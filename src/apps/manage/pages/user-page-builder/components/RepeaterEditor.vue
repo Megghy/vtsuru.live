@@ -71,21 +71,11 @@ function duplicateItem(index: number) {
     >
       <span class="text-[11px] text-muted-foreground">共 {{ itemsModel.length }} 项</span>
       <div class="flex items-center gap-1">
-        <Button
-          size="sm"
-          variant="ghost"
-          class="h-6 px-2 text-xs"
-          @click="expandAll"
-        >
+        <Button variant="ghost" class="h-6 px-2" @click="expandAll">
           <component :is="ExpandOutline" class="size-3.5 mr-1" />
           全部展开
         </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          class="h-6 px-2 text-xs"
-          @click="collapseAll"
-        >
+        <Button variant="ghost" class="h-6 px-2" @click="collapseAll">
           <component :is="ContractOutline" class="size-3.5 mr-1" />
           全部折叠
         </Button>
@@ -139,13 +129,7 @@ function duplicateItem(index: number) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  class="size-6 p-0"
-                  aria-label="复制项目"
-                  @click="duplicateItem(index)"
-                >
+                <Button variant="ghost" class="size-6 p-0" aria-label="复制项目" @click="duplicateItem(index)">
                   <component :is="CopyOutline" class="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -159,12 +143,7 @@ function duplicateItem(index: number) {
             cancel-text="取消"
             @confirm="itemsModel.splice(index, 1)"
           >
-            <Button
-              variant="ghost"
-              size="sm"
-              class="size-6 p-0 text-destructive hover:text-destructive"
-              aria-label="删除项目"
-            >
+            <Button variant="ghost" class="size-6 p-0 text-destructive hover:text-destructive" aria-label="删除项目">
               <component :is="TrashOutline" class="size-3.5" />
             </Button>
           </Popconfirm>
@@ -181,11 +160,7 @@ function duplicateItem(index: number) {
       </section>
     </VueDraggable>
 
-    <Button
-      variant="outline"
-      class="w-full text-xs"
-      @click="addItem"
-    >
+    <Button variant="outline" class="w-full" @click="addItem">
       <component :is="AddOutline" class="size-4 mr-1" />
       {{ addText || '添加项目' }}
     </Button>

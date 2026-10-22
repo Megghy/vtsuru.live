@@ -10,6 +10,7 @@ import {
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 const props = withDefaults(
@@ -104,34 +105,23 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="subscription-action flex items-center gap-1.5">
-      <input
+      <Input
         v-if="!docked"
         :value="url"
         readonly
         aria-label="日历订阅链接"
-        class="h-8 text-xs font-mono px-2 rounded border border-border bg-background flex-1"
+        class="font-mono flex-1"
         @focus="selectUrl"
         @click="selectUrl"
       />
-      <Button
-        as-child
-        variant="outline"
-        size="sm"
-        class="h-8 text-xs flex items-center gap-1"
-      >
+      <Button as-child variant="outline" class="flex items-center gap-1">
         <a :href="webcalUrl">
           <component :is="OpenOutline" class="size-3.5" />
           <span class="btn-text-full">打开日历</span>
           <span class="btn-text-short">日历</span>
         </a>
       </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-8 text-xs flex items-center gap-1"
-        :disabled="copyState === 'success'"
-        @click="copyUrl"
-      >
+      <Button variant="outline" class="flex items-center gap-1" :disabled="copyState === 'success'" @click="copyUrl">
         <component :is="copyState === 'success' ? CheckmarkOutline : CopyOutline" class="size-3.5" />
         <span class="btn-text-full">{{ copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接' }}</span>
         <span class="btn-text-short">{{ copyState === 'success' ? '已复制' : copyState === 'error' ? '失败' : '复制' }}</span>
@@ -143,13 +133,7 @@ onBeforeUnmount(() => {
         v-model:open="popoverOpen"
       >
         <PopoverTrigger as-child>
-          <Button
-            variant="ghost"
-            size="icon"
-            class="size-8 rounded-full text-muted-foreground hover:text-foreground"
-            :title="`订阅设置 (${settingsSummary})`"
-            :aria-label="`订阅设置 (${settingsSummary})`"
-          >
+          <Button variant="ghost" size="icon" class="size-8 rounded-full text-muted-foreground hover:text-foreground" :title="`订阅设置 (${settingsSummary})`" :aria-label="`订阅设置 (${settingsSummary})`">
             <component :is="SettingsOutline" class="size-4" />
           </Button>
         </PopoverTrigger>

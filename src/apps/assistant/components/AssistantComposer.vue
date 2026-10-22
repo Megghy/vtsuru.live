@@ -167,11 +167,7 @@ onBeforeUnmount(() => recognition?.abort())
       <div class="composer__row">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground"
-              :disabled="loading || images.length >= MAX_IMAGES"
+            <Button variant="ghost" size="icon" class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground" :disabled="loading || images.length>= MAX_IMAGES"
               @click="fileInput?.click()"
             >
               <component :is="Image24Regular" class="size-4" />
@@ -190,14 +186,7 @@ onBeforeUnmount(() => recognition?.abort())
 
         <Tooltip v-if="speechSupported">
           <TooltipTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground"
-              :class="{ 'composer__mic--on text-primary!': listening }"
-              :disabled="loading"
-              @click="toggleSpeech"
-            >
+            <Button variant="ghost" size="icon" class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground" :class="{ 'composer__mic--on text-primary!': listening }" :disabled="loading" @click="toggleSpeech">
               <component :is="listening ? Mic24Filled : Mic24Regular" class="size-4" />
             </Button>
           </TooltipTrigger>
@@ -215,23 +204,11 @@ onBeforeUnmount(() => recognition?.abort())
           @paste="onPaste"
         />
 
-        <Button
-          v-if="loading"
-          variant="destructive"
-          size="sm"
-          class="composer__btn h-[38px] px-3 text-xs flex items-center gap-1 shrink-0"
-          @click="emit('stop')"
-        >
+        <Button v-if="loading" variant="destructive" class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0" @click="emit('stop')">
           <component :is="Stop24Filled" class="size-3.5" />
           停止
         </Button>
-        <Button
-          v-else
-          size="sm"
-          class="composer__btn h-[38px] px-3 text-xs flex items-center gap-1 shrink-0"
-          :disabled="!text.trim() && !images.length"
-          @click="submit"
-        >
+        <Button v-else class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0" :disabled="!text.trim() && !images.length" @click="submit">
           <component :is="Send24Filled" class="size-3.5" />
           发送
         </Button>

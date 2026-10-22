@@ -65,18 +65,9 @@ function getMetaText(song: SongsInfo) {
       <div class="search-row flex gap-2 mb-3">
         <div class="relative search-field flex-1">
           <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="inputKeyword"
-            class="h-8 pl-8 text-xs w-full"
-            placeholder="搜索歌曲或歌手…"
-            @keyup.enter="commitSearch"
-          />
+          <Input v-model="inputKeyword" class="pl-8 w-full" placeholder="搜索歌曲或歌手…" @keyup.enter="commitSearch" />
         </div>
-        <Button
-          size="sm"
-          class="h-8 text-xs px-4"
-          @click="commitSearch"
-        >
+        <Button class="px-4" @click="commitSearch">
           搜索
         </Button>
       </div>
@@ -199,12 +190,7 @@ function getMetaText(song: SongsInfo) {
           ref="loadMoreTrigger"
           class="load-more col-span-full flex justify-center py-4"
         >
-          <Button
-            variant="outline"
-            size="sm"
-            class="text-xs"
-            @click="loadMore"
-          >
+          <Button variant="outline" @click="loadMore">
             加载更多
           </Button>
         </div>

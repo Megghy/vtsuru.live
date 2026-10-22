@@ -464,15 +464,7 @@ onUnmounted(() => {
       <h2 class="text-base font-semibold m-0 text-foreground">登录或注册</h2>
       <div class="flex items-center gap-2">
         <slot name="header-extra" />
-        <Button
-          v-if="props.closable"
-          variant="ghost"
-          size="icon"
-          class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-          title="关闭"
-          aria-label="关闭"
-          @click="closePanel"
-        >
+        <Button v-if="props.closable" variant="ghost" size="icon" class="size-7 rounded-full text-muted-foreground hover:text-foreground" title="关闭" aria-label="关闭" @click="closePanel">
           <component :is="Dismiss16Regular" class="size-4" />
         </Button>
       </div>
@@ -485,12 +477,7 @@ onUnmounted(() => {
       <p class="text-sm font-medium text-emerald-600 dark:text-emerald-400 m-0">
         已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。
       </p>
-      <Button
-        v-if="props.closable"
-        size="sm"
-        class="text-xs"
-        @click="closePanel"
-      >
+      <Button v-if="props.closable" @click="closePanel">
         继续
       </Button>
     </div>
@@ -528,7 +515,7 @@ onUnmounted(() => {
         class="w-full"
         @update:model-value="selectedTab = $event as any"
       >
-        <TabsList class="grid w-full h-8" :class="isForgetPassword ? 'grid-cols-3' : 'grid-cols-2'">
+        <TabsList class="grid w-full" :class="isForgetPassword ? 'grid-cols-3' : 'grid-cols-2'">
           <TabsTrigger value="login" class="text-xs">登录</TabsTrigger>
           <TabsTrigger value="register" class="text-xs">注册</TabsTrigger>
           <TabsTrigger v-if="isForgetPassword" value="forget" class="text-xs">忘记密码</TabsTrigger>
@@ -538,24 +525,12 @@ onUnmounted(() => {
         <TabsContent value="login" class="pt-3 space-y-3">
           <div class="space-y-1">
             <label class="font-medium text-foreground text-xs">用户名 / 邮箱 / B站 UID</label>
-            <Input
-              v-model="loginModel.account"
-              placeholder="输入用户名 / 邮箱 / B站 UID"
-              autocomplete="username"
-              class="h-8 text-xs"
-            />
+            <Input v-model="loginModel.account" placeholder="输入用户名 / 邮箱 / B站 UID" autocomplete="username" />
           </div>
 
           <div class="space-y-1">
             <label class="font-medium text-foreground text-xs">密码</label>
-            <Input
-              v-model="loginModel.password"
-              type="password"
-              placeholder="输入密码"
-              autocomplete="current-password"
-              class="h-8 text-xs"
-              @keydown.enter="onLoginButtonClick"
-            />
+            <Input v-model="loginModel.password" type="password" placeholder="输入密码" autocomplete="current-password" @keydown.enter="onLoginButtonClick" />
           </div>
 
           <div class="flex items-center justify-between pt-1">
@@ -568,21 +543,10 @@ onUnmounted(() => {
             </button>
 
             <div class="flex items-center gap-2">
-              <Button
-                v-if="loginPending"
-                variant="outline"
-                size="sm"
-                class="text-xs"
-                @click="cancelActiveRequest"
-              >
+              <Button v-if="loginPending" variant="outline" @click="cancelActiveRequest">
                 取消
               </Button>
-              <Button
-                size="sm"
-                class="text-xs"
-                :disabled="isBusy && !loginPending"
-                @click="onLoginButtonClick"
-              >
+              <Button :disabled="isBusy && !loginPending" @click="onLoginButtonClick">
                 {{ loginButtonText }}
               </Button>
             </div>
@@ -593,64 +557,29 @@ onUnmounted(() => {
         <TabsContent value="register" class="pt-3 space-y-3">
           <div class="space-y-1">
             <label class="font-medium text-foreground text-xs">用户名</label>
-            <Input
-              v-model="registerModel.username"
-              placeholder="输入一个用户名，不允许纯数字"
-              autocomplete="username"
-              class="h-8 text-xs"
-            />
+            <Input v-model="registerModel.username" placeholder="输入一个用户名，不允许纯数字" autocomplete="username" />
           </div>
 
           <div class="space-y-1">
             <label class="font-medium text-foreground text-xs">邮箱</label>
-            <Input
-              v-model="registerModel.email"
-              type="email"
-              placeholder="请输入可接收邮件的邮箱"
-              autocomplete="email"
-              class="h-8 text-xs"
-            />
+            <Input v-model="registerModel.email" type="email" placeholder="请输入可接收邮件的邮箱" autocomplete="email" />
           </div>
 
           <div class="space-y-1">
             <label class="font-medium text-foreground text-xs">密码</label>
-            <Input
-              v-model="registerModel.password"
-              type="password"
-              placeholder="输入密码，需要包含英文和数字"
-              autocomplete="new-password"
-              class="h-8 text-xs"
-            />
+            <Input v-model="registerModel.password" type="password" placeholder="输入密码，需要包含英文和数字" autocomplete="new-password" />
           </div>
 
           <div class="space-y-1">
             <label class="font-medium text-foreground text-xs">重复密码</label>
-            <Input
-              v-model="registerModel.reenteredPassword"
-              type="password"
-              placeholder="再次输入密码"
-              autocomplete="new-password"
-              class="h-8 text-xs"
-              @keydown.enter="onRegisterButtonClick"
-            />
+            <Input v-model="registerModel.reenteredPassword" type="password" placeholder="再次输入密码" autocomplete="new-password" @keydown.enter="onRegisterButtonClick" />
           </div>
 
           <div class="flex items-center justify-end gap-2 pt-1">
-            <Button
-              v-if="registerPending"
-              variant="outline"
-              size="sm"
-              class="text-xs"
-              @click="cancelActiveRequest"
-            >
+            <Button v-if="registerPending" variant="outline" @click="cancelActiveRequest">
               取消
             </Button>
-            <Button
-              size="sm"
-              class="text-xs"
-              :disabled="!canSubmitRegister"
-              @click="onRegisterButtonClick"
-            >
+            <Button :disabled="!canSubmitRegister" @click="onRegisterButtonClick">
               {{ registerButtonText }}
             </Button>
           </div>
@@ -662,24 +591,13 @@ onUnmounted(() => {
             已关联 B 站的账号，也可以重新认证身份后设置新密码。
           </p>
 
-          <Button
-            as="a"
-            href="/bili-auth"
-            variant="outline"
-            size="sm"
-            class="w-full text-xs"
-          >
+          <Button as="a" href="/bili-auth" variant="outline" class="w-full">
             通过 B 站认证重置密码
           </Button>
 
           <div class="space-y-1">
             <label class="font-medium text-foreground text-xs">注册邮箱</label>
-            <Input
-              v-model="inputForgetPasswordValue"
-              type="email"
-              placeholder="请输入注册邮箱"
-              class="h-8 text-xs"
-            />
+            <Input v-model="inputForgetPasswordValue" type="email" placeholder="请输入注册邮箱" />
           </div>
 
           <div class="flex items-center justify-between pt-1">
@@ -692,21 +610,10 @@ onUnmounted(() => {
             </button>
 
             <div class="flex items-center gap-2">
-              <Button
-                v-if="forgetPending"
-                variant="outline"
-                size="sm"
-                class="text-xs"
-                @click="cancelActiveRequest"
-              >
+              <Button v-if="forgetPending" variant="outline" @click="cancelActiveRequest">
                 取消
               </Button>
-              <Button
-                size="sm"
-                class="text-xs"
-                :disabled="!canSubmitForget"
-                @click="onForgetPassword"
-              >
+              <Button :disabled="!canSubmitForget" @click="onForgetPassword">
                 {{ forgetButtonText }}
               </Button>
             </div>

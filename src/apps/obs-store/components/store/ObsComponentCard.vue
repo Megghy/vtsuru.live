@@ -166,11 +166,7 @@ async function handleCopy() {
     <!-- 卡片底部操作栏 -->
     <div class="card-footer">
       <template v-if="isReady">
-        <Button
-          size="sm"
-          class="flex-1 h-8 text-xs gap-1.5"
-          @click="emit('configure', item)"
-        >
+        <Button class="flex-1 gap-1.5" @click="emit('configure', item)">
           <Settings24Regular class="size-4" />
           配置与调试
         </Button>
@@ -179,12 +175,7 @@ async function handleCopy() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  class="h-8 w-8 p-0"
-                  @click="handleCopy"
-                >
+                <Button variant="secondary" class="w-8 p-0" @click="handleCopy">
                   <Checkmark24Regular v-if="copied" class="size-4" />
                   <Copy24Regular v-else class="size-4" />
                 </Button>
@@ -198,13 +189,7 @@ async function handleCopy() {
           <TooltipProvider v-if="item.obsPath">
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  class="h-8 w-8 p-0"
-                  as-child
-                  :disabled="!absoluteObsUrl"
-                >
+                <Button variant="secondary" class="w-8 p-0" as-child :disabled="!absoluteObsUrl">
                   <a
                     :href="absoluteObsUrl || undefined"
                     target="_blank"

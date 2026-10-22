@@ -152,15 +152,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
 
         <template v-else>
           <div class="action-row flex items-center gap-3 mb-4">
-            <Button
-              as="a"
-              variant="outline"
-              size="sm"
-              target="_blank"
-              rel="noopener noreferrer"
-              :href="url"
-              class="open-btn h-8 text-xs font-semibold"
-            >
+            <Button as="a" variant="outline" target="_blank" rel="noopener noreferrer" :href="url" class="open-btn font-semibold">
               <component :is="OpenOutline" class="size-3.5 mr-1.5" />
               {{ cfg.buttonText }}
             </Button>

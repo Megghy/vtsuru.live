@@ -842,25 +842,13 @@ onMounted(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="brand"
-            @click="showAddModal = true"
-          >
+          <Button size="xs" variant="brand" @click="showAddModal = true">
             添加周程
           </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            @click="showBatchAddModal = true"
-          >
+          <Button size="xs" variant="outline" @click="showBatchAddModal = true">
             批量添加
           </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })"
-          >
+          <Button size="xs" variant="outline" @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })">
             修改模板
           </Button>
         </div>
@@ -914,7 +902,7 @@ onMounted(() => {
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">年份</span>
             <Select v-model="selectedScheduleYear">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -932,7 +920,7 @@ onMounted(() => {
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">第几周</span>
             <Select v-model="selectedScheduleWeek">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -950,17 +938,10 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showAddModal = false"
-          >
+          <Button variant="outline" @click="showAddModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            :loading="isFetching"
-            @click="addSchedule"
-          >
+          <Button variant="brand" :loading="isFetching" @click="addSchedule">
             添加
           </Button>
         </DialogFooter>
@@ -987,11 +968,7 @@ onMounted(() => {
           >
             <AlertDescription class="text-xs flex items-center justify-between">
               <span>源周或目标周已更新，请加载最新版本。</span>
-              <Button
-                size="xs"
-                variant="outline"
-                @click="loadLatestScheduleVersion"
-              >
+              <Button size="xs" variant="outline" @click="loadLatestScheduleVersion">
                 加载最新
               </Button>
             </AlertDescription>
@@ -1000,7 +977,7 @@ onMounted(() => {
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">目标年份</span>
             <Select v-model="selectedScheduleYear">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1018,7 +995,7 @@ onMounted(() => {
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">目标周</span>
             <Select v-model="selectedScheduleWeek">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1036,7 +1013,7 @@ onMounted(() => {
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">复制方式</span>
             <Select v-model="copyMode">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1052,17 +1029,10 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showCopyModal = false"
-          >
+          <Button variant="outline" @click="showCopyModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            :loading="isFetching"
-            @click="onCopySchedule"
-          >
+          <Button variant="brand" :loading="isFetching" @click="onCopySchedule">
             确认复制
           </Button>
         </DialogFooter>
@@ -1089,11 +1059,7 @@ onMounted(() => {
           >
             <AlertDescription class="text-xs flex items-center justify-between">
               <span>当前草稿已保留，加载最新版本会替换草稿。</span>
-              <Button
-                size="xs"
-                variant="outline"
-                @click="loadLatestScheduleVersion"
-              >
+              <Button size="xs" variant="outline" @click="loadLatestScheduleVersion">
                 加载最新版本
               </Button>
             </AlertDescription>
@@ -1102,7 +1068,7 @@ onMounted(() => {
           <div class="flex items-center justify-between gap-3">
             <div class="flex-1">
               <Select v-model="selectedDay">
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1116,11 +1082,7 @@ onMounted(() => {
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              size="xs"
-              variant="outline"
-              @click="addScheduleItem"
-            >
+            <Button size="xs" variant="outline" @click="addScheduleItem">
               + 添加行程项
             </Button>
           </div>
@@ -1140,45 +1102,26 @@ onMounted(() => {
               <CardHeader class="p-3 pb-2 flex-row items-center justify-between">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs font-semibold">行程 {{ itemIndex + 1 }}</span>
-                  <Button
-                    v-if="itemIndex > 0"
+                  <Button v-if="itemIndex> 0"
                     size="icon-xs"
                     variant="ghost"
                     @click="moveScheduleItem(itemIndex, 'up')"
                   >
                     ↑
                   </Button>
-                  <Button
-                    v-if="itemIndex < updateScheduleModel.days[Number(selectedDay)].length - 1"
-                    size="icon-xs"
-                    variant="ghost"
-                    @click="moveScheduleItem(itemIndex, 'down')"
-                  >
+                  <Button v-if="itemIndex < updateScheduleModel.days[Number(selectedDay)].length - 1" size="icon-xs" variant="ghost" @click="moveScheduleItem(itemIndex, 'down')">
                     ↓
                   </Button>
                 </div>
 
                 <div class="flex items-center gap-1">
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    @click="onOpenItemTransferModal('copy', itemIndex)"
-                  >
+                  <Button size="xs" variant="ghost" @click="onOpenItemTransferModal('copy', itemIndex)">
                     复制
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    @click="onOpenItemTransferModal('move', itemIndex)"
-                  >
+                  <Button size="xs" variant="ghost" @click="onOpenItemTransferModal('move', itemIndex)">
                     移动
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    class="text-destructive hover:bg-destructive/10"
-                    @click="removeScheduleItem(itemIndex)"
-                  >
+                  <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="removeScheduleItem(itemIndex)">
                     删除
                   </Button>
                 </div>
@@ -1186,28 +1129,14 @@ onMounted(() => {
 
               <CardContent class="p-3 pt-0 space-y-2.5">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <Input
-                    v-model="item.tag"
-                    placeholder="标签名称 (如 杂谈)"
-                    class="w-36 h-7 text-xs"
-                    maxlength="10"
-                  />
-                  <Input
-                    v-model="item.title"
-                    placeholder="事件内容描述"
-                    class="flex-1 h-7 text-xs min-w-[180px]"
-                    maxlength="50"
-                  />
+                  <Input size="xs" v-model="item.tag" placeholder="标签名称 (如 杂谈)" class="w-36" maxlength="10" />
+                  <Input size="xs" v-model="item.title" placeholder="事件内容描述" class="flex-1 min-w-[180px]" maxlength="50" />
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap">
                   <div class="flex items-center gap-1">
                     <span class="text-xs text-muted-foreground">时间:</span>
-                    <Input
-                      v-model="item.time"
-                      type="time"
-                      class="w-24 h-8 text-xs"
-                    />
+                    <Input v-model="item.time" type="time" class="w-24" />
                   </div>
                   <div class="flex items-center gap-1">
                     <span class="text-xs text-muted-foreground">颜色:</span>
@@ -1228,17 +1157,10 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showUpdateModal = false"
-          >
+          <Button variant="outline" @click="showUpdateModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            :loading="isFetching"
-            @click="saveSchedule(Number(selectedDay))"
-          >
+          <Button variant="brand" :loading="isFetching" @click="saveSchedule(Number(selectedDay))">
             保存当天
           </Button>
         </DialogFooter>
@@ -1260,7 +1182,7 @@ onMounted(() => {
         <div class="py-2 space-y-1">
           <span class="text-xs text-muted-foreground">目标星期</span>
           <Select v-model="itemTransferTargetDay">
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1276,16 +1198,10 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showItemTransferModal = false"
-          >
+          <Button variant="outline" @click="showItemTransferModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            @click="onConfirmItemTransfer"
-          >
+          <Button variant="brand" @click="onConfirmItemTransfer">
             确定
           </Button>
         </DialogFooter>
@@ -1309,7 +1225,7 @@ onMounted(() => {
             <div class="space-y-1">
               <span class="text-muted-foreground">年份</span>
               <Select v-model="batchAddYear">
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1327,7 +1243,7 @@ onMounted(() => {
             <div class="space-y-1">
               <span class="text-muted-foreground">星期</span>
               <Select v-model="batchAddDay">
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1347,7 +1263,7 @@ onMounted(() => {
             <span class="text-muted-foreground">周范围</span>
             <div class="flex items-center gap-2">
               <Select v-model="batchAddWeekFrom">
-                <SelectTrigger class="h-8 text-xs flex-1">
+                <SelectTrigger class="flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1362,7 +1278,7 @@ onMounted(() => {
               </Select>
               <span class="text-muted-foreground">至</span>
               <Select v-model="batchAddWeekTo">
-                <SelectTrigger class="h-8 text-xs flex-1">
+                <SelectTrigger class="flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1382,28 +1298,14 @@ onMounted(() => {
 
           <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <Input
-                v-model="batchAddItem.tag"
-                placeholder="标签名称"
-                class="w-36 h-8 text-xs"
-                maxlength="10"
-              />
-              <Input
-                v-model="batchAddItem.title"
-                placeholder="事件描述"
-                class="flex-1 h-8 text-xs"
-                maxlength="50"
-              />
+              <Input v-model="batchAddItem.tag" placeholder="标签名称" class="w-36" maxlength="10" />
+              <Input v-model="batchAddItem.title" placeholder="事件描述" class="flex-1" maxlength="50" />
             </div>
 
             <div class="flex items-center gap-3">
               <div class="flex items-center gap-1">
                 <span class="text-muted-foreground">时间:</span>
-                <Input
-                  v-model="batchAddItem.time"
-                  type="time"
-                  class="w-24 h-8 text-xs"
-                />
+                <Input v-model="batchAddItem.time" type="time" class="w-24" />
               </div>
               <div class="flex items-center gap-1">
                 <span class="text-muted-foreground">颜色:</span>
@@ -1422,17 +1324,10 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showBatchAddModal = false"
-          >
+          <Button variant="outline" @click="showBatchAddModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            :loading="isFetching"
-            @click="onBatchAddSchedule"
-          >
+          <Button variant="brand" :loading="isFetching" @click="onBatchAddSchedule">
             批量添加
           </Button>
         </DialogFooter>

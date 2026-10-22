@@ -79,7 +79,7 @@ function submit() {
               :model-value="String(role)"
               @update:model-value="role = Number($event)"
             >
-              <SelectTrigger class="w-28 h-8 text-xs">
+              <SelectTrigger class="w-28">
                 <SelectValue placeholder="角色" />
               </SelectTrigger>
               <SelectContent>
@@ -113,11 +113,7 @@ function submit() {
               @positive-click="submit"
             >
               <template #trigger>
-                <Button
-                  size="sm"
-                  class="h-8 text-xs"
-                  :disabled="creating"
-                >
+                <Button :disabled="creating">
                   生成链接
                 </Button>
               </template>
@@ -131,13 +127,7 @@ function submit() {
     <Card class="border border-border/80">
       <CardHeader class="pb-2.5 border-b border-border/60 flex flex-row items-center justify-between">
         <CardTitle class="text-sm font-semibold">已发出邀请</CardTitle>
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          :disabled="loading"
-          @click="emit('refresh')"
-        >
+        <Button variant="outline" :disabled="loading" @click="emit('refresh')">
           刷新邀请
         </Button>
       </CardHeader>
@@ -189,17 +179,8 @@ function submit() {
             </div>
 
             <div class="flex items-center gap-2">
-              <Input
-                :value="inv.joinUrl"
-                readonly
-                class="h-7 text-xs font-mono flex-1 bg-muted/30"
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-7 text-xs gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
-                @click="copy(inv.joinUrl)"
-              >
+              <Input size="xs" :value="inv.joinUrl" readonly class="font-mono flex-1 bg-muted/30" />
+              <Button variant="outline" class="gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10" @click="copy(inv.joinUrl)">
                 <component :is="Copy20Regular" class="size-3.5" />
                 复制
               </Button>
@@ -211,11 +192,7 @@ function submit() {
                 @positive-click="emit('revoke', inv.token)"
               >
                 <template #trigger>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    class="h-7 text-xs text-destructive hover:bg-destructive/10"
-                  >
+                  <Button variant="ghost" class="text-destructive hover:bg-destructive/10">
                     撤销
                   </Button>
                 </template>

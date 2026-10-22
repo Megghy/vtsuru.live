@@ -35,6 +35,13 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import {
@@ -359,7 +366,7 @@ onMounted(async () => {
           <span class="text-xs font-semibold block">当前积分来源：{{ pointSourceText }}</span>
           <span class="text-[11px] text-muted-foreground mt-0.5 block">{{ pointSourceHelpText }}</span>
         </div>
-        <Button size="xs" variant="outline" class="gap-1 h-7" @click="emit('openSourceSettings')">
+        <Button size="xs" variant="outline" class="gap-1" @click="emit('openSourceSettings')">
           <Settings24Regular class="size-3.5" />
           来源设置
         </Button>
@@ -371,11 +378,7 @@ onMounted(async () => {
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative w-56">
           <Search24Regular class="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
-          <Input
-            v-model="searchKeyword"
-            placeholder="搜索用户 (用户名或UID)"
-            class="h-8 pl-8 text-xs"
-          />
+          <Input v-model="searchKeyword" placeholder="搜索用户 (用户名或UID)" class="pl-8" />
         </div>
 
         <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
@@ -400,22 +403,22 @@ onMounted(async () => {
       </div>
 
       <div class="flex items-center gap-2">
-        <Button size="xs" variant="outline" class="gap-1 h-7" @click="refresh">
+        <Button size="xs" variant="outline" class="gap-1" @click="refresh">
           <ArrowSync24Regular class="size-3.5" />
           刷新
         </Button>
-        <Button size="xs" variant="outline" class="gap-1 h-7 text-blue-500 hover:text-blue-600" @click="showGivePointModal = true">
+        <Button size="xs" variant="outline" class="gap-1 text-blue-500 hover:text-blue-600" @click="showGivePointModal = true">
           <AddSquare24Regular class="size-3.5" />
           积分调整
         </Button>
-        <Button size="xs" variant="outline" class="gap-1 h-7 text-blue-500 hover:text-blue-600" @click="exportData">
+        <Button size="xs" variant="outline" class="gap-1 text-blue-500 hover:text-blue-600" @click="exportData">
           <ArrowDownload24Regular class="size-3.5" />
           导出
         </Button>
 
         <Popconfirm positive-text="确认重置" negative-text="取消" @positive-click="showResetAllPointsModal = true">
           <template #trigger>
-            <Button size="xs" variant="destructive" class="gap-1 h-7">
+            <Button size="xs" variant="destructive" class="gap-1">
               <Delete24Regular class="size-3.5" />
               重置
             </Button>
@@ -475,21 +478,12 @@ onMounted(async () => {
                     </TableCell>
                     <TableCell class="text-center">
                       <div class="flex items-center justify-center gap-1.5">
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          class="h-7 text-xs text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
-                          @click="currentUser = user; showModal = true"
-                        >
+                        <Button variant="ghost" size="xs" class="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10" @click="currentUser = user; showModal = true">
                           详情
                         </Button>
                         <Popconfirm positive-text="删除" negative-text="取消" @positive-click="deleteUser(user)">
                           <template #trigger>
-                            <Button
-                              variant="ghost"
-                              size="xs"
-                              class="h-7 text-xs text-destructive hover:bg-destructive/10"
-                            >
+                            <Button variant="ghost" size="xs" class="text-destructive hover:bg-destructive/10">
                               删除
                             </Button>
                           </template>
@@ -508,30 +502,28 @@ onMounted(async () => {
                 共 {{ filteredUsers.length }} 位用户，第 {{ pn }} / {{ totalPages }} 页
               </span>
               <div class="flex items-center gap-2">
-                <select
-                  v-model="ps"
-                  class="h-7 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                  @change="pn = 1"
-                >
-                  <option :value="10">10 条/页</option>
-                  <option :value="25">25 条/页</option>
-                  <option :value="50">50 条/页</option>
-                  <option :value="100">100 条/页</option>
-                </select>
+                <div class="w-28">
+                  <Select
+                    :model-value="String(ps)"
+                    @update:model-value="ps = Number($event); pn = 1"
+                  >
+                    <SelectTrigger size="xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 条/页</SelectItem>
+                      <SelectItem value="25">25 条/页</SelectItem>
+                      <SelectItem value="50">50 条/页</SelectItem>
+                      <SelectItem value="100">100 条/页</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 <div class="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    :disabled="pn <= 1"
-                    @click="pn--"
-                  >
+                  <Button variant="outline" size="xs" :disabled="pn <= 1" @click="pn--">
                     上一页
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    :disabled="pn >= totalPages"
+                  <Button variant="outline" size="xs" :disabled="pn>= totalPages"
                     @click="pn++"
                   >
                     下一页
@@ -600,22 +592,12 @@ onMounted(async () => {
 
           <div class="space-y-1">
             <label class="text-xs font-medium text-foreground">备注说明 (选填)</label>
-            <Input
-              v-model="addPointReason"
-              placeholder="请输入备注"
-              maxlength="100"
-              class="h-8 text-xs"
-            />
+            <Input v-model="addPointReason" placeholder="请输入备注" maxlength="100" />
           </div>
         </div>
 
         <DialogFooter>
-          <Button
-            size="sm"
-            :loading="isLoading"
-            :disabled="!addPointTarget || !addPointCount"
-            @click="givePoint"
-          >
+          <Button :loading="isLoading" :disabled="!addPointTarget || !addPointCount" @click="givePoint">
             {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '给予' : '扣除' }}
           </Button>
         </DialogFooter>
@@ -639,21 +621,11 @@ onMounted(async () => {
           <p class="text-xs text-foreground">
             请输入 <strong class="text-destructive">"{{ RESET_CONFIRM_TEXT }}"</strong> 以确认操作
           </p>
-          <Input
-            v-model="resetConfirmText"
-            placeholder="请输入确认文本"
-            class="h-8 text-xs"
-          />
+          <Input v-model="resetConfirmText" placeholder="请输入确认文本" />
         </div>
 
         <DialogFooter>
-          <Button
-            variant="destructive"
-            size="sm"
-            :loading="isLoading"
-            :disabled="resetConfirmText !== RESET_CONFIRM_TEXT"
-            @click="resetAllPoints"
-          >
+          <Button variant="destructive" :loading="isLoading" :disabled="resetConfirmText !== RESET_CONFIRM_TEXT" @click="resetAllPoints">
             确认重置所有用户积分
           </Button>
         </DialogFooter>

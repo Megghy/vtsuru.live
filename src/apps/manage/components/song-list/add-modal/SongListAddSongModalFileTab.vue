@@ -261,31 +261,31 @@ async function addUploadFileSong() {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div class="space-y-1">
             <label class="text-muted-foreground">歌曲名称 (必填)</label>
-            <Input v-model="columnMappings.name" class="h-7 text-xs" />
+            <Input v-model="columnMappings.name" size="xs" />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">翻译名称</label>
-            <Input v-model="columnMappings.translateName" class="h-7 text-xs" />
+            <Input v-model="columnMappings.translateName" size="xs" />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">作者</label>
-            <Input v-model="columnMappings.author" class="h-7 text-xs" />
+            <Input v-model="columnMappings.author" size="xs" />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">描述</label>
-            <Input v-model="columnMappings.description" class="h-7 text-xs" />
+            <Input v-model="columnMappings.description" size="xs" />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">链接</label>
-            <Input v-model="columnMappings.url" class="h-7 text-xs" />
+            <Input v-model="columnMappings.url" size="xs" />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">语言</label>
-            <Input v-model="columnMappings.language" class="h-7 text-xs" />
+            <Input v-model="columnMappings.language" size="xs" />
           </div>
           <div class="space-y-1 col-span-full">
             <label class="text-muted-foreground">标签</label>
-            <Input v-model="columnMappings.tags" class="h-7 text-xs" />
+            <Input v-model="columnMappings.tags" size="xs" />
           </div>
         </div>
 
@@ -315,7 +315,7 @@ async function addUploadFileSong() {
       </label>
 
       <div class="flex justify-end">
-        <Button size="sm" :disabled="!selectedFile" @click="parseExcelFile">
+        <Button :disabled="!selectedFile" @click="parseExcelFile">
           解析文件
         </Button>
       </div>

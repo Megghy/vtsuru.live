@@ -148,12 +148,7 @@ function toggleModule(mod: ClientBackupModule) {
           当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >=
           {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。
         </AlertDescription>
-        <Button
-          size="xs"
-          variant="outline"
-          class="h-6 text-[11px] shrink-0"
-          @click="router.push({ name: 'client-settings', query: { tab: 'about' } })"
-        >
+        <Button size="xs" variant="outline" class="h-6 text-[11px] shrink-0" @click="router.push({ name: 'client-settings', query: { tab: 'about' } })">
           检查更新
         </Button>
       </div>
@@ -171,22 +166,12 @@ function toggleModule(mod: ClientBackupModule) {
           <CardTitle class="text-sm font-semibold">备份目录</CardTitle>
         </CardHeader>
         <CardContent class="p-3 space-y-2">
-          <Input
-            :value="backupSettings.directory"
-            readonly
-            placeholder="尚未选择备份目录"
-            class="h-8 text-xs"
-          />
+          <Input :value="backupSettings.directory" readonly placeholder="尚未选择备份目录" />
           <div class="flex items-center justify-between gap-2">
             <span class="text-xs text-muted-foreground">
               目录由系统对话框选择，定时备份和手动备份都写入这里。
             </span>
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs shrink-0"
-              @click="handlePickDirectory"
-            >
+            <Button variant="secondary" class="shrink-0" @click="handlePickDirectory">
               选择目录
             </Button>
           </div>
@@ -213,7 +198,7 @@ function toggleModule(mod: ClientBackupModule) {
                 :model-value="String(backupSettings.presetHours)"
                 @update:model-value="backupSettings.presetHours = Number($event)"
               >
-                <SelectTrigger class="h-8 text-xs w-full">
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -267,21 +252,10 @@ function toggleModule(mod: ClientBackupModule) {
           <div class="text-xs text-muted-foreground">上次备份: {{ lastBackupText }}</div>
           <div class="text-xs text-muted-foreground">最近文件: {{ backupSettings.lastBackupFile || '无' }}</div>
           <div class="flex items-center gap-2 pt-1">
-            <Button
-              size="sm"
-              class="h-8 text-xs"
-              :disabled="!canUseBackup || !backupSettings.directory || backup.busy"
-              @click="handleManualBackup"
-            >
+            <Button :disabled="!canUseBackup || !backupSettings.directory || backup.busy" @click="handleManualBackup">
               {{ backup.busy ? '备份中...' : '立即备份' }}
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs"
-              :disabled="!canUseBackup || backup.busy"
-              @click="handleSelectImportFile"
-            >
+            <Button variant="outline" :disabled="!canUseBackup || backup.busy" @click="handleSelectImportFile">
               导入备份
             </Button>
           </div>
@@ -337,21 +311,10 @@ function toggleModule(mod: ClientBackupModule) {
           </div>
 
           <div class="flex justify-end gap-2 pt-2 border-t">
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs"
-              @click="showImportModal = false"
-            >
+            <Button variant="outline" @click="showImportModal = false">
               取消
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              class="h-8 text-xs"
-              :disabled="importModules.length === 0 || backup.busy"
-              @click="handleConfirmImport"
-            >
+            <Button variant="destructive" :disabled="importModules.length === 0 || backup.busy" @click="handleConfirmImport">
               {{ backup.busy ? '导入中...' : '确认导入并覆盖' }}
             </Button>
           </div>

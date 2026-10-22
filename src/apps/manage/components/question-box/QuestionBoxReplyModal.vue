@@ -68,12 +68,8 @@ function handleKeydown(e: KeyboardEvent) {
         <DialogFooter class="flex items-center justify-between sm:justify-between w-full pt-2">
           <span class="text-[11px] text-muted-foreground">按 Ctrl + Enter 快捷发送</span>
           <div class="flex items-center gap-2">
-            <Button variant="outline" size="sm" @click="show = false">取消</Button>
-            <Button
-              size="sm"
-              :disabled="!replyMessage.trim() || useQB.isRepling"
-              @click="submitReply"
-            >
+            <Button variant="outline" @click="show = false">取消</Button>
+            <Button :disabled="!replyMessage.trim() || useQB.isRepling" @click="submitReply">
               {{ useQB.isRepling ? '发送中...' : useQB.currentQuestion?.answer ? '修改回复' : '发送回复' }}
             </Button>
           </div>

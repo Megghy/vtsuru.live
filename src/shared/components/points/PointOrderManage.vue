@@ -307,7 +307,7 @@ onMounted(async () => {
               :model-value="filterSettings.streamerId ? String(filterSettings.streamerId) : 'all'"
               @update:model-value="filterSettings.streamerId = $event === 'all' ? undefined : Number($event)"
             >
-              <SelectTrigger class="w-36 h-8 text-xs">
+              <SelectTrigger class="w-36">
                 <SelectValue placeholder="主播" />
               </SelectTrigger>
               <SelectContent>
@@ -327,7 +327,7 @@ onMounted(async () => {
               :model-value="filterSettings.type !== undefined ? String(filterSettings.type) : 'all'"
               @update:model-value="filterSettings.type = $event === 'all' ? undefined : Number($event)"
             >
-              <SelectTrigger class="w-32 h-8 text-xs">
+              <SelectTrigger class="w-32">
                 <SelectValue placeholder="订单类型" />
               </SelectTrigger>
               <SelectContent>
@@ -342,7 +342,7 @@ onMounted(async () => {
               :model-value="filterSettings.status !== undefined ? String(filterSettings.status) : 'all'"
               @update:model-value="filterSettings.status = $event === 'all' ? undefined : Number($event)"
             >
-              <SelectTrigger class="w-32 h-8 text-xs">
+              <SelectTrigger class="w-32">
                 <SelectValue placeholder="订单状态" />
               </SelectTrigger>
               <SelectContent>
@@ -360,7 +360,7 @@ onMounted(async () => {
               :model-value="filterSettings.customer ? String(filterSettings.customer) : 'all'"
               @update:model-value="filterSettings.customer = $event === 'all' ? undefined : Number($event)"
             >
-              <SelectTrigger class="w-36 h-8 text-xs">
+              <SelectTrigger class="w-36">
                 <SelectValue placeholder="按用户筛选" />
               </SelectTrigger>
               <SelectContent class="max-h-56">
@@ -382,12 +382,7 @@ onMounted(async () => {
             </label>
           </div>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-8 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
-            @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))"
-          >
+          <Button variant="ghost" class="flex items-center gap-1 text-muted-foreground hover:text-foreground" @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))">
             <component :is="Filter24Regular" class="size-3.5" />
             重置筛选
           </Button>
@@ -398,21 +393,11 @@ onMounted(async () => {
         <!-- 操作行 -->
         <div class="flex flex-wrap items-center justify-between gap-2.5">
           <div class="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-8 text-xs flex items-center gap-1"
-              @click="refresh"
-            >
+            <Button variant="outline" class="flex items-center gap-1" @click="refresh">
               <component :is="ArrowSync24Regular" class="size-3.5" />
               刷新
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-8 text-xs flex items-center gap-1"
-              @click="exportData"
-            >
+            <Button variant="outline" class="flex items-center gap-1" @click="exportData">
               <component :is="ArrowDownload24Regular" class="size-3.5" />
               导出数据
             </Button>
@@ -427,12 +412,7 @@ onMounted(async () => {
               @positive-click="openStatusUpdateModal"
             >
               <template #trigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-8 text-xs flex items-center gap-1"
-                  :disabled="!selectedItem?.length"
-                >
+                <Button variant="outline" class="flex items-center gap-1" :disabled="!selectedItem?.length">
                   <component :is="Edit24Regular" class="size-3.5" />
                   批量更新状态 ({{ selectedItem?.length ?? 0 }})
                 </Button>
@@ -449,12 +429,7 @@ onMounted(async () => {
               @positive-click="deleteOrder"
             >
               <template #trigger>
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  class="h-8 text-xs flex items-center gap-1"
-                  :disabled="!selectedItem?.length"
-                >
+                <Button variant="destructive" class="flex items-center gap-1" :disabled="!selectedItem?.length">
                   <component :is="Delete24Regular" class="size-3.5" />
                   批量删除 ({{ selectedItem?.length ?? 0 }})
                 </Button>
@@ -486,7 +461,7 @@ onMounted(async () => {
               :model-value="targetStatus !== undefined ? String(targetStatus) : ''"
               @update:model-value="targetStatus = Number($event) as PointOrderStatus"
             >
-              <SelectTrigger class="w-full h-8 text-xs">
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
@@ -498,20 +473,10 @@ onMounted(async () => {
           </div>
 
           <DialogFooter class="pt-2 border-t border-border/60">
-            <Button
-              variant="outline"
-              size="sm"
-              class="text-xs"
-              @click="showStatusModal = false"
-            >
+            <Button variant="outline" @click="showStatusModal = false">
               取消
             </Button>
-            <Button
-              size="sm"
-              class="text-xs"
-              :disabled="targetStatus === undefined"
-              @click="batchUpdateOrderStatus"
-            >
+            <Button :disabled="targetStatus === undefined" @click="batchUpdateOrderStatus">
               确认更新
             </Button>
           </DialogFooter>

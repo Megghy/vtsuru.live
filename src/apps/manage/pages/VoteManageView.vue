@@ -76,6 +76,7 @@ import {
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { copyToClipboard } from '@/shared/utils'
 import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
 import { type VotePreset, VOTE_QUICK_PRESETS, useVoteTemplates } from '@/shared/utils/votePresets'
@@ -577,53 +578,35 @@ onUnmounted(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-            <Button
-              size="xs"
-              :variant="activeTab === 'console' ? 'default' : 'ghost'"
-              class="h-7 text-xs px-2.5 gap-1"
-              @click="activeTab = 'console'"
-            >
+          <ToggleGroup v-model="activeTab" type="single">
+            <ToggleGroupItem value="console">
               <component
                 :is="Clock24Regular"
-                class="h-3.5 w-3.5"
+                class="size-3.5 mr-1"
               />
               工作台
-            </Button>
-            <Button
-              size="xs"
-              :variant="activeTab === 'preview' ? 'default' : 'ghost'"
-              class="h-7 text-xs px-2.5 gap-1"
-              @click="activeTab = 'preview'"
-            >
+            </ToggleGroupItem>
+            <ToggleGroupItem value="preview">
               <component
                 :is="Desktop24Regular"
-                class="h-3.5 w-3.5"
+                class="size-3.5 mr-1"
               />
               OBS 预览与调试
-            </Button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
 
-          <Button
-            size="xs"
-            variant="outline"
-            @click="showSettingsModal = true"
-          >
+          <Button variant="outline" @click="showSettingsModal = true">
             <component
               :is="Settings24Regular"
-              class="h-3.5 w-3.5 mr-1"
+              class="size-3.5 mr-1"
             />
             全局设置
           </Button>
 
-          <Button
-            size="xs"
-            variant="brand"
-            @click="copyObsLink(voteConfig.theme, voteConfig.displayPosition)"
-          >
+          <Button variant="default" @click="copyObsLink(voteConfig.theme, voteConfig.displayPosition)">
             <component
               :is="Copy24Regular"
-              class="h-3.5 w-3.5 mr-1"
+              class="size-3.5 mr-1"
             />
             复制 OBS 链接
           </Button>
@@ -707,36 +690,20 @@ onUnmounted(() => {
             <div class="flex items-center justify-between gap-3 flex-wrap">
               <div class="flex items-center gap-1.5">
                 <span class="text-xs text-muted-foreground">加时:</span>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  @click="extendDuration(30)"
-                >
+                <Button size="xs" variant="outline" @click="extendDuration(30)">
                   +30s
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  @click="extendDuration(60)"
-                >
+                <Button size="xs" variant="outline" @click="extendDuration(60)">
                   +60s
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  @click="extendDuration(120)"
-                >
+                <Button size="xs" variant="outline" @click="extendDuration(120)">
                   +2m
                 </Button>
               </div>
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    class="border-amber-500 text-amber-500 hover:bg-amber-500/10"
-                  >
+                  <Button size="xs" variant="outline" class="border-amber-500 text-amber-500 hover:bg-amber-500/10">
                     <component
                       :is="Pause24Regular"
                       class="h-3.5 w-3.5 mr-1"
@@ -778,14 +745,7 @@ onUnmounted(() => {
             <!-- 快捷预设芯片 -->
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="text-xs text-muted-foreground">快捷预设:</span>
-              <Button
-                v-for="p in VOTE_QUICK_PRESETS"
-                :key="p.name"
-                size="xs"
-                variant="outline"
-                class="h-6 text-xs gap-1"
-                @click="applyPreset(p)"
-              >
+              <Button v-for="p in VOTE_QUICK_PRESETS" :key="p.name" size="xs" variant="outline" class="h-6 gap-1" @click="applyPreset(p)">
                 <component
                   :is="Sparkle24Regular"
                   class="h-3 w-3 text-brand"
@@ -795,12 +755,7 @@ onUnmounted(() => {
             </div>
 
             <!-- 投票主题 -->
-            <Input
-              v-model="formTitle"
-              placeholder="输入投票主题 (例如: 本局出装选择 / 下一把玩什么)"
-              class="text-xs h-8"
-              maxlength="50"
-            />
+            <Input v-model="formTitle" placeholder="输入投票主题 (例如: 本局出装选择 / 下一把玩什么)" maxlength="50" />
 
             <!-- 选项编辑列表 -->
             <div class="space-y-2">
@@ -810,14 +765,8 @@ onUnmounted(() => {
                 class="flex items-center gap-2"
               >
                 <span class="font-mono text-xs text-muted-foreground w-5 text-right shrink-0">{{ idx + 1 }}.</span>
-                <Input
-                  v-model="opt.text"
-                  placeholder="选项文字"
-                  class="text-xs h-8 flex-1"
-                  maxlength="30"
-                />
-                <Button
-                  v-if="formOptions.length > 2"
+                <Input v-model="opt.text" placeholder="选项文字" class="flex-1" maxlength="30" />
+                <Button v-if="formOptions.length> 2"
                   size="icon-xs"
                   variant="ghost"
                   class="text-muted-foreground hover:text-destructive"
@@ -832,26 +781,17 @@ onUnmounted(() => {
             </div>
 
             <div class="flex items-center gap-2">
-              <Button
-                size="xs"
-                variant="outline"
-                @click="addOption"
-              >
+              <Button size="xs" variant="outline" @click="addOption">
                 <component
                   :is="Add24Filled"
                   class="h-3.5 w-3.5 mr-1"
                 />
                 添加选项
               </Button>
-              <Button
-                size="xs"
-                variant="outline"
-                @click="openBatchModal"
-              >
+              <Button size="xs" variant="outline" @click="openBatchModal">
                 批量粘贴/导入
               </Button>
-              <Button
-                v-if="formOptions.length > 2"
+              <Button v-if="formOptions.length> 2"
                 size="xs"
                 variant="ghost"
                 class="text-muted-foreground"
@@ -868,14 +808,7 @@ onUnmounted(() => {
               <div class="flex items-center gap-4 flex-wrap">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs text-muted-foreground">时长:</span>
-                  <Input
-                    v-model.number="formDuration"
-                    type="number"
-                    min="0"
-                    max="3600"
-                    step="30"
-                    class="w-20 h-8 text-xs font-mono"
-                  />
+                  <Input v-model.number="formDuration" type="number" min="0" max="3600" step="30" class="w-20 font-mono" />
                   <span class="text-xs text-muted-foreground">秒</span>
                 </div>
 
@@ -885,12 +818,7 @@ onUnmounted(() => {
                 </label>
               </div>
 
-              <Button
-                size="sm"
-                variant="brand"
-                :loading="isLoading"
-                @click="createVote"
-              >
+              <Button variant="brand" :loading="isLoading" @click="createVote">
                 <component
                   :is="Play24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -913,16 +841,8 @@ onUnmounted(() => {
           </CardHeader>
           <CardContent class="p-3.5 space-y-2.5">
             <div class="flex gap-1.5">
-              <Input
-                v-model="newTemplateName"
-                placeholder="存为新模板..."
-                class="text-xs h-8 flex-1"
-              />
-              <Button
-                size="xs"
-                variant="outline"
-                @click="saveCustomTemplate"
-              >
+              <Input v-model="newTemplateName" placeholder="存为新模板..." class="flex-1" />
+              <Button size="xs" variant="outline" @click="saveCustomTemplate">
                 保存
               </Button>
             </div>
@@ -951,12 +871,7 @@ onUnmounted(() => {
                     {{ tpl.options.join(' / ') }}
                   </div>
                 </div>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  class="text-muted-foreground hover:text-destructive shrink-0"
-                  @click.stop="deleteCustomTemplate(idx)"
-                >
+                <Button size="icon-xs" variant="ghost" class="text-muted-foreground hover:text-destructive shrink-0" @click.stop="deleteCustomTemplate(idx)">
                   <component
                     :is="Delete24Regular"
                     class="h-3.5 w-3.5"
@@ -1001,20 +916,12 @@ onUnmounted(() => {
                 </div>
 
                 <div class="flex items-center gap-1 shrink-0">
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    @click="reuseHistory(item)"
-                  >
+                  <Button size="xs" variant="outline" @click="reuseHistory(item)">
                     复刻
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger as-child>
-                      <Button
-                        size="icon-xs"
-                        variant="ghost"
-                        class="text-muted-foreground hover:text-destructive"
-                      >
+                      <Button size="icon-xs" variant="ghost" class="text-muted-foreground hover:text-destructive">
                         <component
                           :is="Delete24Regular"
                           class="h-3.5 w-3.5"
@@ -1073,19 +980,7 @@ onUnmounted(() => {
             </div>
 
             <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-              <Button
-                v-for="bg in [
-                  { key: 'checker', label: '网格' },
-                  { key: 'dark', label: '纯黑' },
-                  { key: 'light', label: '浅色' },
-                  { key: 'game', label: '直播场景' },
-                ]"
-                :key="bg.key"
-                size="xs"
-                :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                class="h-6 text-xs px-2"
-                @click="previewBg = bg.key as any"
-              >
+              <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '纯黑' }, { key: 'light', label: '浅色' }, { key: 'game', label: '直播场景' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" class="h-6 px-2" @click="previewBg = bg.key as any">
                 {{ bg.label }}
               </Button>
             </div>
@@ -1117,11 +1012,7 @@ onUnmounted(() => {
             <span class="text-xs text-muted-foreground font-mono">
               参数: ?theme={{ previewTheme }}&position={{ previewPosition }}&max={{ previewMaxDisplay }}
             </span>
-            <Button
-              size="xs"
-              variant="brand"
-              @click="copyObsLink(previewTheme, previewPosition, previewMaxDisplay)"
-            >
+            <Button size="xs" variant="brand" @click="copyObsLink(previewTheme, previewPosition, previewMaxDisplay)">
               <component
                 :is="Copy24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -1152,53 +1043,25 @@ onUnmounted(() => {
             <div>
               <span class="text-xs text-muted-foreground block mb-2">一键载入场景:</span>
               <div class="flex flex-wrap gap-1.5">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  @click="loadMockScene('duel-top')"
-                >
+                <Button size="xs" variant="outline" @click="loadMockScene('duel-top')">
                   红蓝顶栏
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  @click="loadMockScene('duel')"
-                >
+                <Button size="xs" variant="outline" @click="loadMockScene('duel')">
                   红蓝卡片
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  @click="loadMockScene('standard')"
-                >
+                <Button size="xs" variant="outline" @click="loadMockScene('standard')">
                   四选一
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  @click="loadMockScene('leaderboard')"
-                >
+                <Button size="xs" variant="outline" @click="loadMockScene('leaderboard')">
                   10人排行榜
                 </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  @click="setMockBalance('close')"
-                >
+                <Button size="xs" variant="ghost" @click="setMockBalance('close')">
                   差1票
                 </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  @click="setMockBalance('tie')"
-                >
+                <Button size="xs" variant="ghost" @click="setMockBalance('tie')">
                   平票
                 </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  @click="setMockBalance('empty')"
-                >
+                <Button size="xs" variant="ghost" @click="setMockBalance('empty')">
                   零票
                 </Button>
               </div>
@@ -1209,19 +1072,7 @@ onUnmounted(() => {
             <div>
               <span class="text-xs text-muted-foreground block mb-1.5">预设主题:</span>
               <div class="grid grid-cols-2 gap-1.5">
-                <Button
-                  v-for="th in [
-                    { key: 'glass', label: '毛玻璃 Glass' },
-                    { key: 'duel', label: '对决 Duel' },
-                    { key: 'minimal', label: '极简 Minimal' },
-                    { key: 'transparent', label: '无背景/纯透明' },
-                  ]"
-                  :key="th.key"
-                  size="xs"
-                  :variant="previewTheme === th.key ? 'default' : 'outline'"
-                  class="text-xs justify-start"
-                  @click="previewTheme = th.key as any"
-                >
+                <Button v-for="th in [ { key: 'glass', label: '毛玻璃 Glass' }, { key: 'duel', label: '对决 Duel' }, { key: 'minimal', label: '极简 Minimal' }, { key: 'transparent', label: '无背景/纯透明' }, ]" :key="th.key" size="xs" :variant="previewTheme === th.key ? 'default' : 'outline'" class="justify-start" @click="previewTheme = th.key as any">
                   {{ th.label }}
                 </Button>
               </div>
@@ -1230,7 +1081,7 @@ onUnmounted(() => {
             <div class="space-y-1.5">
               <span class="text-xs text-muted-foreground block">屏幕对齐位置:</span>
               <Select v-model="previewPosition">
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1258,13 +1109,7 @@ onUnmounted(() => {
 
             <div class="flex items-center justify-between">
               <span class="text-xs text-muted-foreground">排行榜最大显示行数:</span>
-              <Input
-                v-model.number="previewMaxDisplay"
-                type="number"
-                min="2"
-                max="20"
-                class="w-20 h-8 text-xs font-mono"
-              />
+              <Input v-model.number="previewMaxDisplay" type="number" min="2" max="20" class="w-20 font-mono" />
             </div>
           </CardContent>
         </Card>
@@ -1295,28 +1140,13 @@ onUnmounted(() => {
               >
                 <span class="font-medium truncate max-w-[140px]">{{ opt.index }}. {{ opt.text }}</span>
                 <div class="flex items-center gap-1">
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    class="h-6 px-1.5 text-xs"
-                    @click="mockAddVote(opt.index, 1)"
-                  >
+                  <Button size="xs" variant="outline" class="h-6 px-1.5" @click="mockAddVote(opt.index, 1)">
                     +1
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    class="h-6 px-1.5 text-xs"
-                    @click="mockAddVote(opt.index, 10)"
-                  >
+                  <Button size="xs" variant="outline" class="h-6 px-1.5" @click="mockAddVote(opt.index, 10)">
                     +10
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    class="h-6 px-1.5 text-xs text-amber-500 hover:bg-amber-500/10"
-                    @click="mockOvertake(opt.index)"
-                  >
+                  <Button size="xs" variant="ghost" class="h-6 px-1.5 text-amber-500 hover:bg-amber-500/10" @click="mockOvertake(opt.index)">
                     <component
                       :is="ArrowTrending24Filled"
                       class="h-3 w-3 mr-0.5"
@@ -1330,24 +1160,14 @@ onUnmounted(() => {
             <Separator />
 
             <div class="flex gap-2">
-              <Button
-                size="xs"
-                variant="outline"
-                class="flex-1 text-amber-500 border-amber-500/30"
-                @click="toggleMockUrgent"
-              >
+              <Button size="xs" variant="outline" class="flex-1 text-amber-500 border-amber-500/30" @click="toggleMockUrgent">
                 <component
                   :is="Timer24Regular"
                   class="h-3.5 w-3.5 mr-1"
                 />
                 剩余 8s (呼吸警告)
               </Button>
-              <Button
-                size="xs"
-                variant="brand"
-                class="flex-1"
-                @click="toggleMockWinner"
-              >
+              <Button size="xs" variant="brand" class="flex-1" @click="toggleMockWinner">
                 <component
                   :is="Trophy24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -1382,16 +1202,10 @@ onUnmounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showBatchModal = false"
-          >
+          <Button variant="outline" @click="showBatchModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            @click="applyBatchOptions"
-          >
+          <Button variant="brand" @click="applyBatchOptions">
             确认导入
           </Button>
         </DialogFooter>
@@ -1464,19 +1278,7 @@ onUnmounted(() => {
           <div class="space-y-1.5">
             <span class="text-xs text-muted-foreground block">默认主题风格</span>
             <div class="grid grid-cols-2 gap-2">
-              <Button
-                v-for="th in [
-                  { key: 'glass', label: '毛玻璃 Modern Glass' },
-                  { key: 'duel', label: '对决 Duel VS' },
-                  { key: 'minimal', label: '极简 Minimal' },
-                  { key: 'transparent', label: '无背景/纯透明' },
-                ]"
-                :key="th.key"
-                size="xs"
-                :variant="voteConfig.theme === th.key ? 'default' : 'outline'"
-                class="text-xs justify-start"
-                @click="voteConfig.theme = th.key"
-              >
+              <Button v-for="th in [ { key: 'glass', label: '毛玻璃 Modern Glass' }, { key: 'duel', label: '对决 Duel VS' }, { key: 'minimal', label: '极简 Minimal' }, { key: 'transparent', label: '无背景/纯透明' }, ]" :key="th.key" size="xs" :variant="voteConfig.theme === th.key ? 'default' : 'outline'" class="justify-start" @click="voteConfig.theme = th.key">
                 {{ th.label }}
               </Button>
             </div>
@@ -1485,7 +1287,7 @@ onUnmounted(() => {
           <div class="space-y-1.5">
             <span class="text-xs text-muted-foreground block">OBS 画面停靠位置</span>
             <Select v-model="voteConfig.displayPosition">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1513,17 +1315,10 @@ onUnmounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showSettingsModal = false"
-          >
+          <Button variant="outline" @click="showSettingsModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            :loading="isLoading"
-            @click="saveVoteConfig"
-          >
+          <Button variant="brand" :loading="isLoading" @click="saveVoteConfig">
             保存设置
           </Button>
         </DialogFooter>

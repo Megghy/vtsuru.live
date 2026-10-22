@@ -87,17 +87,8 @@ function removeBlockword(index: number) {
     <div class="settings-group space-y-2.5">
       <span class="font-semibold text-xs text-foreground block">触发关键词</span>
       <div class="flex items-center gap-2">
-        <Input
-          v-model="tempKeyword"
-          placeholder="输入关键词..."
-          class="h-8 text-xs flex-1"
-          @keyup.enter="addKeyword"
-        />
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          @click="addKeyword"
-        >
+        <Input v-model="tempKeyword" placeholder="输入关键词..." class="flex-1" @keyup.enter="addKeyword" />
+        <Button @click="addKeyword">
           添加
         </Button>
       </div>
@@ -165,18 +156,8 @@ function removeBlockword(index: number) {
     <div class="settings-group space-y-2.5">
       <span class="font-semibold text-xs text-foreground block">屏蔽关键词</span>
       <div class="flex items-center gap-2">
-        <Input
-          v-model="tempBlockword"
-          placeholder="输入屏蔽词..."
-          class="h-8 text-xs flex-1"
-          @keyup.enter="addBlockword"
-        />
-        <Button
-          size="sm"
-          variant="secondary"
-          class="h-8 text-xs text-amber-600 dark:text-amber-400"
-          @click="addBlockword"
-        >
+        <Input v-model="tempBlockword" placeholder="输入屏蔽词..." class="flex-1" @keyup.enter="addBlockword" />
+        <Button variant="secondary" class="text-amber-600 dark:text-amber-400" @click="addBlockword">
           添加
         </Button>
       </div>

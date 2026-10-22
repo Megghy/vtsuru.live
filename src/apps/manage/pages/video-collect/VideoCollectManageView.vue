@@ -262,23 +262,14 @@ async function confirmDelete() {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="outline"
-            :loading="isLoading"
-            @click="loadTables"
-          >
+          <Button variant="outline" :loading="isLoading" @click="loadTables">
             <component
               :is="ArrowSync24Regular"
               class="h-3.5 w-3.5 mr-1"
             />
             刷新
           </Button>
-          <Button
-            size="xs"
-            variant="brand"
-            @click="createModalVisible = true"
-          >
+          <Button variant="brand" @click="createModalVisible = true">
             <component
               :is="Add20Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -346,11 +337,7 @@ async function confirmDelete() {
           :is="Search24Regular"
           class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
         />
-        <Input
-          v-model="keyword"
-          placeholder="搜索征集名称或说明..."
-          class="h-7 text-xs pl-8"
-        />
+        <Input v-model="keyword" placeholder="搜索征集名称或说明..." class="pl-8" />
       </div>
 
       <div class="w-40">
@@ -358,7 +345,7 @@ async function confirmDelete() {
           v-model="statusFilter"
           default-value="all"
         >
-          <SelectTrigger class="h-7 text-xs">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -399,11 +386,7 @@ async function confirmDelete() {
         v-if="videoTables.length === 0"
         class="mt-3"
       >
-        <Button
-          size="xs"
-          variant="brand"
-          @click="createModalVisible = true"
-        >
+        <Button size="xs" variant="brand" @click="createModalVisible = true">
           立即创建第一个征集
         </Button>
       </div>
@@ -472,26 +455,14 @@ async function confirmDelete() {
             class="flex items-center gap-1"
             @click.stop
           >
-            <Button
-              size="xs"
-              variant="outline"
-              title="复制投稿页面链接"
-              class="h-7 px-2"
-              @click.stop="copyShareLink(table)"
-            >
+            <Button size="xs" variant="outline" title="复制投稿页面链接" @click.stop="copyShareLink(table)">
               <component
                 :is="Copy24Regular"
                 class="h-3.5 w-3.5 mr-1"
               />
               链接
             </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              title="查看展示结果页"
-              class="h-7 px-2"
-              @click.stop="openResultPage(table)"
-            >
+            <Button size="xs" variant="outline" title="查看展示结果页" @click.stop="openResultPage(table)">
               <component
                 :is="Open24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -501,11 +472,7 @@ async function confirmDelete() {
 
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
-                <Button
-                  size="icon-xs"
-                  variant="ghost"
-                  class="h-7 w-7"
-                >
+                <Button size="icon-xs" variant="ghost">
                   <component
                     :is="MoreVertical24Regular"
                     class="h-3.5 w-3.5"

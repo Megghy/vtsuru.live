@@ -190,13 +190,7 @@ function formatRelative(time: number) {
     <template v-else>
       <header class="ticket-detail__header flex items-start justify-between gap-3 pb-3 border-b border-border/60">
         <div class="flex items-start gap-2 min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            class="size-8 -ml-1 text-muted-foreground hover:text-foreground shrink-0 md:hidden"
-            title="返回工单列表"
-            @click="emit('back')"
-          >
+          <Button variant="ghost" size="icon" class="size-8 -ml-1 text-muted-foreground hover:text-foreground shrink-0 md:hidden" title="返回工单列表" @click="emit('back')">
             <component :is="ArrowLeft24Regular" class="size-4" />
           </Button>
 
@@ -216,14 +210,7 @@ function formatRelative(time: number) {
           </div>
         </div>
 
-        <Button
-          v-if="editable"
-          variant="ghost"
-          size="icon"
-          class="size-8 text-muted-foreground hover:text-foreground shrink-0"
-          title="工单设置"
-          @click="showPreferences = true"
-        >
+        <Button v-if="editable" variant="ghost" size="icon" class="size-8 text-muted-foreground hover:text-foreground shrink-0" title="工单设置" @click="showPreferences = true">
           <component :is="Settings24Regular" class="size-4" />
         </Button>
       </header>
@@ -337,12 +324,7 @@ function formatRelative(time: number) {
             @positive-click="resolve"
           >
             <template #trigger>
-              <Button
-                variant="outline"
-                size="sm"
-                class="h-7 text-xs flex items-center gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
-                :disabled="resolving"
-              >
+              <Button variant="outline" class="flex items-center gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10" :disabled="resolving">
                 <component :is="CheckmarkCircle24Regular" class="size-3.5" />
                 问题已解决
               </Button>
@@ -351,12 +333,7 @@ function formatRelative(time: number) {
           </Popconfirm>
           <div v-else />
 
-          <Button
-            size="sm"
-            class="h-7 text-xs flex items-center gap-1"
-            :disabled="!canSend || sending"
-            @click="sendReply"
-          >
+          <Button class="flex items-center gap-1" :disabled="!canSend || sending" @click="sendReply">
             <component :is="Send24Regular" class="size-3.5" />
             回复
           </Button>
@@ -392,20 +369,10 @@ function formatRelative(time: number) {
         </div>
 
         <DialogFooter class="pt-2 border-t border-border/60">
-          <Button
-            variant="outline"
-            size="sm"
-            class="text-xs"
-            @click="showPreferences = false"
-          >
+          <Button variant="outline" @click="showPreferences = false">
             取消
           </Button>
-          <Button
-            size="sm"
-            class="text-xs"
-            :disabled="savingPreferences"
-            @click="savePreferences"
-          >
+          <Button :disabled="savingPreferences" @click="savePreferences">
             保存
           </Button>
         </DialogFooter>

@@ -106,10 +106,12 @@ onMounted(async () => {
       class="manage-page"
       :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
     >
-      <component
-        :is="Component"
-        :key="`${String(viewRoute.name)}-${auth.biliAuth.id}`"
-      />
+      <Transition name="page-fade" mode="out-in">
+        <component
+          :is="Component"
+          :key="`${String(viewRoute.name)}-${auth.biliAuth.id}`"
+        />
+      </Transition>
     </div>
   </RouterView>
 
@@ -134,10 +136,7 @@ onMounted(async () => {
         </CardDescription>
       </CardHeader>
       <CardFooter class="flex justify-center p-0 pt-6">
-        <Button
-          size="sm"
-          @click="router.push({ name: 'bili-auth' })"
-        >
+        <Button @click="router.push({ name: 'bili-auth' })">
           {{ auth.isInvalid ? '重新认证' : accountInfo.id ? '绑定 Bilibili' : '开始认证' }}
         </Button>
       </CardFooter>
@@ -154,19 +153,14 @@ onMounted(async () => {
           </DialogDescription>
         </DialogHeader>
         <div class="py-2">
-          <Input
-            :model-value="migrationLink"
-            readonly
-            type="text"
-            class="text-xs font-mono"
-          />
+          <Input :model-value="migrationLink" readonly type="text" class="font-mono" />
         </div>
         <DialogFooter class="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" class="gap-1.5" @click="copyMigrationLink">
+          <Button variant="outline" class="gap-1.5" @click="copyMigrationLink">
             <Copy class="size-3.5" />
             复制链接
           </Button>
-          <Button size="sm" @click="auth.finishLegacyMigration()">
+          <Button @click="auth.finishLegacyMigration()">
             我已保存
           </Button>
         </DialogFooter>
@@ -181,11 +175,7 @@ onMounted(async () => {
           </DialogDescription>
         </DialogHeader>
         <div class="flex items-center justify-center py-6">
-          <Button
-            v-if="migrationError"
-            size="sm"
-            @click="migrateLegacyAuth"
-          >
+          <Button v-if="migrationError" @click="migrateLegacyAuth">
             重试
           </Button>
           <Spin v-else size="medium" />

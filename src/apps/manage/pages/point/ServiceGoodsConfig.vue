@@ -9,6 +9,13 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -171,10 +178,7 @@ function removeOption(field: ServiceField, optIndex: number) {
           <span class="text-xs font-medium" :class="!draft.paused ? 'text-primary' : 'text-muted-foreground'">
             {{ !draft.paused ? '接单中' : '已暂停' }}
           </span>
-          <Switch
-            :checked="!draft.paused"
-            @update:checked="draft.paused = !$event"
-          />
+          <Switch :checked="!draft.paused" @update:checked="draft.paused = !$event" />
         </div>
       </CardContent>
     </Card>
@@ -186,29 +190,13 @@ function removeOption(field: ServiceField, optIndex: number) {
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">预计完成周期</label>
           <div class="relative">
-            <Input
-              v-model="estimatedDaysInput"
-              type="number"
-              min="1"
-              step="1"
-              placeholder="可选，例如 7"
-              class="h-8 text-xs pr-7"
-              @update:model-value="updateNumber('estimatedDays', String($event))"
-            />
+            <Input v-model="estimatedDaysInput" type="number" min="1" step="1" placeholder="可选，例如 7" class="pr-7" @update:model-value="updateNumber('estimatedDays', String($event))" />
             <span class="absolute right-2.5 top-2 text-[11px] text-muted-foreground">天</span>
           </div>
         </div>
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">最大未完成订单数</label>
-          <Input
-            v-model="maxActiveOrdersInput"
-            type="number"
-            min="1"
-            step="1"
-            placeholder="不限制"
-            class="h-8 text-xs"
-            @update:model-value="updateNumber('maxActiveOrders', String($event))"
-          />
+          <Input v-model="maxActiveOrdersInput" type="number" min="1" step="1" placeholder="不限制" @update:model-value="updateNumber('maxActiveOrders', String($event))" />
         </div>
       </div>
     </div>
@@ -243,17 +231,20 @@ function removeOption(field: ServiceField, optIndex: number) {
         </div>
 
         <div class="flex items-center gap-2">
-          <select
-            class="h-7 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            @change="applyPreset(($event.target as HTMLSelectElement).value)"
-          >
-            <option value="">套用轻量模板</option>
-            <option v-for="opt in presetOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
+          <div class="w-36">
+            <Select @update:model-value="applyPreset(String($event))">
+              <SelectTrigger size="xs">
+                <SelectValue placeholder="套用轻量模板" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="opt in presetOptions" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Button size="xs" variant="outline" class="gap-1 h-7" @click="addField">
+          <Button size="xs" variant="outline" class="gap-1" @click="addField">
             <Add24Filled class="size-3.5" />
             添加字段
           </Button>
@@ -275,34 +266,29 @@ function removeOption(field: ServiceField, optIndex: number) {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">
               <label class="text-xs font-medium text-foreground">字段名称 <span class="text-destructive">*</span></label>
-              <Input
-                v-model="field.label"
-                placeholder="例如：需求描述"
-                maxlength="100"
-                class="h-8 text-xs"
-                @blur="normalizeField(field)"
-              />
+              <Input v-model="field.label" placeholder="例如：需求描述" maxlength="100" @blur="normalizeField(field)" />
             </div>
 
             <div class="space-y-1">
               <label class="text-xs font-medium text-foreground">字段类型</label>
               <div class="flex items-center gap-2">
-                <select
-                  v-model="field.type"
-                  class="flex-1 h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                  @change="normalizeField(field)"
-                >
-                  <option v-for="ft in fieldTypes" :key="ft.value" :value="ft.value">
-                    {{ ft.label }}
-                  </option>
-                </select>
+                <div class="flex-1">
+                  <Select
+                    :model-value="field.type"
+                    @update:model-value="(val) => { field.type = val as ServiceFieldType; normalizeField(field) }"
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem v-for="ft in fieldTypes" :key="ft.value" :value="ft.value">
+                        {{ ft.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="size-8 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
-                  @click="removeField(index)"
-                >
+                <Button variant="ghost" size="icon-sm" class="text-destructive/80 hover:text-destructive hover:bg-destructive/10" @click="removeField(index)">
                   <Delete24Filled class="size-3.5" />
                 </Button>
               </div>
@@ -315,13 +301,8 @@ function removeOption(field: ServiceField, optIndex: number) {
             >
               <label class="text-xs font-medium text-foreground">可选项配置</label>
               <div class="flex items-center gap-2">
-                <Input
-                  v-model="optionInputs[field.id]"
-                  placeholder="输入选项名称后按回车或点击添加"
-                  class="h-7 text-xs flex-1"
-                  @keyup.enter="addOption(field)"
-                />
-                <Button size="xs" variant="outline" class="h-7" @click="addOption(field)">
+                <Input size="xs" v-model="optionInputs[field.id]" placeholder="输入选项名称后按回车或点击添加" class="flex-1" @keyup.enter="addOption(field)" />
+                <Button size="xs" variant="outline" @click="addOption(field)">
                   添加选项
                 </Button>
               </div>

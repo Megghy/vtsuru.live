@@ -111,12 +111,7 @@ watch(
     >
       <Empty description="没有匹配的组件">
         <template #extra>
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs"
-            @click="resetFilters"
-          >
+          <Button variant="secondary" @click="resetFilters">
             清除筛选
           </Button>
         </template>

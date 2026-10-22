@@ -63,7 +63,7 @@ onMounted(loadVoices)
       label="语言"
     >
       <Select v-model="settings.providers[providerId].language">
-        <SelectTrigger class="h-8 text-xs w-full">
+        <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

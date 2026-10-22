@@ -108,12 +108,7 @@ watch(
           :to="{ name: 'user-goods', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-7 text-xs text-primary font-medium p-0"
-            @click="navigate"
-          >
+          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
             全部商品
             <component :is="OpenOutline" class="size-3.5 ml-1" />
           </Button>
@@ -136,13 +131,8 @@ watch(
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>积分商品加载失败</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-6 px-2 text-xs"
-          @click="load(true)"
-        >
-          <component :is="RefreshOutline" class="size-3 mr-1" />
+        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
+          <component :is="RefreshOutline" class="size-3" />
           重试
         </Button>
       </AlertDescription>

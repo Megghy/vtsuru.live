@@ -74,7 +74,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
           <div class="flex items-center gap-1.5">
             <div class="flex-1">
               <Select v-model="action.actionConfig.vtsHotkeyId">
-                <SelectTrigger class="h-8 text-xs w-full">
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="选择热键" />
                 </SelectTrigger>
                 <SelectContent>
@@ -89,13 +89,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                 </SelectContent>
               </Select>
             </div>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="h-8 w-8 p-0"
-              title="刷新"
-              @click="vts.refreshHotkeys()"
-            >
+            <Button size="xs" variant="ghost" class="w-8 p-0" title="刷新" @click="vts.refreshHotkeys()">
               <ArrowClockwise16Filled class="size-3.5" />
             </Button>
           </div>
@@ -108,7 +102,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
         >
           <span class="text-xs text-muted-foreground">机位预设</span>
           <Select v-model="action.actionConfig.vtsPresetId">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue placeholder="选择预设" />
             </SelectTrigger>
             <SelectContent>
@@ -131,7 +125,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
             <div class="flex items-center gap-1.5">
               <div class="flex-1">
                 <Select v-model="action.actionConfig.vtsItemFileName">
-                  <SelectTrigger class="h-8 text-xs w-full">
+                  <SelectTrigger class="w-full">
                     <SelectValue placeholder="选择道具文件" />
                   </SelectTrigger>
                   <SelectContent>
@@ -146,14 +140,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                   </SelectContent>
                 </Select>
               </div>
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-8 w-8 p-0"
-                :disabled="!vts.connected"
-                title="刷新"
-                @click="vts.refreshItems({ includeFiles: true })"
-              >
+              <Button size="xs" variant="ghost" class="w-8 p-0" :disabled="!vts.connected" title="刷新" @click="vts.refreshItems({ includeFiles: true })">
                 <ArrowClockwise16Filled class="size-3.5" />
               </Button>
             </div>
@@ -194,11 +181,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
         <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">参数 ID</span>
-            <Input
-              v-model="action.actionConfig.vtsParamId"
-              placeholder="如 Blush, EyeOpen"
-              class="h-8 text-xs"
-            />
+            <Input v-model="action.actionConfig.vtsParamId" placeholder="如 Blush, EyeOpen" />
           </div>
 
           <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
@@ -239,7 +222,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
         >
           <span class="text-xs text-muted-foreground">宏</span>
           <Select v-model="action.actionConfig.vtsMacroId">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue placeholder="选择要运行的宏" />
             </SelectTrigger>
             <SelectContent>
@@ -260,7 +243,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">配饰</span>
             <Select v-model="action.actionConfig.vtsAccessoryId">
-              <SelectTrigger class="h-8 text-xs w-full">
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="选择配饰" />
               </SelectTrigger>
               <SelectContent>

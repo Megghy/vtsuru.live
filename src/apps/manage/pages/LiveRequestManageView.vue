@@ -28,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { copyToClipboard } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -117,31 +118,22 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-3 max-w-md h-8 p-0.5 bg-muted">
-        <TabsTrigger
-          value="requests"
-          class="text-xs h-7 gap-1"
-        >
+      <TabsList class="grid w-full grid-cols-3 max-w-md">
+        <TabsTrigger value="requests">
           <component
             :is="Video24Regular"
             class="h-3.5 w-3.5"
           />
           当前点播与控制
         </TabsTrigger>
-        <TabsTrigger
-          value="preview"
-          class="text-xs h-7 gap-1"
-        >
+        <TabsTrigger value="preview">
           <component
             :is="Desktop24Regular"
             class="h-3.5 w-3.5"
           />
           OBS 舞台预览
         </TabsTrigger>
-        <TabsTrigger
-          value="settings"
-          class="text-xs h-7 gap-1"
-        >
+        <TabsTrigger value="settings">
           <component
             :is="Settings24Regular"
             class="h-3.5 w-3.5"
@@ -193,8 +185,8 @@ onUnmounted(() => {
                   </CardTitle>
                 </div>
 
-                <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                  <Button
+                <ToggleGroup v-model="previewBg" type="single" class="bg-muted p-0.5 rounded-md">
+                  <ToggleGroupItem
                     v-for="bg in [
                       { key: 'checker', label: '网格' },
                       { key: 'dark', label: '纯黑' },
@@ -202,14 +194,12 @@ onUnmounted(() => {
                       { key: 'game', label: '模拟游戏' },
                     ]"
                     :key="bg.key"
-                    size="xs"
-                    :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                    class="h-6 text-xs px-2"
-                    @click="previewBg = bg.key as any"
+                    :value="bg.key"
+                    class="h-6 text-xs px-2 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
                   >
                     {{ bg.label }}
-                  </Button>
-                </div>
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </CardHeader>
 
@@ -235,11 +225,7 @@ onUnmounted(() => {
 
               <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
                 <span class="text-xs text-muted-foreground">推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。</span>
-                <Button
-                  size="xs"
-                  variant="brand"
-                  @click="copyObsLink"
-                >
+                <Button variant="default" @click="copyObsLink">
                   <component
                     :is="Copy24Regular"
                     class="h-3.5 w-3.5 mr-1"
@@ -267,20 +253,7 @@ onUnmounted(() => {
 
               <CardContent class="p-3.5 space-y-3.5">
                 <div class="grid grid-cols-1 gap-1.5">
-                  <Button
-                    v-for="st in [
-                      { key: 'glass', label: '毛玻璃质感 (Modern Glass)' },
-                      { key: 'transparent', label: '纯透明无底壳 (Transparent)' },
-                      { key: 'minimal', label: '极简通透流 (Minimal Text)' },
-                      { key: 'classic', label: '经典卡片 (Classic Dark)' },
-                      { key: 'fresh', label: '清新自然 (Fresh Light)' },
-                    ]"
-                    :key="st.key"
-                    size="sm"
-                    :variant="obsStyleType === st.key ? 'default' : 'outline'"
-                    class="w-full justify-start text-xs font-normal"
-                    @click="obsStyleType = st.key as any"
-                  >
+                  <Button v-for="st in [ { key: 'glass', label: '毛玻璃质感 (Modern Glass)' }, { key: 'transparent', label: '纯透明无底壳 (Transparent)' }, { key: 'minimal', label: '极简通透流 (Minimal Text)' }, { key: 'classic', label: '经典卡片 (Classic Dark)' }, { key: 'fresh', label: '清新自然 (Fresh Light)' }, ]" :key="st.key" :variant="obsStyleType === st.key ? 'default' : 'outline'" class="w-full justify-start font-normal" @click="obsStyleType = st.key as any">
                     {{ st.label }}
                   </Button>
                 </div>
@@ -290,14 +263,7 @@ onUnmounted(() => {
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-xs text-muted-foreground">滚动轮播速度</span>
                   <div class="flex items-center gap-1.5">
-                    <Input
-                      v-model.number="obsScrollSpeed"
-                      type="number"
-                      step="0.2"
-                      min="0.5"
-                      max="3"
-                      class="w-20 h-7 text-xs font-mono"
-                    />
+                    <Input v-model.number="obsScrollSpeed" type="number" step="0.2" min="0.5" max="3" class="w-20 font-mono" />
                     <span class="text-xs text-muted-foreground">x</span>
                   </div>
                 </div>

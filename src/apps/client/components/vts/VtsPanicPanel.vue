@@ -44,7 +44,7 @@ function setResetPhysicsHotkey(id: string) {
             :model-value="vts.panicConfig.calibrateHotkeyId || '__none__'"
             @update:model-value="(val) => setCalibrateHotkey(val === '__none__' ? '' : String(val))"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="绑定: 校准热键" />
             </SelectTrigger>
             <SelectContent>
@@ -59,12 +59,7 @@ function setResetPhysicsHotkey(id: string) {
             </SelectContent>
           </Select>
         </div>
-        <Button
-          size="sm"
-          variant="destructive"
-          class="h-8 text-xs"
-          :disabled="!vts.connected"
-          @click="run(() => vts.panicCalibrate(), '已校准')"
+        <Button variant="destructive" :disabled="!vts.connected" @click="run(() => vts.panicCalibrate(), '已校准')"
         >
           一键校准
         </Button>
@@ -76,7 +71,7 @@ function setResetPhysicsHotkey(id: string) {
             :model-value="vts.panicConfig.resetPhysicsHotkeyId || '__none__'"
             @update:model-value="(val) => setResetPhysicsHotkey(val === '__none__' ? '' : String(val))"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="绑定: 重置物理热键" />
             </SelectTrigger>
             <SelectContent>
@@ -91,12 +86,7 @@ function setResetPhysicsHotkey(id: string) {
             </SelectContent>
           </Select>
         </div>
-        <Button
-          size="sm"
-          variant="destructive"
-          class="h-8 text-xs"
-          :disabled="!vts.connected"
-          @click="run(() => vts.panicResetPhysics(), '已重置')"
+        <Button variant="destructive" :disabled="!vts.connected" @click="run(() => vts.panicResetPhysics(), '已重置')"
         >
           重置物理
         </Button>

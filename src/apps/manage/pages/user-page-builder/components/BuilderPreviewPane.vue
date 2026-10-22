@@ -191,13 +191,7 @@ watch(
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="sm"
-                  :variant="previewMode === 'select' ? 'default' : 'ghost'"
-                  class="size-7 p-0"
-                  aria-label="选择区块"
-                  @click="previewMode = 'select'"
-                >
+                <Button :variant="previewMode === 'select' ? 'default' : 'ghost'" class="size-7 p-0" aria-label="选择区块" @click="previewMode = 'select'">
                   <component :is="NavigateOutline" class="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -208,13 +202,7 @@ watch(
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="sm"
-                  :variant="previewMode === 'interact' ? 'default' : 'ghost'"
-                  class="size-7 p-0"
-                  aria-label="操作页面"
-                  @click="previewMode = 'interact'"
-                >
+                <Button :variant="previewMode === 'interact' ? 'default' : 'ghost'" class="size-7 p-0" aria-label="操作页面" @click="previewMode = 'interact'">
                   <component :is="HandLeftOutline" class="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -230,13 +218,7 @@ watch(
           >
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="sm"
-                  :variant="viewport === option.value ? 'default' : 'ghost'"
-                  class="size-7 p-0"
-                  :aria-label="`${option.label}预览`"
-                  @click="viewport = option.value"
-                >
+                <Button :variant="viewport === option.value ? 'default' : 'ghost'" class="size-7 p-0" :aria-label="`${option.label}预览`" @click="viewport = option.value">
                   <component :is="option.icon" class="size-3.5" />
                 </Button>
               </TooltipTrigger>
@@ -247,12 +229,7 @@ watch(
 
         <Popover>
           <PopoverTrigger as-child>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="size-7 p-0"
-              aria-label="预览条件"
-            >
+            <Button variant="ghost" class="size-7 p-0" aria-label="预览条件">
               <component :is="OptionsOutline" class="size-3.5" />
             </Button>
           </PopoverTrigger>
@@ -260,7 +237,7 @@ watch(
             <div class="flex flex-col gap-1">
               <label class="text-muted-foreground font-medium">直播状态</label>
               <Select v-model="simulatedLiveState">
-                <SelectTrigger class="h-7 text-xs">
+                <SelectTrigger size="xs">
                   <SelectValue placeholder="直播状态" />
                 </SelectTrigger>
                 <SelectContent class="text-xs">
@@ -276,13 +253,7 @@ watch(
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="size-7 p-0"
-                aria-label="在真实页面中预览草稿"
-                @click="editor.openPreview"
-              >
+              <Button variant="ghost" class="size-7 p-0" aria-label="在真实页面中预览草稿" @click="editor.openPreview">
                 <component :is="OpenOutline" class="size-3.5" />
               </Button>
             </TooltipTrigger>
@@ -357,11 +328,7 @@ watch(
                     扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId 与相关属性，保存后可在外部预览中查看实际渲染效果。
                   </div>
                   <div class="flex justify-center mt-3.5">
-                    <Button
-                      size="sm"
-                      class="text-xs"
-                      @click="editor.openPreview"
-                    >
+                    <Button @click="editor.openPreview">
                       <component :is="OpenOutline" class="size-3.5 mr-1" />
                       在对外页面中预览
                     </Button>

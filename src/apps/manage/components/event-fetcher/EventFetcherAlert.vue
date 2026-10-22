@@ -23,12 +23,7 @@ function goBindBili() {
     <AlertCircle class="size-4 shrink-0" />
     <AlertDescription class="text-xs flex items-center gap-1.5 flex-wrap">
       <span>使用此功能前你需要先</span>
-      <Button
-        variant="link"
-        size="sm"
-        class="h-auto p-0 text-xs text-blue-500 hover:underline"
-        @click="goBindBili"
-      >
+      <Button variant="link" class="h-auto p-0 text-blue-500 hover:underline" @click="goBindBili">
         在面板绑定 Bilibili 账号
       </Button>
     </AlertDescription>
@@ -52,15 +47,7 @@ function goBindBili() {
         </a>
         来获取你的直播数据
       </span>
-      <Button
-        as="a"
-        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-        target="_blank"
-        rel="noreferrer"
-        variant="outline"
-        size="xs"
-        class="h-6 px-2 text-[11px]"
-      >
+      <Button as="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" rel="noreferrer" variant="outline" size="xs" class="h-6 px-2 text-[11px]">
         查看部署教程
       </Button>
     </AlertDescription>

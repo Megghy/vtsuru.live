@@ -56,12 +56,7 @@ onMounted(loadPoints)
         subtitle="查看你在不同主播频道中的积分余额与兑换入口。"
       >
         <template #actions>
-          <Button
-            variant="outline"
-            :disabled="isLoading"
-            class="flex items-center gap-1.5"
-            @click="loadPoints"
-          >
+          <Button variant="outline" :disabled="isLoading" class="flex items-center gap-1.5" @click="loadPoints">
             <component :is="ArrowSync24Regular" class="size-4" :class="{ 'animate-spin': isLoading }" />
             刷新
           </Button>
@@ -147,12 +142,7 @@ onMounted(loadPoints)
               <span class="balance-unit text-xs text-muted-foreground ml-1">分</span>
             </div>
             <div class="balance-actions shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                class="text-xs h-8 flex items-center gap-1"
-                @click="router.push({ name: 'user-goods', params: { id: item.owner.name } })"
-              >
+              <Button variant="outline" class="flex items-center gap-1" @click="router.push({ name: 'user-goods', params: { id: item.owner.name } })">
                 前往兑换
                 <component :is="ArrowRight24Regular" class="size-3.5" />
               </Button>

@@ -188,17 +188,13 @@ async function handleBatchDelete() {
   <TooltipProvider>
     <Card class="border border-border/80 mb-2.5">
       <CardContent class="p-3 flex flex-wrap items-center gap-2 text-xs">
-        <Input
-          v-model="searchKeyword"
-          placeholder="搜索曲名/译名"
-          class="min-w-[150px] flex-1 h-8 text-xs"
-        />
+        <Input v-model="searchKeyword" placeholder="搜索曲名/译名" class="min-w-[150px] flex-1" />
 
         <Select
           :model-value="selectedAuthorFilter || 'all'"
           @update:model-value="selectedAuthorFilter = $event === 'all' ? null : String($event)"
         >
-          <SelectTrigger class="min-w-[140px] flex-1 h-8 text-xs">
+          <SelectTrigger class="min-w-[140px] flex-1">
             <SelectValue placeholder="筛选歌手" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
@@ -216,13 +212,13 @@ async function handleBatchDelete() {
 
         <div class="flex items-center gap-3 ml-auto">
           <template v-if="hasAudio">
-            <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground select-none">
               <Switch v-model:checked="showListenButton" />
               <span>试听</span>
             </label>
           </template>
           <template v-if="hasLinks">
-            <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground">
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground select-none">
               <Switch v-model:checked="showLinkButton" />
               <span>链接</span>
             </label>
@@ -233,14 +229,7 @@ async function handleBatchDelete() {
 
     <div class="flex items-center justify-between mb-2 text-xs">
       <span class="text-muted-foreground">共 {{ filteredSongs.length }} / {{ songsInternal.length }} 首</span>
-      <Button
-        v-if="isSelf"
-        variant="outline"
-        size="sm"
-        class="h-7 text-xs border-primary text-primary"
-        :disabled="selectedKeys.length === 0"
-        @click="batchModalRef?.open()"
-      >
+      <Button v-if="isSelf" variant="outline" size="xs" class="border-primary text-primary" :disabled="selectedKeys.length === 0" @click="batchModalRef?.open()">
         批量操作 ({{ selectedKeys.length }})
       </Button>
     </div>
@@ -414,13 +403,7 @@ async function handleBatchDelete() {
                 <template v-if="showListenButton && /\.(?:mp3|flac|ogg|wav|m4a)$/i.test(row.url ?? '')">
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        class="size-7 rounded-full text-primary hover:bg-primary/10"
-                        :disabled="isLrcLoading === row.key"
-                        @click="playingSong = row"
-                      >
+                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-primary hover:bg-primary/10" :disabled="isLrcLoading === row.key" @click="playingSong = row">
                         <component :is="Play24Filled" class="size-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -431,12 +414,7 @@ async function handleBatchDelete() {
                 <template v-if="isSelf">
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-                        @click="moveSong(row.key, -1)"
-                      >
+                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-muted-foreground hover:text-foreground" @click="moveSong(row.key, -1)">
                         <component :is="ArrowUp24Filled" class="size-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -445,12 +423,7 @@ async function handleBatchDelete() {
 
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-                        @click="moveSong(row.key, 1)"
-                      >
+                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-muted-foreground hover:text-foreground" @click="moveSong(row.key, 1)">
                         <component :is="ArrowDown24Filled" class="size-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -459,12 +432,7 @@ async function handleBatchDelete() {
 
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-                        @click="editModalRef?.open(row)"
-                      >
+                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-muted-foreground hover:text-foreground" @click="editModalRef?.open(row)">
                         <component :is="NotepadEdit20Filled" class="size-3.5" />
                       </Button>
                     </TooltipTrigger>
@@ -478,11 +446,7 @@ async function handleBatchDelete() {
                     @positive-click="deleteSong(row)"
                   >
                     <template #trigger>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        class="size-7 rounded-full text-destructive hover:bg-destructive/10"
-                      >
+                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
                         <component :is="Delete24Filled" class="size-3.5" />
                       </Button>
                     </template>
@@ -511,20 +475,10 @@ async function handleBatchDelete() {
         第 {{ currentPage }} / {{ totalPages }} 页
       </span>
       <div class="flex items-center gap-1.5">
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          :disabled="currentPage <= 1"
-          @click="prevPage"
-        >
+        <Button variant="outline" :disabled="currentPage <= 1" @click="prevPage">
           上一页
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          :disabled="currentPage >= totalPages"
+        <Button variant="outline" :disabled="currentPage>= totalPages"
           @click="nextPage"
         >
           下一页

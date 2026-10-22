@@ -70,7 +70,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
   <div v-if="propertyAvailable('align')" class="space-y-1">
     <label class="text-xs text-muted-foreground">对齐方式</label>
     <Select v-model="blockProps.align">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="对齐方式" />
       </SelectTrigger>
       <SelectContent>
@@ -89,7 +89,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">按钮类型</label>
     <Select v-model="blockProps.type">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="按钮类型" />
       </SelectTrigger>
       <SelectContent>
@@ -103,7 +103,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">样式变体</label>
     <Select v-model="blockProps.variant">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="样式变体" />
       </SelectTrigger>
       <SelectContent>
@@ -117,7 +117,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">尺寸</label>
     <Select v-model="blockProps.size">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="尺寸" />
       </SelectTrigger>
       <SelectContent>
@@ -131,7 +131,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">形态</label>
     <Select v-model="blockProps.radius">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="形态" />
       </SelectTrigger>
       <SelectContent>
@@ -203,7 +203,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">特效</label>
     <Select v-model="blockProps.effect">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="选择特效" />
       </SelectTrigger>
       <SelectContent>
@@ -217,7 +217,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
   <div v-if="blockProps.effect && blockProps.effect !== 'none'" class="space-y-1">
     <label class="text-xs text-muted-foreground">特效强度</label>
     <Select v-model="blockProps.effectIntensity">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="特效强度" />
       </SelectTrigger>
       <SelectContent>

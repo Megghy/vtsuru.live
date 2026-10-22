@@ -99,7 +99,7 @@ function save() {
               :model-value="form.type"
               @update:model-value="(val) => setType(val as VtsDeckActionType)"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="选择动作" />
               </SelectTrigger>
               <SelectContent>
@@ -125,7 +125,7 @@ function save() {
               :model-value="form.targetId || '__none__'"
               @update:model-value="(val) => setTarget(val === '__none__' ? '' : String(val))"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue :placeholder="targetOptions.length ? '选择目标' : '暂无可选项（需连接 VTS）'" />
               </SelectTrigger>
               <SelectContent>
@@ -144,12 +144,7 @@ function save() {
 
         <div class="flex items-center gap-3">
           <label class="w-16 font-medium text-[var(--muted-foreground)]">名称</label>
-          <Input
-            v-model="form.label"
-            class="flex-1 h-8 text-xs"
-            placeholder="显示在格子上的文字"
-            maxlength="16"
-          />
+          <Input v-model="form.label" class="flex-1" placeholder="显示在格子上的文字" maxlength="16" />
         </div>
 
         <div class="flex items-center gap-3">
@@ -159,13 +154,7 @@ function save() {
               :model-value="form.color ?? ''"
               @update:model-value="(v: string) => (form.color = v || undefined)"
             />
-            <Button
-              v-if="form.color"
-              size="sm"
-              variant="ghost"
-              class="h-7 text-xs px-2"
-              @click="form.color = undefined"
-            >
+            <Button v-if="form.color" variant="ghost" class="px-2" @click="form.color = undefined">
               清除
             </Button>
           </div>
@@ -174,16 +163,7 @@ function save() {
         <div class="flex items-start gap-3">
           <label class="w-16 font-medium text-[var(--muted-foreground)] pt-1.5">快捷键</label>
           <div class="flex flex-col gap-1 flex-1">
-            <Input
-              :value="recording ? '请按下组合键…（Esc 清除）' : form.shortcut ?? ''"
-              readonly
-              class="h-8 text-xs cursor-pointer"
-              :disabled="!vts.shortcutsSupported"
-              :placeholder="vts.shortcutsSupported ? '点击后按下组合键，如 Ctrl+Shift+1' : '当前客户端版本不支持全局快捷键'"
-              @focus="recording = true"
-              @blur="recording = false"
-              @keydown="onShortcutKeydown"
-            />
+            <Input :value="recording ? '请按下组合键…（Esc 清除）' : form.shortcut ?? ''" readonly class="cursor-pointer" :disabled="!vts.shortcutsSupported" :placeholder="vts.shortcutsSupported ? '点击后按下组合键，如 Ctrl+Shift+1' : '当前客户端版本不支持全局快捷键'" @focus="recording = true" @blur="recording = false" @keydown="onShortcutKeydown" />
             <span class="text-[11px] text-[var(--muted-foreground)]">
               全局生效，客户端在后台时也能触发
             </span>
@@ -192,18 +172,10 @@ function save() {
       </div>
 
       <DialogFooter class="flex justify-end gap-2 pt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="show = false"
-        >
+        <Button variant="outline" @click="show = false">
           取消
         </Button>
-        <Button
-          size="sm"
-          :disabled="!canSave"
-          @click="save"
-        >
+        <Button :disabled="!canSave" @click="save">
           保存
         </Button>
       </DialogFooter>

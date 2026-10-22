@@ -175,38 +175,17 @@ function clearAll() {
       <label class="text-xs text-muted-foreground font-medium">背景类型</label>
       <div class="flex items-center gap-2">
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg flex-1">
-          <Button
-            size="sm"
-            :variant="type === 'none' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="type = 'none'"
-          >
+          <Button :variant="type === 'none' ? 'default' : 'ghost'" @click="type = 'none'">
             无背景
           </Button>
-          <Button
-            size="sm"
-            :variant="type === 'color' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="type = 'color'"
-          >
+          <Button :variant="type === 'color' ? 'default' : 'ghost'" @click="type = 'color'">
             纯色底
           </Button>
-          <Button
-            size="sm"
-            :variant="type === 'image' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="type = 'image'"
-          >
+          <Button :variant="type === 'image' ? 'default' : 'ghost'" @click="type = 'image'">
             图片背景
           </Button>
         </div>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 px-2 text-xs"
-          :disabled="type === 'none'"
-          @click="clearAll"
-        >
+        <Button variant="outline" class="px-2" :disabled="type === 'none'" @click="clearAll">
           清空
         </Button>
       </div>
@@ -251,20 +230,10 @@ function clearAll() {
             <span class="image-sub">已设置生效</span>
           </div>
           <div class="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-7 px-2 text-xs"
-              @click="props.target.uploadImage?.()"
-            >
+            <Button size="xs" variant="outline" class="px-2" @click="props.target.uploadImage?.()">
               更换
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              class="h-7 px-2 text-xs"
-              @click="props.target.clearImage?.()"
-            >
+            <Button size="xs" variant="destructive" class="px-2" @click="props.target.clearImage?.()">
               <component :is="TrashOutline" class="size-3.5" />
             </Button>
           </div>
@@ -274,7 +243,7 @@ function clearAll() {
       <div class="flex flex-col gap-1">
         <label class="text-xs text-muted-foreground">图片填充方式</label>
         <Select v-model="fit">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="填充方式" />
           </SelectTrigger>
           <SelectContent class="text-xs">
@@ -301,28 +270,13 @@ function clearAll() {
       <div class="flex flex-col gap-2 pt-2 border-t border-border">
         <label class="text-xs text-muted-foreground font-medium">遮罩色调与透明度</label>
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
-          <Button
-            size="sm"
-            :variant="scrimMode === 'auto' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="scrimMode = 'auto'"
-          >
+          <Button :variant="scrimMode === 'auto' ? 'default' : 'ghost'" @click="scrimMode = 'auto'">
             自适应
           </Button>
-          <Button
-            size="sm"
-            :variant="scrimMode === 'black' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="scrimMode = 'black'"
-          >
+          <Button :variant="scrimMode === 'black' ? 'default' : 'ghost'" @click="scrimMode = 'black'">
             暗黑遮罩
           </Button>
-          <Button
-            size="sm"
-            :variant="scrimMode === 'white' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="scrimMode = 'white'"
-          >
+          <Button :variant="scrimMode === 'white' ? 'default' : 'ghost'" @click="scrimMode = 'white'">
             纯白遮罩
           </Button>
         </div>
@@ -339,7 +293,8 @@ function clearAll() {
             v-model="scrimStrength"
             :min="0"
             :max="100"
-            class="w-20 h-7 text-xs"
+            size="tiny"
+            class="w-20"
           />
         </div>
       </div>
@@ -347,28 +302,13 @@ function clearAll() {
       <div class="flex flex-col gap-2 pt-2 border-t border-border">
         <label class="text-xs text-muted-foreground font-medium">视觉滤镜与模糊</label>
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
-          <Button
-            size="sm"
-            :variant="blurMode === 'none' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="blurMode = 'none'"
-          >
+          <Button :variant="blurMode === 'none' ? 'default' : 'ghost'" @click="blurMode = 'none'">
             清晰无滤镜
           </Button>
-          <Button
-            size="sm"
-            :variant="blurMode === 'background' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="blurMode = 'background'"
-          >
+          <Button :variant="blurMode === 'background' ? 'default' : 'ghost'" @click="blurMode = 'background'">
             模糊背景
           </Button>
-          <Button
-            size="sm"
-            :variant="blurMode === 'glass' ? 'default' : 'ghost'"
-            class="h-7 text-xs"
-            @click="blurMode = 'glass'"
-          >
+          <Button :variant="blurMode === 'glass' ? 'default' : 'ghost'" @click="blurMode = 'glass'">
             磨砂玻璃
           </Button>
         </div>
@@ -385,7 +325,8 @@ function clearAll() {
             v-model="blur"
             :min="0"
             :max="40"
-            class="w-20 h-7 text-xs"
+            size="tiny"
+            class="w-20"
           />
         </div>
       </div>

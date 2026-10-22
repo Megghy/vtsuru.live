@@ -154,10 +154,7 @@ watch(
         </Badge>
 
         <div class="flex items-center gap-2">
-          <Switch
-            :checked="isDarkValue"
-            @update:checked="isDarkValue = $event"
-          />
+          <Switch :checked="isDarkValue" @update:checked="isDarkValue = $event" />
           <component :is="isDarkValue ? Moon : Sunny" class="size-4 text-muted-foreground" />
         </div>
       </div>

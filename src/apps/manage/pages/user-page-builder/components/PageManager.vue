@@ -95,11 +95,7 @@ function confirmDuplicatePage() {
   <div class="flex flex-col gap-2">
     <div class="page-item">
       <div class="page-item__row flex items-center gap-1">
-        <Button
-          :variant="editor.currentKey.value === 'home' ? 'default' : 'outline'"
-          class="page-item__main w-full justify-start h-8 px-2 text-xs"
-          @click="editor.currentKey.value = 'home'"
-        >
+        <Button :variant="editor.currentKey.value === 'home' ? 'default' : 'outline'" class="page-item__main w-full justify-start px-2" @click="editor.currentKey.value = 'home'">
           <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
             <span class="truncate text-left flex-1">
               主页 /@{{ editor.account.value.name || '...' }}
@@ -117,13 +113,7 @@ function confirmDuplicatePage() {
 
     <div class="h-px bg-border my-1" />
 
-    <Button
-      size="sm"
-      variant="outline"
-      class="w-full text-xs"
-      :disabled="!canCreateMorePages"
-      @click="addPageModal = true"
-    >
+    <Button variant="outline" class="w-full" :disabled="!canCreateMorePages" @click="addPageModal = true">
       新建子页面
     </Button>
 
@@ -142,11 +132,7 @@ function confirmDuplicatePage() {
           :class="{ 'opacity-90': section.hidden }"
         >
           <div class="page-item__row flex items-center gap-1">
-            <Button
-              :variant="editor.currentKey.value === p.slug ? 'default' : 'outline'"
-              class="page-item__main flex-1 min-w-0 justify-start h-8 px-2 text-xs"
-              @click="editor.currentKey.value = p.slug"
-            >
+            <Button :variant="editor.currentKey.value === p.slug ? 'default' : 'outline'" class="page-item__main flex-1 min-w-0 justify-start px-2" @click="editor.currentKey.value = p.slug">
               <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
                 <span class="truncate text-left flex-1">
                   {{ p.title }}
@@ -162,12 +148,7 @@ function confirmDuplicatePage() {
 
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  class="size-7 p-0"
-                  aria-label="更多页面操作"
-                >
+                <Button variant="ghost" class="size-7 p-0" aria-label="更多页面操作">
                   <component :is="EllipsisHorizontalOutline" class="size-3.5" />
                 </Button>
               </DropdownMenuTrigger>
@@ -199,11 +180,7 @@ function confirmDuplicatePage() {
         <div class="flex flex-col gap-3 py-2">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium">页面链接标识 (Slug) <span class="text-destructive">*</span></label>
-            <Input
-              v-model="newSlug"
-              placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）"
-              class="text-xs"
-            />
+            <Input v-model="newSlug" placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）" />
           </div>
 
           <div class="flex flex-col gap-1.5">
@@ -237,8 +214,8 @@ function confirmDuplicatePage() {
           </Alert>
         </div>
         <DialogFooter>
-          <Button size="sm" variant="outline" @click="addPageModal = false">取消</Button>
-          <Button size="sm" :disabled="!newSlug.trim().length" @click="createPage">创建</Button>
+          <Button variant="outline" @click="addPageModal = false">取消</Button>
+          <Button :disabled="!newSlug.trim().length" @click="createPage">创建</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -255,17 +232,13 @@ function confirmDuplicatePage() {
           </Alert>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium">新页面标识 (Slug) <span class="text-destructive">*</span></label>
-            <Input
-              v-model="duplicateToSlug"
-              placeholder="例如 links-copy"
-              class="text-xs"
-            />
+            <Input v-model="duplicateToSlug" placeholder="例如 links-copy" />
           </div>
           <span class="text-[11px] text-muted-foreground">会自动为复制后的页面生成新的区块 ID，避免与原页面冲突。</span>
         </div>
         <DialogFooter>
-          <Button size="sm" variant="outline" @click="duplicatePageModal = false">取消</Button>
-          <Button size="sm" :disabled="!duplicateToSlug.trim().length" @click="confirmDuplicatePage">确定</Button>
+          <Button variant="outline" @click="duplicatePageModal = false">取消</Button>
+          <Button :disabled="!duplicateToSlug.trim().length" @click="confirmDuplicatePage">确定</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -280,8 +253,8 @@ function confirmDuplicatePage() {
           将删除 /{{ deletePageSlug }} 及其中全部配置，此操作可通过撤销恢复。
         </div>
         <DialogFooter>
-          <Button size="sm" variant="outline" @click="deletePageModal = false">取消</Button>
-          <Button size="sm" variant="destructive" @click="confirmDeletePage">删除</Button>
+          <Button variant="outline" @click="deletePageModal = false">取消</Button>
+          <Button variant="destructive" @click="confirmDeletePage">删除</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

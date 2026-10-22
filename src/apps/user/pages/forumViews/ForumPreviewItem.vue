@@ -141,11 +141,7 @@ function formatFullTime(time: number) {
 
         <DropdownMenu v-if="forum.isAdmin">
           <DropdownMenuTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-6 rounded-full text-muted-foreground hover:text-foreground"
-            >
+            <Button variant="ghost" size="icon" class="size-6 rounded-full text-muted-foreground hover:text-foreground">
               <component :is="MoreVertical24Filled" class="size-3.5" />
             </Button>
           </DropdownMenuTrigger>

@@ -370,13 +370,7 @@ onBeforeUnmount(() => {
       <section class="stage-panel grid grid-rows-[auto_minmax(0,1fr)_auto] min-w-0 min-h-0">
         <header class="stage-toolbar flex items-center justify-between min-h-14 px-4 bg-card border-b border-border">
           <div class="stage-title flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-8"
-              aria-label="返回提问箱管理"
-              @click="goBack"
-            >
+            <Button variant="ghost" size="icon" class="size-8" aria-label="返回提问箱管理" @click="goBack">
               <component :is="ArrowLeft24Regular" class="size-4" />
             </Button>
             <div class="flex flex-col">
@@ -389,13 +383,7 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="stage-toolbar-actions flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              class="text-xs flex items-center gap-1.5 h-8"
-              aria-label="复制 OBS 浏览器源链接"
-              @click="copyObsUrl"
-            >
+            <Button variant="outline" class="flex items-center gap-1.5" aria-label="复制 OBS 浏览器源链接" @click="copyObsUrl">
               <component :is="Copy24Regular" class="size-3.5" />
               复制 OBS 链接
             </Button>
@@ -409,13 +397,7 @@ onBeforeUnmount(() => {
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="size-8"
-                  :aria-label="isSettingsCollapsed ? '展开设置面板' : '折叠设置面板'"
-                  @click="isSettingsCollapsed = !isSettingsCollapsed"
-                >
+                <Button variant="ghost" size="icon" class="size-8" :aria-label="isSettingsCollapsed ? '展开设置面板' : '折叠设置面板'" @click="isSettingsCollapsed = !isSettingsCollapsed">
                   <component :is="isSettingsCollapsed ? PanelRight24Regular : PanelRightContract24Regular" class="size-4" />
                 </Button>
               </TooltipTrigger>
@@ -461,48 +443,26 @@ onBeforeUnmount(() => {
           <div class="actions-left flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  class="size-8"
-                  aria-label="上一条提问 (快捷键 ← / K)"
-                  @click="adjacentQuestion(-1)"
-                >
+                <Button variant="outline" size="icon" class="size-8" aria-label="上一条提问 (快捷键 ← / K)" @click="adjacentQuestion(-1)">
                   <component :is="ArrowLeft24Regular" class="size-4" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>上一条提问 (快捷键 ← / K)</TooltipContent>
             </Tooltip>
 
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-8 text-xs text-destructive hover:bg-destructive/10 flex items-center gap-1"
-              :disabled="!questionBox.displayQuestion"
-              @click="questionBox.clearCurrentQuestion"
-            >
+            <Button variant="outline" class="text-destructive hover:bg-destructive/10 flex items-center gap-1" :disabled="!questionBox.displayQuestion" @click="questionBox.clearCurrentQuestion">
               <component :is="Dismiss24Regular" class="size-3.5" />
               清空 (Space)
             </Button>
 
-            <Button
-              size="sm"
-              class="h-8 text-xs flex items-center gap-1"
-              @click="nextUnread"
-            >
+            <Button class="flex items-center gap-1" @click="nextUnread">
               下一条未读 (N)
               <component :is="ArrowRight24Regular" class="size-3.5" />
             </Button>
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  class="size-8"
-                  aria-label="下一条提问 (快捷键 → / J)"
-                  @click="adjacentQuestion(1)"
-                >
+                <Button variant="outline" size="icon" class="size-8" aria-label="下一条提问 (快捷键 → / J)" @click="adjacentQuestion(1)">
                   <component :is="ArrowRight24Regular" class="size-4" />
                 </Button>
               </TooltipTrigger>
@@ -511,25 +471,12 @@ onBeforeUnmount(() => {
 
             <span class="w-px h-4 bg-border mx-1" />
 
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-8 text-xs flex items-center gap-1"
-              :disabled="!questionBox.displayQuestion || questionBox.displayQuestion.isReaded"
-              @click="markCurrentRead"
-            >
+            <Button variant="outline" class="flex items-center gap-1" :disabled="!questionBox.displayQuestion || questionBox.displayQuestion.isReaded" @click="markCurrentRead">
               <component :is="Checkmark24Regular" class="size-3.5" />
               标已读 (R)
             </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-8 text-xs flex items-center gap-1"
-              :class="{ 'text-destructive': questionBox.displayQuestion?.isFavorite }"
-              :disabled="!questionBox.displayQuestion"
-              @click="toggleCurrentFavorite"
-            >
+            <Button variant="outline" class="flex items-center gap-1" :class="{ 'text-destructive': questionBox.displayQuestion?.isFavorite }" :disabled="!questionBox.displayQuestion" @click="toggleCurrentFavorite">
               <component :is="questionBox.displayQuestion?.isFavorite ? Heart : HeartOutline" class="size-3.5" />
               {{ questionBox.displayQuestion?.isFavorite ? '已收藏' : '收藏' }} (F)
             </Button>
@@ -558,12 +505,7 @@ onBeforeUnmount(() => {
               {{ hasUnsavedChanges ? '未保存' : '已同步' }}
             </span>
           </div>
-          <Button
-            size="sm"
-            class="h-7 text-xs flex items-center gap-1"
-            :disabled="!hasUnsavedChanges || saving"
-            @click="saveSettings"
-          >
+          <Button class="flex items-center gap-1" :disabled="!hasUnsavedChanges || saving" @click="saveSettings">
             <component :is="Save24Regular" class="size-3.5" />
             保存 (Ctrl+S)
           </Button>
@@ -592,19 +534,8 @@ onBeforeUnmount(() => {
               <div class="space-y-1.5">
                 <label class="font-medium text-foreground">OBS 浏览器源链接</label>
                 <div class="flex gap-1.5">
-                  <Input
-                    readonly
-                    :model-value="obsUrl"
-                    placeholder="登录后可复制 OBS 链接"
-                    class="h-8 text-xs font-mono"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    class="size-8 shrink-0"
-                    aria-label="复制 OBS 链接"
-                    @click="copyObsUrl"
-                  >
+                  <Input readonly :model-value="obsUrl" placeholder="登录后可复制 OBS 链接" class="font-mono" />
+                  <Button variant="outline" size="icon" class="size-8 shrink-0" aria-label="复制 OBS 链接" @click="copyObsUrl">
                     <component :is="Copy24Regular" class="size-3.5" />
                   </Button>
                 </div>
@@ -630,28 +561,13 @@ onBeforeUnmount(() => {
               </div>
 
               <div class="flex items-center gap-1.5 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-7 text-[11px]"
-                  @click="savedCardSize = { width: 720, height: 480 }"
-                >
+                <Button size="xs" variant="outline" class="text-[11px]" @click="savedCardSize = { width: 720, height: 480 }">
                   3:2 (720×480)
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-7 text-[11px]"
-                  @click="savedCardSize = { width: 800, height: 450 }"
-                >
+                <Button size="xs" variant="outline" class="text-[11px]" @click="savedCardSize = { width: 800, height: 450 }">
                   16:9 (800×450)
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-7 text-[11px]"
-                  @click="savedCardSize = { width: 600, height: 600 }"
-                >
+                <Button size="xs" variant="outline" class="text-[11px]" @click="savedCardSize = { width: 600, height: 600 }">
                   1:1 (600×600)
                 </Button>
               </div>

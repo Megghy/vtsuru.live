@@ -84,17 +84,13 @@ function requestSong(song: SongsInfo) {
     <div class="toolbar flex flex-wrap gap-2.5 items-center mb-3.5">
       <div class="relative search flex-1 min-w-48">
         <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          v-model="searchKeyword"
-          class="h-8 pl-8 text-xs"
-          placeholder="搜索歌曲 / 歌手 / 标签…"
-        />
+        <Input v-model="searchKeyword" class="pl-8" placeholder="搜索歌曲 / 歌手 / 标签…" />
       </div>
       <Select
         :model-value="selectedAuthor || 'all'"
         @update:model-value="selectedAuthor = $event === 'all' ? null : String($event)"
       >
-        <SelectTrigger class="w-36 h-8 text-xs">
+        <SelectTrigger class="w-36">
           <SelectValue placeholder="歌手" />
         </SelectTrigger>
         <SelectContent>
@@ -113,7 +109,7 @@ function requestSong(song: SongsInfo) {
         :model-value="selectedTag || 'all'"
         @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
       >
-        <SelectTrigger class="w-36 h-8 text-xs">
+        <SelectTrigger class="w-36">
           <SelectValue placeholder="标签" />
         </SelectTrigger>
         <SelectContent>
@@ -229,15 +225,7 @@ function requestSong(song: SongsInfo) {
             </button>
           </div>
           <div class="row-actions flex items-center gap-1">
-            <Button
-              v-if="song.url"
-              variant="ghost"
-              size="icon"
-              class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-              :disabled="isLrcLoading === song.key"
-              title="试听"
-              @click="previewSong = song"
-            >
+            <Button v-if="song.url" variant="ghost" size="icon" class="size-7 rounded-full text-muted-foreground hover:text-foreground" :disabled="isLrcLoading === song.key" title="试听" @click="previewSong = song">
               <component :is="Play24Filled" class="size-3.5" />
             </Button>
             <SongRequestButton

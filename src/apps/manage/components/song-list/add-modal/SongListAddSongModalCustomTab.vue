@@ -8,6 +8,13 @@ import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongLi
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
@@ -119,23 +126,13 @@ async function addCustomSong() {
       <!-- 歌曲名称 -->
       <div class="space-y-1">
         <label class="text-xs font-medium text-foreground">歌曲名称 <span class="text-destructive">*</span></label>
-        <Input
-          v-model="addSongModel.name"
-          placeholder="请输入歌曲名称"
-          maxlength="200"
-          class="h-8 text-xs"
-        />
+        <Input v-model="addSongModel.name" placeholder="请输入歌曲名称" maxlength="200" />
       </div>
 
       <!-- 作者 (多选) -->
       <div class="space-y-1">
         <label class="text-xs font-medium text-foreground">作者 (回车添加)</label>
-        <Input
-          v-model="authorInput"
-          placeholder="输入作者后按回车新增"
-          class="h-8 text-xs"
-          @keyup.enter="addTagItem('author', authorInput); authorInput = ''"
-        />
+        <Input v-model="authorInput" placeholder="输入作者后按回车新增" @keyup.enter="addTagItem('author', authorInput); authorInput = ''" />
         <div v-if="addSongModel.author && addSongModel.author.length > 0" class="flex flex-wrap gap-1 pt-1">
           <span
             v-for="(a, idx) in addSongModel.author"
@@ -152,19 +149,19 @@ async function addCustomSong() {
       <div class="space-y-1">
         <label class="text-xs font-medium text-foreground">语言 (可快捷添加或输入)</label>
         <div class="flex items-center gap-2">
-          <Input
-            v-model="languageInput"
-            placeholder="输入语言后回车"
-            class="h-8 text-xs flex-1"
-            @keyup.enter="addTagItem('language', languageInput); languageInput = ''"
-          />
-          <select
-            class="h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            @change="addTagItem('language', ($event.target as HTMLSelectElement).value); ($event.target as HTMLSelectElement).value = ''"
-          >
-            <option value="">快捷选择</option>
-            <option v-for="opt in songSelectOption" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
-          </select>
+          <Input v-model="languageInput" placeholder="输入语言后回车" class="flex-1" @keyup.enter="addTagItem('language', languageInput); languageInput = ''" />
+          <div class="w-32">
+            <Select @update:model-value="addTagItem('language', String($event))">
+              <SelectTrigger>
+                <SelectValue placeholder="快捷选择" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem v-for="opt in songSelectOption" :key="opt.value" :value="opt.value">
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
         <div v-if="addSongModel.language && addSongModel.language.length > 0" class="flex flex-wrap gap-1 pt-1">
           <span
@@ -181,12 +178,7 @@ async function addCustomSong() {
       <!-- 标签 (多选) -->
       <div class="space-y-1">
         <label class="text-xs font-medium text-foreground">标签 (回车添加)</label>
-        <Input
-          v-model="tagInput"
-          placeholder="输入标签后按回车新增"
-          class="h-8 text-xs"
-          @keyup.enter="addTagItem('tags', tagInput); tagInput = ''"
-        />
+        <Input v-model="tagInput" placeholder="输入标签后按回车新增" @keyup.enter="addTagItem('tags', tagInput); tagInput = ''" />
         <div v-if="addSongModel.tags && addSongModel.tags.length > 0" class="flex flex-wrap gap-1 pt-1">
           <span
             v-for="(t, idx) in addSongModel.tags"
@@ -202,22 +194,13 @@ async function addCustomSong() {
       <!-- 试听 / 伴奏链接 -->
       <div class="space-y-1">
         <label class="text-xs font-medium text-foreground">试听 / 伴奏链接</label>
-        <Input
-          v-model="addSongModel.url"
-          placeholder="可选，音频直链可直接播放"
-          class="h-8 text-xs"
-        />
+        <Input v-model="addSongModel.url" placeholder="可选，音频直链可直接播放" />
       </div>
 
       <!-- 备注说明 -->
       <div class="space-y-1">
         <label class="text-xs font-medium text-foreground">备注说明</label>
-        <Input
-          v-model="addSongModel.description"
-          placeholder="可选备注说明"
-          maxlength="250"
-          class="h-8 text-xs"
-        />
+        <Input v-model="addSongModel.description" placeholder="可选备注说明" maxlength="250" />
       </div>
 
       <!-- 独立点歌门槛 -->

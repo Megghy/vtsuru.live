@@ -101,20 +101,10 @@ function getWeekRangeLabel(year: number, week: number) {
           v-if="isSelf"
           class="flex items-center gap-1.5"
         >
-          <Button
-            variant="outline"
-            size="sm"
-            class="h-7 text-xs"
-            @click="emit('onUpdate', item)"
-          >
+          <Button variant="outline" @click="emit('onUpdate', item)">
             编辑
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            class="h-7 text-xs"
-            @click="emit('onCopy', item)"
-          >
+          <Button variant="outline" @click="emit('onCopy', item)">
             复制
           </Button>
           <Popconfirm
@@ -124,11 +114,7 @@ function getWeekRangeLabel(year: number, week: number) {
             @positive-click="emit('onDelete', item)"
           >
             <template #trigger>
-              <Button
-                variant="destructive"
-                size="sm"
-                class="h-7 text-xs"
-              >
+              <Button variant="destructive">
                 删除
               </Button>
             </template>

@@ -280,21 +280,11 @@ async function handleRemoveAccount(id: string) {
           </div>
 
           <div class="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs gap-1.5"
-              :disabled="isBatchChecking"
-              @click="handleBatchCheck"
-            >
+            <Button variant="secondary" class="gap-1.5" :disabled="isBatchChecking" @click="handleBatchCheck">
               <RefreshOutline class="size-3.5" :class="{ 'animate-spin': isBatchChecking }" />
               检查全部有效性
             </Button>
-            <Button
-              size="sm"
-              class="h-8 text-xs gap-1.5"
-              @click="
-                () => {
+            <Button class="gap-1.5" @click=" () => {
                   showAddModal = true
                   if (addTab === 'qrcode') startQRCodeLogin()
                 }
@@ -320,7 +310,7 @@ async function handleRemoveAccount(id: string) {
                 :model-value="accountManager.routing.mainAccountId"
                 @update:model-value="(val) => accountManager.setMainAccount(String(val ?? ''))"
               >
-                <SelectTrigger class="h-8 text-xs w-full">
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="请选择主账号" />
                 </SelectTrigger>
                 <SelectContent>
@@ -346,7 +336,7 @@ async function handleRemoveAccount(id: string) {
                 :model-value="accountManager.routing.danmakuAccountId"
                 @update:model-value="(val) => accountManager.setDanmakuAccount(String(val ?? ''))"
               >
-                <SelectTrigger class="h-8 text-xs w-full">
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="选择发弹幕账号" />
                 </SelectTrigger>
                 <SelectContent>
@@ -367,9 +357,7 @@ async function handleRemoveAccount(id: string) {
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <div class="flex items-center gap-2 cursor-pointer select-none">
-                      <Switch
-                        :checked="accountManager.routing.fallbackToMain"
-                        @update:checked="(val) => accountManager.setFallbackToMain(val)"
+                      <Switch :checked="accountManager.routing.fallbackToMain" @update:checked="(val) => accountManager.setFallbackToMain(val)"
                       />
                       <span class="text-xs text-muted-foreground">小号失效自动回退主账号</span>
                     </div>
@@ -391,11 +379,7 @@ async function handleRemoveAccount(id: string) {
       class="empty-box"
     >
       <Empty description="账号池中暂无 B 站账号">
-        <Button
-          size="sm"
-          class="h-8 text-xs mt-3"
-          @click="
-            () => {
+        <Button class="mt-3" @click=" () => {
               showAddModal = true
               startQRCodeLogin()
             }
@@ -441,25 +425,11 @@ async function handleRemoveAccount(id: string) {
                     v-if="editingAccountId === acc.id"
                     class="inline-flex items-center gap-1"
                   >
-                    <Input
-                      v-model="editingAliasText"
-                      placeholder="输入备注"
-                      class="h-6 w-24 text-xs"
-                      @keyup.enter="saveEditAlias(acc)"
-                    />
-                    <Button
-                      size="xs"
-                      class="h-6 px-2 text-xs"
-                      @click="saveEditAlias(acc)"
-                    >
+                    <Input v-model="editingAliasText" placeholder="输入备注" class="h-6 w-24" @keyup.enter="saveEditAlias(acc)" />
+                    <Button size="xs" class="h-6 px-2" @click="saveEditAlias(acc)">
                       保存
                     </Button>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 px-2 text-xs"
-                      @click="editingAccountId = null"
-                    >
+                    <Button size="xs" variant="ghost" class="h-6 px-2" @click="editingAccountId = null">
                       取消
                     </Button>
                   </div>
@@ -471,13 +441,7 @@ async function handleRemoveAccount(id: string) {
                   >
                     {{ acc.alias }}
                   </Badge>
-                  <Button
-                    v-else
-                    size="xs"
-                    variant="ghost"
-                    class="h-5 px-1.5 text-[11px] text-muted-foreground gap-1"
-                    @click="startEditAlias(acc)"
-                  >
+                  <Button v-else size="xs" variant="ghost" class="h-5 px-1.5 text-[11px] text-muted-foreground gap-1" @click="startEditAlias(acc)">
                     <CreateOutline class="size-3" />
                     设备注
                   </Button>
@@ -531,33 +495,16 @@ async function handleRemoveAccount(id: string) {
               </Badge>
 
               <!-- 操作按钮组 -->
-              <Button
-                size="xs"
-                variant="secondary"
-                class="h-7 text-xs gap-1"
-                @click="handleCheckSingle(acc)"
-              >
+              <Button size="xs" variant="secondary" class="gap-1" @click="handleCheckSingle(acc)">
                 <RefreshOutline class="size-3" />
                 检查
               </Button>
 
-              <Button
-                v-if="acc.id !== accountManager.routing.mainAccountId"
-                size="xs"
-                variant="outline"
-                class="h-7 text-xs border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
-                @click="accountManager.setMainAccount(acc.id)"
-              >
+              <Button v-if="acc.id !== accountManager.routing.mainAccountId" size="xs" variant="outline" class="border-amber-500/40 text-amber-600 hover:bg-amber-500/10" @click="accountManager.setMainAccount(acc.id)">
                 设为主播号
               </Button>
 
-              <Button
-                v-if="acc.id !== accountManager.routing.danmakuAccountId"
-                size="xs"
-                variant="outline"
-                class="h-7 text-xs border-sky-500/40 text-sky-600 hover:bg-sky-500/10"
-                @click="accountManager.setDanmakuAccount(acc.id)"
-              >
+              <Button v-if="acc.id !== accountManager.routing.danmakuAccountId" size="xs" variant="outline" class="border-sky-500/40 text-sky-600 hover:bg-sky-500/10" @click="accountManager.setDanmakuAccount(acc.id)">
                 设为发弹幕号
               </Button>
 
@@ -566,11 +513,7 @@ async function handleRemoveAccount(id: string) {
                 @positive-click="handleRemoveAccount(acc.id)"
               >
                 <template #trigger>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    class="h-7 w-7 p-0 border-destructive/40 text-destructive hover:bg-destructive/10"
-                  >
+                  <Button size="xs" variant="outline" class="w-7 p-0 border-destructive/40 text-destructive hover:bg-destructive/10">
                     <TrashOutline class="size-3.5" />
                   </Button>
                 </template>
@@ -593,7 +536,7 @@ async function handleRemoveAccount(id: string) {
           v-model="addTab"
           class="w-full mt-2"
         >
-          <TabsList class="grid w-full grid-cols-3 h-8">
+          <TabsList class="grid w-full grid-cols-3">
             <TabsTrigger value="qrcode" class="text-xs">
               二维码扫码登录
             </TabsTrigger>
@@ -621,11 +564,7 @@ async function handleRemoveAccount(id: string) {
                 v-else
                 class="h-[170px] flex items-center justify-center"
               >
-                <Button
-                  size="sm"
-                  class="h-9 text-xs gap-1.5"
-                  @click="startQRCodeLogin"
-                >
+                <Button class="h-9 gap-1.5" @click="startQRCodeLogin">
                   <QrCodeOutline class="size-4" />
                   点击生成登录二维码
                 </Button>
@@ -637,20 +576,10 @@ async function handleRemoveAccount(id: string) {
 
               <div class="w-[85%] space-y-1">
                 <span class="text-xs text-muted-foreground">账号备注别名 (可选)</span>
-                <Input
-                  v-model="newAccountAlias"
-                  placeholder="例如: 房管机器人、小号、副播"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="newAccountAlias" placeholder="例如: 房管机器人、小号、副播" />
               </div>
 
-              <Button
-                v-if="isQRCodeLogining"
-                size="xs"
-                variant="secondary"
-                class="h-7 text-xs"
-                @click="finishQRCodeLogin"
-              >
+              <Button v-if="isQRCodeLogining" size="xs" variant="secondary" @click="finishQRCodeLogin">
                 刷新二维码
               </Button>
             </div>
@@ -660,39 +589,21 @@ async function handleRemoveAccount(id: string) {
           <TabsContent value="cloud" class="pt-3 space-y-3">
             <div class="space-y-1">
               <span class="text-xs text-muted-foreground">CookieCloud 服务地址</span>
-              <Input
-                v-model="cloudConfig.host"
-                placeholder="https://cookie.vtsuru.live"
-                class="h-8 text-xs"
-              />
+              <Input v-model="cloudConfig.host" placeholder="https://cookie.vtsuru.live" />
             </div>
 
             <div class="space-y-1">
               <span class="text-xs text-muted-foreground">用户 Key</span>
-              <Input
-                v-model="cloudConfig.key"
-                placeholder="请输入 CookieCloud Key"
-                class="h-8 text-xs"
-              />
+              <Input v-model="cloudConfig.key" placeholder="请输入 CookieCloud Key" />
             </div>
 
             <div class="space-y-1">
               <span class="text-xs text-muted-foreground">端到端加密密码</span>
-              <Input
-                v-model="cloudConfig.password"
-                type="password"
-                placeholder="请输入加密密码"
-                class="h-8 text-xs"
-              />
+              <Input v-model="cloudConfig.password" type="password" placeholder="请输入加密密码" />
             </div>
 
             <div class="flex justify-end pt-2">
-              <Button
-                size="sm"
-                class="h-8 text-xs"
-                :disabled="isSyncingCloud"
-                @click="handleCloudImport"
-              >
+              <Button :disabled="isSyncingCloud" @click="handleCloudImport">
                 从云端拉取并添加
               </Button>
             </div>
@@ -702,11 +613,7 @@ async function handleRemoveAccount(id: string) {
           <TabsContent value="manual" class="pt-3 space-y-3">
             <div class="space-y-1">
               <span class="text-xs text-muted-foreground">账号备注别名 (可选)</span>
-              <Input
-                v-model="manualAliasInput"
-                placeholder="例如: 感谢机器人"
-                class="h-8 text-xs"
-              />
+              <Input v-model="manualAliasInput" placeholder="例如: 感谢机器人" />
             </div>
 
             <div class="space-y-1">
@@ -719,11 +626,7 @@ async function handleRemoveAccount(id: string) {
             </div>
 
             <div class="flex justify-end pt-2">
-              <Button
-                size="sm"
-                class="h-8 text-xs"
-                @click="handleManualAdd"
-              >
+              <Button @click="handleManualAdd">
                 验证并添加账号
               </Button>
             </div>

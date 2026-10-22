@@ -113,29 +113,14 @@ watch(
         </div>
 
         <div class="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-8 text-xs"
-            @click="handleGoConsole"
-          >
+          <Button variant="outline" @click="handleGoConsole">
             返回控制台
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-8 text-xs gap-1.5"
-            :disabled="isLoading"
-            @click="loadMyOrgs"
-          >
+          <Button variant="outline" class="gap-1.5" :disabled="isLoading" @click="loadMyOrgs">
             <RefreshOutline class="size-3.5" :class="{ 'animate-spin': isLoading }" />
             刷新
           </Button>
-          <Button
-            size="sm"
-            class="h-8 text-xs gap-1.5"
-            @click="showCreateModal = true"
-          >
+          <Button class="gap-1.5" @click="showCreateModal = true">
             <AddOutline class="size-3.5" />
             创建组织
           </Button>
@@ -170,11 +155,7 @@ watch(
             class="py-12"
           >
             <div class="mt-3">
-              <Button
-                size="sm"
-                class="h-8 text-xs"
-                @click="showCreateModal = true"
-              >
+              <Button @click="showCreateModal = true">
                 创建组织
               </Button>
             </div>
@@ -208,11 +189,7 @@ watch(
             </div>
 
             <div class="mt-4 pt-2 border-t">
-              <Button
-                size="sm"
-                variant="secondary"
-                class="w-full h-7 text-xs gap-1 text-primary"
-              >
+              <Button variant="secondary" class="w-full gap-1 text-primary">
                 进入管理
                 <ArrowForward class="size-3.5" />
               </Button>
@@ -231,30 +208,14 @@ watch(
           <form @submit.prevent="createOrg" class="space-y-4 pt-2">
             <div class="space-y-1.5">
               <label class="text-xs font-medium text-foreground">组织名称</label>
-              <Input
-                v-model="orgName"
-                placeholder="请输入组织名称"
-                class="h-8 text-xs"
-                autofocus
-              />
+              <Input v-model="orgName" placeholder="请输入组织名称" autofocus />
             </div>
 
             <DialogFooter class="gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                class="h-8 text-xs"
-                @click="showCreateModal = false"
-              >
+              <Button type="button" variant="outline" @click="showCreateModal = false">
                 取消
               </Button>
-              <Button
-                type="submit"
-                size="sm"
-                class="h-8 text-xs"
-                :disabled="creating"
-              >
+              <Button type="submit" :disabled="creating">
                 {{ creating ? '创建中...' : '创建' }}
               </Button>
             </DialogFooter>

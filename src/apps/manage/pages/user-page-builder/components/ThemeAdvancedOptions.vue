@@ -121,17 +121,9 @@ const radiusPresets = [
               :min="0"
               :max="32"
               placeholder="默认 6px"
-              class="h-8 text-xs"
             />
             <div class="flex items-center gap-1 mt-1">
-              <Button
-                v-for="preset in radiusPresets"
-                :key="preset.value"
-                size="sm"
-                :variant="radius === preset.value ? 'default' : 'ghost'"
-                class="h-5 px-1.5 text-[10px]"
-                @click="radius = preset.value"
-              >
+              <Button v-for="preset in radiusPresets" :key="preset.value" :variant="radius === preset.value ? 'default' : 'ghost'" class="h-5 px-1.5 text-[10px]" @click="radius = preset.value">
                 {{ preset.label }}
               </Button>
             </div>
@@ -140,7 +132,7 @@ const radiusPresets = [
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">边框强度</label>
             <Select v-model="borderStrength">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
               <SelectContent class="text-xs">
@@ -155,7 +147,7 @@ const radiusPresets = [
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">边框样式</label>
             <Select v-model="borderStyle">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="继承（实线）" />
               </SelectTrigger>
               <SelectContent class="text-xs">
@@ -168,7 +160,7 @@ const radiusPresets = [
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">阴影层级</label>
             <Select v-model="shadowLevel">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
               <SelectContent class="text-xs">
@@ -187,14 +179,13 @@ const radiusPresets = [
               :min="15"
               :max="100"
               placeholder="跟随主题"
-              class="h-8 text-xs"
             />
           </div>
 
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">布局密度</label>
             <Select v-model="spacing">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
               <SelectContent class="text-xs">
@@ -208,7 +199,7 @@ const radiusPresets = [
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">组件尺寸</label>
             <Select v-model="controlSize">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="继承（标准）" />
               </SelectTrigger>
               <SelectContent class="text-xs">
@@ -221,22 +212,12 @@ const radiusPresets = [
 
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">内容最大宽度</label>
-            <Input
-              v-model="pageMaxWidth"
-              placeholder="默认 820px；例如 100% / 1200px"
-              class="h-8 text-xs"
-            />
+            <Input v-model="pageMaxWidth" placeholder="默认 820px；例如 100% / 1200px" />
           </div>
         </PropsGrid>
 
         <div class="flex justify-end pt-1">
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-7 text-xs"
-            :disabled="!hasAdvancedSettings"
-            @click="clearAdvancedSettings"
-          >
+          <Button variant="outline" :disabled="!hasAdvancedSettings" @click="clearAdvancedSettings">
             恢复高级选项默认值
           </Button>
         </div>

@@ -30,7 +30,7 @@ const fields = [
       :disabled="disabled"
       @update:model-value="emit('change', { inputMode: $event as any })"
     >
-      <SelectTrigger class="h-8 text-xs w-full">
+      <SelectTrigger class="w-full">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -77,11 +77,7 @@ const fields = [
 
     <div class="flex items-center justify-between p-1.5 border rounded-md">
       <span class="text-xs font-medium">噪声抑制</span>
-      <Switch
-        :checked="state.noiseSuppression"
-        :disabled="disabled"
-        @update:checked="emit('change', { noiseSuppression: $event })"
-      />
+      <Switch :checked="state.noiseSuppression" :disabled="disabled" @update:checked="emit('change', { noiseSuppression: $event })" />
     </div>
   </div>
 </template>

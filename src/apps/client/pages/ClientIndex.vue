@@ -138,20 +138,10 @@ function toggleGiftWindow() {
           </div>
 
           <div class="hero-actions">
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs"
-              @click="router.push({ name: 'client-pngtuber' })"
-            >
+            <Button variant="secondary" @click="router.push({ name: 'client-pngtuber' })">
               PNGtuber
             </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs gap-1.5 text-primary hover:text-primary"
-              @click="openUrl(liveRoomUrl)"
-            >
+            <Button variant="secondary" class="gap-1.5 text-primary hover:text-primary" @click="openUrl(liveRoomUrl)">
               <Open24Regular class="size-3.5" />
               前往直播间
             </Button>
@@ -161,11 +151,7 @@ function toggleGiftWindow() {
               @positive-click="logoutAccount"
             >
               <template #trigger>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="h-8 text-xs text-destructive hover:bg-destructive/10 hover:text-destructive"
-                >
+                <Button variant="ghost" class="text-destructive hover:bg-destructive/10 hover:text-destructive">
                   退出登录
                 </Button>
               </template>
@@ -317,25 +303,13 @@ function toggleGiftWindow() {
             </div>
 
             <div class="float-window-actions">
-              <Button
-                size="xs"
-                variant="secondary"
-                class="h-6 text-[11px]"
-                :class="danmakuWindow.isDanmakuWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'"
-                @click="toggleDanmakuWindow"
-              >
+              <Button size="xs" variant="secondary" class="h-6 text-[11px]" :class="danmakuWindow.isDanmakuWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'" @click="toggleDanmakuWindow">
                 {{ danmakuWindow.isDanmakuWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 text-[11px] px-2 gap-1"
-                      :disabled="!danmakuWindow.isDanmakuWindowOpen"
-                      @click="danmakuWindow.setDanmakuWindowPosition(100, 100)"
-                    >
+                    <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 gap-1" :disabled="!danmakuWindow.isDanmakuWindowOpen" @click="danmakuWindow.setDanmakuWindowPosition(100, 100)">
                       <ArrowReset24Regular class="size-3" />
                       重置
                     </Button>
@@ -345,12 +319,7 @@ function toggleGiftWindow() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-6 text-[11px] px-2 text-muted-foreground"
-                @click="router.push({ name: 'client-danmaku-window-manage' })"
-              >
+              <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 text-muted-foreground" @click="router.push({ name: 'client-danmaku-window-manage' })">
                 设置
               </Button>
             </div>
@@ -377,25 +346,13 @@ function toggleGiftWindow() {
             </div>
 
             <div class="float-window-actions">
-              <Button
-                size="xs"
-                variant="secondary"
-                class="h-6 text-[11px]"
-                :class="giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'"
-                @click="toggleGiftWindow"
-              >
+              <Button size="xs" variant="secondary" class="h-6 text-[11px]" :class="giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'" @click="toggleGiftWindow">
                 {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 text-[11px] px-2 gap-1"
-                      :disabled="!giftWindow.isGiftWindowOpen"
-                      @click="giftWindow.setPosition(100, 100)"
-                    >
+                    <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 gap-1" :disabled="!giftWindow.isGiftWindowOpen" @click="giftWindow.setPosition(100, 100)">
                       <ArrowReset24Regular class="size-3" />
                       重置
                     </Button>
@@ -405,12 +362,7 @@ function toggleGiftWindow() {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-6 text-[11px] px-2 text-muted-foreground"
-                @click="router.push({ name: 'client-gift-window-manage' })"
-              >
+              <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 text-muted-foreground" @click="router.push({ name: 'client-gift-window-manage' })">
                 设置
               </Button>
             </div>
@@ -479,11 +431,7 @@ function toggleGiftWindow() {
         </div>
 
         <div class="client-index-cover__footer">
-          <Button
-            size="sm"
-            class="h-8 text-xs gap-1.5"
-            @click="router.push({ name: 'client-live-manage' })"
-          >
+          <Button class="gap-1.5" @click="router.push({ name: 'client-live-manage' })">
             <Live24Filled class="size-3.5" />
             修改直播标题与分区
           </Button>

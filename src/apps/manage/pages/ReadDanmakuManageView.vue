@@ -159,12 +159,7 @@ onDeactivated(unbindKeydown)
     >
       <template #action>
         <div class="flex items-center gap-1.5 flex-wrap">
-          <Button
-            size="xs"
-            :variant="speechState.canSpeech ? 'destructive' : 'brand'"
-            :loading="speechState.isApiAudioLoading"
-            @click="speechState.canSpeech ? speechService.stopSpeech() : speechService.startSpeech()"
-          >
+          <Button :variant="speechState.canSpeech ? 'destructive' : 'default'" :loading="speechState.isApiAudioLoading" @click="speechState.canSpeech ? speechService.stopSpeech() : speechService.startSpeech()">
             <component
               :is="speechState.canSpeech ? MicOff24Filled : Mic24Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -172,13 +167,7 @@ onDeactivated(unbindKeydown)
             {{ speechState.canSpeech ? '停止朗读' : '开启朗读' }}
           </Button>
 
-          <Button
-            v-if="speechState.canSpeech"
-            size="xs"
-            :variant="isPaused ? 'outline' : 'secondary'"
-            :class="{ 'border-amber-500/40 text-amber-500': isPaused }"
-            @click="speechService.togglePause()"
-          >
+          <Button v-if="speechState.canSpeech" :variant="isPaused ? 'outline' : 'secondary'" :class="{ 'border-amber-500/40 text-amber-500': isPaused }" @click="speechService.togglePause()">
             <component
               :is="isPaused ? Play20Filled : Pause20Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -186,12 +175,7 @@ onDeactivated(unbindKeydown)
             {{ isPaused ? '恢复播报' : '暂停' }}
           </Button>
 
-          <Button
-            v-if="speechState.isSpeaking"
-            size="xs"
-            variant="outline"
-            @click="speechService.skipCurrent()"
-          >
+          <Button v-if="speechState.isSpeaking" variant="outline" @click="speechService.skipCurrent()">
             <component
               :is="Next20Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -201,11 +185,7 @@ onDeactivated(unbindKeydown)
 
           <AlertDialog>
             <AlertDialogTrigger as-child>
-              <Button
-                size="xs"
-                variant="outline"
-                :disabled="!accountInfo?.id"
-              >
+              <Button variant="outline" :disabled="!accountInfo?.id">
                 <component
                   :is="CloudArrowDown20Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -252,41 +232,29 @@ onDeactivated(unbindKeydown)
             v-model="activeConfigTab"
             class="w-full"
           >
-            <TabsList class="grid grid-cols-4 w-full h-8 p-0.5 bg-muted mb-4">
-              <TabsTrigger
-                value="voice"
-                class="text-xs h-7 gap-1"
-              >
+            <TabsList class="grid grid-cols-4 w-full mb-4">
+              <TabsTrigger value="voice">
                 <component
                   :is="Speaker224Regular"
                   class="h-3.5 w-3.5"
                 />
                 语音引擎
               </TabsTrigger>
-              <TabsTrigger
-                value="template"
-                class="text-xs h-7 gap-1"
-              >
+              <TabsTrigger value="template">
                 <component
                   :is="DocumentText24Regular"
                   class="h-3.5 w-3.5"
                 />
                 消息模板
               </TabsTrigger>
-              <TabsTrigger
-                value="filter"
-                class="text-xs h-7 gap-1"
-              >
+              <TabsTrigger value="filter">
                 <component
                   :is="ShieldCheckmark24Regular"
                   class="h-3.5 w-3.5"
                 />
                 过滤防刷
               </TabsTrigger>
-              <TabsTrigger
-                value="advanced"
-                class="text-xs h-7 gap-1"
-              >
+              <TabsTrigger value="advanced">
                 <component
                   :is="SpeakerSettings24Regular"
                   class="h-3.5 w-3.5"
@@ -413,7 +381,7 @@ onDeactivated(unbindKeydown)
               v-model="activeQueueTab"
               class="w-full"
             >
-              <TabsList class="grid grid-cols-2 w-full h-8 p-0.5 bg-muted mb-3">
+              <TabsList class="grid grid-cols-2 w-full p-0.5 bg-muted mb-3">
                 <TabsTrigger
                   value="queue"
                   class="text-xs h-7 gap-1"

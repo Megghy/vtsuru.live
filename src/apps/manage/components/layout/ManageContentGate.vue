@@ -101,18 +101,19 @@ async function resendEmail() {
         :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
       >
         <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
-        <KeepAlive>
+        <Transition name="page-fade" mode="out-in">
+          <KeepAlive v-if="viewRoute.meta.keepAlive">
+            <component
+              :is="Component"
+              :key="String(viewRoute.name ?? viewRoute.path)"
+            />
+          </KeepAlive>
           <component
             :is="Component"
-            v-if="viewRoute.meta.keepAlive"
-            :key="String(viewRoute.name ?? viewRoute.path)"
+            v-else
+            :key="viewRoute.fullPath.split('#')[0]"
           />
-        </KeepAlive>
-        <component
-          :is="Component"
-          v-if="!viewRoute.meta.keepAlive"
-          :key="viewRoute.fullPath.split('#')[0]"
-        />
+        </Transition>
       </div>
     </RouterView>
 
@@ -150,12 +151,7 @@ async function resendEmail() {
             </Alert>
 
             <div class="flex items-center gap-2 pt-2">
-              <Button
-                size="sm"
-                :disabled="!canResendEmail"
-                class="gap-1.5"
-                @click="resendEmail"
-              >
+              <Button :disabled="!canResendEmail" class="gap-1.5" @click="resendEmail">
                 <Mail24Filled class="size-4" />
                 重新发送验证邮件
               </Button>
@@ -168,7 +164,7 @@ async function resendEmail() {
 
             <Popconfirm positive-text="退出登录" negative-text="取消" @positive-click="logoutAccount">
               <template #trigger>
-                <Button variant="outline" size="sm" class="gap-1.5">
+                <Button variant="outline" class="gap-1.5">
                   <PersonFeedback24Filled class="size-4" />
                   切换账号
                 </Button>
@@ -188,5 +184,20 @@ async function resendEmail() {
   flex: 1;
   min-height: 100%;
   flex-direction: column;
+}
+
+:deep(.page-fade-enter-active),
+:deep(.page-fade-leave-active) {
+  transition: opacity 140ms cubic-bezier(0.4, 0, 0.2, 1), transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.page-fade-enter-from) {
+  opacity: 0;
+  transform: translateY(3px);
+}
+
+:deep(.page-fade-leave-to) {
+  opacity: 0;
+  transform: translateY(-3px);
 }
 </style>

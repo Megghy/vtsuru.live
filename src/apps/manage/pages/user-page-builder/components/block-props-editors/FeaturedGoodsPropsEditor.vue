@@ -68,7 +68,7 @@ watch(
           :model-value="String(blockProps.count ?? 4)"
           @update:model-value="(val) => (blockProps.count = Number(val))"
         >
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="展示数量" />
           </SelectTrigger>
           <SelectContent>
@@ -86,7 +86,7 @@ watch(
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">选择方式</label>
         <Select v-model="blockProps.selection">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="选择方式" />
           </SelectTrigger>
           <SelectContent>

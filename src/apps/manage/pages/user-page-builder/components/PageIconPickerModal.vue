@@ -112,7 +112,7 @@ watch(show, (visible) => {
       <div class="page-icon-picker space-y-3">
         <div class="relative">
           <SearchOutline class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input v-model="search" class="pl-8 text-xs h-8" placeholder="搜索图标名称" />
+          <Input v-model="search" class="pl-8" placeholder="搜索图标名称" />
         </div>
 
         <div class="style-filter-scroll">
@@ -166,8 +166,8 @@ watch(show, (visible) => {
       </div>
 
       <DialogFooter class="flex flex-row justify-between items-center sm:justify-between pt-2">
-        <Button variant="outline" size="sm" @click="selectIcon(undefined)"> 使用默认图标 </Button>
-        <Button variant="outline" size="sm" @click="show = false"> 取消 </Button>
+        <Button variant="outline" @click="selectIcon(undefined)"> 使用默认图标 </Button>
+        <Button variant="outline" @click="show = false"> 取消 </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

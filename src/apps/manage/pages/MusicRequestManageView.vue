@@ -68,6 +68,7 @@ import {
 } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { copyToClipboard } from '@/shared/utils'
 import { formatListForCopy } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -400,22 +401,14 @@ onUnmounted(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="outline"
-            @click="copyWaitingList"
-          >
+          <Button variant="outline" @click="copyWaitingList">
             <component
               :is="Copy24Regular"
               class="h-3.5 w-3.5 mr-1"
             />
             复制点歌单
           </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            @click="copySongList"
-          >
+          <Button variant="outline" @click="copySongList">
             <component
               :is="MusicNote224Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -430,10 +423,10 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-6 max-w-2xl h-8 p-0.5 bg-muted">
+      <TabsList class="grid w-full grid-cols-6 max-w-2xl">
         <TabsTrigger
           value="queue"
-          class="text-xs h-7 gap-1"
+          class="gap-1.5"
         >
           <component
             :is="MusicNote224Filled"
@@ -443,7 +436,7 @@ onUnmounted(() => {
         </TabsTrigger>
         <TabsTrigger
           value="songlist"
-          class="text-xs h-7 gap-1"
+          class="gap-1.5"
         >
           <component
             :is="MusicNote224Regular"
@@ -453,7 +446,7 @@ onUnmounted(() => {
         </TabsTrigger>
         <TabsTrigger
           value="history"
-          class="text-xs h-7 gap-1"
+          class="gap-1.5"
         >
           <component
             :is="History24Regular"
@@ -463,7 +456,7 @@ onUnmounted(() => {
         </TabsTrigger>
         <TabsTrigger
           value="blacklist"
-          class="text-xs h-7 gap-1"
+          class="gap-1.5"
         >
           <component
             :is="ShieldDismiss24Regular"
@@ -473,7 +466,7 @@ onUnmounted(() => {
         </TabsTrigger>
         <TabsTrigger
           value="preview"
-          class="text-xs h-7 gap-1"
+          class="gap-1.5"
         >
           <component
             :is="Desktop24Regular"
@@ -483,7 +476,7 @@ onUnmounted(() => {
         </TabsTrigger>
         <TabsTrigger
           value="settings"
-          class="text-xs h-7 gap-1"
+          class="gap-1.5"
         >
           <component
             :is="Settings24Regular"
@@ -503,14 +496,14 @@ onUnmounted(() => {
             <div class="flex items-center gap-2">
               <Badge
                 variant="brand"
-                class="text-xs"
+                size="sm"
               >
                 待播歌曲: {{ musicRequestStore.waitingMusics.length }} 首
               </Badge>
               <Badge
                 v-if="activeCooldowns.length > 0"
                 variant="warning"
-                class="text-xs"
+                size="sm"
               >
                 冷却中观众: {{ activeCooldowns.length }} 人
               </Badge>
@@ -522,21 +515,12 @@ onUnmounted(() => {
                   :is="Search24Regular"
                   class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
                 />
-                <Input
-                  v-model="waitingFilter"
-                  placeholder="搜索歌名或点歌人"
-                  class="pl-8 text-xs h-8"
-                />
+                <Input v-model="waitingFilter" placeholder="搜索歌名或点歌人" class="pl-8" />
               </div>
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    class="text-destructive hover:bg-destructive/10"
-                    :disabled="musicRequestStore.waitingMusics.length === 0"
-                  >
+                  <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="musicRequestStore.waitingMusics.length === 0">
                     清空待播
                   </Button>
                 </AlertDialogTrigger>
@@ -599,7 +583,7 @@ onUnmounted(() => {
             <div class="flex items-center gap-2">
               <Badge
                 variant="brand"
-                class="text-xs"
+                size="sm"
               >
                 闲置曲库: {{ originMusics.length }} 首
               </Badge>
@@ -612,18 +596,10 @@ onUnmounted(() => {
                   :is="Search24Regular"
                   class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
                 />
-                <Input
-                  v-model="songListFilter"
-                  placeholder="搜索曲库歌名或歌手"
-                  class="pl-8 text-xs h-8"
-                />
+                <Input v-model="songListFilter" placeholder="搜索曲库歌名或歌手" class="pl-8" />
               </div>
 
-              <Button
-                size="xs"
-                variant="outline"
-                @click="showNeteaseModal = true"
-              >
+              <Button size="xs" variant="outline" @click="showNeteaseModal = true">
                 <component
                   :is="ArrowDownload24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -631,12 +607,7 @@ onUnmounted(() => {
                 网易云导入
               </Button>
 
-              <Button
-                size="xs"
-                variant="outline"
-                :loading="isSyncingMySongList"
-                @click="syncFromMySongList"
-              >
+              <Button size="xs" variant="outline" :loading="isSyncingMySongList" @click="syncFromMySongList">
                 <component
                   :is="ArrowUpload24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -646,12 +617,7 @@ onUnmounted(() => {
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    class="text-destructive hover:bg-destructive/10"
-                    :disabled="originMusics.length === 0"
-                  >
+                  <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="originMusics.length === 0">
                     清空曲库
                   </Button>
                 </AlertDialogTrigger>
@@ -696,13 +662,7 @@ onUnmounted(() => {
                   </div>
 
                   <div class="flex items-center gap-1.5 shrink-0">
-                    <Button
-                      size="icon-xs"
-                      variant="ghost"
-                      class="text-primary hover:bg-primary/10"
-                      title="试听/播放"
-                      @click="musicRequestStore.playMusic(song)"
-                    >
+                    <Button size="icon-xs" variant="ghost" class="text-primary hover:bg-primary/10" title="试听/播放" @click="musicRequestStore.playMusic(song)">
                       <component
                         :is="Play24Regular"
                         class="h-3.5 w-3.5"
@@ -711,12 +671,7 @@ onUnmounted(() => {
 
                     <AlertDialog>
                       <AlertDialogTrigger as-child>
-                        <Button
-                          size="icon-xs"
-                          variant="ghost"
-                          class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          title="删除"
-                        >
+                        <Button size="icon-xs" variant="ghost" class="text-muted-foreground hover:text-destructive hover:bg-destructive/10" title="删除">
                           <component
                             :is="Delete24Regular"
                             class="h-3.5 w-3.5"
@@ -765,12 +720,7 @@ onUnmounted(() => {
             <span class="text-xs text-muted-foreground">本地记录最近 {{ musicRequestStore.history.length }} 条点歌流水 (最多保留 200 条)</span>
             <AlertDialog>
               <AlertDialogTrigger as-child>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="text-destructive hover:bg-destructive/10"
-                  :disabled="musicRequestStore.history.length === 0"
-                >
+                <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="musicRequestStore.history.length === 0">
                   清空历史
                 </Button>
               </AlertDialogTrigger>
@@ -842,17 +792,8 @@ onUnmounted(() => {
           <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
             <span class="text-xs text-muted-foreground">观众点歌时若匹配到黑名单关键词或歌名，系统将自动拦截并提示</span>
             <div class="flex items-center gap-2 w-72">
-              <Input
-                v-model="newBlacklistKeyword"
-                placeholder="输入违规词或禁点歌名"
-                class="text-xs h-8"
-                @keyup.enter="addBlacklist"
-              />
-              <Button
-                size="xs"
-                variant="brand"
-                @click="addBlacklist"
-              >
+              <Input v-model="newBlacklistKeyword" placeholder="输入违规词或禁点歌名" @keyup.enter="addBlacklist" />
+              <Button size="xs" variant="brand" @click="addBlacklist">
                 <component
                   :is="Add24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -902,53 +843,27 @@ onUnmounted(() => {
       >
         <Card>
           <CardContent class="p-3 flex items-center justify-between gap-3 flex-wrap">
-            <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-muted-foreground">OBS 样式:</span>
-              <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                <Button
-                  v-for="st in [
-                    { key: 'glass', label: '毛玻璃' },
-                    { key: 'transparent', label: '纯透明' },
-                    { key: 'classic', label: '经典质感' },
-                    { key: 'fresh', label: '清新粉蓝' },
-                    { key: 'minimal', label: '极简透字' },
-                  ]"
-                  :key="st.key"
-                  size="xs"
-                  :variant="obsStyleType === st.key ? 'default' : 'ghost'"
-                  class="h-6 text-xs px-2"
-                  @click="obsStyleType = st.key as any"
-                >
-                  {{ st.label }}
-                </Button>
-              </div>
+              <ToggleGroup v-model="obsStyleType" type="single" size="xs">
+                <ToggleGroupItem value="glass">毛玻璃</ToggleGroupItem>
+                <ToggleGroupItem value="transparent">纯透明</ToggleGroupItem>
+                <ToggleGroupItem value="classic">经典质感</ToggleGroupItem>
+                <ToggleGroupItem value="fresh">清新粉蓝</ToggleGroupItem>
+                <ToggleGroupItem value="minimal">极简透字</ToggleGroupItem>
+              </ToggleGroup>
             </div>
 
-            <div class="flex items-center gap-3 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-muted-foreground">背景底色:</span>
-              <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                <Button
-                  v-for="bg in [
-                    { key: 'checker', label: '棋盘格' },
-                    { key: 'dark', label: '纯暗黑' },
-                    { key: 'light', label: '浅色' },
-                    { key: 'game', label: '模拟游戏' },
-                  ]"
-                  :key="bg.key"
-                  size="xs"
-                  :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                  class="h-6 text-xs px-2"
-                  @click="previewBg = bg.key as any"
-                >
-                  {{ bg.label }}
-                </Button>
-              </div>
+              <ToggleGroup v-model="previewBg" type="single" size="xs">
+                <ToggleGroupItem value="checker">棋盘格</ToggleGroupItem>
+                <ToggleGroupItem value="dark">纯暗黑</ToggleGroupItem>
+                <ToggleGroupItem value="light">浅色</ToggleGroupItem>
+                <ToggleGroupItem value="game">模拟游戏</ToggleGroupItem>
+              </ToggleGroup>
 
-              <Button
-                size="xs"
-                variant="brand"
-                @click="copyObsLink"
-              >
+              <Button size="xs" variant="brand" @click="copyObsLink">
                 <component
                   :is="Copy24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -993,35 +908,17 @@ onUnmounted(() => {
               <div class="flex items-center justify-between gap-3">
                 <span class="text-xs font-medium text-foreground">点歌弹幕前缀</span>
                 <div class="flex items-center gap-2">
-                  <Input
-                    v-model="settings.orderPrefix"
-                    placeholder="如: 点歌"
-                    class="w-32 h-8 text-xs font-mono"
-                  />
+                  <Input v-model="settings.orderPrefix" placeholder="如: 点歌" class="w-32 font-mono" />
                   <span class="text-xs text-muted-foreground">如: 点歌 晴天</span>
                 </div>
               </div>
 
               <div class="flex items-center justify-between gap-3">
                 <span class="text-xs font-medium text-foreground">音乐搜索平台</span>
-                <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                  <Button
-                    size="xs"
-                    :variant="settings.platform === 'netease' ? 'default' : 'ghost'"
-                    class="h-6 text-xs px-2"
-                    @click="settings.platform = 'netease'"
-                  >
-                    网易云音乐
-                  </Button>
-                  <Button
-                    size="xs"
-                    :variant="settings.platform === 'kugou' ? 'default' : 'ghost'"
-                    class="h-6 text-xs px-2"
-                    @click="settings.platform = 'kugou'"
-                  >
-                    酷狗音乐
-                  </Button>
-                </div>
+                <ToggleGroup v-model="settings.platform" type="single" size="xs">
+                  <ToggleGroupItem value="netease">网易云音乐</ToggleGroupItem>
+                  <ToggleGroupItem value="kugou">酷狗音乐</ToggleGroupItem>
+                </ToggleGroup>
               </div>
 
               <Separator />
@@ -1050,13 +947,7 @@ onUnmounted(() => {
               <div class="flex items-center justify-between gap-3">
                 <span class="text-xs font-medium text-foreground">个人点歌冷却</span>
                 <div class="flex items-center gap-2">
-                  <Input
-                    v-model.number="settings.orderCooldown"
-                    type="number"
-                    min="0"
-                    max="3600"
-                    class="w-24 h-8 text-xs font-mono"
-                  />
+                  <Input v-model.number="settings.orderCooldown" type="number" min="0" max="3600" class="w-24 font-mono" />
                   <span class="text-xs text-muted-foreground">秒 (设为 0 不限频)</span>
                 </div>
               </div>
@@ -1065,13 +956,7 @@ onUnmounted(() => {
 
               <div class="flex items-center justify-between">
                 <span class="text-xs text-muted-foreground">当前冷却中观众 ({{ activeCooldowns.length }} 人)</span>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="text-amber-500 hover:bg-amber-500/10 text-xs"
-                  :disabled="activeCooldowns.length === 0"
-                  @click="cleanAllCooldowns"
-                >
+                <Button size="xs" variant="ghost" class="text-amber-500 hover:bg-amber-500/10" :disabled="activeCooldowns.length === 0" @click="cleanAllCooldowns">
                   解除全部冷却
                 </Button>
               </div>
@@ -1122,17 +1007,8 @@ onUnmounted(() => {
 
         <div class="space-y-3 py-2">
           <div class="flex gap-2">
-            <Input
-              v-model="neteaseIdInput"
-              placeholder="粘贴网易云歌单链接或歌单 ID"
-              class="flex-1 text-xs"
-              @keyup.enter="loadNeteasePlaylist"
-            />
-            <Button
-              variant="brand"
-              :loading="isNeteaseLoading"
-              @click="loadNeteasePlaylist"
-            >
+            <Input v-model="neteaseIdInput" placeholder="粘贴网易云歌单链接或歌单 ID" class="flex-1" @keyup.enter="loadNeteasePlaylist" />
+            <Button variant="brand" :loading="isNeteaseLoading" @click="loadNeteasePlaylist">
               解析歌单
             </Button>
           </div>
@@ -1144,18 +1020,10 @@ onUnmounted(() => {
             <div class="flex items-center justify-between">
               <span class="text-xs text-muted-foreground">共解析出 {{ neteaseSongs.length }} 首，已勾选 {{ selectedNeteaseKeys.length }} 首</span>
               <div class="flex items-center gap-2">
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  @click="selectAllNetease"
-                >
+                <Button size="xs" variant="ghost" @click="selectAllNetease">
                   全选
                 </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  @click="deselectAllNetease"
-                >
+                <Button size="xs" variant="ghost" @click="deselectAllNetease">
                   取消全选
                 </Button>
               </div>
@@ -1187,18 +1055,10 @@ onUnmounted(() => {
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            @click="showNeteaseModal = false"
-          >
+          <Button variant="outline" @click="showNeteaseModal = false">
             取消
           </Button>
-          <Button
-            variant="brand"
-            :loading="isNeteaseLoading"
-            :disabled="selectedNeteaseKeys.length === 0"
-            @click="confirmImportNetease"
-          >
+          <Button variant="brand" :loading="isNeteaseLoading" :disabled="selectedNeteaseKeys.length === 0" @click="confirmImportNetease">
             确认导入 ({{ selectedNeteaseKeys.length }} 首)
           </Button>
         </DialogFooter>

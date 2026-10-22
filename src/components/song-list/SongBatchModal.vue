@@ -105,7 +105,7 @@ defineExpose({ open, close })
       </DialogHeader>
 
       <Tabs default-value="author" class="w-full">
-        <TabsList class="grid grid-cols-5 h-8">
+        <TabsList class="grid grid-cols-5">
           <TabsTrigger value="author" class="text-xs">作者</TabsTrigger>
           <TabsTrigger value="tag" class="text-xs">标签</TabsTrigger>
           <TabsTrigger value="language" class="text-xs">语言</TabsTrigger>
@@ -124,13 +124,9 @@ defineExpose({ open, close })
               <span>替换</span>
             </label>
           </div>
-          <Input
-            v-model="batchAuthorText"
-            placeholder="输入作者，多个用空格或逗号分隔"
-            class="h-8 text-xs"
-          />
+          <Input v-model="batchAuthorText" placeholder="输入作者，多个用空格或逗号分隔" />
           <div class="flex justify-end">
-            <Button size="sm" class="text-xs" @click="handleUpdateAuthor">
+            <Button @click="handleUpdateAuthor">
               应用
             </Button>
           </div>
@@ -147,13 +143,9 @@ defineExpose({ open, close })
               <span>替换</span>
             </label>
           </div>
-          <Input
-            v-model="batchTagText"
-            placeholder="输入标签，多个用空格或逗号分隔"
-            class="h-8 text-xs"
-          />
+          <Input v-model="batchTagText" placeholder="输入标签，多个用空格或逗号分隔" />
           <div class="flex justify-end">
-            <Button size="sm" class="text-xs" @click="handleUpdateTag">
+            <Button @click="handleUpdateTag">
               应用
             </Button>
           </div>
@@ -170,13 +162,9 @@ defineExpose({ open, close })
               <span>替换</span>
             </label>
           </div>
-          <Input
-            v-model="batchLanguageText"
-            placeholder="输入语言，多个用空格或逗号分隔"
-            class="h-8 text-xs"
-          />
+          <Input v-model="batchLanguageText" placeholder="输入语言，多个用空格或逗号分隔" />
           <div class="flex justify-end">
-            <Button size="sm" class="text-xs" @click="handleUpdateLanguage">
+            <Button @click="handleUpdateLanguage">
               应用
             </Button>
           </div>
@@ -250,7 +238,7 @@ defineExpose({ open, close })
           </template>
 
           <div class="flex justify-end pt-2">
-            <Button size="sm" class="text-xs" @click="handleUpdateOption">
+            <Button @click="handleUpdateOption">
               应用
             </Button>
           </div>
@@ -261,12 +249,7 @@ defineExpose({ open, close })
             确定要删除选中的 {{ selectedCount }} 首歌曲？此操作不可恢复。
           </p>
           <div class="flex justify-end">
-            <Button
-              variant="destructive"
-              size="sm"
-              class="text-xs"
-              @click="emit('delete'); close()"
-            >
+            <Button variant="destructive" @click="emit('delete'); close()">
               确认删除
             </Button>
           </div>

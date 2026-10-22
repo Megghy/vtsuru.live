@@ -161,30 +161,17 @@ onMounted(getSongs)
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="brand"
-            @click="showModal = true"
-          >
+          <Button variant="default" @click="showModal = true">
             添加歌曲
           </Button>
 
-          <Button
-            size="xs"
-            variant="outline"
-            :loading="isLoading || isImporting"
-            @click="getSongs"
-          >
+          <Button variant="outline" :loading="isLoading || isImporting" @click="getSongs">
             刷新
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button
-                size="xs"
-                variant="outline"
-                :loading="isImporting"
-              >
+              <Button variant="outline" :loading="isImporting">
                 <component
                   :is="MoreHorizontal24Filled"
                   class="h-3.5 w-3.5 mr-1"

@@ -308,28 +308,13 @@ defineExpose({
           <div>
             <div class="text-xs text-muted-foreground mb-2">选择导出格式</div>
             <div class="grid grid-cols-3 gap-2">
-              <Button
-                size="sm"
-                :variant="exportType === 'json' ? 'default' : 'outline'"
-                class="text-xs"
-                @click="exportType = 'json'"
-              >
+              <Button :variant="exportType === 'json' ? 'default' : 'outline'" @click="exportType = 'json'">
                 JSON 完整
               </Button>
-              <Button
-                size="sm"
-                :variant="exportType === 'xml' ? 'default' : 'outline'"
-                class="text-xs"
-                @click="exportType = 'xml'"
-              >
+              <Button :variant="exportType === 'xml' ? 'default' : 'outline'" @click="exportType = 'xml'">
                 XML 标准
               </Button>
-              <Button
-                size="sm"
-                :variant="exportType === 'csv' ? 'default' : 'outline'"
-                class="text-xs"
-                @click="exportType = 'csv'"
-              >
+              <Button :variant="exportType === 'csv' ? 'default' : 'outline'" @click="exportType = 'csv'">
                 CSV 表格
               </Button>
             </div>
@@ -347,10 +332,10 @@ defineExpose({
           </div>
         </div>
         <DialogFooter>
-          <Button size="sm" variant="outline" @click="showExportModal = false">
+          <Button variant="outline" @click="showExportModal = false">
             取消
           </Button>
-          <Button size="sm" :disabled="isExporting" @click="handleExport">
+          <Button :disabled="isExporting" @click="handleExport">
             立即导出
           </Button>
         </DialogFooter>
@@ -366,11 +351,7 @@ defineExpose({
           <div class="flex flex-wrap items-center gap-2">
             <div class="relative w-64">
               <component :is="Search24Filled" class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-              <Input
-                v-model="keyword"
-                placeholder="搜索发言内容、用户名或 UID..."
-                class="h-8 pl-8 text-xs"
-              />
+              <Input v-model="keyword" placeholder="搜索发言内容、用户名或 UID..." class="pl-8" />
             </div>
 
             <div class="flex items-center gap-1.5">
@@ -414,11 +395,7 @@ defineExpose({
 
             <div class="h-4 w-px bg-border" />
 
-            <Button
-              size="sm"
-              variant="outline"
-              @click="showExportModal = true"
-            >
+            <Button variant="outline" @click="showExportModal = true">
               <component :is="DocumentArrowDown20Regular" class="size-3.5 mr-1" />
               导出弹幕
             </Button>

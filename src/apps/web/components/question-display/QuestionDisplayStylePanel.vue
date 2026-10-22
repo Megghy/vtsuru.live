@@ -112,11 +112,7 @@ function resetToDefault() {
           @positive-click="resetToDefault"
         >
           <template #trigger>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
-            >
+            <Button variant="ghost" class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1">
               <component :is="ArrowReset24Regular" class="size-3.5" />
               重置
             </Button>
@@ -213,7 +209,7 @@ function resetToDefault() {
             :model-value="String(setting.fontWeight ?? 400)"
             @update:model-value="setting.fontWeight = Number($event)"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -243,7 +239,7 @@ function resetToDefault() {
             :model-value="String(setting.nameFontWeight ?? 400)"
             @update:model-value="setting.nameFontWeight = Number($event)"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -355,7 +351,7 @@ function resetToDefault() {
           :model-value="setting.textShadow ?? QuestionDisplayShadow.None"
           @update:model-value="setting.textShadow = $event as any"
         >
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -466,7 +462,7 @@ function resetToDefault() {
             :model-value="setting.shadow ?? QuestionDisplayShadow.None"
             @update:model-value="setting.shadow = $event as any"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -509,7 +505,7 @@ function resetToDefault() {
             :model-value="setting.imageLayout ?? QuestionDisplayImageLayout.Contain"
             @update:model-value="setting.imageLayout = $event as any"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -530,7 +526,7 @@ function resetToDefault() {
             :model-value="setting.transition ?? QuestionDisplayTransition.Fade"
             @update:model-value="setting.transition = $event as any"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

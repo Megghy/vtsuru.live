@@ -157,14 +157,7 @@ function formatRelativeTime(timestamp: number) {
         <!-- 开始/暂停处理 -->
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="icon-xs"
-              :variant="isProcessing ? 'outline' : 'brand'"
-              :class="{ 'border-amber-500 text-amber-500 hover:bg-amber-500/10': isProcessing }"
-              :disabled="hasOtherProcessing"
-              :loading="store.isLoading && isManaging"
-              @click="manage(isProcessing ? QueueStatus.Waiting : QueueStatus.Progressing)"
-            >
+            <Button size="icon-xs" :variant="isProcessing ? 'outline' : 'brand'" :class="{ 'border-amber-500 text-amber-500 hover:bg-amber-500/10': isProcessing }" :disabled="hasOtherProcessing" :loading="store.isLoading && isManaging" @click="manage(isProcessing ? QueueStatus.Waiting : QueueStatus.Progressing)">
               <component
                 :is="ClipboardTextLtr24Filled"
                 class="h-3.5 w-3.5"
@@ -179,13 +172,7 @@ function formatRelativeTime(timestamp: number) {
         <!-- 标记完成 -->
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-              :loading="store.isLoading && isManaging"
-              @click="manage(QueueStatus.Finish)"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10" :loading="store.isLoading && isManaging" @click="manage(QueueStatus.Finish)">
               <component
                 :is="Checkmark12Regular"
                 class="h-4 w-4"
@@ -200,13 +187,7 @@ function formatRelativeTime(timestamp: number) {
         <!-- 拉黑用户 -->
         <AlertDialog v-if="canBlock">
           <AlertDialogTrigger as-child>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
-              :loading="store.isLoading && isManaging"
-              @click="store.queueDataBeingManaged = queueData.id"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10" :loading="store.isLoading && isManaging" @click="store.queueDataBeingManaged = queueData.id">
               <component
                 :is="PresenceBlocked16Regular"
                 class="h-3.5 w-3.5"
@@ -235,13 +216,7 @@ function formatRelativeTime(timestamp: number) {
         <!-- 取消排队 -->
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              :loading="store.isLoading && isManaging"
-              @click="manage(QueueStatus.Cancel)"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-muted-foreground hover:text-destructive hover:bg-destructive/10" :loading="store.isLoading && isManaging" @click="manage(QueueStatus.Cancel)">
               <component
                 :is="Dismiss16Filled"
                 class="h-3.5 w-3.5"

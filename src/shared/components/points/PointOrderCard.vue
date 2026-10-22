@@ -290,12 +290,7 @@ function formatRelativeTime(time: number) {
                 {{ row.trackingNumber || (row.type === GoodsTypes.Virtual ? '无需发货' : '暂无物流') }}
               </TableCell>
               <TableCell class="py-2.5 text-right pr-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-7 text-xs px-2"
-                  @click="openDetail(row)"
-                >
+                <Button variant="outline" class="px-2" @click="openDetail(row)">
                   详情
                 </Button>
               </TableCell>
@@ -334,12 +329,7 @@ function formatRelativeTime(time: number) {
             {{ item.customer?.name || '未知用户' }} · {{ item.count }} 件 · {{ Number(item.point.toFixed(1)) }} 积分
           </p>
 
-          <Button
-            variant="outline"
-            size="sm"
-            class="w-full text-xs h-7 mt-1"
-            @click="openDetail(item)"
-          >
+          <Button variant="outline" class="w-full mt-1" @click="openDetail(item)">
             查看与处理
           </Button>
         </article>
@@ -464,22 +454,9 @@ function formatRelativeTime(time: number) {
               <div class="space-y-2">
                 <span class="text-[11px] font-medium text-muted-foreground block">物流信息</span>
                 <div class="flex flex-col gap-2 p-2.5 rounded-lg border border-border/60 bg-muted/20">
-                  <Input
-                    v-model="detail.expressCompany"
-                    placeholder="快递公司 (如: 顺丰速运)"
-                    class="h-8 text-xs"
-                  />
-                  <Input
-                    v-model="detail.trackingNumber"
-                    placeholder="填写快递单号"
-                    class="h-8 text-xs font-mono"
-                  />
-                  <Button
-                    size="sm"
-                    class="text-xs h-7 self-end"
-                    :disabled="actionLoading"
-                    @click="saveExpress"
-                  >
+                  <Input v-model="detail.expressCompany" placeholder="快递公司 (如: 顺丰速运)" />
+                  <Input v-model="detail.trackingNumber" placeholder="填写快递单号" class="font-mono" />
+                  <Button class="self-end" :disabled="actionLoading" @click="saveExpress">
                     更新物流信息
                   </Button>
                 </div>
@@ -497,11 +474,7 @@ function formatRelativeTime(time: number) {
             @positive-click="updateStatus([detail.id], previousStatus(detail)!)"
           >
             <template #trigger>
-              <Button
-                variant="outline"
-                size="sm"
-                class="text-xs text-amber-600 border-amber-500/40 hover:bg-amber-500/10"
-              >
+              <Button variant="outline" class="text-amber-600 border-amber-500/40 hover:bg-amber-500/10">
                 回退到等待发货
               </Button>
             </template>
@@ -516,10 +489,7 @@ function formatRelativeTime(time: number) {
             @positive-click="updateStatus([detail.id], nextStatus(detail)!)"
           >
             <template #trigger>
-              <Button
-                size="sm"
-                class="text-xs"
-              >
+              <Button >
                 {{
                   detail.type === GoodsTypes.Virtual
                     ? '完成订单'

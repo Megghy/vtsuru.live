@@ -262,11 +262,10 @@ function handleVariableInsert(text: string) {
       <CardTitle class="text-sm font-semibold">
         {{ title }}
       </CardTitle>
-      <Button
-        v-if="mergedPlaceholders.length > 0"
+      <Button v-if="mergedPlaceholders.length > 0"
         variant="ghost"
-        size="sm"
-        class="h-7 text-xs flex items-center gap-1"
+        size="xs"
+        class="flex items-center gap-1"
         @click="showSyntaxModal = true"
       >
         <Info24Filled class="h-4 w-4" />
@@ -321,12 +320,7 @@ function handleVariableInsert(text: string) {
 
             <!-- 实时预览切换与区域 -->
             <div class="flex items-center justify-between mt-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-7 px-2 text-xs flex items-center gap-1"
-                @click="showLivePreview = !showLivePreview"
-              >
+              <Button size="xs" variant="ghost" class="px-2 flex items-center gap-1" @click="showLivePreview = !showLivePreview">
                 <component
                   :is="showLivePreview ? LiveOff24Regular : Code24Regular"
                   class="h-4 w-4"

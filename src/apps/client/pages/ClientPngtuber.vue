@@ -98,11 +98,7 @@ onMounted(() => {
         <div class="input-grid">
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-[var(--muted-foreground)]">频道</label>
-            <Input
-              v-model="driver.channel"
-              placeholder="default"
-              :disabled="locked"
-            />
+            <Input v-model="driver.channel" placeholder="default" :disabled="locked" />
           </div>
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-[var(--muted-foreground)]">音频来源</label>
@@ -168,24 +164,13 @@ onMounted(() => {
         </div>
 
         <div class="flex items-center gap-2 flex-wrap">
-          <Button
-            v-if="!locked"
-            @click="driver.start"
-          >
+          <Button v-if="!locked" @click="driver.start">
             启动驱动
           </Button>
-          <Button
-            v-else
-            variant="outline"
-            @click="driver.stop"
-          >
+          <Button v-else variant="outline" @click="driver.stop">
             停止驱动
           </Button>
-          <Button
-            variant="secondary"
-            :disabled="locked"
-            @click="driver.audioMode === 'microphone' ? driver.refreshDevices() : refreshInputs()"
-          >
+          <Button variant="secondary" :disabled="locked" @click="driver.audioMode === 'microphone' ? driver.refreshDevices() : refreshInputs()">
             刷新设备
           </Button>
           <RouterLink
@@ -254,27 +239,23 @@ onMounted(() => {
 
           <div class="flex items-center gap-4">
             <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">静音</span>
-            <Switch
-              :checked="driver.runtime.muted"
-              @update:checked="(value) => control({ muted: value })"
+            <Switch :checked="driver.runtime.muted" @update:checked="(value) => control({ muted: value })"
             />
           </div>
 
           <div class="flex items-center gap-4">
             <span class="text-xs font-medium w-16 text-[var(--muted-foreground)]">暂离</span>
-            <Switch
-              :checked="driver.runtime.away"
-              @update:checked="(value) => control({ away: value })"
+            <Switch :checked="driver.runtime.away" @update:checked="(value) => control({ away: value })"
             />
           </div>
         </div>
 
         <div class="flex items-center gap-2 pt-2">
           <RouterLink :to="settingsLink">
-            <Button variant="outline" size="sm">表情、快捷键与完整设置</Button>
+            <Button variant="outline">表情、快捷键与完整设置</Button>
           </RouterLink>
           <RouterLink :to="{ name: 'client-auto-action-manage' }">
-            <Button variant="outline" size="sm">配置自动操作</Button>
+            <Button variant="outline">配置自动操作</Button>
           </RouterLink>
         </div>
       </CardContent>

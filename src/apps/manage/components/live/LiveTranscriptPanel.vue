@@ -19,6 +19,13 @@ import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
@@ -215,11 +222,7 @@ defineExpose({ load })
       class="py-12 flex flex-col items-center justify-center gap-3"
     >
       <Empty :description="`转写获取失败: ${error}`" />
-      <Button
-        size="sm"
-        variant="outline"
-        @click="load"
-      >
+      <Button variant="outline" @click="load">
         重试加载
       </Button>
     </div>
@@ -243,32 +246,29 @@ defineExpose({ load })
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex items-center gap-2 flex-1 min-w-[280px] max-w-[540px]">
               <span class="text-xs text-muted-foreground whitespace-nowrap">转写会话:</span>
-              <select
-                v-model="selectedSessionId"
-                class="h-8 flex-1 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-                @change="selectedSessionId && loadSegments(selectedSessionId)"
-              >
-                <option v-for="opt in sessionOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+              <div class="flex-1">
+                <Select
+                  :model-value="selectedSessionId ?? ''"
+                  @update:model-value="(val) => { selectedSessionId = String(val); val && loadSegments(String(val)) }"
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="opt in sessionOptions" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div class="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                :disabled="!segments.length"
-                @click="downloadTxt"
-              >
+              <Button variant="outline" :disabled="!segments.length" @click="downloadTxt">
                 <component :is="DocumentText24Regular" class="size-3.5 mr-1" />
                 导出 TXT
               </Button>
-              <Button
-                size="sm"
-                :disabled="!segments.length"
-                @click="downloadSrt"
-              >
+              <Button :disabled="!segments.length" @click="downloadSrt">
                 <component :is="DocumentArrowDown20Regular" class="size-3.5 mr-1" />
                 导出 SRT 字幕
               </Button>
@@ -280,22 +280,21 @@ defineExpose({ load })
             <div class="flex items-center gap-2">
               <div class="relative w-60">
                 <component :is="Search24Filled" class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input
-                  v-model="searchKeyword"
-                  placeholder="搜索字幕关键词..."
-                  class="h-8 pl-8 text-xs"
-                />
+                <Input v-model="searchKeyword" placeholder="搜索字幕关键词..." class="pl-8" />
               </div>
 
-              <select
-                v-if="speakerOptions.length > 2"
-                v-model="selectedSpeaker"
-                class="h-8 w-32 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-              >
-                <option v-for="opt in speakerOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
+              <div v-if="speakerOptions.length > 2" class="w-32">
+                <Select v-model="selectedSpeaker">
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem v-for="opt in speakerOptions" :key="opt.value" :value="opt.value">
+                      {{ opt.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div

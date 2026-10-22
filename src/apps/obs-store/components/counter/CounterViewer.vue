@@ -193,44 +193,21 @@ activateKeyboard()
           </div>
 
           <div class="flex items-center gap-1.5">
-            <Input
-              v-model="channelDraft"
-              class="h-8 text-xs w-[120px]"
-              placeholder="频道"
-              maxlength="64"
-              @keyup.enter="changeChannel"
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs"
-              @click="changeChannel"
-            >
+            <Input v-model="channelDraft" class="w-[120px]" placeholder="频道" maxlength="64" @keyup.enter="changeChannel" />
+            <Button variant="secondary" @click="changeChannel">
               切换频道
             </Button>
           </div>
 
           <div class="flex items-center gap-2">
-            <Button
-              v-if="lastSyncError"
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs"
-              :disabled="isSyncing"
-              @click="retry"
-            >
+            <Button v-if="lastSyncError" variant="secondary" :disabled="isSyncing" @click="retry">
               重试同步
             </Button>
 
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    class="h-8 text-xs gap-1.5"
-                    @click="openPopoutWindow"
-                  >
+                  <Button variant="secondary" class="gap-1.5" @click="openPopoutWindow">
                     <Open24Regular class="size-4" />
                     独立小窗
                   </Button>
@@ -241,11 +218,7 @@ activateKeyboard()
               </Tooltip>
             </TooltipProvider>
 
-            <Button
-              size="sm"
-              class="h-8 text-xs gap-1.5"
-              @click="copyObsUrl"
-            >
+            <Button class="gap-1.5" @click="copyObsUrl">
               <Checkmark24Regular v-if="copied" class="size-4" />
               <Copy24Regular v-else class="size-4" />
               复制 OBS 源链接
@@ -333,28 +306,13 @@ activateKeyboard()
             <div class="flex items-center justify-between mb-2">
               <span class="deck-label">OBS 画面实时监视器</span>
               <div class="flex items-center gap-1.5">
-                <Button
-                  size="xs"
-                  class="h-6 text-[11px] px-2"
-                  :variant="previewBg === 'checker' ? 'default' : 'outline'"
-                  @click="previewBg = 'checker'"
-                >
+                <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
                   网格底
                 </Button>
-                <Button
-                  size="xs"
-                  class="h-6 text-[11px] px-2"
-                  :variant="previewBg === 'dark' ? 'default' : 'outline'"
-                  @click="previewBg = 'dark'"
-                >
+                <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
                   暗黑底
                 </Button>
-                <Button
-                  size="xs"
-                  class="h-6 text-[11px] px-2"
-                  :variant="previewBg === 'transparent' ? 'default' : 'outline'"
-                  @click="previewBg = 'transparent'"
-                >
+                <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
                   透明底
                 </Button>
               </div>
@@ -388,22 +346,12 @@ activateKeyboard()
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">标题文本</label>
-            <Input
-              :value="state.title"
-              class="h-8 text-xs"
-              placeholder="例如：艾尔登法环 死亡挑战"
-              @input="updateState({ title: ($event.target as HTMLInputElement).value })"
-            />
+            <Input :value="state.title" placeholder="例如：艾尔登法环 死亡挑战" @input="updateState({ title: ($event.target as HTMLInputElement).value })" />
           </div>
 
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">前缀小标</label>
-            <Input
-              :value="state.prefix"
-              class="h-8 text-xs"
-              placeholder="例如：DEATHS / WINS"
-              @input="updateState({ prefix: ($event.target as HTMLInputElement).value })"
-            />
+            <Input :value="state.prefix" placeholder="例如：DEATHS / WINS" @input="updateState({ prefix: ($event.target as HTMLInputElement).value })" />
           </div>
 
           <div class="space-y-1.5">
@@ -422,7 +370,7 @@ activateKeyboard()
               :model-value="state.theme"
               @update:model-value="updateState({ theme: $event as CounterTheme })"
             >
-              <SelectTrigger class="h-8 text-xs w-full">
+              <SelectTrigger class="w-full">
                 <SelectValue placeholder="选择风格" />
               </SelectTrigger>
               <SelectContent>
@@ -449,10 +397,7 @@ activateKeyboard()
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">显示目标进度条</label>
             <div class="pt-1">
-              <Switch
-                :checked="state.showProgress"
-                @update:checked="updateState({ showProgress: $event })"
-              />
+              <Switch :checked="state.showProgress" @update:checked="updateState({ showProgress: $event })" />
             </div>
           </div>
         </div>

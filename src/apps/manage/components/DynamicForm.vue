@@ -20,6 +20,13 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Progress } from '@/shared/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -389,11 +396,7 @@ onBeforeUnmount(() => {
     @submit.prevent="onSubmit"
   >
     <div class="dynamic-form__footer flex justify-end mb-4">
-      <Button
-        type="submit"
-        size="sm"
-        :disabled="isUploading"
-      >
+      <Button type="submit" :disabled="isUploading">
         {{ isUploading ? '保存中...' : '提交' }}
       </Button>
     </div>
@@ -425,29 +428,27 @@ onBeforeUnmount(() => {
             @update:pending-files="updateDecorativeFiles(item.key, $event)"
           />
 
-          <Input
-            v-else-if="item.type === 'string'"
-            v-model="configData[item.key]"
-            :placeholder="item.placeholder"
-            :type="item.inputType || 'text'"
-            class="h-8 text-xs"
-          />
+          <Input v-else-if="item.type === 'string'" v-model="configData[item.key]" :placeholder="item.placeholder" :type="item.inputType || 'text'" />
 
-          <select
+          <Select
             v-else-if="item.type === 'select'"
             v-model="configData[item.key]"
-            class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <option v-if="item.clearable" value="">请选择</option>
-            <option
-              v-for="opt in getSelectOptions(item)"
-              :key="String(opt.value)"
-              :value="opt.value"
-              :disabled="opt.disabled"
-            >
-              {{ opt.label }}
-            </option>
-          </select>
+            <SelectTrigger>
+              <SelectValue :placeholder="item.placeholder || '请选择'" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-if="item.clearable" value="">请选择</SelectItem>
+              <SelectItem
+                v-for="opt in getSelectOptions(item)"
+                :key="String(opt.value)"
+                :value="String(opt.value)"
+                :disabled="opt.disabled"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
 
           <ColorPicker
             v-else-if="item.type === 'color'"
@@ -549,7 +550,7 @@ onBeforeUnmount(() => {
             {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件
           </p>
           <div v-if="uploadStage === UploadStage.Failed" class="flex justify-end pt-2">
-            <Button size="sm" variant="outline" @click="showUploadModal = false">
+            <Button variant="outline" @click="showUploadModal = false">
               关闭
             </Button>
           </div>

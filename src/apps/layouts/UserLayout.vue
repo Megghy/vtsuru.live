@@ -512,7 +512,7 @@ function scrollToTop() {
   >
     <div class="flex flex-col items-center justify-center gap-3">
       <Empty description="用户未找到或该用户暂未开启个人空间" />
-      <Button size="sm" @click="$router.push('/')">
+      <Button @click="$router.push('/')">
         返回首页
       </Button>
     </div>
@@ -525,7 +525,7 @@ function scrollToTop() {
     <div class="flex flex-col items-center justify-center gap-3">
       <div class="text-base font-semibold">页面加载失败</div>
       <div class="text-xs text-muted-foreground">网络暂时不可用或服务发生异常，请稍后重试</div>
-      <Button size="sm" @click="retryPublicPage">
+      <Button @click="retryPublicPage">
         重新加载
       </Button>
     </div>
@@ -558,53 +558,29 @@ function scrollToTop() {
 
         <div class="layout-header__right flex items-center gap-2">
           <!-- 主题切换开关 -->
-          <Button
-            size="sm"
-            variant="ghost"
-            class="size-8 p-0"
-            :disabled="isLoading || pageThemeMode !== 'auto'"
-            :title="themeSwitchTitle"
-            @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
-          >
+          <Button variant="ghost" class="size-8 p-0" :disabled="isLoading || pageThemeMode !== 'auto'" :title="themeSwitchTitle" @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark">
             <component :is="effectiveIsDark ? Moon : Sunny" class="size-4" />
           </Button>
 
           <!-- 已登录用户操作 -->
           <template v-if="accountInfo?.id">
-            <Button
-              v-if="isOwner"
-              size="sm"
-              variant="outline"
-              title="进入主页可视化装修与块配置"
-              @click="$router.push({ name: 'manage-userPageBuilder' })"
-            >
+            <Button v-if="isOwner" variant="outline" title="进入主页可视化装修与块配置" @click="$router.push({ name: 'manage-userPageBuilder' })">
               <component :is="ColorPaletteOutline" class="size-4 mr-1" />
               <span v-if="isDesktop">装修主页</span>
             </Button>
 
-            <Button
-              size="sm"
-              variant="outline"
-              @click="$router.push({ name: 'live-directory', query: { tab: 'following' } })"
-            >
+            <Button variant="outline" @click="$router.push({ name: 'live-directory', query: { tab: 'following' } })">
               <component :is="HeartOutline" class="size-4 mr-1" />
               <span v-if="isDesktop">关注管理</span>
             </Button>
-            <Button
-              size="sm"
-              @click="enterLastWorkspace"
-            >
+            <Button @click="enterLastWorkspace">
               <component :is="WindowWrench20Filled" class="size-4 mr-1" />
               <span v-if="isDesktop">{{ WORKSPACE_LABELS[lastWorkspace] }}</span>
             </Button>
           </template>
 
           <!-- 未登录用户操作 -->
-          <Button
-            v-else
-            size="sm"
-            @click="registerAndLoginModalVisiable = true"
-          >
+          <Button v-else @click="registerAndLoginModalVisiable = true">
             注册 / 登录
           </Button>
         </div>
@@ -908,10 +884,7 @@ function scrollToTop() {
               查看积分和订单，用 Bilibili 认证即可，不用注册。主播或需要提问时再登录。
             </div>
             <div class="flex justify-center mt-2">
-              <Button
-                size="sm"
-                @click="openAudienceEntry"
-              >
+              <Button @click="openAudienceEntry">
                 {{ useAuth.isAuthed ? '查看积分和订单' : '开始 Bilibili 认证' }}
               </Button>
             </div>

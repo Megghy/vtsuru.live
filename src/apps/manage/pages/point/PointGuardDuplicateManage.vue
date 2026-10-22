@@ -29,15 +29,9 @@ import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tag } from '@/shared/ui/tag'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 
 interface DuplicateUserRow extends ResponsePointGuardDuplicateUserModel {
@@ -313,7 +307,7 @@ async function applyCleanup(applyAll: boolean) {
             <span class="text-muted-foreground">排除已处理</span>
           </div>
 
-          <Button size="sm" class="ml-auto gap-1.5" :disabled="scanLoading" @click="scanDuplicates">
+          <Button class="ml-auto gap-1.5" :disabled="scanLoading" @click="scanDuplicates">
             <ArrowSync24Regular class="size-3.5" :class="{ 'animate-spin': scanLoading }" />
             {{ scanLoading ? '扫描中...' : '扫描重复上舰' }}
           </Button>
@@ -327,22 +321,18 @@ async function applyCleanup(applyAll: boolean) {
         <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">扣分设置</CardTitle>
       </CardHeader>
       <CardContent class="p-3.5 pt-0 space-y-3">
-        <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            :variant="pointMode === 'current' ? 'default' : 'outline'"
-            @click="pointMode = 'current'"
-          >
+        <ToggleGroup
+          v-model="pointMode"
+          type="single"
+          size="xs"
+        >
+          <ToggleGroupItem value="current">
             按当前积分设置
-          </Button>
-          <Button
-            size="xs"
-            :variant="pointMode === 'manual' ? 'default' : 'outline'"
-            @click="pointMode = 'manual'"
-          >
+          </ToggleGroupItem>
+          <ToggleGroupItem value="manual">
             手动三档设置
-          </Button>
-        </div>
+          </ToggleGroupItem>
+        </ToggleGroup>
 
         <div class="flex items-center gap-3 flex-wrap text-xs">
           <span class="text-muted-foreground">舰长</span>
@@ -366,12 +356,7 @@ async function applyCleanup(applyAll: boolean) {
             :disabled="pointMode !== 'manual'"
             class="w-24"
           />
-          <Button
-            size="xs"
-            variant="outline"
-            :disabled="pointMode !== 'manual'"
-            @click="resetManualPointValues"
-          >
+          <Button size="xs" variant="outline" :disabled="pointMode !== 'manual'" @click="resetManualPointValues">
             恢复当前设置
           </Button>
         </div>
@@ -413,7 +398,7 @@ async function applyCleanup(applyAll: boolean) {
           <div class="flex items-center gap-2 ml-auto">
             <Popconfirm positive-text="确认清理" negative-text="取消" @positive-click="applyCleanup(true)">
               <template #trigger>
-                <Button variant="destructive" size="sm" :disabled="applyLoading" class="gap-1.5">
+                <Button variant="destructive" :disabled="applyLoading" class="gap-1.5">
                   <Delete24Regular class="size-3.5" />
                   一键清理全部
                 </Button>
@@ -423,7 +408,7 @@ async function applyCleanup(applyAll: boolean) {
 
             <Popconfirm positive-text="确认清理" negative-text="取消" @positive-click="applyCleanup(false)">
               <template #trigger>
-                <Button size="sm" :disabled="applyLoading || selectedRowKeys.length === 0">
+                <Button :disabled="applyLoading || selectedRowKeys.length === 0">
                   清理已选用户 ({{ selectedRowKeys.length }})
                 </Button>
               </template>
@@ -500,7 +485,7 @@ async function applyCleanup(applyAll: boolean) {
                     {{ formatTime(row.firstEventAt) }} ~ {{ formatTime(row.lastEventAt) }}
                   </TableCell>
                   <TableCell class="text-right">
-                    <Button variant="ghost" size="xs" class="gap-1 h-7 text-xs" @click="openDetail(row)">
+                    <Button variant="ghost" size="xs" class="gap-1" @click="openDetail(row)">
                       <Eye24Regular class="size-3.5" />
                       详情
                     </Button>
@@ -516,18 +501,10 @@ async function applyCleanup(applyAll: boolean) {
               共 {{ rows.length }} 条，第 {{ currentPage }} / {{ totalPages }} 页
             </span>
             <div class="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="xs"
-                :disabled="currentPage <= 1"
-                @click="currentPage--"
-              >
+              <Button variant="outline" size="xs" :disabled="currentPage <= 1" @click="currentPage--">
                 上一页
               </Button>
-              <Button
-                variant="outline"
-                size="xs"
-                :disabled="currentPage >= totalPages"
+              <Button variant="outline" size="xs" :disabled="currentPage>= totalPages"
                 @click="currentPage++"
               >
                 下一页

@@ -285,14 +285,7 @@ function fireMock() {
     </span>
 
     <div class="flex flex-wrap gap-1 my-1">
-      <Button
-        v-for="item in Object.values(templateConstants)"
-        :key="item.name"
-        variant="outline"
-        size="sm"
-        class="h-6 text-[11px] px-2"
-        @click="copyToClipboard(item.words)"
-      >
+      <Button v-for="item in Object.values(templateConstants)" :key="item.name" variant="outline" class="h-6 text-[11px] px-2" @click="copyToClipboard(item.words)">
         {{ item.words }}
       </Button>
     </div>
@@ -325,17 +318,7 @@ function fireMock() {
             </span>
           </div>
           <div class="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-6 text-[11px] px-2 text-primary"
-              :disabled="
-                !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] ||
-                (row.type === EventDataTypes.Follow && !supportsFollow)
-              "
-              :loading="speechState.isApiAudioLoading"
-              @click.stop="test(row.type, row.eventKey)"
-            >
+            <Button variant="outline" class="h-6 text-[11px] px-2 text-primary" :disabled=" !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] || (row.type === EventDataTypes.Follow && !supportsFollow) " :loading="speechState.isApiAudioLoading" @click.stop="test(row.type, row.eventKey)">
               测试
             </Button>
             <AccordionTrigger class="p-0 hover:no-underline" />
@@ -352,41 +335,21 @@ function fireMock() {
               <div class="rule-header">
                 <span class="text-[11px] text-muted-foreground">规则 {{ ri + 1 }}</span>
                 <div class="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    class="h-6 text-[11px] px-2 text-primary hover:bg-primary/10"
-                    :loading="speechState.isApiAudioLoading"
-                    @click="test(row.type, row.eventKey, rule)"
-                  >
+                  <Button variant="ghost" class="h-6 text-[11px] px-2 text-primary hover:bg-primary/10" :loading="speechState.isApiAudioLoading" @click="test(row.type, row.eventKey, rule)">
                     测试此条
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                    @click="removeRule(row.eventKey, ri)"
-                  >
+                  <Button variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10" @click="removeRule(row.eventKey, ri)">
                     <Delete20Filled class="size-3.5" />
                   </Button>
                 </div>
               </div>
-              <Input
-                v-model="rule.template"
-                class="text-xs h-8"
-                :placeholder="`模板文本，如: ${row.label}...`"
-              />
+              <Input v-model="rule.template" :placeholder="`模板文本，如: ${row.label}...`" />
               <div class="conditions-section">
                 <div class="flex items-center justify-between mb-1">
                   <span class="text-[11px] text-muted-foreground">
                     {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
                   </span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    class="h-6 text-[11px] px-2 gap-1"
-                    @click="addCondition(rule, row.eventKey)"
-                  >
+                  <Button variant="outline" class="h-6 text-[11px] px-2 gap-1" @click="addCondition(rule, row.eventKey)">
                     <Add20Filled class="size-3" />
                     添加条件
                   </Button>
@@ -400,7 +363,7 @@ function fireMock() {
                     v-model="cond.field"
                     @update:model-value="() => onFieldChange(cond)"
                   >
-                    <SelectTrigger class="w-[120px] h-7 text-xs">
+                    <SelectTrigger size="xs" class="w-[120px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -416,7 +379,7 @@ function fireMock() {
                   </Select>
 
                   <Select v-model="cond.op">
-                    <SelectTrigger class="w-[80px] h-7 text-xs">
+                    <SelectTrigger size="xs" class="w-[80px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -442,31 +405,16 @@ function fireMock() {
                       @update:value="(v: number | null) => (cond.value = v ?? 0)"
                     />
                   </div>
-                  <Input
-                    v-else
-                    :model-value="String(cond.value)"
-                    class="w-[140px] h-7 text-xs"
-                    placeholder="匹配内容"
-                    @update:model-value="(v: string | number) => (cond.value = v)"
+                  <Input size="xs" v-else :model-value="String(cond.value)" class="w-[140px]" placeholder="匹配内容" @update:model-value="(v: string | number) => (cond.value = v)"
                   />
 
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    class="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
-                    @click="removeCondition(rule, ci)"
-                  >
+                  <Button size="xs" variant="ghost" class="w-7 p-0 text-destructive hover:bg-destructive/10" @click="removeCondition(rule, ci)">
                     <Delete20Filled class="size-3.5" />
                   </Button>
                 </div>
               </div>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-7 text-xs gap-1 w-fit"
-              @click="addRule(row.eventKey)"
-            >
+            <Button variant="outline" class="gap-1 w-fit" @click="addRule(row.eventKey)">
               <Add20Filled class="size-3.5" />
               添加模板规则
             </Button>
@@ -496,7 +444,7 @@ function fireMock() {
                 :model-value="String(mockData.type)"
                 @update:model-value="mockData.type = Number($event)"
               >
-                <SelectTrigger class="w-[90px] h-7 text-xs">
+                <SelectTrigger size="xs" class="w-[90px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -510,16 +458,8 @@ function fireMock() {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <Input
-                v-model="mockData.uname"
-                class="w-[100px] h-7 text-xs"
-                placeholder="用户名"
-              />
-              <Input
-                v-model="mockData.msg"
-                class="w-[140px] h-7 text-xs"
-                placeholder="消息/礼物名"
-              />
+              <Input size="xs" v-model="mockData.uname" class="w-[100px]" placeholder="用户名" />
+              <Input size="xs" v-model="mockData.msg" class="w-[140px]" placeholder="消息/礼物名" />
             </div>
             <div class="flex items-center gap-3 flex-wrap">
               <div class="flex items-center gap-1.5">
@@ -565,11 +505,7 @@ function fireMock() {
                 </div>
               </div>
             </div>
-            <Button
-              size="sm"
-              class="w-fit h-7 text-xs"
-              @click="fireMock"
-            >
+            <Button class="w-fit" @click="fireMock">
               触发事件
             </Button>
           </div>
@@ -580,10 +516,7 @@ function fireMock() {
     <Separator class="my-1" />
 
     <div class="flex items-center gap-2 text-xs">
-      <Switch
-        :checked="settings.timedBroadcast.enabled"
-        @update:checked="settings.timedBroadcast.enabled = $event"
-      />
+      <Switch :checked="settings.timedBroadcast.enabled" @update:checked="settings.timedBroadcast.enabled = $event" />
       <span>定时播报</span>
       <div class="w-[80px]">
         <NInputNumber
@@ -603,26 +536,12 @@ function fireMock() {
         :key="i"
         class="broadcast-row"
       >
-        <Input
-          v-model="settings.timedBroadcast.texts[i]"
-          class="h-7 text-xs flex-1"
-          placeholder="播报文本"
-        />
-        <Button
-          size="sm"
-          variant="ghost"
-          class="h-7 w-7 p-0 text-destructive hover:bg-destructive/10"
-          @click="settings.timedBroadcast.texts.splice(i, 1)"
-        >
+        <Input size="xs" v-model="settings.timedBroadcast.texts[i]" class="flex-1" placeholder="播报文本" />
+        <Button size="xs" variant="ghost" class="w-7 p-0 text-destructive hover:bg-destructive/10" @click="settings.timedBroadcast.texts.splice(i, 1)">
           <Delete20Filled class="size-3.5" />
         </Button>
       </div>
-      <Button
-        size="sm"
-        variant="outline"
-        class="h-7 text-xs gap-1 w-fit"
-        @click="settings.timedBroadcast.texts.push('')"
-      >
+      <Button variant="outline" class="gap-1 w-fit" @click="settings.timedBroadcast.texts.push('')">
         <Add20Filled class="size-3.5" />
         添加播报文本
       </Button>

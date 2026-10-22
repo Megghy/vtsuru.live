@@ -100,30 +100,14 @@ function cancelImport() {
     </CardHeader>
     <CardContent class="px-4 pb-4 pt-0">
       <div class="flex items-center gap-2 flex-wrap text-xs">
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8"
-          @click="exportMinimal"
-        >
+        <Button variant="outline" @click="exportMinimal">
           导出连接信息
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8"
-          @click="exportFull"
-        >
+        <Button variant="outline" @click="exportFull">
           导出全量配置
         </Button>
         <label class="cursor-pointer">
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-8"
-            :disabled="importing"
-            as-child
-          >
+          <Button variant="outline" :disabled="importing" as-child>
             <span>导入</span>
           </Button>
           <input
@@ -157,19 +141,10 @@ function cancelImport() {
         </span>
       </div>
       <DialogFooter class="flex justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          :disabled="importing"
-          @click="cancelImport"
-        >
+        <Button variant="outline" :disabled="importing" @click="cancelImport">
           取消
         </Button>
-        <Button
-          size="sm"
-          :disabled="importing"
-          @click="confirmImport"
-        >
+        <Button :disabled="importing" @click="confirmImport">
           确认导入
         </Button>
       </DialogFooter>

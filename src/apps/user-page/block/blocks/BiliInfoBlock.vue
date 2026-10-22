@@ -166,31 +166,11 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
               v-if="cfg.showButtons"
               class="flex items-center gap-2 shrink-0 compact-actions"
             >
-              <Button
-                v-if="model.spaceUrl"
-                as="a"
-                variant="outline"
-                size="sm"
-                class="h-7 px-2.5 text-xs font-medium"
-                target="_blank"
-                rel="noopener noreferrer"
-                :href="model.spaceUrl"
-                aria-label="打开B站主页（新窗口打开）"
-              >
+              <Button v-if="model.spaceUrl" as="a" variant="outline" size="xs" class="font-medium" target="_blank" rel="noopener noreferrer" :href="model.spaceUrl" aria-label="打开B站主页（新窗口打开）">
                 <component :is="HomeOutline" class="size-3.5 mr-1" />
                 主页
               </Button>
-              <Button
-                v-if="cfg.showLiveRoom && model.liveRoomUrl"
-                as="a"
-                variant="outline"
-                size="sm"
-                class="h-7 px-2.5 text-xs font-medium"
-                target="_blank"
-                rel="noopener noreferrer"
-                :href="model.liveRoomUrl"
-                aria-label="打开直播间（新窗口打开）"
-              >
+              <Button v-if="cfg.showLiveRoom && model.liveRoomUrl" as="a" variant="outline" size="xs" class="font-medium" target="_blank" rel="noopener noreferrer" :href="model.liveRoomUrl" aria-label="打开直播间（新窗口打开）">
                 <component :is="PlayCircleOutline" class="size-3.5 mr-1" />
                 直播间
               </Button>
@@ -302,31 +282,11 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
           v-if="cfg.showButtons"
           class="bili-actions p-4 grid grid-cols-2 gap-3"
         >
-          <Button
-            v-if="model.spaceUrl"
-            as="a"
-            variant="outline"
-            size="sm"
-            class="h-8 text-xs font-semibold"
-            target="_blank"
-            rel="noopener noreferrer"
-            :href="model.spaceUrl"
-            aria-label="打开B站主页（新窗口打开）"
-          >
+          <Button v-if="model.spaceUrl" as="a" variant="outline" class="font-semibold" target="_blank" rel="noopener noreferrer" :href="model.spaceUrl" aria-label="打开B站主页（新窗口打开）">
             <component :is="HomeOutline" class="size-3.5 mr-1.5" />
             主页
           </Button>
-          <Button
-            v-if="cfg.showLiveRoom && model.liveRoomUrl"
-            as="a"
-            variant="outline"
-            size="sm"
-            class="h-8 text-xs font-semibold"
-            target="_blank"
-            rel="noopener noreferrer"
-            :href="model.liveRoomUrl"
-            aria-label="打开直播间（新窗口打开）"
-          >
+          <Button v-if="cfg.showLiveRoom && model.liveRoomUrl" as="a" variant="outline" class="font-semibold" target="_blank" rel="noopener noreferrer" :href="model.liveRoomUrl" aria-label="打开直播间（新窗口打开）">
             <component :is="PlayCircleOutline" class="size-3.5 mr-1.5" />
             直播间
           </Button>

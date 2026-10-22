@@ -90,14 +90,7 @@ function handleMoreAction(key: string) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger as-child>
-          <Button
-            variant="ghost"
-            size="sm"
-            class="size-8 p-0"
-            :disabled="!editor.canUndo.value"
-            aria-label="撤销"
-            @click="editor.undo"
-          >
+          <Button variant="ghost" class="size-8 p-0" :disabled="!editor.canUndo.value" aria-label="撤销" @click="editor.undo">
             <component :is="ArrowUndoOutline" class="size-4" />
           </Button>
         </TooltipTrigger>
@@ -108,14 +101,7 @@ function handleMoreAction(key: string) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger as-child>
-          <Button
-            variant="ghost"
-            size="sm"
-            class="size-8 p-0"
-            :disabled="!editor.canRedo.value"
-            aria-label="重做"
-            @click="editor.redo"
-          >
+          <Button variant="ghost" class="size-8 p-0" :disabled="!editor.canRedo.value" aria-label="重做" @click="editor.redo">
             <component :is="ArrowRedoOutline" class="size-4" />
           </Button>
         </TooltipTrigger>
@@ -123,11 +109,7 @@ function handleMoreAction(key: string) {
       </Tooltip>
     </TooltipProvider>
 
-    <Button
-      size="sm"
-      variant="outline"
-      @click="emit('open-global-style')"
-    >
+    <Button variant="outline" @click="emit('open-global-style')">
       <component :is="ColorPaletteOutline" class="size-4 mr-1 text-primary" />
       外观与主题
     </Button>
@@ -135,14 +117,7 @@ function handleMoreAction(key: string) {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger as-child>
-          <Button
-            class="discard-button"
-            size="sm"
-            variant="outline"
-            :disabled="!editor.isDirty.value || editor.isSaving.value"
-            aria-label="放弃本地修改"
-            @click="confirmDiscardLocalChanges"
-          >
+          <Button class="discard-button" variant="outline" :disabled="!editor.isDirty.value || editor.isSaving.value" aria-label="放弃本地修改" @click="confirmDiscardLocalChanges">
             <component :is="RefreshOutline" class="size-4 mr-1" />
             <span class="discard-label">放弃本地修改</span>
           </Button>
@@ -151,42 +126,23 @@ function handleMoreAction(key: string) {
       </Tooltip>
     </TooltipProvider>
 
-    <Button
-      size="sm"
-      variant="outline"
-      :disabled="editor.isSaving.value"
-      @click="editor.saveDraft"
-    >
+    <Button variant="outline" :disabled="editor.isSaving.value" @click="editor.saveDraft">
       <component :is="SaveOutline" class="size-4 mr-1" />
       保存
     </Button>
 
-    <Button
-      v-if="problemCount"
-      size="sm"
-      variant="destructive"
-      @click="editor.openPublishModal"
-    >
+    <Button v-if="problemCount" variant="destructive" @click="editor.openPublishModal">
       <component :is="AlertCircleOutline" class="size-4 mr-1" />
       {{ problemCount }} 个问题
     </Button>
 
-    <Button
-      size="sm"
-      :disabled="editor.isSaving.value"
-      @click="editor.openPublishModal"
-    >
+    <Button :disabled="editor.isSaving.value" @click="editor.openPublishModal">
       发布
     </Button>
 
     <DropdownMenu>
       <DropdownMenuTrigger as-child>
-        <Button
-          variant="ghost"
-          size="sm"
-          class="size-8 p-0"
-          aria-label="更多操作"
-        >
+        <Button variant="ghost" class="size-8 p-0" aria-label="更多操作">
           <component :is="EllipsisHorizontalOutline" class="size-4" />
         </Button>
       </DropdownMenuTrigger>

@@ -145,13 +145,7 @@ onUnmounted(() => {
       </div>
 
       <div class="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="secondary"
-          class="h-7 text-xs gap-1"
-          :disabled="loading"
-          @click="loadHistory"
-        >
+        <Button variant="secondary" class="gap-1" :disabled="loading" @click="loadHistory">
           <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': loading }" />
           刷新
         </Button>
@@ -160,11 +154,7 @@ onUnmounted(() => {
           @positive-click="handleClearAllHistory"
         >
           <template #trigger>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10 gap-1"
-            >
+            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1">
               <Delete16Filled class="size-3.5" />
               清空所有
             </Button>
@@ -176,7 +166,7 @@ onUnmounted(() => {
 
     <CardContent class="p-3">
       <Tabs v-model="activeTab" class="w-full">
-        <TabsList class="grid w-full grid-cols-3 h-8 max-w-[360px]">
+        <TabsList class="grid w-full grid-cols-3 max-w-[360px]">
           <TabsTrigger
             v-for="(label, type) in typeNameMap"
             :key="type"
@@ -285,11 +275,7 @@ onUnmounted(() => {
               @positive-click="handleClearHistory(type as HistoryType)"
             >
               <template #trigger>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="h-6 text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1"
-                >
+                <Button size="xs" variant="ghost" class="h-6 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1">
                   <Delete16Filled class="size-3" />
                   清空{{ label }}历史
                 </Button>

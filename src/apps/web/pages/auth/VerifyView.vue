@@ -137,33 +137,18 @@ onUnmounted(() => {
         {{ copy.summary }}
       </p>
       <div class="verify-actions">
-        <Button
-          v-if="phase === 'success'"
-          class="w-full flex items-center justify-center gap-2"
-          @click="goManage"
-        >
+        <Button v-if="phase === 'success'" class="w-full flex items-center justify-center gap-2" @click="goManage">
           进入主播后台
           <component :is="ArrowRight24Regular" class="size-4" />
         </Button>
-        <Button
-          v-else-if="phase === 'need-login'"
-          class="w-full"
-          @click="goHome"
-        >
+        <Button v-else-if="phase === 'need-login'" class="w-full" @click="goHome">
           去登录
         </Button>
         <template v-else-if="phase === 'error'">
-          <Button
-            class="w-full"
-            @click="goHome"
-          >
+          <Button class="w-full" @click="goHome">
             返回首页
           </Button>
-          <Button
-            variant="outline"
-            class="w-full"
-            @click="goManage"
-          >
+          <Button variant="outline" class="w-full" @click="goManage">
             打开主播后台
           </Button>
         </template>

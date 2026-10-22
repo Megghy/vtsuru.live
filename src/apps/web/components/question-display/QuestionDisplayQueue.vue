@@ -81,13 +81,7 @@ defineExpose({ scrollToCurrent })
         <div class="heading-actions flex items-center gap-1">
           <Tooltip v-if="currentId">
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-7"
-                aria-label="定位正在展示的提问"
-                @click="scrollToCurrent"
-              >
+              <Button variant="ghost" size="icon" class="size-7" aria-label="定位正在展示的提问" @click="scrollToCurrent">
                 <component :is="Location24Regular" class="size-4" />
               </Button>
             </TooltipTrigger>
@@ -95,14 +89,7 @@ defineExpose({ scrollToCurrent })
           </Tooltip>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon"
-                class="size-7"
-                :disabled="loading"
-                aria-label="刷新提问队列"
-                @click="emit('refresh')"
-              >
+              <Button variant="outline" size="icon" class="size-7" :disabled="loading" aria-label="刷新提问队列" @click="emit('refresh')">
                 <component :is="ArrowSync24Regular" class="size-4" :class="{ 'animate-spin': loading }" />
               </Button>
             </TooltipTrigger>
@@ -114,18 +101,14 @@ defineExpose({ scrollToCurrent })
       <div class="queue-filters p-3 space-y-2 border-b border-border/60 bg-muted/20 text-xs">
         <div class="relative">
           <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="search"
-            placeholder="搜索提问内容"
-            class="h-8 pl-8 text-xs"
-          />
+          <Input v-model="search" placeholder="搜索提问内容" class="pl-8" />
         </div>
 
         <Select
           :model-value="tag || 'all'"
           @update:model-value="tag = $event === 'all' ? undefined : String($event)"
         >
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="全部话题" />
           </SelectTrigger>
           <SelectContent>
@@ -239,14 +222,7 @@ defineExpose({ scrollToCurrent })
             <div class="question-actions flex flex-col items-center justify-between gap-1 border-l border-border/60 pl-1.5">
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="size-6"
-                    :class="item.id === currentId ? 'text-destructive' : 'text-primary'"
-                    :aria-label="item.id === currentId ? '清空当前展示' : '展示这条提问'"
-                    @click="item.id === currentId ? emit('clear') : emit('show', item)"
-                  >
+                  <Button variant="ghost" size="icon" class="size-6" :class="item.id === currentId ? 'text-destructive' : 'text-primary'" :aria-label="item.id === currentId ? '清空当前展示' : '展示这条提问'" @click="item.id === currentId ? emit('clear') : emit('show', item)">
                     <component :is="item.id === currentId ? Dismiss24Regular : Eye24Regular" class="size-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -255,14 +231,7 @@ defineExpose({ scrollToCurrent })
 
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="size-6 text-muted-foreground hover:text-foreground"
-                    :disabled="item.isReaded"
-                    aria-label="标记为已读"
-                    @click="emit('read', item)"
-                  >
+                  <Button variant="ghost" size="icon" class="size-6 text-muted-foreground hover:text-foreground" :disabled="item.isReaded" aria-label="标记为已读" @click="emit('read', item)">
                     <component :is="Checkmark24Regular" class="size-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -271,14 +240,7 @@ defineExpose({ scrollToCurrent })
 
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    class="size-6"
-                    :class="item.isFavorite ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'"
-                    :aria-label="item.isFavorite ? '取消收藏' : '收藏'"
-                    @click="emit('favorite', item, !item.isFavorite)"
-                  >
+                  <Button variant="ghost" size="icon" class="size-6" :class="item.isFavorite ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'" :aria-label="item.isFavorite ? '取消收藏' : '收藏'" @click="emit('favorite', item, !item.isFavorite)">
                     <component :is="item.isFavorite ? Heart : HeartOutline" class="size-3.5" />
                   </Button>
                 </TooltipTrigger>

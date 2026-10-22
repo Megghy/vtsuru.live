@@ -97,13 +97,7 @@ function formatFullTime(time: number) {
 
         <Tooltip v-if="showReplyButton">
           <TooltipTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-6 rounded-full text-muted-foreground hover:text-foreground"
-              :disabled="!canOprate"
-              @click="useForum.SetReplyingComment(comment, item)"
-            >
+            <Button variant="ghost" size="icon" class="size-6 rounded-full text-muted-foreground hover:text-foreground" :disabled="!canOprate" @click="useForum.SetReplyingComment(comment, item)">
               <component :is="ArrowReply16Filled" class="size-3" />
             </Button>
           </TooltipTrigger>
@@ -120,12 +114,7 @@ function formatFullTime(time: number) {
           <template #trigger>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="size-6 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  :disabled="!canOprate"
-                >
+                <Button variant="ghost" size="icon" class="size-6 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10" :disabled="!canOprate">
                   <component :is="Delete24Filled" class="size-3" />
                 </Button>
               </TooltipTrigger>

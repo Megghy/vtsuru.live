@@ -191,11 +191,7 @@ const stageRequestLabel = computed(() => {
       <div class="search-shell mb-3">
         <div class="relative w-full">
           <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchKeyword"
-            class="h-8 pl-8 text-xs w-full"
-            placeholder="搜索曲库…"
-          />
+          <Input v-model="searchKeyword" class="pl-8 w-full" placeholder="搜索曲库…" />
         </div>
       </div>
 

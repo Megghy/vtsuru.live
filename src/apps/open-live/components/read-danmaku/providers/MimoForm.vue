@@ -183,25 +183,14 @@ watch(
           </p>
         </div>
       </template>
-      <Input
-        v-model="settings.providers.mimo.mimoStyleTag"
-        placeholder="(慵懒 磁性) 或 [开心]，可留空"
-        class="h-8 text-xs"
-        autocomplete="off"
-      />
+      <Input v-model="settings.providers.mimo.mimoStyleTag" placeholder="(慵懒 磁性) 或 [开心]，可留空" autocomplete="off" />
     </SectionField>
 
     <SectionField
       label="自定义 API Key (可选)"
       hint="填写后将直接从浏览器调用 MiMo API, 不经过本站服务器, 速度更快"
     >
-      <Input
-        v-model="settings.providers.mimo.mimoApiKey"
-        type="password"
-        placeholder="sk-xxxx"
-        autocomplete="new-password"
-        class="h-8 text-xs"
-      />
+      <Input v-model="settings.providers.mimo.mimoApiKey" type="password" placeholder="sk-xxxx" autocomplete="new-password" />
       <span class="text-[11px] text-muted-foreground">
         <a
           href="https://platform.xiaomimimo.com"
@@ -220,13 +209,7 @@ watch(
         <span class="text-[11px] text-muted-foreground">
           {{ account.id ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
         </span>
-        <Button
-          size="xs"
-          variant="secondary"
-          class="h-6 text-[11px] gap-1"
-          :disabled="!account.id"
-          @click="showCreateDialog = true"
-        >
+        <Button size="xs" variant="secondary" class="h-6 text-[11px] gap-1" :disabled="!account.id" @click="showCreateDialog = true">
           <Add20Filled class="size-3.5" />
           新建
         </Button>
@@ -262,20 +245,10 @@ watch(
           </Badge>
 
           <div class="voice-actions">
-            <Button
-              size="xs"
-              :variant="isCustomSelected(v) ? 'default' : 'ghost'"
-              class="h-6 px-2 text-[11px]"
-              @click="useCustomVoice(v)"
-            >
+            <Button size="xs" :variant="isCustomSelected(v) ? 'default' : 'ghost'" class="h-6 px-2 text-[11px]" @click="useCustomVoice(v)">
               {{ isCustomSelected(v) ? '使用中' : '使用' }}
             </Button>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-              @click="editCustomVoice(v)"
-            >
+            <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground" @click="editCustomVoice(v)">
               <Edit20Filled class="size-3.5" />
             </Button>
             <Popconfirm
@@ -283,11 +256,7 @@ watch(
               @positive-click="deleteCustomVoice(v.id)"
             >
               <template #trigger>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                >
+                <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:text-destructive">
                   <Delete20Filled class="size-3.5" />
                 </Button>
               </template>

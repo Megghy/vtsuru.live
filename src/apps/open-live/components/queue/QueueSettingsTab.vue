@@ -48,39 +48,16 @@ function onChange() {
           <div class="flex items-center gap-2 flex-wrap">
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[350px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">弹幕关键词</span>
-              <Input
-                v-model="settings.keyword"
-                placeholder="留空则禁用弹幕加入"
-                class="border-0 shadow-none text-xs h-8"
-                @change="onChange"
-              />
+              <Input v-model="settings.keyword" placeholder="留空则禁用弹幕加入" class="border-0 shadow-none" @change="onChange" />
             </div>
             <div class="flex items-center border rounded-md p-0.5 gap-0.5 bg-muted/30">
-              <Button
-                type="button"
-                size="sm"
-                class="h-7 text-xs px-2.5"
-                :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'"
-                @click="settings.matchType = KeywordMatchType.Full; onChange()"
-              >
+              <Button type="button" class="px-2.5" :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'" @click="settings.matchType = KeywordMatchType.Full; onChange()">
                 完全
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                class="h-7 text-xs px-2.5"
-                :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'"
-                @click="settings.matchType = KeywordMatchType.Contains; onChange()"
-              >
+              <Button type="button" class="px-2.5" :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'" @click="settings.matchType = KeywordMatchType.Contains; onChange()">
                 包含
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                class="h-7 text-xs px-2.5"
-                :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'"
-                @click="settings.matchType = KeywordMatchType.Regex; onChange()"
-              >
+              <Button type="button" class="px-2.5" :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'" @click="settings.matchType = KeywordMatchType.Regex; onChange()">
                 正则
               </Button>
             </div>
@@ -187,11 +164,7 @@ function onChange() {
 
             <div class="flex items-center gap-2 text-xs">
               <span class="text-muted-foreground shrink-0">指定礼物名称</span>
-              <Input
-                :model-value="(settings.giftNames || []).join(',')"
-                placeholder="多个礼物名以英文逗号分隔，留空不限"
-                class="w-[320px] text-xs h-8"
-                @update:model-value="(val: string | number) => {
+              <Input :model-value="(settings.giftNames || []).join(',')" placeholder="多个礼物名以英文逗号分隔，留空不限" class="w-[320px]" @update:model-value="(val: string | number) => {
                   settings.giftNames = String(val).split(',').map((s: string) => s.trim()).filter(Boolean);
                   onChange();
                 }"
@@ -199,22 +172,10 @@ function onChange() {
             </div>
 
             <div class="flex items-center border rounded-md p-0.5 gap-0.5 bg-muted/30 w-fit">
-              <Button
-                type="button"
-                size="sm"
-                class="h-7 text-xs px-2.5"
-                :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'"
-                @click="settings.giftFilterType = QueueGiftFilterType.And; onChange()"
-              >
+              <Button type="button" class="px-2.5" :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'" @click="settings.giftFilterType = QueueGiftFilterType.And; onChange()">
                 需同时满足名称和价值
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                class="h-7 text-xs px-2.5"
-                :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'"
-                @click="settings.giftFilterType = QueueGiftFilterType.Or; onChange()"
-              >
+              <Button type="button" class="px-2.5" :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'" @click="settings.giftFilterType = QueueGiftFilterType.Or; onChange()">
                 满足名称或价值之一
               </Button>
             </div>

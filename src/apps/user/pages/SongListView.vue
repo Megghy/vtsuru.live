@@ -321,13 +321,7 @@ onMounted(async () => {
     </Spin>
 
     <!-- 主播自定义按钮 -->
-    <Button
-      v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id"
-      variant="outline"
-      size="sm"
-      class="absolute right-8 top-5 z-[1000]"
-      @click="showSettingModal = true"
-    >
+    <Button v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id" variant="outline" class="absolute right-8 top-5 z-[1000]" @click="showSettingModal = true">
       自定义
     </Button>
 

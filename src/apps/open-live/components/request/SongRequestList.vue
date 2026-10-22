@@ -98,18 +98,8 @@ async function updateSettings() {
           <!-- 右侧操作与过滤 -->
           <div class="flex items-center gap-2 flex-wrap">
             <div class="flex items-center gap-1.5 w-[220px]">
-              <Input
-                :value="songRequest.newSongName"
-                placeholder="手动输入歌曲名"
-                class="h-8 text-xs flex-1"
-                @input="songRequest.newSongName = ($event.target as HTMLInputElement).value"
-                @keyup.enter="songRequest.addSongManual()"
-              />
-              <Button
-                size="sm"
-                class="h-8 text-xs shrink-0"
-                @click="songRequest.addSongManual()"
-              >
+              <Input :value="songRequest.newSongName" placeholder="手动输入歌曲名" class="flex-1" @input="songRequest.newSongName = ($event.target as HTMLInputElement).value" @keyup.enter="songRequest.addSongManual()" />
+              <Button class="shrink-0" @click="songRequest.addSongManual()">
                 添加
               </Button>
             </div>
@@ -153,11 +143,7 @@ async function updateSettings() {
               @positive-click="songRequest.deactiveAllSongs()"
             >
               <template #trigger>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
-                >
+                <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
                   全部取消
                 </Button>
               </template>

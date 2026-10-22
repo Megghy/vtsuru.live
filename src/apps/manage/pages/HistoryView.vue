@@ -24,9 +24,11 @@ import { isDarkMode } from '@/shared/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { DateRangePicker } from '@/shared/ui/date-picker'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Separator } from '@/shared/ui/separator'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 // 初始化 ECharts 组件
 use([
@@ -454,13 +456,7 @@ watch(
       subtitle="粉丝与舰长成长轨迹，需 VTsuruEventFetcher 持续采集"
     >
       <template #action>
-        <Button
-          v-if="accountInfo?.isBiliVerified === true"
-          size="xs"
-          variant="outline"
-          :loading="isLoading"
-          @click="refreshHistory"
-        >
+        <Button v-if="accountInfo?.isBiliVerified === true" size="xs" variant="outline" :loading="isLoading" @click="refreshHistory">
           <component
             :is="ArrowClockwise24Regular"
             class="h-3.5 w-3.5 mr-1"
@@ -502,72 +498,53 @@ watch(
       <!-- 主控制与图表大卡片 -->
       <Card class="p-4 space-y-4">
         <!-- 顶部工具条 -->
-        <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center justify-between flex-wrap gap-2.5">
           <!-- 预设选择器 -->
           <div class="flex items-center gap-2 flex-wrap">
-            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-              <Button
-                size="xs"
-                :variant="activePreset === '7d' ? 'brand' : 'ghost'"
-                class="h-6 px-2 text-xs"
+            <ToggleGroup v-model="activePreset" type="single">
+              <ToggleGroupItem
+                value="7d"
                 @click="setPreset('7d')"
               >
                 近7天
-              </Button>
-              <Button
-                size="xs"
-                :variant="activePreset === '30d' ? 'brand' : 'ghost'"
-                class="h-6 px-2 text-xs"
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="30d"
                 @click="setPreset('30d')"
               >
                 近30天
-              </Button>
-              <Button
-                size="xs"
-                :variant="activePreset === '90d' ? 'brand' : 'ghost'"
-                class="h-6 px-2 text-xs"
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="90d"
                 @click="setPreset('90d')"
               >
                 近90天
-              </Button>
-              <Button
-                size="xs"
-                :variant="activePreset === 'all' ? 'brand' : 'ghost'"
-                class="h-6 px-2 text-xs"
+              </ToggleGroupItem>
+              <ToggleGroupItem
+                value="all"
                 @click="setPreset('all')"
               >
                 全部
-              </Button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
             <!-- 自定义日期区间 -->
-            <div class="flex items-center gap-1.5">
-              <Input
-                v-model="customStartDate"
-                type="date"
-                class="h-7 text-xs w-32"
-                @change="handleCustomDateApply"
-              />
-              <span class="text-xs text-muted-foreground">至</span>
-              <Input
-                v-model="customEndDate"
-                type="date"
-                class="h-7 text-xs w-32"
-                @change="handleCustomDateApply"
-              />
-            </div>
+            <DateRangePicker
+              v-model:start="customStartDate"
+              v-model:end="customEndDate"
+              size="sm"
+              @update:start="handleCustomDateApply"
+              @update:end="handleCustomDateApply"
+            />
           </div>
 
           <!-- 关于数据更新弹窗说明 -->
           <Popover>
             <PopoverTrigger as-child>
-              <Button
-                size="xs"
-                variant="outline"
-              >
+              <Button variant="outline">
                 <component
                   :is="Info24Filled"
-                  class="h-3.5 w-3.5 mr-1 text-brand"
+                  class="size-3.5 mr-1 text-muted-foreground"
                 />
                 关于更新频次
               </Button>

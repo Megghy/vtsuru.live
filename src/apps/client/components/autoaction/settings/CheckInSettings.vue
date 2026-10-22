@@ -349,7 +349,7 @@ onMounted(() => {
 
     <CardContent class="p-3">
       <Tabs default-value="settings">
-        <TabsList class="grid w-full grid-cols-3 h-8">
+        <TabsList class="grid w-full grid-cols-3">
           <TabsTrigger value="settings" class="text-xs gap-1.5">
             <Settings24Regular class="size-3.5" />
             功能设置
@@ -385,10 +385,7 @@ onMounted(() => {
                   <span class="text-xs font-medium text-foreground block">启用签到功能</span>
                   <span class="text-[11px] text-muted-foreground block mt-0.5">观众发送签到命令可获得积分</span>
                 </div>
-                <Switch
-                  v-model:checked="serverSetting.enableCheckIn"
-                  @update:checked="updateServerSettings"
-                />
+                <Switch v-model:checked="serverSetting.enableCheckIn" @update:checked="updateServerSettings" />
               </div>
 
               <div
@@ -397,17 +394,8 @@ onMounted(() => {
               >
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-muted-foreground w-20 shrink-0">签到命令 *</span>
-                  <Input
-                    :value="serverSetting.checkInKeyword"
-                    placeholder="例如：签到"
-                    class="h-8 text-xs flex-1"
-                    @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value"
-                  />
-                  <Button
-                    size="sm"
-                    class="h-8 text-xs"
-                    @click="updateServerSettings"
-                  >
+                  <Input :value="serverSetting.checkInKeyword" placeholder="例如：签到" class="flex-1" @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value" />
+                  <Button @click="updateServerSettings">
                     保存
                   </Button>
                 </div>
@@ -415,24 +403,15 @@ onMounted(() => {
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">要求已认证</span>
-                    <Switch
-                      v-model:checked="serverSetting.requireAuth"
-                      @update:checked="updateServerSettings"
-                    />
+                    <Switch v-model:checked="serverSetting.requireAuth" @update:checked="updateServerSettings" />
                   </div>
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">允许自己签到</span>
-                    <Switch
-                      v-model:checked="serverSetting.allowSelfCheckIn"
-                      @update:checked="updateServerSettings"
-                    />
+                    <Switch v-model:checked="serverSetting.allowSelfCheckIn" @update:checked="updateServerSettings" />
                   </div>
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">允许查看排行</span>
-                    <Switch
-                      :checked="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)"
-                      @update:checked="updateCheckInRanking"
-                    />
+                    <Switch :checked="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)" @update:checked="updateCheckInRanking" />
                   </div>
                 </div>
               </div>
@@ -447,10 +426,7 @@ onMounted(() => {
 
               <div class="flex items-center justify-between p-2 rounded border bg-card">
                 <span class="text-xs font-medium text-foreground">启用积分奖励</span>
-                <Switch
-                  v-model:checked="serverSetting.givePointsForCheckIn"
-                  @update:checked="updateServerSettings"
-                />
+                <Switch v-model:checked="serverSetting.givePointsForCheckIn" @update:checked="updateServerSettings" />
               </div>
 
               <div
@@ -470,10 +446,7 @@ onMounted(() => {
 
                 <div class="flex items-center justify-between p-2 rounded border bg-card">
                   <span class="text-xs font-medium text-foreground">连续签到奖励</span>
-                  <Switch
-                    v-model:checked="serverSetting.enableConsecutiveBonus"
-                    @update:checked="updateServerSettings"
-                  />
+                  <Switch v-model:checked="serverSetting.enableConsecutiveBonus" @update:checked="updateServerSettings" />
                 </div>
 
                 <div
@@ -546,12 +519,7 @@ onMounted(() => {
           </div>
 
           <div class="flex justify-center pt-2">
-            <Button
-              size="lg"
-              class="h-9 px-8 text-xs"
-              :disabled="!canEdit || isLoading"
-              @click="updateSettings"
-            >
+            <Button class="px-8" :disabled="!canEdit || isLoading" @click="updateSettings">
               {{ isLoading ? '保存中...' : '保存所有更改' }}
             </Button>
           </div>
@@ -572,7 +540,7 @@ onMounted(() => {
                   v-model="timeRange"
                   @update:model-value="loadCheckInRanking"
                 >
-                  <SelectTrigger class="h-8 text-xs w-full">
+                  <SelectTrigger class="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -590,22 +558,12 @@ onMounted(() => {
 
               <div class="relative w-44">
                 <Search24Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input
-                  v-model="userFilter"
-                  placeholder="搜索用户名..."
-                  class="h-8 text-xs pl-8 pr-2"
-                />
+                <Input v-model="userFilter" placeholder="搜索用户名..." class="pl-8 pr-2" />
               </div>
             </div>
 
             <div class="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-8 text-xs gap-1"
-                :disabled="isLoadingRanking"
-                @click="loadCheckInRanking"
-              >
+              <Button variant="secondary" class="gap-1" :disabled="isLoadingRanking" @click="loadCheckInRanking">
                 <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': isLoadingRanking }" />
                 刷新
               </Button>
@@ -615,11 +573,7 @@ onMounted(() => {
                 @positive-click="resetAllCheckIn"
               >
                 <template #trigger>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
-                  >
+                  <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
                     重置全部
                   </Button>
                 </template>
@@ -701,12 +655,7 @@ onMounted(() => {
                         @positive-click="resetUserCheckInByGuid(row.ouId)"
                       >
                         <template #trigger>
-                          <Button
-                            size="xs"
-                            variant="ghost"
-                            class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                            :disabled="isResetting"
-                          >
+                          <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10" :disabled="isResetting">
                             <Delete16Filled class="size-3.5" />
                           </Button>
                         </template>
@@ -763,20 +712,11 @@ onMounted(() => {
 
             <div class="space-y-1">
               <span class="text-xs text-muted-foreground">模拟用户名称</span>
-              <Input
-                v-model="testUsername"
-                placeholder="默认为'测试用户'"
-                class="h-8 text-xs"
-              />
+              <Input v-model="testUsername" placeholder="默认为'测试用户'" />
             </div>
 
             <div class="flex justify-end pt-1">
-              <Button
-                size="sm"
-                class="h-8 text-xs"
-                :disabled="!testUid || !serverSetting.enableCheckIn"
-                @click="handleTestCheckIn"
-              >
+              <Button :disabled="!testUid || !serverSetting.enableCheckIn" @click="handleTestCheckIn">
                 开始模拟签到
               </Button>
             </div>

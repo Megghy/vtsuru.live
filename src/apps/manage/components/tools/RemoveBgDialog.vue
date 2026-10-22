@@ -11,6 +11,13 @@ import {
   DialogTitle,
 } from '@/shared/ui/dialog'
 import { Progress } from '@/shared/ui/progress'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { useMessage } from '@/shared/utils'
 
@@ -100,43 +107,49 @@ function cancel() {
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 my-2">
         <div class="flex flex-col gap-1">
           <label class="text-[11px] text-muted-foreground">模式</label>
-          <select
-            v-model="options.mode"
-            class="h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option v-for="opt in modeOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
+          <Select v-model="options.mode">
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="opt in modeOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div class="flex flex-col gap-1">
           <label class="text-[11px] text-muted-foreground">模型</label>
-          <select
-            v-model="options.model"
-            class="h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option v-for="opt in modelOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </option>
-          </select>
+          <Select v-model="options.model">
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem v-for="opt in modelOptions" :key="opt.value" :value="opt.value">
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div class="flex flex-col gap-1">
           <label class="text-[11px] text-muted-foreground">设备</label>
-          <select
-            v-model="options.device"
-            class="h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-          >
-            <option
-              v-for="opt in deviceOptions"
-              :key="opt.value"
-              :value="opt.value"
-              :disabled="opt.disabled"
-            >
-              {{ opt.label }}
-            </option>
-          </select>
+          <Select v-model="options.device">
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in deviceOptions"
+                :key="opt.value"
+                :value="opt.value"
+                :disabled="opt.disabled"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div class="flex flex-col gap-1 justify-center">
@@ -180,28 +193,15 @@ function cancel() {
       </div>
 
       <DialogFooter class="flex sm:justify-between items-center w-full mt-4">
-        <Button
-          size="sm"
-          variant="secondary"
-          :disabled="processing || !sourceUrl"
-          @click="process"
-        >
+        <Button variant="secondary" :disabled="processing || !sourceUrl" @click="process">
           {{ resultUrl ? '重新处理' : '开始处理' }}
         </Button>
 
         <div class="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            @click="cancel"
-          >
+          <Button variant="outline" @click="cancel">
             取消
           </Button>
-          <Button
-            size="sm"
-            :disabled="!resultBlob"
-            @click="confirm"
-          >
+          <Button :disabled="!resultBlob" @click="confirm">
             应用替换
           </Button>
         </div>

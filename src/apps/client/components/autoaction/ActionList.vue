@@ -219,9 +219,7 @@ function importActions() {
     <div class="action-list-header flex items-center justify-between gap-3 flex-wrap">
       <div class="flex items-center gap-4 flex-wrap">
         <div class="flex items-center gap-2 cursor-pointer select-none">
-          <Switch
-            v-model:checked="typeEnabled"
-          />
+          <Switch v-model:checked="typeEnabled" />
           <span
             class="text-xs font-semibold"
             :class="typeEnabled ? 'text-foreground' : 'text-muted-foreground'"
@@ -234,21 +232,11 @@ function importActions() {
           v-if="filteredActions.length > 0"
           class="batch-actions flex items-center gap-1.5"
         >
-          <Button
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] gap-1"
-            @click="handleBatchEnable(true)"
-          >
+          <Button size="xs" variant="ghost" class="h-6 text-[11px] gap-1" @click="handleBatchEnable(true)">
             <CheckmarkCircle16Regular class="size-3" />
             全部启用
           </Button>
-          <Button
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] gap-1"
-            @click="handleBatchEnable(false)"
-          >
+          <Button size="xs" variant="ghost" class="h-6 text-[11px] gap-1" @click="handleBatchEnable(false)">
             <DismissCircle16Regular class="size-3" />
             全部禁用
           </Button>
@@ -258,22 +246,14 @@ function importActions() {
       <div class="flex items-center gap-2 flex-wrap">
         <div class="relative w-[180px]">
           <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-          <Input
-            v-model="searchText"
-            placeholder="搜索操作..."
-            class="h-8 text-xs pl-8 pr-2"
-          />
+          <Input v-model="searchText" placeholder="搜索操作..." class="pl-8 pr-2" />
         </div>
 
         <slot name="extra-actions" />
 
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 w-8 p-0"
-            >
+            <Button variant="outline" class="w-8 p-0">
               <MoreHorizontal24Regular class="size-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -287,20 +267,11 @@ function importActions() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button
-          size="sm"
-          variant="secondary"
-          class="h-8 text-xs text-amber-600 dark:text-amber-400"
-          @click="$emit('test')"
-        >
+        <Button variant="secondary" class="text-amber-600 dark:text-amber-400" @click="$emit('test')">
           测试
         </Button>
 
-        <Button
-          size="sm"
-          class="h-8 text-xs gap-1.5"
-          @click="$emit('add')"
-        >
+        <Button class="gap-1.5" @click="$emit('add')">
           <Add16Regular class="size-3.5" />
           添加{{ title }}
         </Button>
@@ -316,21 +287,10 @@ function importActions() {
       >
         <Empty :description="searchText ? '没有匹配的搜索结果' : '暂无操作'">
           <div class="mt-3">
-            <Button
-              v-if="!searchText"
-              size="sm"
-              class="h-8 text-xs"
-              @click="$emit('add')"
-            >
+            <Button v-if="!searchText" @click="$emit('add')">
               创建第一个{{ title }}
             </Button>
-            <Button
-              v-else
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs"
-              @click="searchText = ''"
-            >
+            <Button v-else variant="secondary" @click="searchText = ''">
               重置搜索
             </Button>
           </div>
@@ -431,43 +391,26 @@ function importActions() {
                 <div class="flex items-center justify-end gap-1.5">
                   <!-- 上下移动排序 (仅定时) -->
                   <template v-if="triggerType === TriggerType.SCHEDULED">
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 w-6 p-0"
-                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === 0"
+                    <Button size="xs" variant="ghost" class="h-6 w-6 p-0" :disabled="orderedActions.findIndex((a) => a.id === row.id) === 0"
                       @click="autoActionStore.moveAction(row.id, 'up')"
                     >
                       <ArrowUp24Regular class="size-3.5" />
                     </Button>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 w-6 p-0"
-                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === orderedActions.length - 1"
+                    <Button size="xs" variant="ghost" class="h-6 w-6 p-0" :disabled="orderedActions.findIndex((a) => a.id === row.id) === orderedActions.length - 1"
                       @click="autoActionStore.moveAction(row.id, 'down')"
                     >
                       <ArrowDown24Regular class="size-3.5" />
                     </Button>
                   </template>
 
-                  <Button
-                    size="xs"
-                    variant="secondary"
-                    class="h-7 text-xs gap-1"
-                    @click="$emit('edit', row.id)"
-                  >
+                  <Button size="xs" variant="secondary" class="gap-1" @click="$emit('edit', row.id)">
                     <Edit16Regular class="size-3" />
                     编辑
                   </Button>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger as-child>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="h-7 w-7 p-0"
-                      >
+                      <Button size="xs" variant="ghost" class="w-7 p-0">
                         <MoreHorizontal24Regular class="size-3.5" />
                       </Button>
                     </DropdownMenuTrigger>

@@ -73,7 +73,7 @@ async function navigateCheck(target: CheckTarget) {
         v-model="activeTab"
         class="w-full"
       >
-        <TabsList class="grid w-full max-w-xs grid-cols-2 h-8">
+        <TabsList class="grid w-full max-w-xs grid-cols-2">
           <TabsTrigger value="control" class="text-xs gap-1.5">
             <Live24Filled class="size-3.5" />
             直播控制

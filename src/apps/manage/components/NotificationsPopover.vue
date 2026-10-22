@@ -203,13 +203,7 @@ watch(
             {{ notificationStore.unreadCount }} 未读
           </Badge>
         </div>
-        <Button
-          size="xs"
-          variant="ghost"
-          class="h-6 text-[11px] text-muted-foreground hover:text-foreground"
-          :disabled="notificationStore.unreadCount === 0"
-          @click.stop="markAllRead"
-        >
+        <Button size="xs" variant="ghost" class="h-6 text-[11px] text-muted-foreground hover:text-foreground" :disabled="notificationStore.unreadCount === 0" @click.stop="markAllRead">
           全部已读
         </Button>
       </div>
@@ -255,39 +249,17 @@ watch(
 
             <div class="flex items-center gap-1.5 pt-1 justify-end flex-wrap">
               <template v-if="isOrgInviteNotification(item)">
-                <Button
-                  size="xs"
-                  variant="brand"
-                  class="h-6 px-2 text-[11px]"
-                  @click.stop="acceptOrgInvite(item)"
-                >
+                <Button size="xs" variant="brand" class="h-6 px-2 text-[11px]" @click.stop="acceptOrgInvite(item)">
                   接受
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="h-6 px-2 text-[11px]"
-                  @click.stop="rejectOrgInvite(item)"
-                >
+                <Button size="xs" variant="outline" class="h-6 px-2 text-[11px]" @click.stop="rejectOrgInvite(item)">
                   拒绝
                 </Button>
               </template>
-              <Button
-                v-if="resolveOpenUrl(item)"
-                size="xs"
-                variant="brand"
-                class="h-6 px-2 text-[11px]"
-                @click.stop="openNotif(item)"
-              >
+              <Button v-if="resolveOpenUrl(item)" size="xs" variant="brand" class="h-6 px-2 text-[11px]" @click.stop="openNotif(item)">
                 打开
               </Button>
-              <Button
-                v-if="!item.isReaded"
-                size="xs"
-                variant="ghost"
-                class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                @click.stop="markRead(item.id)"
-              >
+              <Button v-if="!item.isReaded" size="xs" variant="ghost" class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground" @click.stop="markRead(item.id)">
                 标为已读
               </Button>
             </div>

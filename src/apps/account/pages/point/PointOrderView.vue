@@ -127,12 +127,7 @@ onMounted(() => void loadOrders())
       subtitle="查看并跟踪你使用积分兑换的实物礼物与互动服务。"
     >
       <template #actions>
-        <Button
-          variant="outline"
-          :disabled="loading"
-          class="flex items-center gap-1.5"
-          @click="refresh"
-        >
+        <Button variant="outline" :disabled="loading" class="flex items-center gap-1.5" @click="refresh">
           <component :is="ArrowSync24Regular" class="size-4" :class="{ 'animate-spin': loading }" />
           刷新
         </Button>
@@ -150,15 +145,11 @@ onMounted(() => void loadOrders())
             <div class="order-filters flex flex-wrap items-center gap-2">
               <div class="relative w-48">
                 <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  v-model="keyword"
-                  placeholder="搜索礼物名或订单号"
-                  class="h-8 pl-8 text-xs"
-                />
+                <Input v-model="keyword" placeholder="搜索礼物名或订单号" class="pl-8" />
               </div>
 
               <Select v-model="status">
-                <SelectTrigger class="w-36 h-8 text-xs">
+                <SelectTrigger class="w-36">
                   <SelectValue placeholder="订单状态" />
                 </SelectTrigger>
                 <SelectContent>

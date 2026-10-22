@@ -68,31 +68,15 @@ function handleConnect() {
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <Input
-          v-model="wsUrlInput"
-          class="min-w-[300px] flex-1 h-8 text-xs"
-          :placeholder="DEFAULT_WS_URL"
-        />
-        <Button
-          v-if="!vts.connected && !vts.connecting"
-          size="sm"
-          @click="handleConnect"
-        >
+        <Input v-model="wsUrlInput" class="min-w-[300px] flex-1" :placeholder="DEFAULT_WS_URL" />
+        <Button v-if="!vts.connected && !vts.connecting" @click="handleConnect">
           连接
         </Button>
-        <Button
-          v-else
-          size="sm"
-          variant="outline"
-          @click="run(() => vts.disconnect())"
+        <Button v-else variant="outline" @click="run(() => vts.disconnect())"
         >
           {{ vts.connecting ? '取消' : '断开' }}
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          :disabled="!vts.authToken"
-          @click="run(() => vts.reauthorize())"
+        <Button variant="outline" :disabled="!vts.authToken" @click="run(() => vts.reauthorize())"
         >
           重新授权
         </Button>

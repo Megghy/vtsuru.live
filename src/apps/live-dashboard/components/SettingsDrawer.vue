@@ -142,12 +142,7 @@ function resetToolbarOrder() {
         <Separator />
         <div class="settings__stat-header flex justify-between items-center">
           <div class="settings__group">顶栏指标项 (支持拖拽排序)</div>
-          <Button
-            size="sm"
-            variant="ghost"
-            class="h-6 text-xs px-2 text-muted-foreground"
-            @click="resetToolbarOrder"
-          >
+          <Button variant="ghost" class="h-6 px-2 text-muted-foreground" @click="resetToolbarOrder">
             重置排序
           </Button>
         </div>
@@ -173,9 +168,7 @@ function resetToolbarOrder() {
               </span>
               <span>{{ opt.label }}</span>
             </div>
-            <Switch
-              v-model="dashboard.settings.toolbarStats[opt.key]"
-            />
+            <Switch v-model="dashboard.settings.toolbarStats[opt.key]" />
           </div>
         </VueDraggable>
 
@@ -192,8 +185,7 @@ function resetToolbarOrder() {
           />
         </label>
         <label class="settings__row"
-          >自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide"
-        /></label>
+          >自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide" /></label>
         <template v-if="dashboard.settings.card.autoHide">
           <label class="settings__row">
             重复次数达到
@@ -218,11 +210,7 @@ function resetToolbarOrder() {
         <Separator />
         <div class="settings__group">用户备注</div>
         <div class="settings__buttons">
-          <Button
-            size="sm"
-            variant="outline"
-            @click="exportNotes"
-          >
+          <Button variant="outline" @click="exportNotes">
             导出备注
           </Button>
           <label>
@@ -232,7 +220,7 @@ function resetToolbarOrder() {
               class="hidden"
               @change="onImportNotes"
             >
-            <Button size="sm" variant="outline" as="span" class="cursor-pointer">
+            <Button variant="outline" as="span" class="cursor-pointer">
               导入备注
             </Button>
           </label>
@@ -254,14 +242,7 @@ function resetToolbarOrder() {
           <span v-if="!counts.length">暂无数据</span>
         </div>
         <div class="settings__buttons">
-          <Button
-            v-for="f in ['json', 'csv', 'xlsx'] as const"
-            :key="f"
-            size="sm"
-            variant="outline"
-            :disabled="exporting === f"
-            @click="doExport(f)"
-          >
+          <Button v-for="f in ['json', 'csv', 'xlsx'] as const" :key="f" variant="outline" :disabled="exporting === f" @click="doExport(f)">
             导出 {{ f.toUpperCase() }}
           </Button>
         </div>
@@ -273,16 +254,13 @@ function resetToolbarOrder() {
               class="hidden"
               @change="onImportEvents"
             >
-            <Button size="sm" variant="outline" as="span" class="cursor-pointer">
+            <Button variant="outline" as="span" class="cursor-pointer">
               导入 JSON 归档
             </Button>
           </label>
           <Popconfirm @positive-click="clearAll">
             <template #trigger>
-              <Button
-                size="sm"
-                variant="destructive"
-              >
+              <Button variant="destructive">
                 清空本地事件
               </Button>
             </template>

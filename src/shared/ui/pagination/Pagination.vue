@@ -13,6 +13,13 @@ import {
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 const props = withDefaults(
   defineProps<{
@@ -49,8 +56,8 @@ function onPageChange(p: number) {
   emit('update:page', p)
 }
 
-function onSizeChange(e: Event) {
-  const size = Number((e.target as HTMLSelectElement).value)
+function onSizeChange(val: string | number) {
+  const size = Number(val)
   emit('update:pageSize', size)
   emit('update:page', 1)
 }
@@ -63,14 +70,20 @@ function onSizeChange(e: Event) {
     </div>
 
     <div class="flex items-center gap-2">
-      <div v-if="showSizePicker" class="flex items-center gap-1">
-        <select
-          :value="pageSize"
-          class="h-7 rounded border border-input bg-background px-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-          @change="onSizeChange"
+      <div v-if="showSizePicker" class="flex items-center gap-1 w-28">
+        <Select
+          :model-value="String(pageSize)"
+          @update:model-value="onSizeChange"
         >
-          <option v-for="s in pageSizes" :key="s" :value="s">{{ s }} 条/页</option>
-        </select>
+          <SelectTrigger size="xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem v-for="s in pageSizes" :key="s" :value="String(s)">
+              {{ s }} 条/页
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <PaginationRoot
@@ -100,11 +113,7 @@ function onSizeChange(e: Event) {
               :value="item.value"
               as-child
             >
-              <Button
-                size="icon"
-                :variant="item.value === page ? 'default' : 'outline'"
-                class="size-7 text-xs"
-              >
+              <Button size="icon" :variant="item.value === page ? 'default' : 'outline'" class="size-7" >
                 {{ item.value }}
               </Button>
             </PaginationListItem>

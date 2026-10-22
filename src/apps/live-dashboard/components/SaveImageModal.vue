@@ -152,14 +152,7 @@ const copy = () =>
             额外留白
           </label>
           <div class="flex items-center gap-1 mt-1">
-            <Button
-              v-for="mode in (['transparent', 'white', 'black'] as const)"
-              :key="mode"
-              size="sm"
-              :variant="options.background === mode ? 'default' : 'outline'"
-              class="h-7 text-xs flex-1 px-1"
-              @click="options.background = mode"
-            >
+            <Button v-for="mode in (['transparent', 'white', 'black'] as const)" :key="mode" :variant="options.background === mode ? 'default' : 'outline'" class="flex-1 px-1" @click="options.background = mode">
               {{ mode === 'transparent' ? '透明' : mode === 'white' ? '白色' : '黑色' }}
             </Button>
           </div>
@@ -167,18 +160,10 @@ const copy = () =>
       </div>
       <DialogFooter>
         <div class="image-dialog__buttons flex justify-end gap-2 w-full">
-          <Button
-            v-if="canCopy"
-            variant="outline"
-            :disabled="busy"
-            @click="copy"
-          >
+          <Button v-if="canCopy" variant="outline" :disabled="busy" @click="copy">
             复制到剪贴板
           </Button>
-          <Button
-            :disabled="busy"
-            @click="save"
-          >
+          <Button :disabled="busy" @click="save">
             保存图片
           </Button>
         </div>

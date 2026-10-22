@@ -43,12 +43,7 @@ function markAllRead() {
       />
       <Popover v-if="panel === 'gift'">
         <PopoverTrigger as-child>
-          <Button
-            variant="ghost"
-            size="icon"
-            class="h-6 w-6"
-            aria-label="礼物过滤"
-            :class="dashboard.settings.giftMinPrice > 0 || dashboard.settings.showFreeGift ? 'text-primary' : 'text-muted-foreground'"
+          <Button variant="ghost" size="icon" class="h-6 w-6" aria-label="礼物过滤" :class="dashboard.settings.giftMinPrice> 0 || dashboard.settings.showFreeGift ? 'text-primary' : 'text-muted-foreground'"
           >
             <component :is="Filter16Regular" class="h-4 w-4" />
           </Button>
@@ -64,9 +59,7 @@ function markAllRead() {
             />
             <label class="gift-filter__row">
               显示免费礼物
-              <Switch
-                v-model="dashboard.settings.showFreeGift"
-              />
+              <Switch v-model="dashboard.settings.showFreeGift" />
             </label>
           </div>
         </PopoverContent>

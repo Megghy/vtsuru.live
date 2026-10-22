@@ -197,11 +197,7 @@ onUnmounted(() => {
       ]"
     >
       <template #action>
-        <Button
-          size="xs"
-          variant="outline"
-          @click="copyQueueList"
-        >
+        <Button size="xs" variant="outline" @click="copyQueueList">
           <component
             :is="Copy24Regular"
             class="h-3.5 w-3.5 mr-1"
@@ -215,7 +211,7 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-3 max-w-md h-8 p-0.5 bg-muted">
+      <TabsList class="grid w-full grid-cols-3 max-w-md p-0.5 bg-muted">
         <TabsTrigger
           value="queue"
           class="text-xs h-7 gap-1"
@@ -284,25 +280,12 @@ onUnmounted(() => {
                   :is="Search24Regular"
                   class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
                 />
-                <Input
-                  v-model="store.activeFilterName"
-                  placeholder="搜索队列用户"
-                  class="pl-8 text-xs h-8"
-                />
+                <Input v-model="store.activeFilterName" placeholder="搜索队列用户" class="pl-8 w-44" />
               </div>
 
               <div class="flex items-center gap-1.5">
-                <Input
-                  v-model="store.newQueueName"
-                  placeholder="手动输入用户名"
-                  class="w-40 text-xs h-8"
-                  @keyup.enter="store.addManual"
-                />
-                <Button
-                  size="xs"
-                  variant="brand"
-                  @click="store.addManual"
-                >
+                <Input v-model="store.newQueueName" placeholder="手动输入用户名" class="w-40" @keyup.enter="store.addManual" />
+                <Button variant="default" @click="store.addManual">
                   <component
                     :is="Add24Regular"
                     class="h-3.5 w-3.5 mr-1"
@@ -313,12 +296,7 @@ onUnmounted(() => {
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    class="text-destructive hover:bg-destructive/10"
-                    :disabled="store.queue.length === 0"
-                  >
+                  <Button variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="store.queue.length === 0">
                     清空当前
                   </Button>
                 </AlertDialogTrigger>
@@ -388,19 +366,7 @@ onUnmounted(() => {
                 </div>
 
                 <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                  <Button
-                    v-for="bg in [
-                      { key: 'checker', label: '网格' },
-                      { key: 'dark', label: '纯黑' },
-                      { key: 'light', label: '浅色' },
-                      { key: 'game', label: '模拟游戏' },
-                    ]"
-                    :key="bg.key"
-                    size="xs"
-                    :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                    class="h-6 text-xs px-2"
-                    @click="previewBg = bg.key as any"
-                  >
+                  <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '纯黑' }, { key: 'light', label: '浅色' }, { key: 'game', label: '模拟游戏' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" class="h-6 px-2" @click="previewBg = bg.key as any">
                     {{ bg.label }}
                   </Button>
                 </div>
@@ -429,11 +395,7 @@ onUnmounted(() => {
 
               <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
                 <span class="text-xs text-muted-foreground">推荐 OBS 来源尺寸：宽 360px ~ 420px，高 540px ~ 680px。</span>
-                <Button
-                  size="xs"
-                  variant="brand"
-                  @click="copyObsLink"
-                >
+                <Button size="xs" variant="brand" @click="copyObsLink">
                   <component
                     :is="Copy24Regular"
                     class="h-3.5 w-3.5 mr-1"
@@ -462,20 +424,7 @@ onUnmounted(() => {
 
               <CardContent class="p-3.5 space-y-3.5">
                 <div class="grid grid-cols-1 gap-1.5">
-                  <Button
-                    v-for="st in [
-                      { key: 'glass', label: '毛玻璃质感 (Modern Glass)' },
-                      { key: 'transparent', label: '纯透明无底壳 (Transparent)' },
-                      { key: 'minimal', label: '极简通透流 (Minimal Text)' },
-                      { key: 'classic', label: '经典卡片 (Classic Dark)' },
-                      { key: 'fresh', label: '清新自然 (Fresh Light)' },
-                    ]"
-                    :key="st.key"
-                    size="sm"
-                    :variant="obsStyleType === st.key ? 'default' : 'outline'"
-                    class="w-full justify-start text-xs font-normal"
-                    @click="obsStyleType = st.key as any"
-                  >
+                  <Button v-for="st in [ { key: 'glass', label: '毛玻璃质感 (Modern Glass)' }, { key: 'transparent', label: '纯透明无底壳 (Transparent)' }, { key: 'minimal', label: '极简通透流 (Minimal Text)' }, { key: 'classic', label: '经典卡片 (Classic Dark)' }, { key: 'fresh', label: '清新自然 (Fresh Light)' }, ]" :key="st.key" :variant="obsStyleType === st.key ? 'default' : 'outline'" class="w-full justify-start font-normal" @click="obsStyleType = st.key as any">
                     {{ st.label }}
                   </Button>
                 </div>
@@ -485,14 +434,7 @@ onUnmounted(() => {
                 <div class="flex items-center justify-between gap-2">
                   <span class="text-xs text-muted-foreground">滚动轮播速度</span>
                   <div class="flex items-center gap-1.5">
-                    <Input
-                      v-model.number="obsScrollSpeed"
-                      type="number"
-                      step="0.2"
-                      min="0.5"
-                      max="3"
-                      class="w-20 h-7 text-xs font-mono"
-                    />
+                    <Input size="xs" v-model.number="obsScrollSpeed" type="number" step="0.2" min="0.5" max="3" class="w-20 font-mono" />
                     <span class="text-xs text-muted-foreground">x</span>
                   </div>
                 </div>
@@ -513,12 +455,7 @@ onUnmounted(() => {
                 </div>
               </CardHeader>
               <CardContent class="p-3.5 space-y-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="w-full justify-center text-xs"
-                  @click="injectMockUser"
-                >
+                <Button variant="outline" class="w-full justify-center" @click="injectMockUser">
                   <component
                     :is="PersonAdd24Regular"
                     class="h-3.5 w-3.5 mr-1"
@@ -526,8 +463,7 @@ onUnmounted(() => {
                   注入测试观众 (+1)
                 </Button>
 
-                <Button
-                  v-if="store.queue.length > 0"
+                <Button v-if="store.queue.length> 0"
                   size="sm"
                   variant="brand"
                   class="w-full justify-center text-xs"
@@ -607,22 +543,10 @@ onUnmounted(() => {
                           {{ formatTime(item.createAt) }}
                         </TableCell>
                         <TableCell class="text-right space-x-1">
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            class="text-primary hover:bg-primary/10"
-                            title="重置为等待状态"
-                            @click="store.updateStatus(item, QueueStatus.Waiting)"
-                          >
+                          <Button size="icon-xs" variant="ghost" class="text-primary hover:bg-primary/10" title="重置为等待状态" @click="store.updateStatus(item, QueueStatus.Waiting)">
                             重置
                           </Button>
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            class="text-destructive hover:bg-destructive/10"
-                            title="删除"
-                            @click="store.deleteQueue([item])"
-                          >
+                          <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10" title="删除" @click="store.deleteQueue([item])">
                             删除
                           </Button>
                         </TableCell>
@@ -645,18 +569,10 @@ onUnmounted(() => {
                 >
                   <span class="text-xs text-muted-foreground">页码 {{ historyPage }} / {{ totalHistoryPages }}</span>
                   <div class="flex items-center gap-1">
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      :disabled="historyPage <= 1"
-                      @click="historyPage--"
-                    >
+                    <Button size="xs" variant="outline" :disabled="historyPage <= 1" @click="historyPage--">
                       上一页
                     </Button>
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      :disabled="historyPage >= totalHistoryPages"
+                    <Button size="xs" variant="outline" :disabled="historyPage>= totalHistoryPages"
                       @click="historyPage++"
                     >
                       下一页

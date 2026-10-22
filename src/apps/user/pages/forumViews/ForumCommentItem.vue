@@ -129,14 +129,7 @@ function formatFullTime(time: number) {
         <div class="flex items-center gap-3 pt-1">
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-7 text-xs flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground"
-                :class="{ 'text-destructive': item.isLiked }"
-                :disabled="!canOprate || useForum.isLikeLoading"
-                @click="
-                  useForum.LikeComment(item.id, !item.isLiked).then((success) => {
+              <Button variant="ghost" class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground" :class="{ 'text-destructive': item.isLiked }" :disabled="!canOprate || useForum.isLikeLoading" @click=" useForum.LikeComment(item.id, !item.isLiked).then((success) => {
                     if (success) {
                       item.isLiked = !item.isLiked
                       item.likeCount += item.isLiked ? 1 : -1
@@ -153,13 +146,7 @@ function formatFullTime(time: number) {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-7 text-xs flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground"
-                :disabled="!canOprate"
-                @click="useForum.SetReplyingComment(item)"
-              >
+              <Button variant="ghost" class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground" :disabled="!canOprate" @click="useForum.SetReplyingComment(item)">
                 <component :is="ArrowReply16Filled" class="size-3.5" />
                 <span>{{ item.replies.length }}</span>
               </Button>

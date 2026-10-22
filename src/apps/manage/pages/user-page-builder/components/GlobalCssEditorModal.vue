@@ -81,8 +81,8 @@ watch(
           <Tag v-if="issues.length" variant="destructive" class="text-xs">
             {{ issues.length }} 个问题
           </Tag>
-          <Button size="sm" variant="outline" @click="closeEditor"> 取消 </Button>
-          <Button size="sm" :disabled="!!issues.length" @click="applyChanges"> 应用 </Button>
+          <Button variant="outline" @click="closeEditor"> 取消 </Button>
+          <Button :disabled="!!issues.length" @click="applyChanges"> 应用 </Button>
         </div>
       </DialogHeader>
 

@@ -86,14 +86,7 @@ function handleInput(e: Event) {
   <Popover v-model:open="showPopover">
     <PopoverTrigger as-child>
       <div class="relative w-full">
-        <Input
-          :value="inputValue"
-          :placeholder="placeholder || '请输入B站用户UID'"
-          :disabled="disabled"
-          class="h-8 text-xs pr-7 font-mono"
-          @input="handleInput"
-          @focus="currentUserInfo && (showPopover = true)"
-        />
+        <Input :value="inputValue" :placeholder="placeholder || '请输入B站用户UID'" :disabled="disabled" class="pr-7 font-mono" @input="handleInput" @focus="currentUserInfo && (showPopover = true)" />
         <div
           v-if="loading"
           class="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none"

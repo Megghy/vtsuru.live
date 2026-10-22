@@ -20,6 +20,13 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import type { SortMode } from '@/store/useQuestionBox'
@@ -96,12 +103,7 @@ const sortOptions = [
     <!-- 筛选工具栏 -->
     <div class="flex items-center justify-between gap-3 flex-wrap mb-3 text-xs">
       <div class="flex items-center gap-3">
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 text-xs"
-          @click="router.push({ name: 'question-display' })"
-        >
+        <Button variant="outline" @click="router.push({ name: 'question-display' })">
           打开展示展板
         </Button>
         <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
@@ -114,30 +116,46 @@ const sortOptions = [
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <Input
-          v-model="useQB.searchKeyword"
-          placeholder="搜索内容..."
-          class="h-8 w-36 text-xs"
-        />
+        <Input v-model="useQB.searchKeyword" placeholder="搜索内容..." class="w-36" />
 
-        <select
-          v-model="useQB.displayTag"
-          class="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        <Select
+          :model-value="useQB.displayTag ?? 'all'"
+          @update:model-value="useQB.displayTag = $event === 'all' ? null : String($event)"
         >
-          <option :value="null">全部话题</option>
-          <option v-for="t in useQB.tags" :key="t.name" :value="t.name">
-            #{{ t.name }}
-          </option>
-        </select>
+          <SelectTrigger class="w-28">
+            <SelectValue placeholder="全部话题" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all" class="text-xs">全部话题</SelectItem>
+            <SelectItem
+              v-for="t in useQB.tags"
+              :key="t.name"
+              :value="t.name"
+              class="text-xs"
+            >
+              #{{ t.name }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
-        <select
-          v-model="useQB.sortMode"
-          class="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+        <Select
+          :model-value="useQB.sortMode"
+          @update:model-value="useQB.sortMode = $event as SortMode"
         >
-          <option v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
+          <SelectTrigger class="w-28">
+            <SelectValue placeholder="排序方式" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              :value="opt.value"
+              class="text-xs"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
         <label class="flex items-center gap-1 cursor-pointer text-xs select-none">
           <Checkbox v-model:checked="useQB.onlyUnreplied" />
@@ -156,13 +174,7 @@ const sortOptions = [
           <span>公开</span>
         </label>
 
-        <Button
-          v-if="hasActiveFilters"
-          variant="ghost"
-          size="sm"
-          class="h-8 text-xs text-primary"
-          @click="clearFilters"
-        >
+        <Button v-if="hasActiveFilters" variant="ghost" class="text-primary" @click="clearFilters">
           清除筛选
         </Button>
       </div>
@@ -196,42 +208,20 @@ const sortOptions = [
         <template #footer="{ item }">
           <div class="flex items-center gap-2 flex-wrap text-xs pt-1">
             <!-- OBS 投屏快捷切换 -->
-            <Button
-              v-if="useQB.displayQuestion?.id === item.id"
-              size="xs"
-              variant="outline"
-              class="text-emerald-600 dark:text-emerald-400 gap-1 border-emerald-500/30"
-              @click="useQB.clearCurrentQuestion"
-            >
+            <Button v-if="useQB.displayQuestion?.id === item.id" size="xs" variant="outline" class="text-emerald-600 dark:text-emerald-400 gap-1 border-emerald-500/30" @click="useQB.clearCurrentQuestion">
               <Tv20Regular class="size-3.5" />
               取消展示
             </Button>
-            <Button
-              v-else
-              size="xs"
-              variant="outline"
-              class="gap-1"
-              @click="useQB.setCurrentQuestion(item)"
-            >
+            <Button v-else size="xs" variant="outline" class="gap-1" @click="useQB.setCurrentQuestion(item)">
               <Tv20Regular class="size-3.5" />
               投到 OBS
             </Button>
 
-            <Button
-              size="xs"
-              variant="outline"
-              :class="item.isReaded ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'"
-              @click="useQB.read(item, !item.isReaded)"
-            >
+            <Button size="xs" variant="outline" :class="item.isReaded ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'" @click="useQB.read(item, !item.isReaded)">
               {{ item.isReaded ? '设为未读' : '设为已读' }}
             </Button>
 
-            <Button
-              size="xs"
-              variant="outline"
-              class="gap-1"
-              @click="useQB.favorite(item, !item.isFavorite)"
-            >
+            <Button size="xs" variant="outline" class="gap-1" @click="useQB.favorite(item, !item.isFavorite)">
               <Heart v-if="item.isFavorite" class="size-3.5 text-rose-500" />
               <HeartOutline v-else class="size-3.5" />
               {{ item.isFavorite ? '取消收藏' : '收藏' }}
@@ -288,22 +278,12 @@ const sortOptions = [
                 公开
               </Button>
             </Popconfirm>
-            <Button
-              v-else
-              size="xs"
-              variant="outline"
-              class="gap-1"
-              @click="useQB.setPublic(item, !item.isPublic)"
-            >
+            <Button v-else size="xs" variant="outline" class="gap-1" @click="useQB.setPublic(item, !item.isPublic)">
               <EyeOff24Regular v-if="item.isPublic" class="size-3.5" />
               <Eye24Regular v-else class="size-3.5" />
               {{ item.isPublic ? '取消公开' : '公开' }}
             </Button>
-            <Button
-              size="xs"
-              :variant="item.answer ? 'default' : 'secondary'"
-              @click="emit('reply', item)"
-            >
+            <Button size="xs" :variant="item.answer ? 'default' : 'secondary'" @click="emit('reply', item)">
               {{ item.answer ? '修改回复' : '回复' }}
             </Button>
           </div>
@@ -366,13 +346,7 @@ const sortOptions = [
 
         <div class="h-4 w-px bg-border mx-1" />
 
-        <Button
-          size="icon"
-          variant="ghost"
-          class="size-6 rounded-full"
-          aria-label="取消选择"
-          @click="useQB.clearSelection"
-        >
+        <Button size="icon" variant="ghost" class="size-6 rounded-full" aria-label="取消选择" @click="useQB.clearSelection">
           <Dismiss24Regular class="size-3.5" />
         </Button>
       </div>

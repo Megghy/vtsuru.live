@@ -222,13 +222,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <Button
-            size="sm"
-            variant="outline"
-            class="gap-1.5"
-            :disabled="!canAdjustPoint"
-            @click="showAddPointModal = true"
-          >
+          <Button variant="outline" class="gap-1.5" :disabled="!canAdjustPoint" @click="showAddPointModal = true">
             <AddSquare24Regular class="size-4" />
             积分调整
           </Button>
@@ -261,9 +255,9 @@ onMounted(async () => {
 
     <!-- 数据标签页 -->
     <Tabs default-value="orders" class="w-full">
-      <TabsList class="h-9">
-        <TabsTrigger value="orders" class="text-xs">订单记录</TabsTrigger>
-        <TabsTrigger value="history" class="text-xs">积分流水</TabsTrigger>
+      <TabsList>
+        <TabsTrigger value="orders">订单记录</TabsTrigger>
+        <TabsTrigger value="history">积分流水</TabsTrigger>
       </TabsList>
 
       <TabsContent value="orders" class="pt-3">
@@ -331,11 +325,7 @@ onMounted(async () => {
         </div>
 
         <DialogFooter>
-          <Button
-            size="sm"
-            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0 || isLoading"
-            @click="givePoint"
-          >
+          <Button :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0 || isLoading" @click="givePoint">
             {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '确认给予' : '确认扣除' }}
           </Button>
         </DialogFooter>

@@ -88,12 +88,7 @@ const priorityOptions = [
         class="space-y-1"
       >
         <span class="text-xs text-muted-foreground">操作名称</span>
-        <Input
-          v-model="action.name"
-          placeholder="例如：给礼物老板点赞"
-          class="h-8 text-xs"
-          :class="nameInvalid ? 'border-destructive focus-visible:ring-destructive' : ''"
-        />
+        <Input v-model="action.name" placeholder="例如：给礼物老板点赞" :class="nameInvalid ? 'border-destructive focus-visible:ring-destructive' : ''" />
         <div
           v-if="nameInvalid"
           class="text-[11px] text-destructive"
@@ -157,7 +152,7 @@ const priorityOptions = [
             v-model="action.triggerType"
             disabled
           >
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -176,7 +171,7 @@ const priorityOptions = [
         <div class="space-y-1">
           <span class="text-xs text-muted-foreground">执行动作</span>
           <Select v-model="action.actionType">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -195,7 +190,7 @@ const priorityOptions = [
         <div class="space-y-1">
           <span class="text-xs text-muted-foreground">执行优先级</span>
           <Select v-model="action.priority">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

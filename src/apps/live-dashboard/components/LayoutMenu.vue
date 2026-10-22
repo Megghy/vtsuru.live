@@ -40,36 +40,23 @@ function toggle(id: PanelId, visible: boolean) {
         />
         <span>{{ PANEL_TITLES[id] }}</span>
         <span class="layout-menu__key">Alt+{{ PANEL_IDS.indexOf(id) + 1 }}</span>
-        <Switch
-          :model-value="!layout.hidden.includes(id)"
-          @update:model-value="(v: boolean) => toggle(id, v)"
+        <Switch :model-value="!layout.hidden.includes(id)" @update:model-value="(v: boolean) => toggle(id, v)"
         />
       </div>
     </VueDraggable>
     <label class="layout-menu__row">
       竖屏布局（上下排列）
-      <Switch
-        v-model="layout.vertical"
-      />
+      <Switch v-model="layout.vertical" />
     </label>
     <label class="layout-menu__row">
       互动区在弹幕上方
-      <Switch
-        v-model="layout.interactionOnTop"
-      />
+      <Switch v-model="layout.interactionOnTop" />
     </label>
     <label class="layout-menu__row">
       专注模式（隐藏面板原地虚化）
-      <Switch
-        v-model="layout.focusMode"
-      />
+      <Switch v-model="layout.focusMode" />
     </label>
-    <Button
-      variant="secondary"
-      size="sm"
-      class="w-full"
-      @click="resetLayout(dashboard.settings)"
-    >
+    <Button variant="secondary" class="w-full" @click="resetLayout(dashboard.settings)">
       重置布局
     </Button>
   </div>

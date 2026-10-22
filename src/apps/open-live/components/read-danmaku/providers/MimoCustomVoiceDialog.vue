@@ -265,12 +265,7 @@ function reset() {
       <div class="space-y-3.5 my-2">
         <div class="space-y-1">
           <label class="text-xs font-semibold text-foreground">名称</label>
-          <Input
-            v-model="name"
-            placeholder="给音色起个名字"
-            class="h-8 text-xs"
-            :disabled="isEdit"
-          />
+          <Input v-model="name" placeholder="给音色起个名字" :disabled="isEdit" />
         </div>
 
         <div
@@ -304,12 +299,7 @@ function reset() {
               参考音频{{ isEdit ? '（留空保持不变）' : '' }}
             </label>
             <div class="flex items-center gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-8 text-xs"
-                @click="fileInput?.click()"
-              >
+              <Button variant="outline" @click="fileInput?.click()">
                 {{ audioFile ? audioFile.name : '选择文件 (mp3/wav, 最大 10MB)' }}
               </Button>
               <input
@@ -370,17 +360,8 @@ function reset() {
         <div class="space-y-1">
           <label class="text-xs font-semibold text-foreground">试听文本</label>
           <div class="flex items-center gap-2">
-            <Input
-              v-model="previewText"
-              class="h-8 text-xs flex-1"
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs shrink-0"
-              :disabled="!canPreview || previewing"
-              @click="preview"
-            >
+            <Input v-model="previewText" class="flex-1" />
+            <Button variant="outline" class="shrink-0" :disabled="!canPreview || previewing" @click="preview">
               {{ previewing ? '试听中...' : '试听' }}
             </Button>
           </div>
@@ -397,20 +378,10 @@ function reset() {
       </div>
 
       <DialogFooter class="gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 text-xs"
-          @click="show = false"
-        >
+        <Button variant="outline" @click="show = false">
           取消
         </Button>
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          :disabled="!canSave || !account || saving"
-          @click="save"
-        >
+        <Button :disabled="!canSave || !account || saving" @click="save">
           {{ isEdit ? '更新' : '保存' }}
         </Button>
       </DialogFooter>

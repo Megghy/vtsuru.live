@@ -14,7 +14,7 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
       default-value="spoken"
       class="w-full"
     >
-      <TabsList class="grid grid-cols-2 w-full h-8">
+      <TabsList class="grid grid-cols-2 w-full">
         <TabsTrigger
           value="spoken"
           class="text-xs"

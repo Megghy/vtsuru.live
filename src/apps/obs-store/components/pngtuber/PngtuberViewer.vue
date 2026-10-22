@@ -239,12 +239,7 @@ function changeChannel() {
     class="pngtuber-page"
     :class="{ standalone }"
   >
-    <Button
-      variant="ghost"
-      size="sm"
-      class="w-fit gap-1.5 h-8 text-xs"
-      @click="goBack"
-    >
+    <Button variant="ghost" class="w-fit gap-1.5" @click="goBack">
       <ArrowLeft24Regular class="size-4" />
       返回
     </Button>
@@ -266,12 +261,7 @@ function changeChannel() {
           <AlertDescription class="text-xs text-current m-0">
             {{ normalized.error || errorMessage || runtimeError || (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪') }}
           </AlertDescription>
-          <Button
-            size="xs"
-            variant="outline"
-            class="h-6 text-[11px] shrink-0"
-            @click="retry"
-          >
+          <Button size="xs" variant="outline" class="h-6 text-[11px] shrink-0" @click="retry">
             重试连接
           </Button>
         </div>
@@ -338,7 +328,7 @@ function changeChannel() {
               </div>
 
               <Select v-model="bg">
-                <SelectTrigger class="h-8 text-xs w-full">
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -375,31 +365,13 @@ function changeChannel() {
               </Alert>
 
               <div class="flex items-center gap-2 flex-wrap">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs"
-                  :disabled="controlDisabled"
-                  @click="control({ muted: !runtime.muted })"
-                >
+                <Button variant="outline" :disabled="controlDisabled" @click="control({ muted: !runtime.muted })">
                   {{ runtime.muted ? '取消静音' : '静音' }}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs"
-                  :disabled="controlDisabled"
-                  @click="control({ away: !runtime.away })"
-                >
+                <Button variant="outline" :disabled="controlDisabled" @click="control({ away: !runtime.away })">
                   {{ runtime.away ? '结束暂离' : '暂离' }}
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs"
-                  :disabled="controlDisabled"
-                  @click="control({ expressionId: '' })"
-                >
+                <Button variant="outline" :disabled="controlDisabled" @click="control({ expressionId: '' })">
                   默认表情
                 </Button>
               </div>
@@ -412,48 +384,19 @@ function changeChannel() {
             </CardHeader>
             <CardContent class="p-0 space-y-3">
               <div class="flex items-center gap-1.5">
-                <Input
-                  v-model="channelDraft"
-                  placeholder="频道"
-                  maxlength="64"
-                  :disabled="busy"
-                  class="h-8 text-xs flex-1"
-                  @keyup.enter="changeChannel"
-                />
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  class="h-8 text-xs"
-                  :disabled="busy"
-                  @click="changeChannel"
-                >
+                <Input v-model="channelDraft" placeholder="频道" maxlength="64" :disabled="busy" class="flex-1" @keyup.enter="changeChannel" />
+                <Button variant="secondary" :disabled="busy" @click="changeChannel">
                   切换频道
                 </Button>
               </div>
 
-              <Input
-                :value="obsUrl"
-                readonly
-                placeholder="登录后生成链接"
-                class="h-8 text-xs"
-              />
+              <Input :value="obsUrl" readonly placeholder="登录后生成链接" />
 
               <div class="flex items-center gap-2 flex-wrap">
-                <Button
-                  size="sm"
-                  class="h-8 text-xs"
-                  :disabled="!obsUrl"
-                  @click="copyUrl"
-                >
+                <Button :disabled="!obsUrl" @click="copyUrl">
                   复制链接
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs"
-                  as-child
-                  :disabled="!obsUrl"
-                >
+                <Button variant="outline" as-child :disabled="!obsUrl">
                   <a
                     :href="obsUrl || undefined"
                     target="_blank"
@@ -462,13 +405,7 @@ function changeChannel() {
                     打开画面
                   </a>
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs"
-                  as-child
-                  :disabled="!obsUrl"
-                >
+                <Button variant="outline" as-child :disabled="!obsUrl">
                   <a
                     :href="obsUrl ? `${obsUrl}&debug=1` : undefined"
                     target="_blank"
@@ -492,22 +429,10 @@ function changeChannel() {
             </CardHeader>
             <CardContent class="p-0 space-y-2">
               <div class="flex items-center gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs"
-                  :disabled="!writable || busy"
-                  @click="packageInput?.click()"
-                >
+                <Button variant="outline" :disabled="!writable || busy" @click="packageInput?.click()">
                   导入模型包
                 </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 text-xs"
-                  :disabled="busy || !isReady || !!normalized.error"
-                  @click="exportPackage"
-                >
+                <Button variant="outline" :disabled="busy || !isReady || !!normalized.error" @click="exportPackage">
                   导出模型包
                 </Button>
                 <input

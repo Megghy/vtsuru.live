@@ -1,4 +1,5 @@
 // vite.config.ts
+
 import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
@@ -8,6 +9,7 @@ import Markdown from 'unplugin-vue-markdown/vite'
 import { defineConfig, type Plugin } from 'vite'
 import svgLoader from 'vite-svg-loader'
 import UnoCSS from 'unocss/vite'
+import unoConfig from './uno.config.ts'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -31,7 +33,7 @@ const removeSodipodiInkscape = {
 export default defineConfig({
   appType: 'spa',
   plugins: [
-    UnoCSS(),
+    UnoCSS(unoConfig),
     {
       name: 'drop-ort-wasm',
       generateBundle(_, bundle) {

@@ -22,7 +22,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">样式</label>
         <Select v-model="blockProps.variant">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="样式" />
           </SelectTrigger>
           <SelectContent>
@@ -61,7 +61,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       >
         <label class="text-xs text-muted-foreground">布局</label>
         <Select v-model="blockProps.layout">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="布局" />
           </SelectTrigger>
           <SelectContent>
@@ -102,7 +102,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">样式</label>
         <Select v-model="blockProps.variant">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="样式" />
           </SelectTrigger>
           <SelectContent>
@@ -143,11 +143,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
         class="span-full space-y-1"
       >
         <label class="text-xs text-muted-foreground">个人主页链接</label>
-        <Input
-          v-model="blockProps.spaceUrl"
-          placeholder="https://space.bilibili.com/..."
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.spaceUrl" placeholder="https://space.bilibili.com/..." />
       </div>
     </PropsGrid>
   </div>
@@ -160,7 +156,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">数据源</label>
         <Select v-model="blockProps.source">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="数据源" />
           </SelectTrigger>
           <SelectContent>
@@ -172,7 +168,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">布局</label>
         <Select v-model="blockProps.layout">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="布局" />
           </SelectTrigger>
           <SelectContent>
@@ -211,11 +207,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
         class="span-full space-y-1"
       >
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input
-          v-model="blockProps.title"
-          placeholder="例如：最近视频"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.title" placeholder="例如：最近视频" />
       </div>
       <div
         v-if="propertyAvailable('items')"
@@ -234,19 +226,11 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
-                <Input
-                  v-model="item.title"
-                  placeholder="可选"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.title" placeholder="可选" />
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">链接</label>
-                <Input
-                  v-model="item.url"
-                  placeholder="https://..."
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.url" placeholder="https://..." />
               </div>
             </PropsGrid>
           </template>
@@ -263,7 +247,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">平台</label>
         <Select v-model="blockProps.provider">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="平台" />
           </SelectTrigger>
           <SelectContent>
@@ -291,11 +275,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">链接</label>
-        <Input
-          v-model="blockProps.url"
-          placeholder="https://..."
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.url" placeholder="https://..." />
       </div>
     </PropsGrid>
   </div>

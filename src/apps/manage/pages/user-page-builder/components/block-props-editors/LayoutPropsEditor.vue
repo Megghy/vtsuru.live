@@ -80,7 +80,7 @@ const verticalOptions = computed(() =>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">布局类型</label>
         <Select v-model="layout.layout">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="布局类型" />
           </SelectTrigger>
           <SelectContent>
@@ -134,7 +134,7 @@ const verticalOptions = computed(() =>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">横向对齐</label>
         <Select v-model="horizontalModel">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="横向对齐" />
           </SelectTrigger>
           <SelectContent>
@@ -152,7 +152,7 @@ const verticalOptions = computed(() =>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">纵向对齐</label>
         <Select v-model="verticalModel">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="纵向对齐" />
           </SelectTrigger>
           <SelectContent>

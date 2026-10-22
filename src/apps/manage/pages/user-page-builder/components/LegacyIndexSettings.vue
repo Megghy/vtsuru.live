@@ -366,7 +366,7 @@ await loadIndexInfo()
             class="flex-1 min-w-0"
             @update:model-value="saveIndexTemplate"
           >
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent class="text-xs">
@@ -379,12 +379,7 @@ await loadIndexInfo()
               </SelectItem>
             </SelectContent>
           </Select>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-8 text-xs"
-            @click="showTemplatePreview = true"
-          >
+          <Button variant="outline" @click="showTemplatePreview = true">
             浏览预览
           </Button>
         </div>
@@ -414,11 +409,7 @@ await loadIndexInfo()
         rows="3"
       />
       <div class="flex justify-end">
-        <Button
-          size="sm"
-          :disabled="isLoading"
-          @click="updateIndexSettings"
-        >
+        <Button :disabled="isLoading" @click="updateIndexSettings">
           保存
         </Button>
       </div>
@@ -428,13 +419,7 @@ await loadIndexInfo()
     <div class="flex flex-col gap-2 pt-2 border-t border-border">
       <div class="flex items-center justify-between">
         <div class="text-xs font-semibold text-muted-foreground uppercase">展示视频</div>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs"
-          :disabled="isLoading"
-          @click="showAddVideoModal = true"
-        >
+        <Button variant="outline" :disabled="isLoading" @click="showAddVideoModal = true">
           添加视频
         </Button>
       </div>
@@ -455,31 +440,13 @@ await loadIndexInfo()
         >
           <SimpleVideoCard :video="item" />
           <div class="flex items-center gap-1.5">
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-6 px-2 text-xs"
-              :disabled="isLoading"
-              @click="moveVideo(item.id, 'up')"
-            >
+            <Button variant="outline" class="h-6 px-2" :disabled="isLoading" @click="moveVideo(item.id, 'up')">
               上移
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-6 px-2 text-xs"
-              :disabled="isLoading"
-              @click="moveVideo(item.id, 'down')"
-            >
+            <Button variant="outline" class="h-6 px-2" :disabled="isLoading" @click="moveVideo(item.id, 'down')">
               下移
             </Button>
-            <Button
-              size="sm"
-              variant="destructive"
-              class="h-6 px-2 text-xs"
-              :disabled="isLoading"
-              @click="removeVideo(item.id)"
-            >
+            <Button variant="destructive" class="h-6 px-2" :disabled="isLoading" @click="removeVideo(item.id)">
               删除
             </Button>
           </div>
@@ -491,13 +458,7 @@ await loadIndexInfo()
     <div class="flex flex-col gap-2 pt-2 border-t border-border">
       <div class="flex items-center justify-between">
         <div class="text-xs font-semibold text-muted-foreground uppercase">其他链接</div>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs"
-          :disabled="isLoading"
-          @click="showAddLinkModal = true"
-        >
+        <Button variant="outline" :disabled="isLoading" @click="showAddLinkModal = true">
           添加链接
         </Button>
       </div>
@@ -519,23 +480,11 @@ await loadIndexInfo()
         >
           <template v-if="editingLinkName === link[0]">
             <div class="flex items-center gap-1.5 w-full">
-              <Input
-                v-model="newLinkName"
-                class="h-7 text-xs flex-1"
-              />
-              <Button
-                size="sm"
-                class="h-7 px-2 text-xs"
-                @click="confirmEditLink(link[0])"
-              >
+              <Input size="xs" v-model="newLinkName" class="flex-1" />
+              <Button size="xs" class="px-2" @click="confirmEditLink(link[0])">
                 保存
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-7 px-2 text-xs"
-                @click="cancelEditLink"
-              >
+              <Button size="xs" variant="outline" class="px-2" @click="cancelEditLink">
                 取消
               </Button>
             </div>
@@ -555,30 +504,13 @@ await loadIndexInfo()
             </TooltipProvider>
 
             <div class="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                class="size-6 p-0"
-                aria-label="上移链接"
-                @click="moveLink(link[0], 'up')"
-              >
+              <Button variant="ghost" class="size-6 p-0" aria-label="上移链接" @click="moveLink(link[0], 'up')">
                 <component :is="ArrowUpOutline" class="size-3.5" />
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="size-6 p-0"
-                aria-label="下移链接"
-                @click="moveLink(link[0], 'down')"
-              >
+              <Button variant="ghost" class="size-6 p-0" aria-label="下移链接" @click="moveLink(link[0], 'down')">
                 <component :is="ArrowDownOutline" class="size-3.5" />
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-6 px-2 text-xs"
-                @click="startEditLink(link[0])"
-              >
+              <Button variant="outline" class="h-6 px-2" @click="startEditLink(link[0])">
                 改名
               </Button>
               <Popconfirm
@@ -587,12 +519,7 @@ await loadIndexInfo()
                 cancel-text="取消"
                 @confirm="removeLink(link[0])"
               >
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="size-6 p-0 text-destructive hover:text-destructive"
-                  aria-label="删除链接"
-                >
+                <Button variant="ghost" class="size-6 p-0 text-destructive hover:text-destructive" aria-label="删除链接">
                   <component :is="Delete24Regular" class="size-3.5" />
                 </Button>
               </Popconfirm>
@@ -610,15 +537,11 @@ await loadIndexInfo()
         <DialogTitle class="text-sm font-semibold">添加视频</DialogTitle>
       </DialogHeader>
       <div class="py-2 flex flex-col gap-2">
-        <Input
-          v-model="addVideoUrl"
-          placeholder="请输入 Bilibili 视频链接或 BV 号"
-          class="text-xs"
-        />
+        <Input v-model="addVideoUrl" placeholder="请输入 Bilibili 视频链接或 BV 号" />
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <Button size="sm" variant="outline" @click="showAddVideoModal = false">取消</Button>
-        <Button size="sm" :disabled="isLoading" @click="addVideo">添加视频</Button>
+        <Button variant="outline" @click="showAddVideoModal = false">取消</Button>
+        <Button :disabled="isLoading" @click="addVideo">添加视频</Button>
       </div>
     </DialogContent>
   </Dialog>
@@ -630,20 +553,12 @@ await loadIndexInfo()
         <DialogTitle class="text-sm font-semibold">添加链接</DialogTitle>
       </DialogHeader>
       <div class="py-2 flex flex-col gap-2">
-        <Input
-          v-model="addLinkName"
-          placeholder="链接名称（如：个人博客、网易云等）"
-          class="text-xs"
-        />
-        <Input
-          v-model="addLinkUrl"
-          placeholder="链接地址（必须以 http:// 或 https:// 开头）"
-          class="text-xs"
-        />
+        <Input v-model="addLinkName" placeholder="链接名称（如：个人博客、网易云等）" />
+        <Input v-model="addLinkUrl" placeholder="链接地址（必须以 http:// 或 https:// 开头）" />
       </div>
       <div class="flex justify-end gap-2 pt-2">
-        <Button size="sm" variant="outline" @click="showAddLinkModal = false">取消</Button>
-        <Button size="sm" :disabled="isLoading" @click="addLink">添加链接</Button>
+        <Button variant="outline" @click="showAddLinkModal = false">取消</Button>
+        <Button :disabled="isLoading" @click="addLink">添加链接</Button>
       </div>
     </DialogContent>
   </Dialog>

@@ -187,19 +187,8 @@ const modeOptions: { label: string; value: ClockMode }[] = [
           </div>
 
           <div class="flex items-center gap-1.5">
-            <Input
-              v-model="channelDraft"
-              class="h-8 text-xs w-[120px]"
-              placeholder="频道"
-              maxlength="64"
-              @keyup.enter="changeChannel"
-            />
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs"
-              @click="changeChannel"
-            >
+            <Input v-model="channelDraft" class="w-[120px]" placeholder="频道" maxlength="64" @keyup.enter="changeChannel" />
+            <Button variant="secondary" @click="changeChannel">
               切换频道
             </Button>
           </div>
@@ -220,25 +209,13 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
           <!-- 快捷操作按钮 -->
           <div class="flex items-center gap-1.5">
-            <Button
-              v-if="lastSyncError"
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs"
-              :disabled="isSyncing"
-              @click="retry"
-            >
+            <Button v-if="lastSyncError" variant="secondary" :disabled="isSyncing" @click="retry">
               重试同步
             </Button>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    class="h-8 text-xs gap-1.5"
-                    @click="openPopoutWindow"
-                  >
+                  <Button variant="secondary" class="gap-1.5" @click="openPopoutWindow">
                     <Open24Regular class="size-4" />
                     独立小窗
                   </Button>
@@ -249,11 +226,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
               </Tooltip>
             </TooltipProvider>
 
-            <Button
-              size="sm"
-              class="h-8 text-xs gap-1.5"
-              @click="copyObsUrl"
-            >
+            <Button class="gap-1.5" @click="copyObsUrl">
               <Checkmark24Regular v-if="copied" class="size-4" />
               <Copy24Regular v-else class="size-4" />
               复制 OBS 源链接
@@ -401,22 +374,12 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
                 <div class="color-item">
                   <span class="color-label">文字颜色</span>
-                  <Input
-                    :value="state.textColor"
-                    placeholder="默认或 #ffffff"
-                    class="h-8 text-xs"
-                    @input="updateState({ textColor: ($event.target as HTMLInputElement).value })"
-                  />
+                  <Input :value="state.textColor" placeholder="默认或 #ffffff" @input="updateState({ textColor: ($event.target as HTMLInputElement).value })" />
                 </div>
 
                 <div class="color-item">
                   <span class="color-label">外壳背景底色</span>
-                  <Input
-                    :value="state.bgColor"
-                    placeholder="默认或 #1e2024"
-                    class="h-8 text-xs"
-                    @input="updateState({ bgColor: ($event.target as HTMLInputElement).value })"
-                  />
+                  <Input :value="state.bgColor" placeholder="默认或 #1e2024" @input="updateState({ bgColor: ($event.target as HTMLInputElement).value })" />
                 </div>
 
                 <div class="color-item">
@@ -436,20 +399,9 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
               <!-- 标题文本输入行 -->
               <div class="text-inputs-row">
-                <Input
-                  :value="state.title"
-                  placeholder="自定义副标 / 标题文本 (如 LIVE NOW)"
-                  class="h-8 text-xs flex-1"
-                  @input="updateState({ title: ($event.target as HTMLInputElement).value })"
-                />
+                <Input :value="state.title" placeholder="自定义副标 / 标题文本 (如 LIVE NOW)" class="flex-1" @input="updateState({ title: ($event.target as HTMLInputElement).value })" />
 
-                <Input
-                  v-if="state.mode === 'countdown'"
-                  :value="state.timerEndText"
-                  placeholder="倒计时结束提示 (如 LIVE STARTED)"
-                  class="h-8 text-xs flex-1"
-                  @input="updateState({ timerEndText: ($event.target as HTMLInputElement).value })"
-                />
+                <Input v-if="state.mode === 'countdown'" :value="state.timerEndText" placeholder="倒计时结束提示 (如 LIVE STARTED)" class="flex-1" @input="updateState({ timerEndText: ($event.target as HTMLInputElement).value })" />
               </div>
 
               <!-- 紧凑交互开关矩阵 -->
@@ -530,28 +482,13 @@ const modeOptions: { label: string; value: ClockMode }[] = [
               <div class="flex items-center justify-between mb-2">
                 <span class="deck-label">OBS 画面实时监视器</span>
                 <div class="flex items-center gap-1.5">
-                  <Button
-                    size="xs"
-                    class="h-6 text-[11px] px-2"
-                    :variant="previewBg === 'checker' ? 'default' : 'outline'"
-                    @click="previewBg = 'checker'"
-                  >
+                  <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
                     网格底
                   </Button>
-                  <Button
-                    size="xs"
-                    class="h-6 text-[11px] px-2"
-                    :variant="previewBg === 'dark' ? 'default' : 'outline'"
-                    @click="previewBg = 'dark'"
-                  >
+                  <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
                     暗黑底
                   </Button>
-                  <Button
-                    size="xs"
-                    class="h-6 text-[11px] px-2"
-                    :variant="previewBg === 'transparent' ? 'default' : 'outline'"
-                    @click="previewBg = 'transparent'"
-                  >
+                  <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
                     透明底
                   </Button>
                 </div>

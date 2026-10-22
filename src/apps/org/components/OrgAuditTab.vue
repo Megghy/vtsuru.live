@@ -53,18 +53,8 @@ onMounted(loadLogs)
 
     <CardContent class="pt-4 space-y-3">
       <div class="flex flex-wrap items-center gap-2">
-        <Input
-          v-model="actionPrefix"
-          placeholder="按 action 前缀过滤（可选）"
-          class="min-w-[220px] flex-1 h-8 text-xs"
-          @keydown.enter="loadLogs"
-        />
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          :disabled="isLoading"
-          @click="loadLogs"
-        >
+        <Input v-model="actionPrefix" placeholder="按 action 前缀过滤（可选）" class="min-w-[220px] flex-1" @keydown.enter="loadLogs" />
+        <Button :disabled="isLoading" @click="loadLogs">
           查询
         </Button>
       </div>

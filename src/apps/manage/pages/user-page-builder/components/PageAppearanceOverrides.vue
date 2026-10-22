@@ -96,13 +96,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
       <div class="flex items-center justify-between text-xs text-muted-foreground">
         <span>不设置时将使用全局背景或默认背景。</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-6 px-2 text-xs"
-          :disabled="!page.background"
-          @click="page.background = undefined"
-        >
+        <Button variant="outline" class="h-6 px-2" :disabled="!page.background" @click="page.background = undefined">
           使用全局背景
         </Button>
       </div>
@@ -121,13 +115,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
       <div class="flex items-center justify-between text-xs text-muted-foreground">
         <span>不设置时将使用全局主题或站点主题。</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-6 px-2 text-xs"
-          :disabled="!page.theme"
-          @click="page.theme = undefined"
-        >
+        <Button variant="outline" class="h-6 px-2" :disabled="!page.theme" @click="page.theme = undefined">
           清除页面主题
         </Button>
       </div>
@@ -137,13 +125,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
           <label class="text-xs text-muted-foreground">主题色 primary</label>
           <div class="flex items-center gap-2">
             <ColorPicker v-model="primaryColor" class="flex-1" />
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 px-2 text-xs"
-              :disabled="primaryColor == null"
-              @click="primaryColor = undefined"
-            >
+            <Button variant="outline" class="px-2" :disabled="primaryColor == null" @click="primaryColor = undefined">
               清除
             </Button>
           </div>
@@ -153,13 +135,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
           <label class="text-xs text-muted-foreground">内容区域底色</label>
           <div class="flex items-center gap-2">
             <ColorPicker v-model="backgroundColor" class="flex-1" />
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 px-2 text-xs"
-              :disabled="backgroundColor == null"
-              @click="backgroundColor = undefined"
-            >
+            <Button variant="outline" class="px-2" :disabled="backgroundColor == null" @click="backgroundColor = undefined">
               清除
             </Button>
           </div>
@@ -168,7 +144,7 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
         <div class="flex flex-col gap-1">
           <label class="text-xs text-muted-foreground">页面主题模式</label>
           <Select v-model="themeMode">
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="模式" />
             </SelectTrigger>
             <SelectContent class="text-xs">

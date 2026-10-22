@@ -48,13 +48,7 @@ const {
         <TooltipProvider v-if="selectionCount">
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="size-7 p-0"
-                aria-label="保存所选区块为模板"
-                @click="saveSelectionAsTemplate"
-              >
+              <Button variant="ghost" class="size-7 p-0" aria-label="保存所选区块为模板" @click="saveSelectionAsTemplate">
                 <component :is="BookmarkOutline" class="size-3.5" />
               </Button>
             </TooltipTrigger>
@@ -67,13 +61,7 @@ const {
             <Tooltip>
               <TooltipTrigger as-child>
                 <DropdownMenuTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="size-7 p-0"
-                    aria-label="应用起始模板"
-                    title="起始模板"
-                  >
+                  <Button variant="ghost" class="size-7 p-0" aria-label="应用起始模板" title="起始模板">
                     <component :is="LayersOutline" class="size-3.5" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -94,20 +82,12 @@ const {
 
         <Popover v-model:open="showAddMenu">
           <PopoverTrigger as-child>
-            <Button
-              size="sm"
-              class="size-7 p-0"
-              aria-label="添加区块"
-            >
+            <Button class="size-7 p-0" aria-label="添加区块">
               <component :is="AddCircleOutline" class="size-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent align="end" class="w-72 p-2 text-xs flex flex-col gap-2">
-            <Input
-              v-model="blockSearch"
-              placeholder="搜索区块名称或关键词..."
-              class="h-7 text-xs"
-            />
+            <Input v-model="blockSearch" placeholder="搜索区块名称或关键词..." size="xs" />
             <div class="max-h-72 overflow-y-auto flex flex-col gap-0.5">
               <template v-if="addBlockOptions.length">
                 <template v-for="opt in addBlockOptions" :key="opt.key">

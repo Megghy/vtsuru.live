@@ -60,21 +60,9 @@ function changePassword() {
           <CardTitle class="text-lg">修改密码</CardTitle>
         </CardHeader>
         <CardContent class="space-y-4">
-          <Input
-            v-model="password"
-            type="password"
-            placeholder="新密码"
-          />
-          <Input
-            v-model="password2"
-            type="password"
-            placeholder="确认密码"
-          />
-          <Button
-            class="w-full"
-            :disabled="isLoading"
-            @click="changePassword"
-          >
+          <Input v-model="password" type="password" placeholder="新密码" />
+          <Input v-model="password2" type="password" placeholder="确认密码" />
+          <Button class="w-full" :disabled="isLoading" @click="changePassword">
             {{ isLoading ? '提交中...' : '修改密码' }}
           </Button>
         </CardContent>

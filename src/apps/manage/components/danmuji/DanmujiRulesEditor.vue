@@ -73,7 +73,7 @@ defineEmits<{ reset: [] }>()
         description="确定恢复默认功能配置吗？"
         @confirm="$emit('reset')"
       >
-        <Button size="sm" variant="outline">
+        <Button variant="outline">
           恢复默认规则
         </Button>
       </Popconfirm>

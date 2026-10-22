@@ -20,6 +20,13 @@ import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templa
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -275,42 +282,57 @@ async function setAsDisplayTemplate() {
     </Alert>
 
     <div class="flex flex-wrap items-center gap-3">
-      <span class="text-xs text-muted-foreground">页面</span>
-      <select
-        v-model="selectedPage"
-        :disabled="isFormSaving"
-        class="h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-      >
-        <option v-for="opt in pageOptions" :key="opt.value" :value="opt.value">
-          {{ opt.label }}
-        </option>
-      </select>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-muted-foreground">页面</span>
+        <div class="w-28">
+          <Select
+            v-model="selectedPage"
+            :disabled="isFormSaving"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in pageOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-      <span class="text-xs text-muted-foreground">模板</span>
-      <select
-        v-model="selectedKey"
-        :disabled="isFormSaving"
-        class="h-8 min-w-[180px] rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-      >
-        <option v-for="opt in filteredTemplateOptions" :key="opt.value" :value="opt.value">
-          {{ opt.label }} {{ opt.capabilities?.length ? `(${opt.capabilities.length} 项能力)` : '' }}
-        </option>
-      </select>
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-muted-foreground">模板</span>
+        <div class="min-w-[180px]">
+          <Select
+            v-model="selectedKey"
+            :disabled="isFormSaving"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in filteredTemplateOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }} {{ opt.capabilities?.length ? `(${opt.capabilities.length} 项能力)` : '' }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
-      <Button
-        size="sm"
-        :disabled="isSaving"
-        @click="setAsDisplayTemplate"
-      >
+      <Button :disabled="isSaving" @click="setAsDisplayTemplate">
         设为展示模板
       </Button>
 
-      <Button
-        v-if="settingName"
-        size="sm"
-        variant="outline"
-        @click="configCollapsed = !configCollapsed"
-      >
+      <Button v-if="settingName" variant="outline" @click="configCollapsed = !configCollapsed">
         <component :is="configCollapsed ? PanelLeftExpand20Filled : PanelLeftContract20Filled" class="size-3.5 mr-1" />
         {{ configCollapsed ? '展开配置' : '折叠配置' }}
       </Button>

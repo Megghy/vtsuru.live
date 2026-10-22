@@ -413,53 +413,22 @@ onBeforeUnmount(() => {
       >
         <div class="flex items-center gap-1.5 flex-wrap">
           <span class="text-xs text-muted-foreground mr-1">已选 {{ selectionCount }} 个区块</span>
-          <Button
-            size="sm"
-            variant="default"
-            class="h-6 px-2 text-xs"
-            @click="bulkGroup"
-          >
+          <Button variant="default" class="h-6 px-2" @click="bulkGroup">
             成组
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-6 px-2 text-xs"
-            @click="bulkHide"
-          >
+          <Button variant="outline" class="h-6 px-2" @click="bulkHide">
             隐藏
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-6 px-2 text-xs"
-            @click="bulkShow"
-          >
+          <Button variant="outline" class="h-6 px-2" @click="bulkShow">
             显示
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-6 px-2 text-xs"
-            @click="bulkCopy"
-          >
+          <Button variant="outline" class="h-6 px-2" @click="bulkCopy">
             复制
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-6 px-2 text-xs"
-            :disabled="!hasClipboard"
-            @click="bulkPaste"
-          >
+          <Button variant="outline" class="h-6 px-2" :disabled="!hasClipboard" @click="bulkPaste">
             粘贴
           </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            class="h-6 px-2 text-xs"
-            @click="bulkDelete"
-          >
+          <Button variant="destructive" class="h-6 px-2" @click="bulkDelete">
             删除
           </Button>
         </div>
@@ -497,17 +466,11 @@ onBeforeUnmount(() => {
           <DialogTitle class="text-sm font-semibold">重命名区块</DialogTitle>
         </DialogHeader>
         <div class="py-2">
-          <Input
-            v-model="renameBlockName"
-            maxlength="50"
-            placeholder="仅用于编辑器内识别"
-            class="text-xs"
-            @keyup.enter="confirmRenameBlock"
-          />
+          <Input v-model="renameBlockName" maxlength="50" placeholder="仅用于编辑器内识别" @keyup.enter="confirmRenameBlock" />
         </div>
         <DialogFooter>
-          <Button size="sm" variant="outline" @click="renameBlockModal = false">取消</Button>
-          <Button size="sm" @click="confirmRenameBlock">保存</Button>
+          <Button variant="outline" @click="renameBlockModal = false">取消</Button>
+          <Button @click="confirmRenameBlock">保存</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -522,8 +485,8 @@ onBeforeUnmount(() => {
           将删除 {{ pendingDeleteIds.length }} 个区块，此操作可通过撤销恢复。
         </div>
         <DialogFooter>
-          <Button size="sm" variant="outline" @click="deleteBlockModal = false">取消</Button>
-          <Button size="sm" variant="destructive" @click="confirmDeleteBlocks">删除</Button>
+          <Button variant="outline" @click="deleteBlockModal = false">取消</Button>
+          <Button variant="destructive" @click="confirmDeleteBlocks">删除</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -254,21 +254,11 @@ onMounted(() => {
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="relative w-[200px]">
             <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input
-              v-model="runtimeSearch"
-              placeholder="搜索 Key..."
-              class="h-8 text-xs pl-8 pr-2"
-            />
+            <Input v-model="runtimeSearch" placeholder="搜索 Key..." class="pl-8 pr-2" />
           </div>
 
           <div class="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-7 text-xs gap-1"
-              :disabled="runtimeLoading"
-              @click="fetchRuntimeData"
-            >
+            <Button variant="secondary" class="gap-1" :disabled="runtimeLoading" @click="fetchRuntimeData">
               <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': runtimeLoading }" />
               刷新
             </Button>
@@ -277,12 +267,7 @@ onMounted(() => {
               @positive-click="clearRuntimeData"
             >
               <template #trigger>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10 gap-1"
-                  :disabled="runtimeData.length === 0"
-                >
+                <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1" :disabled="runtimeData.length === 0">
                   <Delete16Filled class="size-3.5" />
                   清除所有
                 </Button>
@@ -323,12 +308,7 @@ onMounted(() => {
                   <TableCell class="text-xs">
                     <div class="flex items-center justify-between gap-2">
                       <pre class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1">{{ row.valueDisplay }}</pre>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0"
-                        @click="copyToClipboard(row.valueDisplay)"
-                      >
+                      <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -339,11 +319,7 @@ onMounted(() => {
                       @positive-click="deleteRuntimeItem(row.key)"
                     >
                       <template #trigger>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                        >
+                        <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10">
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>
@@ -387,21 +363,11 @@ onMounted(() => {
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="relative w-[200px]">
             <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input
-              v-model="persistentSearch"
-              placeholder="搜索 Key..."
-              class="h-8 text-xs pl-8 pr-2"
-            />
+            <Input v-model="persistentSearch" placeholder="搜索 Key..." class="pl-8 pr-2" />
           </div>
 
           <div class="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-7 text-xs gap-1"
-              :disabled="persistentLoading"
-              @click="fetchPersistentData"
-            >
+            <Button variant="secondary" class="gap-1" :disabled="persistentLoading" @click="fetchPersistentData">
               <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': persistentLoading }" />
               刷新
             </Button>
@@ -410,12 +376,7 @@ onMounted(() => {
               @positive-click="clearPersistentData"
             >
               <template #trigger>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10 gap-1"
-                  :disabled="persistentData.length === 0"
-                >
+                <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1" :disabled="persistentData.length === 0">
                   <Delete16Filled class="size-3.5" />
                   清除所有
                 </Button>
@@ -456,12 +417,7 @@ onMounted(() => {
                   <TableCell class="text-xs">
                     <div class="flex items-center justify-between gap-2">
                       <pre class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1">{{ row.valueDisplay }}</pre>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0"
-                        @click="copyToClipboard(row.valueDisplay)"
-                      >
+                      <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -472,11 +428,7 @@ onMounted(() => {
                       @positive-click="deletePersistentItem(row.key)"
                     >
                       <template #trigger>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                        >
+                        <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10">
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>

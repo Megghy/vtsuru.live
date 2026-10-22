@@ -137,25 +137,14 @@ function download() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="outline"
-                size="sm"
-                class="h-8 text-xs"
-                :loading="preloading"
-                @click="handlePreload"
-              >
+              <Button variant="outline" :loading="preloading" @click="handlePreload">
                 预加载模型
               </Button>
             </TooltipTrigger>
             <TooltipContent>提前下载模型文件，避免首次处理时等待</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <Button
-          :disabled="!resultUrl"
-          size="sm"
-          class="h-8 text-xs"
-          @click="download"
-        >
+        <Button :disabled="!resultUrl" @click="download">
           下载结果
         </Button>
       </div>
@@ -175,7 +164,7 @@ function download() {
           <div class="setting-item">
             <span class="text-[11px] text-muted-foreground">处理模式</span>
             <Select v-model="options.mode">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -192,7 +181,7 @@ function download() {
           <div class="setting-item">
             <span class="text-[11px] text-muted-foreground">模型精度（首次使用需下载）</span>
             <Select v-model="options.model">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -209,7 +198,7 @@ function download() {
           <div class="setting-item">
             <span class="text-[11px] text-muted-foreground">计算设备</span>
             <Select v-model="options.device">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -234,7 +223,7 @@ function download() {
           <div class="setting-item">
             <span class="text-[11px] text-muted-foreground">输出格式</span>
             <Select v-model="options.format">
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -261,9 +250,7 @@ function download() {
           <div class="setting-item">
             <span class="text-[11px] text-muted-foreground">后台处理 (Web Worker)</span>
             <div class="pt-1">
-              <Switch
-                :checked="options.proxyToWorker"
-                @update:checked="(v) => (options.proxyToWorker = v)"
+              <Switch :checked="options.proxyToWorker" @update:checked="(v) => (options.proxyToWorker = v)"
               />
             </div>
             <span class="text-[10px] text-muted-foreground leading-tight">
@@ -285,21 +272,10 @@ function download() {
         <!-- Working area -->
         <template v-else>
           <div class="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs"
-              @click="openFileDialog()"
-            >
+            <Button variant="outline" @click="openFileDialog()">
               重新选择
             </Button>
-            <Button
-              size="sm"
-              class="h-8 text-xs"
-              :loading="processing"
-              :disabled="processing || supported === false"
-              @click="process"
-            >
+            <Button :loading="processing" :disabled="processing || supported === false" @click="process">
               {{ modeOptions.find((m) => m.value === options.mode)?.label ?? '处理' }}
             </Button>
           </div>

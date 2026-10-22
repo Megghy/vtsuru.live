@@ -144,20 +144,10 @@ function handleSelect(action: string) {
           class="actions"
           @click.stop
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-6 w-6 p-0 rounded-full"
-            @click="speechService.forceSpeak(item.data)"
-          >
+          <Button variant="ghost" class="h-6 w-6 p-0 rounded-full" @click="speechService.forceSpeak(item.data)">
             <Play20Filled class="size-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-6 w-6 p-0 rounded-full text-destructive hover:bg-destructive/10"
-            @click="speechService.removeFromQueue(item)"
-          >
+          <Button variant="ghost" class="h-6 w-6 p-0 rounded-full text-destructive hover:bg-destructive/10" @click="speechService.removeFromQueue(item)">
             <Delete20Filled class="size-3.5" />
           </Button>
         </div>

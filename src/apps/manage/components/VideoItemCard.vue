@@ -281,15 +281,7 @@ function triggerPreview() {
 
     <!-- 操作按钮组 -->
     <div class="video-actions flex items-center gap-1 shrink-0">
-      <Button
-        v-for="action in actions"
-        :key="action.status"
-        size="xs"
-        :variant="action.variant"
-        :loading="loading"
-        class="h-7 px-2"
-        @click="emit('updateStatus', action.status, videoInfo)"
-      >
+      <Button v-for="action in actions" :key="action.status" size="xs" :variant="action.variant" :loading="loading" class="px-2" @click="emit('updateStatus', action.status, videoInfo)">
         <component
           :is="action.icon"
           class="h-3 w-3 mr-1"
@@ -435,15 +427,7 @@ function triggerPreview() {
 
       <!-- 操作按钮 -->
       <div class="video-actions flex items-center gap-1 pt-2 border-t border-border">
-        <Button
-          v-for="action in actions"
-          :key="action.status"
-          size="xs"
-          :variant="action.variant"
-          :loading="loading"
-          class="flex-1 h-7"
-          @click="emit('updateStatus', action.status, videoInfo)"
-        >
+        <Button v-for="action in actions" :key="action.status" size="xs" :variant="action.variant" :loading="loading" class="flex-1" @click="emit('updateStatus', action.status, videoInfo)">
           <component
             :is="action.icon"
             class="h-3 w-3 mr-1"

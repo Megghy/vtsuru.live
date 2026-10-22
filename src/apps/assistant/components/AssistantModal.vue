@@ -45,12 +45,7 @@ function onClose() {
     <DialogContent class="sm:max-w-4xl h-[85vh] max-h-[850px] p-0 flex flex-col overflow-hidden gap-0">
       <DialogHeader class="px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 shrink-0">
         <div class="flex items-center gap-2 min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            class="assistant-modal__menu-btn size-7 -ml-1 text-muted-foreground"
-            @click="drawerVisible = true"
-          >
+          <Button variant="ghost" size="icon" class="assistant-modal__menu-btn size-7 -ml-1 text-muted-foreground" @click="drawerVisible = true">
             <component :is="LineHorizontal320Regular" class="size-4" />
           </Button>
 
@@ -58,11 +53,7 @@ function onClose() {
 
           <Popover>
             <PopoverTrigger as-child>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-6 text-muted-foreground hover:text-foreground"
-              >
+              <Button variant="ghost" size="icon" class="size-6 text-muted-foreground hover:text-foreground">
                 <component :is="QuestionCircle20Regular" class="size-3.5" />
               </Button>
             </PopoverTrigger>
@@ -90,12 +81,7 @@ function onClose() {
         </div>
 
         <div class="flex items-center gap-1 mr-6">
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-7 text-xs flex items-center gap-1"
-            @click="store.reset"
-          >
+          <Button variant="ghost" class="flex items-center gap-1" @click="store.reset">
             <component :is="Add20Regular" class="size-3.5" />
             新对话
           </Button>

@@ -61,7 +61,7 @@ async function copyResult() {
       <CardTitle class="text-base font-semibold">翻译工具</CardTitle>
       <div class="flex items-center gap-2">
         <Select v-model="mode">
-          <SelectTrigger class="h-8 w-[130px] text-xs">
+          <SelectTrigger class="w-[130px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -74,12 +74,7 @@ async function copyResult() {
             </SelectItem>
           </SelectContent>
         </Select>
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          :loading="translating"
-          @click="doTranslate"
-        >
+        <Button :loading="translating" @click="doTranslate">
           翻译
         </Button>
       </div>
@@ -101,7 +96,7 @@ async function copyResult() {
         <div class="lang-bar">
           <span class="text-xs text-muted-foreground"> 源语言 </span>
           <Select v-model="sourceLang">
-            <SelectTrigger class="h-8 w-[150px] text-xs">
+            <SelectTrigger class="w-[150px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -115,19 +110,13 @@ async function copyResult() {
             </SelectContent>
           </Select>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            class="h-8 w-8 rounded-full"
-            title="交换原文和译文"
-            @click="swapTexts"
-          >
+          <Button variant="ghost" size="icon" class="w-8 rounded-full" title="交换原文和译文" @click="swapTexts">
             ⇄
           </Button>
 
           <span class="text-xs text-muted-foreground"> 目标语言 </span>
           <Select v-model="targetLang">
-            <SelectTrigger class="h-8 w-[150px] text-xs">
+            <SelectTrigger class="w-[150px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -163,13 +152,7 @@ async function copyResult() {
           <div class="translate-column">
             <div class="panel-header">
               <span class="text-xs text-muted-foreground"> 译文 </span>
-              <Button
-                v-if="resultText"
-                variant="link"
-                size="sm"
-                class="h-auto p-0 text-xs text-primary"
-                @click="copyResult"
-              >
+              <Button v-if="resultText" variant="link" class="h-auto p-0 text-primary" @click="copyResult">
                 复制
               </Button>
             </div>

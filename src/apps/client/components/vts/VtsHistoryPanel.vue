@@ -26,11 +26,7 @@ const pagedHistory = computed(() => {
   <Card>
     <CardHeader class="py-3 px-4 flex flex-row items-center justify-between">
       <CardTitle class="text-sm font-semibold">操作记录</CardTitle>
-      <Button
-        size="sm"
-        variant="destructive"
-        class="h-7 text-xs"
-        @click="run(() => vts.clearHistory(), '已清空')"
+      <Button variant="destructive" @click="run(() => vts.clearHistory(), '已清空')"
       >
         清空
       </Button>
@@ -90,13 +86,7 @@ const pagedHistory = computed(() => {
                 {{ row.error ?? '' }}
               </td>
               <td class="py-2 px-2 text-right whitespace-nowrap">
-                <Button
-                  v-if="row.payload && REPLAYABLE_KINDS.has(row.kind)"
-                  size="sm"
-                  variant="outline"
-                  class="h-6 text-[11px] px-1.5"
-                  :disabled="!vts.connected"
-                  @click="run(() => vts.replayHistoryRecord(row.id), '已回放')"
+                <Button v-if="row.payload && REPLAYABLE_KINDS.has(row.kind)" variant="outline" class="h-6 text-[11px] px-1.5" :disabled="!vts.connected" @click="run(() => vts.replayHistoryRecord(row.id), '已回放')"
                 >
                   回放
                 </Button>
@@ -110,21 +100,11 @@ const pagedHistory = computed(() => {
         v-if="totalPages > 1"
         class="flex items-center justify-end gap-2 pt-2 text-xs"
       >
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs"
-          :disabled="currentPage <= 1"
-          @click="currentPage--"
-        >
+        <Button variant="outline" :disabled="currentPage <= 1" @click="currentPage--">
           上一页
         </Button>
         <span class="text-[var(--muted-foreground)]">{{ currentPage }} / {{ totalPages }}</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs"
-          :disabled="currentPage >= totalPages"
+        <Button variant="outline" :disabled="currentPage>= totalPages"
           @click="currentPage++"
         >
           下一页

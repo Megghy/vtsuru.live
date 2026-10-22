@@ -48,12 +48,7 @@ function test() {
           <li>建议使用 HTTPS</li>
           <li>HTTP 将通过代理转发，速度较慢</li>
         </ul>
-        <Button
-          variant="link"
-          size="sm"
-          class="h-auto p-0 text-xs text-sky-600 dark:text-sky-400"
-          as-child
-        >
+        <Button variant="link" class="h-auto p-0 text-sky-600 dark:text-sky-400" as-child>
           <a
             href="https://github.com/Artrajz/vits-simple-api"
             target="_blank"
@@ -79,7 +74,7 @@ function test() {
     >
       <div class="flex items-center gap-1.5">
         <Select v-model="settings.providers.api.voiceAPISchemeType">
-          <SelectTrigger class="h-8 text-xs w-[88px] shrink-0">
+          <SelectTrigger class="w-[88px] shrink-0">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -94,29 +89,14 @@ function test() {
           </SelectContent>
         </Select>
 
-        <Input
-          v-model="settings.providers.api.voiceAPI"
-          placeholder="xxx.com/voice?text={{text}}&id=0"
-          class="h-8 text-xs flex-1"
-          :class="/^(?:https?:\/\/)/.test(settings.providers.api?.voiceAPI?.toLowerCase() ?? '') ? 'border-destructive' : ''"
-        />
+        <Input v-model="settings.providers.api.voiceAPI" placeholder="xxx.com/voice?text={{text}}&id=0" class="flex-1" :class="/^(?:https?:\/\/)/.test(settings.providers.api?.voiceAPI?.toLowerCase() ?? '') ? 'border-destructive' : ''" />
 
-        <Button
-          size="sm"
-          class="h-8 text-xs shrink-0"
-          :disabled="speechState.isApiAudioLoading"
-          @click="test"
-        >
+        <Button class="shrink-0" :disabled="speechState.isApiAudioLoading" @click="test">
           {{ speechState.isApiAudioLoading ? '加载中...' : '测试' }}
         </Button>
       </div>
 
-      <Button
-        variant="link"
-        size="xs"
-        class="h-auto p-0 text-[11px] text-primary"
-        @click="copyToClipboard('{{text}}')"
-      >
+      <Button variant="link" size="xs" class="h-auto p-0 text-[11px] text-primary" @click="copyToClipboard('{{text}}')">
         点击复制 &#123;&#123;text&#125;&#125; 占位符
       </Button>
     </SectionField>

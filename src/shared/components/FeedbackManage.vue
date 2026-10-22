@@ -256,22 +256,10 @@ watch(
       </strong>
 
       <div class="ticket-page__actions flex items-center gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          class="size-8 text-muted-foreground hover:text-foreground"
-          title="刷新"
-          :disabled="loadingList"
-          @click="loadTickets"
-        >
+        <Button variant="ghost" size="icon" class="size-8 text-muted-foreground hover:text-foreground" title="刷新" :disabled="loadingList" @click="loadTickets">
           <component :is="ArrowClockwise24Regular" class="size-4" :class="{ 'animate-spin': loadingList }" />
         </Button>
-        <Button
-          v-if="isLoggedIn"
-          size="sm"
-          class="h-8 text-xs flex items-center gap-1"
-          @click="showCreate = true"
-        >
+        <Button v-if="isLoggedIn" class="flex items-center gap-1" @click="showCreate = true">
           <component :is="Add24Regular" class="size-3.5" />
           新建工单
         </Button>
@@ -282,13 +270,9 @@ watch(
       v-if="tickets.length || filtering"
       class="ticket-page__filters flex flex-wrap items-center gap-2 pt-3"
     >
-      <Input
-        v-model="keyword"
-        placeholder="搜索标题或编号"
-        class="w-48 h-8 text-xs"
-      />
+      <Input v-model="keyword" placeholder="搜索标题或编号" class="w-48" />
       <Select v-model="statusFilter">
-        <SelectTrigger class="w-28 h-8 text-xs">
+        <SelectTrigger class="w-28">
           <SelectValue placeholder="状态" />
         </SelectTrigger>
         <SelectContent>
@@ -304,7 +288,7 @@ watch(
         </SelectContent>
       </Select>
       <Select v-model="typeFilter">
-        <SelectTrigger class="w-28 h-8 text-xs">
+        <SelectTrigger class="w-28">
           <SelectValue placeholder="类型" />
         </SelectTrigger>
         <SelectContent>
@@ -410,7 +394,7 @@ watch(
               :model-value="String(draft.type)"
               @update:model-value="draft.type = Number($event) as SupportTicketType"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
@@ -428,12 +412,7 @@ watch(
 
           <div class="space-y-1">
             <label class="font-medium text-foreground">标题 *</label>
-            <Input
-              v-model="draft.title"
-              maxlength="160"
-              placeholder="用一句话概括问题"
-              class="h-8 text-xs"
-            />
+            <Input v-model="draft.title" maxlength="160" placeholder="用一句话概括问题" />
           </div>
 
           <div class="space-y-1">
@@ -499,21 +478,10 @@ watch(
         </div>
 
         <DialogFooter class="pt-2 border-t border-border/60">
-          <Button
-            variant="outline"
-            size="sm"
-            class="text-xs"
-            :disabled="creating"
-            @click="showCreate = false"
-          >
+          <Button variant="outline" :disabled="creating" @click="showCreate = false">
             取消
           </Button>
-          <Button
-            size="sm"
-            class="text-xs"
-            :disabled="creating || !draft.title.trim() || !draft.content.trim()"
-            @click="submitTicket"
-          >
+          <Button :disabled="creating || !draft.title.trim() || !draft.content.trim()" @click="submitTicket">
             创建工单
           </Button>
         </DialogFooter>

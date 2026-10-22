@@ -9,6 +9,13 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { useMessage } from '@/shared/utils'
 
@@ -154,14 +161,18 @@ function clearAll() {
         <div class="flex flex-wrap items-center gap-4 text-xs">
           <div class="flex items-center gap-2">
             <span class="text-muted-foreground">格式</span>
-            <select
-              v-model="format"
-              class="h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-            >
-              <option v-for="opt in formatOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+            <div class="w-28">
+              <Select v-model="format">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem v-for="opt in formatOptions" :key="opt.value" :value="opt.value">
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div v-if="isLossy" class="flex items-center gap-2">
@@ -200,12 +211,7 @@ function clearAll() {
             </div>
           </div>
 
-          <Button
-            v-if="items.length"
-            size="sm"
-            variant="outline"
-            @click="reprocessAll"
-          >
+          <Button v-if="items.length" variant="outline" @click="reprocessAll">
             重新压缩
           </Button>
         </div>
@@ -226,17 +232,10 @@ function clearAll() {
           <div class="flex justify-between items-center pt-2">
             <span class="text-xs text-muted-foreground">共 {{ items.length }} 张图片</span>
             <div class="flex gap-2">
-              <Button
-                size="sm"
-                @click="downloadAll"
-              >
+              <Button @click="downloadAll">
                 打包下载 ZIP
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                @click="clearAll"
-              >
+              <Button variant="outline" @click="clearAll">
                 清空
               </Button>
             </div>
@@ -267,20 +266,10 @@ function clearAll() {
                 <span v-else-if="item.processing" class="text-[11px] text-muted-foreground">处理中...</span>
               </div>
               <div class="flex justify-between items-center mt-auto pt-1">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  :disabled="!item.compressedBlob"
-                  @click="downloadOne(item)"
-                >
+                <Button size="xs" variant="outline" :disabled="!item.compressedBlob" @click="downloadOne(item)">
                   下载
                 </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="text-destructive"
-                  @click="removeItem(idx)"
-                >
+                <Button size="xs" variant="ghost" class="text-destructive" @click="removeItem(idx)">
                   移除
                 </Button>
               </div>

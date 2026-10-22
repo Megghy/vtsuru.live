@@ -57,33 +57,15 @@ function addExpressions() {
     <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
       <CardTitle class="text-sm font-semibold">操作台</CardTitle>
       <div class="flex items-center gap-2">
-        <Button
-          v-if="editing"
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs gap-1"
-          :disabled="!vts.connected || vts.expressions.length === 0"
-          @click="addExpressions"
-        >
+        <Button v-if="editing" variant="outline" class="gap-1" :disabled="!vts.connected || vts.expressions.length === 0" @click="addExpressions">
           <ArrowImport24Regular class="size-3.5" />
           导入当前模型表情
         </Button>
-        <Button
-          v-if="editing"
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs gap-1"
-          @click="openEditor()"
-        >
+        <Button v-if="editing" variant="outline" class="gap-1" @click="openEditor()">
           <Add24Regular class="size-3.5" />
           添加格子
         </Button>
-        <Button
-          size="sm"
-          :variant="editing ? 'default' : 'secondary'"
-          class="h-7 text-xs gap-1"
-          @click="editing = !editing"
-        >
+        <Button :variant="editing ? 'default' : 'secondary'" class="gap-1" @click="editing = !editing">
           <Checkmark24Regular v-if="editing" class="size-3.5" />
           <Edit24Regular v-else class="size-3.5" />
           {{ editing ? '完成' : '编辑' }}
@@ -113,20 +95,10 @@ function addExpressions() {
       >
         <Empty description="把常用的表情、热键、宏、机位预设放到这里，一键切换">
           <div class="flex items-center justify-center gap-2 mt-3">
-            <Button
-              size="sm"
-              class="h-8 text-xs"
-              :disabled="!vts.connected || vts.expressions.length === 0"
-              @click="addExpressions"
-            >
+            <Button :disabled="!vts.connected || vts.expressions.length === 0" @click="addExpressions">
               导入当前模型表情
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs"
-              @click="openEditor()"
-            >
+            <Button variant="outline" @click="openEditor()">
               手动添加
             </Button>
           </div>

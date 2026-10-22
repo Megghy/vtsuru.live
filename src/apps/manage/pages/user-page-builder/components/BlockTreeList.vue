@@ -323,13 +323,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="size-6 p-0"
-                :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
-                @click.stop="b.hidden = !b.hidden"
-              >
+              <Button variant="ghost" class="size-6 p-0" :aria-label="b.hidden ? '显示区块' : '隐藏区块'" @click.stop="b.hidden = !b.hidden">
                 <component :is="b.hidden ? EyeOffOutline : EyeOutline" class="size-3.5" />
               </Button>
             </TooltipTrigger>
@@ -340,13 +334,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="size-6 p-0"
-                aria-label="在预览中定位"
-                @click.stop="scrollToPreviewBlock(b.id)"
-              >
+              <Button variant="ghost" class="size-6 p-0" aria-label="在预览中定位" @click.stop="scrollToPreviewBlock(b.id)">
                 <component :is="LocateOutline" class="size-3.5" />
               </Button>
             </TooltipTrigger>
@@ -356,13 +344,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="size-6 p-0"
-              aria-label="更多区块操作"
-              @click.stop
-            >
+            <Button variant="ghost" class="size-6 p-0" aria-label="更多区块操作" @click.stop>
               <component :is="EllipsisHorizontalOutline" class="size-3.5" />
             </Button>
           </DropdownMenuTrigger>

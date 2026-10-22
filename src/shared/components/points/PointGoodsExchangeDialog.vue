@@ -510,7 +510,7 @@ const requestClose = () => {
                 :model-value="(serviceAnswers[field.id] as string) || ''"
                 @update:model-value="serviceAnswers[field.id] = String($event)"
               >
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue :placeholder="`请选择${field.label}`" />
                 </SelectTrigger>
                 <SelectContent>
@@ -525,22 +525,9 @@ const requestClose = () => {
                 </SelectContent>
               </Select>
 
-              <Input
-                v-else-if="field.type === ServiceFieldType.Date"
-                :model-value="(serviceAnswers[field.id] as string) || ''"
-                type="date"
-                class="h-8 text-xs"
-                @update:model-value="serviceAnswers[field.id] = $event"
-              />
+              <Input v-else-if="field.type === ServiceFieldType.Date" :model-value="(serviceAnswers[field.id] as string) || ''" type="date" @update:model-value="serviceAnswers[field.id] = $event" />
 
-              <Input
-                v-else-if="field.type === ServiceFieldType.Number"
-                :model-value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])"
-                type="number"
-                step="any"
-                class="h-8 text-xs"
-                @update:model-value="serviceAnswers[field.id] = Number($event) || undefined"
-              />
+              <Input v-else-if="field.type === ServiceFieldType.Number" :model-value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])" type="number" step="any" @update:model-value="serviceAnswers[field.id] = Number($event) || undefined" />
 
               <Textarea
                 v-else-if="field.type === ServiceFieldType.Textarea"
@@ -552,15 +539,7 @@ const requestClose = () => {
                 @update:model-value="serviceAnswers[field.id] = $event"
               />
 
-              <Input
-                v-else
-                :model-value="(serviceAnswers[field.id] as string) || ''"
-                :type="field.type === ServiceFieldType.Url ? 'url' : 'text'"
-                :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`"
-                maxlength="300"
-                class="h-8 text-xs"
-                @update:model-value="serviceAnswers[field.id] = $event"
-              />
+              <Input v-else :model-value="(serviceAnswers[field.id] as string) || ''" :type="field.type === ServiceFieldType.Url ? 'url' : 'text'" :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`" maxlength="300" @update:model-value="serviceAnswers[field.id] = $event" />
             </div>
           </div>
 
@@ -673,7 +652,7 @@ const requestClose = () => {
                 class="flex-1"
                 @update:model-value="selectedAddress = addressList.find((a) => String(a.id) === $event)"
               >
-                <SelectTrigger class="h-8 text-xs flex-1">
+                <SelectTrigger class="flex-1">
                   <SelectValue placeholder="请选择收货地址" />
                 </SelectTrigger>
                 <SelectContent>
@@ -688,22 +667,10 @@ const requestClose = () => {
                 </SelectContent>
               </Select>
 
-              <Button
-                variant="outline"
-                size="icon"
-                class="size-8 shrink-0"
-                aria-label="新增收货地址"
-                @click="openAddressModal"
-              >
+              <Button variant="outline" size="icon" class="size-8 shrink-0" aria-label="新增收货地址" @click="openAddressModal">
                 <component :is="Add24Regular" class="size-3.5" />
               </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                class="size-8 shrink-0"
-                aria-label="刷新地址列表"
-                @click="refreshAddressList"
-              >
+              <Button variant="outline" size="icon" class="size-8 shrink-0" aria-label="刷新地址列表" @click="refreshAddressList">
                 <component :is="ArrowSync24Regular" class="size-3.5" />
               </Button>
             </div>
@@ -731,13 +698,7 @@ const requestClose = () => {
         </div>
 
         <div class="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            class="text-xs"
-            :disabled="isLoading"
-            @click="requestClose"
-          >
+          <Button variant="outline" :disabled="isLoading" @click="requestClose">
             取消
           </Button>
 
@@ -749,11 +710,7 @@ const requestClose = () => {
             @positive-click="buyGoods"
           >
             <template #trigger>
-              <Button
-                size="sm"
-                class="text-xs"
-                :disabled="!canDoBuy || isLoading"
-              >
+              <Button :disabled="!canDoBuy || isLoading">
                 确认兑换
               </Button>
             </template>
@@ -786,7 +743,7 @@ const requestClose = () => {
               :model-value="currentAddress.province || ''"
               @update:model-value="currentAddress.province = String($event); onAreaSelectChange(0)"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="省份" />
               </SelectTrigger>
               <SelectContent>
@@ -809,7 +766,7 @@ const requestClose = () => {
               :disabled="!currentAddress.province"
               @update:model-value="currentAddress.city = String($event); onAreaSelectChange(1)"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="城市" />
               </SelectTrigger>
               <SelectContent>
@@ -832,7 +789,7 @@ const requestClose = () => {
               :disabled="!currentAddress.city"
               @update:model-value="currentAddress.district = String($event); onAreaSelectChange(2)"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="区/县" />
               </SelectTrigger>
               <SelectContent>
@@ -855,7 +812,7 @@ const requestClose = () => {
               :disabled="!currentAddress.district"
               @update:model-value="currentAddress.street = $event ? String($event) : undefined"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="街道" />
               </SelectTrigger>
               <SelectContent>
@@ -885,21 +842,11 @@ const requestClose = () => {
         <div class="grid grid-cols-2 gap-2">
           <div class="space-y-1">
             <label class="text-muted-foreground text-[11px]">联系电话</label>
-            <Input
-              :model-value="currentAddress.phone ? String(currentAddress.phone) : ''"
-              type="tel"
-              placeholder="手机号"
-              class="h-8 text-xs font-mono"
-              @update:model-value="currentAddress.phone = Number($event) || undefined"
-            />
+            <Input :model-value="currentAddress.phone ? String(currentAddress.phone) : ''" type="tel" placeholder="手机号" class="font-mono" @update:model-value="currentAddress.phone = Number($event) || undefined" />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground text-[11px]">联系人</label>
-            <Input
-              v-model="currentAddress.name"
-              placeholder="姓名"
-              class="h-8 text-xs"
-            />
+            <Input v-model="currentAddress.name" placeholder="姓名" />
           </div>
         </div>
 
@@ -910,20 +857,10 @@ const requestClose = () => {
       </div>
 
       <DialogFooter class="pt-2 border-t border-border/60">
-        <Button
-          variant="outline"
-          size="sm"
-          class="text-xs"
-          @click="showAddressModal = false"
-        >
+        <Button variant="outline" @click="showAddressModal = false">
           取消
         </Button>
-        <Button
-          size="sm"
-          class="text-xs"
-          :disabled="!userAgree || isLoading"
-          @click="updateAddress"
-        >
+        <Button :disabled="!userAgree || isLoading" @click="updateAddress">
           保存地址
         </Button>
       </DialogFooter>
@@ -967,19 +904,10 @@ const requestClose = () => {
       </div>
 
       <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          class="text-xs"
-          @click="showSuccessModal = false"
-        >
+        <Button variant="outline" @click="showSuccessModal = false">
           关闭
         </Button>
-        <Button
-          size="sm"
-          class="text-xs"
-          @click="showSuccessModal = false; router.push({ name: 'bili-user-orders' })"
-        >
+        <Button @click="showSuccessModal = false; router.push({ name: 'bili-user-orders' })">
           查看我的订单
         </Button>
       </DialogFooter>

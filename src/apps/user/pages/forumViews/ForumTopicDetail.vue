@@ -188,12 +188,7 @@ onMounted(async () => {
       <Card class="shadow-xs">
         <CardHeader class="p-3">
           <div class="flex items-center gap-2 text-xs flex-wrap">
-            <Button
-              variant="ghost"
-              size="sm"
-              class="h-7 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
-              @click="$router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
-            >
+            <Button variant="ghost" class="flex items-center gap-1 text-muted-foreground hover:text-foreground" @click="$router.push({ name: 'user-forum', params: { id: userInfo?.name } })">
               <component :is="ArrowCircleLeft12Regular" class="size-4" />
               返回讨论区
             </Button>
@@ -268,14 +263,7 @@ onMounted(async () => {
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-7 text-xs flex items-center gap-1"
-                  :class="{ 'text-destructive border-destructive/30': topic.isLiked }"
-                  :disabled="!canOprate || useForum.isLikeLoading"
-                  @click="
-                    useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
+                <Button variant="outline" class="flex items-center gap-1" :class="{ 'text-destructive border-destructive/30': topic.isLiked }" :disabled="!canOprate || useForum.isLikeLoading" @click=" useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
                       if (success) {
                         topic.isLiked = !topic.isLiked
                         topic.likeCount += topic.isLiked ? 1 : -1
@@ -292,13 +280,7 @@ onMounted(async () => {
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-7 text-xs flex items-center gap-1"
-                  :disabled="!canOprate"
-                  @click="showCommentModal = true"
-                >
+                <Button variant="outline" class="flex items-center gap-1" :disabled="!canOprate" @click="showCommentModal = true">
                   <component :is="Comment24Regular" class="size-3.5" />
                   <span>{{ topic.commentCount }}</span>
                 </Button>
@@ -324,12 +306,7 @@ onMounted(async () => {
       <Card class="shadow-xs">
         <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
           <strong class="text-xs font-semibold">评论</strong>
-          <Button
-            size="sm"
-            class="h-7 text-xs"
-            :disabled="!canOprate"
-            @click="showCommentModal = true"
-          >
+          <Button :disabled="!canOprate" @click="showCommentModal = true">
             发送评论
           </Button>
         </CardHeader>
@@ -400,12 +377,7 @@ onMounted(async () => {
                 v-model="commentToken"
                 class="forum-captcha"
               />
-              <Button
-                size="sm"
-                class="text-xs"
-                :disabled="!commentToken || useForum.isLoading"
-                @click="postComment"
-              >
+              <Button :disabled="!commentToken || useForum.isLoading" @click="postComment">
                 发布
               </Button>
             </div>
@@ -449,12 +421,7 @@ onMounted(async () => {
                 v-model="replyToken"
                 class="forum-captcha"
               />
-              <Button
-                size="sm"
-                class="text-xs"
-                :disabled="!replyToken || useForum.isLoading"
-                @click="postReply"
-              >
+              <Button :disabled="!replyToken || useForum.isLoading" @click="postReply">
                 发布
               </Button>
             </div>

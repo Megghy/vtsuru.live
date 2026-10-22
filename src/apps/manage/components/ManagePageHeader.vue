@@ -60,11 +60,7 @@ const isFunctionEnabled = computed(() => {
               <Tooltip>
                 <TooltipTrigger as-child>
                   <div class="flex items-center gap-1.5 cursor-pointer">
-                    <Switch
-                      :model-value="isFunctionEnabled"
-                      :disabled="loading || switchLoading"
-                      class="h-5 w-9"
-                      @update:model-value="(val) => toggle?.setEnable(Boolean(val))"
+                    <Switch :model-value="isFunctionEnabled" :disabled="loading || switchLoading" @update:model-value="(val) => toggle?.setEnable(Boolean(val))"
                     />
                     <span class="text-xs text-muted-foreground select-none">
                       {{ isFunctionEnabled ? '已启用' : '已禁用' }}
@@ -130,19 +126,11 @@ const isFunctionEnabled = computed(() => {
             </div>
 
             <div class="flex items-center gap-1.5">
-              <Input
-                :model-value="link.value"
-                readonly
-                class="flex-1 font-mono text-xs bg-muted/40"
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                @click="copyToClipboard(link.copyValue ?? link.value)"
-              >
+              <Input :model-value="link.value" readonly class="flex-1 font-mono bg-muted/40" />
+              <Button variant="outline" @click="copyToClipboard(link.copyValue ?? link.value)">
                 <component
                   :is="Copy24Regular"
-                  class="h-3.5 w-3.5"
+                  class="h-3.5 w-3.5 mr-1"
                 />
                 复制
               </Button>

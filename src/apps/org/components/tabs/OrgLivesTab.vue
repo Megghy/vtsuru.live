@@ -61,11 +61,7 @@ onMounted(() => load())
       <!-- 搜索与筛选工具栏 -->
       <div class="flex items-center gap-2 flex-wrap">
         <div class="relative w-52">
-          <Input
-            v-model="search"
-            placeholder="搜索标题/主播"
-            class="h-8 text-xs pl-7"
-          />
+          <Input v-model="search" placeholder="搜索标题/主播" class="pl-7" />
           <component :is="SearchOutline" class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
 
@@ -73,7 +69,7 @@ onMounted(() => load())
           :model-value="String(streamerFilter)"
           @update:model-value="streamerFilter = Number($event)"
         >
-          <SelectTrigger class="w-40 h-8 text-xs">
+          <SelectTrigger class="w-40">
             <SelectValue placeholder="筛选主播" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
@@ -92,7 +88,7 @@ onMounted(() => load())
           :model-value="sortKey"
           @update:model-value="sortKey = $event as any"
         >
-          <SelectTrigger class="w-28 h-8 text-xs">
+          <SelectTrigger class="w-28">
             <SelectValue placeholder="排序" />
           </SelectTrigger>
           <SelectContent>
@@ -107,13 +103,7 @@ onMounted(() => load())
           </SelectContent>
         </Select>
 
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-8 text-xs gap-1"
-          :disabled="view.length === 0"
-          @click="exportLives"
-        >
+        <Button variant="outline" class="gap-1" :disabled="view.length === 0" @click="exportLives">
           <component :is="DownloadOutline" class="size-3.5" />
           导出 CSV
         </Button>

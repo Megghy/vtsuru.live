@@ -216,12 +216,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
               data-validation-field="name"
             >
               <label class="text-xs text-muted-foreground">区块备注名称</label>
-              <Input
-                v-model="blockNameModel"
-                maxlength="50"
-                placeholder="例如：直播信息 · 紧凑"
-                class="h-8 text-xs"
-              />
+              <Input v-model="blockNameModel" maxlength="50" placeholder="例如：直播信息 · 紧凑" />
             </div>
 
             <div
@@ -229,10 +224,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
               class="flex items-center justify-between pt-4"
             >
               <label class="text-xs text-muted-foreground">显示边框</label>
-              <Switch
-                :checked="blockFramedModel"
-                @update:checked="blockFramedModel = $event"
-              />
+              <Switch :checked="blockFramedModel" @update:checked="blockFramedModel = $event" />
             </div>
 
             <div
@@ -240,10 +232,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
               class="flex items-center justify-between pt-4"
             >
               <label class="text-xs text-muted-foreground">显示背景</label>
-              <Switch
-                :checked="blockBackgroundedModel"
-                @update:checked="blockBackgroundedModel = $event"
-              />
+              <Switch :checked="blockBackgroundedModel" @update:checked="blockBackgroundedModel = $event" />
             </div>
           </PropsGrid>
         </AccordionContent>
@@ -276,7 +265,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
             >
               <label class="text-xs text-muted-foreground">直播状态</label>
               <Select v-model="liveStateModel">
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue placeholder="直播状态" />
                 </SelectTrigger>
                 <SelectContent class="text-xs">
@@ -293,7 +282,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
             >
               <label class="text-xs text-muted-foreground">设备</label>
               <Select v-model="deviceModel">
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue placeholder="设备" />
                 </SelectTrigger>
                 <SelectContent class="text-xs">

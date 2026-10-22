@@ -78,30 +78,11 @@ async function give(sign: 1 | -1) {
         :show-button="false"
         class="w-16"
       />
-      <Input
-        v-model="reason"
-        class="h-7 text-xs flex-1"
-        placeholder="原因（可选）"
-        :maxlength="100"
-      />
-      <Button
-        size="icon"
-        variant="secondary"
-        class="h-7 w-7 shrink-0 text-primary"
-        :disabled="!count || !!error || submitting"
-        aria-label="增加积分"
-        @click="give(1)"
-      >
+      <Input size="xs" v-model="reason" class="flex-1" placeholder="原因（可选）" :maxlength="100" />
+      <Button size="icon" variant="secondary" class="w-7 shrink-0 text-primary" :disabled="!count || !!error || submitting" aria-label="增加积分" @click="give(1)">
         <component :is="Add16Regular" class="h-4 w-4" />
       </Button>
-      <Button
-        size="icon"
-        variant="secondary"
-        class="h-7 w-7 shrink-0"
-        :disabled="!count || !!error || !total || submitting"
-        aria-label="扣除积分"
-        @click="give(-1)"
-      >
+      <Button size="icon" variant="secondary" class="w-7 shrink-0" :disabled="!count || !!error || !total || submitting" aria-label="扣除积分" @click="give(-1)">
         <component :is="Subtract16Regular" class="h-4 w-4" />
       </Button>
     </div>

@@ -100,13 +100,7 @@ function selectSwatch(swatch: string) {
                 @input="onNativeColorChange"
               />
             </div>
-            <Input
-              v-model="textInput"
-              class="h-8 font-mono text-xs uppercase"
-              placeholder="#000000"
-              @blur="onTextChange"
-              @keyup.enter="onTextChange"
-            />
+            <Input v-model="textInput" class="font-mono uppercase" placeholder="#000000" @blur="onTextChange" @keyup.enter="onTextChange" />
           </div>
 
           <div v-if="swatches && swatches.length > 0">

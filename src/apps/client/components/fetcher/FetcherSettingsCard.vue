@@ -104,11 +104,7 @@ async function handleToggleEventFetcher(enabled: boolean) {
             <span class="text-xs text-muted-foreground">
               {{ settings.settings.enableEventFetcher ? '已启用' : '已禁用' }}
             </span>
-            <Switch
-              :checked="settings.settings.enableEventFetcher"
-              :disabled="webfetcher.state === 'connecting'"
-              @update:checked="settings.settings.enableEventFetcher = $event; handleToggleEventFetcher($event)"
-            />
+            <Switch :checked="settings.settings.enableEventFetcher" :disabled="webfetcher.state === 'connecting'" @update:checked="settings.settings.enableEventFetcher = $event; handleToggleEventFetcher($event)" />
           </div>
         </div>
 
@@ -179,12 +175,7 @@ async function handleToggleEventFetcher(enabled: boolean) {
           "
         >
           <template #trigger>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
-              :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
-            >
+            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher">
               强制重启弹幕客户端
             </Button>
           </template>

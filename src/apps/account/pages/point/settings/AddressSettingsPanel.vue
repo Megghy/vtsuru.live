@@ -205,12 +205,7 @@ defineExpose({ reset })
           <span class="text-xs text-muted-foreground">{{ addresses.length }} 个地址</span>
         </div>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-8 text-xs flex items-center gap-1"
-        @click="openEditor()"
-      >
+      <Button variant="outline" class="flex items-center gap-1" @click="openEditor()">
         <component :is="Add24Regular" class="size-3.5" />
         添加地址
       </Button>
@@ -226,11 +221,7 @@ defineExpose({ reset })
       class="py-8"
     >
       <template #extra>
-        <Button
-          size="sm"
-          class="mt-2 text-xs"
-          @click="openEditor()"
-        >
+        <Button class="mt-2" @click="openEditor()">
           添加第一个地址
         </Button>
       </template>
@@ -247,12 +238,7 @@ defineExpose({ reset })
       >
         <AddressDisplay :address="address" />
         <div class="point-settings__row-actions flex items-center justify-end gap-1 pt-2 border-t border-border/50">
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-7 px-2 text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
-            @click="openEditor(address)"
-          >
+          <Button size="xs" variant="ghost" class="px-2 text-muted-foreground hover:text-foreground flex items-center gap-1" @click="openEditor(address)">
             <component :is="Edit24Regular" class="size-3.5" />
             编辑
           </Button>
@@ -263,11 +249,7 @@ defineExpose({ reset })
             @positive-click="deleteAddress(address)"
           >
             <template #trigger>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-7 px-2 text-xs text-destructive hover:bg-destructive/10 flex items-center gap-1"
-              >
+              <Button size="xs" variant="ghost" class="px-2 text-destructive hover:bg-destructive/10 flex items-center gap-1">
                 <component :is="Delete24Regular" class="size-3.5" />
                 删除
               </Button>
@@ -299,7 +281,7 @@ defineExpose({ reset })
               :model-value="draft.province"
               @update:model-value="changeProvince"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="选择省份" />
               </SelectTrigger>
               <SelectContent>
@@ -322,7 +304,7 @@ defineExpose({ reset })
               :disabled="!draft.province"
               @update:model-value="changeCity"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="选择城市" />
               </SelectTrigger>
               <SelectContent>
@@ -345,7 +327,7 @@ defineExpose({ reset })
               :disabled="!draft.city"
               @update:model-value="changeDistrict"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="选择区县" />
               </SelectTrigger>
               <SelectContent>
@@ -368,7 +350,7 @@ defineExpose({ reset })
               :disabled="!draft.district"
               @update:model-value="draft.street = $event ? String($event) : undefined"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="选择街道" />
               </SelectTrigger>
               <SelectContent>
@@ -398,21 +380,11 @@ defineExpose({ reset })
         <div class="grid grid-cols-2 gap-2.5">
           <div class="space-y-1">
             <label class="font-medium text-foreground">收件人</label>
-            <Input
-              v-model="draft.name"
-              placeholder="收件人姓名"
-              class="h-8 text-xs"
-            />
+            <Input v-model="draft.name" placeholder="收件人姓名" />
           </div>
           <div class="space-y-1">
             <label class="font-medium text-foreground">联系电话</label>
-            <Input
-              :model-value="draft.phone ? String(draft.phone) : ''"
-              type="tel"
-              placeholder="联系电话"
-              class="h-8 text-xs font-mono"
-              @update:model-value="draft.phone = Number($event) || null"
-            />
+            <Input :model-value="draft.phone ? String(draft.phone) : ''" type="tel" placeholder="联系电话" class="font-mono" @update:model-value="draft.phone = Number($event) || null" />
           </div>
         </div>
 
@@ -432,18 +404,10 @@ defineExpose({ reset })
       </div>
 
       <DialogFooter class="pt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="editing = false"
-        >
+        <Button variant="outline" @click="editing = false">
           取消
         </Button>
-        <Button
-          size="sm"
-          :disabled="saving"
-          @click="saveAddress"
-        >
+        <Button :disabled="saving" @click="saveAddress">
           保存地址
         </Button>
       </DialogFooter>

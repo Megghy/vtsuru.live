@@ -299,11 +299,7 @@ async function rejectStreamer() {
                 v-if="joinType === 'member'"
                 class="pt-2"
               >
-                <Button
-                  class="w-full"
-                  :disabled="isBusy"
-                  @click="acceptMember"
-                >
+                <Button class="w-full" :disabled="isBusy" @click="acceptMember">
                   {{ isBusy ? '加入中...' : '确认加入' }}
                 </Button>
               </div>
@@ -312,19 +308,10 @@ async function rejectStreamer() {
                 v-else
                 class="flex gap-3 pt-2"
               >
-                <Button
-                  class="flex-1"
-                  :disabled="isBusy"
-                  @click="acceptStreamer"
-                >
+                <Button class="flex-1" :disabled="isBusy" @click="acceptStreamer">
                   {{ isBusy ? '处理中...' : '授权' }}
                 </Button>
-                <Button
-                  variant="destructive"
-                  class="flex-1"
-                  :disabled="isBusy"
-                  @click="rejectStreamer"
-                >
+                <Button variant="destructive" class="flex-1" :disabled="isBusy" @click="rejectStreamer">
                   {{ isBusy ? '处理中...' : '拒绝' }}
                 </Button>
               </div>

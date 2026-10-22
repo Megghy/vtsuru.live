@@ -64,12 +64,7 @@ const platformTag = computed(() => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
-              @click="emit('play')"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10" @click="emit('play')">
               <component
                 :is="MusicNote2Play20Filled"
                 class="h-4 w-4"
@@ -83,12 +78,7 @@ const platformTag = computed(() => {
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
-              @click="emit('block')"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10" @click="emit('block')">
               <component
                 :is="PresenceBlocked16Regular"
                 class="h-4 w-4"
@@ -102,12 +92,7 @@ const platformTag = computed(() => {
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-              class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-              @click="emit('cancel')"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-muted-foreground hover:text-destructive hover:bg-destructive/10" @click="emit('cancel')">
               <component
                 :is="Dismiss16Filled"
                 class="h-4 w-4"

@@ -87,13 +87,7 @@ function requestSong(song: SongsInfo) {
                 <strong class="text-sm font-semibold">曲库筛选</strong>
                 <span class="text-xs text-muted-foreground font-mono">{{ filteredSongs.length }} / {{ data?.length ?? 0 }} 首</span>
               </div>
-              <Button
-                v-if="hasFilters"
-                variant="ghost"
-                size="sm"
-                class="h-7 text-xs text-muted-foreground hover:text-foreground"
-                @click="clearFilters"
-              >
+              <Button v-if="hasFilters" variant="ghost" class="text-muted-foreground hover:text-foreground" @click="clearFilters">
                 清除
               </Button>
             </header>
@@ -101,17 +95,13 @@ function requestSong(song: SongsInfo) {
             <div class="filter-fields space-y-2">
               <div class="relative w-full">
                 <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  v-model="searchKeyword"
-                  class="h-8 pl-8 text-xs w-full"
-                  placeholder="搜索歌名、歌手或标签"
-                />
+                <Input v-model="searchKeyword" class="pl-8 w-full" placeholder="搜索歌名、歌手或标签" />
               </div>
               <Select
                 :model-value="selectedAuthor || 'all'"
                 @update:model-value="selectedAuthor = $event === 'all' ? null : String($event)"
               >
-                <SelectTrigger class="w-full h-8 text-xs">
+                <SelectTrigger class="w-full">
                   <SelectValue placeholder="筛选歌手" />
                 </SelectTrigger>
                 <SelectContent>
@@ -132,15 +122,7 @@ function requestSong(song: SongsInfo) {
               v-if="tags.length"
               class="tag-list flex flex-wrap gap-1.5"
             >
-              <Button
-                v-for="tag in tags"
-                :key="tag"
-                size="sm"
-                :variant="selectedTag === tag ? 'default' : 'secondary'"
-                class="h-6 text-xs px-2 rounded-full font-normal"
-                :aria-pressed="selectedTag === tag"
-                @click="toggleTag(tag)"
-              >
+              <Button v-for="tag in tags" :key="tag" :variant="selectedTag === tag ? 'default' : 'secondary'" size="xs" class="rounded-full font-normal" :aria-pressed="selectedTag === tag" @click="toggleTag(tag)">
                 {{ tag }}
               </Button>
             </div>
@@ -254,16 +236,7 @@ function requestSong(song: SongsInfo) {
                 </div>
 
                 <div class="actions flex items-center gap-1 shrink-0">
-                  <Button
-                    v-if="item.url"
-                    variant="ghost"
-                    size="icon"
-                    class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-                    title="试听"
-                    :aria-label="`试听《${item.name}》`"
-                    :disabled="isLrcLoading === item.key"
-                    @click="selectedSong = item"
-                  >
+                  <Button v-if="item.url" variant="ghost" size="icon" class="size-7 rounded-full text-muted-foreground hover:text-foreground" title="试听" :aria-label="`试听《${item.name}》`" :disabled="isLrcLoading === item.key" @click="selectedSong = item">
                     <component :is="Play24Filled" class="size-3.5" />
                   </Button>
                   <SongRequestButton
@@ -283,12 +256,7 @@ function requestSong(song: SongsInfo) {
             ref="loadMoreTrigger"
             class="load-more flex justify-center py-4"
           >
-            <Button
-              variant="outline"
-              size="sm"
-              class="text-xs"
-              @click="loadMore"
-            >
+            <Button variant="outline" @click="loadMore">
               加载更多
             </Button>
           </div>

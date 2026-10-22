@@ -161,13 +161,8 @@ const containerStyle = computed(() => {
       >
         <AlertDescription class="flex items-center justify-between w-full">
           <span>{{ error }}</span>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-6 px-2 text-xs"
-            @click="loadUserIndex(true)"
-          >
-            <component :is="RefreshOutline" class="size-3 mr-1" />
+          <Button variant="outline" size="xs" class="gap-1" @click="loadUserIndex(true)">
+            <component :is="RefreshOutline" class="size-3" />
             重试
           </Button>
         </AlertDescription>

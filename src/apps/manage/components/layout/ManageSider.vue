@@ -455,11 +455,7 @@ async function go(name: string, query?: Record<string, string>) {
 
       <DropdownMenu v-if="workspace === 'user' && biliAuth.biliAuth.id && !biliAuth.usesAccountIdentity">
         <DropdownMenuTrigger as-child>
-          <Button
-            variant="secondary"
-            class="h-8.5 w-full flex items-center justify-start gap-2 px-2"
-            :class="{ 'justify-center p-0 w-8.5': collapsed }"
-          >
+          <Button variant="secondary" class=".5 w-full flex items-center justify-start gap-2 px-2" :class="{ 'justify-center p-0 w-8.5': collapsed }">
             <img
               v-if="biliAuth.biliAuth.avatar"
               :src="biliAuth.biliAuth.avatar"
@@ -487,12 +483,7 @@ async function go(name: string, query?: Record<string, string>) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button
-        v-else-if="workspace === 'user' && biliAuth.biliAuth.id"
-        variant="secondary"
-        class="h-8.5 w-full flex items-center justify-start gap-2 px-2"
-        :class="{ 'justify-center p-0 w-8.5': collapsed }"
-      >
+      <Button v-else-if="workspace === 'user' && biliAuth.biliAuth.id" variant="secondary" class=".5 w-full flex items-center justify-start gap-2 px-2" :class="{ 'justify-center p-0 w-8.5': collapsed }">
         <img
           v-if="biliAuth.biliAuth.avatar"
           :src="biliAuth.biliAuth.avatar"
@@ -507,14 +498,7 @@ async function go(name: string, query?: Record<string, string>) {
 
       <template v-if="workspace === 'streamer'">
         <div class="manage-sider__top-row">
-          <Button
-            size="sm"
-            variant="secondary"
-            class="sider-top-btn sider-top-btn--panel h-8.5"
-            :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }"
-            :title="collapsed ? '面板' : undefined"
-            @click="go('manage-index')"
-          >
+          <Button variant="secondary" class="sider-top-btn sider-top-btn--panel .5" :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }" :title="collapsed ? '面板' : undefined" @click="go('manage-index')">
             <component
               :is="GridOutline"
               class="sider-icon"
@@ -525,14 +509,7 @@ async function go(name: string, query?: Record<string, string>) {
             >面板</span>
           </Button>
 
-          <Button
-            v-if="!collapsed"
-            size="icon-sm"
-            variant="ghost"
-            class="sider-top-icon-btn h-8.5 w-8.5"
-            title="反馈"
-            @click="go('manage-feedback')"
-          >
+          <Button v-if="!collapsed" size="icon-sm" variant="ghost" class="sider-top-icon-btn .5 w-8.5" title="反馈" @click="go('manage-feedback')">
             <component
               :is="PersonFeedback24Filled"
               class="sider-icon"
@@ -541,14 +518,7 @@ async function go(name: string, query?: Record<string, string>) {
         </div>
 
         <div class="manage-sider__top-row sider-top-row--builder">
-          <Button
-            size="sm"
-            variant="brand"
-            class="sider-top-btn sider-top-btn--panel h-8.5"
-            :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }"
-            :title="collapsed ? '主页装修' : undefined"
-            @click="go('manage-userPageBuilder')"
-          >
+          <Button variant="brand" class="sider-top-btn sider-top-btn--panel .5" :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }" :title="collapsed ? '主页装修' : undefined" @click="go('manage-userPageBuilder')">
             <component
               :is="ColorPaletteOutline"
               class="sider-icon"
@@ -559,14 +529,7 @@ async function go(name: string, query?: Record<string, string>) {
             >主页装修</span>
           </Button>
 
-          <Button
-            v-if="!collapsed"
-            size="icon-sm"
-            variant="ghost"
-            class="sider-top-icon-btn h-8.5 w-8.5"
-            title="更换主页背景与主题"
-            @click="go('manage-userPageBuilder', { action: 'theme' })"
-          >
+          <Button v-if="!collapsed" size="icon-sm" variant="ghost" class="sider-top-icon-btn .5 w-8.5" title="更换主页背景与主题" @click="go('manage-userPageBuilder', { action: 'theme' })">
             <component
               :is="ImageOutline"
               class="sider-icon"

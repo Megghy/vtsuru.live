@@ -134,13 +134,7 @@ const status = computed<'success' | 'warning' | 'info'>(() => {
             orientation="vertical"
             class="h-3.5"
           />
-          <Button
-            as="a"
-            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-            target="_blank"
-            variant="outline"
-            size="xs"
-          >
+          <Button as="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" variant="outline" size="xs">
             关于
           </Button>
         </template>

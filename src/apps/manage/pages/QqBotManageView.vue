@@ -129,12 +129,7 @@ onMounted(() => {
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <Button
-              size="xs"
-              variant="brand"
-              disabled
-              @click="createCode"
-            >
+            <Button size="xs" variant="brand" disabled @click="createCode">
               <component
                 :is="Bot24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -142,12 +137,7 @@ onMounted(() => {
               生成绑定码
             </Button>
 
-            <Button
-              v-if="bindCode"
-              size="xs"
-              variant="outline"
-              @click="copy(bindCode.code, '绑定码')"
-            >
+            <Button v-if="bindCode" size="xs" variant="outline" @click="copy(bindCode.code, '绑定码')">
               <component
                 :is="Copy24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -155,12 +145,7 @@ onMounted(() => {
               复制绑定码
             </Button>
 
-            <Button
-              v-if="bindCode"
-              size="xs"
-              variant="outline"
-              @click="copy(bindCode.instruction, '指令')"
-            >
+            <Button v-if="bindCode" size="xs" variant="outline" @click="copy(bindCode.instruction, '指令')">
               复制指令
             </Button>
           </div>
@@ -209,21 +194,13 @@ onMounted(() => {
               <div class="flex items-center gap-3">
                 <div class="flex items-center gap-1.5 text-muted-foreground">
                   <span>开播推送</span>
-                  <Switch
-                    disabled
-                    :checked="group.notify.liveStart"
-                    @update:checked="(value: boolean) => toggleLiveStart(group, value)"
+                  <Switch disabled :checked="group.notify.liveStart" @update:checked="(value: boolean) => toggleLiveStart(group, value)"
                   />
                 </div>
 
                 <AlertDialog>
                   <AlertDialogTrigger as-child>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="text-destructive hover:bg-destructive/10"
-                      disabled
-                    >
+                    <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" disabled>
                       <component
                         :is="Delete24Regular"
                         class="h-3.5 w-3.5 mr-1"

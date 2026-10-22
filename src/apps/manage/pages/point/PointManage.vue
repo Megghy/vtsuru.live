@@ -465,28 +465,23 @@ function resetGoods() {
 
     <!-- 标签页 -->
     <Tabs v-model="hash" class="w-full">
-      <TabsList class="h-9">
-        <TabsTrigger value="goods" class="text-xs">礼物</TabsTrigger>
-        <TabsTrigger value="orders" class="text-xs">订单</TabsTrigger>
-        <TabsTrigger value="users" class="text-xs">用户</TabsTrigger>
-        <TabsTrigger value="guard-duplicates" class="text-xs">重复上舰</TabsTrigger>
-        <TabsTrigger value="settings" class="text-xs">设置</TabsTrigger>
-        <TabsTrigger value="test" class="text-xs">测试</TabsTrigger>
+      <TabsList>
+        <TabsTrigger value="goods">礼物</TabsTrigger>
+        <TabsTrigger value="orders">订单</TabsTrigger>
+        <TabsTrigger value="users">用户</TabsTrigger>
+        <TabsTrigger value="guard-duplicates">重复上舰</TabsTrigger>
+        <TabsTrigger value="settings">设置</TabsTrigger>
+        <TabsTrigger value="test">测试</TabsTrigger>
       </TabsList>
 
       <!-- 礼物管理 -->
       <TabsContent value="goods" class="pt-4 space-y-4">
         <div class="flex items-center gap-2.5">
-          <Button size="sm" class="gap-1.5" @click="onModalOpen">
+          <Button class="gap-1.5" @click="onModalOpen">
             <Add24Filled class="size-4" />
             添加礼物
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            class="gap-1.5"
-            @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })"
-          >
+          <Button variant="outline" class="gap-1.5" @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })">
             <Eye24Filled class="size-4" />
             前往展示页
           </Button>
@@ -509,7 +504,7 @@ function resetGoods() {
                   积分: {{ item.price }}
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <Button variant="outline" size="xs" class="flex-1 text-xs" @click="onUpdateClick(item)">
+                  <Button variant="outline" size="xs" class="flex-1" @click="onUpdateClick(item)">
                     <Edit24Filled class="size-3 mr-1" />
                     修改
                   </Button>
@@ -519,7 +514,7 @@ function resetGoods() {
                     @positive-click="onSetShelfClick(item, GoodsStatus.Discontinued)"
                   >
                     <template #trigger>
-                      <Button variant="outline" size="xs" class="flex-1 text-xs text-amber-500 hover:text-amber-600">
+                      <Button variant="outline" size="xs" class="flex-1 text-amber-500 hover:text-amber-600">
                         <ArrowSync24Filled class="size-3 mr-1" />
                         下架
                       </Button>
@@ -532,7 +527,7 @@ function resetGoods() {
                     @positive-click="onDeleteClick(item)"
                   >
                     <template #trigger>
-                      <Button variant="outline" size="xs" class="flex-1 text-xs text-destructive hover:bg-destructive/10">
+                      <Button variant="outline" size="xs" class="flex-1 text-destructive hover:bg-destructive/10">
                         <Delete24Filled class="size-3 mr-1" />
                         删除
                       </Button>
@@ -568,7 +563,7 @@ function resetGoods() {
                     积分: {{ item.price }}
                   </div>
                   <div class="flex items-center gap-1.5">
-                    <Button variant="outline" size="xs" class="flex-1 text-xs" @click="onUpdateClick(item)">
+                    <Button variant="outline" size="xs" class="flex-1" @click="onUpdateClick(item)">
                       <Edit24Filled class="size-3 mr-1" />
                       修改
                     </Button>
@@ -578,7 +573,7 @@ function resetGoods() {
                       @positive-click="onSetShelfClick(item, GoodsStatus.Normal)"
                     >
                       <template #trigger>
-                        <Button variant="outline" size="xs" class="flex-1 text-xs text-emerald-500 hover:text-emerald-600">
+                        <Button variant="outline" size="xs" class="flex-1 text-emerald-500 hover:text-emerald-600">
                           <ArrowSync24Filled class="size-3 mr-1" />
                           上架
                         </Button>
@@ -591,7 +586,7 @@ function resetGoods() {
                       @positive-click="onDeleteClick(item)"
                     >
                       <template #trigger>
-                        <Button variant="outline" size="xs" class="flex-1 text-xs text-destructive hover:bg-destructive/10">
+                        <Button variant="outline" size="xs" class="flex-1 text-destructive hover:bg-destructive/10">
                           <Delete24Filled class="size-3 mr-1" />
                           删除
                         </Button>
@@ -643,23 +638,17 @@ function resetGoods() {
           <DialogTitle class="text-sm font-semibold">
             {{ currentGoodsModel.goods.id ? '编辑礼物' : '添加礼物' }}
           </DialogTitle>
-          <Button
-            v-if="!currentGoodsModel.goods.id"
-            variant="ghost"
-            size="xs"
-            class="text-xs text-amber-500 hover:text-amber-600 mr-6"
-            @click="resetGoods"
-          >
+          <Button v-if="!currentGoodsModel.goods.id" variant="ghost" size="xs" class="text-amber-500 hover:text-amber-600 mr-6" @click="resetGoods">
             重置表单
           </Button>
         </DialogHeader>
 
         <div class="flex-1 overflow-y-auto p-4 space-y-4">
           <Tabs v-model="goodsModalTab" class="w-full">
-            <TabsList class="h-8">
-              <TabsTrigger value="basic" class="text-xs">商品与交付</TabsTrigger>
-              <TabsTrigger value="subItems" class="text-xs">款式设置 ({{ currentGoodsModel.goods.subItems?.length || 0 }})</TabsTrigger>
-              <TabsTrigger value="rules" class="text-xs">规则与特权</TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="basic">商品与交付</TabsTrigger>
+              <TabsTrigger value="subItems">款式设置 ({{ currentGoodsModel.goods.subItems?.length || 0 }})</TabsTrigger>
+              <TabsTrigger value="rules">规则与特权</TabsTrigger>
             </TabsList>
 
             <!-- 基本信息与交付 -->
@@ -669,12 +658,7 @@ function resetGoods() {
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div class="space-y-1">
                     <label class="text-xs font-medium text-foreground">礼物名称 <span class="text-destructive">*</span></label>
-                    <Input
-                      v-model="currentGoodsModel.goods.name"
-                      placeholder="如：舰长专属定制抱枕"
-                      maxlength="200"
-                      class="h-8 text-xs"
-                    />
+                    <Input v-model="currentGoodsModel.goods.name" placeholder="如：舰长专属定制抱枕" maxlength="200" />
                   </div>
                   <div class="space-y-1">
                     <label class="text-xs font-medium text-foreground">所需积分 <span class="text-destructive">*</span></label>
@@ -770,25 +754,13 @@ function resetGoods() {
                 <div class="space-y-1">
                   <label class="text-xs font-medium text-foreground">礼物类型 <span class="text-destructive">*</span></label>
                   <div class="flex items-center gap-2">
-                    <Button
-                      size="xs"
-                      :variant="currentGoodsModel.goods.type === GoodsTypes.Virtual ? 'default' : 'outline'"
-                      @click="onGoodsTypeChange(GoodsTypes.Virtual)"
-                    >
+                    <Button size="xs" :variant="currentGoodsModel.goods.type === GoodsTypes.Virtual ? 'default' : 'outline'" @click="onGoodsTypeChange(GoodsTypes.Virtual)">
                       虚拟礼物 (卡密/网盘/文本)
                     </Button>
-                    <Button
-                      size="xs"
-                      :variant="currentGoodsModel.goods.type === GoodsTypes.Physical ? 'default' : 'outline'"
-                      @click="onGoodsTypeChange(GoodsTypes.Physical)"
-                    >
+                    <Button size="xs" :variant="currentGoodsModel.goods.type === GoodsTypes.Physical ? 'default' : 'outline'" @click="onGoodsTypeChange(GoodsTypes.Physical)">
                       实体礼物 (实物邮寄)
                     </Button>
-                    <Button
-                      size="xs"
-                      :variant="currentGoodsModel.goods.type === GoodsTypes.Service ? 'default' : 'outline'"
-                      @click="onGoodsTypeChange(GoodsTypes.Service)"
-                    >
+                    <Button size="xs" :variant="currentGoodsModel.goods.type === GoodsTypes.Service ? 'default' : 'outline'" @click="onGoodsTypeChange(GoodsTypes.Service)">
                       服务兑换 (约稿/预约/定制)
                     </Button>
                   </div>
@@ -831,7 +803,7 @@ function resetGoods() {
             <TabsContent value="subItems" class="pt-3 space-y-3">
               <div class="flex items-center justify-between">
                 <span class="text-xs text-muted-foreground">可为主商品添加多种款式（如不同尺码、颜色或套餐）</span>
-                <Button size="xs" variant="outline" class="gap-1 h-7" @click="addSubItem">
+                <Button size="xs" variant="outline" class="gap-1" @click="addSubItem">
                   <Plus class="size-3.5" />
                   添加款式
                 </Button>
@@ -851,12 +823,7 @@ function resetGoods() {
                 >
                   <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold text-foreground">款式 #{{ subIdx + 1 }}</span>
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      class="text-destructive hover:bg-destructive/10 h-7"
-                      @click="removeSubItemByKey(getSubItemKey(sub))"
-                    >
+                    <Button variant="ghost" size="xs" class="text-destructive hover:bg-destructive/10" @click="removeSubItemByKey(getSubItemKey(sub))">
                       删除款式
                     </Button>
                   </div>
@@ -864,11 +831,7 @@ function resetGoods() {
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div class="space-y-1">
                       <label class="text-xs font-medium text-foreground">款式名称 <span class="text-destructive">*</span></label>
-                      <Input
-                        v-model="sub.name"
-                        placeholder="如：黑色 XL 码"
-                        class="h-8 text-xs"
-                      />
+                      <Input v-model="sub.name" placeholder="如：黑色 XL 码" />
                     </div>
                     <div class="space-y-1">
                       <label class="text-xs font-medium text-foreground">所需积分</label>
@@ -952,10 +915,10 @@ function resetGoods() {
         </div>
 
         <DialogFooter class="p-3 border-t bg-muted/10">
-          <Button variant="outline" size="sm" :disabled="isUpdating || isUploadingCover" @click="showAddGoodsModal = false">
+          <Button variant="outline" :disabled="isUpdating || isUploadingCover" @click="showAddGoodsModal = false">
             取消
           </Button>
-          <Button size="sm" :disabled="isUpdating || isUploadingCover" @click="updateGoods">
+          <Button :disabled="isUpdating || isUploadingCover" @click="updateGoods">
             {{ isUpdating ? '保存中...' : currentGoodsModel.goods.id ? '保存修改' : '立即创建' }}
           </Button>
         </DialogFooter>

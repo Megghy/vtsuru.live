@@ -121,7 +121,7 @@ function displayValue(f: EditableField) {
               :model-value="fieldValue(i, f.key)"
               @update:model-value="setSelectValue(i, f.key, $event)"
             >
-              <SelectTrigger class="h-7 text-xs">
+              <SelectTrigger size="xs">
                 <SelectValue :placeholder="f.label" />
               </SelectTrigger>
               <SelectContent>
@@ -143,13 +143,7 @@ function displayValue(f: EditableField) {
               :placeholder="f.label"
               @update:model-value="setFieldValue(i, f.key, $event)"
             />
-            <Input
-              v-else
-              :model-value="fieldValue(i, f.key)"
-              :placeholder="f.type === 'tags' ? '逗号分隔' : f.label"
-              class="h-7 text-xs"
-              @update:model-value="setFieldValue(i, f.key, $event)"
-            />
+            <Input size="xs" v-else :model-value="fieldValue(i, f.key)" :placeholder="f.type === 'tags' ? '逗号分隔' : f.label" @update:model-value="setFieldValue(i, f.key, $event)" />
           </div>
         </div>
 

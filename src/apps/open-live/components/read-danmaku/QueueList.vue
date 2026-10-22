@@ -48,8 +48,7 @@ function onDragEnd() {
       <span class="text-xs text-muted-foreground">
         {{ speakQueue.length }} 项
       </span>
-      <Button
-        v-if="speakQueue.length > 0"
+      <Button v-if="speakQueue.length> 0"
         variant="ghost"
         size="sm"
         class="h-6 text-xs text-destructive hover:bg-destructive/10 ml-auto gap-1 px-2"

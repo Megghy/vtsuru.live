@@ -97,7 +97,7 @@ const switches = [
             :disabled="disabled"
             @update:model-value="emit('change', { [f.key]: $event as any })"
           >
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -138,11 +138,7 @@ const switches = [
           class="toggle flex items-center justify-between p-1.5 border rounded-md"
         >
           <span class="text-xs font-medium">{{ label }}</span>
-          <Switch
-            :checked="state[key]"
-            :disabled="disabled"
-            @update:checked="emit('change', { [key]: $event })"
-          />
+          <Switch :checked="state[key]" :disabled="disabled" @update:checked="emit('change', { [key]: $event })" />
         </div>
       </div>
 

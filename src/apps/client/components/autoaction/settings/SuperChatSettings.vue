@@ -36,7 +36,7 @@ const scFilterModeOptions = [
     <div class="space-y-1">
       <span class="text-xs text-muted-foreground">SC过滤模式</span>
       <Select v-model="action.triggerConfig.scFilterMode">
-        <SelectTrigger class="h-8 text-xs w-full">
+        <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

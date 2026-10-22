@@ -270,13 +270,7 @@ function formatFullTime(time: number) {
             <span>{{ formatRelativeTime(item.createAt) }}</span>
           </div>
 
-          <Button
-            v-if="item.from === PointFrom.Use && item.extra?.goods"
-            variant="outline"
-            size="sm"
-            class="w-full text-xs h-7 mt-1"
-            @click="openGoods(item)"
-          >
+          <Button v-if="item.from === PointFrom.Use && item.extra?.goods" variant="outline" class="w-full mt-1" @click="openGoods(item)">
             查看礼物快照
           </Button>
         </article>

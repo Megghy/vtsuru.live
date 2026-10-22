@@ -368,11 +368,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
       >
         <h2 class="text-2xl font-bold">视频征集不存在</h2>
         <p class="text-sm text-muted-foreground">链接可能有误，或该征集已被删除。</p>
-        <Button
-          variant="outline"
-          class="mt-2"
-          @click="router.push({ name: 'home' })"
-        >
+        <Button variant="outline" class="mt-2" @click="router.push({ name: 'home' })">
           返回首页
         </Button>
       </div>
@@ -384,10 +380,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
       >
         <h2 class="text-2xl font-bold text-destructive">加载结果失败</h2>
         <p class="text-sm text-muted-foreground">{{ loadError }}</p>
-        <Button
-          class="mt-2 flex items-center gap-1.5 mx-auto"
-          @click="loadData"
-        >
+        <Button class="mt-2 flex items-center gap-1.5 mx-auto" @click="loadData">
           <component :is="ArrowClockwise24Regular" class="size-4" />
           重新加载
         </Button>
@@ -424,13 +417,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             </p>
           </div>
           <div class="header-actions">
-            <Button
-              v-if="isCollecting"
-              variant="default"
-              size="sm"
-              class="flex items-center gap-1.5"
-              @click="router.push({ name: 'video-collect', params: { id: table.shortId } })"
-            >
+            <Button v-if="isCollecting" variant="default" class="flex items-center gap-1.5" @click="router.push({ name: 'video-collect', params: { id: table.shortId } })">
               推荐视频
               <component :is="ArrowRight24Regular" class="size-4" />
             </Button>
@@ -540,11 +527,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
               <template v-if="mode === 'list'">
                 <div class="relative w-44">
                   <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    v-model="searchQuery"
-                    placeholder="搜索标题、UP 主..."
-                    class="h-8 pl-8 text-xs"
-                  />
+                  <Input v-model="searchQuery" placeholder="搜索标题、UP 主..." class="pl-8" />
                 </div>
 
                 <div class="flex items-center bg-muted/60 p-0.5 rounded-md">
@@ -576,7 +559,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
                 <div class="w-36">
                   <Select v-model="sortBy">
-                    <SelectTrigger class="h-8 text-xs">
+                    <SelectTrigger>
                       <SelectValue placeholder="排序方式" />
                     </SelectTrigger>
                     <SelectContent>
@@ -598,30 +581,15 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 <span class="text-muted-foreground text-xs font-mono">
                   已揭晓 {{ revealedIds.length }} / {{ shuffledVideos.length }}
                 </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-8 text-xs flex items-center gap-1"
-                  @click="shuffleDeck"
-                >
+                <Button variant="outline" class="flex items-center gap-1" @click="shuffleDeck">
                   <component :is="ArrowSwap24Regular" class="size-3.5" />
                   重新洗牌
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-8 text-xs flex items-center gap-1"
-                  @click="revealAll"
-                >
+                <Button variant="outline" class="flex items-center gap-1" @click="revealAll">
                   <component :is="Eye24Regular" class="size-3.5" />
                   全部翻开
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-8 text-xs flex items-center gap-1"
-                  @click="hideAll"
-                >
+                <Button variant="outline" class="flex items-center gap-1" @click="hideAll">
                   <component :is="EyeOff24Regular" class="size-3.5" />
                   全部盖上
                 </Button>
@@ -636,11 +604,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 @positive-click="resetProgress"
               >
                 <template #trigger>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="h-8 text-xs text-muted-foreground hover:text-destructive flex items-center gap-1"
-                  >
+                  <Button variant="ghost" class="text-muted-foreground hover:text-destructive flex items-center gap-1">
                     <component :is="ArrowClockwise24Regular" class="size-3.5" />
                     重置进度
                   </Button>
@@ -671,12 +635,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
               >
                 <h3 class="text-base font-semibold">未找到匹配的视频</h3>
                 <p class="text-xs text-muted-foreground">可以尝试调整搜索关键词或筛选条件</p>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="text-xs"
-                  @click="resetFilter"
-                >
+                <Button variant="outline" @click="resetFilter">
                   清除筛选
                 </Button>
               </div>
@@ -742,22 +701,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 </div>
 
                 <div class="draw-actions-row flex items-center justify-center gap-3 pt-2">
-                  <Button
-                    v-if="drawnVideo"
-                    variant="outline"
-                    size="lg"
-                    class="flex items-center gap-1.5"
-                    @click="openVideo(drawnVideo)"
-                  >
+                  <Button v-if="drawnVideo" variant="outline" size="lg" class="flex items-center gap-1.5" @click="openVideo(drawnVideo)">
                     在哔哩哔哩打开
                     <component :is="ArrowRight24Regular" class="size-4" />
                   </Button>
-                  <Button
-                    size="lg"
-                    :disabled="isDrawing"
-                    class="main-draw-btn flex items-center gap-1.5 px-8"
-                    @click="drawRandomVideo"
-                  >
+                  <Button size="lg" :disabled="isDrawing" class="main-draw-btn flex items-center gap-1.5 px-8" @click="drawRandomVideo">
                     <component :is="Sparkle24Regular" class="size-4" />
                     {{ drawnVideo ? '继续抽取下一个' : '开始抽取' }}
                   </Button>
@@ -825,25 +773,14 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 />
 
                 <div class="sequence-controls flex items-center justify-center gap-3">
-                  <Button
-                    variant="outline"
-                    :disabled="sequenceIndex === 0"
-                    class="flex items-center gap-1.5"
-                    @click="prevSequenceVideo"
-                  >
+                  <Button variant="outline" :disabled="sequenceIndex === 0" class="flex items-center gap-1.5" @click="prevSequenceVideo">
                     <component :is="ArrowLeft24Regular" class="size-4" />
                     上一个
                   </Button>
-                  <Button
-                    variant="secondary"
-                    @click="skipSequenceVideo"
-                  >
+                  <Button variant="secondary" @click="skipSequenceVideo">
                     跳过此视频
                   </Button>
-                  <Button
-                    class="flex items-center gap-1.5"
-                    @click="openSequenceVideo"
-                  >
+                  <Button class="flex items-center gap-1.5" @click="openSequenceVideo">
                     打开并在 B 站播放
                     <component :is="ArrowRight24Regular" class="size-4" />
                   </Button>
@@ -887,10 +824,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 <p class="text-xs text-muted-foreground">
                   已累计观看 {{ watchedVideos.length }} 个视频，总观看时长 {{ formatDuration(watchedDuration) }}
                 </p>
-                <Button
-                  class="mt-2 flex items-center gap-1.5 mx-auto"
-                  @click="restartSequence"
-                >
+                <Button class="mt-2 flex items-center gap-1.5 mx-auto" @click="restartSequence">
                   <component :is="ArrowClockwise24Regular" class="size-4" />
                   从头再看一轮
                 </Button>

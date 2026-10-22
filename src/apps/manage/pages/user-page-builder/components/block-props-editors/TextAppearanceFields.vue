@@ -34,7 +34,7 @@ const showIntensity = computed(() => {
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">文字特效</label>
     <Select v-model="blockProps.textEffect">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="选择特效" />
       </SelectTrigger>
       <SelectContent>
@@ -47,7 +47,7 @@ const showIntensity = computed(() => {
   <div v-if="showIntensity" class="space-y-1">
     <label class="text-xs text-muted-foreground">特效强度</label>
     <Select v-model="blockProps.effectIntensity">
-      <SelectTrigger class="h-8 text-xs">
+      <SelectTrigger>
         <SelectValue placeholder="选择强度" />
       </SelectTrigger>
       <SelectContent>

@@ -270,12 +270,7 @@ function handleTitleClick() {
             <AlertTitle>操作错误</AlertTitle>
             <AlertDescription class="flex items-center justify-between">
               <span>{{ errorMsg }}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-6 px-2 text-xs"
-                @click="errorMsg = null"
-              >
+              <Button variant="ghost" class="h-6 px-2" @click="errorMsg = null">
                 关闭
               </Button>
             </AlertDescription>
@@ -298,10 +293,7 @@ function handleTitleClick() {
                         label="开机时自动启动应用"
                         label-placement="left"
                       >
-                        <Switch
-                          :checked="isStartOnBoot"
-                          :disabled="isLoading || isUpdatingAutostart"
-                          @update:checked="val => isStartOnBoot = val"
+                        <Switch :checked="isStartOnBoot" :disabled="isLoading || isUpdatingAutostart" @update:checked="val => isStartOnBoot = val"
                         />
                       </LabelItem>
 
@@ -310,9 +302,7 @@ function handleTitleClick() {
                         label="启动后静默最小化到系统托盘"
                         label-placement="left"
                       >
-                        <Switch
-                          :checked="setting.settings.bootAsMinimized"
-                          @update:checked="val => { setting.settings.bootAsMinimized = val; setting.save() }"
+                        <Switch :checked="setting.settings.bootAsMinimized" @update:checked="val => { setting.settings.bootAsMinimized = val; setting.save() }"
                         />
                       </LabelItem>
                     </CardContent>
@@ -386,9 +376,7 @@ function handleTitleClick() {
                           开启后，选中的事件将在 Windows 桌面右下角推送通知
                         </div>
                       </div>
-                      <Switch
-                        :checked="setting.settings.enableNotification"
-                        @update:checked="val => { setting.settings.enableNotification = val; setting.save() }"
+                      <Switch :checked="setting.settings.enableNotification" @update:checked="val => { setting.settings.enableNotification = val; setting.save() }"
                       />
                     </div>
 
@@ -409,9 +397,7 @@ function handleTitleClick() {
                             {{ item.desc }}
                           </div>
                         </div>
-                        <Switch
-                          :checked="isNotificationTypeEnabled(item.type)"
-                          @update:checked="(val) => toggleNotificationType(item.type, val)"
+                        <Switch :checked="isNotificationTypeEnabled(item.type)" @update:checked="(val) => toggleNotificationType(item.type, val)"
                         />
                       </div>
                     </div>
@@ -507,13 +493,7 @@ function handleTitleClick() {
                           查询服务端最新客户端版本并自动更新
                         </div>
                       </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        class="gap-1.5"
-                        :disabled="isCheckingUpdate"
-                        @click="handleCheckUpdate"
-                      >
+                      <Button variant="secondary" class="gap-1.5" :disabled="isCheckingUpdate" @click="handleCheckUpdate">
                         <component
                           :is="ArrowSync24Regular"
                           class="w-4 h-4"

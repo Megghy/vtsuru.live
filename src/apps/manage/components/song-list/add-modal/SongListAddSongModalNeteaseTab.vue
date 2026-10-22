@@ -187,22 +187,14 @@ async function addNeteaseSongs() {
   <div class="space-y-3">
     <div class="flex items-center gap-2">
       <div class="relative flex-1">
-        <Input
-          v-model="neteaseIdInput"
-          placeholder="直接输入网易云歌单Id或网页链接"
-          class="h-8 text-xs pr-20"
-        />
+        <Input v-model="neteaseIdInput" placeholder="直接输入网易云歌单Id或网页链接" class="pr-20" />
         <div v-if="neteaseSongListId" class="absolute right-2 top-1.5">
           <Tag type="success" size="small">
             ID: {{ neteaseSongListId }}
           </Tag>
         </div>
       </div>
-      <Button
-        size="sm"
-        :disabled="!neteaseSongListId"
-        @click="getNeteaseSongList"
-      >
+      <Button :disabled="!neteaseSongListId" @click="getNeteaseSongList">
         获取歌单
       </Button>
     </div>

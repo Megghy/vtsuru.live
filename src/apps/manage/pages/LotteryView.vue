@@ -491,7 +491,7 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-2 max-w-sm h-8 p-0.5 bg-muted">
+      <TabsList class="grid w-full grid-cols-2 max-w-sm p-0.5 bg-muted">
         <TabsTrigger
           value="live"
           class="text-xs h-7 gap-1"
@@ -544,12 +544,7 @@ onUnmounted(() => {
             </div>
 
             <div class="flex items-center gap-2 flex-wrap">
-              <Button
-                size="xs"
-                :variant="isStartLiveLottery ? 'outline' : 'brand'"
-                :class="{ 'border-amber-500 text-amber-500 hover:bg-amber-500/10': isStartLiveLottery }"
-                @click="isStartLiveLottery = !isStartLiveLottery"
-              >
+              <Button :variant="isStartLiveLottery ? 'outline' : 'default'" :class="{ 'border-amber-500 text-amber-500 hover:bg-amber-500/10': isStartLiveLottery }" @click="isStartLiveLottery = !isStartLiveLottery">
                 <component
                   :is="isStartLiveLottery ? Pause24Filled : Play24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -557,13 +552,7 @@ onUnmounted(() => {
                 {{ isStartLiveLottery ? '暂停收集' : '开始收集观众' }}
               </Button>
 
-              <Button
-                size="xs"
-                variant="brand"
-                :loading="isLiveLottering"
-                :disabled="currentUsers.length === 0"
-                @click="startLiveLottery"
-              >
+              <Button variant="secondary" :loading="isLiveLottering" :disabled="currentUsers.length === 0" @click="startLiveLottery">
                 <component
                   :is="Sparkle24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -571,11 +560,7 @@ onUnmounted(() => {
                 开始翻牌抽取
               </Button>
 
-              <Button
-                size="xs"
-                variant="outline"
-                @click="showLiveAddUserModal = true"
-              >
+              <Button variant="outline" @click="showLiveAddUserModal = true">
                 <component
                   :is="PersonAdd24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -583,19 +568,11 @@ onUnmounted(() => {
                 手动加人
               </Button>
 
-              <Button
-                size="xs"
-                variant="outline"
-                @click="showLiveObsModal = true"
-              >
+              <Button variant="outline" @click="showLiveObsModal = true">
                 OBS 组件大屏
               </Button>
 
-              <Button
-                size="xs"
-                variant="outline"
-                @click="showLiveHistoryModal = true"
-              >
+              <Button variant="outline" @click="showLiveHistoryModal = true">
                 <component
                   :is="History24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -605,12 +582,7 @@ onUnmounted(() => {
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    class="text-destructive hover:bg-destructive/10"
-                    :disabled="currentUsers.length === 0"
-                  >
+                  <Button variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="currentUsers.length === 0">
                     清空奖池
                   </Button>
                 </AlertDialogTrigger>
@@ -740,37 +712,17 @@ onUnmounted(() => {
           <CardContent class="p-3.5 space-y-3">
             <div class="flex items-center gap-3 flex-wrap">
               <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                <Button
-                  size="xs"
-                  :variant="dynamicType === 'comment' ? 'default' : 'ghost'"
-                  class="h-7 text-xs px-2.5"
-                  @click="dynamicType = 'comment'"
-                >
+                <Button size="xs" :variant="dynamicType === 'comment' ? 'default' : 'ghost'" class="px-2.5" @click="dynamicType = 'comment'">
                   评论抽奖
                 </Button>
-                <Button
-                  size="xs"
-                  :variant="dynamicType === 'forward' ? 'default' : 'ghost'"
-                  class="h-7 text-xs px-2.5"
-                  @click="dynamicType = 'forward'"
-                >
+                <Button size="xs" :variant="dynamicType === 'forward' ? 'default' : 'ghost'" class="px-2.5" @click="dynamicType = 'forward'">
                   转发抽奖
                 </Button>
               </div>
 
               <div class="flex items-center gap-1.5 flex-1 min-w-[280px]">
-                <Input
-                  v-model="inputDynamic"
-                  placeholder="输入 B站动态 ID、动态链接 (如 https://t.bilibili.com/123456) 或视频链接"
-                  class="text-xs h-8 flex-1"
-                />
-                <Button
-                  size="xs"
-                  variant="brand"
-                  :loading="isDynamicLoading"
-                  :disabled="!turnstileToken"
-                  @click="fetchDynamicUsers"
-                >
+                <Input v-model="inputDynamic" placeholder="输入 B站动态 ID、动态链接 (如 https://t.bilibili.com/123456) 或视频链接" class="flex-1" />
+                <Button size="xs" variant="brand" :loading="isDynamicLoading" :disabled="!turnstileToken" @click="fetchDynamicUsers">
                   拉取用户数据
                 </Button>
               </div>
@@ -800,8 +752,7 @@ onUnmounted(() => {
               </div>
 
               <div class="flex items-center gap-2">
-                <Button
-                  v-if="dynamicResultUsers.length > 0"
+                <Button v-if="dynamicResultUsers.length> 0"
                   size="xs"
                   variant="outline"
                   @click="exportWinnersCsv"
@@ -813,13 +764,7 @@ onUnmounted(() => {
                   导出中奖 CSV
                 </Button>
 
-                <Button
-                  size="xs"
-                  variant="brand"
-                  :loading="isDynamicLottering"
-                  :disabled="validDynamicUsers.length === 0"
-                  @click="startDynamicLottery"
-                >
+                <Button size="xs" variant="brand" :loading="isDynamicLottering" :disabled="validDynamicUsers.length === 0" @click="startDynamicLottery">
                   开始抽奖 (抽取 {{ dynamicOption.resultCount }} 人)
                 </Button>
               </div>
@@ -881,12 +826,7 @@ onUnmounted(() => {
               <CardContent class="p-3.5 space-y-3.5">
                 <div class="flex items-center justify-between gap-3">
                   <span class="text-xs font-medium text-foreground">抽取人数</span>
-                  <Input
-                    v-model.number="dynamicOption.resultCount"
-                    type="number"
-                    min="1"
-                    class="w-24 h-8 text-xs font-mono"
-                  />
+                  <Input v-model.number="dynamicOption.resultCount" type="number" min="1" class="w-24 font-mono" />
                 </div>
 
                 <Separator />
@@ -910,13 +850,7 @@ onUnmounted(() => {
                     class="pl-6 pt-1 flex items-center gap-2"
                   >
                     <span class="text-xs text-muted-foreground">最低等级:</span>
-                    <Input
-                      v-model.number="dynamicOption.fanCardLevel"
-                      type="number"
-                      min="1"
-                      max="40"
-                      class="w-20 h-7 text-xs font-mono"
-                    />
+                    <Input size="xs" v-model.number="dynamicOption.fanCardLevel" type="number" min="1" max="40" class="w-20 font-mono" />
                   </div>
                 </div>
               </CardContent>

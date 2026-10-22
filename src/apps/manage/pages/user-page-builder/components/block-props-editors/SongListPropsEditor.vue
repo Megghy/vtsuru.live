@@ -16,7 +16,7 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">样式</label>
       <Select v-model="blockProps.variant">
-        <SelectTrigger class="h-8 text-xs">
+        <SelectTrigger>
           <SelectValue placeholder="样式" />
         </SelectTrigger>
         <SelectContent>

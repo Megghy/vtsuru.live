@@ -132,13 +132,7 @@ defineExpose({ reset })
           <span class="text-xs text-muted-foreground">{{ usesAccountIdentity ? '站内账号身份' : `${accountCount} 个快捷账号` }}</span>
         </div>
       </div>
-      <Button
-        v-if="!usesAccountIdentity"
-        variant="outline"
-        size="sm"
-        class="h-8 text-xs flex items-center gap-1"
-        @click="adding = true"
-      >
+      <Button v-if="!usesAccountIdentity" variant="outline" class="flex items-center gap-1" @click="adding = true">
         <component :is="Add24Regular" class="size-3.5" />
         添加账号
       </Button>
@@ -191,13 +185,7 @@ defineExpose({ reset })
           >
             当前
           </Badge>
-          <Button
-            v-else
-            variant="outline"
-            size="sm"
-            class="h-7 px-2 text-xs"
-            @click="switchAccount(item.token)"
-          >
+          <Button size="xs" v-else variant="outline" class="px-2" @click="switchAccount(item.token)">
             切换
           </Button>
           <Popconfirm
@@ -207,12 +195,7 @@ defineExpose({ reset })
             @positive-click="removeAccount(item.token)"
           >
             <template #trigger>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-7 text-destructive hover:bg-destructive/10"
-                title="移除账号"
-              >
+              <Button variant="ghost" size="icon" class="size-7 text-destructive hover:bg-destructive/10" title="移除账号">
                 <component :is="Delete24Regular" class="size-3.5" />
               </Button>
             </template>
@@ -235,13 +218,7 @@ defineExpose({ reset })
         <code class="flex-1 min-w-0 px-2 py-1 bg-background rounded border border-border font-mono text-[11px] text-muted-foreground truncate">
           {{ maskedLoginUrl }}
         </code>
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs flex items-center gap-1 shrink-0"
-          :disabled="!auth.biliToken"
-          @click="copyLoginUrl"
-        >
+        <Button variant="outline" class="flex items-center gap-1 shrink-0" :disabled="!auth.biliToken" @click="copyLoginUrl">
           <component :is="Copy24Regular" class="size-3.5" />
           复制
         </Button>
@@ -252,12 +229,7 @@ defineExpose({ reset })
           @positive-click="rotateLoginUrl"
         >
           <template #trigger>
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-7 text-xs flex items-center gap-1 shrink-0"
-              :disabled="!auth.biliAuth.id"
-            >
+            <Button variant="outline" class="flex items-center gap-1 shrink-0" :disabled="!auth.biliAuth.id">
               <component :is="ArrowSync24Regular" class="size-3.5" />
               刷新
             </Button>
@@ -276,28 +248,14 @@ defineExpose({ reset })
       </DialogHeader>
 
       <div class="space-y-3 py-2 text-xs">
-        <Input
-          v-model="credentialInput"
-          type="password"
-          placeholder="粘贴登录链接、#auth=... 或认证 Token"
-          class="h-8 text-xs font-mono"
-          @keyup.enter="addAccount"
-        />
+        <Input v-model="credentialInput" type="password" placeholder="粘贴登录链接、#auth=... 或认证 Token" class="font-mono" @keyup.enter="addAccount" />
       </div>
 
       <DialogFooter>
-        <Button
-          variant="outline"
-          size="sm"
-          @click="adding = false"
-        >
+        <Button variant="outline" @click="adding = false">
           取消
         </Button>
-        <Button
-          size="sm"
-          :disabled="working"
-          @click="addAccount"
-        >
+        <Button :disabled="working" @click="addAccount">
           添加账号
         </Button>
       </DialogFooter>
@@ -315,22 +273,10 @@ defineExpose({ reset })
       </DialogHeader>
       <div class="space-y-2 py-2 text-xs">
         <p class="text-muted-foreground">请保存好新的登录链接，原链接已失效：</p>
-        <Input
-          :model-value="refreshedLink"
-          readonly
-          class="h-8 text-xs font-mono"
-        />
+        <Input :model-value="refreshedLink" readonly class="font-mono" />
       </div>
       <DialogFooter>
-        <Button
-          size="sm"
-          class="flex items-center gap-1"
-          @click="
-            copyToClipboard(refreshedLink);
-            toast.success('已复制新链接');
-            refreshedLink = '';
-          "
-        >
+        <Button class="flex items-center gap-1" @click=" copyToClipboard(refreshedLink); toast.success('已复制新链接'); refreshedLink = ''; ">
           <component :is="Copy24Regular" class="size-3.5" />
           复制并关闭
         </Button>

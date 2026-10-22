@@ -52,6 +52,25 @@ export default defineConfig({
   --un-default-border-color: var(--border);
   border-color: var(--border);
 }
+.no-scrollbar::-webkit-scrollbar, .scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar, .scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 9999px;
+}
 `.trim(),
     },
   ],
@@ -82,8 +101,37 @@ export default defineConfig({
     'bg-destructive',
     'bg-accent',
     'bg-brand',
+    'h-control-xs',
+    'h-control-sm',
+    'h-control-default',
+    'h-control-lg',
+    'min-h-control-xs',
+    'min-h-control-sm',
+    'min-h-control-default',
+    'min-h-control-lg',
+    'size-control-xs',
+    'size-control-sm',
+    'size-control-default',
+    'size-control-lg',
   ],
   rules: [
+    ['h-control-xs', { height: 'var(--control-h-xs, 28px)' }],
+    ['h-control-sm', { height: 'var(--control-h-sm, 32px)' }],
+    ['h-control-default', { height: 'var(--control-h-default, 36px)' }],
+    ['h-control-lg', { height: 'var(--control-h-lg, 40px)' }],
+    ['min-h-control-xs', { 'min-height': 'var(--control-h-xs, 28px)' }],
+    ['min-h-control-sm', { 'min-height': 'var(--control-h-sm, 32px)' }],
+    ['min-h-control-default', { 'min-height': 'var(--control-h-default, 36px)' }],
+    ['min-h-control-lg', { 'min-height': 'var(--control-h-lg, 40px)' }],
+    ['size-control-xs', { width: 'var(--control-h-xs, 28px)', height: 'var(--control-h-xs, 28px)' }],
+    ['size-control-sm', { width: 'var(--control-h-sm, 32px)', height: 'var(--control-h-sm, 32px)' }],
+    ['size-control-default', { width: 'var(--control-h-default, 36px)', height: 'var(--control-h-default, 36px)' }],
+    ['size-control-lg', { width: 'var(--control-h-lg, 40px)', height: 'var(--control-h-lg, 40px)' }],
+    // ── Safe Area 辅助规则 (OBS 浏览器源 / 移动端 / 客户端视口) ─────────
+    ['pt-safe', { 'padding-top': 'env(safe-area-inset-top, 0px)' }],
+    ['pb-safe', { 'padding-bottom': 'env(safe-area-inset-bottom, 0px)' }],
+    ['pl-safe', { 'padding-left': 'env(safe-area-inset-left, 0px)' }],
+    ['pr-safe', { 'padding-right': 'env(safe-area-inset-right, 0px)' }],
     // ── animate-in / animate-out core ──────────────────────────────────────
     ['animate-in', {
       'animation-name': 'enter',
@@ -206,8 +254,15 @@ export default defineConfig({
     },
   },
   shortcuts: [
+    // 超高频 Flex 居中对齐快捷类 (消除全站 150+ 处长串模板代码)
+    ['flex-center', 'flex items-center justify-center'],
+    ['inline-flex-center', 'inline-flex items-center justify-center'],
+    ['flex-between', 'flex items-center justify-between'],
+    ['flex-col-center', 'flex flex-col items-center justify-center'],
     // 常用微交互与紧凑型管理台快捷类
     ['btn-interactive', 'transition-all duration-150 active:scale-[0.98] select-none'],
+    ['card-interactive', 'transition-all duration-150 hover:border-foreground/25 hover:shadow-sm'],
+    ['list-item-interactive', 'transition-colors duration-120 hover:bg-muted/50 cursor-pointer'],
     ['panel-surface', 'bg-card border border-border rounded-lg shadow-sm'],
   ],
 })

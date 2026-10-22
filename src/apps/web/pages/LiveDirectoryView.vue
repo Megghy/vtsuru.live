@@ -87,12 +87,7 @@ function formatTime(sec: number) {
         <h1 class="text-2xl font-bold tracking-tight">正在直播</h1>
         <p class="text-sm text-muted-foreground mt-1">看看主播们在播什么，也可以在这里查看你的关注。</p>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        :disabled="loading"
-        @click="revision++"
-      >
+      <Button variant="outline" :disabled="loading" @click="revision++">
         {{ loading ? '刷新中...' : '刷新' }}
       </Button>
     </header>
@@ -109,11 +104,7 @@ function formatTime(sec: number) {
     </Tabs>
 
     <div class="max-w-md">
-      <Input
-        v-model="search"
-        placeholder="搜索主播、标题或分区..."
-        class="h-9"
-      />
+      <Input v-model="search" placeholder="搜索主播、标题或分区..." class="h-9" />
     </div>
 
     <Alert

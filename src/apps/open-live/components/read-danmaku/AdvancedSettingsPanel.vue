@@ -58,7 +58,7 @@ function toggleNotificationEvent(val: string) {
         v-model="settings.outputDeviceId"
         @update:model-value="emit('deviceChange')"
       >
-        <SelectTrigger class="w-full h-8 text-xs">
+        <SelectTrigger class="w-full">
           <SelectValue placeholder="默认设备" />
         </SelectTrigger>
         <SelectContent>
@@ -172,7 +172,7 @@ function toggleNotificationEvent(val: string) {
 
     <SectionField label="队列满时策略">
       <Select v-model="settings.queueFullStrategy">
-        <SelectTrigger class="w-[180px] h-8 text-xs">
+        <SelectTrigger class="w-[180px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

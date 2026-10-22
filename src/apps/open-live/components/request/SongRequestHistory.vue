@@ -126,12 +126,7 @@ function getStatusBadge(status: SongRequestStatus) {
     <!-- 筛选工具栏 -->
     <div class="flex items-center gap-2.5 flex-wrap">
       <div class="flex items-center gap-1.5 w-[250px]">
-        <Input
-          :value="songRequest.filterSongName"
-          placeholder="搜索歌曲..."
-          class="h-8 text-xs flex-1"
-          @input="songRequest.filterSongName = ($event.target as HTMLInputElement).value; currentPage = 1"
-        />
+        <Input :value="songRequest.filterSongName" placeholder="搜索歌曲..." class="flex-1" @input="songRequest.filterSongName = ($event.target as HTMLInputElement).value; currentPage = 1" />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
           <Checkbox
             :checked="songRequest.filterSongNameContains"
@@ -142,12 +137,7 @@ function getStatusBadge(status: SongRequestStatus) {
       </div>
 
       <div class="flex items-center gap-1.5 w-[250px]">
-        <Input
-          :value="songRequest.filterName"
-          placeholder="搜索用户..."
-          class="h-8 text-xs flex-1"
-          @input="songRequest.filterName = ($event.target as HTMLInputElement).value; currentPage = 1"
-        />
+        <Input :value="songRequest.filterName" placeholder="搜索用户..." class="flex-1" @input="songRequest.filterName = ($event.target as HTMLInputElement).value; currentPage = 1" />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
           <Checkbox
             :checked="songRequest.filterNameContains"
@@ -162,7 +152,7 @@ function getStatusBadge(status: SongRequestStatus) {
           v-model="selectedStatusFilter"
           @update:model-value="currentPage = 1"
         >
-          <SelectTrigger class="h-8 text-xs w-full">
+          <SelectTrigger class="w-full">
             <SelectValue placeholder="状态筛选" />
           </SelectTrigger>
           <SelectContent>
@@ -250,13 +240,7 @@ function getStatusBadge(status: SongRequestStatus) {
                   <TooltipProvider>
                     <Tooltip v-if="row.status === SongRequestStatus.Finish || row.status === SongRequestStatus.Cancel">
                       <TooltipTrigger as-child>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          class="h-6 w-6 p-0 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40"
-                          :disabled="songRequest.isLoading"
-                          @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)"
-                        >
+                        <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40" :disabled="songRequest.isLoading" @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)">
                           <ArrowCounterclockwise24Regular class="size-3.5" />
                         </Button>
                       </TooltipTrigger>
@@ -271,12 +255,7 @@ function getStatusBadge(status: SongRequestStatus) {
                             @positive-click="songRequest.deleteSongs([row])"
                           >
                             <template #trigger>
-                              <Button
-                                size="xs"
-                                variant="ghost"
-                                class="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                :disabled="songRequest.isLoading"
-                              >
+                              <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" :disabled="songRequest.isLoading">
                                 <Delete24Filled class="size-3.5" />
                               </Button>
                             </template>

@@ -125,18 +125,8 @@ async function addFivesingSongs(song: SongsInfo) {
 <template>
   <div class="space-y-3">
     <div class="flex items-center gap-2">
-      <Input
-        v-model="fivesingSearchInput"
-        placeholder="输入要搜索的歌名"
-        maxlength="15"
-        class="h-8 text-xs flex-1"
-        @keyup.enter="getFivesingSearchList(true)"
-      />
-      <Button
-        size="sm"
-        :disabled="!fivesingSearchInput"
-        @click="getFivesingSearchList(true)"
-      >
+      <Input v-model="fivesingSearchInput" placeholder="输入要搜索的歌名" maxlength="15" class="flex-1" @keyup.enter="getFivesingSearchList(true)" />
+      <Button :disabled="!fivesingSearchInput" @click="getFivesingSearchList(true)">
         搜索
       </Button>
     </div>
@@ -162,13 +152,7 @@ async function addFivesingSongs(song: SongsInfo) {
               </div>
             </TableCell>
             <TableCell class="text-center">
-              <Button
-                v-if="!song.url"
-                size="xs"
-                variant="outline"
-                :disabled="isGettingFivesingSongPlayUrl === song.id"
-                @click="playFivesingSong(song)"
-              >
+              <Button v-if="!song.url" size="xs" variant="outline" :disabled="isGettingFivesingSongPlayUrl === song.id" @click="playFivesingSong(song)">
                 {{ isGettingFivesingSongPlayUrl === song.id ? '获取中...' : '试听' }}
               </Button>
               <audio

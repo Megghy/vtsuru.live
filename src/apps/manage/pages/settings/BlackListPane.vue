@@ -87,23 +87,9 @@ function unblockUser(id: number) {
       </CardHeader>
       <CardContent class="p-3.5 space-y-3">
         <div class="flex items-center gap-2 flex-wrap">
-          <Input
-            v-model="biliId"
-            type="number"
-            placeholder="B 站 UID"
-            class="w-40 font-mono text-xs"
-          />
-          <Input
-            v-model="biliName"
-            placeholder="备注名（可选）"
-            class="w-48 text-xs"
-          />
-          <Button
-            size="xs"
-            variant="brand"
-            :loading="isAdding"
-            @click="addBiliUser"
-          >
+          <Input v-model="biliId" type="number" placeholder="B 站 UID" class="w-40 font-mono" />
+          <Input v-model="biliName" placeholder="备注名（可选）" class="w-48" />
+          <Button variant="brand" :loading="isAdding" @click="addBiliUser">
             添加
           </Button>
         </div>
@@ -123,12 +109,7 @@ function unblockUser(id: number) {
                 {{ displayOuid(item[0]) }}
               </code>
             </div>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="text-destructive hover:bg-destructive/10"
-              @click="unblockBiliUser(item[0])"
-            >
+            <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="unblockBiliUser(item[0])">
               移除
             </Button>
           </li>
@@ -169,12 +150,7 @@ function unblockUser(id: number) {
                 #{{ item.id }}
               </code>
             </div>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="text-destructive hover:bg-destructive/10"
-              @click="unblockUser(item.id)"
-            >
+            <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="unblockUser(item.id)">
               移除
             </Button>
           </li>

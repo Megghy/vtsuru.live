@@ -45,6 +45,7 @@ import {
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { DateRangePicker } from '@/shared/ui/date-picker'
 import { Input } from '@/shared/ui/input'
 import {
   Select,
@@ -62,6 +63,7 @@ import {
   TableRow,
 } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 interface GuardMemberModel {
   guardOUId: string
@@ -573,88 +575,50 @@ function onTabChange(value: string | number) {
           class="space-y-4"
         >
           <!-- 筛选与操作工具栏 -->
-          <div class="flex items-center justify-between flex-wrap gap-3">
+          <div class="flex items-center justify-between flex-wrap gap-2.5">
             <div class="flex items-center gap-2 flex-wrap">
               <!-- 快捷区间 -->
-              <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="h-6 px-2 text-xs"
+              <ToggleGroup type="single">
+                <ToggleGroupItem
+                  value="thisMonth"
                   @click="setDateRangePreset('thisMonth')"
                 >
                   本月
-                </Button>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="h-6 px-2 text-xs"
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="lastMonth"
                   @click="setDateRangePreset('lastMonth')"
                 >
                   上个月
-                </Button>
-              </div>
+                </ToggleGroupItem>
+              </ToggleGroup>
 
-              <!-- 自定义日期 -->
-              <div class="flex items-center gap-1.5">
-                <Input
-                  v-model="startDateInput"
-                  type="date"
-                  class="h-7 text-xs w-32"
-                  @change="handleDateInputChange"
-                />
-                <span class="text-xs text-muted-foreground">至</span>
-                <Input
-                  v-model="endDateInput"
-                  type="date"
-                  class="h-7 text-xs w-32"
-                  @change="handleDateInputChange"
-                />
-              </div>
+              <!-- 自定义日期范围 -->
+              <DateRangePicker
+                v-model:start="startDateInput"
+                v-model:end="endDateInput"
+                size="sm"
+                @update:start="handleDateInputChange"
+                @update:end="handleDateInputChange"
+              />
 
-              <!-- 类型选择 -->
-              <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-                <Button
-                  size="xs"
-                  :variant="selectedType === EventDataTypes.Guard ? 'brand' : 'ghost'"
-                  class="h-6 px-2.5 text-xs"
-                  @click="selectedType = EventDataTypes.Guard"
-                >
+              <!-- 类型选择 (舰长 / Superchat) -->
+              <ToggleGroup v-model="selectedType" type="single">
+                <ToggleGroupItem :value="EventDataTypes.Guard">
                   舰长
-                </Button>
-                <Button
-                  size="xs"
-                  :variant="selectedType === EventDataTypes.SC ? 'brand' : 'ghost'"
-                  class="h-6 px-2.5 text-xs"
-                  @click="selectedType = EventDataTypes.SC"
-                >
+                </ToggleGroupItem>
+                <ToggleGroupItem :value="EventDataTypes.SC">
                   Superchat
-                </Button>
-              </div>
+                </ToggleGroupItem>
+              </ToggleGroup>
 
               <!-- 用户搜索输入 -->
               <div class="flex items-center gap-1">
-                <Input
-                  v-model="userFilterInput"
-                  placeholder="筛选 UID / OUID / 用户名"
-                  class="h-7 text-xs w-44"
-                  @keyup.enter="applyUserFilter"
-                />
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="h-7 px-2"
-                  @click="applyUserFilter"
-                >
+                <Input v-model="userFilterInput" placeholder="筛选 UID / OUID / 用户名" class="w-48" @keyup.enter="applyUserFilter" />
+                <Button variant="outline" class="px-2.5" @click="applyUserFilter">
                   应用
                 </Button>
-                <Button
-                  v-if="userFilterInput || Object.keys(userFilterApplied).length"
-                  size="xs"
-                  variant="ghost"
-                  class="h-7 px-2 text-muted-foreground"
-                  @click="clearUserFilter"
-                >
+                <Button v-if="userFilterInput || Object.keys(userFilterApplied).length" variant="ghost" class="px-2 text-muted-foreground" @click="clearUserFilter">
                   清空
                 </Button>
               </div>
@@ -662,35 +626,19 @@ function onTabChange(value: string | number) {
 
             <!-- 导出功能 -->
             <div class="flex items-center gap-2">
-              <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-                <Button
-                  size="xs"
-                  :variant="exportType === 'csv' ? 'brand' : 'ghost'"
-                  class="h-6 px-2 text-xs"
-                  @click="exportType = 'csv'"
-                >
+              <ToggleGroup v-model="exportType" type="single">
+                <ToggleGroupItem value="csv">
                   CSV
-                </Button>
-                <Button
-                  size="xs"
-                  :variant="exportType === 'json' ? 'brand' : 'ghost'"
-                  class="h-6 px-2 text-xs"
-                  @click="exportType = 'json'"
-                >
+                </ToggleGroupItem>
+                <ToggleGroupItem value="json">
                   JSON
-                </Button>
-              </div>
+                </ToggleGroupItem>
+              </ToggleGroup>
 
-              <Button
-                size="xs"
-                variant="outline"
-                class="h-7 px-2.5"
-                :disabled="selectedEvents.length === 0 || isLoading || isLoadingMore"
-                @click="exportData"
-              >
+              <Button variant="outline" :disabled="selectedEvents.length === 0 || isLoading || isLoadingMore" @click="exportData">
                 <component
                   :is="ArrowDownload24Regular"
-                  class="h-3.5 w-3.5 mr-1"
+                  class="size-3.5 mr-1"
                 />
                 导出
               </Button>
@@ -700,29 +648,21 @@ function onTabChange(value: string | number) {
           <!-- 手动添加上舰记录面板 (仅舰长模式可见) -->
           <div
             v-if="selectedType === EventDataTypes.Guard"
-            class="p-3 rounded-lg border border-border bg-muted/20 space-y-2"
+            class="p-3 rounded-lg border border-border bg-muted/20 space-y-2.5"
           >
             <div class="text-xs font-semibold text-muted-foreground">
               补录上舰流水记录
             </div>
             <div class="flex items-center gap-2 flex-wrap">
-              <Input
-                v-model="manualGuardUname"
-                placeholder="用户名"
-                class="h-7 text-xs w-28"
-              />
-              <Input
-                v-model="manualGuardUserKey"
-                placeholder="UID 或 OUID"
-                class="h-7 text-xs w-36"
-              />
+              <Input v-model="manualGuardUname" placeholder="用户名" class="w-32" />
+              <Input v-model="manualGuardUserKey" placeholder="UID 或 OUID" class="w-44" />
 
-              <div class="w-24">
+              <div class="w-28">
                 <Select
                   v-model="manualGuardMsg"
                   default-value="舰长"
                 >
-                  <SelectTrigger class="h-7 text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="等级" />
                   </SelectTrigger>
                   <SelectContent>
@@ -739,34 +679,11 @@ function onTabChange(value: string | number) {
                 </Select>
               </div>
 
-              <Input
-                v-model="manualGuardTime"
-                type="datetime-local"
-                class="h-7 text-xs w-44"
-              />
-              <Input
-                v-model.number="manualGuardNum"
-                type="number"
-                min="1"
-                placeholder="数量"
-                class="h-7 text-xs w-20"
-              />
-              <Input
-                v-model.number="manualGuardPrice"
-                type="number"
-                min="0"
-                placeholder="价格(可选)"
-                class="h-7 text-xs w-24"
-              />
+              <Input v-model="manualGuardTime" type="datetime-local" class="w-48" />
+              <Input v-model.number="manualGuardNum" type="number" min="1" placeholder="数量" class="w-20" />
+              <Input v-model.number="manualGuardPrice" type="number" min="0" placeholder="价格(可选)" class="w-28" />
 
-              <Button
-                size="xs"
-                variant="brand"
-                class="h-7 px-3"
-                :loading="manualGuardLoading"
-                :disabled="isLoading || isLoadingMore"
-                @click="addManualGuard"
-              >
+              <Button variant="default" :loading="manualGuardLoading" :disabled="isLoading || isLoadingMore" @click="addManualGuard">
                 添加记录
               </Button>
             </div>
@@ -780,49 +697,39 @@ function onTabChange(value: string | number) {
               </span>
               <Badge
                 variant="secondary"
-                class="text-[10px] px-1.5 py-0 h-4"
+                class="text-[11px] px-2 py-0.5"
               >
                 人数 {{ eventSummary.uniqueUsers }}
               </Badge>
               <Badge
-                variant="brand"
-                class="text-[10px] px-1.5 py-0 h-4"
+                variant="outline"
+                class="text-[11px] px-2 py-0.5 font-medium"
               >
                 金额合计 ¥{{ eventSummary.totalPrice }}
               </Badge>
               <Badge
                 v-if="selectedType === EventDataTypes.Guard"
                 variant="outline"
-                class="text-[10px] px-1.5 py-0 h-4"
+                class="text-[11px] px-2 py-0.5"
               >
                 数量合计 {{ eventSummary.totalNum }}
               </Badge>
             </div>
 
-            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-              <Button
-                size="xs"
-                :variant="displayMode === 'grid' ? 'brand' : 'ghost'"
-                class="h-5 px-1.5"
-                @click="displayMode = 'grid'"
-              >
+            <ToggleGroup v-model="displayMode" type="single">
+              <ToggleGroupItem value="grid" aria-label="网格视图">
                 <component
                   :is="Grid28Filled"
-                  class="h-3.5 w-3.5"
+                  class="size-3.5"
                 />
-              </Button>
-              <Button
-                size="xs"
-                :variant="displayMode === 'column' ? 'brand' : 'ghost'"
-                class="h-5 px-1.5"
-                @click="displayMode = 'column'"
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="column" aria-label="列表视图">
                 <component
                   :is="List16Filled"
-                  class="h-3.5 w-3.5"
+                  class="size-3.5"
                 />
-              </Button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <!-- 网格视图 -->
@@ -936,12 +843,7 @@ function onTabChange(value: string | number) {
               v-if="hasMore"
               class="pt-4 flex justify-center"
             >
-              <Button
-                size="xs"
-                variant="outline"
-                :loading="isLoadingMore"
-                @click="loadMore"
-              >
+              <Button size="xs" variant="outline" :loading="isLoadingMore" @click="loadMore">
                 加载更多
               </Button>
             </div>
@@ -1031,11 +933,7 @@ function onTabChange(value: string | number) {
                     >
                       <AlertDialog v-if="item.id">
                         <AlertDialogTrigger as-child>
-                          <Button
-                            size="icon-xs"
-                            variant="ghost"
-                            class="text-destructive hover:bg-destructive/10"
-                          >
+                          <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10">
                             <component
                               :is="Delete24Regular"
                               class="h-3 w-3"
@@ -1068,12 +966,7 @@ function onTabChange(value: string | number) {
               v-if="hasMore"
               class="pt-2 flex justify-center"
             >
-              <Button
-                size="xs"
-                variant="outline"
-                :loading="isLoadingMore"
-                @click="loadMore"
-              >
+              <Button size="xs" variant="outline" :loading="isLoadingMore" @click="loadMore">
                 加载更多
               </Button>
             </div>
@@ -1129,12 +1022,7 @@ function onTabChange(value: string | number) {
 
           <!-- 刷新按钮 -->
           <div class="flex justify-end">
-            <Button
-              size="xs"
-              variant="outline"
-              :loading="guardListLoading"
-              @click="loadGuardList"
-            >
+            <Button size="xs" variant="outline" :loading="guardListLoading" @click="loadGuardList">
               <component
                 :is="ArrowSync24Filled"
                 class="h-3.5 w-3.5 mr-1"
@@ -1208,19 +1096,11 @@ function onTabChange(value: string | number) {
           >
             <span>共 {{ guardList.length }} 位在舰用户</span>
             <div class="flex items-center gap-1.5">
-              <Button
-                size="xs"
-                variant="outline"
-                :disabled="guardPaginationPage <= 1"
-                @click="guardPaginationPage--"
-              >
+              <Button size="xs" variant="outline" :disabled="guardPaginationPage <= 1" @click="guardPaginationPage--">
                 上一页
               </Button>
               <span class="px-2 font-mono">{{ guardPaginationPage }} / {{ totalGuardPages }}</span>
-              <Button
-                size="xs"
-                variant="outline"
-                :disabled="guardPaginationPage >= totalGuardPages"
+              <Button size="xs" variant="outline" :disabled="guardPaginationPage>= totalGuardPages"
                 @click="guardPaginationPage++"
               >
                 下一页

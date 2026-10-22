@@ -47,6 +47,12 @@ export interface ThemeTokens {
   // 焦点 ring
   ringColor: string
 
+  // 控件高度与基线契约
+  controlHeightXs: string
+  controlHeightSm: string
+  controlHeightDefault: string
+  controlHeightLg: string
+
   // 阴影
   shadow1: string
   shadow2: string
@@ -78,6 +84,12 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const mutedForeground = isDark ? neutral[400] : neutral[600]
 
   const ringColor = isDark ? neutral[300] : neutral[400]
+
+  // 控件统一尺寸契约（全局单一真源：xs=28px, sm=32px, default=36px, lg=40px）
+  const controlHeightXs = '28px'
+  const controlHeightSm = '32px'
+  const controlHeightDefault = '36px'
+  const controlHeightLg = '40px'
 
   // primary：保留 shadcn 风格的中性灰
   const primary = isDark ? neutral[200] : neutral[900]
@@ -130,6 +142,10 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
     brandSoft,
     brandTint,
     ringColor,
+    controlHeightXs,
+    controlHeightSm,
+    controlHeightDefault,
+    controlHeightLg,
     shadow1,
     shadow2,
     shadowPopover,

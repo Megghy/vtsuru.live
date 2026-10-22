@@ -50,10 +50,7 @@ async function mount() {
     </template>
 
     <div class="max-w-md">
-      <Input
-        v-model="customCss"
-        placeholder="css"
-        @update:model-value="(s) => danmujiRef?.setCss(String(s))"
+      <Input v-model="customCss" placeholder="css" @update:model-value="(s) => danmujiRef?.setCss(String(s))"
       />
     </div>
     <DanmujiOBS

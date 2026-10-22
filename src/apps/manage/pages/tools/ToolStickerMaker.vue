@@ -123,12 +123,7 @@ async function onRemoveBgConfirm(blob: Blob) {
         >
           {{ (blobSize / 1024).toFixed(1) }} KB
         </span>
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          :disabled="!opts.bgImageUrl"
-          @click="download"
-        >
+        <Button :disabled="!opts.bgImageUrl" @click="download">
           下载
         </Button>
       </div>
@@ -183,7 +178,7 @@ async function onRemoveBgConfirm(blob: Blob) {
             <div class="prop-row">
               <span>格式</span>
               <Select v-model="opts.format">
-                <SelectTrigger class="h-8 flex-1 text-xs">
+                <SelectTrigger class="flex-1">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,11 +206,7 @@ async function onRemoveBgConfirm(blob: Blob) {
                 @update:model-value="(val) => { if (val?.[0] !== undefined) opts.quality = val[0] }"
               />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              class="w-full h-8 text-xs mt-1"
-              @click="() => openBgPicker()"
+            <Button variant="outline" class="w-full mt-1" @click="() => openBgPicker()"
             >
               更换背景图
             </Button>
@@ -226,19 +217,10 @@ async function onRemoveBgConfirm(blob: Blob) {
             <div class="flex justify-between items-center panel-title">
               <span class="font-medium text-foreground text-sm"> 图层 </span>
               <div class="flex items-center gap-1">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  class="h-6 w-6"
-                  @click="editorRef?.addTextLayer()"
-                >
+                <Button size="icon" variant="outline" class="h-6 w-6" @click="editorRef?.addTextLayer()">
                   <TextOutline class="w-3.5 h-3.5" />
                 </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  class="h-6 w-6"
-                  @click="() => openImgPicker()"
+                <Button size="icon" variant="outline" class="h-6 w-6" @click="() => openImgPicker()"
                 >
                   <ImageOutline class="w-3.5 h-3.5" />
                 </Button>
@@ -271,12 +253,7 @@ async function onRemoveBgConfirm(blob: Blob) {
                 <span class="text-xs flex-1 truncate">
                   {{ layer.name }}
                 </span>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  class="h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10"
-                  @click.stop="editorRef?.removeLayer(layer.id)"
-                >
+                <Button size="icon" variant="ghost" class="h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" @click.stop="editorRef?.removeLayer(layer.id)">
                   <TrashOutline class="w-3 h-3" />
                 </Button>
               </div>
@@ -297,10 +274,7 @@ async function onRemoveBgConfirm(blob: Blob) {
               </span>
             </div>
             <template v-if="selectedLayer?.type === 'text'">
-              <Input
-                v-model="(selectedLayer as TextLayer).text"
-                class="h-8 text-xs"
-              />
+              <Input v-model="(selectedLayer as TextLayer).text" />
               <div class="prop-row">
                 <span>字号</span>
                 <NInputNumber
@@ -317,7 +291,7 @@ async function onRemoveBgConfirm(blob: Blob) {
                   :model-value="(selectedLayer as TextLayer).fontFamily"
                   @update:model-value="onFontChange"
                 >
-                  <SelectTrigger class="h-8 flex-1 text-xs">
+                  <SelectTrigger class="flex-1">
                     <SelectValue :placeholder="fontsLoading ? '加载字体中...' : '选择字体'" />
                   </SelectTrigger>
                   <SelectContent class="max-h-60">
@@ -414,12 +388,7 @@ async function onRemoveBgConfirm(blob: Blob) {
                   @update:model-value="(val) => { if (val?.[0] !== undefined) (selectedLayer as ImageLayer).strokeWidth = val[0] }"
                 />
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                class="w-full h-8 text-xs mt-1"
-                @click="showRemoveBg = true"
-              >
+              <Button variant="outline" class="w-full mt-1" @click="showRemoveBg = true">
                 去背景
               </Button>
             </template>

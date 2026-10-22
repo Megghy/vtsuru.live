@@ -120,7 +120,7 @@ async function saveScheduleImage() {
           :model-value="selectedWeek"
           @update:model-value="selectedWeek = String($event)"
         >
-          <SelectTrigger class="h-10 text-xs w-full bg-[var(--schedule-toolbar-resolved-control-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]">
+          <SelectTrigger class="h-10 w-full bg-[var(--schedule-toolbar-resolved-control-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]">
             <SelectValue placeholder="选择周次" />
           </SelectTrigger>
           <SelectContent class="bg-[var(--schedule-toolbar-resolved-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]">

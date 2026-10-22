@@ -107,9 +107,9 @@ onUnmounted(disposeChart)
         class="w-auto"
         @update:model-value="range = $event as any"
       >
-        <TabsList class="h-7 p-0.5">
-          <TabsTrigger value="last7Days" class="text-xs px-2.5 h-6">近7日</TabsTrigger>
-          <TabsTrigger value="last30Days" class="text-xs px-2.5 h-6">近30日</TabsTrigger>
+        <TabsList size="xs">
+          <TabsTrigger value="last7Days">近7日</TabsTrigger>
+          <TabsTrigger value="last30Days">近30日</TabsTrigger>
         </TabsList>
       </Tabs>
     </div>
@@ -198,20 +198,14 @@ onUnmounted(disposeChart)
               class="w-auto"
               @update:model-value="rankMetric = $event as any"
             >
-              <TabsList class="h-7 p-0.5">
-                <TabsTrigger value="income" class="text-xs px-2 h-6">收入</TabsTrigger>
-                <TabsTrigger value="danmaku" class="text-xs px-2 h-6">弹幕</TabsTrigger>
-                <TabsTrigger value="interaction" class="text-xs px-2 h-6">互动</TabsTrigger>
+              <TabsList size="xs">
+                <TabsTrigger value="income">收入</TabsTrigger>
+                <TabsTrigger value="danmaku">弹幕</TabsTrigger>
+                <TabsTrigger value="interaction">互动</TabsTrigger>
               </TabsList>
             </Tabs>
 
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-7 text-xs gap-1"
-              :disabled="ranking.length === 0"
-              @click="exportRanking"
-            >
+            <Button variant="outline" class="gap-1" :disabled="ranking.length === 0" @click="exportRanking">
               <component :is="DownloadOutline" class="size-3.5" />
               导出
             </Button>

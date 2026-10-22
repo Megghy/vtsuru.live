@@ -34,11 +34,7 @@ const accountInfo = useAccount()
           </CardContent>
         </div>
         <CardFooter class="p-4 pt-0">
-          <Button
-            size="sm"
-            class="w-full"
-            @click="$router.push({ name: 'open-live-lottery', query: $route.query })"
-          >
+          <Button class="w-full" @click="$router.push({ name: 'open-live-lottery', query: $route.query })">
             前往使用
           </Button>
         </CardFooter>
@@ -54,11 +50,7 @@ const accountInfo = useAccount()
           </CardContent>
         </div>
         <CardFooter class="p-4 pt-0">
-          <Button
-            size="sm"
-            class="w-full"
-            @click="$router.push({ name: 'open-live-live-request', query: $route.query })"
-          >
+          <Button class="w-full" @click="$router.push({ name: 'open-live-live-request', query: $route.query })">
             前往使用
           </Button>
         </CardFooter>
@@ -74,11 +66,7 @@ const accountInfo = useAccount()
           </CardContent>
         </div>
         <CardFooter class="p-4 pt-0">
-          <Button
-            size="sm"
-            class="w-full"
-            @click="$router.push({ name: 'open-live-queue', query: $route.query })"
-          >
+          <Button class="w-full" @click="$router.push({ name: 'open-live-queue', query: $route.query })">
             前往使用
           </Button>
         </CardFooter>
@@ -94,11 +82,7 @@ const accountInfo = useAccount()
           </CardContent>
         </div>
         <CardFooter class="p-4 pt-0">
-          <Button
-            size="sm"
-            class="w-full"
-            @click="$router.push({ name: 'open-live-speech', query: $route.query })"
-          >
+          <Button class="w-full" @click="$router.push({ name: 'open-live-speech', query: $route.query })">
             前往使用
           </Button>
         </CardFooter>
@@ -114,11 +98,7 @@ const accountInfo = useAccount()
           </CardContent>
         </div>
         <CardFooter class="p-4 pt-0">
-          <Button
-            size="sm"
-            class="w-full"
-            @click="$router.push({ name: 'open-live-danmuji', query: $route.query })"
-          >
+          <Button class="w-full" @click="$router.push({ name: 'open-live-danmuji', query: $route.query })">
             前往使用
           </Button>
         </CardFooter>
@@ -134,11 +114,7 @@ const accountInfo = useAccount()
           </CardContent>
         </div>
         <CardFooter class="p-4 pt-0">
-          <Button
-            size="sm"
-            class="w-full"
-            @click="$router.push({ name: 'open-live-tools', query: $route.query })"
-          >
+          <Button class="w-full" @click="$router.push({ name: 'open-live-tools', query: $route.query })">
             前往使用
           </Button>
         </CardFooter>
@@ -175,24 +151,10 @@ const accountInfo = useAccount()
           <span class="text-xs text-muted-foreground"> 舰长积分、动态抽奖、视频征集、歌单、棉花糖、日程表... </span>
         </template>
         <template #actions>
-          <Button
-            as="a"
-            href="/"
-            target="_blank"
-            variant="ghost"
-            size="sm"
-            class="text-primary"
-          >
+          <Button as="a" href="/" target="_blank" variant="ghost" class="text-primary">
             VTsuru.live
           </Button>
-          <Button
-            as="a"
-            href="/about"
-            target="_blank"
-            variant="ghost"
-            size="sm"
-            class="text-muted-foreground"
-          >
+          <Button as="a" href="/about" target="_blank" variant="ghost" class="text-muted-foreground">
             关于本站
           </Button>
         </template>

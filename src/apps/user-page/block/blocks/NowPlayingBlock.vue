@@ -79,12 +79,7 @@ useIntervalFn(() => {
           :to="{ name: 'user-songList', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-7 text-xs text-primary font-medium p-0"
-            @click="navigate"
-          >
+          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
             完整点歌页
             <component :is="OpenOutline" class="size-3.5 ml-1" />
           </Button>
@@ -107,13 +102,8 @@ useIntervalFn(() => {
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>当前点歌状态加载失败</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-6 px-2 text-xs"
-          @click="load(true)"
-        >
-          <component :is="RefreshOutline" class="size-3 mr-1" />
+        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
+          <component :is="RefreshOutline" class="size-3" />
           重试
         </Button>
       </AlertDescription>

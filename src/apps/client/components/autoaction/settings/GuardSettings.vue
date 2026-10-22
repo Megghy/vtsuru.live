@@ -120,7 +120,7 @@ function getGuardLevelName(level: number): string {
       <div class="flex items-center gap-2">
         <div class="w-24 shrink-0">
           <Select v-model="tempGiftCodeLevel">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -131,17 +131,8 @@ function getGuardLevelName(level: number): string {
             </SelectContent>
           </Select>
         </div>
-        <Input
-          v-model="tempGiftCode"
-          placeholder="输入礼品码..."
-          class="h-8 text-xs flex-1"
-          @keyup.enter="addGiftCode"
-        />
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          @click="addGiftCode"
-        >
+        <Input v-model="tempGiftCode" placeholder="输入礼品码..." class="flex-1" @keyup.enter="addGiftCode" />
+        <Button @click="addGiftCode">
           添加
         </Button>
       </div>

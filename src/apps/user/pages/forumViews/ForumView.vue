@@ -180,12 +180,7 @@ onUnmounted(() => {
             </AlertDescription>
           </Alert>
           <Separator />
-          <Button
-            size="sm"
-            class="text-xs"
-            :disabled="!accountInfo.id || useForum.isLoading"
-            @click="ApplyToForum"
-          >
+          <Button :disabled="!accountInfo.id || useForum.isLoading" @click="ApplyToForum">
             {{ forumInfo.settings.requireApply ? '申请' : '' }}加入
           </Button>
         </CardContent>
@@ -204,10 +199,7 @@ onUnmounted(() => {
       <div class="forum-grid grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
         <Card class="forum-sidebar shadow-xs">
           <CardContent class="p-4 space-y-3">
-            <Button
-              class="w-full text-xs h-8"
-              @click="showPostTopicModal = true"
-            >
+            <Button class="w-full" @click="showPostTopicModal = true">
               发布话题
             </Button>
             <Badge
@@ -267,11 +259,7 @@ onUnmounted(() => {
         </DialogHeader>
 
         <div class="flex-1 min-h-0 overflow-y-auto space-y-3">
-          <Input
-            v-model="currentPostTopicModel.title"
-            placeholder="话题标题"
-            class="h-8 text-xs"
-          />
+          <Input v-model="currentPostTopicModel.title" placeholder="话题标题" />
           <VEditor
             ref="editor"
             v-model:value="currentPostTopicModel.content"
@@ -284,12 +272,7 @@ onUnmounted(() => {
               v-model="token"
               class="forum-captcha"
             />
-            <Button
-              size="sm"
-              class="text-xs"
-              :disabled="!token || useForum.isLoading"
-              @click="postTopic"
-            >
+            <Button :disabled="!token || useForum.isLoading" @click="postTopic">
               发布
             </Button>
           </div>

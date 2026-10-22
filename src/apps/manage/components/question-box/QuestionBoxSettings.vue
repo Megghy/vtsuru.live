@@ -226,18 +226,8 @@ function addTag() {
         </CardHeader>
         <CardContent class="p-4 flex-1 flex flex-col space-y-3">
           <div class="flex items-center gap-2">
-            <Input
-              v-model="addTagName"
-              placeholder="输入新标签名称..."
-              maxlength="20"
-              class="h-8 text-xs flex-1"
-              @keydown.enter="addTag"
-            />
-            <Button
-              size="sm"
-              :disabled="!addTagName.trim()"
-              @click="addTag"
-            >
+            <Input v-model="addTagName" placeholder="输入新标签名称..." maxlength="20" class="flex-1" @keydown.enter="addTag" />
+            <Button :disabled="!addTagName.trim()" @click="addTag">
               添加
             </Button>
           </div>
@@ -264,13 +254,7 @@ function addTag() {
               </div>
 
               <div class="flex items-center gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  class="size-6 text-muted-foreground hover:text-foreground"
-                  :title="item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题'"
-                  @click="useQB.changeTagVisiable(item.name, !item.visiable)"
-                >
+                <Button size="icon" variant="ghost" class="size-6 text-muted-foreground hover:text-foreground" :title="item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题'" @click="useQB.changeTagVisiable(item.name, !item.visiable)">
                   <Eye24Filled v-if="item.visiable" class="size-3.5" />
                   <EyeOff24Filled v-else class="size-3.5" />
                 </Button>
@@ -280,11 +264,7 @@ function addTag() {
                   :description="`确认删除标签「${item.name}」吗？`"
                   @confirm="useQB.delTag(item.name)"
                 >
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    class="size-6 text-muted-foreground hover:text-destructive"
-                  >
+                  <Button size="icon" variant="ghost" class="size-6 text-muted-foreground hover:text-destructive">
                     <Delete24Regular class="size-3.5" />
                   </Button>
                 </Popconfirm>

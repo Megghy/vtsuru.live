@@ -177,57 +177,28 @@ function saveEdit() {
       class="p-2.5 pt-0 flex justify-end gap-1.5"
     >
       <template v-if="editing">
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          @click="cancelEdit"
-        >
+        <Button variant="outline" @click="cancelEdit">
           放弃
         </Button>
-        <Button
-          size="sm"
-          class="h-7 text-xs"
-          @click="saveEdit"
-        >
+        <Button @click="saveEdit">
           保存
         </Button>
       </template>
 
       <template v-else-if="isScheduled">
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          @click="emit('cancel-schedule')"
-        >
+        <Button variant="outline" @click="emit('cancel-schedule')">
           取消定时
         </Button>
-        <Button
-          size="sm"
-          class="h-7 text-xs"
-          @click="emit('confirm')"
-        >
+        <Button @click="emit('confirm')">
           立即执行
         </Button>
       </template>
 
       <template v-else-if="isPending || proposal.status === 'failed'">
-        <Button
-          v-if="canEdit"
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          @click="startEdit"
-        >
+        <Button v-if="canEdit" variant="outline" @click="startEdit">
           修改
         </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          @click="emit('reject')"
-        >
+        <Button variant="outline" @click="emit('reject')">
           取消
         </Button>
 
@@ -236,36 +207,18 @@ function saveEdit() {
           @update:open="schedulePicker = $event"
         >
           <PopoverTrigger as-child>
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-7 text-xs"
-              @click="openSchedulePicker"
-            >
+            <Button variant="outline" @click="openSchedulePicker">
               定时
             </Button>
           </PopoverTrigger>
           <PopoverContent class="w-64 p-3 space-y-2.5 text-xs">
             <span class="text-muted-foreground block text-[11px]">选择自动执行时间</span>
-            <Input
-              v-model="scheduleDateTimeStr"
-              type="datetime-local"
-              class="h-7 text-xs font-mono"
-            />
+            <Input size="xs" v-model="scheduleDateTimeStr" type="datetime-local" class="font-mono" />
             <div class="flex justify-end gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                class="h-6 text-[11px] px-2"
-                @click="schedulePicker = false"
-              >
+              <Button variant="outline" class="h-6 text-[11px] px-2" @click="schedulePicker = false">
                 取消
               </Button>
-              <Button
-                size="sm"
-                class="h-6 text-[11px] px-2"
-                @click="confirmSchedule"
-              >
+              <Button class="h-6 text-[11px] px-2" @click="confirmSchedule">
                 确定
               </Button>
             </div>
@@ -280,23 +233,14 @@ function saveEdit() {
           @positive-click="emit('confirm')"
         >
           <template #trigger>
-            <Button
-              variant="destructive"
-              size="sm"
-              class="h-7 text-xs"
-            >
+            <Button variant="destructive">
               {{ proposal.status === 'failed' ? '重试' : '确认执行' }}
             </Button>
           </template>
           确认执行该高风险操作?
         </Popconfirm>
 
-        <Button
-          v-else
-          size="sm"
-          class="h-7 text-xs"
-          @click="emit('confirm')"
-        >
+        <Button v-else @click="emit('confirm')">
           {{ proposal.status === 'failed' ? '重试' : '确认执行' }}
         </Button>
       </template>

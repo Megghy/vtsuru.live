@@ -518,7 +518,7 @@ defineExpose({ Config, DefaultConfig })
               :model-value="selectedWeek"
               @update:model-value="selectedWeek = String($event)"
             >
-              <SelectTrigger class="timegrid-week-select h-8 text-xs w-48">
+              <SelectTrigger class="timegrid-week-select w-48">
                 <SelectValue placeholder="选择周次" />
               </SelectTrigger>
               <SelectContent>

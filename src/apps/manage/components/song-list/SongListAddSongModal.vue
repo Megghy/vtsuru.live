@@ -138,7 +138,7 @@ function openAssistant() {
                   上传歌曲信息截图，或直接粘贴歌曲信息，Agent 会自动识别并生成添加操作。
                 </AlertDescription>
               </div>
-              <Button size="xs" variant="outline" class="gap-1 h-7" @click="openAssistant">
+              <Button size="xs" variant="outline" class="gap-1" @click="openAssistant">
                 <Bot24Regular class="size-3.5" />
                 打开助手
               </Button>
@@ -146,12 +146,12 @@ function openAssistant() {
           </Alert>
 
           <Tabs v-model="activeTab" class="w-full">
-            <TabsList class="h-8">
-              <TabsTrigger value="custom" class="text-xs">手动录入</TabsTrigger>
-              <TabsTrigger value="netease" class="text-xs">从网易云歌单导入</TabsTrigger>
-              <TabsTrigger value="5sing" class="text-xs">从 5sing 搜索</TabsTrigger>
-              <TabsTrigger value="file" class="text-xs">从文件导入</TabsTrigger>
-              <TabsTrigger value="directory" class="text-xs">从文件夹读取</TabsTrigger>
+            <TabsList>
+              <TabsTrigger value="custom">手动录入</TabsTrigger>
+              <TabsTrigger value="netease">从网易云歌单导入</TabsTrigger>
+              <TabsTrigger value="5sing">从 5sing 搜索</TabsTrigger>
+              <TabsTrigger value="file">从文件导入</TabsTrigger>
+              <TabsTrigger value="directory">从文件夹读取</TabsTrigger>
             </TabsList>
 
             <TabsContent value="custom" class="pt-3">
@@ -216,23 +216,14 @@ function openAssistant() {
             <span class="text-muted-foreground">添加完成仅重置歌名</span>
           </label>
           <Button size="xs" variant="outline" @click="customTabRef.resetAll()">还原</Button>
-          <Button
-            size="sm"
-            :disabled="!customTabRef.canAdd || isModalLoading"
-            @click="customTabRef.add()"
-          >
+          <Button :disabled="!customTabRef.canAdd || isModalLoading" @click="customTabRef.add()">
             添加歌曲
           </Button>
         </div>
-        <Button
-          v-else-if="footerConfig.tab"
-          size="sm"
-          :disabled="!footerConfig.tab.canAdd || isModalLoading"
-          @click="footerConfig.tab.add()"
-        >
+        <Button v-else-if="footerConfig.tab" :disabled="!footerConfig.tab.canAdd || isModalLoading" @click="footerConfig.tab.add()">
           {{ footerConfig.tab.label }}
         </Button>
-        <Button v-else size="sm" disabled>
+        <Button v-else disabled>
           在表格中点击添加
         </Button>
       </DialogFooter>

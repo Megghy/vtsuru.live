@@ -211,11 +211,7 @@ onMounted(async () => {
     >
       <div class="font-semibold text-amber-600 dark:text-amber-400">需要认证</div>
       <p class="text-foreground">你尚未进行 Bilibili 账号认证, 可先浏览礼物，认证后可查看积分并兑换礼物。</p>
-      <Button
-        size="sm"
-        class="h-7 text-xs"
-        @click="$router.push({ name: 'bili-auth' })"
-      >
+      <Button size="xs" @click="$router.push({ name: 'bili-auth' })">
         立即认证
       </Button>
     </div>
@@ -261,21 +257,11 @@ onMounted(async () => {
           </div>
 
           <div class="account-actions flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              class="h-7 text-xs flex items-center gap-1"
-              @click="gotoAuthPage"
-            >
+            <Button variant="ghost" class="flex items-center gap-1" @click="gotoAuthPage">
               <component :is="Person24Regular" class="size-3.5" />
               账号中心
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="h-7 text-xs flex items-center gap-1"
-              @click="NavigateToNewTab('/bili-user/settings')"
-            >
+            <Button variant="ghost" class="flex items-center gap-1" @click="NavigateToNewTab('/bili-user/settings')">
               <component :is="ArrowSync24Regular" class="size-3.5" />
               切换账号
             </Button>
@@ -313,15 +299,11 @@ onMounted(async () => {
             <div class="flex flex-wrap items-center gap-2.5">
               <div class="relative w-48">
                 <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  v-model="searchKeyword"
-                  placeholder="搜索礼物名称..."
-                  class="h-8 pl-8 text-xs"
-                />
+                <Input v-model="searchKeyword" placeholder="搜索礼物名称..." class="pl-8" />
               </div>
 
               <Select v-model="sortOrder">
-                <SelectTrigger class="w-36 h-8 text-xs">
+                <SelectTrigger class="w-36">
                   <SelectValue placeholder="排序方式" />
                 </SelectTrigger>
                 <SelectContent>
@@ -346,22 +328,11 @@ onMounted(async () => {
             </div>
 
             <div class="toolbar-actions flex items-center gap-2">
-              <Button
-                v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder !== 'default'"
-                variant="ghost"
-                size="sm"
-                class="h-8 text-xs flex items-center gap-1 text-muted-foreground hover:text-foreground"
-                @click="clearFilters"
-              >
+              <Button v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder !== 'default'" variant="ghost" class="flex items-center gap-1 text-muted-foreground hover:text-foreground" @click="clearFilters">
                 <component :is="Filter24Regular" class="size-3.5" />
                 重置筛选
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                class="h-8 text-xs flex items-center gap-1"
-                @click="refreshCurrentPoint"
-              >
+              <Button variant="outline" class="flex items-center gap-1" @click="refreshCurrentPoint">
                 <component :is="ArrowSync24Regular" class="size-3.5" />
                 刷新积分
               </Button>
@@ -417,11 +388,7 @@ onMounted(async () => {
                 </Badge>
               </div>
 
-              <Button
-                class="w-full text-xs h-8"
-                :variant="item.isPinned ? 'default' : 'secondary'"
-                @click="onBuyClick(item)"
-              >
+              <Button class="w-full" :variant="item.isPinned ? 'default' : 'secondary'" @click="onBuyClick(item)">
                 {{ getTooltip(item) === '开始兑换' ? (item.isPinned ? '立即兑换' : '兑换') : '查看详情' }}
               </Button>
             </div>

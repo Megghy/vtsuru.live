@@ -103,13 +103,7 @@ watch(hasUserKey, (value) => {
       label="DashScope API Key"
       hint="需要前往阿里云百炼创建语音服务实例并获取 API Key, 否则使用本站默认的共享 Key, 可能会遇到排队或调用失败的情况"
     >
-      <Input
-        v-model="settings.providers.cosyvoice.apiKey"
-        type="password"
-        placeholder="sk-xxxx"
-        autocomplete="new-password"
-        class="h-8 text-xs"
-      />
+      <Input v-model="settings.providers.cosyvoice.apiKey" type="password" placeholder="sk-xxxx" autocomplete="new-password" />
       <span class="text-[11px] text-muted-foreground">
         <a
           href="https://bailian.console.aliyun.com/"
@@ -124,7 +118,7 @@ watch(hasUserKey, (value) => {
 
     <SectionField label="模型">
       <Select v-model="settings.providers.cosyvoice.model">
-        <SelectTrigger class="h-8 text-xs w-full">
+        <SelectTrigger class="w-full">
           <SelectValue placeholder="选择模型" />
         </SelectTrigger>
         <SelectContent>
@@ -170,13 +164,7 @@ watch(hasUserKey, (value) => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-8 w-8 p-0 shrink-0"
-                  :disabled="!hasUserKey || customVoiceLoading"
-                  @click="refreshCustomVoices"
-                >
+                <Button variant="outline" class="w-8 p-0 shrink-0" :disabled="!hasUserKey || customVoiceLoading" @click="refreshCustomVoices">
                   <ArrowSync20Regular class="size-4" :class="{ 'animate-spin': customVoiceLoading }" />
                 </Button>
               </TooltipTrigger>
@@ -214,7 +202,7 @@ watch(hasUserKey, (value) => {
       hint="用于改善数字、缩写、符号或小语种读法。阿里云当前版本主要处理第一个语言提示。"
     >
       <Select v-model="settings.providers.cosyvoice.languageHint">
-        <SelectTrigger class="h-8 text-xs w-full">
+        <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

@@ -84,24 +84,14 @@ async function download() {
     </CardHeader>
     <CardContent class="pt-0">
       <div class="flex flex-col gap-4">
-        <Input
-          v-model="text"
-          placeholder="输入链接或文本"
-        />
+        <Input v-model="text" placeholder="输入链接或文本" />
 
         <div>
           <span class="text-xs text-muted-foreground mb-1.5 block">
             链接预设
           </span>
           <div class="flex flex-wrap gap-2">
-            <Button
-              v-for="p in linkPresets"
-              :key="p.label"
-              size="sm"
-              variant="outline"
-              class="h-7 text-xs px-2.5"
-              @click="text = p.value"
-            >
+            <Button v-for="p in linkPresets" :key="p.label" variant="outline" class="px-2.5" @click="text = p.value">
               {{ p.label }}
             </Button>
           </div>
@@ -112,14 +102,7 @@ async function download() {
             配色预设
           </span>
           <div class="flex flex-wrap gap-2">
-            <Button
-              v-for="s in stylePresets"
-              :key="s.label"
-              size="sm"
-              variant="outline"
-              class="h-7 text-xs px-2.5 inline-flex items-center gap-1.5"
-              @click="applyStyle(s)"
-            >
+            <Button v-for="s in stylePresets" :key="s.label" variant="outline" class="px-2.5 inline-flex items-center gap-1.5" @click="applyStyle(s)">
               <span
                 class="color-dot"
                 :style="{ background: s.fg, boxShadow: `0 0 0 2px ${s.bg}` }"
@@ -178,10 +161,7 @@ async function download() {
         </div>
 
         <div>
-          <Button
-            :disabled="!text"
-            @click="download"
-          >
+          <Button :disabled="!text" @click="download">
             下载 PNG
           </Button>
         </div>

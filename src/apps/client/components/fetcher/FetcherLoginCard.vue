@@ -205,12 +205,7 @@ onUnmounted(() => {
       <div v-if="biliCookie.isCookieValid" class="space-y-2">
         <div class="flex items-center justify-between">
           <span class="text-xs text-muted-foreground">登录凭据 (Cookie - 敏感信息)</span>
-          <Button
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] gap-1"
-            @click="showCookie = !showCookie"
-          >
+          <Button size="xs" variant="ghost" class="h-6 text-[11px] gap-1" @click="showCookie = !showCookie">
             <EyeOffOutline v-if="showCookie" class="size-3.5" />
             <EyeOutline v-else class="size-3.5" />
             {{ showCookie ? '隐藏' : '显示' }}
@@ -224,12 +219,7 @@ onUnmounted(() => {
           class="text-xs font-mono resize-none h-16"
         />
 
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 text-xs gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10"
-          @click="logout"
-        >
+        <Button variant="outline" class="gap-1.5 border-destructive/40 text-destructive hover:bg-destructive/10" @click="logout">
           <LogOutOutline class="size-3.5" />
           退出登录
         </Button>
@@ -249,7 +239,7 @@ onUnmounted(() => {
         class="w-full"
         @update:model-value="settings.save()"
       >
-        <TabsList class="grid w-full grid-cols-2 h-8">
+        <TabsList class="grid w-full grid-cols-2">
           <TabsTrigger value="qrcode" class="text-xs">
             扫码登录
           </TabsTrigger>
@@ -263,12 +253,7 @@ onUnmounted(() => {
             v-if="!isQRCodeLogining || loginStatus === 'expired'"
             class="flex items-center gap-2"
           >
-            <Button
-              id="bilibili-login"
-              size="sm"
-              class="h-8 text-xs gap-1.5"
-              @click="startLogin"
-            >
+            <Button id="bilibili-login" class="gap-1.5" @click="startLogin">
               <LogInOutline class="size-4" />
               {{ loginStatus === 'expired' ? '重新获取二维码' : '获取二维码' }}
             </Button>

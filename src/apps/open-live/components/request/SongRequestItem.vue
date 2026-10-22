@@ -197,13 +197,7 @@ function formatTimeAbsolute(time: number | string | Date) {
         <TooltipProvider>
           <Tooltip v-if="hasSong">
             <TooltipTrigger as-child>
-              <Button
-                size="xs"
-                variant="outline"
-                class="h-7 w-7 p-0 rounded-full border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10"
-                :disabled="isLrcLoading === song?.song?.key"
-                @click="onSelectSong"
-              >
+              <Button size="xs" variant="outline" class="w-7 p-0 rounded-full border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10" :disabled="isLrcLoading === song?.song?.key" @click="onSelectSong">
                 <Play24Filled class="size-3.5" />
               </Button>
             </TooltipTrigger>
@@ -212,18 +206,7 @@ function formatTimeAbsolute(time: number | string | Date) {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                size="xs"
-                :variant="song.status === SongRequestStatus.Singing ? 'outline' : 'default'"
-                class="h-7 w-7 p-0 rounded-full"
-                :class="song.status === SongRequestStatus.Singing ? 'border-amber-500/40 text-amber-600 hover:bg-amber-500/10' : ''"
-                :disabled="hasOtherSingSong || isLoading"
-                @click="
-                  onUpdateStatus(
-                    song.status === SongRequestStatus.Singing ? SongRequestStatus.Waiting : SongRequestStatus.Singing,
-                  )
-                "
-              >
+              <Button size="xs" :variant="song.status === SongRequestStatus.Singing ? 'outline' : 'default'" class="w-7 p-0 rounded-full" :class="song.status === SongRequestStatus.Singing ? 'border-amber-500/40 text-amber-600 hover:bg-amber-500/10' : ''" :disabled="hasOtherSingSong || isLoading" @click=" onUpdateStatus( song.status === SongRequestStatus.Singing ? SongRequestStatus.Waiting : SongRequestStatus.Singing, ) ">
                 <Mic24Filled class="size-3.5" />
               </Button>
             </TooltipTrigger>
@@ -234,12 +217,7 @@ function formatTimeAbsolute(time: number | string | Date) {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                size="xs"
-                class="h-7 w-7 p-0 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white"
-                :disabled="isLoading"
-                @click="onUpdateStatus(SongRequestStatus.Finish)"
-              >
+              <Button size="xs" class="w-7 p-0 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white" :disabled="isLoading" @click="onUpdateStatus(SongRequestStatus.Finish)">
                 <Checkmark12Regular class="size-3.5" />
               </Button>
             </TooltipTrigger>
@@ -254,12 +232,7 @@ function formatTimeAbsolute(time: number | string | Date) {
                   @positive-click="onUpdateStatus(SongRequestStatus.Cancel)"
                 >
                   <template #trigger>
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      class="h-7 w-7 p-0 rounded-full border-destructive/40 text-destructive hover:bg-destructive/10"
-                      :disabled="isLoading"
-                    >
+                    <Button size="xs" variant="outline" class="w-7 p-0 rounded-full border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="isLoading">
                       <Dismiss16Filled class="size-3.5" />
                     </Button>
                   </template>
@@ -278,12 +251,7 @@ function formatTimeAbsolute(time: number | string | Date) {
                   @positive-click="onBlockUser"
                 >
                   <template #trigger>
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      class="h-7 w-7 p-0 rounded-full border-destructive/40 text-destructive hover:bg-destructive/10"
-                      :disabled="isLoading"
-                    >
+                    <Button size="xs" variant="outline" class="w-7 p-0 rounded-full border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="isLoading">
                       <PresenceBlocked16Regular class="size-3.5" />
                     </Button>
                   </template>

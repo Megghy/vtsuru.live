@@ -161,12 +161,7 @@ defineExpose({ reset })
         </h2>
         <span class="text-xs text-muted-foreground">管理用于登录和找回账号的凭据</span>
       </div>
-      <Button
-        size="xs"
-        variant="ghost"
-        class="text-muted-foreground hover:text-destructive"
-        @click="logout"
-      >
+      <Button size="xs" variant="ghost" class="text-muted-foreground hover:text-destructive" @click="logout">
         退出登录
       </Button>
     </header>
@@ -194,11 +189,7 @@ defineExpose({ reset })
           >
             {{ account.isEmailVerified ? '已验证' : account.bindEmail ? '待验证' : '未绑定' }}
           </Badge>
-          <Button
-            size="xs"
-            variant="outline"
-            @click="emailModalVisible = true"
-          >
+          <Button size="xs" variant="outline" @click="emailModalVisible = true">
             {{ emailAction }}
           </Button>
         </div>
@@ -219,12 +210,7 @@ defineExpose({ reset })
           </div>
         </div>
 
-        <Button
-          size="xs"
-          variant="outline"
-          class="shrink-0"
-          @click="passwordModalVisible = true"
-        >
+        <Button size="xs" variant="outline" class="shrink-0" @click="passwordModalVisible = true">
           修改密码
         </Button>
       </article>
@@ -244,24 +230,10 @@ defineExpose({ reset })
       </DialogHeader>
 
       <div class="space-y-3 py-2">
-        <Input
-          v-model="email"
-          type="email"
-          placeholder="邮箱地址"
-          @keyup.enter="sendEmailCode"
-        />
+        <Input v-model="email" type="email" placeholder="邮箱地址" @keyup.enter="sendEmailCode" />
         <div class="flex gap-2">
-          <Input
-            v-model="emailCode"
-            placeholder="邮箱验证码"
-            class="flex-1"
-            @keyup.enter="saveEmail"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            :loading="sendingCode"
-            :disabled="countdownSeconds > 0"
+          <Input v-model="emailCode" placeholder="邮箱验证码" class="flex-1" @keyup.enter="saveEmail" />
+          <Button type="button" variant="outline" :loading="sendingCode" :disabled="countdownSeconds> 0"
             @click="sendEmailCode"
           >
             <template v-if="countdownSeconds > 0">
@@ -275,17 +247,10 @@ defineExpose({ reset })
       </div>
 
       <DialogFooter>
-        <Button
-          variant="outline"
-          @click="emailModalVisible = false"
-        >
+        <Button variant="outline" @click="emailModalVisible = false">
           取消
         </Button>
-        <Button
-          variant="brand"
-          :loading="saving"
-          @click="saveEmail"
-        >
+        <Button variant="brand" :loading="saving" @click="saveEmail">
           确认{{ emailAction }}
         </Button>
       </DialogFooter>
@@ -305,36 +270,16 @@ defineExpose({ reset })
       </DialogHeader>
 
       <div class="space-y-3 py-2">
-        <Input
-          v-model="oldPassword"
-          type="password"
-          placeholder="当前旧密码"
-        />
-        <Input
-          v-model="password"
-          type="password"
-          placeholder="新密码"
-        />
-        <Input
-          v-model="passwordAgain"
-          type="password"
-          placeholder="再次输入新密码"
-          @keyup.enter="savePassword"
-        />
+        <Input v-model="oldPassword" type="password" placeholder="当前旧密码" />
+        <Input v-model="password" type="password" placeholder="新密码" />
+        <Input v-model="passwordAgain" type="password" placeholder="再次输入新密码" @keyup.enter="savePassword" />
       </div>
 
       <DialogFooter>
-        <Button
-          variant="outline"
-          @click="passwordModalVisible = false"
-        >
+        <Button variant="outline" @click="passwordModalVisible = false">
           取消
         </Button>
-        <Button
-          variant="brand"
-          :loading="saving"
-          @click="savePassword"
-        >
+        <Button variant="brand" :loading="saving" @click="savePassword">
           确认修改
         </Button>
       </DialogFooter>

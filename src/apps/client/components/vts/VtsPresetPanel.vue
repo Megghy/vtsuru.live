@@ -76,21 +76,10 @@ function addFromCurrent() {
     </CardHeader>
     <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-2.5">
       <div class="flex items-center gap-2 flex-wrap">
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 text-xs"
-          @click="addPreset"
-        >
+        <Button variant="outline" @click="addPreset">
           新建预设
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 text-xs"
-          :disabled="!canReadCurrent"
-          @click="addFromCurrent"
-        >
+        <Button variant="outline" :disabled="!canReadCurrent" @click="addFromCurrent">
           从当前位置创建
         </Button>
       </div>
@@ -111,31 +100,18 @@ function addFromCurrent() {
           </div>
 
           <div class="flex items-center gap-1.5 flex-wrap">
-            <Button
-              size="sm"
-              class="h-7 text-xs"
-              :disabled="!vts.connected"
-              @click="run(() => vts.applyPreset(p.id), '已应用')"
+            <Button :disabled="!vts.connected" @click="run(() => vts.applyPreset(p.id), '已应用')"
             >
               应用
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-7 text-xs"
-              @click="openEdit(p)"
-            >
+            <Button variant="outline" @click="openEdit(p)">
               编辑
             </Button>
             <Popconfirm
               title="确认删除此预设?"
               @confirm="vts.removePreset(p.id)"
             >
-              <Button
-                size="sm"
-                variant="destructive"
-                class="h-7 text-xs"
-              >
+              <Button variant="destructive">
                 删除
               </Button>
             </Popconfirm>
@@ -154,19 +130,10 @@ function addFromCurrent() {
         <DialogTitle class="text-base font-semibold">编辑机位预设</DialogTitle>
       </DialogHeader>
       <div class="flex flex-col gap-3 py-2 text-xs">
-        <Input
-          v-model="form.name"
-          placeholder="预设名称"
-          class="h-8 text-xs"
-        />
+        <Input v-model="form.name" placeholder="预设名称" />
 
         <div class="flex items-center gap-2 flex-wrap">
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-7 text-xs"
-            :disabled="!canReadCurrent"
-            @click="run(() => { fillFromCurrent() }, '已填入当前位姿')"
+          <Button variant="outline" :disabled="!canReadCurrent" @click="run(() => { fillFromCurrent() }, '已填入当前位姿')"
           >
             填入当前位置
           </Button>
@@ -181,7 +148,6 @@ function addFromCurrent() {
               :min="0"
               :step="0.05"
               placeholder="过渡时间(s)"
-              class="h-8 text-xs"
             />
           </div>
           <div class="space-y-1">
@@ -190,7 +156,6 @@ function addFromCurrent() {
               v-model="form.positionX"
               :step="0.01"
               placeholder="X"
-              class="h-8 text-xs"
             />
           </div>
           <div class="space-y-1">
@@ -199,7 +164,6 @@ function addFromCurrent() {
               v-model="form.positionY"
               :step="0.01"
               placeholder="Y"
-              class="h-8 text-xs"
             />
           </div>
           <div class="space-y-1">
@@ -208,7 +172,6 @@ function addFromCurrent() {
               v-model="form.rotation"
               :step="0.1"
               placeholder="旋转"
-              class="h-8 text-xs"
             />
           </div>
           <div class="space-y-1">
@@ -217,23 +180,15 @@ function addFromCurrent() {
               v-model="form.size"
               :step="0.5"
               placeholder="大小"
-              class="h-8 text-xs"
             />
           </div>
         </div>
       </div>
       <DialogFooter class="flex justify-end gap-2 pt-2">
-        <Button
-          variant="outline"
-          size="sm"
-          @click="showEdit = false"
-        >
+        <Button variant="outline" @click="showEdit = false">
           取消
         </Button>
-        <Button
-          size="sm"
-          @click="saveEdit"
-        >
+        <Button @click="saveEdit">
           保存
         </Button>
       </DialogFooter>

@@ -132,41 +132,22 @@ async function manualCheckCookie() {
       <div class="space-y-2">
         <div class="flex items-center gap-2">
           <span class="text-xs text-muted-foreground w-20 shrink-0">Key</span>
-          <Input
-            v-model="cookieCloudData.key"
-            placeholder="请输入 Key"
-            class="h-8 text-xs flex-1"
-          />
+          <Input v-model="cookieCloudData.key" placeholder="请输入 Key" class="flex-1" />
         </div>
 
         <div class="flex items-center gap-2">
           <span class="text-xs text-muted-foreground w-20 shrink-0">Password</span>
-          <Input
-            v-model="cookieCloudData.password"
-            placeholder="请输入 Password"
-            type="password"
-            class="h-8 text-xs flex-1"
-          />
+          <Input v-model="cookieCloudData.password" placeholder="请输入 Password" type="password" class="flex-1" />
         </div>
 
         <div class="flex items-center gap-2">
           <span class="text-xs text-muted-foreground w-20 shrink-0">Host (可选)</span>
-          <Input
-            v-model="cookieCloudData.host"
-            placeholder="请输入 Host (可选)"
-            class="h-8 text-xs flex-1"
-          />
+          <Input v-model="cookieCloudData.host" placeholder="请输入 Host (可选)" class="flex-1" />
         </div>
       </div>
 
       <div class="flex items-center gap-2 pt-1">
-        <Button
-          v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'"
-          size="sm"
-          class="h-8 text-xs"
-          :disabled="isLoadingCookiecloud"
-          @click="setCookieCloud"
-        >
+        <Button v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'" :disabled="isLoadingCookiecloud" @click="setCookieCloud">
           保存配置
         </Button>
         <Popconfirm
@@ -183,11 +164,7 @@ async function manualCheckCookie() {
           "
         >
           <template #trigger>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
-            >
+            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
               清除配置
             </Button>
           </template>
@@ -208,11 +185,7 @@ async function manualCheckCookie() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-8 text-xs gap-1.5"
-                :disabled="biliCookie.cookieCloudState !== 'valid' || syncCooldown.remaining.value > 0 || isSyncingFromCloud"
+              <Button variant="outline" class="gap-1.5" :disabled="biliCookie.cookieCloudState !== 'valid' || syncCooldown.remaining.value> 0 || isSyncingFromCloud"
                 @click="manualSyncFromCloud"
               >
                 <CloudDownloadOutline class="size-3.5" />
@@ -236,11 +209,7 @@ async function manualCheckCookie() {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-8 text-xs gap-1.5"
-                :disabled="!biliCookie.hasBiliCookie || checkCooldown.remaining.value > 0 || isCheckingCookie"
+              <Button variant="outline" class="gap-1.5" :disabled="!biliCookie.hasBiliCookie || checkCooldown.remaining.value> 0 || isCheckingCookie"
                 @click="manualCheckCookie"
               >
                 <RefreshOutline class="size-3.5" />

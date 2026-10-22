@@ -37,20 +37,10 @@ function addSlot() {
     <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
       <CardTitle class="text-sm font-semibold">参数控制</CardTitle>
       <div class="flex items-center gap-2">
-        <Button
-          size="sm"
-          class="h-7 text-xs"
-          @click="addSlot"
-        >
+        <Button @click="addSlot">
           添加参数槽
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs"
-          :disabled="!vts.connected"
-          @click="vts.stopAllParamHolds"
-        >
+        <Button variant="outline" :disabled="!vts.connected" @click="vts.stopAllParamHolds">
           全部停止持有
         </Button>
         <span class="text-xs text-muted-foreground">
@@ -80,20 +70,11 @@ function addSlot() {
 
           <div class="flex items-center gap-2 flex-wrap">
             <div class="flex items-center gap-1.5 cursor-pointer select-none">
-              <Switch
-                :checked="slot.hold"
-                :disabled="!vts.connected"
-                @update:checked="(val) => updateSlot({ ...slot, hold: val })"
+              <Switch :checked="slot.hold" :disabled="!vts.connected" @update:checked="(val) => updateSlot({ ...slot, hold: val })"
               />
               <span class="text-xs text-muted-foreground">Hold</span>
             </div>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-7 text-xs"
-              :disabled="!vts.connected"
-              @click="injectOnce(slot)"
-            >
+            <Button size="xs" variant="outline" :disabled="!vts.connected" @click="injectOnce(slot)">
               注入
             </Button>
             <Popconfirm
@@ -101,11 +82,7 @@ function addSlot() {
               @positive-click="vts.removeParamSlot(slot.id)"
             >
               <template #trigger>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="h-7 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
-                >
+                <Button size="xs" variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
                   删除
                 </Button>
               </template>
@@ -151,18 +128,8 @@ function addSlot() {
             <span class="transition-transform group-open:rotate-180 text-[10px]">▾</span>
           </summary>
           <div class="flex flex-wrap items-center gap-2 pt-2 border-t mt-2">
-            <Input
-              v-model="slot.name"
-              placeholder="显示名"
-              class="h-8 text-xs w-28"
-              @blur="updateSlot({ ...slot })"
-            />
-            <Input
-              v-model="slot.parameterId"
-              placeholder="参数 ID"
-              class="h-8 text-xs w-36"
-              @blur="updateSlot({ ...slot })"
-            />
+            <Input v-model="slot.name" placeholder="显示名" class="w-28" @blur="updateSlot({ ...slot })" />
+            <Input v-model="slot.parameterId" placeholder="参数 ID" class="w-36" @blur="updateSlot({ ...slot })" />
             <div class="flex items-center gap-1">
               <span class="text-muted-foreground">权重:</span>
               <NInputNumber

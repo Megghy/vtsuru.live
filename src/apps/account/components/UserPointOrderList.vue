@@ -165,11 +165,7 @@ function formatDateTime(ts: number) {
               </Tag>
             </TableCell>
             <TableCell class="text-right">
-              <Button
-                size="xs"
-                variant="outline"
-                @click="openDetail(row)"
-              >
+              <Button size="xs" variant="outline" @click="openDetail(row)">
                 详情
               </Button>
             </TableCell>

@@ -109,12 +109,7 @@ function retry() {
             请保持同频道管理页打开并启动麦克风。
           </AlertDescription>
         </Alert>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs"
-          @click="retry"
-        >
+        <Button variant="outline" @click="retry">
           重新加载 / 重试连接
         </Button>
         <div class="text-[11px] text-muted-foreground">

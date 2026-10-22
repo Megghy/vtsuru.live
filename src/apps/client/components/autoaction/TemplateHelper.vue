@@ -48,11 +48,7 @@ function handleInsert(text: string) {
   <div class="template-helper flex flex-col gap-2">
     <div class="relative">
       <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      <Input
-        v-model="searchText"
-        placeholder="搜索变量..."
-        class="h-8 pl-8 text-xs"
-      />
+      <Input v-model="searchText" placeholder="搜索变量..." class="pl-8" />
     </div>
 
     <ScrollArea class="h-[200px]">

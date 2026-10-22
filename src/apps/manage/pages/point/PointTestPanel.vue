@@ -18,6 +18,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
@@ -341,7 +348,7 @@ async function checkEligibility() {
           @positive-click="resetTestAccount"
         >
           <template #trigger>
-            <Button variant="destructive" size="sm" :disabled="isLoading">
+            <Button variant="destructive" :disabled="isLoading">
               重置积分
             </Button>
           </template>
@@ -354,25 +361,30 @@ async function checkEligibility() {
         <div class="space-y-3 max-w-lg">
           <div class="space-y-1">
             <label class="text-xs font-medium text-foreground">事件类型 <span class="text-destructive">*</span></label>
-            <select
-              v-model="testForm.type"
-              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            <Select
+              :model-value="String(testForm.type)"
+              @update:model-value="testForm.type = Number($event) as any"
             >
-              <option v-for="opt in eventTypeOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in eventTypeOptions"
+                  :key="opt.value"
+                  :value="String(opt.value)"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <!-- 礼物相关字段 -->
           <template v-if="showGiftFields">
             <div class="space-y-1">
               <label class="text-xs font-medium text-foreground">礼物名称 <span class="text-destructive">*</span></label>
-              <Input
-                v-model="testForm.giftName"
-                placeholder="例如: 小心心、辣条"
-                class="h-8 text-xs"
-              />
+              <Input v-model="testForm.giftName" placeholder="例如: 小心心、辣条" />
             </div>
 
             <div class="space-y-1">
@@ -397,14 +409,20 @@ async function checkEligibility() {
           <!-- 上舰相关字段 -->
           <div v-if="showGuardFields" class="space-y-1">
             <label class="text-xs font-medium text-foreground">舰长等级 <span class="text-destructive">*</span></label>
-            <select
-              v-model="testForm.guardLevel"
-              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              <option v-for="opt in guardLevelOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+            <Select v-model="testForm.guardLevel">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in guardLevelOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <!-- SC 价格字段 -->
@@ -418,7 +436,7 @@ async function checkEligibility() {
           </div>
 
           <div class="flex justify-end pt-2">
-            <Button size="sm" :disabled="isTesting" @click="runTest">
+            <Button :disabled="isTesting" @click="runTest">
               {{ isTesting ? '执行中...' : '执行测试' }}
             </Button>
           </div>
@@ -433,28 +451,44 @@ async function checkEligibility() {
         <div class="rounded-lg border border-border bg-card p-4 max-w-lg space-y-3">
           <div class="space-y-1">
             <label class="text-xs font-medium text-foreground">目标用户 <span class="text-destructive">*</span></label>
-            <select
-              v-model="selectedUserKey"
-              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            <Select
+              :model-value="selectedUserKey ?? ''"
+              @update:model-value="selectedUserKey = $event ? ($event as EligibleUserKey) : null"
             >
-              <option :value="null">请选择用户</option>
-              <option v-for="opt in userOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="请选择用户" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in userOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div class="space-y-1">
             <label class="text-xs font-medium text-foreground">礼物 <span class="text-destructive">*</span></label>
-            <select
-              v-model="selectedGoodsId"
-              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            <Select
+              :model-value="selectedGoodsId ? String(selectedGoodsId) : ''"
+              @update:model-value="selectedGoodsId = $event ? Number($event) : null"
             >
-              <option :value="null">请选择礼物</option>
-              <option v-for="opt in goodsOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="请选择礼物" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in goodsOptions"
+                  :key="opt.value"
+                  :value="String(opt.value)"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div class="space-y-1">
@@ -471,11 +505,7 @@ async function checkEligibility() {
           </div>
 
           <div class="flex justify-end pt-2">
-            <Button
-              size="sm"
-              :disabled="!selectedUserKey || !selectedGoodsId || isCheckingEligibility"
-              @click="checkEligibility"
-            >
+            <Button :disabled="!selectedUserKey || !selectedGoodsId || isCheckingEligibility" @click="checkEligibility">
               {{ isCheckingEligibility ? '查询中...' : '查询' }}
             </Button>
           </div>

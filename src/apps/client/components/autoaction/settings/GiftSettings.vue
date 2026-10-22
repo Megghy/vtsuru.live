@@ -71,7 +71,7 @@ function removeGiftName(index: number) {
     <div class="space-y-1">
       <span class="text-xs text-muted-foreground">礼物过滤模式</span>
       <Select v-model="action.triggerConfig.filterMode">
-        <SelectTrigger class="h-8 text-xs w-full">
+        <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -99,17 +99,8 @@ function removeGiftName(index: number) {
         }}
       </span>
       <div class="flex items-center gap-2">
-        <Input
-          v-model="tempGiftName"
-          placeholder="输入礼物名称..."
-          class="h-8 text-xs flex-1"
-          @keyup.enter="addGiftName"
-        />
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          @click="addGiftName"
-        >
+        <Input v-model="tempGiftName" placeholder="输入礼物名称..." class="flex-1" @keyup.enter="addGiftName" />
+        <Button @click="addGiftName">
           添加
         </Button>
       </div>

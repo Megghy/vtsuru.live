@@ -103,17 +103,11 @@ async function SaveComboSetting() {
         v-model="selectedTab"
         class="w-full"
       >
-        <TabsList class="grid w-full grid-cols-2 max-w-xs h-8 p-0.5 bg-muted mb-3">
-          <TabsTrigger
-            value="general"
-            class="text-xs h-7"
-          >
+        <TabsList class="grid w-full grid-cols-2 max-w-xs mb-3">
+          <TabsTrigger value="general">
             常规
           </TabsTrigger>
-          <TabsTrigger
-            value="blacklist"
-            class="text-xs h-7"
-          >
+          <TabsTrigger value="blacklist">
             黑名单
           </TabsTrigger>
         </TabsList>

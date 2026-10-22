@@ -52,10 +52,7 @@ function removeMapping(scene: string) {
     <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
       <div class="flex items-center gap-3 flex-wrap text-xs">
         <div class="flex items-center gap-2">
-          <Switch
-            :checked="vts.obsLinkConfig.enabled"
-            @update:checked="setEnabled"
-          />
+          <Switch :checked="vts.obsLinkConfig.enabled" @update:checked="setEnabled" />
           <span>{{ vts.obsLinkConfig.enabled ? '已启用' : '未启用' }}</span>
         </div>
 
@@ -64,19 +61,13 @@ function removeMapping(scene: string) {
             :model-value="vts.obsLinkConfig.debounceMs"
             :min="0"
             :step="50"
-            class="w-24 h-8 text-xs"
+            class="w-24"
             @update:model-value="(val) => setDebounceMs((val ?? 0) as number)"
           />
           <span class="text-[var(--muted-foreground)]">防抖 (ms)</span>
         </div>
 
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 text-xs"
-          :disabled="!obs.obsConnected"
-          @click="obs.fetchObsScenes"
-        >
+        <Button variant="outline" :disabled="!obs.obsConnected" @click="obs.fetchObsScenes">
           刷新场景
         </Button>
         <span class="text-[var(--muted-foreground)]">当前: {{ obs.currentObsScene || '未知' }}</span>
@@ -107,7 +98,7 @@ function removeMapping(scene: string) {
                 :model-value="vts.obsLinkConfig.sceneToPresetId[scene] || '__none__'"
                 @update:model-value="(val) => (val && val !== '__none__' ? setMapping(scene, String(val)) : removeMapping(scene))"
               >
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue placeholder="映射到 VTS 机位预设" />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,13 +114,7 @@ function removeMapping(scene: string) {
               </Select>
             </div>
           </div>
-          <Button
-            size="sm"
-            variant="ghost"
-            class="h-7 text-xs"
-            :disabled="!vts.obsLinkConfig.sceneToPresetId[scene]"
-            @click="removeMapping(scene)"
-          >
+          <Button variant="ghost" :disabled="!vts.obsLinkConfig.sceneToPresetId[scene]" @click="removeMapping(scene)">
             清除
           </Button>
         </div>

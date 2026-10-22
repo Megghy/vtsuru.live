@@ -380,12 +380,7 @@ const triggerTypeOptions = [
             class="space-y-3.5 max-w-4xl mx-auto"
           >
             <div class="flex items-center gap-3">
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-8 text-xs gap-1.5"
-                @click="backToOverview"
-              >
+              <Button variant="secondary" class="gap-1.5" @click="backToOverview">
                 <ArrowLeft24Filled class="size-3.5" />
                 返回列表
               </Button>
@@ -437,12 +432,7 @@ const triggerTypeOptions = [
                         {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
                       </Badge>
                     </div>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 text-xs gap-1 text-primary hover:text-primary"
-                      @click="openSetNextModal"
-                    >
+                    <Button size="xs" variant="ghost" class="h-6 gap-1 text-primary hover:text-primary" @click="openSetNextModal">
                       <Edit16Regular class="size-3" />
                       手动指定
                     </Button>
@@ -535,7 +525,7 @@ const triggerTypeOptions = [
         <div class="space-y-3 pt-2">
           <span class="text-xs text-muted-foreground block">请选择要添加的自动操作类型：</span>
           <Select v-model="selectedTriggerType">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -551,19 +541,10 @@ const triggerTypeOptions = [
           </Select>
         </div>
         <DialogFooter class="pt-3">
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs"
-            @click="showAddModal = false"
-          >
+          <Button variant="secondary" @click="showAddModal = false">
             取消
           </Button>
-          <Button
-            size="sm"
-            class="h-8 text-xs"
-            @click="addAutoAction"
-          >
+          <Button @click="addAutoAction">
             确认
           </Button>
         </DialogFooter>
@@ -578,7 +559,7 @@ const triggerTypeOptions = [
         </DialogHeader>
         <div class="space-y-2 pt-2">
           <Select v-model="targetNextActionId">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue placeholder="选择操作" />
             </SelectTrigger>
             <SelectContent>
@@ -597,19 +578,10 @@ const triggerTypeOptions = [
           </span>
         </div>
         <DialogFooter class="pt-3">
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs"
-            @click="showSetNextModal = false"
-          >
+          <Button variant="secondary" @click="showSetNextModal = false">
             取消
           </Button>
-          <Button
-            size="sm"
-            class="h-8 text-xs"
-            @click="confirmSetNextAction"
-          >
+          <Button @click="confirmSetNextAction">
             确认指定
           </Button>
         </DialogFooter>
@@ -630,19 +602,10 @@ const triggerTypeOptions = [
           />
         </div>
         <DialogFooter class="pt-3">
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs"
-            @click="showTestModal = false"
-          >
+          <Button variant="secondary" @click="showTestModal = false">
             取消
           </Button>
-          <Button
-            size="sm"
-            class="h-8 text-xs"
-            @click="confirmTest"
-          >
+          <Button @click="confirmTest">
             确认测试
           </Button>
         </DialogFooter>

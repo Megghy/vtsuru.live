@@ -173,13 +173,8 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
         >
           <AlertDescription class="flex items-center justify-between w-full">
             <span>日程加载失败，请稍后重试</span>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-6 px-2 text-xs"
-              @click="loadSchedule(true)"
-            >
-              <component :is="RefreshOutline" class="size-3 mr-1" />
+            <Button variant="outline" size="xs" class="gap-1" @click="loadSchedule(true)">
+              <component :is="RefreshOutline" class="size-3" />
               重试
             </Button>
           </AlertDescription>

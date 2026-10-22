@@ -231,11 +231,7 @@ const timelineData: TimelineRecord[] = [
           </div>
         </CardContent>
         <CardFooter class="pt-4 border-t border-border/50 flex justify-center">
-          <Button
-            size="lg"
-            class="px-8"
-            @click="$router.push({ name: 'manage-index' })"
-          >
+          <Button size="lg" class="px-8" @click="$router.push({ name: 'manage-index' })">
             回到控制台
           </Button>
         </CardFooter>

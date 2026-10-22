@@ -21,11 +21,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">边框标题</label>
-        <Input
-          v-model="blockProps.borderTitle"
-          placeholder="例如：标签"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.borderTitle" placeholder="例如：标签" />
       </div>
       <div
         v-if="propertyAvailable('borderTitleAlign')"
@@ -33,7 +29,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
       >
         <label class="text-xs text-muted-foreground">标题对齐</label>
         <Select v-model="blockProps.borderTitleAlign">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="标题对齐" />
           </SelectTrigger>
           <SelectContent>
@@ -46,7 +42,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">大小</label>
         <Select v-model="blockProps.size">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="大小" />
           </SelectTrigger>
           <SelectContent>
@@ -73,16 +69,12 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">文本</label>
-                <Input
-                  v-model="item.text"
-                  placeholder="#标签"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.text" placeholder="#标签" />
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">类型</label>
                 <Select v-model="item.type">
-                  <SelectTrigger class="h-8 text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="类型" />
                   </SelectTrigger>
                   <SelectContent>
@@ -98,11 +90,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
               </div>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">自定义颜色</label>
-                <Input
-                  v-model="item.color"
-                  placeholder="#fb7299，可选"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.color" placeholder="#fb7299，可选" />
               </div>
             </PropsGrid>
           </template>
@@ -118,16 +106,12 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
     <PropsGrid>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">区块标题</label>
-        <Input
-          v-model="blockProps.title"
-          placeholder="里程碑"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.title" placeholder="里程碑" />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">展示方式</label>
         <Select v-model="blockProps.mode">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="展示方式" />
           </SelectTrigger>
           <SelectContent>
@@ -150,18 +134,11 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">日期</label>
-                <Input
-                  v-model="item.date"
-                  type="date"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.date" type="date" />
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
-                <Input
-                  v-model="item.title"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.title" />
               </div>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">内容</label>
@@ -201,10 +178,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
             <PropsGrid>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">问题</label>
-                <Input
-                  v-model="item.q"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.q" />
               </div>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">回答</label>
@@ -228,10 +202,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
     <PropsGrid>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input
-          v-model="blockProps.title"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.title" />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">描述</label>
@@ -256,7 +227,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">平台</label>
                 <Select v-model="item.platform">
-                  <SelectTrigger class="h-8 text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="平台" />
                   </SelectTrigger>
                   <SelectContent>
@@ -272,19 +243,11 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">显示名</label>
-                <Input
-                  v-model="item.label"
-                  placeholder="可选"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.label" placeholder="可选" />
               </div>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">链接</label>
-                <Input
-                  v-model="item.url"
-                  placeholder="https://..."
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.url" placeholder="https://..." />
               </div>
             </PropsGrid>
           </template>

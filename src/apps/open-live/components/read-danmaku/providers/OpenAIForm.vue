@@ -38,28 +38,15 @@ const formatOptions = [
       label="Base URL"
       hint="OpenAI 兼容服务的根路径，会自动追加 /v1/audio/speech"
     >
-      <Input
-        v-model="settings.providers.openai.baseUrl"
-        placeholder="https://api.openai.com"
-        class="h-8 text-xs"
-      />
+      <Input v-model="settings.providers.openai.baseUrl" placeholder="https://api.openai.com" />
     </SectionField>
 
     <SectionField label="API Key">
-      <Input
-        v-model="settings.providers.openai.apiKey"
-        type="password"
-        placeholder="sk-xxxx"
-        class="h-8 text-xs"
-      />
+      <Input v-model="settings.providers.openai.apiKey" type="password" placeholder="sk-xxxx" />
     </SectionField>
 
     <SectionField label="模型">
-      <Input
-        v-model="settings.providers.openai.model"
-        placeholder="tts-1"
-        class="h-8 text-xs"
-      />
+      <Input v-model="settings.providers.openai.model" placeholder="tts-1" />
     </SectionField>
 
     <SectionField label="音色">
@@ -72,7 +59,7 @@ const formatOptions = [
 
     <SectionField label="音频格式">
       <Select v-model="settings.providers.openai.format">
-        <SelectTrigger class="h-8 text-xs w-full">
+        <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

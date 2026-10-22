@@ -276,12 +276,7 @@ onBeforeUnmount(() => {
               <span><component :is="Live24Regular" class="size-4" />需要打开直播间</span>
             </div>
 
-            <Button
-              size="lg"
-              class="w-full bg-[#fb7299] hover:bg-[#fb7299]/90 text-white flex items-center justify-center gap-2"
-              :disabled="isStarting"
-              @click="startVerify"
-            >
+            <Button size="lg" class="w-full bg-[#fb7299] hover:bg-[#fb7299]/90 text-white flex items-center justify-center gap-2" :disabled="isStarting" @click="startVerify">
               {{ isStarting ? '处理中...' : '开始认证' }}
               <component :is="ArrowRight24Regular" class="size-4" />
             </Button>
@@ -314,11 +309,7 @@ onBeforeUnmount(() => {
               </button>
             </div>
 
-            <Button
-              as-child
-              size="lg"
-              class="w-full bg-[#00aeec] hover:bg-[#00aeec]/90 text-white flex items-center justify-center gap-2"
-            >
+            <Button as-child size="lg" class="w-full bg-[#00aeec] hover:bg-[#00aeec]/90 text-white flex items-center justify-center gap-2">
               <a
                 :href="`https://live.bilibili.com/${startModel?.targetRoomId}`"
                 target="_blank"
@@ -342,11 +333,7 @@ onBeforeUnmount(() => {
             <p class="state-kicker state-kicker--error">认证已结束</p>
             <h2>本次认证已超时</h2>
             <p class="state-summary">一次性认证码已经失效，请重新开始认证流程。</p>
-            <Button
-              size="lg"
-              class="w-full"
-              @click="restart"
-            >
+            <Button size="lg" class="w-full" @click="restart">
               重新开始
             </Button>
           </div>
@@ -376,13 +363,7 @@ onBeforeUnmount(() => {
                 >专属登录链接</label
               >
               <div class="relative flex items-center">
-                <Input
-                  id="bili-login-link"
-                  :type="showPasswordLink ? 'text' : 'password'"
-                  :model-value="authUrl"
-                  readonly
-                  class="pr-16 font-mono text-xs"
-                />
+                <Input id="bili-login-link" :type="showPasswordLink ? 'text' : 'password'" :model-value="authUrl" readonly class="pr-16 font-mono" />
                 <div class="absolute right-1.5 flex items-center gap-1">
                   <button
                     type="button"
@@ -410,11 +391,7 @@ onBeforeUnmount(() => {
             </template>
 
             <div class="success-actions flex flex-col gap-2 pt-2">
-              <Button
-                size="lg"
-                class="w-full bg-[#18a058] hover:bg-[#18a058]/90 text-white flex items-center justify-center gap-2"
-                @click="$router.push({ name: 'bili-user-points' })"
-              >
+              <Button size="lg" class="w-full bg-[#18a058] hover:bg-[#18a058]/90 text-white flex items-center justify-center gap-2" @click="$router.push({ name: 'bili-user-points' })">
                 查看我的积分
                 <component :is="ArrowRight24Regular" class="size-4" />
               </Button>

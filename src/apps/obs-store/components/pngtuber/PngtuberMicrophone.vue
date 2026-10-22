@@ -97,7 +97,7 @@ const currentDeviceLabel = computed(() => {
         {{ obs ? '当前 OBS 麦克风' : '本机麦克风（仅本地保存）' }}
       </label>
       <Select v-model="deviceId">
-        <SelectTrigger class="h-8 text-xs w-full">
+        <SelectTrigger class="w-full">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -120,40 +120,16 @@ const currentDeviceLabel = computed(() => {
     </div>
 
     <div class="flex items-center gap-2 flex-wrap">
-      <Button
-        size="sm"
-        variant="outline"
-        class="h-8 text-xs"
-        :disabled="isStarting"
-        @click="isListening ? audio.stopListening() : audio.startListening()"
-      >
+      <Button variant="outline" :disabled="isStarting" @click="isListening ? audio.stopListening() : audio.startListening()">
         {{ isListening ? '停止麦克风' : '启动 / 重试麦克风' }}
       </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        class="h-8 text-xs"
-        @click="audio.refreshDevices()"
-      >
+      <Button variant="outline" @click="audio.refreshDevices()">
         刷新设备
       </Button>
-      <Button
-        v-if="!obs"
-        size="sm"
-        variant="outline"
-        class="h-8 text-xs"
-        @click="audio.simulateSpeaking(true)"
-      >
+      <Button v-if="!obs" variant="outline" @click="audio.simulateSpeaking(true)">
         模拟说话 1.5s
       </Button>
-      <Button
-        v-if="!obs"
-        size="sm"
-        variant="outline"
-        class="h-8 text-xs"
-        :disabled="disabled || !isListening || isCalibrating"
-        @click="calibrate"
-      >
+      <Button v-if="!obs" variant="outline" :disabled="disabled || !isListening || isCalibrating" @click="calibrate">
         噪声校准
       </Button>
     </div>

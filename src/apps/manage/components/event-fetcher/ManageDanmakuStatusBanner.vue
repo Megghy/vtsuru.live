@@ -65,12 +65,7 @@ function goPanel() {
         <AlertTriangle class="size-4 shrink-0" />
         <AlertDescription class="m-0 text-xs">弹幕相关功能需要先绑定 Bilibili 主播账号。</AlertDescription>
       </div>
-      <Button
-        size="xs"
-        variant="outline"
-        class="h-6 px-2 text-[11px] border-amber-500/30 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300"
-        @click="goPanel"
-      >
+      <Button size="xs" variant="outline" class="h-6 px-2 text-[11px] border-amber-500/30 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300" @click="goPanel">
         前往面板绑定
       </Button>
     </Alert>
@@ -86,12 +81,7 @@ function goPanel() {
           身份码状态异常（{{ authCodeLabel }}），实时弹幕可能无法正常工作。
         </AlertDescription>
       </div>
-      <Button
-        size="xs"
-        variant="outline"
-        class="h-6 px-2 text-[11px] border-destructive/30 hover:bg-destructive/20"
-        @click="goPanel"
-      >
+      <Button size="xs" variant="outline" class="h-6 px-2 text-[11px] border-destructive/30 hover:bg-destructive/20" @click="goPanel">
         更新身份码
       </Button>
     </Alert>

@@ -90,7 +90,7 @@ function propertyAvailable(property: string) {
       <div class="flex flex-col gap-1">
         <label class="text-xs text-muted-foreground">样式</label>
         <Select v-model="gallery.layout">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="选择样式" />
           </SelectTrigger>
           <SelectContent class="text-xs">
@@ -107,7 +107,6 @@ function propertyAvailable(property: string) {
           v-model="gallery.columns"
           :min="1"
           :max="12"
-          class="h-8 text-xs"
         />
       </div>
 
@@ -117,32 +116,23 @@ function propertyAvailable(property: string) {
           v-model="gallery.gap"
           :min="0"
           :max="80"
-          class="h-8 text-xs"
         />
       </div>
 
       <div class="flex flex-col gap-1">
         <label class="text-xs text-muted-foreground">最大宽度</label>
-        <Input
-          v-model="gallery.maxWidth"
-          placeholder="例如 100% 或 720px"
-          class="h-8 text-xs"
-        />
+        <Input v-model="gallery.maxWidth" placeholder="例如 100% 或 720px" />
       </div>
 
       <div v-if="propertyAvailable('maxHeight')" class="flex flex-col gap-1">
         <label class="text-xs text-muted-foreground">图片最大高度</label>
-        <Input
-          v-model="gallery.maxHeight"
-          placeholder="例如 320px"
-          class="h-8 text-xs"
-        />
+        <Input v-model="gallery.maxHeight" placeholder="例如 320px" />
       </div>
 
       <div v-if="propertyAvailable('fit')" class="flex flex-col gap-1">
         <label class="text-xs text-muted-foreground">图片裁剪方式</label>
         <Select v-model="gallery.fit">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="裁剪方式" />
           </SelectTrigger>
           <SelectContent class="text-xs">
@@ -163,7 +153,7 @@ function propertyAvailable(property: string) {
         <div v-if="propertyAvailable('effect')" class="flex flex-col gap-1">
           <label class="text-xs text-muted-foreground">切换动效</label>
           <Select v-model="gallery.effect">
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="动效" />
             </SelectTrigger>
             <SelectContent class="text-xs">
@@ -180,7 +170,6 @@ function propertyAvailable(property: string) {
             v-model="gallery.interval"
             :min="1000"
             :max="20000"
-            class="h-8 text-xs"
           />
         </div>
 
@@ -197,7 +186,7 @@ function propertyAvailable(property: string) {
         <div v-if="propertyAvailable('dotType')" class="flex flex-col gap-1">
           <label class="text-xs text-muted-foreground">指示点样式</label>
           <Select v-model="gallery.dotType">
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="样式" />
             </SelectTrigger>
             <SelectContent class="text-xs">
@@ -210,7 +199,7 @@ function propertyAvailable(property: string) {
         <div v-if="propertyAvailable('dotPlacement')" class="flex flex-col gap-1">
           <label class="text-xs text-muted-foreground">指示点位置</label>
           <Select v-model="gallery.dotPlacement">
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="位置" />
             </SelectTrigger>
             <SelectContent class="text-xs">
@@ -240,7 +229,7 @@ function propertyAvailable(property: string) {
         <div class="flex flex-col gap-1">
           <label class="text-xs text-muted-foreground">切换触发方式</label>
           <Select v-model="gallery.trigger">
-            <SelectTrigger class="h-8 text-xs">
+            <SelectTrigger>
               <SelectValue placeholder="方式" />
             </SelectTrigger>
             <SelectContent class="text-xs">
@@ -255,13 +244,7 @@ function propertyAvailable(property: string) {
     <div class="flex flex-col gap-2 pt-2 border-t border-border">
       <div class="flex items-center justify-between">
         <span class="text-xs text-muted-foreground">图片列表（可拖拽排序）</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-7 text-xs"
-          :disabled="props.editor.isUploading.value"
-          @click="props.editor.triggerUploadGalleryBulk(props.block)"
-        >
+        <Button variant="outline" :disabled="props.editor.isUploading.value" @click="props.editor.triggerUploadGalleryBulk(props.block)">
           <component :is="ImageOutline" class="size-3.5 mr-1" />
           批量上传
         </Button>
@@ -291,55 +274,26 @@ function propertyAvailable(property: string) {
             </div>
 
             <div class="flex items-center gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-6 px-2 text-xs"
-                :disabled="props.editor.isUploading.value"
-                @click="props.editor.triggerUploadItemImage(props.block, index)"
-              >
+              <Button variant="outline" class="h-6 px-2" :disabled="props.editor.isUploading.value" @click="props.editor.triggerUploadItemImage(props.block, index)">
                 上传
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                class="h-6 px-2 text-xs"
-                @click="props.editor.clearUploadedItemImage(props.block, index)"
-              >
+              <Button variant="ghost" class="h-6 px-2" @click="props.editor.clearUploadedItemImage(props.block, index)">
                 清除
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                class="h-6 px-2 text-xs text-destructive hover:text-destructive"
-                @click="removeItem(index)"
-              >
+              <Button variant="ghost" class="h-6 px-2 text-destructive hover:text-destructive" @click="removeItem(index)">
                 <component :is="TrashOutline" class="size-3.5" />
               </Button>
             </div>
           </div>
 
           <div class="flex flex-col gap-1.5 pt-1">
-            <Input
-              v-model="ensureItem(index).alt"
-              placeholder="替代文本（说明图片内容；装饰图片可留空）"
-              class="h-7 text-xs"
-            />
-            <Input
-              v-model="ensureItem(index).desc"
-              placeholder="图片描述（可选，显示在图片下方）"
-              class="h-7 text-xs"
-            />
+            <Input v-model="ensureItem(index).alt" placeholder="替代文本（说明图片内容；装饰图片可留空）" size="xs" />
+            <Input v-model="ensureItem(index).desc" placeholder="图片描述（可选，显示在图片下方）" size="xs" />
           </div>
         </div>
       </VueDraggable>
 
-      <Button
-        size="sm"
-        variant="outline"
-        class="w-full text-xs"
-        @click="addItem"
-      >
+      <Button variant="outline" class="w-full" @click="addItem">
         <component :is="AddOutline" class="size-3.5 mr-1" />
         添加图片
       </Button>

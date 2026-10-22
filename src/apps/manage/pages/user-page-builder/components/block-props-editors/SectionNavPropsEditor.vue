@@ -31,7 +31,7 @@ function hasLevel(level: number) {
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">排列方式</label>
       <Select v-model="blockProps.layout">
-        <SelectTrigger class="h-8 text-xs">
+        <SelectTrigger>
           <SelectValue placeholder="排列方式" />
         </SelectTrigger>
         <SelectContent>

@@ -52,19 +52,9 @@ const fetchedLabel = computed(() => {
       >
         <div class="flex items-center gap-1.5">
           <span class="text-xs text-muted-foreground">写入日程表</span>
-          <Switch
-            :checked="autoSync"
-            :disabled="syncing"
-            @update:checked="emit('update:autoSync', $event)"
-          />
+          <Switch :checked="autoSync" :disabled="syncing" @update:checked="emit('update:autoSync', $event)" />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          class="h-7 text-xs"
-          :disabled="refreshing"
-          @click="emit('refresh')"
-        >
+        <Button variant="outline" :disabled="refreshing" @click="emit('refresh')">
           立即刷新
         </Button>
       </div>

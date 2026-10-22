@@ -108,10 +108,7 @@ onUnmounted(() => void dashboard.stop())
     >
       <h2 class="text-xl font-semibold mb-2">请先登录</h2>
       <p class="text-sm text-muted-foreground mb-4">中控台需要登录并绑定直播间后使用</p>
-      <Button
-        as="a"
-        href="/manage"
-      >
+      <Button as="a" href="/manage">
         前往登录
       </Button>
     </div>

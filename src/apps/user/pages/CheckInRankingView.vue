@@ -165,7 +165,7 @@ onMounted(() => {
       <CardContent class="space-y-4 text-xs">
         <div class="filter-bar flex flex-wrap items-center gap-2">
           <Select v-model="timeRange">
-            <SelectTrigger class="w-28 h-8 text-xs">
+            <SelectTrigger class="w-28">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -182,19 +182,10 @@ onMounted(() => {
 
           <div class="relative flex-1 min-w-36">
             <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              v-model="userFilter"
-              placeholder="搜索用户"
-              class="h-8 pl-8 text-xs w-full"
-            />
+            <Input v-model="userFilter" placeholder="搜索用户" class="pl-8 w-full" />
           </div>
 
-          <Button
-            size="sm"
-            class="h-8 text-xs flex items-center gap-1"
-            :disabled="isLoading"
-            @click="loadCheckInRanking"
-          >
+          <Button class="flex items-center gap-1" :disabled="isLoading" @click="loadCheckInRanking">
             <component :is="ArrowClockwise24Regular" class="size-3.5" :class="{ 'animate-spin': isLoading }" />
             刷新
           </Button>
@@ -309,7 +300,7 @@ onMounted(() => {
               :model-value="String(pagination.pageSize)"
               @update:model-value="pagination.pageSize = Number($event)"
             >
-              <SelectTrigger class="w-24 h-8 text-xs">
+              <SelectTrigger class="w-24">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

@@ -98,13 +98,7 @@ onMounted(() => {
         </div>
       </div>
 
-      <Button
-        variant="brand"
-        size="icon"
-        class="assistant-fab fixed right-5 bottom-[84px] z-[1500] h-11 w-11 rounded-full shadow-lg"
-        title="VTsuru 助手"
-        @click="openAssistant"
-      >
+      <Button variant="brand" size="icon" class="assistant-fab fixed right-5 bottom-[84px] z-[1500] h-11 w-11 rounded-full shadow-lg" title="VTsuru 助手" @click="openAssistant">
         <component
           :is="Bot24Regular"
           class="h-6 w-6"

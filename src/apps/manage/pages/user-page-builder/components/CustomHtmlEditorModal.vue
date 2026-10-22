@@ -247,8 +247,8 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
           <Tag v-if="codeIssues.length" variant="destructive" class="text-xs">
             {{ codeIssues.length }} 个问题
           </Tag>
-          <Button size="sm" variant="outline" @click="closeEditor"> 取消 </Button>
-          <Button size="sm" @click="applyChanges"> 应用 </Button>
+          <Button variant="outline" @click="closeEditor"> 取消 </Button>
+          <Button @click="applyChanges"> 应用 </Button>
         </div>
       </DialogHeader>
 
@@ -260,14 +260,7 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      :disabled="uploading"
-                      aria-label="上传图片"
-                      @click="uploadInput?.click()"
-                    >
+                    <Button size="icon" variant="ghost" class="size-7" :disabled="uploading" aria-label="上传图片" @click="uploadInput?.click()">
                       <CloudUploadOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -275,7 +268,7 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Input v-model="resourceSearch" class="h-7 text-xs" placeholder="搜索文件" />
+            <Input v-model="resourceSearch" size="xs" placeholder="搜索文件" />
             <input
               ref="uploadInput"
               type="file"
@@ -316,22 +309,16 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
         <section class="code-pane flex flex-col min-h-0 border-r">
           <div class="pane-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0">
             <Tabs :model-value="activeLanguage" class="w-auto" @update:model-value="(val) => (activeLanguage = val as any)">
-              <TabsList class="h-7">
-                <TabsTrigger value="html" class="h-6 text-xs px-3"> HTML </TabsTrigger>
-                <TabsTrigger value="css" class="h-6 text-xs px-3"> CSS </TabsTrigger>
+              <TabsList size="xs">
+                <TabsTrigger value="html"> HTML </TabsTrigger>
+                <TabsTrigger value="css"> CSS </TabsTrigger>
               </TabsList>
             </Tabs>
             <div class="flex items-center gap-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      aria-label="切换资源栏"
-                      @click="resourcesVisible = !resourcesVisible"
-                    >
+                    <Button size="icon" variant="ghost" class="size-7" aria-label="切换资源栏" @click="resourcesVisible = !resourcesVisible">
                       <FolderOpenOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -339,13 +326,7 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      aria-label="格式化代码"
-                      @click="codeEditor?.formatDocument()"
-                    >
+                    <Button size="icon" variant="ghost" class="size-7" aria-label="格式化代码" @click="codeEditor?.formatDocument()">
                       <CodeWorkingOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -378,32 +359,14 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
             <span class="text-xs font-semibold text-foreground"> 实时预览 </span>
             <div class="flex items-center gap-1.5">
               <div class="inline-flex rounded-md border p-0.5 bg-muted">
-                <Button
-                  size="icon"
-                  :variant="previewDevice === 'desktop' ? 'default' : 'ghost'"
-                  class="size-6"
-                  aria-label="桌面预览"
-                  @click="previewDevice = 'desktop'"
-                >
+                <Button size="icon" :variant="previewDevice === 'desktop' ? 'default' : 'ghost'" class="size-6" aria-label="桌面预览" @click="previewDevice = 'desktop'">
                   <DesktopOutline class="size-3.5" />
                 </Button>
-                <Button
-                  size="icon"
-                  :variant="previewDevice === 'mobile' ? 'default' : 'ghost'"
-                  class="size-6"
-                  aria-label="移动预览"
-                  @click="previewDevice = 'mobile'"
-                >
+                <Button size="icon" :variant="previewDevice === 'mobile' ? 'default' : 'ghost'" class="size-6" aria-label="移动预览" @click="previewDevice = 'mobile'">
                   <PhonePortraitOutline class="size-3.5" />
                 </Button>
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                class="size-7"
-                :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
-                @click="previewDark = !previewDark"
-              >
+              <Button size="icon" variant="ghost" class="size-7" :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'" @click="previewDark = !previewDark">
                 <SunnyOutline v-if="previewDark" class="size-4" />
                 <MoonOutline v-else class="size-4" />
               </Button>

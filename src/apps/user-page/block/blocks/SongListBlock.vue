@@ -110,12 +110,7 @@ function requestStatus(song: SongsInfo) {
           :to="{ name: 'user-songList', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            class="h-7 text-xs text-primary font-medium p-0"
-            @click="navigate"
-          >
+          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
             完整歌单
             <component :is="OpenOutline" class="size-3.5 ml-1" />
           </Button>
@@ -138,13 +133,8 @@ function requestStatus(song: SongsInfo) {
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>歌单加载失败</span>
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-6 px-2 text-xs"
-          @click="load(true)"
-        >
-          <component :is="RefreshOutline" class="size-3 mr-1" />
+        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
+          <component :is="RefreshOutline" class="size-3" />
           重试
         </Button>
       </AlertDescription>
@@ -161,11 +151,7 @@ function requestStatus(song: SongsInfo) {
         class="relative mb-2.5"
       >
         <component :is="SearchOutline" class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-        <Input
-          v-model="search"
-          placeholder="搜索歌曲或歌手"
-          class="h-8 pl-8 text-xs"
-        />
+        <Input v-model="search" placeholder="搜索歌曲或歌手" class="pl-8" />
       </div>
       <Empty
         v-if="filteredSongs.length === 0"

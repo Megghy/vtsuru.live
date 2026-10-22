@@ -11,10 +11,12 @@ interface Props extends PrimitiveProps {
   class?: HTMLAttributes['class']
   loading?: boolean
   disabled?: boolean
+  type?: 'button' | 'submit' | 'reset'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   as: 'button',
+  type: 'button',
   loading: false,
   disabled: false,
 })
@@ -23,6 +25,7 @@ const props = withDefaults(defineProps<Props>(), {
 <template>
   <Primitive
     :as="as"
+    :type="as === 'button' ? type : undefined"
     :as-child="asChild"
     :class="cn(buttonVariants({ variant, size }), props.class)"
     :disabled="disabled || loading"

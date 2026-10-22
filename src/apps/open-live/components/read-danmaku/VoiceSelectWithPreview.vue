@@ -55,7 +55,7 @@ async function onPreview() {
         :model-value="modelValue"
         @update:model-value="$emit('update:modelValue', String($event ?? ''))"
       >
-        <SelectTrigger class="w-full h-9 text-xs">
+        <SelectTrigger class="w-full h-9">
           <SelectValue :placeholder="placeholder ?? '选择音色'" />
         </SelectTrigger>
         <SelectContent class="max-h-60">
@@ -70,13 +70,7 @@ async function onPreview() {
         </SelectContent>
       </Select>
     </div>
-    <Button
-      variant="outline"
-      size="sm"
-      :loading="previewing"
-      class="gap-1 h-9 shrink-0 text-xs"
-      @click="onPreview"
-    >
+    <Button variant="outline" :loading="previewing" class="gap-1 h-9 shrink-0" @click="onPreview">
       <Play20Filled class="size-3.5" />
       试听
     </Button>

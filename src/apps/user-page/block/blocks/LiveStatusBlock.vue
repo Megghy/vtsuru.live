@@ -248,33 +248,11 @@ const hasCover = computed(
           v-if="cfg.showButtons && (model.spaceUrl || model.liveRoomUrl)"
           class="actions"
         >
-          <Button
-            v-if="model.spaceUrl"
-            as="a"
-            variant="outline"
-            size="sm"
-            class="h-8 text-xs font-medium"
-            :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover }"
-            target="_blank"
-            rel="noopener noreferrer"
-            :href="model.spaceUrl"
-            aria-label="打开主播主页（新窗口打开）"
-          >
+          <Button v-if="model.spaceUrl" as="a" variant="outline" class="font-medium" :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover }" target="_blank" rel="noopener noreferrer" :href="model.spaceUrl" aria-label="打开主播主页（新窗口打开）">
             <component :is="HomeOutline" class="size-3.5 mr-1.5" />
             主页
           </Button>
-          <Button
-            v-if="model.liveRoomUrl"
-            as="a"
-            :variant="model.isStreaming ? 'default' : 'outline'"
-            size="sm"
-            class="h-8 text-xs font-medium"
-            :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover && !model.isStreaming }"
-            target="_blank"
-            rel="noopener noreferrer"
-            :href="model.liveRoomUrl"
-            aria-label="打开直播间（新窗口打开）"
-          >
+          <Button v-if="model.liveRoomUrl" as="a" :variant="model.isStreaming ? 'default' : 'outline'" class="font-medium" :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover && !model.isStreaming }" target="_blank" rel="noopener noreferrer" :href="model.liveRoomUrl" aria-label="打开直播间（新窗口打开）">
             <component :is="TvOutline" class="size-3.5 mr-1.5" />
             直播间
           </Button>

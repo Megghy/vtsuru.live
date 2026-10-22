@@ -36,12 +36,7 @@ const levelOptions = [
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input
-          v-model="blockProps.title"
-          maxlength="100"
-          placeholder="可选"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.title" maxlength="100" placeholder="可选" />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">尺寸</label>
@@ -56,7 +51,7 @@ const levelOptions = [
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">纠错等级</label>
         <Select v-model="blockProps.level">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="纠错等级" />
           </SelectTrigger>
           <SelectContent>

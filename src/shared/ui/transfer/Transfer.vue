@@ -164,11 +164,7 @@ function toggleTargetItem(val: string) {
       <div v-if="sourceFilterable" class="p-2 border-b">
         <div class="relative">
           <Search class="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
-          <Input
-            v-model="sourceSearch"
-            placeholder="搜索..."
-            class="h-7 pl-7.5 text-xs"
-          />
+          <Input size="xs" v-model="sourceSearch" placeholder="搜索..." class="pl-7.5" />
         </div>
       </div>
 
@@ -208,22 +204,10 @@ function toggleTargetItem(val: string) {
 
     <!-- 中间操作按钮 -->
     <div class="flex flex-col gap-2 shrink-0">
-      <Button
-        variant="outline"
-        size="icon"
-        class="size-8"
-        :disabled="checkedSourceKeys.length === 0"
-        @click="moveToTarget"
-      >
+      <Button variant="outline" size="icon" class="size-8" :disabled="checkedSourceKeys.length === 0" @click="moveToTarget" >
         <ChevronRight class="size-4" />
       </Button>
-      <Button
-        variant="outline"
-        size="icon"
-        class="size-8"
-        :disabled="checkedTargetKeys.length === 0"
-        @click="moveToSource"
-      >
+      <Button variant="outline" size="icon" class="size-8" :disabled="checkedTargetKeys.length === 0" @click="moveToSource" >
         <ChevronLeft class="size-4" />
       </Button>
     </div>
@@ -245,11 +229,7 @@ function toggleTargetItem(val: string) {
       <div v-if="targetFilterable" class="p-2 border-b">
         <div class="relative">
           <Search class="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
-          <Input
-            v-model="targetSearch"
-            placeholder="搜索已选..."
-            class="h-7 pl-7.5 text-xs"
-          />
+          <Input size="xs" v-model="targetSearch" placeholder="搜索已选..." class="pl-7.5" />
         </div>
       </div>
 

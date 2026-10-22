@@ -54,11 +54,7 @@ const fields = [
 
 <template>
   <div class="space-y-3">
-    <Button
-      size="sm"
-      variant="outline"
-      class="h-8 text-xs w-full"
-      :disabled="disabled || accessories.length >= 12"
+    <Button variant="outline" class="w-full" :disabled="disabled || accessories.length>= 12"
       @click="add"
     >
       增加配件（{{ accessories.length }}/12）
@@ -76,13 +72,7 @@ const fields = [
         </summary>
 
         <div class="mt-3 pt-2.5 border-t space-y-3">
-          <Input
-            :value="a.name"
-            placeholder="配件名称"
-            :disabled="disabled"
-            class="h-8 text-xs"
-            @input="patch(a.id, { name: ($event.target as HTMLInputElement).value })"
-          />
+          <Input :value="a.name" placeholder="配件名称" :disabled="disabled" @input="patch(a.id, { name: ($event.target as HTMLInputElement).value })" />
 
           <PngtuberImageSlot
             :value="a.image"
@@ -116,7 +106,7 @@ const fields = [
             :disabled="disabled"
             @update:model-value="patch(a.id, { visible: $event as any })"
           >
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -129,11 +119,7 @@ const fields = [
           <div class="flex items-center justify-between gap-2 pt-1">
             <div class="flex items-center gap-2">
               <span class="text-xs">置于立绘前方</span>
-              <Switch
-                :checked="a.front"
-                :disabled="disabled"
-                @update:checked="patch(a.id, { front: $event })"
-              />
+              <Switch :checked="a.front" :disabled="disabled" @update:checked="patch(a.id, { front: $event })" />
             </div>
 
             <Popconfirm
@@ -147,12 +133,7 @@ const fields = [
               "
             >
               <template #trigger>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="h-6 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10"
-                  :disabled="disabled"
-                >
+                <Button size="xs" variant="outline" class="h-6 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="disabled">
                   删除配件
                 </Button>
               </template>

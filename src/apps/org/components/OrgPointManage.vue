@@ -101,7 +101,7 @@ onMounted(async () => {
           :model-value="selectedStreamerId ? String(selectedStreamerId) : 'all'"
           @update:model-value="selectedStreamerId = $event === 'all' ? null : Number($event); loadData()"
         >
-          <SelectTrigger class="w-full sm:w-80 h-8 text-xs">
+          <SelectTrigger class="w-full sm:w-80">
             <SelectValue placeholder="选择主播后，可单独查看/修改积分规则与筛选统计" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
@@ -155,13 +155,7 @@ onMounted(async () => {
 
     <!-- 刷新按钮 -->
     <div class="flex items-center">
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-7 text-xs gap-1"
-        :disabled="isLoading"
-        @click="loadData"
-      >
+      <Button variant="outline" class="gap-1" :disabled="isLoading" @click="loadData">
         <component :is="RefreshOutline" class="size-3.5" />
         刷新
       </Button>

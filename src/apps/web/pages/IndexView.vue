@@ -321,15 +321,10 @@ onMounted(() => {
             </div>
 
             <div class="hero-actions">
-              <Button
-                variant="secondary"
-                @click="$router.push('/@Megghy')"
-              >
+              <Button variant="secondary" @click="$router.push('/@Megghy')">
                 展示
               </Button>
-              <Button
-                as-child
-              >
+              <Button as-child>
                 <a
                   href="https://play-live.bilibili.com/details/1698742711771"
                   target="_blank"
@@ -337,10 +332,7 @@ onMounted(() => {
                   幻星平台
                 </a>
               </Button>
-              <Button
-                variant="outline"
-                @click="$router.push({ name: 'about' })"
-              >
+              <Button variant="outline" @click="$router.push({ name: 'about' })">
                 关于
               </Button>
             </div>
@@ -405,15 +397,10 @@ onMounted(() => {
               <li>支持区块组合、拖拽排序、组件级样式与预览</li>
             </ul>
             <div class="section-actions">
-              <Button
-                @click="$router.push({ name: 'manage-userPageBuilder' })"
-              >
+              <Button @click="$router.push({ name: 'manage-userPageBuilder' })">
                 打开编辑器
               </Button>
-              <Button
-                variant="secondary"
-                @click="$router.push('/@Megghy')"
-              >
+              <Button variant="secondary" @click="$router.push('/@Megghy')">
                 查看示例
               </Button>
             </div>
@@ -466,9 +453,7 @@ onMounted(() => {
           </article>
         </div>
         <div class="section-actions centered-actions">
-          <Button
-            as-child
-          >
+          <Button as-child>
             <a
               href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
               target="_blank"
@@ -478,10 +463,7 @@ onMounted(() => {
               客户端安装说明
             </a>
           </Button>
-          <Button
-            variant="outline"
-            as-child
-          >
+          <Button variant="outline" as-child>
             <a
               href="https://github.com/Megghy/vtsuru-fetvher-client"
               target="_blank"
@@ -489,10 +471,7 @@ onMounted(() => {
               客户端代码
             </a>
           </Button>
-          <Button
-            variant="outline"
-            as-child
-          >
+          <Button variant="outline" as-child>
             <a
               href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
               target="_blank"
@@ -524,7 +503,7 @@ onMounted(() => {
 
           <div class="streamers-controls flex items-center gap-1.5">
             <RouterLink to="/live">
-              <Button size="sm" variant="outline" class="h-8 text-xs">直播与关注</Button>
+              <Button variant="outline">直播与关注</Button>
             </RouterLink>
             <button
               type="button"

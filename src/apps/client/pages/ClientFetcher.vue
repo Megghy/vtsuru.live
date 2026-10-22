@@ -37,7 +37,7 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       v-model="activeTab"
       class="w-full fetcher-tabs"
     >
-      <TabsList class="grid w-full max-w-md grid-cols-3 h-8">
+      <TabsList class="grid w-full max-w-md grid-cols-3">
         <TabsTrigger value="connection" class="text-xs gap-1.5">
           <CloudArchive24Filled class="size-3.5" />
           连接与凭据

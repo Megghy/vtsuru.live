@@ -86,15 +86,7 @@ const previewBoxStyle = computed(() => {
     <DialogContent class="max-w-[860px] max-h-[90vh] overflow-hidden flex flex-col p-6">
       <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
         <DialogTitle class="text-base font-semibold">OBS 抽奖组件</DialogTitle>
-        <Button
-          v-if="url"
-          as="a"
-          variant="outline"
-          size="sm"
-          target="_blank"
-          :href="url"
-          class="mr-6 gap-1"
-        >
+        <Button v-if="url" as="a" variant="outline" target="_blank" :href="url" class="mr-6 gap-1">
           <Open24Regular class="size-4" />
           浏览
         </Button>
@@ -161,16 +153,8 @@ const previewBoxStyle = computed(() => {
                 v-else
                 class="flex items-center gap-2"
               >
-                <Input
-                  :model-value="url"
-                  readonly
-                  class="font-mono text-xs"
-                />
-                <Button
-                  size="sm"
-                  class="shrink-0 gap-1.5"
-                  @click="copyToClipboard(url)"
-                >
+                <Input :model-value="url" readonly class="font-mono" />
+                <Button class="shrink-0 gap-1.5" @click="copyToClipboard(url)">
                   <Copy24Regular class="size-4" />
                   复制
                 </Button>

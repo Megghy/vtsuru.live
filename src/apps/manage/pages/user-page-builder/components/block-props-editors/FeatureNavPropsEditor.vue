@@ -48,9 +48,7 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
         <span class="feature-label text-xs text-foreground truncate flex-1">
           {{ USER_FEATURE_DEFINITION_MAP[item.key].label }}
         </span>
-        <Switch
-          :checked="item.hidden !== true"
-          @update:checked="(value) => setVisible(item, value)"
+        <Switch :checked="item.hidden !== true" @update:checked="(value) => setVisible(item, value)"
         />
       </div>
     </VueDraggable>

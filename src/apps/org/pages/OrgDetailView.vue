@@ -130,13 +130,7 @@ function openRename() {
         <CardContent class="p-4 space-y-4">
           <div class="flex items-center justify-between gap-3 flex-wrap">
             <div class="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 rounded-full text-muted-foreground hover:text-foreground"
-                aria-label="返回"
-                @click="router.push({ name: 'org-index' })"
-              >
+              <Button variant="ghost" size="icon" class="size-8 rounded-full text-muted-foreground hover:text-foreground" aria-label="返回" @click="router.push({ name: 'org-index' })">
                 <component :is="ArrowLeft20Regular" class="size-4" />
               </Button>
 
@@ -149,14 +143,7 @@ function openRename() {
                   <h1 class="text-base font-semibold text-foreground truncate m-0">
                     {{ orgName || `组织 ${orgId}` }}
                   </h1>
-                  <Button
-                    v-if="isOrgAdmin"
-                    variant="ghost"
-                    size="icon"
-                    class="size-6 rounded-full text-muted-foreground hover:text-foreground"
-                    title="重命名组织"
-                    @click="openRename"
-                  >
+                  <Button v-if="isOrgAdmin" variant="ghost" size="icon" class="size-6 rounded-full text-muted-foreground hover:text-foreground" title="重命名组织" @click="openRename">
                     <component :is="Edit20Regular" class="size-3.5" />
                   </Button>
                 </div>
@@ -165,12 +152,7 @@ function openRename() {
             </div>
 
             <div class="flex items-center gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                class="h-8 text-xs"
-                @click="router.push({ name: 'manage-index' })"
-              >
+              <Button variant="outline" @click="router.push({ name: 'manage-index' })">
                 返回控制台
               </Button>
 
@@ -182,11 +164,7 @@ function openRename() {
                 @positive-click="leaveOrg"
               >
                 <template #trigger>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    class="h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 gap-1"
-                  >
+                  <Button variant="outline" class="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1">
                     <component :is="SignOut20Regular" class="size-3.5" />
                     退出组织
                   </Button>
@@ -202,11 +180,7 @@ function openRename() {
                 @positive-click="dissolveOrg"
               >
                 <template #trigger>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    class="h-8 text-xs text-destructive border-destructive/30 hover:bg-destructive/10 gap-1"
-                  >
+                  <Button variant="outline" class="text-destructive border-destructive/30 hover:bg-destructive/10 gap-1">
                     <component :is="TrashOutline" class="size-3.5" />
                     解散组织
                   </Button>
@@ -214,12 +188,7 @@ function openRename() {
                 确定解散该组织吗？此操作不可恢复，将删除所有成员、主播、邀请与审计记录。
               </Popconfirm>
 
-              <Button
-                size="sm"
-                class="h-8 text-xs gap-1"
-                :disabled="loadingOrgInfo || streamersStore.loading.value"
-                @click="reload"
-              >
+              <Button class="gap-1" :disabled="loadingOrgInfo || streamersStore.loading.value" @click="reload">
                 <component :is="ArrowSync20Regular" class="size-3.5" />
                 刷新
               </Button>
@@ -309,29 +278,14 @@ function openRename() {
 
           <div class="space-y-1 text-xs">
             <label class="font-medium text-foreground text-xs">新名称</label>
-            <Input
-              v-model="newOrgName"
-              placeholder="请输入新名称"
-              class="h-8 text-xs"
-              @keydown.enter.prevent="renameOrg"
-            />
+            <Input v-model="newOrgName" placeholder="请输入新名称" @keydown.enter.prevent="renameOrg" />
           </div>
 
           <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              class="text-xs"
-              @click="showRenameModal = false"
-            >
+            <Button variant="outline" @click="showRenameModal = false">
               取消
             </Button>
-            <Button
-              size="sm"
-              class="text-xs"
-              :disabled="renaming"
-              @click="renameOrg"
-            >
+            <Button :disabled="renaming" @click="renameOrg">
               {{ renaming ? '保存中...' : '确定' }}
             </Button>
           </DialogFooter>

@@ -16,11 +16,7 @@ defineProps<{
   <PropsGrid>
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">{{ label }}文字</label>
-      <Input
-        v-model="action.label"
-        placeholder="留空则不显示"
-        class="h-8 text-xs"
-      />
+      <Input v-model="action.label" placeholder="留空则不显示" />
     </div>
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">{{ label }}目标类型</label>
@@ -28,7 +24,7 @@ defineProps<{
         :model-value="getNavigationTargetType(action)"
         @update:model-value="(value) => setNavigationTargetType(action, value as any)"
       >
-        <SelectTrigger class="h-8 text-xs">
+        <SelectTrigger>
           <SelectValue :placeholder="`${label}目标类型`" />
         </SelectTrigger>
         <SelectContent>
@@ -43,7 +39,7 @@ defineProps<{
         v-if="action.page"
         v-model="action.page"
       >
-        <SelectTrigger class="h-8 text-xs">
+        <SelectTrigger>
           <SelectValue placeholder="选择目标页面" />
         </SelectTrigger>
         <SelectContent>
@@ -56,12 +52,7 @@ defineProps<{
           </SelectItem>
         </SelectContent>
       </Select>
-      <Input
-        v-else
-        v-model="action.url"
-        placeholder="https://..."
-        class="h-8 text-xs"
-      />
+      <Input v-else v-model="action.url" placeholder="https://..." />
     </div>
   </PropsGrid>
 </template>

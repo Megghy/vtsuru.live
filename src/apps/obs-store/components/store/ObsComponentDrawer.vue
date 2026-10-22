@@ -100,12 +100,7 @@ const statusLabel = computed(() => props.component?.status === 'beta' ? '内测'
             v-if="props.component?.managePath"
             class="flex items-center gap-2"
           >
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs gap-1.5"
-              as-child
-            >
+            <Button variant="secondary" class="gap-1.5" as-child>
               <a
                 :href="props.component.managePath"
                 target="_blank"

@@ -350,20 +350,10 @@ function clearCurrentTheme() {
             <div class="flex items-center justify-between">
               <span class="scope-title">配置作用范围：</span>
               <div class="grid grid-cols-2 gap-1 bg-muted p-0.5 rounded-lg">
-                <Button
-                  size="sm"
-                  :variant="currentScope === 'global' ? 'default' : 'ghost'"
-                  class="h-7 text-xs px-2.5"
-                  @click="currentScope = 'global'"
-                >
+                <Button :variant="currentScope === 'global' ? 'default' : 'ghost'" class="px-2.5" @click="currentScope = 'global'">
                   全局通用
                 </Button>
-                <Button
-                  size="sm"
-                  :variant="currentScope === 'page' ? 'default' : 'ghost'"
-                  class="h-7 text-xs px-2.5"
-                  @click="currentScope = 'page'"
-                >
+                <Button :variant="currentScope === 'page' ? 'default' : 'ghost'" class="px-2.5" @click="currentScope = 'page'">
                   本页专属
                 </Button>
               </div>
@@ -386,23 +376,10 @@ function clearCurrentTheme() {
               <span>智能提取配色</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-6 px-2 text-xs"
-                :disabled="isExtracting || !avatarUrl"
-                @click="runExtractFromUrl(avatarUrl, '头像')"
-              >
+              <Button variant="outline" class="h-6 px-2" :disabled="isExtracting || !avatarUrl" @click="runExtractFromUrl(avatarUrl, '头像')">
                 从头像提取
               </Button>
-              <Button
-                v-if="currentBackgroundImageUrl"
-                size="sm"
-                variant="outline"
-                class="h-6 px-2 text-xs"
-                :disabled="isExtracting"
-                @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')"
-              >
+              <Button v-if="currentBackgroundImageUrl" variant="outline" class="h-6 px-2" :disabled="isExtracting" @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')">
                 从壁纸提取
               </Button>
             </div>
@@ -422,19 +399,10 @@ function clearCurrentTheme() {
                 <span>主色：{{ extractedResult.primaryColor }}</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-6 px-2 text-xs"
-                  @click="applyExtracted('light')"
-                >
+                <Button variant="outline" class="h-6 px-2" @click="applyExtracted('light')">
                   套用浅色
                 </Button>
-                <Button
-                  size="sm"
-                  class="h-6 px-2 text-xs"
-                  @click="applyExtracted('dark')"
-                >
+                <Button class="h-6 px-2" @click="applyExtracted('dark')">
                   套用深色
                 </Button>
               </div>
@@ -493,7 +461,7 @@ function clearCurrentTheme() {
 
         <!-- 三大选项卡配置 -->
         <Tabs v-model="activeTab" class="w-full">
-          <TabsList class="grid grid-cols-3 w-full h-8">
+          <TabsList class="grid grid-cols-3 w-full">
             <TabsTrigger value="colors" class="text-xs">色彩与模式</TabsTrigger>
             <TabsTrigger value="background" class="text-xs">壁纸与背景</TabsTrigger>
             <TabsTrigger value="advanced" class="text-xs">排版与质感</TabsTrigger>
@@ -514,7 +482,7 @@ function clearCurrentTheme() {
             <div class="flex flex-col gap-1">
               <label class="text-xs text-muted-foreground">主题模式</label>
               <Select v-model="themeMode">
-                <SelectTrigger class="h-8 text-xs">
+                <SelectTrigger>
                   <SelectValue placeholder="主题模式" />
                 </SelectTrigger>
                 <SelectContent class="text-xs">
@@ -547,12 +515,7 @@ function clearCurrentTheme() {
                 <span class="text-muted-foreground">
                   {{ editor.settings.value.customCss ? '已配置全局 CSS' : '未配置全局 CSS' }}
                 </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-7 text-xs"
-                  @click="cssEditorVisible = true"
-                >
+                <Button variant="outline" @click="cssEditorVisible = true">
                   <component :is="CodeSlashOutline" class="size-3.5 mr-1" />
                   编辑 CSS
                 </Button>
@@ -569,21 +532,13 @@ function clearCurrentTheme() {
           cancel-text="取消"
           @confirm="clearCurrentTheme"
         >
-          <Button
-            size="sm"
-            variant="destructive"
-            class="h-8 text-xs"
-          >
+          <Button variant="destructive">
             <component :is="TrashOutline" class="size-3.5 mr-1" />
             {{ isPageScope ? '重置为继承全局' : '清空当前主题' }}
           </Button>
         </Popconfirm>
 
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          @click="show = false"
-        >
+        <Button @click="show = false">
           <component :is="CheckmarkOutline" class="size-3.5 mr-1" />
           完成
         </Button>

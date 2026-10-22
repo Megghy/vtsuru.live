@@ -229,20 +229,10 @@ onMounted(() => {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Input
-              v-model="token"
-              type="password"
-              placeholder="请输入Token"
-              class="h-9 text-xs"
-              @keyup.enter="login"
-            />
+            <Input v-model="token" type="password" placeholder="请输入Token" class="h-9" @keyup.enter="login" />
           </div>
 
-          <Button
-            class="w-full h-9 text-xs font-medium"
-            :disabled="isLoadingAccount"
-            @click="login"
-          >
+          <Button class="w-full h-9 font-medium" :disabled="isLoadingAccount" @click="login">
             登陆
           </Button>
         </CardContent>
@@ -469,13 +459,7 @@ onMounted(() => {
                 {{ cookieStatusText }}
               </Badge>
             </div>
-            <Button
-              v-if="cookieStatusType !== 'success'"
-              size="xs"
-              variant="outline"
-              class="w-full h-6 text-[10px]"
-              @click="goCookieManagement"
-            >
+            <Button v-if="cookieStatusType !== 'success'" size="xs" variant="outline" class="w-full h-6 text-[10px]" @click="goCookieManagement">
               前往处理
             </Button>
           </div>

@@ -137,12 +137,7 @@ const SEARCH_HELP = [
           </Tooltip>
         </TooltipProvider>
 
-        <Input
-          ref="searchInputRef"
-          v-model="dashboard.search"
-          placeholder="搜索（Ctrl+F）"
-          class="toolbar__search-input h-7 text-xs pl-8 pr-6"
-        />
+        <Input size="xs" ref="searchInputRef" v-model="dashboard.search" placeholder="搜索（Ctrl+F）" class="toolbar__search-input pl-8 pr-6" />
 
         <button
           v-if="dashboard.search"
@@ -157,11 +152,7 @@ const SEARCH_HELP = [
       <!-- 历史筛选：Popover 按钮 -->
       <Popover>
         <PopoverTrigger as-child>
-          <Button
-            size="xs"
-            :variant="range ? 'default' : 'ghost'"
-            class="toolbar__history-btn h-7 text-xs gap-1"
-          >
+          <Button size="xs" :variant="range ? 'default' : 'ghost'" class="toolbar__history-btn gap-1">
             <History24Regular class="size-3.5" />
             <span>{{ range ? '已选历史' : '历史回溯' }}</span>
             <Dismiss16Regular
@@ -175,28 +166,13 @@ const SEARCH_HELP = [
         <PopoverContent align="start" class="w-80 p-3 space-y-3">
           <div class="font-semibold text-xs text-foreground">历史事件回溯筛选</div>
           <div class="grid grid-cols-3 gap-1.5">
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px]"
-              @click="applyQuickRange(3600_000)"
-            >
+            <Button size="xs" variant="outline" class="h-6 text-[11px]" @click="applyQuickRange(3600_000)">
               最近 1 小时
             </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px]"
-              @click="applyTodayRange"
-            >
+            <Button size="xs" variant="outline" class="h-6 text-[11px]" @click="applyTodayRange">
               今天
             </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px]"
-              @click="applyQuickRange(7 * 86400_000)"
-            >
+            <Button size="xs" variant="outline" class="h-6 text-[11px]" @click="applyQuickRange(7 * 86400_000)">
               最近 7 天
             </Button>
           </div>
@@ -204,32 +180,22 @@ const SEARCH_HELP = [
           <div class="space-y-1.5 pt-1 border-t">
             <div class="text-[11px] text-muted-foreground">自定义时间范围</div>
             <div class="grid grid-cols-2 gap-1.5">
-              <input
+              <Input
                 v-model="customStart"
                 type="datetime-local"
-                class="h-7 text-[11px] px-1.5 rounded border border-input bg-background"
+                size="xs"
               />
-              <input
+              <Input
                 v-model="customEnd"
                 type="datetime-local"
-                class="h-7 text-[11px] px-1.5 rounded border border-input bg-background"
+                size="xs"
               />
             </div>
             <div class="flex items-center justify-between pt-1">
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-6 text-[11px] text-muted-foreground"
-                :disabled="!range"
-                @click="range = null"
-              >
+              <Button size="xs" variant="ghost" class="h-6 text-[11px] text-muted-foreground" :disabled="!range" @click="range = null">
                 清除时间筛选
               </Button>
-              <Button
-                size="xs"
-                class="h-6 text-[11px]"
-                @click="applyCustomRange"
-              >
+              <Button size="xs" class="h-6 text-[11px]" @click="applyCustomRange">
                 应用
               </Button>
             </div>
@@ -455,12 +421,7 @@ const SEARCH_HELP = [
 
       <Popover>
         <PopoverTrigger as-child>
-          <Button
-            variant="ghost"
-            size="xs"
-            class="h-7 w-7 p-0"
-            aria-label="布局"
-          >
+          <Button variant="ghost" size="xs" class="w-7 p-0" aria-label="布局">
             <Board16Regular class="size-4 text-muted-foreground" />
           </Button>
         </PopoverTrigger>

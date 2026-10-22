@@ -249,19 +249,12 @@ async function translateTask(task: ImageTask) {
     <CardHeader class="flex flex-row items-center justify-between pb-4">
       <CardTitle class="text-base font-semibold">文字识别 (OCR)</CardTitle>
       <div class="flex items-center gap-2">
-        <Button
-          size="sm"
-          variant="outline"
-          class="h-8 text-xs"
-          :disabled="tasks.every((t) => !t.lines.length)"
+        <Button variant="outline" :disabled="tasks.every((t) => !t.lines.length)"
           @click="copyAll"
         >
           复制全部
         </Button>
-        <Button
-          size="sm"
-          class="h-8 text-xs"
-          :loading="tasks.some((t) => t.processing)"
+        <Button :loading="tasks.some((t) => t.processing)"
           @click="recognizeAll"
         >
           {{ modelLoading ? '加载模型中...' : '全部识别' }}
@@ -321,29 +314,13 @@ async function translateTask(task: ImageTask) {
             class="task-panel"
           >
             <div class="flex items-center gap-2 task-toolbar">
-              <Button
-                size="sm"
-                class="h-8 text-xs"
-                :loading="task.processing"
-                @click="recognizeOne(task)"
-              >
+              <Button :loading="task.processing" @click="recognizeOne(task)">
                 {{ task.processing ? (modelLoading ? '加载模型...' : '识别中...') : '开始识别' }}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-8 text-xs"
-                :disabled="!task.fullText"
-                @click="copyOne(task)"
-              >
+              <Button variant="outline" :disabled="!task.fullText" @click="copyOne(task)">
                 复制文字
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                class="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                @click="removeTask(task.id)"
-              >
+              <Button variant="ghost" class="text-destructive hover:text-destructive hover:bg-destructive/10" @click="removeTask(task.id)">
                 移除
               </Button>
             </div>
@@ -385,7 +362,7 @@ async function translateTask(task: ImageTask) {
                       翻译为
                     </span>
                     <Select v-model="targetLang">
-                      <SelectTrigger class="h-7 w-[100px] text-xs">
+                      <SelectTrigger size="xs" class="w-[100px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -402,7 +379,7 @@ async function translateTask(task: ImageTask) {
                       使用
                     </span>
                     <Select v-model="mode">
-                      <SelectTrigger class="h-7 w-[110px] text-xs">
+                      <SelectTrigger size="xs" class="w-[110px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -415,14 +392,7 @@ async function translateTask(task: ImageTask) {
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      class="h-7 px-2 text-xs"
-                      :loading="translating"
-                      :disabled="!task.fullText"
-                      @click="translateTask(task)"
-                    >
+                    <Button size="xs" variant="outline" class="px-2" :loading="translating" :disabled="!task.fullText" @click="translateTask(task)">
                       翻译
                     </Button>
                   </div>

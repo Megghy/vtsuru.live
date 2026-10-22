@@ -149,32 +149,16 @@ const hasTrim = computed(() => start.value != null || end.value != null)
     </div>
 
     <div class="trim-actions">
-      <Button
-        size="sm"
-        variant="outline"
-        class="h-6 px-2 text-xs"
-        @click="setStartHere"
-      >
+      <Button variant="outline" class="h-6 px-2" @click="setStartHere">
         设为入点
       </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        class="h-6 px-2 text-xs"
-        @click="setEndHere"
-      >
+      <Button variant="outline" class="h-6 px-2" @click="setEndHere">
         设为出点
       </Button>
       <span class="trim-info text-xs text-muted-foreground">
         截取 {{ clock(startVal) }} - {{ clock(endVal) }}（{{ clock(endVal - startVal) }}）
       </span>
-      <Button
-        v-if="hasTrim"
-        size="sm"
-        variant="ghost"
-        class="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
-        @click="reset"
-      >
+      <Button v-if="hasTrim" variant="ghost" class="h-6 px-2 text-muted-foreground hover:text-foreground" @click="reset">
         重置
       </Button>
     </div>

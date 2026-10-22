@@ -65,18 +65,14 @@ function test() {
 
     <div class="space-y-1">
       <span class="text-xs text-muted-foreground">频道</span>
-      <Input
-        v-model="action.actionConfig.pngtuberChannel"
-        placeholder="default"
-        class="h-8 text-xs"
-      />
+      <Input v-model="action.actionConfig.pngtuberChannel" placeholder="default" />
     </div>
 
     <div class="space-y-1">
       <span class="text-xs text-muted-foreground">表情 ID</span>
       <div v-if="expressionOptions.length > 0">
         <Select v-model="action.actionConfig.pngtuberExpressionId">
-          <SelectTrigger class="h-8 text-xs w-full">
+          <SelectTrigger class="w-full">
             <SelectValue placeholder="选择已加载表情或填写表情 ID" />
           </SelectTrigger>
           <SelectContent>
@@ -92,11 +88,7 @@ function test() {
         </Select>
       </div>
       <div v-else>
-        <Input
-          v-model="action.actionConfig.pngtuberExpressionId"
-          placeholder="填写表情 ID"
-          class="h-8 text-xs"
-        />
+        <Input v-model="action.actionConfig.pngtuberExpressionId" placeholder="填写表情 ID" />
       </div>
     </div>
 
@@ -122,11 +114,7 @@ function test() {
       </RouterLink>
     </div>
 
-    <Button
-      class="h-8 text-xs w-full"
-      :disabled="testing || !action.actionConfig.pngtuberExpressionId?.trim()"
-      @click="test"
-    >
+    <Button class="w-full" :disabled="testing || !action.actionConfig.pngtuberExpressionId?.trim()" @click="test">
       {{ testing ? '切换中...' : '测试切换表情' }}
     </Button>
   </div>

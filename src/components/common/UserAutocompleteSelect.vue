@@ -4,6 +4,7 @@ import { Check, ChevronsUpDown, Loader2, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import { getApiUserAutocomplete } from '@/api/generated/user/user'
+import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 export interface SelectOption {
@@ -149,11 +150,11 @@ watch(
       </PopoverTrigger>
       <PopoverContent class="w-[320px] p-2 text-xs" align="start">
         <div class="relative mb-2">
-          <input
-            type="text"
-            class="w-full h-7 px-2 pr-7 text-xs rounded border border-input bg-background placeholder:text-muted-foreground outline-none focus:ring-1 focus:ring-ring"
+          <Input
+            size="xs"
+            class="pr-7"
             :placeholder="placeholder || '输入B站UID/用户名搜索...'"
-            :value="searchInput"
+            :model-value="searchInput"
             @input="onSearchInput"
           />
           <Loader2 v-if="loading" class="absolute right-2 top-1.5 size-3.5 animate-spin text-muted-foreground" />

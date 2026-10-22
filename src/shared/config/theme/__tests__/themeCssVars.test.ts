@@ -15,6 +15,12 @@ describe('getThemeCssVars', () => {
     expect(dark['--background']).toBe('#09090b')
     expect(dark['--foreground']).toBe('#fafafa')
 
+    // 统一控件尺寸变量验证
+    expect(light['--control-h-xs']).toBe('28px')
+    expect(light['--control-h-sm']).toBe('32px')
+    expect(light['--control-h-default']).toBe('36px')
+    expect(light['--control-h-lg']).toBe('40px')
+
     // 不应该有旧的 Naive UI 变量
     expect(Object.keys(light).some((key) => key.startsWith('--n-'))).toBe(false)
   })
@@ -25,11 +31,11 @@ describe('getThemeCssVars', () => {
     const light = getThemeCssVars(lightTokens)
     const dark = getThemeCssVars(darkTokens)
 
-    // Manage light: canvas=#f4f4f5, surface=#ffffff, muted(surfaceHover)=#f4f4f5
+    // Manage light: canvas=#f4f4f5, surface=#ffffff, muted(surfaceHover)=#fafafa
     expect([light['--background'], light['--card'], light['--muted']]).toEqual([
       '#f4f4f5',
       '#ffffff',
-      '#f4f4f5',
+      '#fafafa',
     ])
 
     // Manage dark: canvas=#18181b, surface=#27272a, muted(surfaceHover)=#3f3f46

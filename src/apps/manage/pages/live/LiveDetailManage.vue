@@ -134,11 +134,7 @@ onBeforeUnmount(async () => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="outline"
-            @click="router.push({ name: 'manage-live' })"
-          >
+          <Button size="xs" variant="outline" @click="router.push({ name: 'manage-live' })">
             <component
               :is="ArrowLeft24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -249,11 +245,7 @@ onBeforeUnmount(async () => {
         未找到对应场次的直播数据
       </div>
       <div class="mt-3">
-        <Button
-          size="xs"
-          variant="brand"
-          @click="loadInitialData"
-        >
+        <Button size="xs" variant="brand" @click="loadInitialData">
           重新加载
         </Button>
       </div>

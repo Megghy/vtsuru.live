@@ -22,11 +22,7 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">边框标题</label>
-        <Input
-          v-model="blockProps.borderTitle"
-          placeholder="例如：导航"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.borderTitle" placeholder="例如：导航" />
       </div>
       <div
         v-if="propertyAvailable('borderTitleAlign')"
@@ -34,7 +30,7 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
       >
         <label class="text-xs text-muted-foreground">标题对齐</label>
         <Select v-model="blockProps.borderTitleAlign">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="标题对齐" />
           </SelectTrigger>
           <SelectContent>
@@ -47,7 +43,7 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">排列方向</label>
         <Select v-model="blockProps.direction">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="排列方向" />
           </SelectTrigger>
           <SelectContent>
@@ -80,10 +76,7 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
-                <Input
-                  v-model="item.label"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.label" />
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">跳转类型</label>
@@ -91,7 +84,7 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                   :model-value="getNavigationTargetType(item)"
                   @update:model-value="(value) => setNavigationTargetType(item, value as any)"
                 >
-                  <SelectTrigger class="h-8 text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="跳转类型" />
                   </SelectTrigger>
                   <SelectContent>
@@ -107,7 +100,7 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                   v-if="item.page"
                   v-model="item.page"
                 >
-                  <SelectTrigger class="h-8 text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="选择内部页面" />
                   </SelectTrigger>
                   <SelectContent>
@@ -120,12 +113,7 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <Input
-                  v-else-if="!item.back"
-                  v-model="item.url"
-                  placeholder="https://..."
-                  class="h-8 text-xs"
-                />
+                <Input v-else-if="!item.back" v-model="item.url" placeholder="https://..." />
                 <span
                   v-else
                   class="text-xs text-muted-foreground"

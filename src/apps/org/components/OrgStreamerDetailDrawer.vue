@@ -156,7 +156,7 @@ function getHeatmapColor(val: number) {
                   :model-value="String(d.editStatus.value ?? 1)"
                   @update:model-value="d.editStatus.value = Number($event)"
                 >
-                  <SelectTrigger class="w-40 h-8 text-xs">
+                  <SelectTrigger class="w-40">
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
                   <SelectContent>
@@ -176,11 +176,7 @@ function getHeatmapColor(val: number) {
                 />
               </div>
 
-              <Button
-                size="sm"
-                class="h-7 text-xs"
-                :disabled="d.saving.value"
-                @click="d.save(() => emit('saved'))"
+              <Button :disabled="d.saving.value" @click="d.save(() => emit('saved'))"
               >
                 {{ d.saving.value ? '保存中...' : '保存设置' }}
               </Button>
@@ -238,13 +234,7 @@ function getHeatmapColor(val: number) {
                 </div>
 
                 <div v-if="d.hasMore.value" class="pt-3 flex justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    class="h-7 text-xs"
-                    :disabled="d.loading.value"
-                    @click="d.loadMore"
-                  >
+                  <Button variant="outline" :disabled="d.loading.value" @click="d.loadMore">
                     {{ d.loading.value ? '加载中...' : '加载更多' }}
                   </Button>
                 </div>

@@ -32,12 +32,7 @@ const showModel = computed({
     <DialogContent class="max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col p-6">
       <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
         <DialogTitle class="text-base font-semibold">抽奖结果</DialogTitle>
-        <Button
-          variant="destructive"
-          size="sm"
-          class="mr-6"
-          @click="emit('clear')"
-        >
+        <Button variant="destructive" class="mr-6" @click="emit('clear')">
           清空
         </Button>
       </DialogHeader>
@@ -54,12 +49,7 @@ const showModel = computed({
           >
             <CardHeader class="py-2 px-3 border-b flex flex-row items-center justify-between bg-muted/30">
               <span class="text-xs text-muted-foreground font-mono">{{ formatTime(item.time) }}</span>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-7 text-xs text-destructive hover:bg-destructive/10"
-                @click="emit('remove', item.time)"
-              >
+              <Button variant="ghost" class="text-destructive hover:bg-destructive/10" @click="emit('remove', item.time)">
                 删除
               </Button>
             </CardHeader>

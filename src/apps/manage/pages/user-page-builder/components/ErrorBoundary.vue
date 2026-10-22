@@ -32,7 +32,7 @@ onErrorCaptured((e) => {
       {{ capturedError.message || String(capturedError) }}
     </div>
     <div>
-      <Button variant="outline" size="sm" @click="reset"> 重试 </Button>
+      <Button variant="outline" @click="reset"> 重试 </Button>
     </div>
   </div>
   <slot v-else />

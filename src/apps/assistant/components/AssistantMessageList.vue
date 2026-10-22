@@ -237,23 +237,11 @@ function formatTokens(value?: number): string {
               :disabled="busy"
             />
             <div class="msg-editor__actions flex items-center justify-end gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                class="h-7 text-xs flex items-center gap-1"
-                :disabled="busy || !canSubmitEdit(msg)"
-                @click="submitEditing(msg)"
-              >
+              <Button variant="outline" class="flex items-center gap-1" :disabled="busy || !canSubmitEdit(msg)" @click="submitEditing(msg)">
                 <component :is="Checkmark16Regular" class="size-3.5" />
                 保存
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-7 text-xs flex items-center gap-1"
-                :disabled="busy"
-                @click="cancelEditing(msg)"
-              >
+              <Button variant="ghost" class="flex items-center gap-1" :disabled="busy" @click="cancelEditing(msg)">
                 <component :is="Dismiss16Regular" class="size-3.5" />
                 取消
               </Button>
@@ -290,12 +278,7 @@ function formatTokens(value?: number): string {
           >
             <Tooltip v-if="msg.text">
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
-                  @click="copyMessage(msg)"
-                >
+                <Button variant="ghost" size="icon" class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground" @click="copyMessage(msg)">
                   <component :is="Copy16Regular" class="size-3" />
                 </Button>
               </TooltipTrigger>
@@ -304,13 +287,7 @@ function formatTokens(value?: number): string {
 
             <Tooltip v-if="msg.role === 'user'">
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
-                  :disabled="busy || !canEditUser(msg)"
-                  @click="startEditing(msg)"
-                >
+                <Button variant="ghost" size="icon" class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground" :disabled="busy || !canEditUser(msg)" @click="startEditing(msg)">
                   <component :is="Edit16Regular" class="size-3" />
                 </Button>
               </TooltipTrigger>
@@ -319,13 +296,7 @@ function formatTokens(value?: number): string {
 
             <Tooltip v-if="msg.role === 'assistant'">
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
-                  :disabled="busy"
-                  @click="emit('rerun', msg.id)"
-                >
+                <Button variant="ghost" size="icon" class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground" :disabled="busy" @click="emit('rerun', msg.id)">
                   <component :is="ArrowClockwise16Regular" class="size-3" />
                 </Button>
               </TooltipTrigger>
@@ -338,12 +309,7 @@ function formatTokens(value?: number): string {
             class="msg-error flex items-center justify-between gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs"
           >
             <span class="msg-error__text flex-1">{{ msg.error ?? '出错了' }}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              class="h-6 text-[11px] border-destructive/30 hover:bg-destructive/20"
-              @click="emit('retry', msg.id)"
-            >
+            <Button variant="outline" class="h-6 text-[11px] border-destructive/30 hover:bg-destructive/20" @click="emit('retry', msg.id)">
               重试
             </Button>
           </div>
@@ -360,24 +326,13 @@ function formatTokens(value?: number): string {
               @positive-click="emit('confirm-all', msg.id)"
             >
               <template #trigger>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  class="h-7 text-xs border-primary text-primary"
-                >
+                <Button variant="outline" class="border-primary text-primary">
                   全部执行 {{ batchActions(msg).length }} 项
                 </Button>
               </template>
               其中包含高风险操作，确认全部执行？
             </Popconfirm>
-            <Button
-              v-else
-              variant="outline"
-              size="sm"
-              class="h-7 text-xs border-primary text-primary"
-              :disabled="batchRunning(msg)"
-              @click="emit('confirm-all', msg.id)"
-            >
+            <Button v-else variant="outline" class="border-primary text-primary" :disabled="batchRunning(msg)" @click="emit('confirm-all', msg.id)">
               全部执行 {{ batchActions(msg).length }} 项
             </Button>
           </div>

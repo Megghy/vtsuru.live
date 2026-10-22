@@ -246,34 +246,16 @@ function toggleFilterType(val: string, checked: boolean) {
           {{ giftWindow.isGiftWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
         </Badge>
 
-        <Button
-          size="sm"
-          variant="secondary"
-          class="h-8 text-xs"
-          :class="giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'"
-          @click="giftWindow.isGiftWindowOpen ? giftWindow.closeWindow() : giftWindow.openWindow()"
-        >
+        <Button variant="secondary" :class="giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'" @click="giftWindow.isGiftWindowOpen ? giftWindow.closeWindow() : giftWindow.openWindow()">
           {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '打开浮窗' }}
         </Button>
 
         <div class="inline-flex rounded-md shadow-sm">
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs gap-1 rounded-r-none border-r border-border"
-            :disabled="!giftWindow.isGiftWindowOpen"
-            @click="giftWindow.sendTestGift()"
-          >
+          <Button variant="secondary" class="gap-1 rounded-r-none border-r border-border" :disabled="!giftWindow.isGiftWindowOpen" @click="giftWindow.sendTestGift()">
             <Send24Filled class="size-3.5 text-sky-500" />
             测试礼物
           </Button>
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs gap-1 rounded-l-none"
-            :disabled="!giftWindow.isGiftWindowOpen"
-            @click="giftWindow.clearGifts()"
-          >
+          <Button variant="secondary" class="gap-1 rounded-l-none" :disabled="!giftWindow.isGiftWindowOpen" @click="giftWindow.clearGifts()">
             <Delete24Regular class="size-3.5 text-amber-500" />
             清空
           </Button>
@@ -287,7 +269,7 @@ function toggleFilterType(val: string, checked: boolean) {
       class="w-full gift-tabs"
       @update:model-value="onTabChange"
     >
-      <TabsList class="grid w-full max-w-xl grid-cols-5 h-8">
+      <TabsList class="grid w-full max-w-xl grid-cols-5">
         <TabsTrigger value="thank" class="text-xs gap-1.5">
           <Megaphone24Filled class="size-3.5" />
           下播感谢
@@ -315,12 +297,7 @@ function toggleFilterType(val: string, checked: boolean) {
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
             <CardTitle class="text-sm font-semibold">本场打赏前 50 ➕ 在场舰长名单</CardTitle>
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-7 text-xs gap-1 text-primary"
-              @click="copyThankText"
-            >
+            <Button variant="secondary" class="gap-1 text-primary" @click="copyThankText">
               <Copy24Regular class="size-3.5" />
               一键复制感谢文案
             </Button>
@@ -701,12 +678,7 @@ function toggleFilterType(val: string, checked: boolean) {
             </div>
 
             <div class="flex justify-end pt-1">
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-7 text-xs gap-1.5"
-                @click="resetWindowPosition"
-              >
+              <Button variant="secondary" class="gap-1.5" @click="resetWindowPosition">
                 <ArrowReset24Regular class="size-3.5" />
                 重置至默认坐标
               </Button>
@@ -954,7 +926,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   :model-value="selectedHistoryLiveId || undefined"
                   @update:model-value="onHistoryLiveChange"
                 >
-                  <SelectTrigger class="h-8 text-xs w-full">
+                  <SelectTrigger class="w-full">
                     <SelectValue placeholder="选择已结束的直播场次" />
                   </SelectTrigger>
                   <SelectContent>
@@ -970,13 +942,7 @@ function toggleFilterType(val: string, checked: boolean) {
                 </Select>
               </div>
 
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-8 text-xs gap-1.5"
-                :disabled="isHistoryLoading"
-                @click="loadHistory"
-              >
+              <Button variant="secondary" class="gap-1.5" :disabled="isHistoryLoading" @click="loadHistory">
                 <ArrowSync24Filled class="size-3.5" :class="{ 'animate-spin': isHistoryLoading }" />
                 刷新场次
               </Button>

@@ -42,13 +42,7 @@ const { pageEntries } = usePageEntries(editor)
       <TooltipProvider v-if="props.collapsible">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="size-7 p-0"
-              :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'"
-              @click="emit('toggle-collapse')"
-            >
+            <Button variant="ghost" class="size-7 p-0" :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'" @click="emit('toggle-collapse')">
               <component :is="props.collapsed ? ChevronForwardOutline : ChevronBackOutline" class="size-3.5" />
             </Button>
           </TooltipTrigger>
@@ -79,13 +73,7 @@ const { pageEntries } = usePageEntries(editor)
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="sm"
-                    class="size-7 p-0 rounded-full"
-                    :variant="editor.currentKey.value === 'home' ? 'default' : 'ghost'"
-                    aria-label="主页"
-                    @click="editor.currentKey.value = 'home'"
-                  >
+                  <Button class="size-7 p-0 rounded-full" :variant="editor.currentKey.value === 'home' ? 'default' : 'ghost'" aria-label="主页" @click="editor.currentKey.value = 'home'">
                     <component :is="HomeOutline" class="size-3.5" />
                   </Button>
                 </TooltipTrigger>
@@ -99,14 +87,7 @@ const { pageEntries } = usePageEntries(editor)
             >
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="sm"
-                    class="size-7 p-0 rounded-full"
-                    :variant="editor.currentKey.value === page.slug ? 'default' : 'ghost'"
-                    :class="{ 'opacity-60': !page.navVisible }"
-                    :aria-label="page.title"
-                    @click="editor.currentKey.value = page.slug"
-                  >
+                  <Button class="size-7 p-0 rounded-full" :variant="editor.currentKey.value === page.slug ? 'default' : 'ghost'" :class="{ 'opacity-60': !page.navVisible }" :aria-label="page.title" @click="editor.currentKey.value = page.slug">
                     <component :is="resolveUserPageNavIcon(page.navIcon)" class="size-3.5" />
                   </Button>
                 </TooltipTrigger>

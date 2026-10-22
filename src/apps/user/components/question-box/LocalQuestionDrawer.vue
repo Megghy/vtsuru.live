@@ -78,14 +78,7 @@ function formatRelativeTime(time: number) {
                 {{ item.anonymousName }}
               </span>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="delete-action absolute top-2 right-2 size-6 rounded-full text-muted-foreground opacity-60 hover:opacity-100 hover:text-destructive hover:bg-destructive/10"
-              aria-label="删除这条本地记录"
-              title="删除这条本地记录"
-              @click="emit('remove', item.id)"
-            >
+            <Button variant="ghost" size="icon" class="delete-action absolute top-2 right-2 size-6 rounded-full text-muted-foreground opacity-60 hover:opacity-100 hover:text-destructive hover:bg-destructive/10" aria-label="删除这条本地记录" title="删除这条本地记录" @click="emit('remove', item.id)">
               <component :is="Delete24Regular" class="size-3.5" />
             </Button>
           </article>
@@ -109,11 +102,7 @@ function formatRelativeTime(time: number) {
           @positive-click="emit('clear')"
         >
           <template #trigger>
-            <Button
-              variant="destructive"
-              size="sm"
-              class="text-xs flex items-center gap-1.5"
-            >
+            <Button variant="destructive" class="flex items-center gap-1.5">
               <component :is="Delete24Regular" class="size-3.5" />
               清空本地记录
             </Button>

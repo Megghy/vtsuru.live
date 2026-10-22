@@ -46,13 +46,7 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
           </h2>
           <p>连接状态实时更新；登录与 OBS 配置可手动刷新。</p>
         </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          class="h-8 text-xs gap-1.5"
-          :disabled="refreshing"
-          @click="$emit('refresh')"
-        >
+        <Button variant="secondary" class="gap-1.5" :disabled="refreshing" @click="$emit('refresh')">
           <ArrowSync24Regular class="size-3.5" :class="{ 'animate-spin': refreshing }" />
           刷新检查
         </Button>
@@ -97,13 +91,7 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
             <strong>{{ check.title }}</strong>
             <p>{{ check.detail }}</p>
           </div>
-          <Button
-            v-if="check.status !== 'success'"
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] shrink-0"
-            @click="$emit('navigate', check.target)"
-          >
+          <Button v-if="check.status !== 'success'" size="xs" variant="ghost" class="h-6 text-[11px] shrink-0" @click="$emit('navigate', check.target)">
             {{ targets[check.target] }}
           </Button>
         </li>

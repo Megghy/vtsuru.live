@@ -293,23 +293,10 @@ function removeHotword(index: number) {
       </div>
 
       <div class="runtime-actions flex items-center gap-3">
-        <Button
-          v-if="!isRunning"
-          size="sm"
-          class="h-8 text-xs"
-          :disabled="startBlocked || isBusy"
-          @click="start"
-        >
+        <Button v-if="!isRunning" :disabled="startBlocked || isBusy" @click="start">
           {{ isBusy ? '启动中...' : '开始转写' }}
         </Button>
-        <Button
-          v-else
-          size="sm"
-          variant="destructive"
-          class="h-8 text-xs"
-          :disabled="isBusy"
-          @click="stop"
-        >
+        <Button v-else variant="destructive" :disabled="isBusy" @click="stop">
           {{ isBusy ? '停止中...' : '停止转写' }}
         </Button>
         <span class="text-xs text-muted-foreground">
@@ -372,22 +359,10 @@ function removeHotword(index: number) {
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="outline"
-            class="h-6 text-[11px]"
-            :disabled="isRunning"
-            @click="addProfile('tencent')"
-          >
+          <Button size="xs" variant="outline" class="h-6 text-[11px]" :disabled="isRunning" @click="addProfile('tencent')">
             新增腾讯云
           </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            class="h-6 text-[11px]"
-            :disabled="isRunning"
-            @click="addProfile('openai')"
-          >
+          <Button size="xs" variant="outline" class="h-6 text-[11px]" :disabled="isRunning" @click="addProfile('openai')">
             新增 OpenAI
           </Button>
         </div>
@@ -399,7 +374,7 @@ function removeHotword(index: number) {
             v-model="settingsStore.settings.activeProfileId"
             :disabled="isRunning"
           >
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue placeholder="选择配置" />
             </SelectTrigger>
             <SelectContent>
@@ -421,12 +396,7 @@ function removeHotword(index: number) {
           @positive-click="settingsStore.removeActiveProfile()"
         >
           <template #trigger>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
-              :disabled="settingsStore.settings.profiles.length === 1 || isRunning"
-            >
+            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="settingsStore.settings.profiles.length === 1 || isRunning">
               删除
             </Button>
           </template>
@@ -440,12 +410,7 @@ function removeHotword(index: number) {
       >
         <div class="flex items-center gap-3">
           <span class="w-24 text-muted-foreground shrink-0">配置名称</span>
-          <Input
-            v-model="activeProfile.name"
-            :disabled="isRunning"
-            placeholder="用于区分本地配置"
-            class="h-8 text-xs flex-1"
-          />
+          <Input v-model="activeProfile.name" :disabled="isRunning" placeholder="用于区分本地配置" class="flex-1" />
         </div>
 
         <div class="flex items-center gap-3">
@@ -456,7 +421,7 @@ function removeHotword(index: number) {
               :disabled="isRunning"
               @update:model-value="changeProvider"
             >
-              <SelectTrigger class="h-8 text-xs w-full">
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -474,7 +439,7 @@ function removeHotword(index: number) {
               v-model="activeProfile.language"
               :disabled="isRunning"
             >
-              <SelectTrigger class="h-8 text-xs w-full">
+              <SelectTrigger class="w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -499,7 +464,7 @@ function removeHotword(index: number) {
                 v-model="activeProfile.engineModelType"
                 :disabled="isRunning"
               >
-                <SelectTrigger class="h-8 text-xs w-full">
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -518,63 +483,34 @@ function removeHotword(index: number) {
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">App ID</span>
-            <Input
-              v-model="activeProfile.appId"
-              :disabled="isRunning"
-              class="h-8 text-xs flex-1"
-            />
+            <Input v-model="activeProfile.appId" :disabled="isRunning" class="flex-1" />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">Secret ID</span>
-            <Input
-              v-model="activeProfile.secretId"
-              type="password"
-              :disabled="isRunning"
-              class="h-8 text-xs flex-1"
-            />
+            <Input v-model="activeProfile.secretId" type="password" :disabled="isRunning" class="flex-1" />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">Secret Key</span>
-            <Input
-              v-model="activeProfile.secretKey"
-              type="password"
-              :disabled="isRunning"
-              class="h-8 text-xs flex-1"
-            />
+            <Input v-model="activeProfile.secretKey" type="password" :disabled="isRunning" class="flex-1" />
           </div>
         </template>
 
         <template v-else>
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">模型</span>
-            <Input
-              v-model="activeProfile.model"
-              :disabled="isRunning"
-              placeholder="gpt-live-transcribe"
-              class="h-8 text-xs flex-1"
-            />
+            <Input v-model="activeProfile.model" :disabled="isRunning" placeholder="gpt-live-transcribe" class="flex-1" />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">API 地址</span>
-            <Input
-              v-model="activeProfile.baseUrl"
-              :disabled="isRunning"
-              placeholder="wss://api.openai.com/v1/realtime"
-              class="h-8 text-xs flex-1"
-            />
+            <Input v-model="activeProfile.baseUrl" :disabled="isRunning" placeholder="wss://api.openai.com/v1/realtime" class="flex-1" />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">API Key</span>
-            <Input
-              v-model="activeProfile.apiKey"
-              type="password"
-              :disabled="isRunning"
-              class="h-8 text-xs flex-1"
-            />
+            <Input v-model="activeProfile.apiKey" type="password" :disabled="isRunning" class="flex-1" />
           </div>
         </template>
 
@@ -598,20 +534,8 @@ function removeHotword(index: number) {
               </button>
             </Badge>
             <div class="flex items-center gap-1">
-              <Input
-                v-model="newHotword"
-                :disabled="isRunning"
-                placeholder="+ 新增热词"
-                class="h-6 w-24 text-xs"
-                @keyup.enter="addHotword"
-              />
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-6 px-1.5 text-xs"
-                :disabled="isRunning || !newHotword.trim()"
-                @click="addHotword"
-              >
+              <Input v-model="newHotword" :disabled="isRunning" placeholder="+ 新增热词" class="h-6 w-24" @keyup.enter="addHotword" />
+              <Button size="xs" variant="ghost" class="h-6 px-1.5" :disabled="isRunning || !newHotword.trim()" @click="addHotword">
                 添加
               </Button>
             </div>

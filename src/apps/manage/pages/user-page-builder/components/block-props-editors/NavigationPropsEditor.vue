@@ -35,18 +35,11 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
-                <Input
-                  v-model="item.label"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.label" />
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">链接</label>
-                <Input
-                  v-model="item.url"
-                  placeholder="https://..."
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.url" placeholder="https://..." />
               </div>
             </PropsGrid>
           </template>
@@ -63,11 +56,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
       <ButtonAppearanceFields :block="props.block" />
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">按钮文本</label>
-        <Input
-          v-model="blockProps.label"
-          placeholder="例如：衣柜"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.label" placeholder="例如：衣柜" />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">跳转类型</label>
@@ -75,7 +64,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
           :model-value="getNavigationTargetType(blockProps)"
           @update:model-value="(value) => setNavigationTargetType(blockProps, value as any)"
         >
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="跳转类型" />
           </SelectTrigger>
           <SelectContent>
@@ -91,7 +80,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
           v-if="blockProps.page"
           v-model="blockProps.page"
         >
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="选择目标页面" />
           </SelectTrigger>
           <SelectContent>
@@ -104,12 +93,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
             </SelectItem>
           </SelectContent>
         </Select>
-        <Input
-          v-else-if="!blockProps.back"
-          v-model="blockProps.url"
-          placeholder="链接 https://..."
-          class="h-8 text-xs"
-        />
+        <Input v-else-if="!blockProps.back" v-model="blockProps.url" placeholder="链接 https://..." />
         <div
           v-else
           class="text-xs text-muted-foreground py-1"
@@ -128,7 +112,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">大小</label>
         <Select v-model="blockProps.size">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="大小" />
           </SelectTrigger>
           <SelectContent>
@@ -141,7 +125,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">形状</label>
         <Select v-model="blockProps.variant">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="形状" />
           </SelectTrigger>
           <SelectContent>
@@ -169,7 +153,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">平台</label>
                 <Select v-model="item.platform">
-                  <SelectTrigger class="h-8 text-xs">
+                  <SelectTrigger>
                     <SelectValue placeholder="平台" />
                   </SelectTrigger>
                   <SelectContent>
@@ -185,19 +169,11 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">显示名 / 无障碍名称</label>
-                <Input
-                  v-model="item.label"
-                  placeholder="可选"
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.label" placeholder="可选" />
               </div>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">链接</label>
-                <Input
-                  v-model="item.url"
-                  placeholder="https://..."
-                  class="h-8 text-xs"
-                />
+                <Input v-model="item.url" placeholder="https://..." />
               </div>
             </PropsGrid>
           </template>

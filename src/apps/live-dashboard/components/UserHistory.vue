@@ -93,14 +93,14 @@ function describe(e: DashboardEvent) {
       v-model="tab"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-5 h-7">
-        <TabsTrigger value="all" class="text-xs py-1">
+      <TabsList size="xs" class="grid w-full grid-cols-5">
+        <TabsTrigger value="all">
           全部
         </TabsTrigger>
-        <TabsTrigger value="message" class="text-xs py-1">
+        <TabsTrigger value="message">
           弹幕
         </TabsTrigger>
-        <TabsTrigger value="sc" class="text-xs py-1">
+        <TabsTrigger value="sc">
           SC
         </TabsTrigger>
         <TabsTrigger value="gift" class="text-xs py-1">

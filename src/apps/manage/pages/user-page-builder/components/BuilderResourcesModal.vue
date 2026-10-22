@@ -121,20 +121,13 @@ function confirmDelete(resource: BuilderResource) {
             </template>
           </div>
           <div class="flex items-center gap-2">
-            <Button size="sm" variant="outline" class="h-7 text-xs" @click="editor.normalizeRichTextImagesFile">
+            <Button variant="outline" @click="editor.normalizeRichTextImagesFile">
               整理富文本引用
             </Button>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    class="size-7"
-                    :disabled="resources.isLoading.value"
-                    aria-label="刷新资源"
-                    @click="resources.loadResources"
-                  >
+                  <Button size="icon" variant="ghost" class="size-7" :disabled="resources.isLoading.value" aria-label="刷新资源" @click="resources.loadResources">
                     <RefreshOutline class="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -145,7 +138,7 @@ function confirmDelete(resource: BuilderResource) {
         </div>
 
         <Tabs :model-value="resources.currentView.value" class="w-full shrink-0" @update:model-value="(val) => (resources.currentView.value = val as any)">
-          <TabsList class="h-8 w-full justify-start">
+          <TabsList class="w-full justify-start">
             <TabsTrigger value="all" class="text-xs"> 全部 {{ resources.resources.value.length }} </TabsTrigger>
             <TabsTrigger value="used" class="text-xs"> 引用中 {{ resources.usedCount.value }} </TabsTrigger>
             <TabsTrigger value="unused" class="text-xs"> 未使用 {{ resources.unusedCount.value }} </TabsTrigger>
@@ -221,13 +214,7 @@ function confirmDelete(resource: BuilderResource) {
                   <TooltipProvider>
                     <Tooltip v-if="file.path">
                       <TooltipTrigger as-child>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          class="size-7"
-                          aria-label="复制资源链接"
-                          @click="copyResourcePath(file.path)"
-                        >
+                        <Button size="icon" variant="ghost" class="size-7" aria-label="复制资源链接" @click="copyResourcePath(file.path)">
                           <CopyOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>
@@ -235,14 +222,7 @@ function confirmDelete(resource: BuilderResource) {
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger as-child>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          class="size-7 text-destructive hover:text-destructive"
-                          aria-label="删除资源"
-                          :disabled="resources.deletingId.value === file.id"
-                          @click="confirmDelete(file)"
-                        >
+                        <Button size="icon" variant="ghost" class="size-7 text-destructive hover:text-destructive" aria-label="删除资源" :disabled="resources.deletingId.value === file.id" @click="confirmDelete(file)">
                           <TrashOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>

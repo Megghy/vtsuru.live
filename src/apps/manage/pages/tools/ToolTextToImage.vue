@@ -155,12 +155,7 @@ async function download() {
   <Card>
     <CardHeader class="flex flex-row items-center justify-between pb-4">
       <CardTitle class="text-base font-semibold">文字转图片</CardTitle>
-      <Button
-        :disabled="!text"
-        size="sm"
-        class="h-8 text-xs"
-        @click="download"
-      >
+      <Button :disabled="!text" @click="download">
         下载 PNG
       </Button>
     </CardHeader>
@@ -182,7 +177,7 @@ async function download() {
                 :model-value="style.fontFamily"
                 @update:model-value="onFontChange"
               >
-                <SelectTrigger class="h-8 flex-1 text-xs">
+                <SelectTrigger class="flex-1">
                   <SelectValue :placeholder="fontsLoading ? '加载字体中...' : '选择字体'" />
                 </SelectTrigger>
                 <SelectContent class="max-h-60">
@@ -198,15 +193,13 @@ async function download() {
             </div>
             <div class="flex items-center gap-2">
               <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 加粗 </span>
-              <Switch
-                :checked="style.bold"
-                @update:checked="(v) => (style.bold = v)"
+              <Switch :checked="style.bold" @update:checked="(v) => (style.bold = v)"
               />
             </div>
             <div class="flex items-center gap-2">
               <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 水平对齐 </span>
               <Select v-model="style.textAlign">
-                <SelectTrigger class="h-8 w-[120px] text-xs">
+                <SelectTrigger class="w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -223,7 +216,7 @@ async function download() {
             <div class="flex items-center gap-2">
               <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 垂直对齐 </span>
               <Select v-model="style.verticalAlign">
-                <SelectTrigger class="h-8 w-[120px] text-xs">
+                <SelectTrigger class="w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

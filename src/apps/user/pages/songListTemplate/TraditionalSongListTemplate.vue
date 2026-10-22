@@ -325,16 +325,12 @@ function getSafeUrl(value?: string) {
 
         <main class="song-panel p-5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/80 shadow-xs space-y-4">
           <div class="filter-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
-            <Input
-              v-model="searchQuery"
-              placeholder="搜索歌名、歌手、语言、标签或备注"
-              class="search-input h-8 text-xs col-span-1 sm:col-span-2"
-            />
+            <Input v-model="searchQuery" placeholder="搜索歌名、歌手、语言、标签或备注" class="search-input col-span-1 sm:col-span-2" />
             <Select
               :model-value="selectedArtist || 'all'"
               @update:model-value="selectedArtist = $event === 'all' ? null : String($event)"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="歌手" />
               </SelectTrigger>
               <SelectContent>
@@ -353,7 +349,7 @@ function getSafeUrl(value?: string) {
               :model-value="selectedLanguage || 'all'"
               @update:model-value="selectedLanguage = $event === 'all' ? null : String($event)"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="语言" />
               </SelectTrigger>
               <SelectContent>
@@ -372,7 +368,7 @@ function getSafeUrl(value?: string) {
               :model-value="selectedTag || 'all'"
               @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
             >
-              <SelectTrigger class="h-8 text-xs">
+              <SelectTrigger>
                 <SelectValue placeholder="标签" />
               </SelectTrigger>
               <SelectContent>
@@ -392,7 +388,7 @@ function getSafeUrl(value?: string) {
                 :model-value="sortKey || 'default'"
                 @update:model-value="sortKey = $event === 'default' ? null : ($event as SortKey)"
               >
-                <SelectTrigger class="h-8 text-xs flex-1">
+                <SelectTrigger class="flex-1">
                   <SelectValue placeholder="排序" />
                 </SelectTrigger>
                 <SelectContent>
@@ -406,14 +402,7 @@ function getSafeUrl(value?: string) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-8 shrink-0 text-muted-foreground"
-                :disabled="!sortKey"
-                :title="sortOrder === 'asc' ? '升序' : '降序'"
-                @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
-              >
+              <Button variant="ghost" size="icon" class="size-8 shrink-0 text-muted-foreground" :disabled="!sortKey" :title="sortOrder === 'asc' ? '升序' : '降序'" @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'">
                 <component :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled" class="size-4" />
               </Button>
             </div>
@@ -422,22 +411,11 @@ function getSafeUrl(value?: string) {
           <div class="result-toolbar flex items-center justify-between gap-3 text-xs pt-1 border-t border-border/50">
             <span class="result-count text-muted-foreground font-mono">{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span>
             <div class="toolbar-actions flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                class="h-7 text-xs flex items-center gap-1 text-muted-foreground"
-                :disabled="!hasFilters"
-                @click="clearFilters"
-              >
+              <Button variant="ghost" class="flex items-center gap-1 text-muted-foreground" :disabled="!hasFilters" @click="clearFilters">
                 <component :is="ArrowCounterclockwise20Filled" class="size-3.5" />
                 清空
               </Button>
-              <Button
-                variant="secondary"
-                size="sm"
-                class="h-7 text-xs"
-                @click="randomOrder"
-              >
+              <Button variant="secondary" @click="randomOrder">
                 随机一首
               </Button>
             </div>
@@ -616,19 +594,10 @@ function getSafeUrl(value?: string) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter class="pt-3">
-            <Button
-              v-if="dialogState.negativeText"
-              variant="outline"
-              size="sm"
-              class="h-8 text-xs"
-              @click="dialogState.open = false"
-            >
+            <Button v-if="dialogState.negativeText" variant="outline" @click="dialogState.open = false">
               {{ dialogState.negativeText }}
             </Button>
-            <Button
-              size="sm"
-              class="h-8 text-xs"
-              @click="() => { dialogState.onConfirm(); dialogState.open = false; }"
+            <Button @click="() => { dialogState.onConfirm(); dialogState.open = false; }"
             >
               {{ dialogState.positiveText }}
             </Button>

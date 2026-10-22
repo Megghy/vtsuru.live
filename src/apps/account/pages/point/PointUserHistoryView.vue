@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowDownload24Regular, ArrowSync24Regular, CalendarLtr24Regular } from '@vicons/fluent'
+import { ArrowDownload24Regular, ArrowSync24Regular } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { computed, onMounted, ref } from 'vue'
@@ -11,9 +11,10 @@ import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import PointHistoryCard from '@/shared/components/points/PointHistoryCard.vue'
 import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
+import { DateRangePicker } from '@/shared/ui/date-picker'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { objectsToCSV, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -156,21 +157,11 @@ onMounted(() => void loadHistories())
       subtitle="追溯在所有主播频道的积分获取、消耗明细与时间流水。"
     >
       <template #actions>
-        <Button
-          variant="outline"
-          :disabled="filteredHistories.length === 0"
-          class="flex items-center gap-1.5"
-          @click="exportHistories"
-        >
+        <Button variant="outline" :disabled="filteredHistories.length === 0" class="flex items-center gap-1.5" @click="exportHistories">
           <component :is="ArrowDownload24Regular" class="size-4" />
           导出
         </Button>
-        <Button
-          variant="outline"
-          :disabled="loading"
-          class="flex items-center gap-1.5"
-          @click="refresh"
-        >
+        <Button variant="outline" :disabled="loading" class="flex items-center gap-1.5" @click="refresh">
           <component :is="ArrowSync24Regular" class="size-4" :class="{ 'animate-spin': loading }" />
           刷新
         </Button>
@@ -190,7 +181,7 @@ onMounted(() => void loadHistories())
                 :model-value="streamer || 'all'"
                 @update:model-value="streamer = $event === 'all' ? null : String($event)"
               >
-                <SelectTrigger class="w-40 h-8 text-xs">
+                <SelectTrigger class="w-40">
                   <SelectValue placeholder="全部主播" />
                 </SelectTrigger>
                 <SelectContent>
@@ -206,47 +197,23 @@ onMounted(() => void loadHistories())
                 </SelectContent>
               </Select>
 
-              <div class="filter-direction flex items-center bg-muted/60 p-0.5 rounded-md border border-border/50">
-                <button
-                  type="button"
-                  class="px-2.5 py-1 text-xs rounded transition cursor-pointer"
-                  :class="direction === 'all' ? 'bg-background shadow-xs text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'"
-                  @click="direction = 'all'"
-                >
+              <ToggleGroup v-model="direction" type="single">
+                <ToggleGroupItem value="all">
                   全部
-                </button>
-                <button
-                  type="button"
-                  class="px-2.5 py-1 text-xs rounded transition cursor-pointer"
-                  :class="direction === 'increase' ? 'bg-background shadow-xs text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'"
-                  @click="direction = 'increase'"
-                >
+                </ToggleGroupItem>
+                <ToggleGroupItem value="increase">
                   增加
-                </button>
-                <button
-                  type="button"
-                  class="px-2.5 py-1 text-xs rounded transition cursor-pointer"
-                  :class="direction === 'decrease' ? 'bg-background shadow-xs text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'"
-                  @click="direction = 'decrease'"
-                >
+                </ToggleGroupItem>
+                <ToggleGroupItem value="decrease">
                   减少
-                </button>
-              </div>
+                </ToggleGroupItem>
+              </ToggleGroup>
 
-              <div class="filter-datepicker flex items-center gap-1.5 bg-background border border-border/80 px-2 py-0.5 rounded-md">
-                <component :is="CalendarLtr24Regular" class="size-3.5 text-muted-foreground shrink-0" />
-                <Input
-                  v-model="startDateStr"
-                  type="date"
-                  class="h-7 w-32 px-1 text-xs border-0 shadow-none focus-visible:ring-0"
-                />
-                <span class="text-muted-foreground text-xs">至</span>
-                <Input
-                  v-model="endDateStr"
-                  type="date"
-                  class="h-7 w-32 px-1 text-xs border-0 shadow-none focus-visible:ring-0"
-                />
-              </div>
+              <DateRangePicker
+                v-model:start="startDateStr"
+                v-model:end="endDateStr"
+                size="sm"
+              />
             </div>
 
             <div class="history-toolbar__meta">

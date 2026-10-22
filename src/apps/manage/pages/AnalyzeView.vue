@@ -72,6 +72,8 @@ import {
   TableRow,
 } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { DateRangePicker } from '@/shared/ui/date-picker'
 
 // 注册 ECharts 必要组件
 echarts.use([
@@ -678,65 +680,24 @@ onUnmounted(() => {
       <template #action>
         <div class="flex items-center gap-2 flex-wrap">
           <!-- 预设选择器 -->
-          <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-            <Button
-              size="xs"
-              :variant="activePreset === '7d' ? 'brand' : 'ghost'"
-              class="h-6 px-2 text-xs"
-              @click="setPreset('7d')"
-            >
-              近7天
-            </Button>
-            <Button
-              size="xs"
-              :variant="activePreset === '30d' ? 'brand' : 'ghost'"
-              class="h-6 px-2 text-xs"
-              @click="setPreset('30d')"
-            >
-              近30天
-            </Button>
-            <Button
-              size="xs"
-              :variant="activePreset === '60d' ? 'brand' : 'ghost'"
-              class="h-6 px-2 text-xs"
-              @click="setPreset('60d')"
-            >
-              近60天
-            </Button>
-            <Button
-              size="xs"
-              :variant="activePreset === 'all' ? 'brand' : 'ghost'"
-              class="h-6 px-2 text-xs"
-              @click="setPreset('all')"
-            >
-              全部
-            </Button>
-          </div>
+          <ToggleGroup v-model="activePreset" type="single">
+            <ToggleGroupItem value="7d" @click="setPreset('7d')">近7天</ToggleGroupItem>
+            <ToggleGroupItem value="30d" @click="setPreset('30d')">近30天</ToggleGroupItem>
+            <ToggleGroupItem value="60d" @click="setPreset('60d')">近60天</ToggleGroupItem>
+            <ToggleGroupItem value="all" @click="setPreset('all')">全部</ToggleGroupItem>
+          </ToggleGroup>
 
           <!-- 自定义日期区间 -->
-          <div class="flex items-center gap-1.5">
-            <Input
-              v-model="customStartDate"
-              type="date"
-              class="h-7 text-xs w-32"
-              @change="handleCustomDateApply"
-            />
-            <span class="text-xs text-muted-foreground">至</span>
-            <Input
-              v-model="customEndDate"
-              type="date"
-              class="h-7 text-xs w-32"
-              @change="handleCustomDateApply"
-            />
-          </div>
+          <DateRangePicker
+            v-model:start="customStartDate"
+            v-model:end="customEndDate"
+            size="sm"
+            @update:start="handleCustomDateApply"
+            @update:end="handleCustomDateApply"
+          />
 
           <!-- 刷新按钮 -->
-          <Button
-            size="xs"
-            variant="outline"
-            :loading="refreshing"
-            @click="refreshData"
-          >
+          <Button variant="outline" :loading="refreshing" @click="refreshData">
             <component
               :is="ArrowClockwise24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -1038,59 +999,17 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center gap-2">
-            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-              <Button
-                size="xs"
-                :variant="activeMetricPreset === 'income' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="applyMetricPreset('income')"
-              >
-                收益拆解
-              </Button>
-              <Button
-                size="xs"
-                :variant="activeMetricPreset === 'danmaku' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="applyMetricPreset('danmaku')"
-              >
-                弹幕互动
-              </Button>
-              <Button
-                size="xs"
-                :variant="activeMetricPreset === 'audience' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="applyMetricPreset('audience')"
-              >
-                观众付费
-              </Button>
-              <Button
-                size="xs"
-                :variant="activeMetricPreset === 'all' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="applyMetricPreset('all')"
-              >
-                全维概览
-              </Button>
-            </div>
+            <ToggleGroup v-model="activeMetricPreset" type="single" size="xs">
+              <ToggleGroupItem value="income" @click="applyMetricPreset('income')">收益拆解</ToggleGroupItem>
+              <ToggleGroupItem value="danmaku" @click="applyMetricPreset('danmaku')">弹幕互动</ToggleGroupItem>
+              <ToggleGroupItem value="audience" @click="applyMetricPreset('audience')">观众付费</ToggleGroupItem>
+              <ToggleGroupItem value="all" @click="applyMetricPreset('all')">全维概览</ToggleGroupItem>
+            </ToggleGroup>
 
-            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-              <Button
-                size="xs"
-                :variant="chartViewType === 'trend' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="chartViewType = 'trend'"
-              >
-                折线
-              </Button>
-              <Button
-                size="xs"
-                :variant="chartViewType === 'bar' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="chartViewType = 'bar'"
-              >
-                柱状
-              </Button>
-            </div>
+            <ToggleGroup v-model="chartViewType" type="single" size="xs">
+              <ToggleGroupItem value="trend">折线</ToggleGroupItem>
+              <ToggleGroupItem value="bar">柱状</ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
 
@@ -1342,32 +1261,11 @@ onUnmounted(() => {
               <span>单场直播高光 TOP 5</span>
             </div>
 
-            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-              <Button
-                size="xs"
-                :variant="activeTopSessionTab === 'income' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="activeTopSessionTab = 'income'"
-              >
-                最高收益
-              </Button>
-              <Button
-                size="xs"
-                :variant="activeTopSessionTab === 'danmaku' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="activeTopSessionTab = 'danmaku'"
-              >
-                最密弹幕
-              </Button>
-              <Button
-                size="xs"
-                :variant="activeTopSessionTab === 'duration' ? 'brand' : 'ghost'"
-                class="h-5 px-2 text-[11px]"
-                @click="activeTopSessionTab = 'duration'"
-              >
-                最长开播
-              </Button>
-            </div>
+            <ToggleGroup v-model="activeTopSessionTab" type="single" size="xs">
+              <ToggleGroupItem value="income">最高收益</ToggleGroupItem>
+              <ToggleGroupItem value="danmaku">最密弹幕</ToggleGroupItem>
+              <ToggleGroupItem value="duration">最长开播</ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <div
@@ -1453,16 +1351,11 @@ onUnmounted(() => {
               class="flex items-center gap-1.5 text-xs text-muted-foreground mr-2"
               @click.stop
             >
-              <Switch
-                :checked="showOnlyLiveDays"
-                @update:checked="(val) => (showOnlyLiveDays = val)"
+              <Switch :checked="showOnlyLiveDays" @update:checked="(val) => (showOnlyLiveDays = val)"
               />
               <span>仅开播日</span>
             </div>
-            <Button
-              size="icon-xs"
-              variant="ghost"
-            >
+            <Button size="icon-xs" variant="ghost">
               <component :is="isDailyTableExpanded ? ChevronUp24Regular : ChevronDown24Regular" />
             </Button>
           </div>

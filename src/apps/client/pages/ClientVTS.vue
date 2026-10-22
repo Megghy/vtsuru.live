@@ -95,22 +95,12 @@ const macroProgress = computed(() => {
           >
             {{ status.text }}
           </Badge>
-          <Button
-            v-if="!vts.connected && !vts.connecting"
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs gap-1.5"
-            @click="run(() => vts.connect())"
+          <Button v-if="!vts.connected && !vts.connecting" variant="secondary" class="gap-1.5" @click="run(() => vts.connect())"
           >
             <PlugConnected24Filled class="size-3.5" />
             连接
           </Button>
-          <Button
-            v-else
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs gap-1.5"
-            @click="run(() => vts.disconnect())"
+          <Button v-else variant="secondary" class="gap-1.5" @click="run(() => vts.disconnect())"
           >
             <PlugDisconnected24Filled class="size-3.5" />
             {{ vts.connecting ? '取消' : '断开' }}
@@ -215,7 +205,7 @@ const macroProgress = computed(() => {
         v-model="tab"
         class="w-full vts-tabs"
       >
-        <TabsList class="grid w-full max-w-lg grid-cols-4 h-8">
+        <TabsList class="grid w-full max-w-lg grid-cols-4">
           <TabsTrigger value="deck" class="text-xs gap-1.5">
             <Grid24Regular class="size-3.5" />
             操作台
@@ -296,12 +286,7 @@ const macroProgress = computed(() => {
                   </Badge>
                   <span class="font-medium text-xs text-foreground">{{ a.name || '未命名操作' }}</span>
                 </div>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  class="h-7 text-xs"
-                  @click="router.push({ name: 'client-auto-action-manage' })"
-                >
+                <Button variant="secondary" @click="router.push({ name: 'client-auto-action-manage' })">
                   前往自动操作
                 </Button>
               </AccordionContent>

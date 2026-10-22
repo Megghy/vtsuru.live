@@ -77,17 +77,13 @@ function requestSong(song: SongsInfo) {
       <div class="toolbar flex flex-wrap gap-2.5 items-center mb-4">
         <div class="relative search flex-1 min-w-48">
           <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            v-model="searchKeyword"
-            class="h-8 pl-8 text-xs w-full"
-            placeholder="搜索歌曲 / 歌手 / 标签…"
-          />
+          <Input v-model="searchKeyword" class="pl-8 w-full" placeholder="搜索歌曲 / 歌手 / 标签…" />
         </div>
         <Select
           :model-value="selectedTag || 'all'"
           @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
         >
-          <SelectTrigger class="w-36 h-8 text-xs">
+          <SelectTrigger class="w-36">
             <SelectValue placeholder="标签" />
           </SelectTrigger>
           <SelectContent>
@@ -173,14 +169,7 @@ function requestSong(song: SongsInfo) {
               <div class="cover-overlay absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                 <Tooltip v-if="song.url">
                   <TooltipTrigger as-child>
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      class="size-9 rounded-full bg-background/90 text-foreground hover:bg-background"
-                      :aria-label="`试听：${song.name}`"
-                      :disabled="isLrcLoading === song.key"
-                      @click="previewSong = song"
-                    >
+                    <Button variant="secondary" size="icon" class="size-9 rounded-full bg-background/90 text-foreground hover:bg-background" :aria-label="`试听：${song.name}`" :disabled="isLrcLoading === song.key" @click="previewSong = song">
                       <component :is="Play24Filled" class="size-4" />
                     </Button>
                   </TooltipTrigger>

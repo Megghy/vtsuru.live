@@ -304,10 +304,7 @@ onUnmounted(() => turnstile.value?.remove())
                 </div>
                 <h3 class="text-lg font-semibold">推荐成功</h3>
                 <p class="text-xs text-muted-foreground">你的视频推荐已经提交。</p>
-                <Button
-                  class="mt-2"
-                  @click="submitAnother"
-                >
+                <Button class="mt-2" @click="submitAnother">
                   再推荐一个
                 </Button>
               </div>
@@ -342,9 +339,7 @@ onUnmounted(() => turnstile.value?.remove())
               >
                 <h3 class="text-base font-semibold">需要绑定 B 站账号</h3>
                 <p class="text-xs text-muted-foreground">完成身份绑定后即可参与本次视频征集。</p>
-                <Button
-                  @click="router.push({ name: 'bili-auth' })"
-                >
+                <Button @click="router.push({ name: 'bili-auth' })">
                   前往绑定
                 </Button>
               </div>
@@ -378,11 +373,7 @@ onUnmounted(() => turnstile.value?.remove())
 
                 <div class="space-y-1.5">
                   <label class="text-xs font-medium text-foreground">视频链接或 BV 号</label>
-                  <Input
-                    v-model="addModel.video"
-                    placeholder="https://www.bilibili.com/video/BV..."
-                    class="h-9 text-xs"
-                  />
+                  <Input v-model="addModel.video" placeholder="https://www.bilibili.com/video/BV..." class="h-9" />
                 </div>
 
                 <div
@@ -398,22 +389,11 @@ onUnmounted(() => turnstile.value?.remove())
                 >
                   <div class="space-y-1.5">
                     <label class="text-xs font-medium text-foreground">推荐人</label>
-                    <Input
-                      v-model="addModel.name"
-                      placeholder="选填"
-                      maxlength="50"
-                      class="h-9 text-xs"
-                    />
+                    <Input v-model="addModel.name" placeholder="选填" maxlength="50" class="h-9" />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-xs font-medium text-foreground">哔哩哔哩 UID</label>
-                    <Input
-                      :model-value="addModel.uid != null ? String(addModel.uid) : ''"
-                      type="number"
-                      placeholder="选填"
-                      class="h-9 text-xs"
-                      @update:model-value="addModel.uid = $event ? Number($event) : undefined"
-                    />
+                    <Input :model-value="addModel.uid != null ? String(addModel.uid) : ''" type="number" placeholder="选填" class="h-9" @update:model-value="addModel.uid = $event ? Number($event) : undefined" />
                   </div>
                 </div>
 
@@ -436,11 +416,7 @@ onUnmounted(() => turnstile.value?.remove())
                   class="turnstile flex justify-center py-1"
                 />
 
-                <Button
-                  type="submit"
-                  class="w-full"
-                  :disabled="isLoading || !token"
-                >
+                <Button type="submit" class="w-full" :disabled="isLoading || !token">
                   {{ isLoading ? '提交中...' : '提交推荐' }}
                 </Button>
               </form>

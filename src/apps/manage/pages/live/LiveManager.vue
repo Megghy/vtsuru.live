@@ -35,6 +35,7 @@ import {
 } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 defineOptions({ name: 'ManageLiveView' })
 
@@ -242,11 +243,7 @@ onBeforeUnmount(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="outline"
-            @click="router.push({ name: 'manage-analyze' })"
-          >
+          <Button size="xs" variant="outline" @click="router.push({ name: 'manage-analyze' })">
             <component
               :is="DataTrending24Regular"
               class="h-3.5 w-3.5 mr-1 text-brand"
@@ -254,21 +251,11 @@ onBeforeUnmount(() => {
             深度看板
           </Button>
 
-          <Button
-            size="xs"
-            variant="ghost"
-            :disabled="isLoading"
-            @click="resetFilters"
-          >
+          <Button size="xs" variant="ghost" :disabled="isLoading" @click="resetFilters">
             重置筛选
           </Button>
 
-          <Button
-            size="xs"
-            variant="brand"
-            :loading="isLoading"
-            @click="getAll"
-          >
+          <Button size="xs" variant="brand" :loading="isLoading" @click="getAll">
             <component
               :is="ArrowSync24Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -300,12 +287,7 @@ onBeforeUnmount(() => {
         <AlertTitle>加载失败</AlertTitle>
         <AlertDescription class="text-xs flex items-center justify-between gap-2">
           <span>{{ loadError }}</span>
-          <Button
-            size="xs"
-            variant="outline"
-            :loading="isLoading"
-            @click="getAll"
-          >
+          <Button size="xs" variant="outline" :loading="isLoading" @click="getAll">
             重试
           </Button>
         </AlertDescription>
@@ -404,39 +386,14 @@ onBeforeUnmount(() => {
                 :is="Search24Filled"
                 class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
               />
-              <Input
-                v-model="keyword"
-                placeholder="搜索标题或场次 ID..."
-                class="h-7 text-xs pl-8"
-              />
+              <Input v-model="keyword" placeholder="搜索标题或场次 ID..." class="pl-8" />
             </div>
 
-            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-              <Button
-                size="xs"
-                :variant="statusFilter === 'all' ? 'brand' : 'ghost'"
-                class="h-6 px-2.5 text-xs"
-                @click="statusFilter = 'all'"
-              >
-                全部
-              </Button>
-              <Button
-                size="xs"
-                :variant="statusFilter === 'live' ? 'brand' : 'ghost'"
-                class="h-6 px-2.5 text-xs"
-                @click="statusFilter = 'live'"
-              >
-                直播中
-              </Button>
-              <Button
-                size="xs"
-                :variant="statusFilter === 'finished' ? 'brand' : 'ghost'"
-                class="h-6 px-2.5 text-xs"
-                @click="statusFilter = 'finished'"
-              >
-                已结束
-              </Button>
-            </div>
+            <ToggleGroup v-model="statusFilter" type="single">
+              <ToggleGroupItem value="all">全部</ToggleGroupItem>
+              <ToggleGroupItem value="live">直播中</ToggleGroupItem>
+              <ToggleGroupItem value="finished">已结束</ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <!-- 右侧：排序与自动刷新 -->
@@ -448,7 +405,7 @@ onBeforeUnmount(() => {
                   v-model="sortKey"
                   default-value="startAt"
                 >
-                  <SelectTrigger class="h-7 text-xs">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -473,7 +430,7 @@ onBeforeUnmount(() => {
                   v-model="sortOrder"
                   default-value="desc"
                 >
-                  <SelectTrigger class="h-7 text-xs">
+                  <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -492,18 +449,9 @@ onBeforeUnmount(() => {
 
             <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>自动刷新</span>
-              <Switch
-                :checked="enableAutoRefresh"
-                @update:checked="(val) => (enableAutoRefresh = val)"
+              <Switch :checked="enableAutoRefresh" @update:checked="(val) => (enableAutoRefresh = val)"
               />
-              <Input
-                v-if="enableAutoRefresh"
-                v-model.number="refreshSeconds"
-                type="number"
-                min="10"
-                max="300"
-                class="h-7 text-xs w-16"
-              />
+              <Input v-if="enableAutoRefresh" v-model.number="refreshSeconds" type="number" min="10" max="300" class="w-16" />
             </div>
           </div>
         </div>
@@ -535,11 +483,7 @@ onBeforeUnmount(() => {
             未找到符合条件的直播记录
           </div>
           <div class="mt-3">
-            <Button
-              size="xs"
-              variant="outline"
-              @click="resetFilters"
-            >
+            <Button size="xs" variant="outline" @click="resetFilters">
               清空筛选条件
             </Button>
           </div>
@@ -568,7 +512,7 @@ onBeforeUnmount(() => {
                 :model-value="String(pageSize)"
                 @update:model-value="(val) => (pageSize = Number(val))"
               >
-                <SelectTrigger class="h-7 text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -587,19 +531,11 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="flex items-center gap-1.5">
-            <Button
-              size="xs"
-              variant="outline"
-              :disabled="page <= 1"
-              @click="page--"
-            >
+            <Button size="xs" variant="outline" :disabled="page <= 1" @click="page--">
               上一页
             </Button>
             <span class="px-2 font-mono">{{ page }} / {{ totalPages }}</span>
-            <Button
-              size="xs"
-              variant="outline"
-              :disabled="page >= totalPages"
+            <Button size="xs" variant="outline" :disabled="page>= totalPages"
               @click="page++"
             >
               下一页

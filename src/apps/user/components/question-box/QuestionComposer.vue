@@ -154,24 +154,11 @@ async function submit() {
         <h1>给 {{ userInfo?.name || '主播' }} 留句话</h1>
         <p>说说你正在想的事。</p>
       </div>
-      <Button
-        v-if="!isIdentified"
-        variant="secondary"
-        size="sm"
-        class="history-action"
-        @click="emit('openHistory')"
-      >
+      <Button v-if="!isIdentified" variant="secondary" class="history-action" @click="emit('openHistory')">
         <History24Regular class="size-4 mr-1 inline-block" />
         本地记录
       </Button>
-      <Button
-        v-else-if="isUserLoggedIn"
-        variant="secondary"
-        size="sm"
-        class="history-action"
-        :disabled="isSelf"
-        @click="router.push({ name: 'manage-questionBox', query: { send: '1' } })"
-      >
+      <Button v-else-if="isUserLoggedIn" variant="secondary" class="history-action" :disabled="isSelf" @click="router.push({ name: 'manage-questionBox', query: { send: '1' } })">
         <History24Regular class="size-4 mr-1 inline-block" />
         已发送
       </Button>
@@ -190,10 +177,7 @@ async function submit() {
         <span class="sent-kicker">MESSAGE DELIVERED</span>
         <h2>已经送达</h2>
         <p>这条留言已进入 {{ userInfo?.name || '主播' }} 的提问箱。</p>
-        <Button
-          variant="secondary"
-          @click="composeAgain"
-        >
+        <Button variant="secondary" @click="composeAgain">
           再写一条
           <ArrowRight24Regular class="size-4 ml-1 inline-block" />
         </Button>
@@ -358,20 +342,10 @@ async function submit() {
             v-else
             class="guest-fields"
           >
-            <Input
-              v-model="draft.anonymousName"
-              maxlength="20"
-              placeholder="昵称（可选）"
-            />
+            <Input v-model="draft.anonymousName" maxlength="20" placeholder="昵称（可选）" />
             <div class="relative flex items-center">
               <Mail24Regular class="size-4 absolute left-3 text-muted-foreground pointer-events-none" />
-              <Input
-                v-model="draft.anonymousEmail"
-                maxlength="100"
-                class="pl-9"
-                placeholder="邮箱（可选）"
-                :class="draft.anonymousEmail && !isValidEmail(draft.anonymousEmail) ? 'border-destructive' : ''"
-              />
+              <Input v-model="draft.anonymousEmail" maxlength="100" class="pl-9" placeholder="邮箱（可选）" :class="draft.anonymousEmail && !isValidEmail(draft.anonymousEmail) ? 'border-destructive' : ''" />
             </div>
           </div>
         </div>
@@ -414,12 +388,7 @@ async function submit() {
             >
               {{ cooldownSeconds }} 秒后可再次提交
             </Tag>
-            <Button
-              size="lg"
-              :disabled="!canSubmit"
-              :loading="isSending"
-              @click="submit"
-            >
+            <Button size="lg" :disabled="!canSubmit" :loading="isSending" @click="submit">
               {{ selectedFiles.length && isSending ? '正在上传' : '送出留言' }}
               <Send24Regular class="size-4 ml-1 inline-block" />
             </Button>

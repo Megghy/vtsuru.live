@@ -180,21 +180,14 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 
     <CardContent class="p-3 space-y-3">
       <div class="flex items-center gap-2 flex-wrap">
-        <Input
-          v-model="query"
-          placeholder="搜索名称 / 描述 / 类型"
-          class="h-8 text-xs min-w-[200px] flex-1"
-        />
+        <Input v-model="query" placeholder="搜索名称 / 描述 / 类型" class="min-w-[200px] flex-1" />
         <div class="flex items-center gap-1.5 cursor-pointer select-none">
-          <Switch
-            :checked="safeClick"
-            @update:checked="safeClick = $event; disarm()"
-          />
+          <Switch :checked="safeClick" @update:checked="safeClick = $event; disarm()" />
           <span class="text-xs text-muted-foreground">防误触</span>
         </div>
         <div class="w-[110px]">
           <Select v-model="groupMode">
-            <SelectTrigger class="h-8 text-xs w-full">
+            <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -209,13 +202,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
             </SelectContent>
           </Select>
         </div>
-        <Button
-          size="sm"
-          variant="secondary"
-          class="h-8 text-xs"
-          :disabled="disabled"
-          @click="emit('refresh')"
-        >
+        <Button variant="secondary" :disabled="disabled" @click="emit('refresh')">
           刷新
         </Button>
       </div>
@@ -280,25 +267,14 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-1.5 cursor-pointer select-none">
-            <Switch
-              :checked="editForm.pinned"
-              @update:checked="editForm.pinned = $event"
-            />
+            <Switch :checked="editForm.pinned" @update:checked="editForm.pinned = $event" />
             <span>置顶</span>
           </div>
-          <Input
-            v-model="editForm.group"
-            placeholder="分组"
-            class="h-8 text-xs flex-1"
-          />
+          <Input v-model="editForm.group" placeholder="分组" class="flex-1" />
         </div>
 
         <div class="flex items-center gap-3">
-          <Input
-            v-model="editForm.displayName"
-            placeholder="显示名称"
-            class="h-8 text-xs flex-1"
-          />
+          <Input v-model="editForm.displayName" placeholder="显示名称" class="flex-1" />
           <div class="w-32 shrink-0">
             <ColorPicker
               v-model="editForm.color"
@@ -308,12 +284,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 
         <div class="flex items-center gap-2">
           <label class="cursor-pointer">
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs"
-              as-child
-            >
+            <Button variant="outline" as-child>
               <span>选择图标</span>
             </Button>
             <input
@@ -323,13 +294,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
               @change="onIconFileChange"
             />
           </label>
-          <Button
-            size="sm"
-            variant="ghost"
-            class="h-8 text-xs"
-            :disabled="!editForm.iconDataUrl"
-            @click="editForm.iconDataUrl = ''"
-          >
+          <Button variant="ghost" :disabled="!editForm.iconDataUrl" @click="editForm.iconDataUrl = ''">
             清除图标
           </Button>
           <img
@@ -341,27 +306,13 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            class="h-8 text-xs"
-            @click="showEdit = false"
-          >
+          <Button variant="ghost" @click="showEdit = false">
             取消
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-8 text-xs border-destructive/40 text-destructive hover:bg-destructive/10"
-            @click="clearCustomization"
-          >
+          <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" @click="clearCustomization">
             重置
           </Button>
-          <Button
-            size="sm"
-            class="h-8 text-xs"
-            @click="saveEdit"
-          >
+          <Button @click="saveEdit">
             保存
           </Button>
         </div>

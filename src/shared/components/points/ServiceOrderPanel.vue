@@ -255,12 +255,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
             <AlertTitle class="text-xs font-semibold">服务订单加载失败</AlertTitle>
             <AlertDescription class="text-xs">{{ loadError }}</AlertDescription>
           </Alert>
-          <Button
-            size="sm"
-            variant="outline"
-            class="text-xs"
-            @click="load"
-          >
+          <Button variant="outline" @click="load">
             <component :is="ArrowClockwise24Regular" class="size-3.5 mr-1" />
             重试
           </Button>
@@ -376,15 +371,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
             <div class="p-3 rounded-lg border border-border/80 bg-background space-y-3">
               <div class="space-y-1">
                 <span class="text-muted-foreground text-[11px] block">预约时间</span>
-                <Input
-                  v-if="
-                    role === 'owner' &&
-                    (current.status === PointOrderStatus.Pending || current.status === PointOrderStatus.InProgress)
-                  "
-                  v-model="appointmentAt"
-                  type="datetime-local"
-                  class="h-8 text-xs font-mono max-w-xs"
-                />
+                <Input v-if=" role === 'owner' && (current.status === PointOrderStatus.Pending || current.status === PointOrderStatus.InProgress) " v-model="appointmentAt" type="datetime-local" class="font-mono max-w-xs" />
                 <span
                   v-else-if="orderData?.appointmentAt"
                   class="text-foreground text-xs"
@@ -401,15 +388,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
 
               <div class="space-y-1">
                 <span class="text-muted-foreground text-[11px] block">交付链接</span>
-                <Input
-                  v-if="
-                    role === 'owner' &&
-                    (current.status === PointOrderStatus.Pending || current.status === PointOrderStatus.InProgress)
-                  "
-                  v-model="deliveryUrl"
-                  placeholder="可选，填写外部交付链接"
-                  class="h-8 text-xs"
-                />
+                <Input v-if=" role === 'owner' && (current.status === PointOrderStatus.Pending || current.status === PointOrderStatus.InProgress) " v-model="deliveryUrl" placeholder="可选，填写外部交付链接" />
                 <a
                   v-else-if="orderData?.deliveryUrl"
                   :href="orderData.deliveryUrl"
@@ -428,17 +407,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
                 </span>
               </div>
 
-              <Button
-                v-if="
-                  role === 'owner' &&
-                  (current.status === PointOrderStatus.Pending || current.status === PointOrderStatus.InProgress)
-                "
-                size="sm"
-                variant="outline"
-                class="text-xs"
-                :disabled="actionLoading"
-                @click="applyOwner()"
-              >
+              <Button v-if=" role === 'owner' && (current.status === PointOrderStatus.Pending || current.status === PointOrderStatus.InProgress) " variant="outline" :disabled="actionLoading" @click="applyOwner()">
                 保存安排与交付信息
               </Button>
             </div>
@@ -485,12 +454,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
                 class="text-xs resize-none"
               />
               <div class="flex justify-end">
-                <Button
-                  size="sm"
-                  class="text-xs"
-                  :disabled="actionLoading || !note.trim()"
-                  @click="role === 'owner' ? applyOwner() : applyBuyer()"
-                >
+                <Button :disabled="actionLoading || !note.trim()" @click="role === 'owner' ? applyOwner() : applyBuyer()">
                   <component :is="Send24Regular" class="size-3.5 mr-1" />
                   发送留言
                 </Button>
@@ -518,27 +482,12 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
             />
 
             <div class="flex items-center justify-end gap-2 flex-wrap">
-              <Button
-                v-for="action in ownerActions"
-                :key="action.status"
-                size="sm"
-                :variant="action.variant"
-                class="text-xs flex items-center gap-1"
-                :disabled="actionLoading"
-                @click="applyOwner(action.status)"
-              >
+              <Button v-for="action in ownerActions" :key="action.status" :variant="action.variant" class="flex items-center gap-1" :disabled="actionLoading" @click="applyOwner(action.status)">
                 <component :is="action.icon" class="size-3.5" />
                 {{ action.label }}
               </Button>
 
-              <Button
-                v-if="canBuyerCancel"
-                size="sm"
-                variant="destructive"
-                class="text-xs flex items-center gap-1"
-                :disabled="actionLoading"
-                @click="applyBuyer(true)"
-              >
+              <Button v-if="canBuyerCancel" variant="destructive" class="flex items-center gap-1" :disabled="actionLoading" @click="applyBuyer(true)">
                 <component :is="DismissCircle24Regular" class="size-3.5" />
                 取消订单并退回积分
               </Button>

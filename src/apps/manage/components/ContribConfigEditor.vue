@@ -10,6 +10,13 @@ import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { useMessage } from '@/shared/utils'
 
@@ -126,12 +133,7 @@ function removeUploadedFile(key: string, idx: number) {
       <label class="text-xs font-medium text-foreground block">{{ item.name }}</label>
 
       <template v-if="item.type === 'string'">
-        <Input
-          v-model="configData[item.key]"
-          :placeholder="item.placeholder"
-          :type="item.inputType || 'text'"
-          class="h-8 text-xs"
-        />
+        <Input v-model="configData[item.key]" :placeholder="item.placeholder" :type="item.inputType || 'text'" />
       </template>
 
       <template v-else-if="item.type === 'number' || item.type === 'sliderNumber'">
@@ -147,18 +149,20 @@ function removeUploadedFile(key: string, idx: number) {
       </template>
 
       <template v-else-if="item.type === 'select'">
-        <select
-          v-model="configData[item.key]"
-          class="w-full h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-        >
-          <option
-            v-for="opt in (typeof item.options === 'function' ? item.options(configData) : item.options)"
-            :key="opt.value"
-            :value="opt.value"
-          >
-            {{ opt.label }}
-          </option>
-        </select>
+        <Select v-model="configData[item.key]">
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in (typeof item.options === 'function' ? item.options(configData) : item.options)"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
       </template>
 
       <template v-else-if="item.type === 'color'">
@@ -171,12 +175,7 @@ function removeUploadedFile(key: string, idx: number) {
       <template v-else-if="item.type === 'file'">
         <div class="space-y-2">
           <div class="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-7 text-xs"
-              @click="triggerUpload(item.key)"
-            >
+            <Button variant="outline" @click="triggerUpload(item.key)">
               上传
             </Button>
             <span class="text-xs text-muted-foreground">
@@ -195,11 +194,7 @@ function removeUploadedFile(key: string, idx: number) {
           >
             <span class="font-mono text-muted-foreground">#{{ f.id }}</span>
             <span class="flex-1 truncate text-foreground">{{ f.path }}</span>
-            <Button
-              size="xs"
-              variant="destructive"
-              @click="removeUploadedFile(item.key, idx)"
-            >
+            <Button size="xs" variant="destructive" @click="removeUploadedFile(item.key, idx)">
               删除
             </Button>
           </div>

@@ -9,6 +9,13 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { canvasToBlob, useMessage } from '@/shared/utils'
 
@@ -354,9 +361,9 @@ watchEffect(async () => {
                   </div>
                 </div>
                 <div class="flex gap-2 mt-3">
-                  <Button size="sm" variant="outline" @click="onFilePicked(sourceFile!)">居中裁剪</Button>
-                  <Button size="sm" @click="openManualCrop">手动裁剪</Button>
-                  <Button size="sm" variant="ghost" @click="() => openFilePicker()">重新选择</Button>
+                  <Button variant="outline" @click="onFilePicked(sourceFile!)">居中裁剪</Button>
+                  <Button @click="openManualCrop">手动裁剪</Button>
+                  <Button variant="ghost" @click="() => openFilePicker()">重新选择</Button>
                 </div>
               </div>
 
@@ -382,14 +389,18 @@ watchEffect(async () => {
                   </div>
                   <div class="flex items-center justify-between">
                     <span class="text-muted-foreground">格式</span>
-                    <select
-                      v-model="exportSettings.format"
-                      class="h-8 w-32 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none"
-                    >
-                      <option v-for="opt in formatOptions" :key="opt.value" :value="opt.value">
-                        {{ opt.label }}
-                      </option>
-                    </select>
+                    <div class="w-32">
+                      <Select v-model="exportSettings.format">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem v-for="opt in formatOptions" :key="opt.value" :value="opt.value">
+                            {{ opt.label }}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div v-if="exportSettings.format === 'jpeg'" class="flex items-center justify-between">
                     <span class="text-muted-foreground">质量</span>
@@ -425,12 +436,7 @@ watchEffect(async () => {
             <div class="space-y-3">
               <div class="flex justify-between items-center">
                 <h4 class="font-semibold text-sm text-foreground">九宫格编辑</h4>
-                <Button
-                  v-if="hasAnyAdditional"
-                  size="xs"
-                  variant="ghost"
-                  @click="clearAllCellImages"
-                >
+                <Button v-if="hasAnyAdditional" size="xs" variant="ghost" @click="clearAllCellImages">
                   清空所有附加
                 </Button>
               </div>
@@ -478,14 +484,18 @@ watchEffect(async () => {
                       class="flex items-center gap-2 p-1.5 rounded border border-border bg-background text-xs"
                     >
                       <img :src="item.url" class="w-10 h-10 object-cover rounded shrink-0" alt="" />
-                      <select
-                        v-model="item.fit"
-                        class="h-7 rounded border border-input bg-background px-1 text-[11px] text-foreground focus:outline-none"
-                      >
-                        <option v-for="opt in fitOptions" :key="opt.value" :value="opt.value">
-                          {{ opt.label }}
-                        </option>
-                      </select>
+                      <div class="w-24">
+                        <Select v-model="item.fit">
+                          <SelectTrigger size="xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem v-for="opt in fitOptions" :key="opt.value" :value="opt.value">
+                              {{ opt.label }}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <div class="flex items-center gap-1 w-20">
                         <NInputNumber
                           v-model="item.height"
@@ -495,21 +505,11 @@ watchEffect(async () => {
                         />
                       </div>
                       <span v-if="item.height === 0" class="text-[11px] text-muted-foreground">自适应</span>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="text-destructive ml-auto"
-                        @click="removeImageFromCell(expandedCell!, j)"
-                      >
+                      <Button size="xs" variant="ghost" class="text-destructive ml-auto" @click="removeImageFromCell(expandedCell!, j)">
                         ×
                       </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      class="w-full border-dashed"
-                      @click="addImageToCell(expandedCell!)"
-                    >
+                    <Button variant="outline" class="w-full border-dashed" @click="addImageToCell(expandedCell!)">
                       + 添加图片
                     </Button>
                   </div>
@@ -524,12 +524,7 @@ watchEffect(async () => {
 
             <!-- Action bar -->
             <div class="flex justify-center pt-2">
-              <Button
-                size="lg"
-                class="px-8"
-                :disabled="isGenerating"
-                @click="generateTiles"
-              >
+              <Button size="lg" class="px-8" :disabled="isGenerating" @click="generateTiles">
                 {{ isGenerating ? '生成中...' : '生成九宫格' }}
               </Button>
             </div>
@@ -542,8 +537,8 @@ watchEffect(async () => {
             <div class="flex justify-between items-center">
               <h4 class="font-semibold text-sm text-foreground">生成结果</h4>
               <div class="flex gap-2">
-                <Button size="sm" variant="outline" @click="backToEdit">返回编辑</Button>
-                <Button size="sm" @click="downloadZip">打包下载 ZIP</Button>
+                <Button variant="outline" @click="backToEdit">返回编辑</Button>
+                <Button @click="downloadZip">打包下载 ZIP</Button>
               </div>
             </div>
             <div class="grid grid-cols-3 gap-3 max-w-md mx-auto">

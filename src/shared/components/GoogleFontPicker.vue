@@ -140,7 +140,7 @@ function applyPreviewFont() {
             :model-value="model ?? ''"
             @update:model-value="model = $event ? String($event) : null"
           >
-            <SelectTrigger class="h-8 text-xs flex-1">
+            <SelectTrigger class="flex-1">
               <SelectValue :placeholder="placeholder" />
             </SelectTrigger>
             <SelectContent class="max-h-60">
@@ -164,13 +164,7 @@ function applyPreviewFont() {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="outline"
-                size="icon"
-                class="size-8 shrink-0"
-                aria-label="浏览字体库"
-                @click="openFontBrowser"
-              >
+              <Button variant="outline" size="icon" class="size-8 shrink-0" aria-label="浏览字体库" @click="openFontBrowser">
                 <component :is="TextFont24Regular" class="size-4" />
               </Button>
             </TooltipTrigger>
@@ -203,18 +197,14 @@ function applyPreviewFont() {
           <div class="font-browser-controls flex items-center gap-2">
             <div class="relative flex-1">
               <component :is="SearchOutline" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                v-model="fontSearch"
-                placeholder="搜索字体名称..."
-                class="h-8 pl-8 text-xs"
-              />
+              <Input v-model="fontSearch" placeholder="搜索字体名称..." class="pl-8" />
             </div>
 
             <Select
               :model-value="fontCategory ?? 'all'"
               @update:model-value="fontCategory = $event === 'all' ? null : String($event)"
             >
-              <SelectTrigger class="w-36 h-8 text-xs shrink-0">
+              <SelectTrigger class="w-36 shrink-0">
                 <SelectValue placeholder="全部分类" />
               </SelectTrigger>
               <SelectContent>
@@ -282,12 +272,7 @@ function applyPreviewFont() {
                 </div>
               </div>
 
-              <Button
-                size="sm"
-                class="w-full text-xs"
-                :disabled="model === activePreviewFamily"
-                @click="applyPreviewFont"
-              >
+              <Button class="w-full" :disabled="model === activePreviewFamily" @click="applyPreviewFont">
                 {{ model === activePreviewFamily ? '正在使用' : '使用此字体' }}
               </Button>
             </section>

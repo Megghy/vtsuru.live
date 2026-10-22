@@ -78,6 +78,7 @@ import {
 } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 import VideoCollectFormModal from './VideoCollectFormModal.vue'
 
@@ -435,13 +436,7 @@ function openVideoInBili(bvid: string) {
       <!-- 紧凑页头与操作区 -->
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-2.5 min-w-0">
-          <Button
-            size="icon-xs"
-            variant="outline"
-            title="返回列表"
-            class="h-8 w-8 shrink-0"
-            @click="router.push({ name: 'manage-videoCollect' })"
-          >
+          <Button size="icon-sm" variant="outline" title="返回列表" class="shrink-0" @click="router.push({ name: 'manage-videoCollect' })">
             <component
               :is="ArrowLeft24Regular"
               class="h-4 w-4"
@@ -469,11 +464,7 @@ function openVideoInBili(bvid: string) {
         </div>
 
         <div class="flex items-center gap-1.5">
-          <Button
-            size="xs"
-            variant="outline"
-            @click="shareModalVisible = true"
-          >
+          <Button variant="outline" @click="shareModalVisible = true">
             <component
               :is="Share24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -481,11 +472,7 @@ function openVideoInBili(bvid: string) {
             分享
           </Button>
 
-          <Button
-            size="xs"
-            variant="outline"
-            @click="router.push({ name: 'video-collect-list', params: { id: table.id }, query: route.query })"
-          >
+          <Button variant="outline" @click="router.push({ name: 'video-collect-list', params: { id: table.id }, query: route.query })">
             <component
               :is="Open24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -493,11 +480,7 @@ function openVideoInBili(bvid: string) {
             展示结果
           </Button>
 
-          <Button
-            size="xs"
-            variant="outline"
-            @click="editModalVisible = true"
-          >
+          <Button variant="outline" @click="editModalVisible = true">
             <component
               :is="Edit24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -507,11 +490,7 @@ function openVideoInBili(bvid: string) {
 
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button
-                size="icon-xs"
-                variant="ghost"
-                class="h-7 w-7"
-              >
+              <Button size="icon-sm" variant="ghost">
                 <component
                   :is="MoreVertical24Regular"
                   class="h-3.5 w-3.5"
@@ -643,30 +622,15 @@ function openVideoInBili(bvid: string) {
         <!-- Tab 栏与工具条 -->
         <Card class="p-3 flex items-center justify-between flex-wrap gap-3">
           <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-            <Button
-              size="xs"
-              :variant="activeStatus === VideoStatus.Pending ? 'brand' : 'ghost'"
-              class="h-6 px-2.5 text-xs flex items-center gap-1.5"
-              @click="activeStatus = VideoStatus.Pending"
-            >
+            <Button size="xs" :variant="activeStatus === VideoStatus.Pending ? 'brand' : 'ghost'" class="h-6 px-2.5 flex items-center gap-1.5" @click="activeStatus = VideoStatus.Pending">
               <span>待审核</span>
               <span class="px-1 py-0 rounded-full text-[10px] bg-background text-foreground font-mono font-bold">{{ pendingVideos.length }}</span>
             </Button>
-            <Button
-              size="xs"
-              :variant="activeStatus === VideoStatus.Accepted ? 'brand' : 'ghost'"
-              class="h-6 px-2.5 text-xs flex items-center gap-1.5"
-              @click="activeStatus = VideoStatus.Accepted"
-            >
+            <Button size="xs" :variant="activeStatus === VideoStatus.Accepted ? 'brand' : 'ghost'" class="h-6 px-2.5 flex items-center gap-1.5" @click="activeStatus = VideoStatus.Accepted">
               <span>已通过</span>
               <span class="px-1 py-0 rounded-full text-[10px] bg-background text-foreground font-mono font-bold">{{ acceptedVideos.length }}</span>
             </Button>
-            <Button
-              size="xs"
-              :variant="activeStatus === VideoStatus.Rejected ? 'brand' : 'ghost'"
-              class="h-6 px-2.5 text-xs flex items-center gap-1.5"
-              @click="activeStatus = VideoStatus.Rejected"
-            >
+            <Button size="xs" :variant="activeStatus === VideoStatus.Rejected ? 'brand' : 'ghost'" class="h-6 px-2.5 flex items-center gap-1.5" @click="activeStatus = VideoStatus.Rejected">
               <span>已拒绝</span>
               <span class="px-1 py-0 rounded-full text-[10px] bg-background text-foreground font-mono font-bold">{{ rejectedVideos.length }}</span>
             </Button>
@@ -679,11 +643,7 @@ function openVideoInBili(bvid: string) {
                 :is="Search24Regular"
                 class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
               />
-              <Input
-                v-model="keyword"
-                placeholder="搜索标题、BV、UP..."
-                class="h-7 text-xs pl-8"
-              />
+              <Input v-model="keyword" placeholder="搜索标题、BV、UP..." class="pl-8" />
             </div>
 
             <div class="w-32">
@@ -691,7 +651,7 @@ function openVideoInBili(bvid: string) {
                 v-model="sortOption"
                 default-value="submitted-desc"
               >
-                <SelectTrigger class="h-7 text-xs">
+                <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -711,38 +671,23 @@ function openVideoInBili(bvid: string) {
               </Select>
             </div>
 
-            <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-              <Button
-                size="xs"
-                :variant="viewMode === 'list' ? 'brand' : 'ghost'"
-                class="h-5 px-1.5"
-                @click="setViewMode('list')"
-              >
+            <ToggleGroup :model-value="viewMode" type="single" size="xs" @update:model-value="(val) => val && setViewMode(val as any)"
+            >
+              <ToggleGroupItem value="list">
                 <component
                   :is="TableSimple24Regular"
                   class="h-3.5 w-3.5"
                 />
-              </Button>
-              <Button
-                size="xs"
-                :variant="viewMode === 'grid' ? 'brand' : 'ghost'"
-                class="h-5 px-1.5"
-                @click="setViewMode('grid')"
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="grid">
                 <component
                   :is="Grid24Regular"
                   class="h-3.5 w-3.5"
                 />
-              </Button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
-            <Button
-              size="icon-xs"
-              variant="outline"
-              class="h-7 w-7"
-              :loading="isLoading"
-              @click="loadData"
-            >
+            <Button size="icon-sm" variant="outline" :loading="isLoading" @click="loadData">
               <component
                 :is="ArrowSync24Regular"
                 class="h-3.5 w-3.5"
@@ -758,24 +703,13 @@ function openVideoInBili(bvid: string) {
         >
           <div class="flex items-center gap-2">
             <span class="font-semibold text-foreground">已选中 {{ selectedBvids.length }} 项</span>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="h-6 px-2 text-xs text-muted-foreground"
-              @click="clearSelection"
-            >
+            <Button size="xs" variant="ghost" class="h-6 px-2 text-muted-foreground" @click="clearSelection">
               取消勾选
             </Button>
           </div>
 
           <div class="flex items-center gap-1.5">
-            <Button
-              v-if="activeStatus !== VideoStatus.Accepted"
-              size="xs"
-              variant="brand"
-              :loading="isBatchUpdating"
-              @click="batchSetStatus(VideoStatus.Accepted)"
-            >
+            <Button v-if="activeStatus !== VideoStatus.Accepted" size="xs" variant="brand" :loading="isBatchUpdating" @click="batchSetStatus(VideoStatus.Accepted)">
               <component
                 :is="Checkmark24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -783,13 +717,7 @@ function openVideoInBili(bvid: string) {
               批量通过 ({{ selectedBvids.length }})
             </Button>
 
-            <Button
-              v-if="activeStatus !== VideoStatus.Rejected"
-              size="xs"
-              variant="destructive"
-              :loading="isBatchUpdating"
-              @click="batchSetStatus(VideoStatus.Rejected)"
-            >
+            <Button v-if="activeStatus !== VideoStatus.Rejected" size="xs" variant="destructive" :loading="isBatchUpdating" @click="batchSetStatus(VideoStatus.Rejected)">
               <component
                 :is="Dismiss24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -797,13 +725,7 @@ function openVideoInBili(bvid: string) {
               批量拒绝 ({{ selectedBvids.length }})
             </Button>
 
-            <Button
-              v-if="activeStatus !== VideoStatus.Pending"
-              size="xs"
-              variant="outline"
-              :loading="isBatchUpdating"
-              @click="batchSetStatus(VideoStatus.Pending)"
-            >
+            <Button v-if="activeStatus !== VideoStatus.Pending" size="xs" variant="outline" :loading="isBatchUpdating" @click="batchSetStatus(VideoStatus.Pending)">
               批量退回待审
             </Button>
           </div>
@@ -880,11 +802,7 @@ function openVideoInBili(bvid: string) {
         无法加载视频征集：征集不存在，或无访问权限。
       </div>
       <div>
-        <Button
-          size="xs"
-          variant="outline"
-          @click="router.push({ name: 'manage-videoCollect' })"
-        >
+        <Button size="xs" variant="outline" @click="router.push({ name: 'manage-videoCollect' })">
           返回征集列表
         </Button>
       </div>
@@ -918,28 +836,14 @@ function openVideoInBili(bvid: string) {
             />
           </div>
 
-          <div class="flex items-center gap-1 w-full">
-            <Input
-              :model-value="shareUrl"
-              readonly
-              class="h-8 text-xs font-mono"
-            />
-            <Button
-              size="xs"
-              variant="brand"
-              class="h-8 px-3"
-              @click="copyToClipboard(shareUrl); message.success('链接已复制')"
-            >
+          <div class="flex items-center gap-1.5 w-full">
+            <Input :model-value="shareUrl" readonly class="font-mono flex-1" />
+            <Button variant="brand" @click="copyToClipboard(shareUrl); message.success('链接已复制')">
               复制
             </Button>
           </div>
 
-          <Button
-            size="xs"
-            variant="outline"
-            class="w-full"
-            @click="saveQrCode"
-          >
+          <Button size="xs" variant="outline" class="w-full" @click="saveQrCode">
             <component
               :is="ArrowDownload24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -988,11 +892,7 @@ function openVideoInBili(bvid: string) {
         </div>
 
         <DialogFooter>
-          <Button
-            size="xs"
-            variant="outline"
-            @click="openVideoInBili(previewBvid)"
-          >
+          <Button size="xs" variant="outline" @click="openVideoInBili(previewBvid)">
             <component
               :is="Open24Regular"
               class="h-3.5 w-3.5 mr-1"

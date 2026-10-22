@@ -103,13 +103,7 @@ onMounted(async () => {
     >
       <template #action>
         <div class="flex items-center gap-1.5 flex-wrap">
-          <Button
-            size="icon-xs"
-            variant="outline"
-            :loading="useQB.isLoading"
-            title="刷新"
-            @click="refresh"
-          >
+          <Button size="icon-sm" variant="outline" :loading="useQB.isLoading" title="刷新" @click="refresh">
             <component
               :is="ArrowSync24Filled"
               class="h-3.5 w-3.5"
@@ -119,11 +113,7 @@ onMounted(async () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="icon-xs"
-                  variant="outline"
-                  @click="shareModalVisible = true"
-                >
+                <Button size="icon-sm" variant="outline" @click="shareModalVisible = true">
                   <component
                     :is="Share24Filled"
                     class="h-3.5 w-3.5"
@@ -136,19 +126,11 @@ onMounted(async () => {
             </Tooltip>
           </TooltipProvider>
 
-          <Button
-            size="xs"
-            variant="outline"
-            @click="showOBSModal = true"
-          >
+          <Button variant="outline" @click="showOBSModal = true">
             OBS 组件
           </Button>
 
-          <Button
-            size="xs"
-            variant="brand"
-            @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
-          >
+          <Button variant="default" @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })">
             <component
               :is="Link24Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -160,7 +142,7 @@ onMounted(async () => {
 
       <template #links-extra>
         <Select v-model="selectedDirectShareTag">
-          <SelectTrigger class="w-40 h-8 text-xs">
+          <SelectTrigger class="w-40">
             <SelectValue placeholder="附加话题 (可选)" />
           </SelectTrigger>
           <SelectContent>
@@ -181,35 +163,26 @@ onMounted(async () => {
       v-model="selectedTabItem"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-4 max-w-lg h-8 p-0.5 bg-muted">
-        <TabsTrigger
-          value="0"
-          class="text-xs h-7 gap-1"
-        >
+      <TabsList class="grid w-full grid-cols-4 max-w-lg">
+        <TabsTrigger value="0">
           我收到的
           <Badge
-            variant="brand"
-            class="text-[10px] px-1 py-0 h-4 ml-1"
+            variant="secondary"
+            size="xs"
           >
             {{ useQB.recieveQuestionsFiltered.length }}
           </Badge>
         </TabsTrigger>
-        <TabsTrigger
-          value="1"
-          class="text-xs h-7 gap-1"
-        >
+        <TabsTrigger value="1">
           我发送的
           <Badge
-            variant="outline"
-            class="text-[10px] px-1 py-0 h-4 ml-1"
+            variant="secondary"
+            size="xs"
           >
             {{ useQB.sendQuestions.length }}
           </Badge>
         </TabsTrigger>
-        <TabsTrigger
-          value="2"
-          class="text-xs h-7 gap-1"
-        >
+        <TabsTrigger value="2">
           <component
             :is="TrashBin"
             class="h-3.5 w-3.5"
@@ -218,15 +191,12 @@ onMounted(async () => {
           <Badge
             v-if="useQB.trashQuestions.length > 0"
             variant="warning"
-            class="text-[10px] px-1 py-0 h-4 ml-1"
+            size="xs"
           >
             {{ useQB.trashQuestions.length }}
           </Badge>
         </TabsTrigger>
-        <TabsTrigger
-          value="3"
-          class="text-xs h-7"
-        >
+        <TabsTrigger value="3">
           设置
         </TabsTrigger>
       </TabsList>
@@ -269,11 +239,7 @@ onMounted(async () => {
                   >
                     发给
                   </Badge>
-                  <Button
-                    variant="link"
-                    class="h-auto p-0 text-xs font-semibold text-primary"
-                    @click="router.push(`/user/${item.target.id}`)"
-                  >
+                  <Button variant="link" class="h-auto p-0 font-semibold text-primary" @click="router.push(`/user/${item.target.id}`)">
                     {{ item.target.name }}
                   </Button>
                 </div>
@@ -335,29 +301,16 @@ onMounted(async () => {
           >
             <template #footer="{ item }">
               <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="text-primary"
-                  @click="useQB.markAsNormal(item)"
-                >
+                <Button size="xs" variant="outline" class="text-primary" @click="useQB.markAsNormal(item)">
                   标记为正常
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
-                  @click="useQB.blacklist(item)"
-                >
+                <Button size="xs" variant="outline" class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10" @click="useQB.blacklist(item)">
                   拉黑提问者
                 </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger as-child>
-                    <Button
-                      size="xs"
-                      variant="destructive"
-                    >
+                    <Button size="xs" variant="destructive">
                       <component
                         :is="Delete24Filled"
                         class="h-3.5 w-3.5 mr-1"

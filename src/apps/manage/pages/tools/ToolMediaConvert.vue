@@ -454,15 +454,7 @@ onBeforeUnmount(() => {
               快捷预设
             </span>
             <div class="flex flex-wrap gap-2">
-              <Button
-                v-for="preset in presets"
-                :key="preset.key"
-                size="sm"
-                :variant="activePreset === preset.key ? 'default' : 'outline'"
-                class="h-7 text-xs"
-                :title="preset.desc"
-                @click="applyPreset(preset.key)"
-              >
+              <Button v-for="preset in presets" :key="preset.key" :variant="activePreset === preset.key ? 'default' : 'outline'" :title="preset.desc" @click="applyPreset(preset.key)">
                 {{ preset.label }}
               </Button>
             </div>
@@ -486,7 +478,7 @@ onBeforeUnmount(() => {
                 :model-value="settings.format"
                 @update:model-value="(v) => { settings.format = v as any; activePreset = null }"
               >
-                <SelectTrigger class="h-8 w-full text-xs">
+                <SelectTrigger class="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -502,7 +494,7 @@ onBeforeUnmount(() => {
             </div>
 
             <Tabs default-value="audio">
-              <TabsList class="w-full grid grid-cols-5 h-8">
+              <TabsList class="w-full grid grid-cols-5">
                 <TabsTrigger
                   v-if="selectedFormat.kind === 'video'"
                   value="video"
@@ -552,7 +544,7 @@ onBeforeUnmount(() => {
                   >
                     <span class="text-xs text-muted-foreground"> 编码器 </span>
                     <Select v-model="settings.videoCodec">
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -572,7 +564,7 @@ onBeforeUnmount(() => {
                       :model-value="settings.videoMaxWidth === null ? 'null' : String(settings.videoMaxWidth)"
                       @update:model-value="(v) => (settings.videoMaxWidth = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -592,7 +584,7 @@ onBeforeUnmount(() => {
                       :model-value="settings.videoFps === null ? 'null' : String(settings.videoFps)"
                       @update:model-value="(v) => (settings.videoFps = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -612,7 +604,7 @@ onBeforeUnmount(() => {
                   >
                     <span class="text-xs text-muted-foreground"> 编码速度（越慢压缩越好） </span>
                     <Select v-model="settings.videoPreset">
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -692,7 +684,7 @@ onBeforeUnmount(() => {
                       :model-value="String(settings.gifWidth)"
                       @update:model-value="(v) => (settings.gifWidth = Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -712,7 +704,7 @@ onBeforeUnmount(() => {
                       :model-value="String(settings.gifFps)"
                       @update:model-value="(v) => (settings.gifFps = Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -728,9 +720,7 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 循环播放 </span>
-                    <Switch
-                      :checked="settings.gifLoop"
-                      @update:checked="(v) => (settings.gifLoop = v)"
+                    <Switch :checked="settings.gifLoop" @update:checked="(v) => (settings.gifLoop = v)"
                     />
                   </div>
                 </div>
@@ -749,7 +739,7 @@ onBeforeUnmount(() => {
                       :model-value="String(settings.rotate)"
                       @update:model-value="(v) => (settings.rotate = Number(v) as Rotate)"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -765,30 +755,22 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 水平翻转 </span>
-                    <Switch
-                      :checked="settings.flipH"
-                      @update:checked="(v) => (settings.flipH = v)"
+                    <Switch :checked="settings.flipH" @update:checked="(v) => (settings.flipH = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 垂直翻转 </span>
-                    <Switch
-                      :checked="settings.flipV"
-                      @update:checked="(v) => (settings.flipV = v)"
+                    <Switch :checked="settings.flipV" @update:checked="(v) => (settings.flipV = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 锐化 </span>
-                    <Switch
-                      :checked="settings.sharpen"
-                      @update:checked="(v) => (settings.sharpen = v)"
+                    <Switch :checked="settings.sharpen" @update:checked="(v) => (settings.sharpen = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 去隔行（老录像） </span>
-                    <Switch
-                      :checked="settings.deinterlace"
-                      @update:checked="(v) => (settings.deinterlace = v)"
+                    <Switch :checked="settings.deinterlace" @update:checked="(v) => (settings.deinterlace = v)"
                     />
                   </div>
                 </div>
@@ -836,7 +818,7 @@ onBeforeUnmount(() => {
                     :model-value="String(settings.speed)"
                     @update:model-value="(v) => (settings.speed = Number(v))"
                   >
-                    <SelectTrigger class="h-8 text-xs">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -885,7 +867,7 @@ onBeforeUnmount(() => {
                       :disabled="settings.format === 'wav'"
                       @update:model-value="(v) => (settings.audioBitrate = Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -905,7 +887,7 @@ onBeforeUnmount(() => {
                       :model-value="settings.sampleRate === null ? 'null' : String(settings.sampleRate)"
                       @update:model-value="(v) => (settings.sampleRate = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -922,7 +904,7 @@ onBeforeUnmount(() => {
                   <div class="field">
                     <span class="text-xs text-muted-foreground"> 声道 </span>
                     <Select v-model="settings.channelMode">
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -942,7 +924,7 @@ onBeforeUnmount(() => {
                       :model-value="settings.highpass === null ? 'null' : String(settings.highpass)"
                       @update:model-value="(v) => (settings.highpass = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -962,7 +944,7 @@ onBeforeUnmount(() => {
                       :model-value="settings.lowpass === null ? 'null' : String(settings.lowpass)"
                       @update:model-value="(v) => (settings.lowpass = v === 'null' ? null : Number(v))"
                     >
-                      <SelectTrigger class="h-8 text-xs">
+                      <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -981,16 +963,12 @@ onBeforeUnmount(() => {
                     class="field switch-field"
                   >
                     <span class="text-xs text-muted-foreground"> 保留元数据/封面 </span>
-                    <Switch
-                      :checked="settings.keepMetadata"
-                      @update:checked="(v) => (settings.keepMetadata = v)"
+                    <Switch :checked="settings.keepMetadata" @update:checked="(v) => (settings.keepMetadata = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 响度标准化 </span>
-                    <Switch
-                      :checked="settings.loudnorm"
-                      @update:checked="(v) => (settings.loudnorm = v)"
+                    <Switch :checked="settings.loudnorm" @update:checked="(v) => (settings.loudnorm = v)"
                     />
                   </div>
                 </div>
@@ -1057,41 +1035,16 @@ onBeforeUnmount(() => {
               {{ statusText }}
             </span>
             <div class="flex items-center gap-2">
-              <Button
-                v-if="processing"
-                variant="destructive"
-                size="sm"
-                class="h-8 text-xs"
-                @click="cancelAll"
-              >
+              <Button v-if="processing" variant="destructive" @click="cancelAll">
                 取消处理
               </Button>
-              <Button
-                v-else
-                size="sm"
-                class="h-8 text-xs"
-                :loading="loadingCore"
-                :disabled="!canProcess"
-                @click="processAll"
-              >
+              <Button v-else :loading="loadingCore" :disabled="!canProcess" @click="processAll">
                 开始处理{{ pendingItems.length ? `（${pendingItems.length}）` : '' }}
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-8 text-xs"
-                :disabled="!doneItems.length || processing"
-                @click="downloadAll"
-              >
+              <Button variant="outline" :disabled="!doneItems.length || processing" @click="downloadAll">
                 打包下载 ZIP
               </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                class="h-8 text-xs"
-                :disabled="!items.length || processing"
-                @click="clearAll"
-              >
+              <Button variant="ghost" :disabled="!items.length || processing" @click="clearAll">
                 清空
               </Button>
             </div>
@@ -1197,12 +1150,7 @@ onBeforeUnmount(() => {
                   {{ item.error }}
                 </span>
 
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="trim-toggle h-6 px-1.5 text-xs text-muted-foreground hover:text-foreground"
-                  @click="item.expanded = !item.expanded"
-                >
+                <Button variant="ghost" class="trim-toggle h-6 px-1.5 text-muted-foreground hover:text-foreground" @click="item.expanded = !item.expanded">
                   {{ item.expanded ? '收起预览/截取' : '预览 / 截取片段' }}
                 </Button>
 
@@ -1242,22 +1190,10 @@ onBeforeUnmount(() => {
               </div>
 
               <div class="item-actions flex flex-col gap-1.5">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-7 text-xs"
-                  :disabled="!item.outputBlob"
-                  @click="downloadOne(item)"
-                >
+                <Button variant="outline" :disabled="!item.outputBlob" @click="downloadOne(item)">
                   下载
                 </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  class="h-7 text-xs text-muted-foreground hover:text-destructive"
-                  :disabled="processing"
-                  @click="removeItem(index)"
-                >
+                <Button variant="ghost" class="text-muted-foreground hover:text-destructive" :disabled="processing" @click="removeItem(index)">
                   移除
                 </Button>
               </div>

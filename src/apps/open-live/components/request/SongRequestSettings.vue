@@ -83,24 +83,12 @@ async function updateSettings() {
           <div class="flex items-center gap-1.5 w-[320px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-24">点播弹幕前缀</span>
             <template v-if="liveRequest.configCanEdit">
-              <Input
-                v-model="settings.orderPrefix"
-                class="h-8 text-xs flex-1"
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-8 text-xs shrink-0"
-                @click="updateSettings"
-              >
+              <Input v-model="settings.orderPrefix" class="flex-1" />
+              <Button variant="secondary" class="shrink-0" @click="updateSettings">
                 保存
               </Button>
             </template>
-            <Input
-              v-else
-              v-model="liveRequest.defaultPrefix"
-              class="h-8 text-xs flex-1"
-            />
+            <Input v-else v-model="liveRequest.defaultPrefix" class="flex-1" />
           </div>
 
           <Alert
@@ -122,13 +110,7 @@ async function updateSettings() {
             class="flex-1"
             @update:value="settings.queueMaxSize = $event || 10"
           />
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs shrink-0"
-            :disabled="!liveRequest.configCanEdit"
-            @click="updateSettings"
-          >
+          <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
             保存
           </Button>
         </div>
@@ -175,13 +157,7 @@ async function updateSettings() {
                 class="flex-1"
                 @update:value="settings.fanMedalMinLevel = $event || 0"
               />
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-8 text-xs shrink-0"
-                :disabled="!liveRequest.configCanEdit"
-                @click="updateSettings"
-              >
+              <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
                 保存
               </Button>
             </div>
@@ -246,13 +222,7 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.scMinPrice = $event || 30"
             />
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
+            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
               保存
             </Button>
           </div>
@@ -354,13 +324,7 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.cooldownSecond = $event || 1200"
             />
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
+            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
               保存
             </Button>
           </div>
@@ -374,13 +338,7 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.jianzhangCooldownSecond = $event || 900"
             />
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
+            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
               保存
             </Button>
           </div>
@@ -394,13 +352,7 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.tiduCooldownSecond = $event || 600"
             />
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
+            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
               保存
             </Button>
           </div>
@@ -414,13 +366,7 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.zongduCooldownSecond = $event || 300"
             />
-            <Button
-              size="sm"
-              variant="secondary"
-              class="h-8 text-xs shrink-0"
-              :disabled="!liveRequest.configCanEdit"
-              @click="updateSettings"
-            >
+            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
               保存
             </Button>
           </div>
@@ -438,13 +384,7 @@ async function updateSettings() {
             class="flex-1"
             @update:value="settings.webCooldownSecond = $event || 600"
           />
-          <Button
-            size="sm"
-            variant="secondary"
-            class="h-8 text-xs shrink-0"
-            :disabled="!liveRequest.configCanEdit"
-            @click="updateSettings"
-          >
+          <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
             保存
           </Button>
         </div>
@@ -461,17 +401,8 @@ async function updateSettings() {
           <div class="flex items-center gap-1.5 w-[260px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-10">标题</span>
             <template v-if="configCanEdit">
-              <Input
-                v-model="settings.obsTitle"
-                placeholder="默认为 点播"
-                class="h-8 text-xs flex-1"
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                class="h-8 text-xs shrink-0"
-                @click="updateSettings"
-              >
+              <Input v-model="settings.obsTitle" placeholder="默认为 点播" class="flex-1" />
+              <Button variant="secondary" class="shrink-0" @click="updateSettings">
                 保存
               </Button>
             </template>

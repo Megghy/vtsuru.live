@@ -271,12 +271,7 @@ async function selectFolder() {
     </Alert>
 
     <div class="flex items-center gap-2">
-      <Button
-        size="sm"
-        :disabled="isScanningFolder"
-        class="gap-1.5"
-        @click="selectFolder"
-      >
+      <Button :disabled="isScanningFolder" class="gap-1.5" @click="selectFolder">
         <ArchiveOutline class="size-4" />
         {{ isScanningFolder ? '正在扫描...' : '选择本地文件夹' }}
       </Button>
@@ -287,11 +282,7 @@ async function selectFolder() {
 
       <!-- 批量工具 -->
       <div class="space-y-2">
-        <Button
-          variant="outline"
-          size="xs"
-          @click="showBatchEdit = !showBatchEdit"
-        >
+        <Button variant="outline" size="xs" @click="showBatchEdit = !showBatchEdit">
           {{ showBatchEdit ? '收起批量设置工具' : '展开批量设置工具' }}
         </Button>
 
@@ -299,19 +290,19 @@ async function selectFolder() {
           <p class="text-muted-foreground text-[11px]">选中歌曲后，可以批量设置作者、语言或标签信息</p>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div class="flex items-center gap-1.5">
-              <Input v-model="batchAuthorInput" placeholder="输入作者" class="h-7 text-xs flex-1" />
+              <Input size="xs" v-model="batchAuthorInput" placeholder="输入作者" class="flex-1" />
               <Button size="xs" variant="outline" @click="batchEditFolderSongs('author', [batchAuthorInput]); batchAuthorInput = ''">
                 设置作者
               </Button>
             </div>
             <div class="flex items-center gap-1.5">
-              <Input v-model="batchLanguageInput" placeholder="输入语言" class="h-7 text-xs flex-1" />
+              <Input size="xs" v-model="batchLanguageInput" placeholder="输入语言" class="flex-1" />
               <Button size="xs" variant="outline" @click="batchEditFolderSongs('language', [batchLanguageInput]); batchLanguageInput = ''">
                 设置语言
               </Button>
             </div>
             <div class="flex items-center gap-1.5">
-              <Input v-model="batchTagInput" placeholder="输入标签" class="h-7 text-xs flex-1" />
+              <Input size="xs" v-model="batchTagInput" placeholder="输入标签" class="flex-1" />
               <Button size="xs" variant="outline" @click="batchEditFolderSongs('tags', [batchTagInput]); batchTagInput = ''">
                 设置标签
               </Button>

@@ -80,15 +80,12 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">作者</label>
-        <Input
-          v-model="blockProps.author"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.author" />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">对齐</label>
         <Select v-model="blockProps.align">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="对齐" />
           </SelectTrigger>
           <SelectContent>
@@ -117,7 +114,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">方向</label>
         <Select v-model="blockProps.direction">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="方向" />
           </SelectTrigger>
           <SelectContent>
@@ -151,11 +148,7 @@ function enableFeedbackEmbed(enabled: boolean) {
     <PropsGrid>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input
-          v-model="blockProps.title"
-          placeholder="例如：生日倒计时"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.title" placeholder="例如：生日倒计时" />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">目标时间</label>
@@ -168,7 +161,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">展示样式</label>
         <Select v-model="blockProps.style">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="展示样式" />
           </SelectTrigger>
           <SelectContent>
@@ -183,11 +176,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">到达后文案</label>
-        <Input
-          v-model="blockProps.doneText"
-          placeholder="已到达"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.doneText" placeholder="已到达" />
       </div>
     </PropsGrid>
   </div>
@@ -202,20 +191,14 @@ function enableFeedbackEmbed(enabled: boolean) {
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input
-          v-model="blockProps.title"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.title" />
       </div>
       <div
         v-if="propertyAvailable('buttonText')"
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">按钮文字</label>
-        <Input
-          v-model="blockProps.buttonText"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.buttonText" />
       </div>
       <div
         v-if="propertyAvailable('description')"
@@ -238,18 +221,12 @@ function enableFeedbackEmbed(enabled: boolean) {
             class="text-destructive"
           >*</span>
         </label>
-        <Input
-          v-model="blockProps.url"
-          placeholder="https://..."
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.url" placeholder="https://..." />
       </div>
       <div class="span-full space-y-1">
         <div class="flex items-center justify-between py-1">
           <label class="text-xs text-muted-foreground">嵌入到页面</label>
-          <Switch
-            :checked="blockProps.embed"
-            @update:checked="(val) => { blockProps.embed = val; enableFeedbackEmbed(val); }"
+          <Switch :checked="blockProps.embed" @update:checked="(val) => { blockProps.embed = val; enableFeedbackEmbed(val); }"
           />
         </div>
         <div class="rounded p-2 text-xs text-muted-foreground bg-muted/40">
@@ -262,7 +239,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       >
         <label class="text-xs text-muted-foreground">嵌入内容</label>
         <Select v-model="blockProps.embedMode">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="嵌入内容" />
           </SelectTrigger>
           <SelectContent>
@@ -289,7 +266,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       >
         <label class="text-xs text-muted-foreground">默认话题</label>
         <Select v-model="blockProps.defaultTag">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="不预设话题" />
           </SelectTrigger>
           <SelectContent>
@@ -320,24 +297,16 @@ function enableFeedbackEmbed(enabled: boolean) {
     <PropsGrid>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">最大宽度</label>
-        <Input
-          v-model="blockProps.maxWidth"
-          placeholder="例如 100% 或 480px"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.maxWidth" placeholder="例如 100% 或 480px" />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">最大高度</label>
-        <Input
-          v-model="blockProps.maxHeight"
-          placeholder="例如 100% 或 320px"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.maxHeight" placeholder="例如 100% 或 320px" />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">形状</label>
         <Select v-model="blockProps.shape">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="形状" />
           </SelectTrigger>
           <SelectContent>
@@ -349,32 +318,16 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">图片描述 (Alt)</label>
-        <Input
-          v-model="blockProps.alt"
-          placeholder="图片加载失败时显示的文字"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.alt" placeholder="图片加载失败时显示的文字" />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">本地图片</label>
         <div class="flex items-center gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            class="h-8 text-xs gap-1.5"
-            :disabled="editor.isUploading.value"
-            @click="editor.triggerUpload(props.block, 'imageFile')"
-          >
+          <Button variant="outline" class="gap-1.5" :disabled="editor.isUploading.value" @click="editor.triggerUpload(props.block, 'imageFile')">
             <ImageOutline class="size-4" />
             上传图片
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            class="h-8 text-xs"
-            :disabled="!blockProps.imageFile"
-            @click="editor.clearUploadedFile(props.block, 'imageFile')"
-          >
+          <Button variant="ghost" :disabled="!blockProps.imageFile" @click="editor.clearUploadedFile(props.block, 'imageFile')">
             清除
           </Button>
           <img
@@ -399,19 +352,11 @@ function enableFeedbackEmbed(enabled: boolean) {
     <PropsGrid>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">嵌入链接 (支持 Bilibili / YouTube)</label>
-        <Input
-          v-model="blockProps.url"
-          placeholder="https://www.youtube.com/watch?v=..."
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.url" placeholder="https://www.youtube.com/watch?v=..." />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input
-          v-model="blockProps.title"
-          placeholder="可选，用于无障碍访问"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.title" placeholder="可选，用于无障碍访问" />
       </div>
     </PropsGrid>
   </div>
@@ -423,10 +368,7 @@ function enableFeedbackEmbed(enabled: boolean) {
     <PropsGrid>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">文字</label>
-        <Input
-          v-model="blockProps.text"
-          class="h-8 text-xs"
-        />
+        <Input v-model="blockProps.text" />
       </div>
       <div
         v-if="propertyAvailable('titlePlacement')"
@@ -434,7 +376,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       >
         <label class="text-xs text-muted-foreground">文字位置</label>
         <Select v-model="blockProps.titlePlacement">
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="文字位置" />
           </SelectTrigger>
           <SelectContent>
@@ -472,7 +414,7 @@ function enableFeedbackEmbed(enabled: boolean) {
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">大小</label>
       <Select v-model="blockProps.size">
-        <SelectTrigger class="h-8 text-xs">
+        <SelectTrigger>
           <SelectValue placeholder="大小" />
         </SelectTrigger>
         <SelectContent>
@@ -490,10 +432,7 @@ function enableFeedbackEmbed(enabled: boolean) {
   >
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">文字</label>
-      <Input
-        v-model="blockProps.text"
-        class="h-8 text-xs"
-      />
+      <Input v-model="blockProps.text" />
     </div>
   </div>
 </template>

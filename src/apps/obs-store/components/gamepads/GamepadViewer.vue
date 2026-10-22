@@ -129,19 +129,10 @@ async function copyObsUrl() {
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Button
-              size="sm"
-              class="h-8 text-xs"
-              @click="copyObsUrl"
-            >
+            <Button @click="copyObsUrl">
               复制 OBS 链接
             </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              class="h-8 text-xs"
-              as-child
-            >
+            <Button variant="outline" as-child>
               <a
                 :href="displayRelativeUrl"
                 target="_blank"
@@ -166,12 +157,7 @@ async function copyObsUrl() {
                 正在运行仿真测试演示动画（自动模拟摇杆画圆与按键交替触发）
               </AlertDescription>
             </div>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px] border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-              @click="gamepadStore.stopSimulation"
-            >
+            <Button size="xs" variant="outline" class="h-6 text-[11px] border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10" @click="gamepadStore.stopSimulation">
               退出测试
             </Button>
           </div>
@@ -184,12 +170,7 @@ async function copyObsUrl() {
             <AlertDescription class="text-xs text-current m-0">
               未检测到游戏手柄连接。按下手柄任意按键唤醒，或开启动态仿真测试：
             </AlertDescription>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px] border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
-              @click="gamepadStore.startSimulation"
-            >
+            <Button size="xs" variant="outline" class="h-6 text-[11px] border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10" @click="gamepadStore.startSimulation">
               开启仿真测试
             </Button>
           </div>
@@ -230,28 +211,13 @@ async function copyObsUrl() {
 
           <div class="gp-stage-overlay-tools">
             <div class="flex items-center gap-1.5">
-              <Button
-                size="xs"
-                class="h-6 text-[11px] px-2"
-                :variant="previewBg === 'checker' ? 'default' : 'outline'"
-                @click="previewBg = 'checker'"
-              >
+              <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
                 网格底
               </Button>
-              <Button
-                size="xs"
-                class="h-6 text-[11px] px-2"
-                :variant="previewBg === 'dark' ? 'default' : 'outline'"
-                @click="previewBg = 'dark'"
-              >
+              <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
                 暗黑底
               </Button>
-              <Button
-                size="xs"
-                class="h-6 text-[11px] px-2"
-                :variant="previewBg === 'transparent' ? 'default' : 'outline'"
-                @click="previewBg = 'transparent'"
-              >
+              <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
                 透明底
               </Button>
             </div>
@@ -269,7 +235,7 @@ async function copyObsUrl() {
               <Select
                 v-model="selectedType"
               >
-                <SelectTrigger class="h-8 text-xs w-[180px]">
+                <SelectTrigger class="w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -293,7 +259,7 @@ async function copyObsUrl() {
               <Select
                 v-model="selectedBodyId"
               >
-                <SelectTrigger class="h-8 text-xs w-[220px]">
+                <SelectTrigger class="w-[220px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -357,12 +323,7 @@ async function copyObsUrl() {
               class="w-[80px]"
               @update:value="stickSensitivity = $event || 15"
             />
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-7 text-xs"
-              @click="stickSensitivity = 15"
-            >
+            <Button size="xs" variant="outline" @click="stickSensitivity = 15">
               重置
             </Button>
           </div>
@@ -408,16 +369,8 @@ async function copyObsUrl() {
               3. 勾选 <b>“关闭源时卸载浏览器”</b> 与 <b>“在 OBS 中控制音频”</b>（如有需要）。
             </div>
             <div class="gp-url-box flex items-center gap-2 mt-2">
-              <Input
-                :value="displayAbsoluteUrl"
-                readonly
-                class="h-8 text-xs flex-1"
-              />
-              <Button
-                size="sm"
-                class="h-8 text-xs"
-                @click="copyObsUrl"
-              >
+              <Input :value="displayAbsoluteUrl" readonly class="flex-1" />
+              <Button @click="copyObsUrl">
                 复制
               </Button>
             </div>
@@ -431,17 +384,8 @@ async function copyObsUrl() {
             </summary>
             <div class="flex items-center gap-2 mt-3 pt-2 border-t">
               <span class="text-xs">自定义 ViewBox:</span>
-              <Input
-                v-model="customViewBox"
-                :placeholder="config.defaultViewBox"
-                class="h-8 text-xs w-[220px]"
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-8 text-xs"
-                @click="customViewBox = ''"
-              >
+              <Input v-model="customViewBox" :placeholder="config.defaultViewBox" class="w-[220px]" />
+              <Button variant="outline" @click="customViewBox = ''">
                 恢复默认
               </Button>
             </div>

@@ -73,12 +73,7 @@ function apply() {
         @positive-click="emit('change', '')"
       >
         <template #trigger>
-          <Button
-            variant="ghost"
-            size="xs"
-            class="h-5 px-1.5 text-[11px] text-destructive hover:text-destructive"
-            :disabled="disabled || busy"
-          >
+          <Button variant="ghost" size="xs" class="h-5 px-1.5 text-[11px] text-destructive hover:text-destructive" :disabled="disabled || busy">
             清除
           </Button>
         </template>
@@ -110,31 +105,13 @@ function apply() {
       @change="choose"
     />
 
-    <Button
-      class="w-full h-7 text-xs"
-      size="sm"
-      variant="outline"
-      :disabled="disabled || busy"
-      @click="input?.click()"
-    >
+    <Button class="w-full" variant="outline" :disabled="disabled || busy" @click="input?.click()">
       {{ value ? '更换图片' : '上传图片' }}
     </Button>
 
     <div class="flex items-center gap-1">
-      <Input
-        v-model="url"
-        class="h-7 text-xs flex-1"
-        placeholder="HTTP(S) 图片外链"
-        :disabled="disabled || busy"
-        @keyup.enter="apply"
-      />
-      <Button
-        size="xs"
-        variant="secondary"
-        class="h-7 text-xs shrink-0"
-        :disabled="disabled || busy || !url.trim()"
-        @click="apply"
-      >
+      <Input size="xs" v-model="url" class="flex-1" placeholder="HTTP(S) 图片外链" :disabled="disabled || busy" @keyup.enter="apply" />
+      <Button size="xs" variant="secondary" class="shrink-0" :disabled="disabled || busy || !url.trim()" @click="apply">
         应用
       </Button>
     </div>

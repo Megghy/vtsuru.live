@@ -113,25 +113,12 @@ function openManage() {
         <div class="vote__foot">
           <span class="vote__outcome">{{ outcome }}</span>
           <template v-if="active">
-            <Button
-              v-for="seconds in [30, 60]"
-              :key="seconds"
-              size="sm"
-              variant="secondary"
-              class="h-6 text-xs px-2"
-              :disabled="busy"
-              @click="vote.extend(seconds)"
-            >
+            <Button v-for="seconds in [30, 60]" :key="seconds" variant="secondary" class="h-6 px-2" :disabled="busy" @click="vote.extend(seconds)">
               +{{ seconds }}s
             </Button>
             <Popconfirm @positive-click="vote.end(session.id)">
               <template #trigger>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  class="h-6 text-xs px-2 text-amber-500 border-amber-500 hover:bg-amber-500/10"
-                  :disabled="busy"
-                >
+                <Button variant="outline" class="h-6 px-2 text-amber-500 border-amber-500 hover:bg-amber-500/10" :disabled="busy">
                   <component :is="Stop16Regular" class="h-3.5 w-3.5 mr-1" />
                   结束
                 </Button>
@@ -139,13 +126,7 @@ function openManage() {
               提前结束并展示结果？
             </Popconfirm>
           </template>
-          <Button
-            v-else
-            size="sm"
-            variant="secondary"
-            class="h-6 text-xs px-2"
-            @click="reuse"
-          >
+          <Button v-else variant="secondary" class="h-6 px-2" @click="reuse">
             复用选项
           </Button>
         </div>
@@ -156,23 +137,11 @@ function openManage() {
         class="vote__form"
       >
         <div class="vote__presets flex flex-wrap gap-1">
-          <Button
-            v-for="(preset, index) in presets"
-            :key="index"
-            size="sm"
-            variant="ghost"
-            class="h-6 text-xs px-2 text-muted-foreground"
-            @click="applyPreset(preset)"
-          >
+          <Button v-for="(preset, index) in presets" :key="index" variant="ghost" class="h-6 px-2 text-muted-foreground" @click="applyPreset(preset)">
             {{ preset.name }}
           </Button>
         </div>
-        <Input
-          v-model="title"
-          class="h-8 text-xs"
-          placeholder="投票标题"
-          maxlength="50"
-        />
+        <Input v-model="title" placeholder="投票标题" maxlength="50" />
         <Textarea
           v-model="optionsText"
           class="text-xs min-h-[64px]"
@@ -195,12 +164,7 @@ function openManage() {
             />
             允许多选
           </label>
-          <Button
-            size="sm"
-            class="h-8 text-xs ml-auto"
-            :disabled="busy || !title.trim() || draftOptions.length < 2"
-            @click="create"
-          >
+          <Button class="ml-auto" :disabled="busy || !title.trim() || draftOptions.length < 2" @click="create">
             发起
           </Button>
         </div>

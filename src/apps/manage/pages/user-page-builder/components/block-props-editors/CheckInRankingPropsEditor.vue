@@ -15,7 +15,7 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">展示人数</label>
       <Select :model-value="String(blockProps.count ?? 3)" @update:model-value="(val) => (blockProps.count = Number(val))">
-        <SelectTrigger class="h-8 text-xs">
+        <SelectTrigger>
           <SelectValue placeholder="展示人数" />
         </SelectTrigger>
         <SelectContent>

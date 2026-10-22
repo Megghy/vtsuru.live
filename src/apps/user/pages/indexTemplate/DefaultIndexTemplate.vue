@@ -197,32 +197,15 @@ export const Config = defineTemplateConfig([])
             </div>
 
             <div class="profile-actions">
-              <Button
-                v-if="isOwner"
-                variant="outline"
-                size="lg"
-                class="flex items-center gap-2"
-                @click="$router.push({ name: 'manage-userPageBuilder' })"
-              >
+              <Button v-if="isOwner" variant="outline" size="lg" class="flex items-center gap-2" @click="$router.push({ name: 'manage-userPageBuilder' })">
                 <component :is="ColorPaletteOutline" class="size-4" />
                 主页装修
               </Button>
-              <Button
-                v-if="props.userInfo?.biliId"
-                variant="outline"
-                size="lg"
-                class="profile-action profile-action--secondary flex items-center gap-2"
-                @click="navigate(`https://space.bilibili.com/${props.userInfo.biliId}`)"
-              >
+              <Button v-if="props.userInfo?.biliId" variant="outline" size="lg" class="profile-action profile-action--secondary flex items-center gap-2" @click="navigate(`https://space.bilibili.com/${props.userInfo.biliId}`)">
                 <component :is="BilibiliIcon" class="size-4" />
                 <span class="bili-action__label">B 站主页</span>
               </Button>
-              <Button
-                v-if="props.userInfo?.biliRoomId"
-                size="lg"
-                class="profile-action profile-action--primary flex items-center gap-2"
-                @click="navigate(`https://live.bilibili.com/${props.userInfo.biliRoomId}`)"
-              >
+              <Button v-if="props.userInfo?.biliRoomId" size="lg" class="profile-action profile-action--primary flex items-center gap-2" @click="navigate(`https://live.bilibili.com/${props.userInfo.biliRoomId}`)">
                 <component :is="RadioOutline" class="size-4" />
                 进入直播间
               </Button>

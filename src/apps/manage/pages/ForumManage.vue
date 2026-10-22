@@ -219,12 +219,7 @@ onMounted(async () => {
       subtitle="创建与管理讨论区成员、权限与公告"
     >
       <template #action>
-        <Button
-          size="xs"
-          variant="outline"
-          :loading="useForum.isLoading"
-          @click="refreshForumInfo"
-        >
+        <Button size="xs" variant="outline" :loading="useForum.isLoading" @click="refreshForumInfo">
           刷新
         </Button>
       </template>
@@ -239,7 +234,7 @@ onMounted(async () => {
           :model-value="selectedForum"
           @update:model-value="SwitchForum"
         >
-          <SelectTrigger class="h-8 text-xs">
+          <SelectTrigger>
             <SelectValue placeholder="选择要管理的粉丝讨论区" />
           </SelectTrigger>
           <SelectContent>
@@ -254,11 +249,7 @@ onMounted(async () => {
         </Select>
       </div>
 
-      <Button
-        size="xs"
-        variant="ghost"
-        @click="SwitchForum(accountInfo.id)"
-      >
+      <Button size="xs" variant="ghost" @click="SwitchForum(accountInfo.id)">
         切换到我的讨论区
       </Button>
     </div>
@@ -278,12 +269,7 @@ onMounted(async () => {
       <div class="space-y-3 pt-2">
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-foreground">讨论区名称</label>
-          <Input
-            v-model="create_Name"
-            placeholder="例如：XX的粉丝根据地"
-            maxlength="20"
-            class="h-8 text-xs"
-          />
+          <Input v-model="create_Name" placeholder="例如：XX的粉丝根据地" maxlength="20" />
         </div>
 
         <div class="space-y-1.5">
@@ -315,12 +301,7 @@ onMounted(async () => {
         </div>
 
         <div class="pt-2">
-          <Button
-            size="sm"
-            variant="brand"
-            class="w-full"
-            @click="createForum"
-          >
+          <Button variant="brand" class="w-full" @click="createForum">
             立即创建粉丝讨论区
           </Button>
         </div>
@@ -463,7 +444,7 @@ onMounted(async () => {
                     :model-value="String(currentForum.settings.allowedViewerLevel)"
                     @update:model-value="(val) => { currentForum.settings.allowedViewerLevel = Number(val) as ForumUserLevels; updateForumSettings() }"
                   >
-                    <SelectTrigger class="h-8 text-xs">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -486,7 +467,7 @@ onMounted(async () => {
                     :model-value="String(currentForum.settings.allowedPostLevel)"
                     @update:model-value="(val) => { currentForum.settings.allowedPostLevel = Number(val) as ForumUserLevels; updateForumSettings() }"
                   >
-                    <SelectTrigger class="h-8 text-xs">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -557,11 +538,7 @@ onMounted(async () => {
                       </Badge>
                     </TableCell>
                     <TableCell class="text-right">
-                      <Button
-                        size="xs"
-                        variant="brand"
-                        @click="confirmApplyUser(user.id)"
-                      >
+                      <Button size="xs" variant="brand" @click="confirmApplyUser(user.id)">
                         通过申请
                       </Button>
                     </TableCell>
@@ -616,21 +593,10 @@ onMounted(async () => {
                       </Badge>
                     </TableCell>
                     <TableCell class="text-right space-x-2">
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="text-destructive hover:bg-destructive/10"
-                        @click="banUser(user.id)"
-                      >
+                      <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="banUser(user.id)">
                         封禁
                       </Button>
-                      <Button
-                        v-if="currentForum.owner.id === accountInfo.id"
-                        size="xs"
-                        variant="ghost"
-                        class="text-brand"
-                        @click="addAdmin(user.id)"
-                      >
+                      <Button v-if="currentForum.owner.id === accountInfo.id" size="xs" variant="ghost" class="text-brand" @click="addAdmin(user.id)">
                         设为管理员
                       </Button>
                     </TableCell>
@@ -646,12 +612,7 @@ onMounted(async () => {
               <h4 class="text-xs font-semibold text-foreground">
                 管理员 ({{ currentForum.admins?.length || 0 }})
               </h4>
-              <Button
-                size="xs"
-                variant="brand"
-                :disabled="currentForum.owner.id !== accountInfo.id"
-                @click="showAddAdminModal = true"
-              >
+              <Button size="xs" variant="brand" :disabled="currentForum.owner.id !== accountInfo.id" @click="showAddAdminModal = true">
                 添加管理员
               </Button>
             </div>
@@ -695,13 +656,7 @@ onMounted(async () => {
                       </Badge>
                     </TableCell>
                     <TableCell class="text-right">
-                      <Button
-                        v-if="currentForum.owner.id === accountInfo.id"
-                        size="xs"
-                        variant="ghost"
-                        class="text-destructive hover:bg-destructive/10"
-                        @click="removeAdmin(user.id)"
-                      >
+                      <Button v-if="currentForum.owner.id === accountInfo.id" size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="removeAdmin(user.id)">
                         取消管理员
                       </Button>
                     </TableCell>
@@ -717,11 +672,7 @@ onMounted(async () => {
               <h4 class="text-xs font-semibold text-foreground">
                 封禁用户 ({{ currentForum.blackList?.length || 0 }})
               </h4>
-              <Button
-                size="xs"
-                variant="outline"
-                @click="showBanModal = true"
-              >
+              <Button size="xs" variant="outline" @click="showBanModal = true">
                 封禁用户
               </Button>
             </div>
@@ -765,12 +716,7 @@ onMounted(async () => {
                       </Badge>
                     </TableCell>
                     <TableCell class="text-right">
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="text-brand"
-                        @click="unbanUser(user.id)"
-                      >
+                      <Button size="xs" variant="ghost" class="text-brand" @click="unbanUser(user.id)">
                         解禁
                       </Button>
                     </TableCell>
@@ -820,27 +766,14 @@ onMounted(async () => {
             @update:user-info="(v) => (currentAdminInfo = v)"
           />
 
-          <Input
-            v-model="addAdminName"
-            placeholder="请输入用户名或 VTsuruId"
-            class="h-8 text-xs"
-          />
+          <Input v-model="addAdminName" placeholder="请输入用户名或 VTsuruId" />
         </div>
 
         <DialogFooter>
-          <Button
-            size="xs"
-            variant="ghost"
-            @click="showAddAdminModal = false"
-          >
+          <Button size="xs" variant="ghost" @click="showAddAdminModal = false">
             取消
           </Button>
-          <Button
-            size="xs"
-            variant="brand"
-            :disabled="!currentAdminInfo?.id"
-            @click="addAdmin(currentAdminInfo!.id)"
-          >
+          <Button size="xs" variant="brand" :disabled="!currentAdminInfo?.id" @click="addAdmin(currentAdminInfo!.id)">
             确认添加
           </Button>
         </DialogFooter>
@@ -866,27 +799,14 @@ onMounted(async () => {
             @update:user-info="(v) => (currentBanUserInfo = v)"
           />
 
-          <Input
-            v-model="addBanName"
-            placeholder="请输入用户名或 VTsuruId"
-            class="h-8 text-xs"
-          />
+          <Input v-model="addBanName" placeholder="请输入用户名或 VTsuruId" />
         </div>
 
         <DialogFooter>
-          <Button
-            size="xs"
-            variant="ghost"
-            @click="showBanModal = false"
-          >
+          <Button size="xs" variant="ghost" @click="showBanModal = false">
             取消
           </Button>
-          <Button
-            size="xs"
-            variant="destructive"
-            :disabled="!currentBanUserInfo?.id"
-            @click="banUser(currentBanUserInfo!.id)"
-          >
+          <Button size="xs" variant="destructive" :disabled="!currentBanUserInfo?.id" @click="banUser(currentBanUserInfo!.id)">
             确认封禁
           </Button>
         </DialogFooter>

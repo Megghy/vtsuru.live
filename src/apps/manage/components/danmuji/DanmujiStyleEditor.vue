@@ -2,6 +2,13 @@
 import type { DanmujiStyle } from '@/shared/danmujiStyle'
 import { Checkbox } from '@/shared/ui/checkbox'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
 
 const style = defineModel<DanmujiStyle>({ required: true })
 const presets = [
@@ -15,12 +22,16 @@ const presets = [
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">外观预设</label>
-      <select
-        v-model="style.preset"
-        class="w-full h-8 rounded border border-input bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-      >
-        <option v-for="p in presets" :key="p.value" :value="p.value">{{ p.label }}</option>
-      </select>
+      <Select v-model="style.preset">
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem v-for="p in presets" :key="p.value" :value="p.value">
+            {{ p.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </div>
 
     <div class="space-y-1">
