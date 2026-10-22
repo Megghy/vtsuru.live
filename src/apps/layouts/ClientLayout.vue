@@ -29,7 +29,7 @@ import { clientInited, clientInitStage, initAll, OnClientUnmounted } from '@/app
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
-import { BASE_URL } from '@/shared/config'
+import { BASE_URL, isTauri } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Badge } from '@/shared/ui/badge'
@@ -109,6 +109,15 @@ const routeNameToMenuKey: Record<string, string> = {
   'client-settings': 'settings',
 }
 const activeMenuKey = computed(() => routeNameToMenuKey[route.name as string] ?? '')
+
+function openManagePage() {
+  const url = `https://${BASE_URL}/manage`
+  if (isTauri()) {
+    void openUrl(url)
+  } else {
+    window.open(url, '_blank')
+  }
+}
 
 async function login() {
   if (!token.value.trim()) {
@@ -206,36 +215,33 @@ onMounted(() => {
         class="max-w-[90vw] w-[400px] border bg-card shadow-lg"
       >
         <CardHeader class="text-center pb-4">
-          <CardTitle>登陆</CardTitle>
-          <CardDescription>输入你的 VTsuru Token</CardDescription>
+          <CardTitle>登录</CardTitle>
+          <CardDescription>输入你的 VTsuru Token 登录客户端</CardDescription>
         </CardHeader>
 
         <CardContent class="space-y-4">
-          <div class="space-y-1.5">
+          <div class="space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-medium text-foreground">Token</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <button
-                      type="button"
-                      class="text-xs text-primary hover:underline cursor-pointer"
-                      @click="openUrl(`https://${BASE_URL}/manage`)"
-                    >
-                      前往获取
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>登录后在管理面板主页的个人信息下方</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <button
+                type="button"
+                class="text-xs text-primary hover:underline cursor-pointer inline-flex items-center gap-0.5"
+                @click="openManagePage"
+              >
+                <span>前往管理后台获取</span>
+                <span class="text-[10px]">&nearr;</span>
+              </button>
             </div>
             <Input
               v-model="token"
               type="password"
-              placeholder="请输入Token"
+              placeholder="请输入 Token"
               class="h-9"
               @keyup.enter="login"
             />
+            <p class="text-[11px] text-muted-foreground leading-relaxed">
+              获取方式：登录网页端后，在「管理后台主页」的个人信息卡片下方复制 Token。
+            </p>
           </div>
 
           <Button
@@ -243,7 +249,7 @@ onMounted(() => {
             :disabled="isLoadingAccount"
             @click="login"
           >
-            登陆
+            登录
           </Button>
         </CardContent>
       </Card>
