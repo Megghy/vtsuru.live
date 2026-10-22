@@ -1,4 +1,4 @@
-import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
+import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { v4 as uuidv4 } from 'uuid'
 import type { Ref } from 'vue'
 
@@ -121,15 +121,11 @@ export function useCheckIn(
   _isTianXuanActive: Ref<boolean>,
   sendDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
-  const { data: checkInConfig, isFinished: isConfigLoaded } = useIDBKeyval<CheckInConfig>(
+  const checkInConfig = usePersistedStorage<CheckInConfig>(
     'autoAction.checkin.config',
     createDefaultCheckInConfig(),
-    {
-      onError: (err) => {
-        console.error('[CheckIn] IDB 错误 (配置):', err)
-      },
-    },
   )
+  const isConfigLoaded = persistLoaded(checkInConfig)
 
   function processCheckInResult(payload: CheckInHubEvent, runtimeState: RuntimeState) {
     if (!isConfigLoaded.value || !checkInConfig.value.sendReply || !roomId.value) {

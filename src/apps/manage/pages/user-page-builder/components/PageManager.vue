@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { CopyOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
-import { computed, inject, ref } from 'vue'
+import { AppsOutline, CopyOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
+import { computed, inject, nextTick, ref } from 'vue'
 
+import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import type { UserPageConfig } from '@/apps/user-page/types'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -12,8 +13,9 @@ import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Tag } from '@/shared/ui/tag'
 
 import { UserPageEditorKey } from '../context'
-import { getPageModeShortLabel, PAGE_MODE_OPTIONS } from '../editorPageConfig'
+import { PAGE_MODE_OPTIONS } from '../editorPageConfig'
 import { usePageEntries } from '../usePageEntries'
+import PageIconPickerModal from './PageIconPickerModal.vue'
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
@@ -28,6 +30,12 @@ const duplicateToSlug = ref('')
 
 const deletePageModal = ref(false)
 const deletePageSlug = ref('')
+
+const iconPickerShown = ref(false)
+const iconPickerSlug = ref('')
+const iconPickerValue = computed(() =>
+  iconPickerSlug.value ? editor.settings.value.pages?.[iconPickerSlug.value]?.navIcon : undefined,
+)
 
 const { pageEntries, visiblePages, hiddenPages } = usePageEntries(editor)
 const pagesCount = computed(() => pageEntries.value.length)
@@ -51,6 +59,17 @@ function handlePageAction(key: string, slug: string) {
     deletePageSlug.value = slug
     deletePageModal.value = true
   }
+}
+
+async function openIconPicker(slug: string) {
+  iconPickerSlug.value = slug
+  await nextTick()
+  iconPickerShown.value = true
+}
+
+function setPageNavIcon(value: string | undefined) {
+  const page = editor.settings.value.pages?.[iconPickerSlug.value]
+  if (page) page.navIcon = value
 }
 
 function confirmDeletePage() {
@@ -89,15 +108,7 @@ function confirmDuplicatePage() {
           class="page-item__main w-full justify-start px-2"
           @click="editor.currentKey.value = 'home'"
         >
-          <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
-            <span class="truncate text-left flex-1"> 主页 /@{{ editor.account.value.name || '...' }} </span>
-            <Tag
-              variant="outline"
-              class="text-[10px] h-4.5 px-1 shrink-0"
-            >
-              {{ getPageModeShortLabel(editor.settings.value.home?.mode ?? 'block') }}
-            </Tag>
-          </div>
+          <span class="truncate text-left w-full">主页 /@{{ editor.account.value.name || '...' }}</span>
         </Button>
       </div>
     </div>
@@ -133,16 +144,12 @@ function confirmDuplicatePage() {
               class="page-item__main flex-1 min-w-0 justify-start px-2"
               @click="editor.currentKey.value = p.slug"
             >
-              <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
-                <span class="truncate text-left flex-1">
-                  {{ p.title }}
-                </span>
-                <Tag
-                  variant="outline"
-                  class="text-[10px] h-4.5 px-1 shrink-0"
-                >
-                  {{ getPageModeShortLabel(p.mode ?? 'block') }}
-                </Tag>
+              <div class="flex items-center w-full min-w-0 gap-1.5">
+                <component
+                  :is="resolveUserPageNavIcon(p.navIcon)"
+                  class="size-3.5 shrink-0"
+                />
+                <span class="truncate text-left flex-1">{{ p.title }}</span>
               </div>
             </Button>
 
@@ -150,7 +157,7 @@ function confirmDuplicatePage() {
               <DropdownMenuTrigger as-child>
                 <Button
                   variant="ghost"
-                  class="size-7 p-0"
+                  size="icon-xs"
                   aria-label="更多页面操作"
                 >
                   <component
@@ -161,8 +168,15 @@ function confirmDuplicatePage() {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                class="w-28 text-xs"
+                class="min-w-32 text-xs"
               >
+                <DropdownMenuItem @click="openIconPicker(p.slug)">
+                  <component
+                    :is="AppsOutline"
+                    class="size-3.5 mr-2"
+                  />
+                  选择图标
+                </DropdownMenuItem>
                 <DropdownMenuItem @click="handlePageAction('duplicate', p.slug)">
                   <component
                     :is="CopyOutline"
@@ -314,6 +328,12 @@ function confirmDuplicatePage() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <PageIconPickerModal
+      v-model:show="iconPickerShown"
+      :value="iconPickerValue"
+      @select="setPageNavIcon"
+    />
   </div>
 </template>
 

@@ -2,48 +2,40 @@
 import { Live24Filled, Person48Filled } from '@vicons/fluent'
 
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { cn } from '@/shared/utils/cn'
 
-defineProps<{ collapsed?: boolean; block?: boolean }>()
+const props = defineProps<{ collapsed?: boolean; block?: boolean }>()
 
 const { workspace, switchWorkspace } = useManageWorkspace()
+
+function onChange(value: string | string[] | undefined) {
+  if (value === 'streamer' || value === 'user') void switchWorkspace(value)
+}
 </script>
 
 <template>
-  <div
-    class="grid grid-cols-2 gap-0.5 w-[148px] p-0.5 border border-border rounded-[9px] bg-muted box-border"
-    :class="{ 'w-full': block, 'w-auto grid-cols-1 p-0.5': collapsed }"
+  <ToggleGroup
+    type="single"
+    :model-value="workspace"
+    :class="cn(collapsed ? '!h-auto w-full flex-col' : props.block ? 'w-full' : 'w-[148px]')"
+    @update:model-value="onChange"
   >
-    <button
-      type="button"
-      class="min-w-0 h-7 px-2 border-0 rounded-md bg-transparent text-muted-foreground inline-flex-center gap-1.5 font-inherit text-xs font-semibold cursor-pointer transition-colors"
-      :class="{
-        'bg-popover text-foreground shadow-sm': workspace === 'streamer',
-        'size-7 p-0': collapsed,
-      }"
+    <ToggleGroupItem
+      value="streamer"
       :title="collapsed ? '主播后台' : undefined"
-      @click="switchWorkspace('streamer')"
+      :class="collapsed ? 'w-full px-0' : 'flex-1'"
     >
-      <component
-        :is="Live24Filled"
-        class="h-3.5 w-3.5"
-      />
+      <component :is="Live24Filled" />
       <span v-if="!collapsed">主播</span>
-    </button>
-    <button
-      type="button"
-      class="min-w-0 h-7 px-2 border-0 rounded-md bg-transparent text-muted-foreground inline-flex-center gap-1.5 font-inherit text-xs font-semibold cursor-pointer transition-colors"
-      :class="{
-        'bg-popover text-foreground shadow-sm': workspace === 'user',
-        'size-7 p-0': collapsed,
-      }"
+    </ToggleGroupItem>
+    <ToggleGroupItem
+      value="user"
       :title="collapsed ? '观众' : undefined"
-      @click="switchWorkspace('user')"
+      :class="collapsed ? 'w-full px-0' : 'flex-1'"
     >
-      <component
-        :is="Person48Filled"
-        class="h-3.5 w-3.5"
-      />
+      <component :is="Person48Filled" />
       <span v-if="!collapsed">观众</span>
-    </button>
-  </div>
+    </ToggleGroupItem>
+  </ToggleGroup>
 </template>

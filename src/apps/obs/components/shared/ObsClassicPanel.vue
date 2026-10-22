@@ -169,10 +169,12 @@ const {
 
 .obs-classic-header {
   margin: 0;
+  padding-top: 4px;
   color: #fff;
   text-align: center;
   font-size: 20px;
   font-weight: bold;
+  line-height: 1.2;
   text-shadow:
     0 0 10px #ca7b7b6e,
     0 0 20px #ffffff8e,
@@ -187,9 +189,7 @@ const {
 }
 
 .obs-classic-divider {
-  margin: 0 auto;
-  margin-top: -15px;
-  margin-bottom: -15px;
+  margin: 2px auto 6px;
   width: 90%;
 }
 

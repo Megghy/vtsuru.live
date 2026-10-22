@@ -222,32 +222,41 @@ onUnmounted(() => turnstile.value?.remove())
           class="grid grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] max-[768px]:grid-cols-1 max-[768px]:gap-8 gap-[clamp(28px,6vw,72px)] items-center w-[min(100%,1040px)] max-w-[var(--vtsuru-page-max-width,1040px)] min-w-0"
         >
           <section class="min-w-0">
-            <button
-              type="button"
-              class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
-              @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
+            <div
+              class="min-w-0"
+              :style="{
+                color: 'var(--vtsuru-page-text)',
+                '--foreground': 'var(--vtsuru-page-text)',
+                '--muted-foreground': 'var(--vtsuru-page-text-muted)',
+              }"
             >
-              <component
-                :is="Person24Regular"
-                class="size-4"
-              />
-              {{ table.owner.name }} 的视频征集
-            </button>
-            <div class="collect-title-row flex items-center gap-3 mt-2">
-              <h1 class="text-2xl font-bold tracking-tight">{{ table.name }}</h1>
-              <Badge
-                :variant="collectionStatus === '进行中' ? 'default' : 'secondary'"
-                class="text-xs"
+              <button
+                type="button"
+                class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
+                @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
               >
-                {{ collectionStatus }}
-              </Badge>
+                <component
+                  :is="Person24Regular"
+                  class="size-4"
+                />
+                {{ table.owner.name }} 的视频征集
+              </button>
+              <div class="collect-title-row flex items-center gap-3 mt-2">
+                <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
+                <Badge
+                  :variant="collectionStatus === '进行中' ? 'default' : 'secondary'"
+                  class="text-xs"
+                >
+                  {{ collectionStatus }}
+                </Badge>
+              </div>
+              <p class="collect-description text-sm text-muted-foreground mt-3 leading-relaxed">
+                {{ table.description || '未填写征集说明' }}
+              </p>
             </div>
-            <p class="collect-description text-sm text-muted-foreground mt-3 leading-relaxed">
-              {{ table.description || '未填写征集说明' }}
-            </p>
 
             <div
-              class="collect-meta grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 p-4 rounded-xl border border-border/80 bg-muted/30 text-xs"
+              class="collect-meta grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 p-4 rounded-xl border border-border bg-card text-xs"
             >
               <div class="space-y-1">
                 <div class="flex items-center gap-1.5 text-muted-foreground">

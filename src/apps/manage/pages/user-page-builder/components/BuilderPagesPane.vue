@@ -33,7 +33,10 @@ const { pageEntries } = usePageEntries(editor)
     class="pane-card pages-pane w-full h-full flex flex-col overflow-hidden relative"
     :class="{ 'pages-pane--collapsed': props.collapsed }"
   >
-    <CardHeader class="p-2 border-b border-border flex flex-row items-center justify-between space-y-0">
+    <CardHeader
+      class="p-2 border-b border-border flex flex-row items-center space-y-0"
+      :class="props.collapsed ? 'justify-center' : 'justify-between'"
+    >
       <Transition name="fade">
         <CardTitle
           v-if="!props.collapsed"
@@ -47,7 +50,8 @@ const { pageEntries } = usePageEntries(editor)
           <TooltipTrigger as-child>
             <Button
               variant="ghost"
-              class="size-7 p-0"
+              size="icon-xs"
+              class="rounded-md shrink-0"
               :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'"
               @click="emit('toggle-collapse')"
             >
@@ -85,14 +89,15 @@ const { pageEntries } = usePageEntries(editor)
               <Tooltip>
                 <TooltipTrigger as-child>
                   <Button
-                    class="size-7 p-0 rounded-full"
+                    size="icon-xs"
+                    class="rounded-full shrink-0 aspect-square"
                     :variant="editor.currentKey.value === 'home' ? 'default' : 'ghost'"
                     aria-label="主页"
                     @click="editor.currentKey.value = 'home'"
                   >
                     <component
                       :is="HomeOutline"
-                      class="size-3.5 shrink-0"
+                      class="size-3.5"
                     />
                   </Button>
                 </TooltipTrigger>
@@ -107,7 +112,8 @@ const { pageEntries } = usePageEntries(editor)
               <Tooltip>
                 <TooltipTrigger as-child>
                   <Button
-                    class="size-7 p-0 rounded-full"
+                    size="icon-xs"
+                    class="rounded-full shrink-0 aspect-square"
                     :variant="editor.currentKey.value === page.slug ? 'default' : 'ghost'"
                     :class="{ 'opacity-60': !page.navVisible }"
                     :aria-label="page.title"
@@ -115,7 +121,7 @@ const { pageEntries } = usePageEntries(editor)
                   >
                     <component
                       :is="resolveUserPageNavIcon(page.navIcon)"
-                      class="size-3.5 shrink-0"
+                      class="size-3.5"
                     />
                   </Button>
                 </TooltipTrigger>

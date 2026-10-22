@@ -7,10 +7,15 @@ import {
   Flash24Regular,
   Search16Regular,
 } from '@vicons/fluent'
-import { clear as idbClear, createStore, del as idbDel, entries as idbEntries } from 'idb-keyval'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
+import {
+  AUTO_ACTION_USER_DATA_PREFIX,
+  persistedEntries,
+  persistedRemoveItem,
+  persistedRemoveKeys,
+} from '@/shared/storage/persist'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -19,10 +24,6 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-
-const USER_DATA_DB_NAME = 'AutoActionUserDataDB'
-const USER_DATA_STORE_NAME = 'userData'
-const userDataStore = createStore(USER_DATA_DB_NAME, USER_DATA_STORE_NAME)
 
 const RUNTIME_STORAGE_PREFIX = 'autoaction_runtime_'
 
@@ -50,8 +51,9 @@ const persistentLoading = ref(true)
 async function fetchPersistentData() {
   persistentLoading.value = true
   try {
-    const allEntries = await idbEntries(userDataStore)
-    persistentData.value = allEntries.map(([key, value]) => {
+        const allEntries = (await persistedEntries()).filter(([key]) => key.startsWith(AUTO_ACTION_USER_DATA_PREFIX))
+        persistentData.value = allEntries.map(([rawKey, value]) => {
+          const key = rawKey.slice(AUTO_ACTION_USER_DATA_PREFIX.length)
       let valueDisplay = ''
       let type: string = typeof value
 
@@ -96,7 +98,7 @@ const filteredPersistentData = computed(() => {
 
 async function deletePersistentItem(key: string) {
   try {
-    await idbDel(key, userDataStore)
+    await persistedRemoveItem(`${AUTO_ACTION_USER_DATA_PREFIX}${key}`)
     toast.success(`已删除持久化键: ${key}`)
     await fetchPersistentData()
   } catch (error) {
@@ -107,7 +109,10 @@ async function deletePersistentItem(key: string) {
 
 async function clearPersistentData() {
   try {
-    await idbClear(userDataStore)
+    const keys = (await persistedEntries())
+      .map(([key]) => key)
+      .filter((key) => key.startsWith(AUTO_ACTION_USER_DATA_PREFIX))
+    await persistedRemoveKeys(keys)
     toast.success('已清除所有用户持久化数据')
     await fetchPersistentData()
   } catch (error) {

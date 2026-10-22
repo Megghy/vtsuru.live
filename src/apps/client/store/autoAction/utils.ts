@@ -1,14 +1,20 @@
-import { clear, createStore, del, get, set } from 'idb-keyval' // 导入 useIDBKeyval
 import { nanoid } from 'nanoid'
+
+import {
+  AUTO_ACTION_USER_DATA_PREFIX,
+  persistedGetJson,
+  persistedListKeys,
+  persistedRemoveItem,
+  persistedRemoveKeys,
+  persistedSetJson,
+} from '@/shared/storage/persist'
 
 import type { AutoActionItem, ExecutionContext, RuntimeState } from './types'
 import { ActionType, Priority, TriggerType } from './types'
 
-// --- 定义用户持久化数据的自定义存储区 ---
-const USER_DATA_DB_NAME = 'AutoActionUserDataDB'
-const USER_DATA_STORE_NAME = 'userData'
-const userDataStore = createStore(USER_DATA_DB_NAME, USER_DATA_STORE_NAME)
-// ----------------------------------------
+function userDataKey(key: string): string {
+  return key.startsWith(AUTO_ACTION_USER_DATA_PREFIX) ? key : `${AUTO_ACTION_USER_DATA_PREFIX}${key}`
+}
 
 // --- 定义运行时数据的前缀 (避免与页面其他 sessionStorage 冲突) ---
 const RUNTIME_STORAGE_PREFIX = 'autoaction_runtime_'
@@ -230,48 +236,20 @@ export function buildExecutionContext(
     },
     // --- 持久化数据管理函数 (不变，继续使用 userDataStore) ---
     getStorageData: async <T>(key: string, defaultValue?: T): Promise<T | undefined> => {
-      try {
-        // 使用 userDataStore
-        const value = await get<T>(key, userDataStore)
-        return value === undefined ? defaultValue : value
-      } catch (error) {
-        console.error(`[UserData IDB] getStorageData error for key '${key}':`, error)
-        return defaultValue
-      }
+      const value = await persistedGetJson<T>(userDataKey(key))
+      return value === undefined ? defaultValue : value
     },
     setStorageData: async <T>(key: string, value: T): Promise<void> => {
-      try {
-        // 使用 userDataStore
-        await set(key, value, userDataStore)
-      } catch (error) {
-        console.error(`[UserData IDB] setStorageData error for key '${key}':`, error)
-      }
+      await persistedSetJson(userDataKey(key), value)
     },
     hasStorageData: async (key: string): Promise<boolean> => {
-      try {
-        // 使用 userDataStore
-        const value = await get(key, userDataStore)
-        return value !== undefined
-      } catch (error) {
-        console.error(`[UserData IDB] hasStorageData error for key '${key}':`, error)
-        return false
-      }
+      return (await persistedGetJson(userDataKey(key))) !== undefined
     },
     removeStorageData: async (key: string): Promise<void> => {
-      try {
-        // 使用 userDataStore
-        await del(key, userDataStore)
-      } catch (error) {
-        console.error(`[UserData IDB] removeStorageData error for key '${key}':`, error)
-      }
+      await persistedRemoveItem(userDataKey(key))
     },
     clearStorageData: async (): Promise<void> => {
-      try {
-        // 使用 userDataStore
-        await clear(userDataStore)
-      } catch (error) {
-        console.error('[UserData IDB] clearStorageData error:', error)
-      }
+      await persistedRemoveKeys(await persistedListKeys(AUTO_ACTION_USER_DATA_PREFIX))
     },
   }
 

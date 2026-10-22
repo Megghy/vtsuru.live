@@ -1,24 +1,29 @@
-import { LazyStore } from '@tauri-apps/plugin-store'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 
+import {
+  persistedEntries,
+  persistedFlush,
+  persistedGetJson,
+  persistedListKeys,
+  persistedRemoveItem,
+  persistedSetJson,
+} from '@/shared/storage/persist'
+
 export class StoreTarget<T> {
-  constructor(key: string, target: LazyStore, defaultValue?: T) {
-    this.target = target
+  constructor(key: string, defaultValue?: T) {
     this.key = key
     this.defaultValue = defaultValue
   }
 
-  protected target: LazyStore
   protected defaultValue: T | undefined
-
   protected key: string
+
   async set(value: T) {
-    return this.target.set(this.key, value)
+    return persistedSetJson(this.key, value)
   }
 
   async get(): Promise<T | undefined> {
-    const result = await this.target.get<T>(this.key)
-
+    const result = await persistedGetJson<T>(this.key)
     if (result === undefined && this.defaultValue !== undefined) {
       await this.set(this.defaultValue)
       return this.defaultValue
@@ -27,26 +32,43 @@ export class StoreTarget<T> {
   }
 
   async delete() {
-    return this.target.delete(this.key)
+    return persistedRemoveItem(this.key)
   }
 }
 
 export const useTauriStore = defineStore('tauri', () => {
-  const store = new LazyStore('vtsuru.data.json', {
-    autoSave: true,
-    defaults: {},
-  })
-
   async function set(key: string, value: unknown) {
-    await store.set(key, value)
+    await persistedSetJson(key, value)
   }
 
   async function get<T>(key: string) {
-    return store.get<T>(key)
+    return persistedGetJson<T>(key)
   }
 
   function getTarget<T>(key: string, defaultValue?: T) {
-    return new StoreTarget<T>(key, store, defaultValue)
+    return new StoreTarget<T>(key, defaultValue)
+  }
+
+  const store = {
+    async save() {
+      await persistedFlush()
+    },
+    async clear() {
+      const keys = await persistedListKeys()
+      await Promise.all(keys.map((key) => persistedRemoveItem(key)))
+    },
+    async set(key: string, value: unknown) {
+      await persistedSetJson(key, value)
+    },
+    async delete(key: string) {
+      await persistedRemoveItem(key)
+    },
+    async keys() {
+      return persistedListKeys()
+    },
+    async entries<T = unknown>() {
+      return persistedEntries() as Promise<[string, T][]>
+    },
   }
 
   return {

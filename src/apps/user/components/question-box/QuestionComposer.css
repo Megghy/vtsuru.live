@@ -270,6 +270,14 @@
 
 .message-input {
   background: transparent;
+  border: none;
+  box-shadow: none;
+}
+.message-input:focus,
+.message-input:focus-visible {
+  outline: none;
+  border: none;
+  box-shadow: none;
 }
 
 .editor-footer {

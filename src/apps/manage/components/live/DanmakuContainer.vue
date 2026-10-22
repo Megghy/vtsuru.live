@@ -614,7 +614,7 @@ defineExpose({
     >
       <div
         v-if="filteredDanmakus.length > 0"
-        class="danmaku-scroll-area"
+        class="danmaku-scroll-area px-3 py-2"
         :style="{ height: typeof props.height === 'number' ? `${props.height}px` : props.height }"
       >
         <SimpleVirtualList
@@ -623,7 +623,7 @@ defineExpose({
           :items="filteredDanmakus"
         >
           <template #default="{ item }">
-            <div class="danmaku-row-item">
+            <div class="danmaku-row-item flex items-center py-0.5 min-h-[26px]">
               <DanmakuItem
                 :danmaku="item"
                 :account-info="accountInfo"

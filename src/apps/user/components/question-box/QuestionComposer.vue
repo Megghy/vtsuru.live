@@ -252,7 +252,7 @@ async function submit() {
         >
           <Textarea
             v-model="draft.message"
-            class="message-input min-h-[140px] resize-y"
+            class="message-input min-h-[140px] resize-y border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
             :disabled="isSelf"
             maxlength="10000"
             placeholder="写下你想说的话..."

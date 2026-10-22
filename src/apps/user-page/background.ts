@@ -13,7 +13,7 @@ import type {
   PageBackgroundType,
 } from './block/schema'
 import { getGoogleFontFamilyCss } from './googleFonts'
-import { resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
+import { isUserPageColorDark, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
 import { normalizeUserPageColor, parseUserPageColor } from './themeColor'
 import { resolveUserPageAppearance } from './themeConfig'
 
@@ -142,7 +142,7 @@ function mixWithTransparent(value: string, amount: number) {
   return formatRgb({ ...color, alpha: (color.alpha ?? 1) * amount })
 }
 
-export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean, _canvasColor?: string) {
+export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean, canvasColor?: string) {
   const primaryColor = readThemeColor(theme, 'primaryColor')
   const backgroundColor = readThemeColor(theme, 'backgroundColor')
   const fontFamily = readThemeString(theme, 'fontFamily')
@@ -157,6 +157,10 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   const contrastSurface =
     customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars.surfaceBg : undefined)
   const textPalette = resolveUserPageTextPalette(asObject(theme) ?? undefined, effectiveIsDark, contrastSurface)
+  const canvasIsDark = canvasColor ? isUserPageColorDark(canvasColor) : effectiveIsDark
+  const canvasPalette = canvasColor
+    ? resolveUserPageTextPalette(asObject(theme) ?? undefined, canvasIsDark, canvasColor)
+    : textPalette
   const surfaceText = textPalette.color
   // 主色按当前明暗模式修正为可读色后再派生全部主色 token（如 #000 在暗色下会提亮），
   // 否则文字、描边、浅色底都会与暗色表面糊在一起
@@ -222,6 +226,9 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
     '--vtsuru-page-spacing': `${appearance.spacing}px`,
     '--vtsuru-page-max-width': appearance.pageMaxWidth,
+    '--vtsuru-page-text': canvasPalette.color,
+    '--vtsuru-page-text-muted': canvasPalette.muted,
+    '--vtsuru-page-text-subtle': canvasPalette.subtle,
   } as Record<string, string>
 }
 

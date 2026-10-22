@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { hexToRgba } from '@/shared/utils'
 
 defineProps<{
   schedules: ScheduleWeekInfo[]
@@ -62,6 +63,33 @@ function getWeekRangeLabel(year: number, week: number) {
   const weekStart = getDateFromWeek(year, week, 0)
   const weekEnd = getDateFromWeek(year, week, 6)
   return `${format(weekStart, 'MM/dd')} - ${format(weekEnd, 'MM/dd')}`
+}
+
+function contrastText(color: string) {
+  const value = color.match(/^#([\da-f]{3}|[\da-f]{6})$/i)?.[1]
+  if (!value) return 'var(--foreground)'
+  const hex = value.length === 3 ? [...value].map((char) => char + char).join('') : value
+  const [red, green, blue] = [0, 2, 4].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16))
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000
+  return luminance >= 150 ? '#111111' : '#ffffff'
+}
+
+function tagCardStyle(color?: string | null) {
+  const backgroundColor = color ? hexToRgba(color, 0.08) : undefined
+  return backgroundColor ? { backgroundColor } : undefined
+}
+
+function tagChipStyle(color?: string | null) {
+  if (!color) {
+    return {
+      backgroundColor: 'var(--primary)',
+      color: 'var(--primary-foreground)',
+    }
+  }
+  return {
+    backgroundColor: color,
+    color: contrastText(color),
+  }
 }
 </script>
 
@@ -170,9 +198,7 @@ function getWeekRangeLabel(year: number, week: number) {
                   :key="schedule.id || `${index}-${scheduleIndex}`"
                   class="p-2 rounded border border-border/80 text-xs space-y-1 transition group"
                   :class="isSelf ? 'hover:bg-muted/30 cursor-pointer' : ''"
-                  :style="{
-                    backgroundColor: schedule.tagColor ? `${schedule.tagColor}10` : undefined,
-                  }"
+                  :style="tagCardStyle(schedule.tagColor)"
                   @click="isSelf && emit('onEditItem', item, index, schedule)"
                 >
                   <div
@@ -182,11 +208,8 @@ function getWeekRangeLabel(year: number, week: number) {
                     <div class="flex items-center gap-1 min-w-0 flex-wrap">
                       <span
                         v-if="schedule.tag"
-                        class="px-1 py-0.2 rounded text-[10px] font-medium truncate shrink-0"
-                        :style="{
-                          backgroundColor: schedule.tagColor ? `${schedule.tagColor}25` : 'var(--primary)',
-                          color: schedule.tagColor || 'inherit',
-                        }"
+                        class="px-1.5 py-px rounded text-[10px] font-medium leading-4 truncate max-w-24 shrink-0"
+                        :style="tagChipStyle(schedule.tagColor)"
                       >
                         {{ schedule.tag }}
                       </span>

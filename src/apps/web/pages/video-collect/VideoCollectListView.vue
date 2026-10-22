@@ -403,7 +403,14 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
       <template v-else-if="videoDetail && table">
         <!-- 头部信息 -->
         <header class="result-header flex items-start justify-between gap-4">
-          <div class="result-heading space-y-1.5">
+          <div
+            class="result-heading space-y-1.5"
+            :style="{
+              color: 'var(--vtsuru-page-text)',
+              '--foreground': 'var(--vtsuru-page-text)',
+              '--muted-foreground': 'var(--vtsuru-page-text-muted)',
+            }"
+          >
             <button
               type="button"
               class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
@@ -417,7 +424,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
               <span class="owner-suffix opacity-75">的视频征集</span>
             </button>
             <div class="title-row flex items-center gap-2.5">
-              <h1 class="text-2xl font-bold tracking-tight">{{ table.name }}</h1>
+              <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
               <Badge
                 :variant="isCollecting ? 'default' : 'secondary'"
                 class="text-xs"

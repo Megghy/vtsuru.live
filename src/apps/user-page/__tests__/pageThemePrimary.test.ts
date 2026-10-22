@@ -56,4 +56,11 @@ describe('getUserPageThemeCssVars 主色', () => {
       wcagContrast(parseRgb(dark['--primary-foreground'])!, parseRgb(dark['--primary'])!),
     ).toBeGreaterThanOrEqual(4.5)
   })
+
+  it('浅色画布在暗色主题下让铺在背景上的文字用深色', () => {
+    const vars = getUserPageThemeCssVars({}, true, 'rgb(255, 210, 210)')
+
+    expect(vars['--vtsuru-page-text']).not.toBe(vars['--foreground'])
+    expect(contrast(vars, '--vtsuru-page-text', 'rgb(255, 210, 210)')).toBeGreaterThanOrEqual(4.5)
+  })
 })

@@ -59,7 +59,6 @@ export function ensurePageConfig(settings: UserPagesSettings, key: string): User
 export interface PageModeOption {
   value: UserPageConfig['mode']
   label: string
-  shortLabel: string
   tag?: string
   description: string
 }
@@ -68,20 +67,17 @@ export const PAGE_MODE_OPTIONS: PageModeOption[] = [
   {
     value: 'block',
     label: '可视化自由搭建',
-    shortLabel: '模块搭建',
     tag: '推荐',
     description: '使用丰富的预设组件（个人信息、按钮组、歌单、视频等）自由拼装页面，支持拖拽排序与响应式预览。',
   },
   {
     value: 'legacy',
     label: '经典模板',
-    shortLabel: '经典模板',
     description: '使用系统内置的经典名片模板，支持基础信息、展示视频、外链列表等固定结构。',
   },
   {
     value: 'contrib',
     label: '扩展组件页',
-    shortLabel: '扩展页',
     description: '加载社区开发者贡献的独立定制页面组件（如专属互动页、小游戏等，需配置页面 ID）。',
   },
 ]
@@ -91,11 +87,4 @@ export function getPageModeLabel(mode: UserPageConfig['mode']) {
   if (mode === 'block') return '可视化搭建'
   if (mode === 'contrib') return '扩展组件页'
   return '未知模式'
-}
-
-export function getPageModeShortLabel(mode: UserPageConfig['mode']) {
-  if (mode === 'legacy') return '经典模板'
-  if (mode === 'block') return '模块搭建'
-  if (mode === 'contrib') return '扩展页'
-  return '未知'
 }
