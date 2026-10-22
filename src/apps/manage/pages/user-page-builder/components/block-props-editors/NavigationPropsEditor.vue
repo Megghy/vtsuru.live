@@ -13,6 +13,7 @@ import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
 const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor(() => props.block)
+const linkItems = ensureArrayProp<Record<string, any>>('items')
 </script>
 
 <template>
@@ -24,14 +25,14 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">链接项</label>
         <RepeaterEditor
-          :items="ensureArrayProp('items')"
+          :items="linkItems"
           :create-item="() => ({ label: '', url: 'https://' })"
           add-text="添加链接"
         >
-          <template #title="{ item, index }: { item: any; index: number }">
+          <template #title="{ item, index }">
             {{ item.label || `链接 ${index + 1}` }}
           </template>
-          <template #default="{ item }: { item: any }">
+          <template #default="{ item }">
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
@@ -41,7 +42,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
                 <label class="text-xs text-muted-foreground">链接</label>
                 <Input
                   v-model="item.url"
-                  placeholder="https://..."
+                  placeholder="链接地址"
                 />
               </div>
             </PropsGrid>
@@ -188,7 +189,7 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
                 <label class="text-xs text-muted-foreground">链接</label>
                 <Input
                   v-model="item.url"
-                  placeholder="https://..."
+                  placeholder="链接地址"
                 />
               </div>
             </PropsGrid>

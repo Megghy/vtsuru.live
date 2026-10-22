@@ -61,7 +61,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'"
                 @click="
-                  settings.matchType = KeywordMatchType.Full
+                  settings.matchType = KeywordMatchType.Full;
                   onChange()
                 "
               >
@@ -72,7 +72,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'"
                 @click="
-                  settings.matchType = KeywordMatchType.Contains
+                  settings.matchType = KeywordMatchType.Contains;
                   onChange()
                 "
               >
@@ -83,7 +83,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'"
                 @click="
-                  settings.matchType = KeywordMatchType.Regex
+                  settings.matchType = KeywordMatchType.Regex;
                   onChange()
                 "
               >
@@ -245,7 +245,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'"
                 @click="
-                  settings.giftFilterType = QueueGiftFilterType.And
+                  settings.giftFilterType = QueueGiftFilterType.And;
                   onChange()
                 "
               >
@@ -256,7 +256,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'"
                 @click="
-                  settings.giftFilterType = QueueGiftFilterType.Or
+                  settings.giftFilterType = QueueGiftFilterType.Or;
                   onChange()
                 "
               >

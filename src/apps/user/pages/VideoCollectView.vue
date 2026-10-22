@@ -88,8 +88,4 @@ onMounted(() => {
   gap: var(--vtsuru-page-spacing);
 }
 
-.video-collect-list :deep(.n-list-item__main) {
-  width: 100%;
-  min-width: 0;
-}
 </style>

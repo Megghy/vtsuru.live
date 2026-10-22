@@ -445,127 +445,130 @@ onUnmounted(() => {
             <!-- 账号安全面板 -->
             <AccountSecurityPanel />
 
-            <!-- 主播 Bilibili 账户卡片 -->
-            <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
-              <div class="text-xs font-semibold tracking-wide text-foreground uppercase">主播 Bilibili 账户</div>
+            <!-- 连接状态区域 -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              <!-- 主播 Bilibili 账户卡片 -->
+              <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
+                <div class="text-xs font-semibold tracking-wide text-foreground uppercase">主播 Bilibili 账户</div>
 
-              <div
-                v-if="accountInfo?.isBiliVerified"
-                class="flex items-center justify-between gap-3 flex-wrap"
-              >
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="text-xs font-medium text-primary">已认证 | {{ accountInfo?.biliId }}</span>
+                <div
+                  v-if="accountInfo?.isBiliVerified"
+                  class="flex items-center justify-between gap-3 flex-wrap"
+                >
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="text-xs font-medium text-primary">已认证 | {{ accountInfo?.biliId }}</span>
 
-                  <Badge
-                    v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active"
-                    variant="success"
-                    class="text-[11px]"
-                  >
-                    身份码: 有效
-                  </Badge>
-                  <Badge
-                    v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
-                    variant="destructive"
-                    class="text-[11px]"
-                  >
-                    身份码: 需更新
-                  </Badge>
-                  <Badge
-                    v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound"
-                    variant="warning"
-                    class="text-[11px] gap-1"
-                  >
-                    身份码: 需绑定
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger as-child>
-                          <component
-                            :is="Mic24Filled"
-                            class="h-3 w-3 inline cursor-help"
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个提示 </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </Badge>
+                    <Badge
+                      v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active"
+                      variant="success"
+                      class="text-[11px]"
+                    >
+                      身份码: 有效
+                    </Badge>
+                    <Badge
+                      v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
+                      variant="destructive"
+                      class="text-[11px]"
+                    >
+                      身份码: 需更新
+                    </Badge>
+                    <Badge
+                      v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound"
+                      variant="warning"
+                      class="text-[11px] gap-1"
+                    >
+                      身份码: 需绑定
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <component
+                              :is="Mic24Filled"
+                              class="h-3 w-3 inline cursor-help"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个提示 </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </Badge>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      @click="bindBiliCodeModalVisible = true"
+                    >
+                      更新身份码
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger as-child>
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="text-destructive hover:bg-destructive/10"
+                        >
+                          解除认证
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent class="sm:max-w-md">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>确定解除认证吗？</AlertDialogTitle>
+                          <AlertDialogDescription class="text-xs text-destructive">
+                            解除后现有的数据跟踪数据将被删除并且无法恢复！
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>取消</AlertDialogCancel>
+                          <AlertDialogAction
+                            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            @click="resetBili"
+                          >
+                            确认解除
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div
+                  v-else
+                  class="flex items-center justify-between gap-3 flex-wrap"
+                >
+                  <div class="flex items-center gap-2">
+                    <Badge
+                      variant="destructive"
+                      class="text-[11px] gap-1"
+                    >
+                      未绑定
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <component
+                              :is="Info24Filled"
+                              class="h-3 w-3 inline cursor-help"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个 </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </Badge>
+                  </div>
+
                   <Button
                     size="xs"
-                    variant="outline"
+                    variant="brand"
                     @click="bindBiliCodeModalVisible = true"
                   >
-                    更新身份码
+                    进行绑定
                   </Button>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger as-child>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="text-destructive hover:bg-destructive/10"
-                      >
-                        解除认证
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent class="sm:max-w-md">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>确定解除认证吗？</AlertDialogTitle>
-                        <AlertDialogDescription class="text-xs text-destructive">
-                          解除后现有的数据跟踪数据将被删除并且无法恢复！
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction
-                          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                          @click="resetBili"
-                        >
-                          确认解除
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
                 </div>
               </div>
 
-              <div
-                v-else
-                class="flex items-center justify-between gap-3 flex-wrap"
-              >
-                <div class="flex items-center gap-2">
-                  <Badge
-                    variant="destructive"
-                    class="text-[11px] gap-1"
-                  >
-                    未绑定
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger as-child>
-                          <component
-                            :is="Info24Filled"
-                            class="h-3 w-3 inline cursor-help"
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个 </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </Badge>
-                </div>
-
-                <Button
-                  size="xs"
-                  variant="brand"
-                  @click="bindBiliCodeModalVisible = true"
-                >
-                  进行绑定
-                </Button>
-              </div>
+              <!-- EventFetcher 状态卡片 -->
+              <EventFetcherStatusCard />
             </div>
-
-            <!-- EventFetcher 状态卡片 -->
-            <EventFetcherStatusCard />
 
             <!-- Token 卡片 -->
             <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">

@@ -123,7 +123,7 @@ async function updateSettings() {
                   sortType === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
                 "
                 @click="
-                  sortType = opt.value
+                  sortType = opt.value;
                   updateSettings()
                 "
               >

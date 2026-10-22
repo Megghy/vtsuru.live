@@ -2,11 +2,12 @@
 import {
   Add24Filled,
   ArrowSync24Filled,
+  Copy24Regular,
   Delete24Filled,
   Edit24Filled,
-  Eye24Filled,
   Image24Regular,
   Info24Filled,
+  Open24Regular,
   ShoppingBag24Filled,
 } from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
@@ -43,7 +44,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { toast, useMessage } from '@/shared/utils'
+import { copyToClipboard, toast, useMessage } from '@/shared/utils'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -424,46 +425,82 @@ function resetGoods() {
       title="积分管理"
       subtitle="礼物、订单、用户与配置"
       :function-type="FunctionTypes.Point"
-      :links="[{ label: '礼物展示页链接', value: goodsPageUrl }]"
-    />
-
-    <Card class="border border-border max-w-3xl">
-      <CardContent class="p-3 flex items-center justify-between gap-3 flex-wrap">
-        <Alert
-          v-if="!accountInfo.eventFetcherState.online"
-          variant="default"
-          class="flex-1 min-w-[280px] border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2"
-        >
-          <AlertDescription class="text-xs flex items-center gap-1.5 flex-wrap">
-            <span>
-              此功能依赖
-              <a
-                href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-                target="_blank"
-                rel="noreferrer"
-                class="font-medium underline hover:text-foreground"
-              >
-                VtsuruEventFetcher
-              </a>
-              (事件监听器)，否则无法自动记录直播事件
-            </span>
-            <Separator
-              orientation="vertical"
-              class="h-3 mx-1"
+    >
+      <template #action>
+        <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          <div
+            v-if="goodsPageUrl"
+            class="flex items-center gap-1.5 w-full sm:w-auto"
+          >
+            <Input
+              :model-value="goodsPageUrl"
+              readonly
+              class="hidden md:flex h-control-sm w-60 lg:w-72 xl:w-80 font-mono text-xs bg-muted/40 text-muted-foreground select-all"
+              title="礼物展示页链接（点击全选）"
+              @click="($event.target as HTMLInputElement).select()"
             />
-            <a
-              href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
-              target="_blank"
-              rel="noreferrer"
-              class="text-blue-500 hover:underline"
+            <Button
+              variant="outline"
+              class="flex-1 sm:flex-initial"
+              @click="copyToClipboard(goodsPageUrl)"
             >
-              积分说明
-            </a>
-          </AlertDescription>
-        </Alert>
-        <EventFetcherStatusCard />
-      </CardContent>
-    </Card>
+              <component
+                :is="Copy24Regular"
+                class="size-3.5 mr-1"
+              />
+              复制链接
+            </Button>
+            <Button
+              variant="outline"
+              class="flex-1 sm:flex-initial"
+              as="a"
+              :href="goodsPageUrl"
+              target="_blank"
+            >
+              <component
+                :is="Open24Regular"
+                class="size-3.5 mr-1"
+              />
+              前往展示页
+            </Button>
+          </div>
+          <EventFetcherStatusCard class="w-full sm:w-auto" />
+        </div>
+      </template>
+    </ManagePageHeader>
+
+    <Alert
+      v-if="!accountInfo.eventFetcherState.online"
+      variant="default"
+      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2"
+    >
+      <AlertDescription class="text-xs flex items-center gap-1.5 flex-wrap">
+        <span>
+          此功能依赖
+          <a
+            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+            target="_blank"
+            rel="noreferrer"
+            class="font-medium underline hover:text-foreground"
+          >
+            VtsuruEventFetcher
+          </a>
+          (事件监听器)，否则无法自动记录直播事件
+        </span>
+        <Separator
+          orientation="vertical"
+          class="h-3 mx-1"
+        />
+        <a
+          href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
+          target="_blank"
+          rel="noreferrer"
+          class="text-blue-500 hover:underline"
+        >
+          积分说明
+        </a>
+      </AlertDescription>
+    </Alert>
 
     <!-- 标签页 -->
     <Tabs
@@ -491,14 +528,6 @@ function resetGoods() {
           >
             <Add24Filled class="size-4" />
             添加礼物
-          </Button>
-          <Button
-            variant="outline"
-            class="gap-1.5"
-            @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })"
-          >
-            <Eye24Filled class="size-4" />
-            前往展示页
           </Button>
         </div>
 

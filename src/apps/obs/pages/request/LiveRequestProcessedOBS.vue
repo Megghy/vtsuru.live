@@ -233,9 +233,6 @@ onUnmounted(() => {
   }
 }
 
-.n-divider__line {
-  background-color: #ffffffd5;
-}
 
 .live-request-content {
   background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));

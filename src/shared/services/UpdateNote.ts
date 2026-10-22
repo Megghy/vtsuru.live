@@ -392,6 +392,10 @@ export const savedUpdateNoteVer = usePersistedStorage('UpdateNoteVer', 0)
 
 export function checkUpdateNote() {
   if (savedUpdateNoteVer.value < currentUpdateNoteVer) {
+    if (!window.$dialog?.create) {
+      console.warn('Dialog API not ready, skipping update note')
+      return
+    }
     window.$dialog.create({
       title: '更新日志',
       style: {

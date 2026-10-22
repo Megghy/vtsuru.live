@@ -718,7 +718,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   size="small"
                   class="w-full"
                   @update:value="
-                    giftWindow.settings.x = $event || 0
+                    giftWindow.settings.x = $event || 0;
                     giftWindow.updateWindowPosition()
                   "
                 />
@@ -731,7 +731,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   size="small"
                   class="w-full"
                   @update:value="
-                    giftWindow.settings.y = $event || 0
+                    giftWindow.settings.y = $event || 0;
                     giftWindow.updateWindowPosition()
                   "
                 />

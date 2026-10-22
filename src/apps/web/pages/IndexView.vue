@@ -791,7 +791,7 @@ onMounted(() => {
     background: var(--card-soft);
     box-shadow: 0 10px 26px var(--card-shadow);
 
-.entry-card .n-icon
+.entry-card svg
     color: var(--card-accent);
 
 .entry-card strong
@@ -1036,7 +1036,7 @@ article.feature-card
     font-size: 0.8rem;
     text-align: center;
 
-.streamers-note .n-button
+.streamers-note button
     padding: 0 4px;
     font-size: 0.8rem;
     text-decoration: underline;

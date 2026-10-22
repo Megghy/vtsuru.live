@@ -43,7 +43,7 @@ const isFunctionEnabled = computed(() => {
 <template>
   <div class="flex flex-col gap-3 w-full">
     <div class="flex items-start justify-between gap-3 flex-wrap">
-      <div class="flex flex-col gap-1 min-w-0">
+      <div class="flex flex-col gap-1 min-w-0 w-full sm:w-auto">
         <div class="flex items-center gap-3 flex-wrap">
           <h1 class="text-xl font-bold tracking-tight text-foreground m-0">
             {{ title }}
@@ -82,7 +82,7 @@ const isFunctionEnabled = computed(() => {
         </p>
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap shrink-0">
+      <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto sm:shrink-0">
         <slot name="action">
           <slot name="actions" />
         </slot>

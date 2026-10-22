@@ -18,28 +18,6 @@
   --vtsuru-page-max-width: 1440px;
 }
 
-/* shadcn-like card rhythm */
-.user-page .n-card {
-  border-radius: var(--vtsuru-page-radius, var(--radius));
-  box-shadow: var(--vtsuru-page-shadow, none);
-}
-
-.user-page .n-card .n-card-header {
-  padding: var(--vtsuru-page-spacing, 16px);
-}
-
-.user-page .n-card .n-card__content {
-  padding: var(--vtsuru-page-spacing, 16px);
-}
-
-/* 在用户页中，列表项通常不需要额外的内边距，因为内部会有卡片或其他带边距的元素 */
-.user-page .n-list .n-list-item {
-  padding: 0;
-}
-
-.user-page .n-list {
-  background-color: transparent;
-}
 
 .user-muted {
   color: var(--vtsuru-surface-fg-subtle, var(--muted-foreground));
@@ -54,7 +32,6 @@
 }
 
 /* 展示页卡片统一质感：磨砂半透明背景、圆角与边框对齐公开页主题体系 */
-.page-root.bg-host .viewer-page-content [class*='card'],
 .page-root.bg-host .viewer-page-content .bg-card,
 .page-root.bg-host .viewer-page-content .goods-card,
 .page-root.bg-host .viewer-page-content .ranking-card {

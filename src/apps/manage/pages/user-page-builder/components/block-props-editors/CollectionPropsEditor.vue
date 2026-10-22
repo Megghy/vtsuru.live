@@ -270,7 +270,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
                 <label class="text-xs text-muted-foreground">链接</label>
                 <Input
                   v-model="item.url"
-                  placeholder="https://..."
+                  placeholder="链接地址"
                 />
               </div>
             </PropsGrid>

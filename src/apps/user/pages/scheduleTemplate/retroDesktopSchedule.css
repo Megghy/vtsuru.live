@@ -54,7 +54,7 @@
   background: linear-gradient(90deg, #000080, #b01878);
 }
 
-.retro-template :deep(.schedule-week-toolbar__meta .n-icon),
+.retro-template :deep(.schedule-week-toolbar__meta svg),
 .retro-template :deep(.schedule-week-toolbar__meta b) {
   color: #fff;
 }
@@ -70,7 +70,7 @@
   box-shadow: inset 1px 1px 0 #808080;
 }
 
-.retro-template :deep(.schedule-week-toolbar__select .n-base-selection) {
+.retro-template :deep(.schedule-week-toolbar [data-slot='select-trigger']) {
   border-radius: 0;
 }
 

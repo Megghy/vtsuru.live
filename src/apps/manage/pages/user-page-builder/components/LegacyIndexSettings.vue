@@ -384,7 +384,7 @@ await loadIndexInfo()
           :checked="accountInfo.settings.index.allowDisplayInIndex"
           :disabled="isLoading"
           @update:checked="
-            accountInfo.settings.index.allowDisplayInIndex = $event
+            accountInfo.settings.index.allowDisplayInIndex = $event;
             updateUserIndexSettings()
           "
         />

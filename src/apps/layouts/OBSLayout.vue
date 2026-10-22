@@ -20,8 +20,6 @@ const transparentTargets = [
   () => document.documentElement,
   () => document.body,
   () => document.getElementById('app'),
-  () => document.querySelector('.n-layout-content'),
-  () => document.querySelector('.n-element'),
   () => document.querySelector('.obs-container'),
 ] as const
 

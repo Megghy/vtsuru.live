@@ -97,7 +97,7 @@
   background: var(--brand-soft);
 }
 
-.point-settings__panel-icon .n-icon {
+.point-settings__panel-icon svg {
   font-size: 19px;
 }
 
@@ -145,14 +145,6 @@
   background: var(--muted);
 }
 
-.point-settings__address > .n-flex {
-  min-width: 0;
-  flex: 1;
-}
-
-.point-settings__address > .n-flex > .n-flex:last-child {
-  display: none;
-}
 
 .point-settings__row-actions {
   justify-content: flex-end;

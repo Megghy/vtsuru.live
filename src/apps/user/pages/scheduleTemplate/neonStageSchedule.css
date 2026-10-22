@@ -43,7 +43,7 @@
 
 .neon-template :deep(.schedule-week-toolbar__step),
 .neon-template :deep(.schedule-week-toolbar__save),
-.neon-template :deep(.schedule-week-toolbar__select .n-base-selection) {
+.neon-template :deep(.schedule-week-toolbar [data-slot='select-trigger']) {
   border-radius: 1px;
 }
 

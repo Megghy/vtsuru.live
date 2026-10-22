@@ -42,8 +42,8 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
         </div>
         <div class="grid grid-cols-1 md:grid-cols-[100px_1fr] gap-3 text-xs">
           <template
-            v-for="note in item.items"
-            :key="typeof note.title === 'string' ? note.title : 'note'"
+            v-for="(note, noteIndex) in item.items"
+            :key="noteIndex"
           >
             <div class="flex items-start">
               <Badge

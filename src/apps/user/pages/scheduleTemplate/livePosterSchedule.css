@@ -40,7 +40,7 @@
 
 .live-poster-template :deep(.schedule-week-toolbar__step),
 .live-poster-template :deep(.schedule-week-toolbar__save),
-.live-poster-template :deep(.schedule-week-toolbar__select .n-base-selection) {
+.live-poster-template :deep(.schedule-week-toolbar [data-slot='select-trigger']) {
   border-width: 2px;
 }
 

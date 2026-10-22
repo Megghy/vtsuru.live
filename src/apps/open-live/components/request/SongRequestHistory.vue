@@ -122,7 +122,7 @@ function getStatusBadge(status: SongRequestStatus) {
           placeholder="搜索歌曲..."
           class="flex-1"
           @input="
-            songRequest.filterSongName = ($event.target as HTMLInputElement).value
+            songRequest.filterSongName = ($event.target as HTMLInputElement).value;
             currentPage = 1
           "
         />
@@ -141,7 +141,7 @@ function getStatusBadge(status: SongRequestStatus) {
           placeholder="搜索用户..."
           class="flex-1"
           @input="
-            songRequest.filterName = ($event.target as HTMLInputElement).value
+            songRequest.filterName = ($event.target as HTMLInputElement).value;
             currentPage = 1
           "
         />

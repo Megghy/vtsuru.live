@@ -281,27 +281,32 @@ watch(
         </div>
 
         <RouterView v-slot="{ Component, route: viewRoute }">
-          <div
-            v-if="Component && (!needsOpenLiveAuth || danmakuClient.authInfo)"
-            :class="
-              viewRoute.meta.pageContainer !== 'none'
-                ? [
-                    'open-live-page-inner',
-                    viewRoute.meta.pageWidth === 'md' && 'open-live-page-inner--md',
-                    viewRoute.meta.pageWidth === 'xl' && 'open-live-page-inner--xl',
-                    viewRoute.meta.pageWidth === 'full' && 'open-live-page-inner--full',
-                  ]
-                : undefined
-            "
-          >
-            <KeepAlive>
+          <template v-if="Component && (!needsOpenLiveAuth || danmakuClient.authInfo)">
+            <div
+              v-if="viewRoute.meta.pageContainer !== 'none'"
+              :class="[
+                'open-live-page-inner',
+                viewRoute.meta.pageWidth === 'md' && 'open-live-page-inner--md',
+                viewRoute.meta.pageWidth === 'xl' && 'open-live-page-inner--xl',
+                viewRoute.meta.pageWidth === 'full' && 'open-live-page-inner--full',
+              ]"
+            >
+              <KeepAlive>
+                <component
+                  :is="Component"
+                  :key="viewRoute.fullPath.split('#')[0]"
+                  v-bind="routeComponentProps"
+                />
+              </KeepAlive>
+            </div>
+            <KeepAlive v-else>
               <component
                 :is="Component"
                 :key="viewRoute.fullPath.split('#')[0]"
                 v-bind="routeComponentProps"
               />
             </KeepAlive>
-          </div>
+          </template>
           <div
             v-else-if="needsOpenLiveAuth && !danmakuClient.authInfo && !danmakuClientError"
             class="flex flex-col items-center justify-center h-4/5 gap-3"

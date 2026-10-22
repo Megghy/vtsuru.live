@@ -518,22 +518,24 @@ onMounted(() => {
           <RouterView v-slot="{ Component, route: viewRoute }">
             <KeepAlive>
               <div
-                :class="
-                  viewRoute.meta.pageContainer !== 'none'
-                    ? [
-                        'client-page-inner',
-                        viewRoute.meta.pageWidth === 'md' && 'client-page-inner--md',
-                        viewRoute.meta.pageWidth === 'xl' && 'client-page-inner--xl',
-                        viewRoute.meta.pageWidth === 'full' && 'client-page-inner--full',
-                      ]
-                    : undefined
-                "
+                v-if="viewRoute.meta.pageContainer !== 'none'"
+                :class="[
+                  'client-page-inner',
+                  viewRoute.meta.pageWidth === 'md' && 'client-page-inner--md',
+                  viewRoute.meta.pageWidth === 'xl' && 'client-page-inner--xl',
+                  viewRoute.meta.pageWidth === 'full' && 'client-page-inner--full',
+                ]"
               >
                 <component
                   :is="Component"
                   :key="viewRoute.fullPath.split('#')[0]"
                 />
               </div>
+              <component
+                :is="Component"
+                v-else
+                :key="viewRoute.fullPath.split('#')[0]"
+              />
             </KeepAlive>
           </RouterView>
         </div>

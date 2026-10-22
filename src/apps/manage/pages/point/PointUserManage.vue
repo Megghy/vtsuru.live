@@ -309,7 +309,7 @@ onMounted(async () => {
 <template>
   <div class="space-y-4">
     <!-- 统计卡片 -->
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+    <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
       <Card class="border border-border">
         <CardContent class="p-3.5 space-y-1">
           <span class="text-xs text-muted-foreground">总用户</span>
@@ -364,7 +364,7 @@ onMounted(async () => {
           @click="emit('openSourceSettings')"
         >
           <Settings24Regular class="size-3.5" />
-          来源设置
+          <span class="hidden sm:inline">来源设置</span>
         </Button>
       </div>
     </Alert>
@@ -412,7 +412,7 @@ onMounted(async () => {
           @click="refresh"
         >
           <ArrowSync24Regular class="size-3.5" />
-          刷新
+          <span class="hidden sm:inline">刷新</span>
         </Button>
         <Button
           size="xs"
@@ -421,7 +421,7 @@ onMounted(async () => {
           @click="showGivePointModal = true"
         >
           <AddSquare24Regular class="size-3.5" />
-          积分调整
+          <span class="hidden sm:inline">积分调整</span>
         </Button>
         <Button
           size="xs"
@@ -430,7 +430,7 @@ onMounted(async () => {
           @click="exportData"
         >
           <ArrowDownload24Regular class="size-3.5" />
-          导出
+          <span class="hidden sm:inline">导出</span>
         </Button>
 
         <Popconfirm
@@ -445,7 +445,7 @@ onMounted(async () => {
               class="gap-1"
             >
               <Delete24Regular class="size-3.5" />
-              重置
+              <span class="hidden sm:inline">重置</span>
             </Button>
           </template>
           确定要重置所有用户的积分吗？慎点！
@@ -529,7 +529,7 @@ onMounted(async () => {
                           size="xs"
                           class="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
                           @click="
-                            currentUser = user
+                            currentUser = user;
                             showModal = true
                           "
                         >
@@ -568,7 +568,7 @@ onMounted(async () => {
                   <Select
                     :model-value="String(ps)"
                     @update:model-value="
-                      ps = Number($event)
+                      ps = Number($event);
                       pn = 1
                     "
                   >

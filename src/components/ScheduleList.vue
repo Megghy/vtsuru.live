@@ -171,8 +171,6 @@ function getWeekRangeLabel(year: number, week: number) {
                   class="p-2 rounded border border-border/80 text-xs space-y-1 transition group"
                   :class="isSelf ? 'hover:bg-muted/30 cursor-pointer' : ''"
                   :style="{
-                    borderLeftWidth: '3px',
-                    borderLeftColor: schedule.tagColor || 'var(--primary)',
                     backgroundColor: schedule.tagColor ? `${schedule.tagColor}10` : undefined,
                   }"
                   @click="isSelf && emit('onEditItem', item, index, schedule)"

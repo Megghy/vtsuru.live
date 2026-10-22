@@ -259,9 +259,6 @@ const {
   }
 }
 
-.n-divider__line {
-  background-color: #ffffffd5;
-}
 
 .obs-classic-content {
   background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));

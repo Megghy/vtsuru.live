@@ -152,7 +152,7 @@
   place-items: center;
 }
 
-.step-marker .n-icon {
+.step-marker svg {
   font-size: 20px;
 }
 
@@ -206,7 +206,7 @@
   border-top: 1px solid color-mix(in srgb, var(--bili-pink) 16%, var(--border));
 }
 
-.trust-note > .n-icon {
+.trust-note > svg {
   color: var(--bili-blue);
   font-size: 21px;
 }
@@ -253,7 +253,7 @@
   place-items: center;
 }
 
-.state-icon .n-icon {
+.state-icon svg {
   font-size: 29px;
 }
 
@@ -315,7 +315,7 @@
   border-radius: 6px;
 }
 
-.quick-facts .n-icon {
+.quick-facts svg {
   flex: 0 0 auto;
   color: var(--bili-blue);
   font-size: 17px;
@@ -419,7 +419,7 @@
   border-radius: 4px;
 }
 
-.security-notice > .n-icon {
+.security-notice > svg {
   margin-top: 1px;
   font-size: 19px;
 }
@@ -571,7 +571,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .success-actions .n-button {
+  .success-actions button {
     width: 100%;
   }
 

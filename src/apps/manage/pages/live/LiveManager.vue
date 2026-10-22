@@ -15,7 +15,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAccount } from '@/api/account'
 import type { ResponseLiveInfoModel } from '@/api/api-models'
 import { getApiLiveGetAll } from '@/api/generated/live/live'
-import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -274,8 +273,7 @@ onBeforeUnmount(() => {
       </template>
     </ManagePageHeader>
 
-    <div class="space-y-3">
-      <EventFetcherAlert />
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
       <EventFetcherStatusCard />
 
       <Alert

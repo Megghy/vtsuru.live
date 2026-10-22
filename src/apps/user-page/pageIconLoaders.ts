@@ -9,11 +9,11 @@ const iconModules = import.meta.glob<Component>(
   { import: 'default' },
 )
 
-const iconLoaders = new Map<string, () => Promise<Component>>()
+const iconLoaders = new Map<string, () => Promise<any>>()
 
 for (const [path, loader] of Object.entries(iconModules)) {
   const name = path.match(/\/([^/]+)\.js$/)?.[1]
-  if (name) iconLoaders.set(name, loader as () => Promise<Component>)
+  if (name) iconLoaders.set(name, loader as any)
 }
 
 export const USER_PAGE_NAV_ICON_NAMES = Object.freeze([...iconLoaders.keys()].toSorted())

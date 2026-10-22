@@ -662,7 +662,7 @@ watch(
                       type="radio"
                       :checked="!setting.useDailyFirstGiftPercent"
                       @change="
-                        setting.useDailyFirstGiftPercent = false
+                        setting.useDailyFirstGiftPercent = false;
                         updateSettings()
                       "
                     />
@@ -673,7 +673,7 @@ watch(
                       type="radio"
                       :checked="setting.useDailyFirstGiftPercent"
                       @change="
-                        setting.useDailyFirstGiftPercent = true
+                        setting.useDailyFirstGiftPercent = true;
                         updateSettings()
                       "
                     />
@@ -730,7 +730,7 @@ watch(
                   type="radio"
                   :checked="setting.giftAllowType === SettingPointGiftAllowType.WhiteList"
                   @change="
-                    setting.giftAllowType = SettingPointGiftAllowType.WhiteList
+                    setting.giftAllowType = SettingPointGiftAllowType.WhiteList;
                     updateSettings()
                   "
                 />
@@ -741,7 +741,7 @@ watch(
                   type="radio"
                   :checked="setting.giftAllowType === SettingPointGiftAllowType.All"
                   @change="
-                    setting.giftAllowType = SettingPointGiftAllowType.All
+                    setting.giftAllowType = SettingPointGiftAllowType.All;
                     updateSettings()
                   "
                 />

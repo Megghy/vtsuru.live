@@ -296,7 +296,7 @@
   position: relative;
   display: grid;
   min-width: 0;
-  padding: 8px 8px 8px 11px;
+  padding: 8px;
   gap: 4px;
   overflow: hidden;
   background: color-mix(in srgb, var(--event-color) 8%, transparent);
@@ -305,11 +305,7 @@
 }
 
 .schedule-event::before {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: var(--event-color);
-  content: '';
+  display: none;
 }
 
 .schedule-event.is-next {

@@ -79,9 +79,13 @@ const borderTitleAlignClass = computed(() => {
 
 <template>
   <div
-    class="vtsuru-block-card-wrap"
-    :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded, 'has-border-title': showBorderTitle }"
-    :style="props.wrapStyle"
+    class="vtsuru-block-card"
+    :class="{
+      unframed: isUnframed,
+      unbackgrounded: isUnbackgrounded,
+      'has-border-title': showBorderTitle,
+    }"
+    :style="[props.wrapStyle, cardStyle]"
   >
     <div
       v-if="showBorderTitle"
@@ -93,48 +97,55 @@ const borderTitleAlignClass = computed(() => {
       </span>
     </div>
     <div
-      class="vtsuru-block-card"
-      :class="{ unframed: isUnframed, unbackgrounded: isUnbackgrounded }"
-      :style="cardStyle"
+      v-if="$slots.header || $slots['header-extra']"
+      class="vtsuru-block-card-header flex items-center justify-between"
+      :style="props.headerStyle"
     >
-      <div
-        v-if="$slots.header || $slots['header-extra']"
-        class="vtsuru-block-card-header flex items-center justify-between"
-        :style="props.headerStyle"
-      >
-        <div class="vtsuru-block-card-header-main flex-1 min-w-0">
-          <slot name="header" />
-        </div>
-        <div
-          v-if="$slots['header-extra']"
-          class="vtsuru-block-card-header-extra shrink-0 ml-2"
-        >
-          <slot name="header-extra" />
-        </div>
+      <div class="vtsuru-block-card-header-main flex-1 min-w-0">
+        <slot name="header" />
       </div>
       <div
-        class="vtsuru-block-card-content"
-        :style="resolvedContentStyle"
+        v-if="$slots['header-extra']"
+        class="vtsuru-block-card-header-extra shrink-0 ml-2"
       >
-        <slot />
+        <slot name="header-extra" />
       </div>
-      <div
-        v-if="$slots.footer"
-        class="vtsuru-block-card-footer"
-        :style="props.footerStyle"
-      >
-        <slot name="footer" />
-      </div>
+    </div>
+    <div
+      class="vtsuru-block-card-content"
+      :style="resolvedContentStyle"
+    >
+      <slot />
+    </div>
+    <div
+      v-if="$slots.footer"
+      class="vtsuru-block-card-footer"
+      :style="props.footerStyle"
+    >
+      <slot name="footer" />
     </div>
   </div>
 </template>
 
 <style scoped>
-.vtsuru-block-card-wrap {
+.vtsuru-block-card {
   position: relative;
   display: flex;
+  flex-direction: column;
   height: 100%;
   min-width: 0;
+  border-radius: var(--vtsuru-page-radius);
+  color: var(--vtsuru-block-fg);
+  background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted)));
+  backdrop-filter: blur(var(--user-page-card-blur, 12px));
+  -webkit-backdrop-filter: blur(var(--user-page-card-blur, 12px));
+  border: var(--vtsuru-page-border);
+  box-shadow: var(--vtsuru-page-shadow);
+  overflow: hidden;
+}
+
+.vtsuru-block-card.has-border-title {
+  overflow: visible;
 }
 
 .border-title {
@@ -173,21 +184,6 @@ const borderTitleAlignClass = computed(() => {
   text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
 }
 
-.vtsuru-block-card {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-block-fg);
-  background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted)));
-  backdrop-filter: blur(var(--user-page-bg-blur, 6px));
-  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 6px));
-  border: var(--vtsuru-page-border);
-  box-shadow: var(--vtsuru-page-shadow);
-  overflow: hidden;
-}
-
 .vtsuru-block-card.unframed {
   border: 0;
   box-shadow: none;
@@ -201,7 +197,7 @@ const borderTitleAlignClass = computed(() => {
   box-shadow: none;
 }
 
-.vtsuru-block-card-wrap.unbackgrounded .border-title__text {
+.vtsuru-block-card.unbackgrounded .border-title__text {
   color: var(--vtsuru-block-fg);
 }
 

@@ -2,6 +2,9 @@
 import { HelpCircle } from '@vicons/ionicons5'
 import { toast } from 'vue-sonner'
 
+// Fix vue-tsc type inference issue in template inline functions
+const showToast = toast
+
 import { callStartDanmakuClient, resetDanmakuClientInitState } from '@/apps/client/data/initialize'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useSettings } from '@/apps/client/store/useSettings'
@@ -19,7 +22,7 @@ const settings = useSettings()
 
 async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boolean = false) {
   if (webfetcher.webfetcherType === type && !force) {
-    toast.info('当前已是该模式')
+    showToast.info('当前已是该模式')
     return
   }
   const noticeRef = window.$notification?.info?.({
@@ -40,34 +43,39 @@ async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boo
       closable: true,
       duration: 3000,
     })
-    toast.success(`${webfetcher.webfetcherType} 弹幕客户端连接成功`)
+    showToast.success(`${webfetcher.webfetcherType} 弹幕客户端连接成功`)
   } else {
     window.$notification?.error?.({
       title: 'WebEventFetcher',
       content: `弹幕服务器连接失败: ${result.message}`,
       closable: true,
     })
-    toast.error(`弹幕服务器连接失败: ${result.message}`)
+    showToast.error(`弹幕服务器连接失败: ${result.message}`)
   }
 }
 
 async function handleToggleEventFetcher(enabled: boolean) {
   await settings.save()
   if (enabled) {
-    toast.info('正在启动 EventFetcher...')
+    showToast.info('正在启动 EventFetcher...')
     const result = await callStartDanmakuClient()
     if (result.success) {
-      toast.success('EventFetcher 已启动')
+      showToast.success('EventFetcher 已启动')
     } else {
-      toast.error(`EventFetcher 启动失败: ${result.message}`)
+      showToast.error(`EventFetcher 启动失败: ${result.message}`)
     }
   } else {
     if (webfetcher.state !== 'disconnected') {
       await webfetcher.Stop()
-      toast.info('EventFetcher 已停止')
+      showToast.info('EventFetcher 已停止')
     }
     resetDanmakuClientInitState()
   }
+}
+
+async function handleForceRestartDanmaku() {
+  await onSwitchDanmakuClientMode(settings.settings.useDanmakuClientType, true)
+  showToast.success('已重启弹幕服务器')
 }
 </script>
 
@@ -108,7 +116,7 @@ async function handleToggleEventFetcher(enabled: boolean) {
               :checked="settings.settings.enableEventFetcher"
               :disabled="webfetcher.state === 'connecting'"
               @update:checked="
-                settings.settings.enableEventFetcher = $event
+                settings.settings.enableEventFetcher = $event;
                 handleToggleEventFetcher($event)
               "
             />
@@ -180,12 +188,7 @@ async function handleToggleEventFetcher(enabled: boolean) {
         <Popconfirm
           title="强制重启"
           :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
-          @positive-click="
-            async () => {
-              await onSwitchDanmakuClientMode(settings.settings.useDanmakuClientType, true)
-              toast.success('已重启弹幕服务器')
-            }
-          "
+          @positive-click="handleForceRestartDanmaku"
         >
           <template #trigger>
             <Button

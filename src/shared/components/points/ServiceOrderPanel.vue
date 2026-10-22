@@ -152,6 +152,12 @@ const ownerActions = computed(() => {
   return []
 })
 const canBuyerCancel = computed(() => props.role === 'buyer' && current.value?.status === PointOrderStatus.Pending)
+const shouldShowReasonInput = computed(
+  () =>
+    ownerActions.value.some(
+      (item) => item.status === PointOrderStatus.Rejected || item.status === PointOrderStatus.Cancelled,
+    ) || canBuyerCancel.value,
+)
 
 function normalizeTimestamp(value?: number | string | null) {
   if (value == null || value === '') return undefined
@@ -549,11 +555,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
             <span class="font-semibold text-foreground text-xs block">订单处理</span>
 
             <Textarea
-              v-if="
-                ownerActions.some(
-                  (item) => item.status === PointOrderStatus.Rejected || item.status === PointOrderStatus.Cancelled,
-                ) || canBuyerCancel
-              "
+              v-if="shouldShowReasonInput"
               v-model="reason"
               rows="2"
               placeholder="取消或拒绝原因（必填）"

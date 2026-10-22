@@ -517,7 +517,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
   white-space: nowrap;
 }
 
-.answer-author .n-time {
+.answer-author > span:last-child {
   margin-left: auto;
   color: var(--feed-subtle);
 }
@@ -535,7 +535,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
   margin-top: 11px;
 }
 
-.thread-images :deep(.n-image) {
+.thread-images img {
   width: 100%;
   aspect-ratio: 4 / 3;
   overflow: hidden;
@@ -619,7 +619,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
     flex-wrap: wrap;
   }
 
-  .answer-author .n-time {
+  .answer-author > span:last-child {
     width: 100%;
     margin-left: 34px;
   }

@@ -502,16 +502,6 @@ body {
   margin: 0;
 }
 
-.n-layout {
-  background: transparent;
-}
-.n-layout-content {
-  overflow: hidden !important;
-  background: transparent !important;
-}
-.n-element {
-  background: transparent !important;
-}
 
 :root {
   --gw-bg-color: rgba(20, 20, 30, 0.85);

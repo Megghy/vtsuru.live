@@ -112,73 +112,60 @@ const contentClass = computed(() => ({
 </script>
 
 <template>
-  <div
-    class="root"
-    :style="contentThemeVars"
+  <main
+    class="user-page-entry"
+    :class="[contentBackgroundClass, contentClass]"
+    :style="[contentThemeVars, contentBackgroundVars]"
   >
-    <div
-      :class="contentBackgroundClass"
-      :style="contentBackgroundVars"
-    >
-      <main
-        class="content"
-        :class="contentClass"
+    <component
+      :is="indexTemplateComponent"
+      v-if="renderMode === 'legacy'"
+      :user-info="userInfo"
+      :bili-info="biliInfo"
+    />
+
+    <template v-else-if="renderMode === 'block'">
+      <div
+        v-if="blockValidation && !blockValidation.ok"
+        class="flex flex-col items-center justify-center p-12 text-center"
       >
-        <component
-          :is="indexTemplateComponent"
-          v-if="renderMode === 'legacy'"
-          :user-info="userInfo"
-          :bili-info="biliInfo"
-        />
+        <div class="text-destructive font-semibold text-lg mb-2">页面配置错误</div>
+        <div class="text-sm text-muted-foreground">该页面的发布配置无效，请联系页面所有者处理</div>
+      </div>
+      <BlockPageRenderer
+        v-else-if="blockValidation?.ok && mergedBlockProject"
+        :project="mergedBlockProject"
+        :user-info="userInfo"
+        :bili-info="biliInfo"
+        :bili-status="biliStatus"
+        :is-dark="effectiveIsDark"
+        :canvas-color="canvasColor"
+      />
+    </template>
 
-        <template v-else-if="renderMode === 'block'">
-          <div
-            v-if="blockValidation && !blockValidation.ok"
-            class="flex flex-col items-center justify-center p-12 text-center"
-          >
-            <div class="text-destructive font-semibold text-lg mb-2">页面配置错误</div>
-            <div class="text-sm text-muted-foreground">该页面的发布配置无效，请联系页面所有者处理</div>
-          </div>
-          <BlockPageRenderer
-            v-else-if="blockValidation?.ok && mergedBlockProject"
-            :project="mergedBlockProject"
-            :user-info="userInfo"
-            :bili-info="biliInfo"
-            :bili-status="biliStatus"
-            :is-dark="effectiveIsDark"
-            :canvas-color="canvasColor"
-          />
-        </template>
+    <ContribPageRenderer
+      v-else-if="renderMode === 'contrib' && pageConfig?.contrib"
+      :page="pageConfig.contrib"
+      :user-info="userInfo"
+      :bili-info="biliInfo"
+    />
 
-        <ContribPageRenderer
-          v-else-if="renderMode === 'contrib' && pageConfig?.contrib"
-          :page="pageConfig.contrib"
-          :user-info="userInfo"
-          :bili-info="biliInfo"
-        />
-
-        <div
-          v-else-if="pageSlug"
-          class="flex flex-col items-center justify-center p-12 text-center"
-        >
-          <div class="text-3xl font-bold mb-2">404</div>
-          <div class="text-lg font-medium mb-1">页面不存在</div>
-          <div class="text-sm text-muted-foreground mb-4">该主播未配置此页面</div>
-          <Button @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"> 返回主页 </Button>
-        </div>
-      </main>
+    <div
+      v-else-if="pageSlug"
+      class="flex flex-col items-center justify-center p-12 text-center"
+    >
+      <div class="text-3xl font-bold mb-2">404</div>
+      <div class="text-lg font-medium mb-1">页面不存在</div>
+      <div class="text-sm text-muted-foreground mb-4">该主播未配置此页面</div>
+      <Button @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"> 返回主页 </Button>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
-.root {
+.user-page-entry {
   min-height: 100vh;
   font-family: var(--vtsuru-page-font-family);
-}
-
-.content {
-  min-height: 100vh;
 }
 
 .bg-host {

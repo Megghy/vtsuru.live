@@ -10,7 +10,6 @@ import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
 import { getApiEventGet, postApiEventGuardDelete, postApiEventGuardManual } from '@/api/generated/event/event'
 import { getApiHistoryGuardsList, getApiHistoryGuardsStats } from '@/api/generated/history/history'
-import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
@@ -488,10 +487,7 @@ function onTabChange(value: string | number) {
       subtitle="事件流水记录、导出与在籍舰长明细"
     />
 
-    <div class="space-y-3">
-      <EventFetcherAlert />
-      <EventFetcherStatusCard />
-    </div>
+    <EventFetcherStatusCard />
 
     <!-- 未认证提示 -->
     <Card

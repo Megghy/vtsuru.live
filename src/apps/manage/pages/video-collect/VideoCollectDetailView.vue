@@ -905,7 +905,7 @@ function openVideoInBili(bvid: string) {
             <Button
               variant="brand"
               @click="
-                copyToClipboard(shareUrl)
+                copyToClipboard(shareUrl);
                 message.success('链接已复制')
               "
             >

@@ -4,6 +4,9 @@ import { CloudDownloadOutline, RefreshOutline } from '@vicons/ionicons5'
 import { onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
+// Fix vue-tsc type inference issue in template inline functions
+const showToast = toast
+
 import { useCooldown } from '@/apps/client/composables/useCooldown'
 import type { CookieCloudConfig } from '@/apps/client/store/useBiliCookie'
 import { COOKIE_CLOUD_KEY, useBiliCookie } from '@/apps/client/store/useBiliCookie'
@@ -41,9 +44,9 @@ async function setCookieCloud() {
   try {
     isLoadingCookiecloud.value = true
     await biliCookie.setCookieCloudConfig(cookieCloudData.value)
-    toast.success('Cookie Cloud 配置已保存')
+    showToast.success('Cookie Cloud 配置已保存')
   } catch (err: any) {
-    toast.error(err?.message || String(err) || '保存配置失败')
+    showToast.error(err?.message || String(err) || '保存配置失败')
   } finally {
     isLoadingCookiecloud.value = false
   }
@@ -51,7 +54,7 @@ async function setCookieCloud() {
 
 async function manualSyncFromCloud() {
   if (syncCooldown.isCoolingDown()) {
-    toast.warning(`请等待 ${syncCooldown.remaining.value} 秒后再试`)
+    showToast.warning(`请等待 ${syncCooldown.remaining.value} 秒后再试`)
     return
   }
   try {
@@ -59,13 +62,13 @@ async function manualSyncFromCloud() {
     await biliCookie.check(true) // 强制从 CookieCloud 同步
     syncCooldown.trigger()
     if (biliCookie.isCookieValid) {
-      toast.success('Cookie 同步成功')
+      showToast.success('Cookie 同步成功')
     } else {
-      toast.error('Cookie 同步失败或无效')
+      showToast.error('Cookie 同步失败或无效')
     }
   } catch (err: any) {
     logError(`手动同步 Cookie 失败: ${err}`)
-    toast.error(`同步失败: ${err?.message || String(err) || '未知错误'}`)
+    showToast.error(`同步失败: ${err?.message || String(err) || '未知错误'}`)
   } finally {
     isSyncingFromCloud.value = false
   }
@@ -73,7 +76,7 @@ async function manualSyncFromCloud() {
 
 async function manualCheckCookie() {
   if (checkCooldown.isCoolingDown()) {
-    toast.warning(`请等待 ${checkCooldown.remaining.value} 秒后再试`)
+    showToast.warning(`请等待 ${checkCooldown.remaining.value} 秒后再试`)
     return
   }
   try {
@@ -81,16 +84,24 @@ async function manualCheckCookie() {
     await biliCookie.check(false) // 只检查本地 Cookie
     checkCooldown.trigger()
     if (biliCookie.isCookieValid) {
-      toast.success('Cookie 有效')
+      showToast.success('Cookie 有效')
     } else {
-      toast.error('Cookie 已失效')
+      showToast.error('Cookie 已失效')
     }
   } catch (err: any) {
     logError(`手动检查 Cookie 失败: ${err}`)
-    toast.error(`检查失败: ${err?.message || String(err) || '未知错误'}`)
+    showToast.error(`检查失败: ${err?.message || String(err) || '未知错误'}`)
   } finally {
     isCheckingCookie.value = false
   }
+}
+
+async function handleClearCookieCloudConfig() {
+  await biliCookie.clearCookieCloudConfig()
+  cookieCloudData.value.key = ''
+  cookieCloudData.value.password = ''
+  cookieCloudData.value.host = 'https://cookie.vtsuru.live'
+  showToast.success('配置已清除')
 }
 </script>
 
@@ -168,15 +179,7 @@ async function manualCheckCookie() {
         <Popconfirm
           v-else
           title="清除配置"
-          @positive-click="
-            async () => {
-              await biliCookie.clearCookieCloudConfig()
-              cookieCloudData.key = ''
-              cookieCloudData.password = ''
-              cookieCloudData.host = 'https://cookie.vtsuru.live'
-              toast.success('配置已清除')
-            }
-          "
+          @positive-click="handleClearCookieCloudConfig"
         >
           <template #trigger>
             <Button

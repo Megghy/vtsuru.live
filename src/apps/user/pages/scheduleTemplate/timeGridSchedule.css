@@ -79,8 +79,7 @@
   color: var(--timegrid-accent);
 }
 
-.timegrid-header__eyebrow svg,
-.timegrid-header__eyebrow .n-icon {
+.timegrid-header__eyebrow svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -122,8 +121,7 @@
   line-height: 1.2;
 }
 
-.timegrid-badge svg,
-.timegrid-badge .n-icon {
+.timegrid-badge svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
@@ -188,8 +186,7 @@
   color: var(--timegrid-accent);
 }
 
-.timegrid-ctrl-btn svg,
-.timegrid-ctrl-btn .n-icon {
+.timegrid-ctrl-btn svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;

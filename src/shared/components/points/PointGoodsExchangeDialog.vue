@@ -788,7 +788,7 @@ const requestClose = () => {
             <Select
               :model-value="currentAddress.province || ''"
               @update:model-value="
-                currentAddress.province = String($event)
+                currentAddress.province = String($event);
                 onAreaSelectChange(0)
               "
             >
@@ -814,7 +814,7 @@ const requestClose = () => {
               :model-value="currentAddress.city || ''"
               :disabled="!currentAddress.province"
               @update:model-value="
-                currentAddress.city = String($event)
+                currentAddress.city = String($event);
                 onAreaSelectChange(1)
               "
             >
@@ -840,7 +840,7 @@ const requestClose = () => {
               :model-value="currentAddress.district || ''"
               :disabled="!currentAddress.city"
               @update:model-value="
-                currentAddress.district = String($event)
+                currentAddress.district = String($event);
                 onAreaSelectChange(2)
               "
             >
@@ -980,7 +980,7 @@ const requestClose = () => {
         </Button>
         <Button
           @click="
-            showSuccessModal = false
+            showSuccessModal = false;
             router.push({ name: 'bili-user-orders' })
           "
         >

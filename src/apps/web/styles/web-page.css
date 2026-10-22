@@ -23,15 +23,3 @@
   justify-content: center;
 }
 
-/* shadcn-like card rhythm */
-.web-page .n-card {
-  border-radius: var(--radius);
-}
-
-.web-page .n-card .n-card-header {
-  padding: 12px 14px;
-}
-
-.web-page .n-card .n-card__content {
-  padding: 14px;
-}

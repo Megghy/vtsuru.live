@@ -456,7 +456,7 @@ onMounted(() => {
                     size="small"
                     class="w-32"
                     @update:value="
-                      serverSetting.baseCheckInPoints = $event || 0
+                      serverSetting.baseCheckInPoints = $event || 0;
                       updateServerSettings()
                     "
                   />
@@ -482,7 +482,7 @@ onMounted(() => {
                       size="small"
                       class="w-28"
                       @update:value="
-                        serverSetting.bonusPointsPerDay = $event || 0
+                        serverSetting.bonusPointsPerDay = $event || 0;
                         updateServerSettings()
                       "
                     />
@@ -495,7 +495,7 @@ onMounted(() => {
                       size="small"
                       class="w-28"
                       @update:value="
-                        serverSetting.maxBonusPoints = $event || 0
+                        serverSetting.maxBonusPoints = $event || 0;
                         updateServerSettings()
                       "
                     />

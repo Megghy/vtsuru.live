@@ -71,7 +71,8 @@
   background: var(--index-bg);
   box-shadow: 0 16px 36px color-mix(in srgb, var(--index-fg) 16%, transparent);
 }
-.portrait-frame :deep(.n-avatar) {
+.portrait-frame img,
+.portrait-frame > div {
   display: block;
   z-index: 1;
 }
@@ -139,13 +140,13 @@
   transform: scale(0.95);
 }
 
-.profile-action--secondary :deep(.n-button) {
+.profile-action--secondary {
   border-color: color-mix(in srgb, #fb7299 30%, transparent);
   background: color-mix(in srgb, #fb7299 8%, var(--index-bg));
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.profile-action--secondary:hover :deep(.n-button) {
+.profile-action--secondary:hover {
   border-color: color-mix(in srgb, #fb7299 50%, transparent);
   background: color-mix(in srgb, #fb7299 16%, var(--index-bg));
   box-shadow: 0 8px 16px color-mix(in srgb, #fb7299 20%, transparent);
@@ -161,19 +162,19 @@
   filter: brightness(1.2);
 }
 
-.profile-action--primary :deep(.n-button) {
+.profile-action--primary {
   background: linear-gradient(135deg, var(--index-accent), color-mix(in srgb, var(--index-accent) 80%, #fb7299));
   border: none;
   box-shadow: 0 4px 12px color-mix(in srgb, var(--index-accent) 30%, transparent);
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.profile-action--primary:hover :deep(.n-button) {
+.profile-action--primary:hover {
   box-shadow: 0 8px 24px color-mix(in srgb, var(--index-accent) 40%, transparent);
   transform: translateY(-2px);
 }
 
-.profile-action--primary:active :deep(.n-button) {
+.profile-action--primary:active {
   transform: translateY(0);
   box-shadow: 0 2px 8px color-mix(in srgb, var(--index-accent) 25%, transparent);
 }
@@ -262,7 +263,7 @@
   border-left-color: #fb7299;
   background: color-mix(in srgb, #fb7299 9%, var(--index-bg));
 }
-.notice-strip--reserve :deep(.n-icon) {
+.notice-strip--reserve svg {
   color: #fb7299;
 }
 a.notice-strip--reserve {
@@ -331,7 +332,7 @@ a.notice-strip--reserve:hover {
   font-size: 13px;
   line-height: 1.5;
 }
-.notice-strip :deep(.n-icon) {
+.notice-strip svg {
   flex: none;
   color: var(--index-accent);
 }
@@ -412,7 +413,7 @@ a.notice-strip--reserve:hover {
   background: color-mix(in srgb, var(--index-card) 85%, var(--index-accent) 15%);
   transform: translateX(4px);
 }
-.link-tile :deep(.n-icon) {
+.link-tile svg {
   flex: none;
   color: var(--index-accent);
 }
@@ -438,7 +439,7 @@ a.notice-strip--reserve:hover {
   font-size: 12px;
   line-height: 1.45;
 }
-.video-item__label :deep(.n-icon) {
+.video-item__label svg {
   flex: none;
   margin-top: 2px;
   color: var(--index-accent);
@@ -446,14 +447,6 @@ a.notice-strip--reserve:hover {
 .empty-state {
   padding: 12px 0 22px;
   opacity: 0.38;
-}
-.empty-state :deep(.n-empty__icon) {
-  width: 30px;
-  height: 30px;
-}
-.empty-state :deep(.n-empty__description) {
-  margin-top: 7px;
-  font-size: 12px;
 }
 @media (max-width: 720px) {
   .profile-banner {
@@ -470,7 +463,8 @@ a.notice-strip--reserve:hover {
     height: 138px;
     margin-top: -69px;
   }
-  .portrait-frame :deep(.n-avatar) {
+  .portrait-frame img,
+  .portrait-frame > div {
     width: 126px !important;
     height: 126px !important;
   }
@@ -505,7 +499,8 @@ a.notice-strip--reserve:hover {
     margin-top: -58px;
     border-width: 6px;
   }
-  .portrait-frame :deep(.n-avatar) {
+  .portrait-frame img,
+  .portrait-frame > div {
     width: 104px !important;
     height: 104px !important;
   }
@@ -521,10 +516,12 @@ a.notice-strip--reserve:hover {
     max-width: none;
     flex: 1;
   }
-  .profile-actions :deep(.n-button) {
+  .profile-actions button,
+  .profile-action {
     width: 100%;
   }
-  .profile-actions :deep(.n-button:first-child:last-child) {
+  .profile-actions button:first-child:last-child,
+  .profile-action:first-child:last-child {
     width: auto;
   }
   .identity {

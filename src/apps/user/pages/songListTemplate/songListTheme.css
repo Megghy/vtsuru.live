@@ -32,8 +32,7 @@
   box-sizing: border-box;
 }
 
-.song-list-surface > *,
-.song-list-surface :is(.n-flex, .n-grid, .n-grid-item) {
+.song-list-surface > * {
   min-width: 0;
 }
 

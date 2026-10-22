@@ -355,7 +355,7 @@
   .schedule-subscription:not(.is-docked) .subscription-action input {
     flex: 1 1 100%;
   }
-  .schedule-subscription:not(.is-docked) .subscription-action :deep(.n-button) {
+  .schedule-subscription:not(.is-docked) .subscription-action button {
     flex: 1 1 0;
   }
 
@@ -388,7 +388,7 @@
     flex: 0 0 auto;
     gap: 5px;
   }
-  .schedule-subscription.is-docked .subscription-action :deep(.n-button) {
+  .schedule-subscription.is-docked .subscription-action button {
     padding: 0 8px;
     font-size: 12px;
   }

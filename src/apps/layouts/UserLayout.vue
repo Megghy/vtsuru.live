@@ -560,7 +560,7 @@ function scrollToTop() {
           <!-- 主题切换开关 -->
           <Button
             variant="ghost"
-            class="size-8 p-0"
+            class="h-7 w-7 p-0"
             :disabled="isLoading || pageThemeMode !== 'auto'"
             :title="themeSwitchTitle"
             @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
@@ -576,30 +576,38 @@ function scrollToTop() {
             <Button
               v-if="isOwner"
               variant="outline"
+              size="xs"
               title="进入主页可视化装修与块配置"
               @click="$router.push({ name: 'manage-userPageBuilder' })"
             >
               <component
                 :is="ColorPaletteOutline"
-                class="size-4 mr-1"
+                class="size-4"
+                :class="{ 'mr-1': isDesktop }"
               />
               <span v-if="isDesktop">装修主页</span>
             </Button>
 
             <Button
               variant="outline"
+              size="xs"
               @click="$router.push({ name: 'live-directory', query: { tab: 'following' } })"
             >
               <component
                 :is="HeartOutline"
-                class="size-4 mr-1"
+                class="size-4"
+                :class="{ 'mr-1': isDesktop }"
               />
               <span v-if="isDesktop">关注管理</span>
             </Button>
-            <Button @click="enterLastWorkspace">
+            <Button
+              size="xs"
+              @click="enterLastWorkspace"
+            >
               <component
                 :is="WindowWrench20Filled"
-                class="size-4 mr-1"
+                class="size-4"
+                :class="{ 'mr-1': isDesktop }"
               />
               <span v-if="isDesktop">{{ WORKSPACE_LABELS[lastWorkspace] }}</span>
             </Button>
@@ -608,6 +616,7 @@ function scrollToTop() {
           <!-- 未登录用户操作 -->
           <Button
             v-else
+            size="xs"
             @click="registerAndLoginModalVisiable = true"
           >
             注册 / 登录
@@ -890,11 +899,9 @@ function scrollToTop() {
             <RouterView v-slot="{ Component, route: viewRoute }">
               <KeepAlive :max="4">
                 <div
-                  :class="
-                    viewRoute.meta.pageContainer !== 'none'
-                      ? ['user-page', viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined]
-                      : undefined
-                  "
+                  v-if="viewRoute.meta.pageContainer !== 'none'"
+                  class="user-page"
+                  :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
                 >
                   <component
                     :is="Component"
@@ -904,6 +911,14 @@ function scrollToTop() {
                     :user-info="userInfo"
                   />
                 </div>
+                <component
+                  :is="Component"
+                  v-else
+                  :key="route.fullPath.split('#')[0]"
+                  :bili-info="biliUserInfo"
+                  :bili-status="biliProfileStatus"
+                  :user-info="userInfo"
+                />
               </KeepAlive>
             </RouterView>
           </div>

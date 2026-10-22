@@ -14,6 +14,9 @@ import {
 import { computed, nextTick, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
+// Fix vue-tsc type inference issue in template inline functions
+const showToast = toast
+
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
@@ -80,7 +83,7 @@ function handleBatchEnable(enabled: boolean) {
   actionsToUpdate.forEach((a) => {
     autoActionStore.toggleAutoAction(a.id, enabled)
   })
-  toast.success(`已${enabled ? '启用' : '禁用'} ${actionsToUpdate.length} 条操作`)
+  showToast.success(`已${enabled ? '启用' : '禁用'} ${actionsToUpdate.length} 条操作`)
 }
 
 function getStatusBadge(action: AutoActionItem) {
@@ -162,18 +165,18 @@ function duplicateAction(action: AutoActionItem) {
       }
     })
   }
-  toast.success('已复制')
+  showToast.success('已复制')
 }
 
 function deleteAction(action: AutoActionItem) {
   autoActionStore.removeAutoAction(action.id)
-  toast.success('已删除')
+  showToast.success('已删除')
 }
 
 function exportActions() {
   const actionsToExport = filteredActions.value
   if (actionsToExport.length === 0) {
-    toast.warning('没有可导出的操作')
+    showToast.warning('没有可导出的操作')
     return
   }
   const data = JSON.stringify(actionsToExport, null, 2)
@@ -184,7 +187,7 @@ function exportActions() {
   a.download = `autoaction-${props.triggerType}-${Date.now()}.json`
   a.click()
   URL.revokeObjectURL(url)
-  toast.success(`已导出 ${actionsToExport.length} 条操作`)
+  showToast.success(`已导出 ${actionsToExport.length} 条操作`)
 }
 
 function importActions() {
@@ -205,12 +208,22 @@ function importActions() {
         autoActionStore.autoActions.push(item)
         count++
       }
-      toast.success(`已导入 ${count} 条操作`)
+      showToast.success(`已导入 ${count} 条操作`)
     } catch (err) {
-      toast.error(`导入失败: ${(err as Error).message}`)
+      showToast.error(`导入失败: ${(err as Error).message}`)
     }
   }
   input.click()
+}
+
+function toggleActionEnabled(row: AutoActionItem) {
+  autoActionStore.toggleAutoAction(row.id, !row.enabled)
+  showToast.success(`已${!row.enabled ? '启用' : '禁用'}: ${row.name}`)
+}
+
+function toggleActionOnlyLive(row: AutoActionItem) {
+  row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive
+  showToast.success('已更新触发条件')
 }
 </script>
 
@@ -392,23 +405,13 @@ function importActions() {
                   <DropdownMenuContent align="center">
                     <DropdownMenuItem
                       class="text-xs"
-                      @select="
-                        () => {
-                          autoActionStore.toggleAutoAction(row.id, !row.enabled)
-                          toast.success(`已${!row.enabled ? '启用' : '禁用'}: ${row.name}`)
-                        }
-                      "
+                      @select="toggleActionEnabled(row)"
                     >
                       {{ row.enabled ? '禁用' : '启用' }}
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       class="text-xs"
-                      @select="
-                        () => {
-                          row.triggerConfig.onlyDuringLive = !row.triggerConfig.onlyDuringLive
-                          toast.success('已更新触发条件')
-                        }
-                      "
+                      @select="toggleActionOnlyLive(row)"
                     >
                       {{ row.triggerConfig.onlyDuringLive ? '取消"仅直播"' : '设为"仅直播"' }}
                     </DropdownMenuItem>

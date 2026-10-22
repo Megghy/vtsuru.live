@@ -119,13 +119,13 @@ async function goToUserPage(accountName?: string) {
       </button>
 
       <button
-        v-if="workspace === 'streamer'"
-        class="manage-header__button"
+        v-if="workspace === 'streamer' && accountName"
+        class="manage-header__button manage-header__user-page-button"
         type="button"
-        :disabled="!accountName"
+        title="回到展示页"
         @click="goToUserPage(accountName)"
       >
-        回到展示页
+        <span class="manage-header__button-text">回到展示页</span>
       </button>
     </div>
   </header>
@@ -241,10 +241,10 @@ async function goToUserPage(accountName?: string) {
 }
 
 .manage-header__icon-button {
-  height: 32px;
-  width: 32px;
+  height: 28px;
+  width: 28px;
   padding: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--border);
   background: transparent;
   color: var(--foreground);
@@ -283,9 +283,9 @@ async function goToUserPage(accountName?: string) {
 }
 
 .manage-header__button {
-  height: 32px;
+  height: 28px;
   padding: 0 10px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: 1px solid var(--input);
   background: var(--muted);
   color: var(--foreground);
@@ -339,9 +339,26 @@ async function goToUserPage(accountName?: string) {
   }
 
   .manage-header__page-title,
-  .manage-header__assistant,
-  .manage-header__button {
+  .manage-header__assistant-text {
     display: none;
+  }
+
+  .manage-header__button-text {
+    display: none;
+  }
+
+  .manage-header__user-page-button {
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .manage-header__user-page-button::before {
+    content: '↩';
+    font-size: 16px;
   }
 }
 </style>

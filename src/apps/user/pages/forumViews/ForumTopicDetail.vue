@@ -356,7 +356,7 @@ onMounted(async () => {
               :items-per-page="ps"
               :page="pn"
               @update:page="
-                pn = $event
+                pn = $event;
                 refreshComments()
               "
             />
@@ -390,7 +390,7 @@ onMounted(async () => {
               :items-per-page="ps"
               :page="pn"
               @update:page="
-                pn = $event
+                pn = $event;
                 refreshComments()
               "
             />

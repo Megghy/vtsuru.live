@@ -385,7 +385,4 @@ function resetToolbarOrder() {
   background: var(--brand-soft, rgba(59, 130, 246, 0.15));
 }
 
-.settings :deep(.n-divider) {
-  margin: 4px 0;
-}
 </style>

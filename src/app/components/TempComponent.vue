@@ -29,10 +29,5 @@ onMounted(() => {
   >
     <div class="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
   </div>
-  <div
-    v-else
-    class="h-screen w-full"
-  >
-    <slot />
-  </div>
+  <slot v-else />
 </template>

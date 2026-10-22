@@ -35,7 +35,7 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
+import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import {
   computeAreaStatsFromSessions,
@@ -65,8 +65,7 @@ import { Switch } from '@/shared/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
-import { useMessage } from '@/shared/utils'
-import { isDarkMode } from '@/shared/utils'
+import { isDarkMode, toast } from '@/shared/utils'
 
 // 注册 ECharts 必要组件
 echarts.use([
@@ -86,7 +85,6 @@ echarts.use([
 // 状态管理（SWR 跨页面保活）
 const analyzeStore = useAnalyzeStore()
 const { analyzeData, loading, refreshing, hasData } = storeToRefs(analyzeStore)
-const message = useMessage()
 
 // 区间预设与选择
 type RangePreset = '7d' | '30d' | '60d' | 'all' | 'custom'
@@ -626,7 +624,7 @@ async function loadData() {
   try {
     await analyzeStore.loadData()
   } catch (err: any) {
-    message.error(err?.message || '获取分析数据失败')
+    toast.error(err?.message || '获取分析数据失败')
   } finally {
     await nextTick()
     initChart()
@@ -636,9 +634,9 @@ async function loadData() {
 async function refreshData() {
   try {
     await analyzeStore.loadData()
-    message.success('数据已刷新')
+    toast.success('数据已刷新')
   } catch (err: any) {
-    message.error(err?.message || '刷新数据失败')
+    toast.error(err?.message || '刷新数据失败')
   } finally {
     await nextTick()
     updateChartOption()
@@ -725,7 +723,7 @@ onUnmounted(() => {
     </ManagePageHeader>
 
     <!-- 异常状态提示 -->
-    <EventFetcherAlert />
+    <EventFetcherStatusCard />
 
     <!-- 骨架屏 -->
     <div

@@ -188,7 +188,7 @@ export function buildManageTokens(isDark: boolean): ThemeTokens {
       : {
           canvas: neutral[100],
           surface: '#ffffff',
-          surfaceHover: neutral[100],
+          surfaceHover: neutral[200],
           inset: neutral[200],
           elevated: '#ffffff',
           cardBorderColor: neutral[300],

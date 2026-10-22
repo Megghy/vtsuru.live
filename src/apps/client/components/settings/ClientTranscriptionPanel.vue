@@ -26,6 +26,12 @@ const transcription = useTranscription()
 const account = useAccount()
 const webFetcher = useWebFetcher()
 const activeProfile = computed(() => settingsStore.activeProfile)
+const activeOpenAIProfile = computed(() =>
+  settingsStore.activeProfile?.provider === 'openai' ? settingsStore.activeProfile : undefined,
+)
+const activeTencentProfile = computed(() =>
+  settingsStore.activeProfile?.provider === 'tencent' ? settingsStore.activeProfile : undefined,
+)
 const isRunning = computed(() => transcription.status.running)
 const isBusy = computed(() =>
   ['resolving_stream', 'connecting_provider', 'starting_ffmpeg', 'stopping'].includes(transcription.status.phase),
@@ -488,12 +494,12 @@ function removeHotword(index: number) {
           </div>
         </div>
 
-        <template v-if="activeProfile.provider === 'tencent'">
+        <template v-if="activeTencentProfile">
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">引擎模型</span>
             <div class="flex-1">
               <Select
-                v-model="activeProfile.engineModelType"
+                v-model="activeTencentProfile.engineModelType"
                 :disabled="isRunning"
               >
                 <SelectTrigger class="w-full">
@@ -516,7 +522,7 @@ function removeHotword(index: number) {
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">App ID</span>
             <Input
-              v-model="activeProfile.appId"
+              v-model="activeTencentProfile.appId"
               :disabled="isRunning"
               class="flex-1"
             />
@@ -525,7 +531,7 @@ function removeHotword(index: number) {
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">Secret ID</span>
             <Input
-              v-model="activeProfile.secretId"
+              v-model="activeTencentProfile.secretId"
               type="password"
               :disabled="isRunning"
               class="flex-1"
@@ -535,7 +541,7 @@ function removeHotword(index: number) {
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">Secret Key</span>
             <Input
-              v-model="activeProfile.secretKey"
+              v-model="activeTencentProfile.secretKey"
               type="password"
               :disabled="isRunning"
               class="flex-1"
@@ -543,11 +549,11 @@ function removeHotword(index: number) {
           </div>
         </template>
 
-        <template v-else>
+        <template v-else-if="activeOpenAIProfile">
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">模型</span>
             <Input
-              v-model="activeProfile.model"
+              v-model="activeOpenAIProfile.model"
               :disabled="isRunning"
               placeholder="gpt-live-transcribe"
               class="flex-1"
@@ -557,8 +563,7 @@ function removeHotword(index: number) {
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">API 地址</span>
             <Input
-              v-if="activeProfile.provider === 'openai'"
-              v-model="activeProfile.baseUrl"
+              v-model="activeOpenAIProfile.baseUrl"
               :disabled="isRunning"
               placeholder="wss://api.openai.com/v1/realtime"
               class="flex-1"
@@ -568,8 +573,7 @@ function removeHotword(index: number) {
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">API Key</span>
             <Input
-              v-if="activeProfile.provider === 'openai'"
-              v-model="activeProfile.apiKey"
+              v-model="activeOpenAIProfile.apiKey"
               type="password"
               :disabled="isRunning"
               class="flex-1"

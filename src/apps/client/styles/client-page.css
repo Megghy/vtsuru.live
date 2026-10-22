@@ -41,18 +41,6 @@
   margin: 0;
 }
 
-/* shadcn-like card rhythm */
-.client-page-inner .n-card {
-  border-radius: var(--radius);
-}
-
-.client-page-inner .n-card .n-card-header {
-  padding: 12px 14px;
-}
-
-.client-page-inner .n-card .n-card__content {
-  padding: 14px;
-}
 
 /* 窄窗口下收紧外边距, 让内容获得更多可用宽度 */
 @media (max-width: 640px) {

@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
+import {
+  CheckmarkCircle24Filled,
+  FlashCheckmark16Filled,
+  Info24Filled,
+  PlugDisconnected24Regular,
+  Warning24Filled,
+} from '@vicons/fluent'
+import { AlertCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { EventFetcherType } from '@/api/api-models'
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
-import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const accountInfo = useAccount()
+const router = useRouter()
 const state = computed(() => accountInfo.value?.eventFetcherState)
 
 const eventFetcherVersionName = computed(() => {
@@ -28,7 +34,10 @@ const eventFetcherVersionName = computed(() => {
   }
 })
 
-const status = computed<'success' | 'warning' | 'info'>(() => {
+const status = computed<'success' | 'warning' | 'offline' | 'not-bound'>(() => {
+  if (!accountInfo.value?.isBiliVerified) {
+    return 'not-bound'
+  }
   const current = state.value
   if (current?.online === true) {
     if (!current.status || Object.keys(current.status).length === 0) {
@@ -36,32 +45,74 @@ const status = computed<'success' | 'warning' | 'info'>(() => {
     }
     return 'warning'
   }
-  return 'info'
+  return 'offline'
 })
+
+const statusIcon = computed(() => {
+  switch (status.value) {
+    case 'success':
+      return CheckmarkCircle24Filled
+    case 'warning':
+      return Warning24Filled
+    case 'not-bound':
+      return AlertCircle
+    default:
+      return PlugDisconnected24Regular
+  }
+})
+
+const statusText = computed(() => {
+  if (status.value === 'not-bound') {
+    return '需要先绑定 Bilibili 账号'
+  }
+  if (status.value === 'success') {
+    return accountInfo.value?.isServerFetcherOnline ? '本站托管监听服务' : '运行中'
+  }
+  if (status.value === 'warning') {
+    return state.value?.status ? `异常: ${Object.values(state.value.status).join('; ')}` : '版本过期'
+  }
+  return '未连接'
+})
+
+const todayReceive = computed(() => state.value?.todayReceive ?? 0)
+
+function goBindBili() {
+  void router.push({ name: 'manage-index', query: { tab: 'info' } })
+}
 </script>
 
 <template>
-  <Alert
-    class="border border-border bg-card/60"
+  <div
+    class="fetcher-card"
     :class="{
-      'border-emerald-500/30 bg-emerald-500/5': status === 'success',
-      'border-amber-500/30 bg-amber-500/5': status === 'warning',
+      'fetcher-card--not-bound': status === 'not-bound',
+      'fetcher-card--offline': status === 'offline',
     }"
   >
-    <div class="flex items-center justify-between gap-2 flex-wrap">
-      <div class="flex items-center gap-2">
-        <AlertTitle class="mb-0 text-xs font-semibold tracking-wide uppercase flex items-center gap-1.5">
-          EVENT-FETCHER 状态
+    <div class="fetcher-card__status">
+      <component
+        :is="statusIcon"
+        class="fetcher-card__icon"
+        :class="{
+          'fetcher-card__icon--success': status === 'success',
+          'fetcher-card__icon--warning': status === 'warning',
+          'fetcher-card__icon--offline': status === 'offline',
+          'fetcher-card__icon--not-bound': status === 'not-bound',
+        }"
+      />
+      <div class="fetcher-card__info">
+        <div class="fetcher-card__title">
+          <span>Event Fetcher</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
                 <button
                   type="button"
-                  class="inline-flex text-muted-foreground hover:text-foreground transition-colors"
+                  class="fetcher-card__help"
                 >
                   <component
                     :is="Info24Filled"
-                    class="h-3.5 w-3.5"
+                    class="w-3.5 h-3.5"
                   />
                 </button>
               </TooltipTrigger>
@@ -73,74 +124,223 @@ const status = computed<'success' | 'warning' | 'info'>(() => {
                   target="_blank"
                   class="text-primary underline font-medium inline-block mt-1"
                 >
-                  关于 EVENT-FETCHER &rarr;
+                  关于 Event Fetcher &rarr;
                 </a>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </AlertTitle>
-
-        <template v-if="status !== 'info' && !accountInfo?.isServerFetcherOnline">
-          <Badge
-            variant="outline"
-            class="text-[11px] gap-1 py-0 h-5"
-          >
-            <component
-              :is="FlashCheckmark16Filled"
-              class="h-3 w-3"
-            />
-            {{ eventFetcherVersionName }}
-          </Badge>
-          <Separator
-            orientation="vertical"
-            class="h-3.5"
-          />
-        </template>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <Badge
-          v-if="status === 'success'"
-          variant="success"
-          class="text-xs"
-        >
-          {{ accountInfo?.isServerFetcherOnline ? '正在由本站提供监听服务' : '运行中' }} | 今日已接收
-          <span class="font-bold ml-1">{{ state?.todayReceive ?? 0 }}</span> 条
-        </Badge>
-
-        <Badge
-          v-else-if="status === 'warning'"
-          variant="warning"
-          class="text-xs"
-        >
-          <template v-if="state?.status"> 异常: {{ Object.values(state.status).join('; ') }} </template>
-          <template v-else> 此版本已过期, 请更新 </template>
-        </Badge>
-
-        <Badge
-          v-else
-          variant="secondary"
-          class="text-xs"
-        >
-          未连接
-        </Badge>
-
-        <template v-if="!state?.online">
-          <Separator
-            orientation="vertical"
-            class="h-3.5"
-          />
-          <Button
-            as="a"
-            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-            target="_blank"
-            variant="outline"
-            size="xs"
-          >
-            关于
-          </Button>
-        </template>
+        </div>
+        <div class="fetcher-card__status-text">
+          {{ statusText }}
+          <TooltipProvider v-if="status === 'success' && !accountInfo?.isServerFetcherOnline">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span class="fetcher-card__version">
+                  <component
+                    :is="FlashCheckmark16Filled"
+                    class="w-3 h-3"
+                  />
+                  {{ eventFetcherVersionName }}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">
+                当前连接版本
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
     </div>
-  </Alert>
+
+    <div
+      v-if="status === 'success'"
+      class="fetcher-card__stats"
+    >
+      <div class="fetcher-card__stat-label">今日接收</div>
+      <div class="fetcher-card__stat-value">{{ todayReceive }}</div>
+    </div>
+
+    <div class="fetcher-card__actions">
+      <Button
+        v-if="status === 'not-bound'"
+        variant="outline"
+        size="xs"
+        @click="goBindBili"
+      >
+        前往绑定
+      </Button>
+      <Button
+        v-else-if="status === 'offline'"
+        as="a"
+        href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+        target="_blank"
+        variant="outline"
+        size="xs"
+      >
+        查看文档
+      </Button>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.fetcher-card {
+  position: relative;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.fetcher-card--not-bound,
+.fetcher-card--offline {
+  border-color: rgb(245 158 11 / 0.3);
+  background: rgb(245 158 11 / 0.05);
+}
+
+.fetcher-card__status {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.fetcher-card__icon {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.fetcher-card__icon--success {
+  color: #10b981;
+}
+
+.fetcher-card__icon--warning {
+  color: #f59e0b;
+}
+
+.fetcher-card__icon--offline {
+  color: var(--muted-foreground);
+}
+
+.fetcher-card__icon--not-bound {
+  color: #f59e0b;
+}
+
+.fetcher-card__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.fetcher-card__title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.fetcher-card__help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--muted-foreground);
+  transition: color 0.15s ease;
+}
+
+.fetcher-card__help:hover {
+  color: var(--foreground);
+}
+
+.fetcher-card__status-text {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.3;
+}
+
+.fetcher-card__version {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  font-size: 10px;
+  font-weight: 500;
+  cursor: help;
+  transition: all 0.15s ease;
+}
+
+.fetcher-card__version:hover {
+  background: var(--accent);
+}
+
+.fetcher-card__stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 0 8px;
+}
+
+.fetcher-card__stat-label {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.fetcher-card__stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #10b981;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.fetcher-card__actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 640px) {
+  .fetcher-card {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .fetcher-card__stats {
+    align-items: flex-start;
+    padding: 0 0 0 34px;
+  }
+
+  .fetcher-card__actions {
+    padding-left: 34px;
+  }
+}
+</style>

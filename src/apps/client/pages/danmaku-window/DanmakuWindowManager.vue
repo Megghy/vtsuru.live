@@ -369,7 +369,7 @@ function toggleFilterType(val: string, checked: boolean) {
                     variant="secondary"
                     class="h-6 text-[11px] gap-1 shrink-0"
                     @click="
-                      danmakuWindow.resetLiveStats()
+                      danmakuWindow.resetLiveStats();
                       toast.success('实时统计数据已重置')
                     "
                   >
@@ -552,7 +552,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   size="small"
                   class="w-full"
                   @update:value="
-                    danmakuWindow.danmakuWindowSetting.x = $event || 0
+                    danmakuWindow.danmakuWindowSetting.x = $event || 0;
                     danmakuWindow.updateWindowPosition()
                   "
                 />
@@ -565,7 +565,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   size="small"
                   class="w-full"
                   @update:value="
-                    danmakuWindow.danmakuWindowSetting.y = $event || 0
+                    danmakuWindow.danmakuWindowSetting.y = $event || 0;
                     danmakuWindow.updateWindowPosition()
                   "
                 />

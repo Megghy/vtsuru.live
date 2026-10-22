@@ -450,9 +450,6 @@ body {
   overflow: hidden;
 }
 
-.n-layout {
-  background: transparent;
-}
 
 :root {
   --dw-bg-color: rgba(0, 0, 0, 0.6);

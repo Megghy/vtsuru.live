@@ -29,13 +29,7 @@
 }
 
 .question-composer::before {
-  position: absolute;
-  inset: 0 auto auto 0;
-  width: 100%;
-  height: 2px;
-  background: var(--composer-accent);
-  content: '';
-  opacity: 0.72;
+  display: none;
 }
 
 .question-composer.is-embedded {
@@ -288,31 +282,6 @@
   box-shadow: 0 0 0 3px var(--vtsuru-page-primary-focus);
 }
 
-.message-input :deep(.n-input-wrapper) {
-  padding: 0;
-}
-
-.message-input :deep(.n-input__textarea) {
-  padding: 0;
-}
-
-.message-input :deep(.n-input__textarea-el),
-.message-input :deep(.n-input__textarea-mirror) {
-  box-sizing: border-box;
-  padding: 15px 16px 12px;
-}
-
-.message-input :deep(.n-input__placeholder) {
-  top: 15px !important;
-  right: 16px;
-  left: 16px;
-  color: color-mix(in srgb, var(--composer-muted) 62%, transparent);
-}
-
-.message-input :deep(.n-input__border),
-.message-input :deep(.n-input__state-border) {
-  display: none;
-}
 
 .message-input {
   background: transparent;
@@ -454,7 +423,7 @@
   line-height: 1.45;
 }
 
-.identity-copy > .n-icon {
+.identity-copy > svg {
   flex: 0 0 auto;
   color: var(--composer-accent);
   font-size: 20px;
@@ -620,10 +589,6 @@
     padding: 14px;
   }
 
-  .composer-header :deep(.n-avatar) {
-    width: 42px !important;
-    height: 42px !important;
-  }
 
   .header-copy h1 {
     font-size: 17px;
@@ -637,7 +602,7 @@
     flex-direction: column;
   }
 
-  .submit-action :deep(.n-button) {
+  .submit-action button {
     width: 100%;
   }
 }
