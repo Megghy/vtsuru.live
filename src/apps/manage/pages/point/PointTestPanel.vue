@@ -16,7 +16,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
@@ -400,7 +400,7 @@ async function checkEligibility() {
               <label class="text-xs font-medium text-foreground"
                 >礼物价格（元） <span class="text-destructive">*</span></label
               >
-              <NInputNumber
+              <NumberField
                 v-model="testForm.giftPrice"
                 :min="0"
                 class="w-full"
@@ -409,7 +409,7 @@ async function checkEligibility() {
 
             <div class="space-y-1">
               <label class="text-xs font-medium text-foreground">礼物数量</label>
-              <NInputNumber
+              <NumberField
                 v-model="testForm.giftCount"
                 :min="1"
                 class="w-full"
@@ -447,7 +447,7 @@ async function checkEligibility() {
             <label class="text-xs font-medium text-foreground"
               >SC价格（元） <span class="text-destructive">*</span></label
             >
-            <NInputNumber
+            <NumberField
               v-model="testForm.giftPrice"
               :min="0.01"
               class="w-full"
@@ -515,7 +515,7 @@ async function checkEligibility() {
 
           <div class="space-y-1">
             <label class="text-xs font-medium text-foreground">兑换数量 <span class="text-destructive">*</span></label>
-            <NInputNumber
+            <NumberField
               v-model="eligibilityForm.count"
               :min="1"
               class="w-full"

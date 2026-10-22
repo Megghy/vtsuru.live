@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import ColorPicker from '@/shared/ui/color-picker/ColorPicker.vue'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
@@ -173,8 +173,8 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
     class="space-y-1"
   >
     <label class="text-xs text-muted-foreground">圆角 px</label>
-    <NInputNumber
-      v-model:value="blockProps.radiusPx"
+    <NumberField
+      v-model="blockProps.radiusPx"
       :min="0"
       :max="48"
       class="w-full"
@@ -201,8 +201,8 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
 
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">边框粗细</label>
-    <NInputNumber
-      v-model:value="blockProps.borderWidth"
+    <NumberField
+      v-model="blockProps.borderWidth"
       :min="0"
       :max="8"
       class="w-full"
@@ -220,8 +220,8 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
 
   <div class="space-y-1">
     <label class="text-xs text-muted-foreground">透明度</label>
-    <NInputNumber
-      v-model:value="blockProps.opacity"
+    <NumberField
+      v-model="blockProps.opacity"
       :min="0.15"
       :max="1"
       :step="0.05"

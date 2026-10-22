@@ -3,7 +3,7 @@ import { Info16Regular } from '@vicons/fluent'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -69,22 +69,20 @@ const scFilterModeOptions = [
       </div>
 
       <div class="flex items-center gap-2">
-        <NInputNumber
-          :value="action.triggerConfig.scMinPrice"
+        <NumberField
+          :model-value="action.triggerConfig.scMinPrice"
           :min="0"
           placeholder="最低 (如 30)"
-          size="small"
           class="flex-1"
-          @update:value="action.triggerConfig.scMinPrice = $event"
+          @update:model-value="action.triggerConfig.scMinPrice = $event"
         />
         <span class="text-xs text-muted-foreground">至</span>
-        <NInputNumber
-          :value="action.triggerConfig.scMaxPrice"
+        <NumberField
+          :model-value="action.triggerConfig.scMaxPrice"
           :min="0"
           placeholder="不限"
-          size="small"
           class="flex-1"
-          @update:value="action.triggerConfig.scMaxPrice = $event"
+          @update:model-value="action.triggerConfig.scMaxPrice = $event"
         />
       </div>
     </div>
@@ -118,13 +116,12 @@ const scFilterModeOptions = [
           <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <NInputNumber
-        :value="action.actionConfig.maxUsersPerMsg"
+      <NumberField
+        :model-value="action.actionConfig.maxUsersPerMsg"
         :min="1"
         :max="50"
-        size="small"
         class="w-32"
-        @update:value="action.actionConfig.maxUsersPerMsg = $event || 1"
+        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
       />
     </div>
   </div>

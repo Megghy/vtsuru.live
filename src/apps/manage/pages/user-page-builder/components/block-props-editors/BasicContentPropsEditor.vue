@@ -5,7 +5,7 @@ import type { BlockNode } from '@/apps/user-page/block/schema'
 import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
@@ -80,8 +80,8 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">标题级别 1/2/3</label>
-        <NInputNumber
-          v-model:value="blockProps.level"
+        <NumberField
+          v-model="blockProps.level"
           :min="1"
           :max="3"
           class="w-full"

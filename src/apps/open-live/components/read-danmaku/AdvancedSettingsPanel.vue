@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Slider } from '@/shared/ui/slider'
@@ -46,7 +46,7 @@ function toggleNotificationEvent(val: string) {
 </script>
 
 <template>
-  <div class="panel">
+  <div class="flex flex-col gap-3">
     <SectionField label="音频输出设备">
       <Select
         v-model="settings.outputDeviceId"
@@ -84,11 +84,10 @@ function toggleNotificationEvent(val: string) {
           class="flex items-center border rounded-md overflow-hidden text-xs w-[180px]"
         >
           <span class="bg-muted px-2 py-1 text-muted-foreground border-r shrink-0">间隔(秒)</span>
-          <NInputNumber
-            v-model:value="settings.combineGiftDelay"
+          <NumberField
+            v-model="settings.combineGiftDelay"
             :min="1"
             :max="10"
-            size="small"
             class="border-0 shadow-none flex-1"
           />
         </div>
@@ -155,11 +154,10 @@ function toggleNotificationEvent(val: string) {
 
     <SectionField label="队列上限">
       <div class="max-w-[140px]">
-        <NInputNumber
-          v-model:value="settings.maxQueueSize"
+        <NumberField
+          v-model="settings.maxQueueSize"
           :min="10"
           :max="200"
-          size="small"
         />
       </div>
     </SectionField>
@@ -188,10 +186,3 @@ function toggleNotificationEvent(val: string) {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-</style>

@@ -10,7 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
@@ -113,11 +113,10 @@ function submit() {
 
           <div class="flex items-center gap-2">
             <div class="w-28">
-              <NInputNumber
-                v-model:value="expireDays"
+              <NumberField
+                v-model="expireDays"
                 placeholder="有效期(天)"
                 :min="1"
-                size="small"
               />
             </div>
 

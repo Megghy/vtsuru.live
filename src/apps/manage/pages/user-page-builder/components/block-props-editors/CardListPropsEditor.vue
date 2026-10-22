@@ -5,7 +5,7 @@ import { ref } from 'vue'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
@@ -64,8 +64,8 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">列数</label>
-        <NInputNumber
-          v-model:value="blockProps.columns"
+        <NumberField
+          v-model="blockProps.columns"
           :min="1"
           :max="4"
           class="w-full"
@@ -113,7 +113,7 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
                     v-if="item.imageFile?.path"
                     :src="item.imageFile.path"
                     alt=""
-                    class="card-image-preview"
+                    class="w-14 h-10 object-cover border border-border rounded"
                   />
                 </div>
               </div>
@@ -180,12 +180,3 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
   </div>
 </template>
 
-<style scoped>
-.card-image-preview {
-  width: 56px;
-  height: 40px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-}
-</style>

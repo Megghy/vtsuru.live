@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -58,8 +58,8 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
       <ButtonAppearanceFields :block="props.block" />
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">间距 px</label>
-        <NInputNumber
-          v-model:value="blockProps.gap"
+        <NumberField
+          v-model="blockProps.gap"
           :min="0"
           :max="32"
           class="w-full"

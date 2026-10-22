@@ -102,11 +102,13 @@ const previewIsDark = computed(() => resolvePageThemeIsDark(previewThemeMode.val
 const previewThemeVars = computed(() => getUserPageThemeCssVars(previewTheme.value, previewIsDark.value))
 
 function toOptions(map: TemplateMapType): TemplateOption[] {
-  return Object.entries(map).map(([value, v]) => ({
-    label: v.name,
-    value,
-    capabilities: v.capabilities ?? [],
-  }))
+  return Object.entries(map)
+    .filter(([value]) => value !== '')
+    .map(([value, v]) => ({
+      label: v.name,
+      value,
+      capabilities: v.capabilities ?? [],
+    }))
 }
 
 const groups: Record<'schedule' | 'songlist', TemplateGroup> = {
@@ -124,7 +126,7 @@ const groups: Record<'schedule' | 'songlist', TemplateGroup> = {
 
 // 各分组当前选中的模板 key
 const selectedTemplateKey = ref<Record<'schedule' | 'songlist', string>>({
-  schedule: accountInfo.value?.settings.scheduleTemplate ?? '',
+  schedule: accountInfo.value?.settings.scheduleTemplate || 'default',
   songlist: accountInfo.value?.settings.songListTemplate || 'traditional',
 })
 
@@ -133,7 +135,7 @@ watch(
   (settings) => {
     if (!settings) return
     selectedTemplateKey.value = {
-      schedule: settings.scheduleTemplate ?? '',
+      schedule: settings.scheduleTemplate || 'default',
       songlist: settings.songListTemplate || 'traditional',
     }
   },
@@ -247,7 +249,7 @@ async function setAsDisplayTemplate() {
     if (pageKey.value === 'songlist') {
       accountInfo.value.settings.songListTemplate = selectedKey.value
     } else {
-      accountInfo.value.settings.scheduleTemplate = selectedKey.value
+      accountInfo.value.settings.scheduleTemplate = selectedKey.value === 'default' ? '' : selectedKey.value
     }
     const response = await SaveAccountSettings()
     if (response.code === 200) {
@@ -346,10 +348,10 @@ async function setAsDisplayTemplate() {
     <!-- 当前模板能力标签 -->
     <div
       v-if="capabilityGroups.length"
-      class="capability-bar"
+      class="py-2.5 px-3.5 rounded-lg bg-muted border border-border"
     >
       <div
-        class="capability-bar__title"
+        class="flex items-center gap-1.5 cursor-pointer select-none"
         role="button"
         tabindex="0"
         @click="capabilityExpanded = !capabilityExpanded"
@@ -357,8 +359,8 @@ async function setAsDisplayTemplate() {
       >
         <component
           :is="ChevronDown20Regular"
-          class="capability-bar__chevron size-3.5"
-          :class="{ 'is-expanded': capabilityExpanded }"
+          class="size-3.5 text-muted-foreground transition-transform"
+          :class="{ 'rotate-180': capabilityExpanded }"
         />
         <span class="text-xs font-semibold text-foreground">模板能力</span>
         <span class="text-[11px] text-muted-foreground">
@@ -372,10 +374,10 @@ async function setAsDisplayTemplate() {
         <div
           v-for="g in capabilityGroups"
           :key="g.category"
-          class="capability-group"
+          class="flex items-center flex-wrap gap-1.5 pr-3.5 border-r border-border last:border-r-0"
         >
           <span
-            class="capability-group__head"
+            class="inline-flex items-center gap-1 text-xs font-semibold"
             :style="{ color: CapabilityCategories[g.category].color }"
           >
             <component
@@ -414,14 +416,14 @@ async function setAsDisplayTemplate() {
 
     <div
       ref="workspaceRef"
-      class="template-workspace"
+      class="flex gap-4 items-stretch overflow-hidden"
       :style="{ height: workspaceHeight }"
     >
       <!-- 左: 配置表单 -->
       <Transition name="config-slide">
         <div
           v-if="settingName && !configCollapsed"
-          class="template-config-pane"
+          class="w-80 shrink-0 rounded-lg border border-border bg-card overflow-hidden"
         >
           <div
             v-if="!configSchema || !currentConfigData"
@@ -442,12 +444,12 @@ async function setAsDisplayTemplate() {
       </Transition>
 
       <!-- 右: 实时预览 -->
-      <div class="template-preview-pane">
+      <div class="flex-1 min-w-0 rounded-lg border border-border overflow-hidden bg-card flex flex-col">
         <Transition name="fade">
           <div
             v-if="previewComponent"
             :key="selectedKey"
-            class="template-preview-content"
+            class="flex-1 overflow-y-auto relative"
             :class="{
               'song-list-surface': pageKey === 'songlist',
               'schedule-template-surface': pageKey === 'schedule',
@@ -478,101 +480,20 @@ async function setAsDisplayTemplate() {
 </template>
 
 <style scoped>
-.template-workspace {
-  display: flex;
-  gap: 16px;
-  align-items: stretch;
-  overflow: hidden;
-}
-
-.capability-bar {
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: var(--muted);
-  border: 1px solid var(--border);
-}
-
-.capability-bar__title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  user-select: none;
-}
-
-.capability-bar__chevron {
-  transition: transform 0.2s ease;
-  color: var(--muted-foreground);
-}
-
-.capability-bar__chevron.is-expanded {
-  transform: rotate(180deg);
-}
-
-.capability-group {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding-right: 14px;
-  border-right: 1px solid var(--border);
-}
-
-.capability-group:last-child {
-  border-right: none;
-}
-
-.capability-group__head {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.template-config-pane {
-  width: 320px;
-  flex-shrink: 0;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  overflow: hidden;
-}
-
-.template-preview-pane {
-  flex: 1;
-  min-width: 0;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  overflow: hidden;
-  background: var(--card);
-  display: flex;
-  flex-direction: column;
-}
-
-.template-preview-content {
-  flex: 1;
-  overflow-y: auto;
-  position: relative;
-}
-
 .config-slide-enter-active,
 .config-slide-leave-active {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
 .config-slide-enter-from,
 .config-slide-leave-to {
   width: 0;
   opacity: 0;
   margin-right: -16px;
 }
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.15s ease;
 }
-
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;

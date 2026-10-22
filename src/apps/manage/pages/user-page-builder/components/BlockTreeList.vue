@@ -226,14 +226,14 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
       :data-block-id="b.id"
     >
       <div
-        class="block-item-row"
+        class="block-item-row relative flex gap-1.5 items-center py-1.5 px-2 rounded-lg border border-transparent cursor-pointer select-none transition-colors hover:bg-muted"
         :class="{
-          active: props.selectionSet.has(b.id),
-          invalid: props.invalidSet.has(b.id),
-          hidden: b.hidden,
-          'is-layout': b.type === 'layout',
-          'drag-group-target': props.dragGroupTargetId === b.id,
-          'drag-group-target-wrap': props.dragGroupTargetId === b.id && props.dragGroupTargetMode === 'wrap',
+          'border-border bg-muted': props.selectionSet.has(b.id),
+          'border-destructive': props.invalidSet.has(b.id),
+          '[&_.block-label]:opacity-60 [&_.block-label]:line-through': b.hidden,
+          'shadow-[inset_3px_0_0_var(--primary)]': b.type === 'layout',
+          'border-primary bg-muted shadow-[0_0_0_1px_var(--primary)]': props.dragGroupTargetId === b.id,
+          'border-dashed': props.dragGroupTargetId === b.id && props.dragGroupTargetMode === 'wrap',
           'drag-insert-before': props.dragInsertTargetId === b.id && props.dragInsertPosition === 'before',
           'drag-insert-after': props.dragInsertTargetId === b.id && props.dragInsertPosition === 'after',
         }"
@@ -253,7 +253,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         @mouseleave="editor.hoveredBlockId.value === b.id && (editor.hoveredBlockId.value = null)"
       >
         <div
-          class="indent"
+          class="shrink-0"
           :style="{ width: indentWidth }"
         />
 
@@ -272,7 +272,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 
         <component
           :is="ReorderThreeOutline"
-          class="drag-handle size-4.5 cursor-grab text-muted-foreground shrink-0"
+          class="drag-handle size-4.5 cursor-grab active:cursor-grabbing text-muted-foreground shrink-0"
           title="拖拽排序"
         />
 
@@ -287,7 +287,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         />
 
         <div class="block-label flex-1 min-w-0 flex items-center">
-          <span class="truncate-text text-xs">
+          <span class="overflow-hidden text-ellipsis whitespace-nowrap text-xs">
             {{ getDisplayTitle(b) }}
           </span>
           <span
@@ -390,7 +390,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
                 <component
                   :is="item.icon"
                   v-if="item.icon"
-                  class="mr-2"
+                  class="size-4 shrink-0"
                 />
                 {{ item.label }}
               </DropdownMenuItem>
@@ -439,52 +439,6 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 <style scoped src="./ui-transitions.css"></style>
 
 <style scoped>
-.truncate-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.block-item-row {
-  position: relative;
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  padding: 6px 8px;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  user-select: none;
-  transition:
-    background-color 140ms ease,
-    border-color 140ms ease,
-    box-shadow 140ms ease,
-    transform 140ms ease;
-}
-
-.block-item-row.is-layout {
-  box-shadow: inset 3px 0 0 var(--primary);
-}
-
-.block-item-row:hover {
-  background: var(--muted);
-}
-
-.block-item-row.active {
-  border-color: var(--border);
-  background: var(--muted);
-}
-
-.block-item-row.drag-group-target {
-  border-color: var(--primary);
-  background: var(--muted);
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-.block-item-row.drag-group-target-wrap {
-  border-style: dashed;
-}
-
 .block-item-row.drag-insert-before::before,
 .block-item-row.drag-insert-after::after {
   content: '';
@@ -496,64 +450,19 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
   border-radius: 2px;
   background: var(--primary);
 }
-
 .block-item-row.drag-insert-before::before {
   top: -2px;
 }
-
 .block-item-row.drag-insert-after::after {
   bottom: -2px;
 }
-
-.drag-group-hint {
-  margin-right: 6px;
-  flex: 0 0 auto;
-}
-
-.block-item-row.invalid,
-.block-item-row.active.invalid {
-  border-color: var(--destructive);
-}
-
-.block-item-row.hidden .block-label {
-  opacity: 0.6;
-  text-decoration: line-through;
-}
-
-.indent {
-  flex: 0 0 auto;
-}
-
-.expand-placeholder {
-  flex: 0 0 auto;
-}
-
-.type-icon,
-.type-icon-placeholder {
-  flex: 0 0 auto;
-}
-
-.drag-handle {
-  cursor: grab;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
-.children {
-  margin-left: 0;
-}
-
 .drag-ghost {
   opacity: 0.45;
 }
-
 .sortable-chosen {
   opacity: 0.9;
   background: var(--muted);
 }
-
 .sortable-drag {
   opacity: 0;
 }

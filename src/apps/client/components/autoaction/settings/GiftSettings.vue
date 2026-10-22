@@ -8,7 +8,7 @@ import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -134,13 +134,12 @@ function removeGiftName(index: number) {
       class="flex items-center justify-between p-2.5 rounded border bg-muted/20"
     >
       <span class="text-xs font-medium text-foreground">最低价值 (元)</span>
-      <NInputNumber
-        :value="action.triggerConfig.minValue"
+      <NumberField
+        :model-value="action.triggerConfig.minValue"
         :min="0"
         placeholder="0"
-        size="small"
         class="w-32"
-        @update:value="action.triggerConfig.minValue = $event || 0"
+        @update:model-value="action.triggerConfig.minValue = $event || 0"
       />
     </div>
 
@@ -173,13 +172,12 @@ function removeGiftName(index: number) {
           <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <NInputNumber
-        :value="action.actionConfig.maxUsersPerMsg"
+      <NumberField
+        :model-value="action.actionConfig.maxUsersPerMsg"
         :min="1"
         :max="50"
-        size="small"
         class="w-32"
-        @update:value="action.actionConfig.maxUsersPerMsg = $event || 1"
+        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
       />
     </div>
 
@@ -195,13 +193,12 @@ function removeGiftName(index: number) {
           <TooltipContent class="text-xs"> 单个用户在同一次感谢中最多显示的礼物种类数 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <NInputNumber
-        :value="action.actionConfig.maxItemsPerUser"
+      <NumberField
+        :model-value="action.actionConfig.maxItemsPerUser"
         :min="1"
         :max="20"
-        size="small"
         class="w-32"
-        @update:value="action.actionConfig.maxItemsPerUser = $event || 1"
+        @update:model-value="action.actionConfig.maxItemsPerUser = $event || 1"
       />
     </div>
   </div>

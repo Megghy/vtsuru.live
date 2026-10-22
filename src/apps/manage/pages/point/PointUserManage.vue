@@ -34,7 +34,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
@@ -656,7 +656,7 @@ onMounted(async () => {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <NInputNumber
+            <NumberField
               v-model="addPointCount"
               placeholder="输入要给予或扣除的积分"
               class="w-full"

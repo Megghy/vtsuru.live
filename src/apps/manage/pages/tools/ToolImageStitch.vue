@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
@@ -513,69 +513,63 @@ onBeforeUnmount(clearAll)
                 <div v-if="settings.layout === 'vertical'">
                   <label class="field">
                     <span>输出宽度</span>
-                    <NInputNumber
+                    <NumberField
                       v-model="settings.outputWidth"
                       :min="320"
                       :max="6000"
                       :step="20"
-                      size="small"
                     />
                   </label>
                 </div>
                 <div v-if="settings.layout === 'horizontal'">
                   <label class="field">
                     <span>图片高度</span>
-                    <NInputNumber
+                    <NumberField
                       v-model="settings.stripHeight"
                       :min="120"
                       :max="4000"
                       :step="20"
-                      size="small"
                     />
                   </label>
                 </div>
                 <div v-if="settings.layout === 'grid'">
                   <label class="field">
                     <span>列数</span>
-                    <NInputNumber
+                    <NumberField
                       v-model="settings.columns"
                       :min="1"
                       :max="8"
-                      size="small"
                     />
                   </label>
                 </div>
                 <div v-if="settings.layout === 'grid'">
                   <label class="field">
                     <span>单格尺寸</span>
-                    <NInputNumber
+                    <NumberField
                       v-model="settings.cellSize"
                       :min="120"
                       :max="2400"
                       :step="20"
-                      size="small"
                     />
                   </label>
                 </div>
                 <div>
                   <label class="field">
                     <span>间距</span>
-                    <NInputNumber
+                    <NumberField
                       v-model="settings.gap"
                       :min="0"
                       :max="200"
-                      size="small"
                     />
                   </label>
                 </div>
                 <div>
                   <label class="field">
                     <span>边距</span>
-                    <NInputNumber
+                    <NumberField
                       v-model="settings.padding"
                       :min="0"
                       :max="300"
-                      size="small"
                     />
                   </label>
                 </div>
@@ -601,11 +595,10 @@ onBeforeUnmount(clearAll)
                 <div>
                   <label class="field">
                     <span>圆角</span>
-                    <NInputNumber
+                    <NumberField
                       v-model="settings.radius"
                       :min="0"
                       :max="300"
-                      size="small"
                     />
                   </label>
                 </div>

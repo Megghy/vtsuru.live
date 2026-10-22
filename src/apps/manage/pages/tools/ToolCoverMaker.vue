@@ -11,7 +11,7 @@ import { markFontUsed, useLocalFonts } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Textarea } from '@/shared/ui/textarea'
@@ -352,7 +352,7 @@ async function onRemoveBgConfirm(blob: Blob) {
             <div class="prop-row">
               <span class="text-muted-foreground">字号</span>
               <div class="w-20">
-                <NInputNumber
+                <NumberField
                   v-model="(selectedLayer as TextLayer).fontSize"
                   :min="12"
                   :max="300"

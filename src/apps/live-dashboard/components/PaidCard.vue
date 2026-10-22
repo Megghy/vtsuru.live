@@ -35,29 +35,29 @@ const timeText = computed(() => {
 
 <template>
   <div
-    class="paid"
-    :class="{ 'paid--read': read, 'paid--plain': !colors }"
+    class="my-1 mx-1.5 rounded-md overflow-hidden text-white bg-[var(--paid-body)] select-text"
+    :class="{ 'opacity-40': read, 'text-foreground bg-popover border border-border': !colors }"
     :style="colors ? { '--paid-header': colors.header, '--paid-body': colors.body } : undefined"
     :data-key="event.key"
     @dblclick="dashboard.toggleRead(event)"
     @contextmenu="ui.openContextMenu(event, $event)"
   >
-    <div class="paid__head">
+    <div class="flex gap-2 py-1.5 px-2.5 items-center bg-[var(--paid-header)]" :class="{ 'bg-transparent': !colors }">
       <img
         v-if="dashboard.settings.showAvatar && event.uface"
-        class="paid__avatar"
+        class="paid__avatar size-[2.4em] rounded-full shrink-0 object-cover"
         :src="avatarUrl(event.uface, 64)"
         referrerpolicy="no-referrer"
         loading="lazy"
       />
-      <div class="paid__who">
-        <div class="paid__line">
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-1 flex-wrap">
           <EventBadges
             :event="event"
             :show-medal="dashboard.settings.showMedal"
           />
           <button
-            class="paid__name"
+            class="paid__name appearance-none bg-transparent border-0 p-0 font-semibold cursor-pointer wrap-anywhere hover:underline"
             data-user-trigger
             type="button"
             @click.stop="ui.openUserMenu(event, $event)"
@@ -65,32 +65,32 @@ const timeText = computed(() => {
             {{ event.uname || '匿名用户' }}
           </button>
         </div>
-        <div class="paid__line paid__meta">
-          <span class="paid__price">{{ event.price > 0 ? formatPrice(event.price) : '免费' }}</span>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-bold tabular-nums">{{ event.price > 0 ? formatPrice(event.price) : '免费' }}</span>
           <span
             v-if="!isSc"
-            class="paid__summary"
+            class="inline-flex items-center gap-1 opacity-90"
           >
             <img
               v-if="event.giftIcon"
-              class="paid__gift-icon"
+              class="h-[1.4em]"
               :src="event.giftIcon"
               referrerpolicy="no-referrer"
             />
             {{ paidSummary(event) }}
           </span>
-          <span class="paid__time">{{ timeText }}</span>
+          <span class="ml-auto text-[0.8em] opacity-75">{{ timeText }}</span>
         </div>
       </div>
     </div>
     <div
       v-if="isSc"
-      class="paid__body"
+      class="pt-1.5 px-2.5 pb-2 text-[1.05em] wrap-anywhere"
     >
       <EventMessage :msg="event.msg" />
       <div
         v-if="ui.translations.has(event.key)"
-        class="paid__translation"
+        class="mt-1 text-[0.9em] opacity-80"
       >
         {{ ui.translations.get(event.key) }}
       </div>
@@ -98,104 +98,3 @@ const timeText = computed(() => {
   </div>
 </template>
 
-<style scoped>
-.paid {
-  margin: 4px 6px;
-  border-radius: 6px;
-  overflow: hidden;
-  color: #fff;
-  background: var(--paid-body);
-  user-select: text;
-}
-
-.paid--plain {
-  color: var(--foreground);
-  background: var(--popover);
-  border: 1px solid var(--border);
-}
-
-.paid--read {
-  opacity: 0.4;
-}
-
-.paid__head {
-  display: flex;
-  gap: 8px;
-  padding: 6px 10px;
-  align-items: center;
-  background: var(--paid-header);
-}
-
-.paid--plain .paid__head {
-  background: transparent;
-}
-
-.paid__avatar {
-  width: 2.4em;
-  height: 2.4em;
-  border-radius: 50%;
-  flex-shrink: 0;
-  object-fit: cover;
-}
-
-.paid__who {
-  min-width: 0;
-  flex: 1;
-}
-
-.paid__line {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-}
-
-.paid__name {
-  all: unset;
-  font-weight: 600;
-  cursor: pointer;
-  overflow-wrap: anywhere;
-}
-
-.paid__name:hover {
-  text-decoration: underline;
-}
-
-.paid__meta {
-  gap: 8px;
-}
-
-.paid__price {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.paid__summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  opacity: 0.9;
-}
-
-.paid__gift-icon {
-  height: 1.4em;
-}
-
-.paid__time {
-  margin-left: auto;
-  font-size: 0.8em;
-  opacity: 0.75;
-}
-
-.paid__body {
-  padding: 6px 10px 8px;
-  font-size: 1.05em;
-  overflow-wrap: anywhere;
-}
-
-.paid__translation {
-  margin-top: 4px;
-  font-size: 0.9em;
-  opacity: 0.8;
-}
-</style>

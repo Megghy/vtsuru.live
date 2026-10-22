@@ -28,7 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Empty } from '@/shared/ui/empty'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
@@ -690,34 +690,31 @@ function toggleFilterType(val: string, checked: boolean) {
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">宽度 (px)</span>
-                <NInputNumber
-                  :value="giftWindow.settings.width"
+                <NumberField
+                  :model-value="giftWindow.settings.width"
                   :min="200"
                   :max="3840"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.setSize($event || 300, giftWindow.settings.height)"
+                  @update:model-value="giftWindow.setSize($event || 300, giftWindow.settings.height)"
                 />
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">高度 (px)</span>
-                <NInputNumber
-                  :value="giftWindow.settings.height"
+                <NumberField
+                  :model-value="giftWindow.settings.height"
                   :min="200"
                   :max="2160"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.setSize(giftWindow.settings.width, $event || 400)"
+                  @update:model-value="giftWindow.setSize(giftWindow.settings.width, $event || 400)"
                 />
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">X 坐标</span>
-                <NInputNumber
-                  :value="giftWindow.settings.x"
+                <NumberField
+                  :model-value="giftWindow.settings.x"
                   :min="0"
-                  size="small"
                   class="w-full"
-                  @update:value="
+                  @update:model-value="
                     giftWindow.settings.x = $event || 0;
                     giftWindow.updateWindowPosition()
                   "
@@ -725,12 +722,11 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">Y 坐标</span>
-                <NInputNumber
-                  :value="giftWindow.settings.y"
+                <NumberField
+                  :model-value="giftWindow.settings.y"
                   :min="0"
-                  size="small"
                   class="w-full"
-                  @update:value="
+                  @update:model-value="
                     giftWindow.settings.y = $event || 0;
                     giftWindow.updateWindowPosition()
                   "
@@ -893,13 +889,12 @@ function toggleFilterType(val: string, checked: boolean) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">最低展示金额 (金瓜子)</span>
-                <NInputNumber
-                  :value="giftWindow.settings.minPrice"
+                <NumberField
+                  :model-value="giftWindow.settings.minPrice"
                   :min="0"
                   :step="100"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.minPrice = $event || 0"
+                  @update:model-value="giftWindow.settings.minPrice = $event || 0"
                 />
                 <span class="text-[11px] text-muted-foreground block">
                   1000 金瓜子 = ¥1。设为 0 则不过滤免费或微额礼物。
@@ -907,14 +902,13 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">合并时间窗口 (秒)</span>
-                <NInputNumber
-                  :value="giftWindow.settings.mergeWindowSeconds"
+                <NumberField
+                  :model-value="giftWindow.settings.mergeWindowSeconds"
                   :min="0"
                   :max="60"
                   :step="5"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.mergeWindowSeconds = $event || 0"
+                  @update:model-value="giftWindow.settings.mergeWindowSeconds = $event || 0"
                 />
                 <span class="text-[11px] text-muted-foreground block">
                   同一用户在此时间内送出的相同礼物自动合并为一条连击。
@@ -922,25 +916,23 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">列表最大保留条数</span>
-                <NInputNumber
-                  :value="giftWindow.settings.maxItemCount"
+                <NumberField
+                  :model-value="giftWindow.settings.maxItemCount"
                   :min="5"
                   :max="100"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.maxItemCount = $event || 50"
+                  @update:model-value="giftWindow.settings.maxItemCount = $event || 50"
                 />
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">礼物自动淡出消失 (秒)</span>
-                <NInputNumber
-                  :value="giftWindow.settings.autoDisappearTime"
+                <NumberField
+                  :model-value="giftWindow.settings.autoDisappearTime"
                   :min="0"
                   :max="600"
                   :step="5"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.autoDisappearTime = $event || 0"
+                  @update:model-value="giftWindow.settings.autoDisappearTime = $event || 0"
                 />
               </div>
             </div>
@@ -956,14 +948,13 @@ function toggleFilterType(val: string, checked: boolean) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">排行榜显示人数上限</span>
-                <NInputNumber
-                  :value="giftWindow.settings.rankDisplayCount"
+                <NumberField
+                  :model-value="giftWindow.settings.rankDisplayCount"
                   :min="5"
                   :max="200"
                   :step="10"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.rankDisplayCount = $event || 50"
+                  @update:model-value="giftWindow.settings.rankDisplayCount = $event || 50"
                 />
                 <span class="text-[11px] text-muted-foreground block">
                   依据本场直播累计送出的付费礼物与大航海总价值计算，建议设为 50。
@@ -971,14 +962,13 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">在场活跃判定时间 (分钟)</span>
-                <NInputNumber
-                  :value="giftWindow.settings.onlineThresholdMinutes"
+                <NumberField
+                  :model-value="giftWindow.settings.onlineThresholdMinutes"
                   :min="5"
                   :max="120"
                   :step="5"
-                  size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.onlineThresholdMinutes = $event || 10"
+                  @update:model-value="giftWindow.settings.onlineThresholdMinutes = $event || 10"
                 />
                 <span class="text-[11px] text-muted-foreground block">
                   观众在该时间内有发言、送礼、进入或点赞即视为「还在直播间」。

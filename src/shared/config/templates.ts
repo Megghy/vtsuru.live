@@ -30,12 +30,15 @@ const scheduleArtworkCapabilities = [
 ] as const satisfies readonly TemplateCapability[]
 
 export const ScheduleTemplateMap: TemplateMapType = {
-  '': {
+  default: {
     name: '默认',
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/DefaultScheduleTemplate.vue')),
     ),
     capabilities: ['scheduleDate', 'todayHighlight', 'scheduleStats'],
+  },
+  get ''() {
+    return this.default
   },
   pinky: {
     name: '粉粉',

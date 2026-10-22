@@ -19,7 +19,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -299,12 +299,11 @@ activateKeyboard()
             <!-- 直接设定数值 -->
             <div class="flex items-center gap-2 mt-3">
               <span class="text-xs text-muted-foreground">直接设值:</span>
-              <NInputNumber
-                :value="state.count"
+              <NumberField
+                :model-value="state.count"
                 :min="0"
-                size="small"
                 class="w-[110px]"
-                @update:value="updateState({ count: $event || 0 })"
+                @update:model-value="updateState({ count: $event || 0 })"
               />
             </div>
           </div>
@@ -383,11 +382,11 @@ activateKeyboard()
 
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">目标数值 (0 为不设限)</label>
-            <NInputNumber
-              :value="state.target"
+            <NumberField
+              :model-value="state.target"
               :min="0"
               class="w-full"
-              @update:value="updateState({ target: $event || 0 })"
+              @update:model-value="updateState({ target: $event || 0 })"
             />
           </div>
 

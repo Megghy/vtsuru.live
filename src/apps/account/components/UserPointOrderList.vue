@@ -88,20 +88,20 @@ function formatDateTime(ts: number) {
 <template>
   <div
     v-if="orders.length === 0"
-    class="orders-empty-state"
+    class="py-12 px-4 border border-dashed border-border rounded-[var(--radius)] bg-card"
   >
     <Empty
       description="暂无符合条件的订单记录"
       size="medium"
     >
       <template #extra>
-        <span class="empty-tip">在主播频道使用积分兑换礼物或互动服务后，相关进度将在此展示。</span>
+        <span class="text-muted-foreground text-xs">在主播频道使用积分兑换礼物或互动服务后，相关进度将在此展示。</span>
       </template>
     </Empty>
   </div>
 
   <template v-else>
-    <div class="desktop-order-table overflow-x-auto rounded-md border border-border">
+    <div class="max-md:hidden overflow-x-auto rounded-md border border-border">
       <Table>
         <TableHeader>
           <TableRow>
@@ -179,7 +179,7 @@ function formatDateTime(ts: number) {
       </div>
     </div>
 
-    <div class="mobile-order-list flex flex-col gap-2.5">
+    <div class="hidden max-md:flex flex-col gap-2.5">
       <button
         v-for="order in pagedOrders"
         :key="order.id"
@@ -407,30 +407,3 @@ function formatDateTime(ts: number) {
   />
 </template>
 
-<style scoped>
-.orders-empty-state {
-  padding: 48px 16px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius);
-  background: var(--card);
-}
-
-.empty-tip {
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-
-@media (max-width: 640px) {
-  .desktop-order-table {
-    display: none;
-  }
-  .mobile-order-list {
-    display: flex;
-  }
-}
-@media (min-width: 641px) {
-  .mobile-order-list {
-    display: none;
-  }
-}
-</style>

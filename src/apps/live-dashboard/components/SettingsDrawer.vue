@@ -5,7 +5,7 @@ import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import { Button } from '@/shared/ui/button'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Separator } from '@/shared/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
@@ -119,12 +119,12 @@ function resetToolbarOrder() {
       <SheetHeader>
         <SheetTitle>中控台设置</SheetTitle>
       </SheetHeader>
-      <div class="settings mt-4">
-        <div class="settings__group">显示</div>
-        <label class="settings__row">显示头像<Switch v-model="dashboard.settings.showAvatar" /></label>
-        <label class="settings__row">显示粉丝勋章<Switch v-model="dashboard.settings.showMedal" /></label>
-        <label class="settings__row">显示绝对时间<Switch v-model="dashboard.settings.absoluteTime" /></label>
-        <div class="settings__row">字号 {{ dashboard.settings.fontSize }}px</div>
+      <div class="grid gap-2.5 text-[13px] mt-4">
+        <div class="font-semibold">显示</div>
+        <label class="flex-between gap-2">显示头像<Switch v-model="dashboard.settings.showAvatar" /></label>
+        <label class="flex-between gap-2">显示粉丝勋章<Switch v-model="dashboard.settings.showMedal" /></label>
+        <label class="flex-between gap-2">显示绝对时间<Switch v-model="dashboard.settings.absoluteTime" /></label>
+        <div class="flex-between gap-2">字号 {{ dashboard.settings.fontSize }}px</div>
         <Slider
           :model-value="[dashboard.settings.fontSize]"
           :min="12"
@@ -132,11 +132,10 @@ function resetToolbarOrder() {
           :step="1"
           @update:model-value="(val) => val && (dashboard.settings.fontSize = val[0])"
         />
-        <label class="settings__row">
+        <label class="flex-between gap-2">
           启动时载入最近（小时）
-          <NInputNumber
+          <NumberField
             v-model="dashboard.settings.historyHours"
-            size="small"
             :min="0"
             :max="168"
             class="w-24"
@@ -145,7 +144,7 @@ function resetToolbarOrder() {
 
         <Separator />
         <div class="settings__stat-header flex justify-between items-center">
-          <div class="settings__group">顶栏指标项 (支持拖拽排序)</div>
+          <div class="font-semibold">顶栏指标项 (支持拖拽排序)</div>
           <Button
             variant="ghost"
             class="h-6 px-2 text-muted-foreground"
@@ -158,13 +157,13 @@ function resetToolbarOrder() {
           v-model="orderedStatOptions"
           handle=".drag-handle"
           :animation="150"
-          class="settings__stat-list"
+          class="grid gap-1.5"
           ghost-class="settings__stat-ghost"
         >
           <div
             v-for="opt in orderedStatOptions"
             :key="opt.key"
-            class="settings__row settings__stat-item"
+            class="flex-between gap-2 py-1 px-1.5 rounded-[var(--radius)] bg-popover transition-colors hover:bg-muted/80"
             :title="opt.description"
           >
             <div class="settings__stat-label flex items-center gap-1.5">
@@ -184,33 +183,30 @@ function resetToolbarOrder() {
         </VueDraggable>
 
         <Separator />
-        <div class="settings__group">卡片模式</div>
-        <label class="settings__row">
+        <div class="font-semibold">卡片模式</div>
+        <label class="flex-between gap-2">
           卡片数量
-          <NInputNumber
+          <NumberField
             v-model="dashboard.settings.card.size"
-            size="small"
             :min="4"
             :max="80"
             class="w-24"
           />
         </label>
-        <label class="settings__row">自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide" /></label>
+        <label class="flex-between gap-2">自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide" /></label>
         <template v-if="dashboard.settings.card.autoHide">
-          <label class="settings__row">
+          <label class="flex-between gap-2">
             重复次数达到
-            <NInputNumber
+            <NumberField
               v-model="dashboard.settings.card.autoHideThreshold"
-              size="small"
               :min="2"
               class="w-24"
             />
           </label>
-          <label class="settings__row">
+          <label class="flex-between gap-2">
             隐藏时长（秒）
-            <NInputNumber
+            <NumberField
               v-model="dashboard.settings.card.autoHideSeconds"
-              size="small"
               :min="5"
               class="w-24"
             />
@@ -218,8 +214,8 @@ function resetToolbarOrder() {
         </template>
 
         <Separator />
-        <div class="settings__group">用户备注</div>
-        <div class="settings__buttons">
+        <div class="font-semibold">用户备注</div>
+        <div class="flex flex-wrap gap-1.5">
           <Button
             variant="outline"
             @click="exportNotes"
@@ -244,8 +240,8 @@ function resetToolbarOrder() {
         </div>
 
         <Separator />
-        <div class="settings__group">本地事件库</div>
-        <div class="settings__hint">
+        <div class="font-semibold">本地事件库</div>
+        <div class="text-xs text-muted-foreground">
           事件保存在当前浏览器，清除浏览器数据会一并删除。{{
             dashboard.historyRange ? '导出范围为当前选择的时间段。' : ''
           }}
@@ -258,7 +254,7 @@ function resetToolbarOrder() {
           >
           <span v-if="!counts.length">暂无数据</span>
         </div>
-        <div class="settings__buttons">
+        <div class="flex flex-wrap gap-1.5">
           <Button
             v-for="f in ['json', 'csv', 'xlsx'] as const"
             :key="f"
@@ -294,7 +290,7 @@ function resetToolbarOrder() {
         </div>
 
         <Separator />
-        <div class="settings__hint">
+        <div class="text-xs text-muted-foreground">
           直播间房主发送弹幕 <code>/vt reload</code> 可远程刷新已打开的中控台（仅直连模式可识别房主）。
         </div>
       </div>
@@ -303,86 +299,8 @@ function resetToolbarOrder() {
 </template>
 
 <style scoped>
-.settings {
-  display: grid;
-  gap: 10px;
-  font-size: 13px;
-}
-
-.settings__group {
-  font-weight: 600;
-}
-
-.settings__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.settings__buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.settings__hint {
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.settings__counts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.settings__stat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.settings__stat-list {
-  display: grid;
-  gap: 6px;
-}
-
-.settings__stat-item {
-  padding: 4px 6px;
-  border-radius: var(--radius);
-  background: var(--popover);
-  transition: background 0.15s ease;
-}
-
-.settings__stat-item:hover {
-  background: var(--background-hover, rgba(255, 255, 255, 0.06));
-}
-
-.settings__stat-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-.drag-handle {
-  display: inline-flex;
-  align-items: center;
-  cursor: grab;
-  color: var(--muted-foreground);
-  font-size: 14px;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
 .settings__stat-ghost {
   opacity: 0.4;
   background: var(--brand-soft, rgba(59, 130, 246, 0.15));
 }
-
 </style>

@@ -98,23 +98,23 @@ onUnmounted(() => {
     :style="popoverStyle"
     @click.stop
   >
-    <div class="user-menu">
-      <div class="user-menu__head">
+    <div class="grid gap-2.5">
+      <div class="flex gap-2.5 items-center">
         <img
           v-if="event.uface"
-          class="user-menu__avatar"
+          class="size-11 rounded-full object-cover"
           :src="avatarUrl(event.uface, 96)"
           referrerpolicy="no-referrer"
         />
-        <div class="user-menu__who">
-          <div class="user-menu__name">
+        <div class="min-w-0">
+          <div class="flex items-center gap-1 flex-wrap font-semibold">
             {{ event.uname || '匿名用户' }}
             <EventBadges
               :event="event"
               show-medal
             />
           </div>
-          <div class="user-menu__sub">
+          <div class="flex gap-2 text-xs text-muted-foreground">
             <span v-if="event.uid > 0">UID {{ event.uid }}</span>
             <span :title="dashboard.settings.absoluteTime ? formatRelative(event.time) : formatClock(event.time)">
               {{ dashboard.settings.absoluteTime ? formatClock(event.time) : formatRelative(event.time) }}
@@ -212,52 +212,3 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
-<style scoped>
-.user-menu-anchor {
-  display: none;
-}
-
-.user-menu {
-  display: grid;
-  gap: 10px;
-}
-
-.user-menu__head {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.user-menu__avatar {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.user-menu__who {
-  min-width: 0;
-}
-
-.user-menu__name {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-  font-weight: 600;
-}
-
-.user-menu__sub {
-  display: flex;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.user-menu__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-</style>

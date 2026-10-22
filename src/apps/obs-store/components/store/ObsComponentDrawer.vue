@@ -66,8 +66,8 @@ const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测
         class="border-b pb-4 mb-4"
       >
         <div class="flex items-center justify-between gap-4 w-full pr-6">
-          <div class="drawer-header-left">
-            <div class="icon-wrap">
+          <div class="flex items-center gap-3">
+            <div class="flex-center size-9 bg-[var(--brand-soft)] text-[var(--brand)] rounded-lg shrink-0">
               <component
                 :is="props.component.icon"
                 class="size-5"
@@ -75,7 +75,7 @@ const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测
             </div>
             <div>
               <div class="flex items-center gap-2">
-                <span class="header-title">{{ props.component.name }}</span>
+                <span class="text-[15px] font-semibold text-foreground">{{ props.component.name }}</span>
                 <Badge
                   variant="outline"
                   :class="[
@@ -90,7 +90,7 @@ const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测
                   {{ statusLabel }}
                 </Badge>
               </div>
-              <div class="header-desc text-muted-foreground">
+              <div class="block mt-0.5 text-xs text-muted-foreground">
                 {{ props.component.shortDescription }}
               </div>
             </div>
@@ -120,7 +120,7 @@ const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测
       <!-- 抽屉主体区域 -->
       <div
         v-if="props.component"
-        class="drawer-body-inner"
+        class="py-1 pb-6"
       >
         <Spin :show="isLoading">
           <component
@@ -129,7 +129,7 @@ const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测
           />
           <div
             v-else-if="!isLoading"
-            class="placeholder-wrap"
+            class="flex-center min-h-[240px]"
           >
             <span class="text-sm text-muted-foreground"> 该组件尚在开发规划中，暂无可用的配置控制台。 </span>
           </div>
@@ -138,46 +138,3 @@ const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测
     </SheetContent>
   </Sheet>
 </template>
-
-<style scoped>
-.drawer-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: var(--brand-soft);
-  color: var(--brand);
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.header-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.header-desc {
-  font-size: 12px;
-  display: block;
-  margin-top: 2px;
-}
-
-.drawer-body-inner {
-  padding: 4px 0 24px;
-}
-
-.placeholder-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-}
-</style>

@@ -112,11 +112,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="verify-page">
-    <section class="verify-card">
+  <main class="grid min-h-svh py-8 px-4 bg-muted place-items-center">
+    <section class="grid w-full max-w-[420px] pt-8 px-7 pb-7 border border-border rounded-[var(--radius)] bg-popover justify-items-center text-center gap-2">
       <div
-        class="verify-icon"
-        :class="`verify-icon--${phase}`"
+        class="grid size-[52px] mb-2 rounded-xl place-items-center"
+        :class="{
+          'text-[var(--brand)] bg-[var(--brand-soft)]': phase === 'checking',
+          'text-[var(--vtsuru-success)] bg-[var(--vtsuru-success-soft)]': phase === 'success' || phase === 'need-login',
+          'text-[var(--vtsuru-error)] bg-[var(--vtsuru-error-soft)]': phase === 'error',
+        }"
       >
         <Spin
           v-if="phase === 'checking'"
@@ -128,14 +132,14 @@ onUnmounted(() => {
           class="size-7"
         />
       </div>
-      <p class="verify-kicker">
+      <p class="m-0 text-muted-foreground text-xs">
         {{ copy.kicker }}
       </p>
-      <h1>{{ copy.title }}</h1>
-      <p class="verify-summary">
+      <h1 class="m-0 text-foreground text-[22px] font-semibold leading-tight">{{ copy.title }}</h1>
+      <p class="m-0 mb-3 text-muted-foreground text-sm leading-relaxed">
         {{ copy.summary }}
       </p>
-      <div class="verify-actions">
+      <div class="grid w-full gap-2">
         <Button
           v-if="phase === 'success'"
           class="w-full flex items-center justify-center gap-2"
@@ -172,7 +176,7 @@ onUnmounted(() => {
       </div>
       <p
         v-if="phase === 'checking'"
-        class="verify-hint"
+        class="inline-flex gap-1.5 items-center mt-2 text-muted-foreground text-xs"
       >
         <component
           :is="Mail24Regular"
@@ -183,86 +187,3 @@ onUnmounted(() => {
     </section>
   </main>
 </template>
-
-<style scoped>
-.verify-page {
-  display: grid;
-  min-height: 100svh;
-  padding: 32px 16px;
-  background: var(--muted);
-  place-items: center;
-}
-
-.verify-card {
-  display: grid;
-  width: min(100%, 420px);
-  padding: 32px 28px 28px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--popover);
-  justify-items: center;
-  text-align: center;
-  gap: 8px;
-}
-
-.verify-icon {
-  display: grid;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 8px;
-  border-radius: 12px;
-  place-items: center;
-}
-
-.verify-icon--checking {
-  color: var(--brand);
-  background: var(--brand-soft);
-}
-
-.verify-icon--success,
-.verify-icon--need-login {
-  color: var(--vtsuru-success);
-  background: var(--vtsuru-success-soft);
-}
-
-.verify-icon--error {
-  color: var(--vtsuru-error);
-  background: var(--vtsuru-error-soft);
-}
-
-.verify-kicker {
-  margin: 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-
-h1 {
-  margin: 0;
-  color: var(--foreground);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.verify-summary {
-  margin: 0 0 12px;
-  color: var(--muted-foreground);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.verify-actions {
-  display: grid;
-  width: 100%;
-  gap: 8px;
-}
-
-.verify-hint {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  margin: 8px 0 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-</style>

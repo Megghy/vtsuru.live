@@ -7,7 +7,7 @@ import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabil
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { NInputNumber } from '@/shared/ui/NInputNumber'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
@@ -100,7 +100,7 @@ function propertyAvailable(property: string) {
         class="flex flex-col gap-1"
       >
         <label class="text-xs text-muted-foreground">列数</label>
-        <NInputNumber
+        <NumberField
           v-model="gallery.columns"
           :min="1"
           :max="12"
@@ -112,7 +112,7 @@ function propertyAvailable(property: string) {
         class="flex flex-col gap-1"
       >
         <label class="text-xs text-muted-foreground">间距 px</label>
-        <NInputNumber
+        <NumberField
           v-model="gallery.gap"
           :min="0"
           :max="80"
@@ -190,7 +190,7 @@ function propertyAvailable(property: string) {
           class="flex flex-col gap-1"
         >
           <label class="text-xs text-muted-foreground">轮播间隔 ms</label>
-          <NInputNumber
+          <NumberField
             v-model="gallery.interval"
             :min="1000"
             :max="20000"

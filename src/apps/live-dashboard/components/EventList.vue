@@ -75,10 +75,10 @@ watch(
 </script>
 
 <template>
-  <div class="event-list">
+  <div class="relative h-full min-h-0">
     <div
       ref="listRef"
-      class="event-list__scroll overflow-y-auto"
+      class="h-full overflow-y-auto"
       @scroll="onScroll"
       @wheel.passive="markUserScroll"
       @touchmove.passive="markUserScroll"
@@ -95,13 +95,13 @@ watch(
     </div>
     <div
       v-if="!items.length"
-      class="event-list__empty"
+      class="absolute inset-0 grid place-items-center text-muted-foreground text-[13px] pointer-events-none"
     >
       暂无事件
     </div>
     <Button
       v-if="!following"
-      class="event-list__resume rounded-full shadow-md"
+      class="absolute left-1/2 bottom-2 -translate-x-1/2 z-2 rounded-full shadow-md"
       variant="secondary"
       @click="resume"
     >
@@ -109,33 +109,3 @@ watch(
     </Button>
   </div>
 </template>
-
-<style scoped>
-.event-list {
-  position: relative;
-  height: 100%;
-  min-height: 0;
-}
-
-.event-list__scroll {
-  height: 100%;
-}
-
-.event-list__empty {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  pointer-events: none;
-}
-
-.event-list__resume {
-  position: absolute;
-  left: 50%;
-  bottom: 8px;
-  transform: translateX(-50%);
-  z-index: 2;
-}
-</style>

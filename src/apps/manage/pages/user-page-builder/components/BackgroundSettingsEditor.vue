@@ -4,7 +4,7 @@ import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import { NInputNumber } from '@/shared/ui/NInputNumber'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
@@ -222,7 +222,7 @@ function clearAll() {
         <label class="text-xs text-muted-foreground">背景图片</label>
         <div
           v-if="!imagePath"
-          class="upload-dropzone"
+          class="flex-col-center p-4 border border-dashed border-border rounded-lg bg-muted cursor-pointer transition w-full box-border hover:border-primary hover:bg-popover"
           @click="props.target.uploadImage?.()"
         >
           <component
@@ -234,17 +234,17 @@ function clearAll() {
         </div>
         <div
           v-else
-          class="image-preview-bar"
+          class="flex items-center gap-2.5 py-2 px-2.5 border border-border rounded-lg bg-muted w-full box-border"
         >
           <img
             :src="imagePath"
             alt="背景预览"
             referrerpolicy="no-referrer"
-            class="image-thumb"
+            class="size-10 object-cover rounded-md border border-border shrink-0"
           />
-          <div class="image-info">
-            <span class="image-filename">已上传背景图</span>
-            <span class="image-sub">已设置生效</span>
+          <div class="flex flex-col flex-1 min-w-0 gap-0.5">
+            <span class="text-[13px] font-medium text-foreground">已上传背景图</span>
+            <span class="text-[11px] text-muted-foreground">已设置生效</span>
           </div>
           <div class="flex items-center gap-1.5">
             <Button
@@ -331,11 +331,11 @@ function clearAll() {
             class="flex-1"
             @update:model-value="scrimStrength = $event?.[0] ?? 0"
           />
-          <NInputNumber
+          <NumberField
             v-model="scrimStrength"
             :min="0"
             :max="100"
-            size="tiny"
+            size="xs"
             class="w-20"
           />
         </div>
@@ -375,11 +375,11 @@ function clearAll() {
             class="flex-1"
             @update:model-value="blur = $event?.[0] ?? 0"
           />
-          <NInputNumber
+          <NumberField
             v-model="blur"
             :min="0"
             :max="40"
-            size="tiny"
+            size="xs"
             class="w-20"
           />
         </div>
@@ -388,66 +388,3 @@ function clearAll() {
   </div>
 </template>
 
-<style scoped>
-@import './ui-transitions.css';
-
-.upload-dropzone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  background: var(--muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.upload-dropzone:hover {
-  border-color: var(--primary, #3b82f6);
-  background: var(--popover);
-}
-
-.image-preview-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--muted);
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.image-thumb {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  flex-shrink: 0;
-}
-
-.image-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-  gap: 2px;
-}
-
-.image-filename {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-.image-sub {
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-</style>

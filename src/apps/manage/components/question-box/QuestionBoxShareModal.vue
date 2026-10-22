@@ -107,12 +107,15 @@ function saveQRCode() {
         <!-- 选项设置 -->
         <div class="space-y-1.5">
           <label class="text-xs text-muted-foreground">附加话题 (可选)</label>
-          <Select v-model="selectedShareTag">
+          <Select
+            :model-value="selectedShareTag || '__none__'"
+            @update:model-value="selectedShareTag = $event === '__none__' ? '' : String($event)"
+          >
             <SelectTrigger>
               <SelectValue placeholder="不附加话题" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">不附加话题</SelectItem>
+              <SelectItem value="__none__">不附加话题</SelectItem>
               <SelectItem
                 v-for="t in useQB.tags.filter((t) => t.visiable)"
                 :key="t.name"

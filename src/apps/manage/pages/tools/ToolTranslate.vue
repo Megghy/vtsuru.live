@@ -90,7 +90,7 @@ async function copyResult() {
           DeepSeek-V4-Flash 模型，限制 5000 字
         </span>
 
-        <div class="lang-bar">
+        <div class="flex items-center gap-2 flex-wrap">
           <span class="text-xs text-muted-foreground"> 源语言 </span>
           <Select v-model="sourceLang">
             <SelectTrigger class="w-[150px]">
@@ -134,9 +134,9 @@ async function copyResult() {
           </Select>
         </div>
 
-        <div class="translate-layout">
-          <div class="translate-column">
-            <div class="panel-header">
+        <div class="flex gap-3 items-stretch max-md:flex-col">
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <div class="flex-between px-0.5">
               <span class="text-xs text-muted-foreground"> 原文 </span>
               <span
                 class="text-[11px]"
@@ -147,13 +147,13 @@ async function copyResult() {
             </div>
             <textarea
               v-model="sourceText"
-              class="translate-textarea"
+              class="w-full flex-1 min-h-[300px] resize-y p-3 rounded-md text-sm leading-[1.7] border border-border bg-muted font-inherit outline-none box-border focus:border-primary"
               placeholder="输入要翻译的文本..."
             />
           </div>
 
-          <div class="translate-column">
-            <div class="panel-header">
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <div class="flex-between px-0.5">
               <span class="text-xs text-muted-foreground"> 译文 </span>
               <Button
                 v-if="resultText"
@@ -166,7 +166,7 @@ async function copyResult() {
             </div>
             <textarea
               v-model="resultText"
-              class="translate-textarea"
+              class="w-full flex-1 min-h-[300px] resize-y p-3 rounded-md text-sm leading-[1.7] border border-border bg-muted font-inherit outline-none box-border focus:border-primary"
               placeholder="翻译结果..."
               readonly
             />
@@ -176,58 +176,3 @@ async function copyResult() {
     </CardContent>
   </Card>
 </template>
-
-<style scoped>
-.lang-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.translate-layout {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-}
-@media (max-width: 768px) {
-  .translate-layout {
-    flex-direction: column;
-  }
-}
-
-.translate-column {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 2px;
-}
-
-.translate-textarea {
-  width: 100%;
-  flex: 1;
-  min-height: 300px;
-  resize: vertical;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.7;
-  border: 1px solid var(--border);
-  background: var(--muted);
-  font-family: inherit;
-  color: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-.translate-textarea:focus {
-  border-color: var(--primary-color, #18a058);
-}
-</style>

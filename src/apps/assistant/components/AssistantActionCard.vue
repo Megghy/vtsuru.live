@@ -109,7 +109,7 @@ function saveEdit() {
 </script>
 
 <template>
-  <Card class="action-card mt-2 shadow-xs">
+  <Card class="w-full mt-2 shadow-xs">
     <CardHeader class="p-3 pb-2 flex flex-row items-center justify-between space-y-0 border-b border-border/50">
       <div class="flex items-center gap-2 min-w-0">
         <strong class="action-card__title text-xs font-semibold truncate">{{ proposal.title }}</strong>
@@ -275,8 +275,3 @@ function saveEdit() {
   </Card>
 </template>
 
-<style scoped>
-.action-card {
-  width: 100%;
-}
-</style>

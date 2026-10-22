@@ -203,7 +203,7 @@ watch(() => props.live.liveId, fetchRanking)
 </script>
 
 <template>
-  <div class="live-overview-panel">
+  <div class="flex flex-col gap-3 w-full">
     <!-- 顶部核心指标 4 宫格 -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
       <Card class="p-3.5">
@@ -478,12 +478,3 @@ watch(() => props.live.liveId, fetchRanking)
     </Card>
   </div>
 </template>
-
-<style scoped>
-.live-overview-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-</style>

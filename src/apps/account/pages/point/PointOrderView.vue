@@ -121,7 +121,7 @@ onMounted(() => void loadOrders())
 </script>
 
 <template>
-  <div class="point-orders-page flex flex-col gap-4">
+  <div class="w-full flex flex-col gap-4">
     <AccountPageHeader
       title="我的订单"
       subtitle="查看并跟踪你使用积分兑换的实物礼物与互动服务。"
@@ -227,8 +227,3 @@ onMounted(() => void loadOrders())
   </div>
 </template>
 
-<style scoped>
-.point-orders-page {
-  width: 100%;
-}
-</style>

@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import { OBS_CATEGORIES, getCategoryCounts, obsComponentList } from '@/apps/obs-store/registry'
 import type { ObsCategory, ObsComponentStatus } from '@/apps/obs-store/registry'
 import { Input } from '@/shared/ui/input'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 const props = defineProps<{
   category: ObsCategory
@@ -30,19 +31,21 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
 </script>
 
 <template>
-  <div class="obs-store-header">
-    <!-- 顶部标题与简要说明 -->
-    <div class="header-main-row">
-      <div class="title-block">
+  <div class="mb-5 flex flex-col gap-4">
+    <div class="flex justify-between items-start gap-4 max-md:flex-col max-md:items-stretch">
+      <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2">
-          <h1 class="page-title">OBS 独立组件</h1>
-          <span class="ready-badge">{{ availableCount }} 个可用</span>
+          <h1 class="m-0 text-lg font-semibold text-foreground leading-tight">OBS 独立组件</h1>
+          <span class="text-[11px] text-muted-foreground bg-muted border border-border py-px px-1.5 rounded-full font-medium">
+            {{ availableCount }} 个可用
+          </span>
         </div>
-        <p class="page-desc">收录独立 OBS 浏览器源。纯本地组件即开即用，需要同步的组件会在配置台保存并实时更新。</p>
+        <p class="mt-1.5 mb-0 text-[13px] text-muted-foreground leading-snug">
+          收录独立 OBS 浏览器源。纯本地组件即开即用，需要同步的组件会在配置台保存并实时更新。
+        </p>
       </div>
 
-      <!-- 搜索框 -->
-      <div class="search-box relative">
+      <div class="relative w-[260px] shrink-0 max-md:w-full">
         <Search24Regular
           class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
         />
@@ -55,169 +58,48 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
       </div>
     </div>
 
-    <!-- 筛选工具栏 -->
-    <div class="filter-bar">
-      <!-- 分类选择按钮组 -->
-      <div class="category-tabs">
-        <button
+    <div class="flex-between flex-wrap gap-3 pb-3 border-b border-border max-md:flex-col max-md:items-stretch">
+      <ToggleGroup
+        type="single"
+        :model-value="props.category"
+        class="flex-wrap h-auto gap-1 bg-transparent border-none p-0 justify-start"
+        @update:model-value="(val) => val && emit('update:category', val as ObsCategory)"
+      >
+        <ToggleGroupItem
           v-for="cat in OBS_CATEGORIES"
           :key="cat.id"
-          type="button"
-          class="category-tab-btn"
-          :class="{ active: props.category === cat.id }"
-          @click="emit('update:category', cat.id)"
+          :value="cat.id"
+          class="gap-1.5 h-control-sm px-2.5 rounded-md border border-transparent data-[state=on]:bg-card data-[state=on]:border-border data-[state=on]:font-semibold data-[state=on]:shadow-xs hover:bg-muted"
         >
           <component
             :is="cat.icon"
             v-if="cat.icon"
-            class="cat-icon"
           />
-          <span class="cat-name">{{ cat.name }}</span>
-          <span class="cat-count">{{ categoryCounts[cat.id] ?? 0 }}</span>
-        </button>
-      </div>
+          <span>{{ cat.name }}</span>
+          <span
+            class="text-[11px] bg-muted px-1.5 rounded-full text-muted-foreground leading-normal"
+            :class="{
+              'bg-primary/10 text-primary font-medium': props.category === cat.id,
+            }"
+          >
+            {{ categoryCounts[cat.id] ?? 0 }}
+          </span>
+        </ToggleGroupItem>
+      </ToggleGroup>
 
-      <!-- 状态单选按钮组 -->
-      <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-        <button
+      <ToggleGroup
+        type="single"
+        :model-value="props.statusFilter"
+        @update:model-value="(val) => val && emit('update:statusFilter', val as ObsComponentStatus | 'all')"
+      >
+        <ToggleGroupItem
           v-for="opt in statusOptions"
           :key="opt.value"
-          type="button"
-          class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-          :class="
-            props.statusFilter === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
-          "
-          @click="emit('update:statusFilter', opt.value)"
+          :value="opt.value"
         >
           {{ opt.label }}
-        </button>
-      </div>
+        </ToggleGroupItem>
+      </ToggleGroup>
     </div>
   </div>
 </template>
-
-<style scoped>
-.obs-store-header {
-  margin-bottom: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.header-main-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.title-block {
-  flex: 1;
-  min-width: 0;
-}
-
-.page-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--foreground);
-  margin: 0;
-  line-height: 1.2;
-}
-
-.ready-badge {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  background: var(--muted);
-  border: 1px solid var(--border);
-  padding: 1px 7px;
-  border-radius: 9999px;
-  font-weight: 500;
-}
-
-.page-desc {
-  font-size: 13px;
-  color: var(--muted-foreground);
-  margin: 6px 0 0;
-  line-height: 1.4;
-}
-
-.search-box {
-  width: 260px;
-  flex-shrink: 0;
-}
-
-/* 过滤工具栏 */
-.filter-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-}
-
-.category-tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.category-tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--muted-foreground);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  user-select: none;
-}
-
-.category-tab-btn:hover {
-  background: var(--muted);
-  color: var(--foreground);
-}
-
-.category-tab-btn.active {
-  background: var(--popover);
-  border-color: var(--border);
-  color: var(--foreground);
-  font-weight: 600;
-}
-
-.cat-icon {
-  font-size: 14px;
-}
-
-.cat-count {
-  font-size: 11px;
-  background: var(--muted);
-  padding: 0 5px;
-  border-radius: 9999px;
-  color: var(--muted-foreground);
-}
-
-.category-tab-btn.active .cat-count {
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-
-@media (max-width: 768px) {
-  .header-main-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .search-box {
-    width: 100%;
-  }
-  .filter-bar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-</style>

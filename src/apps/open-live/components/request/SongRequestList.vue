@@ -171,7 +171,7 @@ async function updateSettings() {
 
     <div
       v-if="songRequest.activeSongs.length > 0"
-      class="song-list-container"
+      class="mt-2.5 relative flex flex-col gap-2"
     >
       <div
         v-for="(song, index) in songRequest.activeSongs"
@@ -195,16 +195,3 @@ async function updateSettings() {
   </div>
 </template>
 
-<style scoped>
-.song-list-container {
-  margin-top: 10px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.song-item-wrapper {
-  min-width: 0;
-}
-</style>

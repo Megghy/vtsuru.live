@@ -109,7 +109,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
 
   <div
     v-else
-    class="danmaku-inline-row"
+    class="inline-flex items-center flex-wrap gap-1.5 text-[13px] leading-relaxed w-full"
   >
     <!-- 1. 头像 -->
     <TooltipProvider v-if="danmaku.uId > 0 && showAvatar">
@@ -119,7 +119,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
             :src="`https://workers.vrp.moe/api/bilibili/avatar/${danmaku.uId}?size=22`"
             alt="头像"
             referrerpolicy="no-referrer"
-            class="danmaku-avatar"
+            class="size-5 rounded-full align-middle shrink-0"
           />
         </TooltipTrigger>
         <TooltipContent>
@@ -134,7 +134,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
     </TooltipProvider>
 
     <!-- 2. 时间戳 -->
-    <span class="danmaku-time-text">
+    <span class="text-muted-foreground text-[11px] font-mono">
       {{ format(danmaku.time, 'HH:mm:ss') }}
     </span>
 
@@ -278,29 +278,3 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
     </span>
   </div>
 </template>
-
-<style scoped>
-.danmaku-inline-row {
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
-  font-size: 13px;
-  line-height: 1.6;
-  width: 100%;
-}
-
-.danmaku-avatar {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  vertical-align: middle;
-  flex-shrink: 0;
-}
-
-.danmaku-time-text {
-  color: var(--muted-foreground);
-  font-size: 11px;
-  font-family: monospace;
-}
-</style>

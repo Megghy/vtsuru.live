@@ -52,7 +52,17 @@ export const MEDAL_LEVEL_COLORS: { [key: number]: string } = {
   40: '#d5621a',
 }
 
-// 获取粉丝勋章颜色
+export function getDanmakuDisplayName(item: {
+  uname?: string | null
+  uid?: number | null
+  open_id?: string | null
+}): string {
+  const name = item.uname?.trim()
+  if (name) return name
+  if (item.uid || item.open_id) return '匿名用户'
+  return '系统'
+}
+
 export function getMedalColor(level: number): string {
   // 处理超过40级的情况，颜色循环使用
   if (level > 40) {
@@ -223,10 +233,7 @@ export function useDanmakuUtils(
     return ''
   })
 
-  // 获取用户名显示
-  const displayName = computed(() => {
-    return props.item.uname || '匿名用户'
-  })
+  const displayName = computed(() => getDanmakuDisplayName(props.item))
 
   // 获取消息显示内容
   const displayContent = computed(() => {

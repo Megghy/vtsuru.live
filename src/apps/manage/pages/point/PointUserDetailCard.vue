@@ -22,7 +22,7 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -333,7 +333,7 @@ onMounted(async () => {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <NInputNumber
+            <NumberField
               v-model="addPointCount"
               placeholder="积分数量"
               class="w-full"

@@ -8,7 +8,7 @@ import ImgCutter from 'vue-img-cutter'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { canvasToBlob, useMessage } from '@/shared/utils'
@@ -406,7 +406,7 @@ watchEffect(async () => {
                   <div class="flex items-center justify-between">
                     <span class="text-muted-foreground">单张尺寸</span>
                     <div class="flex items-center gap-1.5 w-32">
-                      <NInputNumber
+                      <NumberField
                         v-model="exportSettings.tileSize"
                         :min="128"
                         :max="currentMaxTileSize"
@@ -444,7 +444,7 @@ watchEffect(async () => {
                   >
                     <span class="text-muted-foreground">质量</span>
                     <div class="w-32">
-                      <NInputNumber
+                      <NumberField
                         v-model="exportSettings.jpegQuality"
                         :min="0.1"
                         :max="1"
@@ -455,7 +455,7 @@ watchEffect(async () => {
                   <div class="flex items-center justify-between">
                     <span class="text-muted-foreground">图片间距</span>
                     <div class="flex items-center gap-1.5 w-32">
-                      <NInputNumber
+                      <NumberField
                         v-model="exportSettings.gap"
                         :min="0"
                         :max="200"
@@ -560,7 +560,7 @@ watchEffect(async () => {
                         </Select>
                       </div>
                       <div class="flex items-center gap-1 w-20">
-                        <NInputNumber
+                        <NumberField
                           v-model="item.height"
                           :min="0"
                           :max="4096"

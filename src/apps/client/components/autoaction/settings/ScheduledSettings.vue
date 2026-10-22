@@ -4,7 +4,7 @@ import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -80,15 +80,14 @@ const schedulingModeOptions = [
       >
         <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
           <span class="text-xs font-medium text-foreground">发送间隔 (秒)</span>
-          <NInputNumber
-            :value="action.triggerConfig.intervalSeconds"
+          <NumberField
+            :model-value="action.triggerConfig.intervalSeconds"
             :min="10"
             :max="86400"
             :disabled="useGlobalTimer"
             placeholder="300"
-            size="small"
             class="w-32"
-            @update:value="action.triggerConfig.intervalSeconds = $event || 300"
+            @update:model-value="action.triggerConfig.intervalSeconds = $event || 300"
           />
         </div>
 

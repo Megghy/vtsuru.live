@@ -20,7 +20,7 @@ import { ColorPicker } from '@/shared/ui/color-picker'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
@@ -82,6 +82,34 @@ function getSelectOptions(item: ConfigItemDefinition): SelectOption[] {
   if (item.type !== 'select') return []
   const options = typeof item.options === 'function' ? item.options(props.configData) : item.options
   return options || []
+}
+
+const SELECT_CLEAR_VALUE = '__vtsuru_select_clear__'
+
+function getSelectValue(item: ConfigItemDefinition): string {
+  const val = props.configData[item.key]
+  if (val === undefined || val === null || val === '') {
+    return SELECT_CLEAR_VALUE
+  }
+  return String(val)
+}
+
+function setSelectValue(item: ConfigItemDefinition, value: unknown) {
+  const strVal = String(value ?? '')
+  if (strVal === SELECT_CLEAR_VALUE) {
+    props.configData[item.key] = undefined
+    return
+  }
+  const options = getSelectOptions(item)
+  const match = options.find((opt) => String(opt.value) === strVal)
+  props.configData[item.key] = match ? match.value : strVal
+}
+
+function getOptionSafeValue(val: unknown): string {
+  if (val === undefined || val === null || val === '') {
+    return SELECT_CLEAR_VALUE
+  }
+  return String(val)
 }
 
 function getUploadedFiles(key: string): UploadFileResponse[] {
@@ -451,7 +479,8 @@ onBeforeUnmount(() => {
 
           <Select
             v-else-if="item.type === 'select'"
-            v-model="configData[item.key]"
+            :model-value="getSelectValue(item)"
+            @update:model-value="setSelectValue(item, $event)"
           >
             <SelectTrigger>
               <SelectValue :placeholder="item.placeholder || '请选择'" />
@@ -459,13 +488,14 @@ onBeforeUnmount(() => {
             <SelectContent>
               <SelectItem
                 v-if="item.clearable"
-                value=""
-                >请选择</SelectItem
+                :value="SELECT_CLEAR_VALUE"
               >
+                请选择
+              </SelectItem>
               <SelectItem
                 v-for="opt in getSelectOptions(item)"
                 :key="String(opt.value)"
-                :value="String(opt.value)"
+                :value="getOptionSafeValue(opt.value)"
                 :disabled="opt.disabled"
               >
                 {{ opt.label }}
@@ -480,7 +510,7 @@ onBeforeUnmount(() => {
             @update:model-value="configData[item.key] = stringToRgba($event)"
           />
 
-          <NInputNumber
+          <NumberField
             v-else-if="item.type === 'number'"
             :model-value="configData[item.key]"
             :min="item.min"

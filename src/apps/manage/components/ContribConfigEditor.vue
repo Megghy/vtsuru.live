@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { useMessage } from '@/shared/utils'
@@ -135,7 +135,7 @@ function removeUploadedFile(key: string, idx: number) {
       </template>
 
       <template v-else-if="item.type === 'number' || item.type === 'sliderNumber'">
-        <NInputNumber
+        <NumberField
           v-model="configData[item.key]"
           :min="item.min"
           :max="item.max"

@@ -318,21 +318,21 @@ function clearCurrentTheme() {
 
       <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
         <!-- 作用域控制：主页时固定，子页时可选 -->
-        <div class="scope-control-box">
+        <div class="bg-muted border border-border rounded-lg py-2.5 px-3.5">
           <template v-if="isCurrentHome">
-            <div class="scope-tip">
+            <div class="flex items-center gap-2">
               <Badge
                 variant="default"
                 class="text-xs"
               >
                 全局主页
               </Badge>
-              <span class="scope-desc">配置将直接应用到主页，并作为全站各页面的默认底色。</span>
+              <span class="block text-xs text-muted-foreground mt-1 leading-snug">配置将直接应用到主页，并作为全站各页面的默认底色。</span>
             </div>
           </template>
           <template v-else>
             <div class="flex items-center justify-between">
-              <span class="scope-title">配置作用范围：</span>
+              <span class="text-[13px] font-medium">配置作用范围：</span>
               <div class="grid grid-cols-2 gap-1 bg-muted p-0.5 rounded-lg">
                 <Button
                   :variant="currentScope === 'global' ? 'default' : 'ghost'"
@@ -350,7 +350,7 @@ function clearCurrentTheme() {
                 </Button>
               </div>
             </div>
-            <span class="scope-desc">
+            <span class="block text-xs text-muted-foreground mt-1 leading-snug">
               {{
                 isPageScope
                   ? '当前正在为当前子页面定制独立专属外观，将优先覆盖全局主题。'
@@ -361,7 +361,7 @@ function clearCurrentTheme() {
         </div>
 
         <!-- 智能提取板块 -->
-        <div class="smart-extract-card">
+        <div class="bg-[var(--brand-tint,rgba(99,102,241,0.05))] border border-dashed border-border rounded-lg py-2.5 px-3.5">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
               <component
@@ -394,12 +394,12 @@ function clearCurrentTheme() {
           <!-- 提取结果展示与一键应用 -->
           <div
             v-if="extractedResult"
-            class="extract-result"
+            class="mt-2.5 pt-2 border-t border-border"
           >
             <div class="flex items-center justify-between mb-2">
               <div class="flex items-center gap-1.5 text-xs font-medium">
                 <span
-                  class="color-dot"
+                  class="inline-block size-3.5 rounded-full border border-black/10"
                   :style="{ backgroundColor: extractedResult.primaryColor }"
                 />
                 <span>主色：{{ extractedResult.primaryColor }}</span>
@@ -423,14 +423,14 @@ function clearCurrentTheme() {
 
             <div
               v-if="extractedResult.swatches.length > 1"
-              class="swatches-row"
+              class="flex items-center gap-1.5 mt-1.5"
             >
               <span class="text-[11px] text-muted-foreground">候选色彩：</span>
               <button
                 v-for="swatch in extractedResult.swatches"
                 :key="swatch"
                 type="button"
-                class="swatch-btn"
+                class="size-[18px] rounded border border-black/15 cursor-pointer p-0 transition-transform hover:scale-120"
                 :style="{ backgroundColor: swatch }"
                 :title="`设为主题色 ${swatch}`"
                 @click="applyCustomSwatch(swatch)"
@@ -441,31 +441,31 @@ function clearCurrentTheme() {
 
         <!-- 推荐精选预设卡片 -->
         <div class="presets-section">
-          <div class="section-title">推荐预设配色</div>
-          <div class="presets-grid">
+          <div class="text-xs font-semibold text-muted-foreground mb-2">推荐预设配色</div>
+          <div class="grid grid-cols-3 gap-2">
             <button
               v-for="preset in PRESET_THEMES"
               :key="preset.id"
               type="button"
-              class="preset-card"
+              class="flex flex-col bg-popover border border-border rounded-md p-1.5 cursor-pointer text-left transition hover:border-primary hover:-translate-y-px"
               @click="applyPreset(preset)"
             >
               <div
-                class="preset-preview"
+                class="relative h-[38px] rounded border border-black/8 flex-between px-2 mb-1"
                 :style="{ backgroundColor: preset.backgroundColor }"
               >
                 <span
-                  class="preset-accent"
+                  class="size-3.5 rounded-full"
                   :style="{ backgroundColor: preset.primaryColor }"
                 />
                 <span
-                  class="preset-text"
+                  class="text-[13px] font-bold"
                   :style="{ color: preset.textColor }"
                 >
                   Aa
                 </span>
               </div>
-              <div class="preset-name">{{ preset.name }}</div>
+              <div class="text-[11px] text-foreground text-center font-medium">{{ preset.name }}</div>
             </button>
           </div>
         </div>
@@ -598,132 +598,3 @@ function clearCurrentTheme() {
   </Sheet>
 </template>
 
-<style scoped>
-.scope-control-box {
-  background: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-}
-
-.scope-tip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.scope-title {
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.scope-desc {
-  display: block;
-  font-size: 12px;
-  color: var(--muted-foreground);
-  margin-top: 4px;
-  line-height: 1.4;
-}
-
-.smart-extract-card {
-  background: var(--brand-tint, rgba(99, 102, 241, 0.05));
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  padding: 10px 14px;
-}
-
-.extract-result {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid var(--border);
-}
-
-.color-dot {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-}
-
-.swatches-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 6px;
-}
-
-.swatch-btn {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.15);
-  cursor: pointer;
-  padding: 0;
-  transition: transform 0.15s ease;
-}
-
-.swatch-btn:hover {
-  transform: scale(1.2);
-}
-
-.section-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted-foreground);
-  margin-bottom: 8px;
-}
-
-.presets-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-}
-
-.preset-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--popover);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 6px;
-  cursor: pointer;
-  text-align: left;
-  transition: all 0.2s ease;
-}
-
-.preset-card:hover {
-  border-color: var(--primary);
-  transform: translateY(-1px);
-}
-
-.preset-preview {
-  position: relative;
-  height: 38px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 8px;
-  margin-bottom: 4px;
-}
-
-.preset-accent {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-}
-
-.preset-text {
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.preset-name {
-  font-size: 11px;
-  color: var(--foreground);
-  text-align: center;
-  font-weight: 500;
-}
-</style>

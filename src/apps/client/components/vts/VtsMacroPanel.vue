@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
@@ -406,13 +406,12 @@ function runMacro(macroId: string) {
               class="flex items-center gap-2"
             >
               <span class="text-muted-foreground">等待</span>
-              <NInputNumber
-                :value="element.step.seconds"
+              <NumberField
+                :model-value="element.step.seconds"
                 :min="0"
                 :step="0.1"
-                size="small"
                 class="w-28"
-                @update:value="(v) => upsertStep(element.id, { type: 'wait', seconds: Number(v ?? 0) })"
+                @update:model-value="(v) => upsertStep(element.id, { type: 'wait', seconds: Number(v ?? 0) })"
               />
               <span class="text-muted-foreground">秒</span>
             </div>
@@ -428,21 +427,19 @@ function runMacro(macroId: string) {
                 class="w-40"
                 @input="patchStep(element.id, { parameterId: ($event.target as HTMLInputElement).value })"
               />
-              <NInputNumber
-                :value="element.step.value"
+              <NumberField
+                :model-value="element.step.value"
                 placeholder="值"
-                size="small"
                 class="w-24"
-                @update:value="(v) => patchStep(element.id, { value: Number(v ?? 0) })"
+                @update:model-value="(v) => patchStep(element.id, { value: Number(v ?? 0) })"
               />
-              <NInputNumber
-                :value="element.step.weight ?? 1"
+              <NumberField
+                :model-value="element.step.weight ?? 1"
                 placeholder="权重"
                 :min="0"
                 :step="0.1"
-                size="small"
                 class="w-24"
-                @update:value="(v) => patchStep(element.id, { weight: Number(v ?? 1) })"
+                @update:model-value="(v) => patchStep(element.id, { weight: Number(v ?? 1) })"
               />
             </div>
 
@@ -516,15 +513,14 @@ function runMacro(macroId: string) {
                 class="flex-1 min-w-[200px]"
                 @input="patchStep(element.id, { url: ($event.target as HTMLInputElement).value })"
               />
-              <NInputNumber
-                :value="element.step.volume ?? 0.8"
+              <NumberField
+                :model-value="element.step.volume ?? 0.8"
                 placeholder="音量"
                 :min="0"
                 :max="1"
                 :step="0.05"
-                size="small"
                 class="w-24"
-                @update:value="(v) => patchStep(element.id, { volume: Number(v ?? 0.8) })"
+                @update:model-value="(v) => patchStep(element.id, { volume: Number(v ?? 0.8) })"
               />
               <div class="flex items-center gap-1.5 cursor-pointer select-none">
                 <Switch

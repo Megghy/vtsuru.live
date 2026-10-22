@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { PngtuberState } from '@/shared/pngtuber/types'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
@@ -72,15 +72,14 @@ const fields = [
         class="space-y-1"
       >
         <label class="text-[11px] text-muted-foreground font-medium">{{ f.label }}</label>
-        <NInputNumber
-          :value="state[f.key]"
+        <NumberField
+          :model-value="state[f.key]"
           :min="f.min"
           :max="f.max"
           :step="f.step"
           :disabled="disabled"
-          size="small"
           class="w-full"
-          @update:value="(value) => value !== null && emit('change', { [f.key]: value })"
+          @update:model-value="(value) => value !== null && emit('change', { [f.key]: value })"
         />
       </div>
     </div>

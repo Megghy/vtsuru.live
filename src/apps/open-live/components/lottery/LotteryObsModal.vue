@@ -100,52 +100,52 @@ const previewBoxStyle = computed(() => {
       </DialogHeader>
 
       <div class="overflow-y-auto max-h-[calc(90vh-110px)] pr-1 pt-4">
-        <div class="lottery-obs-modal__body">
+        <div class="grid grid-cols-[minmax(320px,1fr)_300px] gap-6 items-start max-[720px]:grid-cols-1">
           <!-- 左侧：链接与配置 -->
-          <div class="lottery-obs-modal__main">
+          <div class="flex flex-col gap-4 min-w-0">
             <Alert class="text-xs py-2 bg-muted/50 border-muted">
               <AlertDescription> 将抽奖等待队列与中奖揭榜结果实时展示在 OBS 浏览器源中。 </AlertDescription>
             </Alert>
 
             <!-- 显示版型 -->
-            <div class="lottery-obs-modal__section">
-              <div class="lottery-obs-modal__section-title">显示版型</div>
-              <div class="lottery-segmented-grid">
+            <div class="flex flex-col gap-2">
+              <div class="text-[13px] font-medium text-foreground">显示版型</div>
+              <div class="grid grid-cols-2 gap-1.5 w-full">
                 <button
                   v-for="opt in modeOptions"
                   :key="opt.value"
                   type="button"
-                  class="lottery-segmented-btn"
-                  :class="{ 'is-active': selectedMode === opt.value }"
+                  class="flex-between py-1.5 px-2.5 rounded-md border border-border bg-background text-foreground cursor-pointer outline-none box-border transition hover:bg-popover hover:border-[var(--brand-tint,rgba(56,189,248,0.4))]"
+                  :class="{ 'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold': selectedMode === opt.value }"
                   @click="selectedMode = opt.value"
                 >
-                  <span class="btn-label">{{ opt.label }}</span>
-                  <span class="btn-desc">{{ opt.desc }}</span>
+                  <span class="text-xs">{{ opt.label }}</span>
+                  <span class="text-[10px] text-muted-foreground bg-muted py-px px-1.5 rounded">{{ opt.desc }}</span>
                 </button>
               </div>
             </div>
 
             <!-- 视觉风格 -->
-            <div class="lottery-obs-modal__section">
-              <div class="lottery-obs-modal__section-title">视觉风格</div>
-              <div class="lottery-segmented-grid">
+            <div class="flex flex-col gap-2">
+              <div class="text-[13px] font-medium text-foreground">视觉风格</div>
+              <div class="grid grid-cols-2 gap-1.5 w-full">
                 <button
                   v-for="opt in styleOptions"
                   :key="opt.value"
                   type="button"
-                  class="lottery-segmented-btn"
-                  :class="{ 'is-active': selectedStyle === opt.value }"
+                  class="flex-between py-1.5 px-2.5 rounded-md border border-border bg-background text-foreground cursor-pointer outline-none box-border transition hover:bg-popover hover:border-[var(--brand-tint,rgba(56,189,248,0.4))]"
+                  :class="{ 'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold': selectedStyle === opt.value }"
                   @click="selectedStyle = opt.value"
                 >
-                  <span class="btn-label">{{ opt.label }}</span>
-                  <span class="btn-desc">{{ opt.desc }}</span>
+                  <span class="text-xs">{{ opt.label }}</span>
+                  <span class="text-[10px] text-muted-foreground bg-muted py-px px-1.5 rounded">{{ opt.desc }}</span>
                 </button>
               </div>
             </div>
 
             <!-- 链接复制 -->
-            <div class="lottery-obs-modal__section">
-              <div class="lottery-obs-modal__section-title">OBS 浏览器源链接</div>
+            <div class="flex flex-col gap-2">
+              <div class="text-[13px] font-medium text-foreground">OBS 浏览器源链接</div>
               <Alert
                 v-if="!url"
                 class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs py-2"
@@ -194,13 +194,13 @@ const previewBoxStyle = computed(() => {
           </div>
 
           <!-- 右侧：实时预览 -->
-          <div class="lottery-obs-modal__side">
-            <div class="lottery-obs-modal__preview-label">
+          <div class="flex flex-col items-center gap-2">
+            <div class="text-xs text-muted-foreground text-center">
               实时预览 ({{ recommendedSize.width }} × {{ recommendedSize.height }})
             </div>
-            <div class="lottery-obs-modal__preview-stage">
+            <div class="w-full h-[400px] flex-center border border-dashed border-border rounded-lg bg-muted p-3 box-border">
               <div
-                class="lottery-obs-modal__preview-wrapper"
+                class="relative overflow-hidden transition"
                 :style="previewBoxStyle"
               >
                 <LiveLotteryOBS
@@ -218,119 +218,3 @@ const previewBoxStyle = computed(() => {
   </Dialog>
 </template>
 
-<style scoped>
-.lottery-obs-modal__body {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) 300px;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 720px) {
-  .lottery-obs-modal__body {
-    grid-template-columns: 1fr;
-  }
-}
-
-.lottery-obs-modal__main {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-
-.lottery-obs-modal__section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.lottery-obs-modal__section-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-.lottery-segmented-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 6px;
-  width: 100%;
-}
-
-.lottery-segmented-btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: var(--background);
-  color: var(--foreground);
-  cursor: pointer;
-  outline: none;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-sizing: border-box;
-}
-
-.lottery-segmented-btn:hover {
-  background: var(--popover);
-  border-color: var(--brand-tint, rgba(56, 189, 248, 0.4));
-}
-
-.lottery-segmented-btn.is-active {
-  background: var(--brand-soft, rgba(56, 189, 248, 0.12));
-  border-color: var(--brand, #38bdf8);
-  color: var(--brand, #38bdf8);
-  font-weight: 600;
-}
-
-.btn-label {
-  font-size: 12px;
-}
-
-.btn-desc {
-  font-size: 10px;
-  color: var(--muted-foreground);
-  background: var(--muted);
-  padding: 1px 5px;
-  border-radius: 4px;
-}
-
-.lottery-segmented-btn.is-active .btn-desc {
-  color: var(--brand, #38bdf8);
-  background: rgba(56, 189, 248, 0.18);
-}
-
-.lottery-obs-modal__side {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.lottery-obs-modal__preview-label {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  text-align: center;
-}
-
-.lottery-obs-modal__preview-stage {
-  width: 100%;
-  height: 400px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  background: var(--muted);
-  padding: 12px;
-  box-sizing: border-box;
-}
-
-.lottery-obs-modal__preview-wrapper {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-</style>

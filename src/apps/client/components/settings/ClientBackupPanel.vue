@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const settings = useSettings()
@@ -215,24 +215,22 @@ function toggleModule(mod: ClientBackupModule) {
 
           <div class="flex items-center justify-between gap-3">
             <span class="text-xs font-medium text-foreground">自定义周期（小时）</span>
-            <NInputNumber
-              :value="backupSettings.customHours"
+            <NumberField
+              :model-value="backupSettings.customHours"
               :min="1"
-              size="small"
               class="w-[180px]"
-              @update:value="backupSettings.customHours = $event ?? undefined"
+              @update:model-value="backupSettings.customHours = $event ?? undefined"
             />
           </div>
 
           <div class="flex items-center justify-between gap-3">
             <span class="text-xs font-medium text-foreground">最多保留份数</span>
-            <NInputNumber
-              :value="backupSettings.keepCount"
+            <NumberField
+              :model-value="backupSettings.keepCount"
               :min="1"
               :max="999"
-              size="small"
               class="w-[180px]"
-              @update:value="backupSettings.keepCount = $event || 10"
+              @update:model-value="backupSettings.keepCount = $event || 10"
             />
           </div>
 

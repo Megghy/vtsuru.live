@@ -4,21 +4,20 @@ import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
-import { useDialog, useLoadingBar, useMessage, useModal, useNotification } from '@/shared/utils'
+import { useDialog, useLoadingBar, useMessage, useNotification } from '@/shared/utils'
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 const accountInfo = useAccount()
 
 // Setup code
 onMounted(() => {
-  ;(window as any).$loadingBar = useLoadingBar()
-  ;(window as any).$message = useMessage()
-  ;(window as any).$route = useRoute()
-  ;(window as any).$modal = useModal()
-  ;(window as any).$notification = useNotification()
-  ;(window as any).$dialog = useDialog()
+  window.$loadingBar = useLoadingBar()
+  window.$message = useMessage()
+  window.$route = useRoute()
+  window.$notification = useNotification()
+  window.$dialog = useDialog()
   const providerStore = useLoadingBarStore()
-  providerStore.setLoadingBar((window as any).$loadingBar)
+  providerStore.setLoadingBar(window.$loadingBar)
 })
 </script>
 

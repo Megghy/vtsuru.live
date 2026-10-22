@@ -29,7 +29,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -339,7 +339,7 @@ onBeforeUnmount(() => {
 <template>
   <TooltipProvider>
     <main
-      class="display-workbench grid grid-cols-[minmax(300px,340px)_minmax(420px,1fr)_minmax(310px,350px)] w-full h-[100dvh] min-h-0 overflow-hidden text-foreground bg-background transition-all duration-200"
+      class="grid grid-cols-[minmax(300px,340px)_minmax(420px,1fr)_minmax(310px,350px)] w-full h-dvh min-h-0 overflow-hidden text-foreground bg-background transition-all duration-200"
       :class="{ 'grid-cols-[minmax(300px,340px)_minmax(420px,1fr)_0px]!': isSettingsCollapsed }"
     >
       <QuestionDisplayQueue
@@ -649,16 +649,16 @@ onBeforeUnmount(() => {
               <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                   <label class="font-medium text-foreground">画布宽度 (px)</label>
-                  <NInputNumber
-                    v-model:value="savedCardSize.width"
+                  <NumberField
+                    v-model="savedCardSize.width"
                     :min="240"
                     :max="3840"
                   />
                 </div>
                 <div class="space-y-1">
                   <label class="font-medium text-foreground">画布高度 (px)</label>
-                  <NInputNumber
-                    v-model:value="savedCardSize.height"
+                  <NumberField
+                    v-model="savedCardSize.height"
                     :min="180"
                     :max="2160"
                   />
@@ -709,10 +709,3 @@ onBeforeUnmount(() => {
     </main>
   </TooltipProvider>
 </template>
-
-<style scoped>
-.display-workbench {
-  width: 100%;
-  height: 100dvh;
-}
-</style>

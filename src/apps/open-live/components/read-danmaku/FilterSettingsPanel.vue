@@ -6,7 +6,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 import { useSpeechService } from '@/store/useSpeechService'
@@ -52,7 +52,7 @@ function removeReplacement(index: number) {
 </script>
 
 <template>
-  <div class="panel">
+  <div class="flex flex-col gap-3">
     <SectionField
       label="屏蔽用户"
       hint="这些用户的弹幕/礼物不会播报"
@@ -148,11 +148,10 @@ function removeReplacement(index: number) {
       hint="0 = 不限制，超出部分截断"
     >
       <div class="max-w-[140px]">
-        <NInputNumber
-          v-model:value="settings.maxTextLength"
+        <NumberField
+          v-model="settings.maxTextLength"
           :min="0"
           :max="500"
-          size="small"
           placeholder="0"
         />
       </div>
@@ -163,11 +162,10 @@ function removeReplacement(index: number) {
       hint="同一用户在此间隔内只播报一条，0 = 不限制"
     >
       <div class="max-w-[140px]">
-        <NInputNumber
-          v-model:value="settings.antiSpamInterval"
+        <NumberField
+          v-model="settings.antiSpamInterval"
           :min="0"
           :max="60"
-          size="small"
           placeholder="0"
         />
       </div>
@@ -187,11 +185,11 @@ function removeReplacement(index: number) {
       label="文本替换规则"
       hint="按顺序执行，可用正则"
     >
-      <div class="replacements">
+      <div class="flex flex-col gap-1.5">
         <div
           v-for="(rule, i) in settings.textReplacements"
           :key="i"
-          class="rule-row"
+          class="flex items-center gap-1.5"
         >
           <Input
             size="xs"
@@ -235,20 +233,3 @@ function removeReplacement(index: number) {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.replacements {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.rule-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-</style>

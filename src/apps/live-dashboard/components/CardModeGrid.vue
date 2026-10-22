@@ -17,24 +17,24 @@ const victim = computed(() => grid.value.nextVictim())
 </script>
 
 <template>
-  <div class="card-grid">
+  <div class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] auto-rows-[minmax(72px,auto)] gap-1.5 p-1.5 overflow-y-auto h-full box-border content-start">
     <div
       v-for="(card, index) in grid.slots"
       :key="index"
-      class="card-slot"
-      :class="{ 'card-slot--victim': index === victim, 'card-slot--empty': !card }"
+      class="group/slot border border-border rounded-md bg-popover py-1.5 px-2 transition-opacity duration-300 min-w-0"
+      :class="{ 'opacity-45': index === victim, 'border-dashed bg-transparent': !card }"
       @mouseenter="grid.protectedIndex = index"
       @mouseleave="grid.protectedIndex = undefined"
       @contextmenu="card && ui.openContextMenu(card.display, $event)"
     >
       <template v-if="card">
-        <div class="card-slot__head">
+        <div class="flex items-center gap-1 text-[0.8em] text-muted-foreground">
           <EventBadges
             :event="card.display"
             :show-medal="false"
           />
           <button
-            class="card-slot__name"
+            class="appearance-none bg-transparent border-0 p-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap min-w-0"
             data-user-trigger
             type="button"
             @click.stop="ui.openUserMenu(card.display, $event)"
@@ -44,18 +44,18 @@ const victim = computed(() => grid.value.nextVictim())
           <Popover v-if="card.count > 1">
             <PopoverTrigger as-child>
               <button
-                class="card-slot__count"
+                class="appearance-none bg-transparent border-0 cursor-pointer ml-auto px-1.5 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] font-semibold"
                 type="button"
               >
                 ×{{ card.count }}
               </button>
             </PopoverTrigger>
             <PopoverContent class="max-h-[280px] overflow-y-auto p-2 w-auto">
-              <div class="card-users">
+              <div class="grid gap-1 text-xs min-w-[200px]">
                 <div
                   v-for="[key, user] in [...card.users].sort((a, b) => b[1].count - a[1].count)"
                   :key="key"
-                  class="card-users__row"
+                  class="flex-between gap-3"
                 >
                   <span>{{ user.uname }}</span>
                   <span>×{{ user.count }} · {{ formatClock(user.lastAt) }}</span>
@@ -64,7 +64,7 @@ const victim = computed(() => grid.value.nextVictim())
             </PopoverContent>
           </Popover>
           <button
-            class="card-slot__hide"
+            class="appearance-none bg-transparent border-0 cursor-pointer inline-flex opacity-0 group-hover/slot:opacity-80 ml-auto"
             type="button"
             title="隐藏这条弹幕（刷新后恢复）"
             @click="grid.hide(index)"
@@ -75,14 +75,14 @@ const victim = computed(() => grid.value.nextVictim())
             />
           </button>
         </div>
-        <div class="card-slot__body">
+        <div class="mt-1 font-semibold wrap-anywhere">
           <EventMessage
             :msg="card.display.msg"
             :emoji="card.display.emoji"
           />
           <div
             v-if="ui.translations.has(card.display.key)"
-            class="card-slot__translation"
+            class="mt-0.5 text-[0.85em] font-normal text-muted-foreground"
           >
             {{ ui.translations.get(card.display.key) }}
           </div>
@@ -92,108 +92,3 @@ const victim = computed(() => grid.value.nextVictim())
   </div>
 </template>
 
-<style scoped>
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  grid-auto-rows: minmax(72px, auto);
-  gap: 6px;
-  padding: 6px;
-  overflow-y: auto;
-  height: 100%;
-  box-sizing: border-box;
-  align-content: start;
-}
-
-.card-slot {
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--popover);
-  padding: 6px 8px;
-  transition: opacity 0.3s ease;
-  min-width: 0;
-}
-
-.card-slot--empty {
-  border-style: dashed;
-  background: transparent;
-}
-
-.card-slot--victim {
-  opacity: 0.45;
-}
-
-.card-slot__head {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.8em;
-  color: var(--muted-foreground);
-}
-
-.card-slot__name {
-  all: unset;
-  cursor: pointer;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-
-.card-slot__count {
-  all: unset;
-  cursor: pointer;
-  margin-left: auto;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--brand-soft);
-  color: var(--brand);
-  font-weight: 600;
-}
-
-.card-slot__hide {
-  all: unset;
-  cursor: pointer;
-  display: inline-flex;
-  opacity: 0;
-}
-
-.card-slot:hover .card-slot__hide {
-  opacity: 0.8;
-}
-
-.card-slot__count + .card-slot__hide,
-.card-slot__name + .card-slot__hide {
-  margin-left: auto;
-}
-
-.card-slot__count + .card-slot__hide {
-  margin-left: 0;
-}
-
-.card-slot__body {
-  margin-top: 4px;
-  font-weight: 600;
-  overflow-wrap: anywhere;
-}
-
-.card-slot__translation {
-  margin-top: 2px;
-  font-size: 0.85em;
-  font-weight: 400;
-  color: var(--muted-foreground);
-}
-
-.card-users {
-  display: grid;
-  gap: 4px;
-  font-size: 12px;
-  min-width: 200px;
-}
-
-.card-users__row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-}
-</style>

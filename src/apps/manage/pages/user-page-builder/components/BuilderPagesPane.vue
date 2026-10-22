@@ -92,7 +92,7 @@ const { pageEntries } = usePageEntries(editor)
                   >
                     <component
                       :is="HomeOutline"
-                      class="size-3.5"
+                      class="size-3.5 shrink-0"
                     />
                   </Button>
                 </TooltipTrigger>
@@ -115,7 +115,7 @@ const { pageEntries } = usePageEntries(editor)
                   >
                     <component
                       :is="resolveUserPageNavIcon(page.navIcon)"
-                      class="size-3.5"
+                      class="size-3.5 shrink-0"
                     />
                   </Button>
                 </TooltipTrigger>

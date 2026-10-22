@@ -1,8 +1,11 @@
 import { SquareArrowForward24Filled } from '@vicons/fluent'
 import { usePreferredDark } from '@vueuse/core'
-export { toast } from 'vue-sonner'
-import { computed, h } from 'vue'
+import type { Component, VNode } from 'vue'
+import { computed, h, shallowRef } from 'vue'
 import { toast } from 'vue-sonner'
+import type { ExternalToast } from 'vue-sonner'
+
+export { toast } from 'vue-sonner'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom, ThemeType } from '@/api/api-models'
@@ -24,16 +27,12 @@ export const isDarkMode = computed(() => {
 
 export const theme = computed(() => (isDarkMode.value ? 'dark' : 'light'))
 
-export const configProviderPropsRef = computed(() => ({
-  theme: theme.value,
-}))
-
 export const message = {
-  success: (msg: any, options?: any) => toast.success(typeof msg === 'string' ? msg : String(msg), options),
-  error: (msg: any, options?: any) => toast.error(typeof msg === 'string' ? msg : String(msg), options),
-  warning: (msg: any, options?: any) => toast.warning(typeof msg === 'string' ? msg : String(msg), options),
-  info: (msg: any, options?: any) => toast.info(typeof msg === 'string' ? msg : String(msg), options),
-  loading: (msg: any, options?: any) => toast.loading(typeof msg === 'string' ? msg : String(msg), options),
+  success: (msg: unknown, options?: ExternalToast) => toast.success(String(msg), options),
+  error: (msg: unknown, options?: ExternalToast) => toast.error(String(msg), options),
+  warning: (msg: unknown, options?: ExternalToast) => toast.warning(String(msg), options),
+  info: (msg: unknown, options?: ExternalToast) => toast.info(String(msg), options),
+  loading: (msg: unknown, options?: ExternalToast) => toast.loading(String(msg), options),
   destroy: () => toast.dismiss(),
 }
 
@@ -41,77 +40,70 @@ export function useMessage() {
   return message
 }
 
+type ToastAction = { label: string; onClick: () => void }
+
+export type NotificationOpts = {
+  title?: string
+  content?: string
+  description?: string
+  duration?: number
+  action?: ToastAction
+  cancel?: ToastAction
+}
+
+function toToastHandle(id: string | number) {
+  return { destroy: () => toast.dismiss(id) }
+}
+
+function showNotification(type: 'info' | 'success' | 'warning' | 'error', opts: string | NotificationOpts) {
+  if (typeof opts === 'string') return toToastHandle(toast[type](opts))
+  const duration = opts.duration === 0 ? Infinity : opts.duration
+  return toToastHandle(
+    toast[type](opts.title || opts.content || '', {
+      description: opts.description ?? (opts.title ? opts.content : undefined),
+      duration,
+      action: opts.action,
+      cancel: opts.cancel,
+    }),
+  )
+}
+
 export const notification = {
-  create: (opts: {
-    title?: string
-    content?: string
-    type?: 'info' | 'success' | 'warning' | 'error'
-    duration?: number
-  }) => {
-    const fn = toast[opts.type || 'info'] || toast.info
-    return fn(opts.title || '', { description: opts.content, duration: opts.duration })
-  },
-  info: (opts: any) => {
-    if (typeof opts === 'string') return toast.info(opts)
-    return toast.info(opts.title || opts.content || '', {
-      description: opts.title ? opts.content : undefined,
-      duration: opts.duration,
-    })
-  },
-  success: (opts: any) => {
-    if (typeof opts === 'string') return toast.success(opts)
-    return toast.success(opts.title || opts.content || '', {
-      description: opts.title ? opts.content : undefined,
-      duration: opts.duration,
-    })
-  },
-  warning: (opts: any) => {
-    if (typeof opts === 'string') return toast.warning(opts)
-    return toast.warning(opts.title || opts.content || '', {
-      description: opts.title ? opts.content : undefined,
-      duration: opts.duration,
-    })
-  },
-  error: (opts: any) => {
-    if (typeof opts === 'string') return toast.error(opts)
-    return toast.error(opts.title || opts.content || '', {
-      description: opts.title ? opts.content : undefined,
-      duration: opts.duration,
-    })
-  },
+  create: (opts: NotificationOpts & { type?: 'info' | 'success' | 'warning' | 'error' }) =>
+    showNotification(opts.type || 'info', opts),
+  info: (opts: string | NotificationOpts) => showNotification('info', opts),
+  success: (opts: string | NotificationOpts) => showNotification('success', opts),
+  warning: (opts: string | NotificationOpts) => showNotification('warning', opts),
+  error: (opts: string | NotificationOpts) => showNotification('error', opts),
 }
 
 export function useNotification() {
   return notification
 }
 
+export type AppDialogRequest = {
+  title?: string
+  content?: string | Component | (() => VNode)
+  positiveText?: string
+  negativeText?: string
+  onPositiveClick?: () => void | Promise<void>
+  onNegativeClick?: () => void
+  onClose?: () => void
+  class?: string
+}
+
+export const appDialog = shallowRef<AppDialogRequest | null>(null)
+
+function openDialog(opts: AppDialogRequest) {
+  appDialog.value = opts
+}
+
 export const dialog = {
-  warning: (opts: {
-    title?: string
-    content?: string
-    positiveText?: string
-    negativeText?: string
-    onPositiveClick?: () => void
-    onNegativeClick?: () => void
-  }) => {
-    if (window.confirm(`${opts.title || '提示'}\n${opts.content || ''}`)) {
-      opts.onPositiveClick?.()
-    } else {
-      opts.onNegativeClick?.()
-    }
-  },
-  error: (opts: any) => {
-    window.alert(`${opts.title || '错误'}\n${opts.content || ''}`)
-    opts.onPositiveClick?.()
-  },
-  info: (opts: any) => {
-    window.alert(`${opts.title || '提示'}\n${opts.content || ''}`)
-    opts.onPositiveClick?.()
-  },
-  success: (opts: any) => {
-    window.alert(`${opts.title || '成功'}\n${opts.content || ''}`)
-    opts.onPositiveClick?.()
-  },
+  create: openDialog,
+  warning: openDialog,
+  error: openDialog,
+  info: openDialog,
+  success: openDialog,
 }
 
 export function useDialog() {
@@ -128,27 +120,11 @@ export function useLoadingBar() {
   return loadingBar
 }
 
-export function useModal() {
-  return {
-    create: (_opts: any) => {},
-  }
-}
-
-// 兼容全局挂载
 if (typeof window !== 'undefined') {
-  ;(window as any).$message = message
-  ;(window as any).$notification = notification
-  ;(window as any).$dialog = dialog
-  ;(window as any).$loadingBar = loadingBar
-}
-
-export function createNaiveUIApi(_types?: string[]) {
-  return {
-    message,
-    notification,
-    dialog,
-    loadingBar,
-  }
+  window.$message = message
+  window.$notification = notification
+  window.$dialog = dialog
+  window.$loadingBar = loadingBar
 }
 
 export function NavigateToNewTab(url: string) {

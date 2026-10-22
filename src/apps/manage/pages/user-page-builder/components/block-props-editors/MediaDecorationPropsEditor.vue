@@ -6,7 +6,7 @@ import { getApiQaGetTags } from '@/api/generated/qa/qa'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
@@ -127,8 +127,8 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">滚动时长 秒</label>
-        <NInputNumber
-          v-model:value="blockProps.durationSec"
+        <NumberField
+          v-model="blockProps.durationSec"
           :min="4"
           :max="120"
           class="w-full"
@@ -268,8 +268,8 @@ function enableFeedbackEmbed(enabled: boolean) {
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">内嵌高度</label>
-        <NInputNumber
-          v-model:value="blockProps.height"
+        <NumberField
+          v-model="blockProps.height"
           :min="200"
           :max="1200"
           class="w-full"
@@ -427,8 +427,8 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">上边距 px</label>
-        <NInputNumber
-          v-model:value="blockProps.marginTop"
+        <NumberField
+          v-model="blockProps.marginTop"
           :min="0"
           :max="80"
           class="w-full"
@@ -436,8 +436,8 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">下边距 px</label>
-        <NInputNumber
-          v-model:value="blockProps.marginBottom"
+        <NumberField
+          v-model="blockProps.marginBottom"
           :min="0"
           :max="80"
           class="w-full"

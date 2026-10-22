@@ -8,7 +8,7 @@ import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { useMessage } from '@/shared/utils'
@@ -193,7 +193,7 @@ function clearAll() {
           <div class="flex items-center gap-2">
             <span class="text-muted-foreground">最大宽度</span>
             <div class="w-24">
-              <NInputNumber
+              <NumberField
                 v-model="maxWidth"
                 :min="0"
                 placeholder="不限"
@@ -204,7 +204,7 @@ function clearAll() {
           <div class="flex items-center gap-2">
             <span class="text-muted-foreground">最大高度</span>
             <div class="w-24">
-              <NInputNumber
+              <NumberField
                 v-model="maxHeight"
                 :min="0"
                 placeholder="不限"

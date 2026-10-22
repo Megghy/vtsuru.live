@@ -20,7 +20,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Slider } from '@/shared/ui/slider'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -338,13 +338,12 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                 class="custom-duration-row"
               >
                 <span class="quick-label">自定义倒计时 (秒):</span>
-                <NInputNumber
-                  :value="state.countdownDuration"
+                <NumberField
+                  :model-value="state.countdownDuration"
                   :min="5"
                   :step="30"
-                  size="small"
                   class="w-[130px]"
-                  @update:value="updateState({ countdownDuration: $event || 300 })"
+                  @update:model-value="updateState({ countdownDuration: $event || 300 })"
                 />
               </div>
             </div>

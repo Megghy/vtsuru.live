@@ -7,7 +7,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Separator } from '@/shared/ui/separator'
 
@@ -160,7 +160,7 @@ function addFromCurrent() {
         <div class="grid grid-cols-2 md:grid-cols-3 gap-2.5">
           <div class="space-y-1">
             <label class="text-[11px] text-[var(--muted-foreground)]">过渡时间 (s)</label>
-            <NInputNumber
+            <NumberField
               v-model="form.timeInSeconds"
               :min="0"
               :step="0.05"
@@ -169,7 +169,7 @@ function addFromCurrent() {
           </div>
           <div class="space-y-1">
             <label class="text-[11px] text-[var(--muted-foreground)]">X 坐标</label>
-            <NInputNumber
+            <NumberField
               v-model="form.positionX"
               :step="0.01"
               placeholder="X"
@@ -177,7 +177,7 @@ function addFromCurrent() {
           </div>
           <div class="space-y-1">
             <label class="text-[11px] text-[var(--muted-foreground)]">Y 坐标</label>
-            <NInputNumber
+            <NumberField
               v-model="form.positionY"
               :step="0.01"
               placeholder="Y"
@@ -185,7 +185,7 @@ function addFromCurrent() {
           </div>
           <div class="space-y-1">
             <label class="text-[11px] text-[var(--muted-foreground)]">旋转</label>
-            <NInputNumber
+            <NumberField
               v-model="form.rotation"
               :step="0.1"
               placeholder="旋转"
@@ -193,7 +193,7 @@ function addFromCurrent() {
           </div>
           <div class="space-y-1">
             <label class="text-[11px] text-[var(--muted-foreground)]">缩放大小</label>
-            <NInputNumber
+            <NumberField
               v-model="form.size"
               :step="0.5"
               placeholder="大小"

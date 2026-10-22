@@ -29,7 +29,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -450,12 +450,11 @@ onMounted(() => {
               >
                 <div class="flex items-center justify-between p-2 rounded border bg-card">
                   <span class="text-xs font-medium text-foreground">基础签到积分</span>
-                  <NInputNumber
-                    :value="serverSetting.baseCheckInPoints"
+                  <NumberField
+                    :model-value="serverSetting.baseCheckInPoints"
                     :min="0"
-                    size="small"
                     class="w-32"
-                    @update:value="
+                    @update:model-value="
                       serverSetting.baseCheckInPoints = $event || 0;
                       updateServerSettings()
                     "
@@ -476,12 +475,11 @@ onMounted(() => {
                 >
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">每日额外奖励</span>
-                    <NInputNumber
-                      :value="serverSetting.bonusPointsPerDay"
+                    <NumberField
+                      :model-value="serverSetting.bonusPointsPerDay"
                       :min="0"
-                      size="small"
                       class="w-28"
-                      @update:value="
+                      @update:model-value="
                         serverSetting.bonusPointsPerDay = $event || 0;
                         updateServerSettings()
                       "
@@ -489,12 +487,11 @@ onMounted(() => {
                   </div>
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">奖励积分上限</span>
-                    <NInputNumber
-                      :value="serverSetting.maxBonusPoints"
+                    <NumberField
+                      :model-value="serverSetting.maxBonusPoints"
                       :min="0"
-                      size="small"
                       class="w-28"
-                      @update:value="
+                      @update:model-value="
                         serverSetting.maxBonusPoints = $event || 0;
                         updateServerSettings()
                       "

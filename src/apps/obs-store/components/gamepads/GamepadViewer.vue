@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { useGamepadStore } from '@/store/useGamepadStore'
@@ -332,13 +332,12 @@ async function copyObsUrl() {
                 }
               "
             />
-            <NInputNumber
-              :value="stickSensitivity"
+            <NumberField
+              :model-value="stickSensitivity"
               :min="5"
               :max="50"
-              size="small"
               class="w-[80px]"
-              @update:value="stickSensitivity = $event || 15"
+              @update:model-value="stickSensitivity = $event || 15"
             />
             <Button
               size="xs"
@@ -363,14 +362,13 @@ async function copyObsUrl() {
                 }
               "
             />
-            <NInputNumber
-              :value="gamepadStore.deadzone"
+            <NumberField
+              :model-value="gamepadStore.deadzone"
               :min="0"
               :max="0.3"
               :step="0.01"
-              size="small"
               class="w-[80px]"
-              @update:value="gamepadStore.deadzone = $event || 0.08"
+              @update:model-value="gamepadStore.deadzone = $event || 0.08"
             />
             <span class="text-xs text-muted-foreground"> (过滤手柄微小零点漂移，默认 0.08) </span>
           </div>

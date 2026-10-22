@@ -77,10 +77,10 @@ function displayValue(f: EditableField) {
 </script>
 
 <template>
-  <div class="generic-card flex flex-col gap-1.5">
+  <div class="w-full flex flex-col gap-1.5">
     <div
       v-if="preview.length"
-      class="generic-card__list flex flex-col gap-1.5"
+      class="flex flex-col gap-1.5"
     >
       <div
         v-for="(item, i) in preview"
@@ -263,8 +263,3 @@ function displayValue(f: EditableField) {
   </div>
 </template>
 
-<style scoped>
-.generic-card {
-  width: 100%;
-}
-</style>

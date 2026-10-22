@@ -14,7 +14,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -626,12 +626,11 @@ const requestClose = () => {
                   class="w-20 shrink-0"
                   @click.stop
                 >
-                  <NInputNumber
-                    :value="selectedSubItems.find((s) => s.subItemId === sub.id)?.quantity ?? 1"
+                  <NumberField
+                    :model-value="selectedSubItems.find((s) => s.subItemId === sub.id)?.quantity ?? 1"
                     :min="1"
                     :max="subItemMax(sub)"
-                    size="small"
-                    @update:value="updateSubItemQuantity(sub.id, $event)"
+                    @update:model-value="updateSubItemQuantity(sub.id, $event)"
                   />
                 </div>
               </div>
@@ -654,13 +653,12 @@ const requestClose = () => {
               </span>
             </div>
             <div class="w-32">
-              <NInputNumber
-                v-model:value="buyCount"
+              <NumberField
+                v-model="buyCount"
                 :min="1"
                 :max="
                   Math.min(goods.maxBuyCount ?? 100000, (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0))
                 "
-                size="small"
               />
             </div>
           </div>
@@ -990,9 +988,3 @@ const requestClose = () => {
     </DialogContent>
   </Dialog>
 </template>
-
-<style scoped>
-.field-full {
-  width: 100%;
-}
-</style>

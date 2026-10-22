@@ -72,7 +72,7 @@ defineExpose({ scrollToCurrent })
 
 <template>
   <TooltipProvider>
-    <section class="queue-panel flex flex-col h-full min-h-0 bg-card border-r border-border">
+    <section class="w-full min-w-0 flex flex-col h-full min-h-0 bg-card border-r border-border">
       <header class="queue-heading flex items-center justify-between p-3.5 border-b border-border/80">
         <div class="flex items-center gap-2">
           <h1 class="text-sm font-bold">提问队列</h1>
@@ -331,10 +331,3 @@ defineExpose({ scrollToCurrent })
     </section>
   </TooltipProvider>
 </template>
-
-<style scoped>
-.queue-panel {
-  width: 100%;
-  min-width: 0;
-}
-</style>

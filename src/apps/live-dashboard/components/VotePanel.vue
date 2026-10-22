@@ -8,7 +8,7 @@ import { CURRENT_HOST, isTauri } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
@@ -88,18 +88,18 @@ function openManage() {
         @click="openManage"
       />
     </template>
-    <div class="vote">
+    <div class="grid content-start gap-3 box-border h-full p-2.5 overflow-y-auto text-[13px]">
       <section
         v-if="session"
-        class="vote__result"
+        class="grid gap-1.5"
       >
-        <div class="vote__head">
+        <div class="flex items-center gap-1.5 min-w-0">
           <span
             v-if="active"
-            class="vote__live"
+            class="vote__live size-2 shrink-0 rounded-full bg-[var(--vtsuru-success)]"
           />
-          <span class="vote__title">{{ session.title }}</span>
-          <span class="vote__meta">
+          <span class="font-semibold truncate">{{ session.title }}</span>
+          <span class="ml-auto shrink-0 text-xs text-muted-foreground tabular-nums">
             {{ active ? (timeLeft === null ? '不限时' : formatCountdown(timeLeft)) : '已结束' }}
             · {{ session.totalVotes }} 票
           </span>
@@ -118,8 +118,8 @@ function openManage() {
           <span class="vote__text">{{ option.text }}</span>
           <span class="vote__count">{{ option.count }} · {{ Math.round(option.percentage) }}%</span>
         </div>
-        <div class="vote__foot">
-          <span class="vote__outcome">{{ outcome }}</span>
+        <div class="flex items-center gap-1.5">
+          <span class="mr-auto text-xs text-muted-foreground">{{ outcome }}</span>
           <template v-if="active">
             <Button
               v-for="seconds in [30, 60]"
@@ -161,7 +161,7 @@ function openManage() {
 
       <section
         v-if="!active && loaded"
-        class="vote__form"
+        class="grid gap-1.5"
       >
         <div class="vote__presets flex flex-wrap gap-1">
           <Button
@@ -186,9 +186,8 @@ function openManage() {
         />
         <div class="vote__row flex items-center gap-2">
           <div class="flex items-center gap-1 w-[120px]">
-            <NInputNumber
+            <NumberField
               v-model="duration"
-              size="small"
               :min="0"
               :step="30"
               class="w-full"
@@ -214,54 +213,9 @@ function openManage() {
 </template>
 
 <style scoped>
-.vote {
-  display: grid;
-  align-content: start;
-  gap: 12px;
-  box-sizing: border-box;
-  height: 100%;
-  padding: 10px;
-  overflow-y: auto;
-  font-size: 13px;
-}
-
-.vote__result,
-.vote__form {
-  display: grid;
-  gap: 6px;
-}
-
-.vote__head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
 .vote__live {
-  width: 8px;
-  height: 8px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--vtsuru-success);
   animation: pulse 1.6s ease-in-out infinite;
 }
-
-.vote__title {
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.vote__meta {
-  margin-left: auto;
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--muted-foreground);
-  font-variant-numeric: tabular-nums;
-}
-
 .vote__option {
   position: relative;
   display: flex;
@@ -308,31 +262,6 @@ function openManage() {
   font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
-
-.vote__foot,
-.vote__row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.vote__outcome {
-  margin-right: auto;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.vote__presets {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 2px;
-}
-
-.vote__hint {
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
 @keyframes pulse {
   50% {
     opacity: 0.35;

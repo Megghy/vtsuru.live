@@ -176,8 +176,8 @@ onMounted(() => {
 
 <template>
   <div
-    class="client-layout-root manage-theme bg-background text-foreground"
-    :style="manageCssVars"
+    class="manage-theme bg-background text-foreground h-screen flex flex-col overflow-hidden"
+    :style="[manageCssVars, { '--client-titlebar-height': '30px' }]"
   >
     <WindowBar />
 
@@ -185,11 +185,11 @@ onMounted(() => {
     <Transition name="fade">
       <div
         v-if="isLoggedIn && !clientInited"
-        class="init-overlay"
+        class="fixed left-0 right-0 bottom-0 top-[var(--client-titlebar-height)] bg-card flex-center z-[2000]"
       >
-        <div class="init-overlay-content">
+        <div class="flex flex-col items-center gap-3">
           <Spin size="large" />
-          <div class="init-stage">
+          <div class="text-muted-foreground text-[13px]">
             {{ clientInitStage || '初始化中...' }}
           </div>
         </div>
@@ -199,27 +199,27 @@ onMounted(() => {
     <!-- 登录视图 -->
     <div
       v-if="!isLoggedIn"
-      class="login-container"
+      class="flex-1 min-h-0 flex-center bg-card"
     >
       <Card
         v-if="!isLoadingAccount"
-        class="login-card border bg-card shadow-lg"
+        class="max-w-[90vw] w-[400px] border bg-card shadow-lg"
       >
-        <CardHeader class="login-header text-center pb-4">
-          <CardTitle class="login-title">登陆</CardTitle>
-          <CardDescription class="login-subtitle">输入你的 VTsuru Token</CardDescription>
+        <CardHeader class="text-center pb-4">
+          <CardTitle>登陆</CardTitle>
+          <CardDescription>输入你的 VTsuru Token</CardDescription>
         </CardHeader>
 
         <CardContent class="space-y-4">
           <div class="space-y-1.5">
-            <div class="token-label-container flex items-center justify-between">
-              <span class="token-label text-xs font-medium text-foreground">Token</span>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-medium text-foreground">Token</span>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <button
                       type="button"
-                      class="token-get-link text-xs text-primary hover:underline cursor-pointer"
+                      class="text-xs text-primary hover:underline cursor-pointer"
                       @click="openUrl(`https://${BASE_URL}/manage`)"
                     >
                       前往获取
@@ -548,53 +548,3 @@ onMounted(() => {
     <ClientStatusBar v-if="isLoggedIn && clientInited" />
   </div>
 </template>
-
-<style scoped>
-.client-layout-root {
-  --client-titlebar-height: 30px;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  background-color: var(--background);
-}
-
-.login-container {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--card);
-}
-
-.login-card {
-  max-width: 90vw;
-  width: 400px;
-}
-
-.init-overlay {
-  position: fixed;
-  top: var(--client-titlebar-height);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--card);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-}
-
-.init-overlay-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.init-stage {
-  color: var(--muted-foreground);
-  font-size: 13px;
-}
-</style>

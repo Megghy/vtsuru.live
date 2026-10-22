@@ -20,40 +20,40 @@ function toggle(id: PanelId, visible: boolean) {
 </script>
 
 <template>
-  <div class="layout-menu">
-    <div class="layout-menu__label">面板（拖动调整顺序）</div>
+  <div class="grid gap-2 w-60 text-[13px]">
+    <div class="text-xs text-muted-foreground">面板（拖动调整顺序）</div>
     <VueDraggable
       v-model="layout.order"
       :animation="150"
-      handle=".layout-menu__handle"
-      class="layout-menu__list"
+      handle=".layout-menu-handle"
+      class="grid gap-1"
     >
       <div
         v-for="id in layout.order"
         :key="id"
-        class="layout-menu__item"
+        class="flex items-center gap-1.5 py-1 px-1.5 border border-border rounded-md"
       >
         <component
           :is="ReOrderDotsVertical16Regular"
-          class="layout-menu__handle h-4 w-4"
+          class="layout-menu-handle h-4 w-4 cursor-grab text-muted-foreground"
         />
         <span>{{ PANEL_TITLES[id] }}</span>
-        <span class="layout-menu__key">Alt+{{ PANEL_IDS.indexOf(id) + 1 }}</span>
+        <span class="ml-auto text-[11px] text-muted-foreground">Alt+{{ PANEL_IDS.indexOf(id) + 1 }}</span>
         <Switch
           :model-value="!layout.hidden.includes(id)"
           @update:model-value="(v: boolean) => toggle(id, v)"
         />
       </div>
     </VueDraggable>
-    <label class="layout-menu__row">
+    <label class="flex-between gap-2">
       竖屏布局（上下排列）
       <Switch v-model="layout.vertical" />
     </label>
-    <label class="layout-menu__row">
+    <label class="flex-between gap-2">
       互动区在弹幕上方
       <Switch v-model="layout.interactionOnTop" />
     </label>
-    <label class="layout-menu__row">
+    <label class="flex-between gap-2">
       专注模式（隐藏面板原地虚化）
       <Switch v-model="layout.focusMode" />
     </label>
@@ -66,49 +66,3 @@ function toggle(id: PanelId, visible: boolean) {
     </Button>
   </div>
 </template>
-
-<style scoped>
-.layout-menu {
-  display: grid;
-  gap: 8px;
-  width: 240px;
-  font-size: 13px;
-}
-
-.layout-menu__label {
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.layout-menu__list {
-  display: grid;
-  gap: 4px;
-}
-
-.layout-menu__item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 6px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-
-.layout-menu__handle {
-  cursor: grab;
-  color: var(--muted-foreground);
-}
-
-.layout-menu__key {
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.layout-menu__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-</style>

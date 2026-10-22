@@ -11,7 +11,7 @@ import {
 } from '@/apps/user-page/block/customHtmlContract'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -84,8 +84,8 @@ const maxHeight = computed({
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">固定高度</label>
-        <NInputNumber
-          v-model:value="fixedHeight"
+        <NumberField
+          v-model="fixedHeight"
           :min="CUSTOM_HTML_MIN_HEIGHT"
           :max="CUSTOM_HTML_MAX_HEIGHT"
           :step="20"
@@ -97,8 +97,8 @@ const maxHeight = computed({
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">最大高度</label>
-        <NInputNumber
-          v-model:value="maxHeight"
+        <NumberField
+          v-model="maxHeight"
           :min="CUSTOM_HTML_MIN_AUTO_HEIGHT"
           :max="CUSTOM_HTML_MAX_HEIGHT"
           :step="20"

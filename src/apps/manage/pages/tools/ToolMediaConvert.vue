@@ -11,7 +11,7 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
@@ -676,7 +676,7 @@ onBeforeUnmount(() => {
                   class="field target-size"
                 >
                   <span class="text-xs text-muted-foreground"> 目标体积（每个文件，MB） </span>
-                  <NInputNumber
+                  <NumberField
                     v-model="settings.targetSizeMb"
                     :min="1"
                     :max="2000"

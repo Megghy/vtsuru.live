@@ -2,6 +2,7 @@
 import { computed, defineAsyncComponent, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 
+import AppDialogHost from '@/app/components/AppDialogHost.vue'
 import TempComponent from '@/app/components/TempComponent.vue'
 import { applyThemeCssVars, buildSiteTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
@@ -39,18 +40,19 @@ const layout = computed(() => {
   }
 })
 
+const isTransparentShell = computed(() => layout.value === 'obs' || Boolean(route.meta.transparent))
 const siteTokens = computed(() => buildSiteTokens(isDarkMode.value))
 provideThemeScope(computed(() => getThemeCssVars(siteTokens.value)))
-const shellStyle = computed(() =>
-  layout.value === 'user' || layout.value === '' ? { minHeight: '100dvh' } : { height: '100dvh' },
-)
+const shellStyle = computed(() => {
+  if (isTransparentShell.value) return { height: '100%' }
+  if (layout.value === 'user' || layout.value === '') return { minHeight: '100dvh' }
+  return { height: '100dvh' }
+})
 
 watchEffect(() => {
-  if (isDarkMode.value) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
+  const root = document.documentElement
+  root.classList.toggle('dark', isDarkMode.value)
+  root.classList.toggle('transparent-shell', isTransparentShell.value)
   applyThemeCssVars(siteTokens.value)
 })
 </script>
@@ -58,7 +60,7 @@ watchEffect(() => {
 <template>
   <div
     :style="shellStyle"
-    class="app-root text-foreground bg-background antialiased"
+    :class="['app-root text-foreground antialiased', { 'bg-background': !isTransparentShell }]"
   >
     <Suspense>
       <TempComponent>
@@ -82,6 +84,7 @@ watchEffect(() => {
         </div>
       </template>
     </Suspense>
+    <AppDialogHost />
     <Toaster
       richColors
       position="top-right"
@@ -97,6 +100,15 @@ body {
   margin: 0;
   color: var(--foreground);
   background-color: var(--background);
+}
+html.transparent-shell,
+html.transparent-shell body {
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent;
+}
+html.transparent-shell #app {
+  height: 100%;
 }
 
 :root {

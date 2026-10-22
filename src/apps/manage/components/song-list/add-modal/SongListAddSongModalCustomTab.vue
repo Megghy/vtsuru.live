@@ -7,7 +7,7 @@ import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -324,7 +324,7 @@ async function addCustomSong() {
               />
               <span>需要 SC (最低金额)</span>
             </label>
-            <NInputNumber
+            <NumberField
               v-if="addSongModel.options?.scMinPrice != null"
               v-model="addSongModel.options.scMinPrice"
               :min="30"

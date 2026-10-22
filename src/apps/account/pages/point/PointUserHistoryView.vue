@@ -151,7 +151,7 @@ onMounted(() => void loadHistories())
 </script>
 
 <template>
-  <div class="point-history-page flex flex-col gap-4">
+  <div class="w-full flex flex-col gap-4">
     <AccountPageHeader
       title="积分记录"
       subtitle="追溯在所有主播频道的积分获取、消耗明细与时间流水。"
@@ -253,8 +253,3 @@ onMounted(() => void loadHistories())
   </div>
 </template>
 
-<style scoped>
-.point-history-page {
-  width: 100%;
-}
-</style>

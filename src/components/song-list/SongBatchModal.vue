@@ -6,7 +6,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { toast } from '@/shared/utils'
 
@@ -269,11 +269,10 @@ defineExpose({ open, close })
                   />
                   <span>SC ≥</span>
                 </label>
-                <NInputNumber
+                <NumberField
                   v-if="batchOption.scMinPrice != null"
-                  v-model:value="batchOption.scMinPrice"
+                  v-model="batchOption.scMinPrice"
                   :min="1"
-                  size="small"
                   class="w-20"
                 />
                 <span v-if="batchOption.scMinPrice != null">元</span>
@@ -287,11 +286,10 @@ defineExpose({ open, close })
                   />
                   <span>粉丝牌 ≥</span>
                 </label>
-                <NInputNumber
+                <NumberField
                   v-if="batchOption.fanMedalMinLevel != null"
-                  v-model:value="batchOption.fanMedalMinLevel"
+                  v-model="batchOption.fanMedalMinLevel"
                   :min="1"
-                  size="small"
                   class="w-20"
                 />
                 <span v-if="batchOption.fanMedalMinLevel != null">级</span>

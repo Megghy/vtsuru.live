@@ -10,7 +10,7 @@ import { usePngtuberDriver } from '@/apps/client/store/usePngtuberDriver'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const props = defineProps<{ action: AutoActionItem }>()
@@ -94,14 +94,13 @@ function test() {
 
     <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
       <span class="text-xs font-medium text-foreground">持续时间（毫秒）</span>
-      <NInputNumber
-        :value="action.actionConfig.pngtuberDurationMs"
+      <NumberField
+        :model-value="action.actionConfig.pngtuberDurationMs"
         :min="0"
         :step="100"
         placeholder="5000"
-        size="small"
         class="w-32"
-        @update:value="action.actionConfig.pngtuberDurationMs = $event"
+        @update:model-value="action.actionConfig.pngtuberDurationMs = $event"
       />
     </div>
 

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
@@ -14,8 +14,8 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
   <PropsGrid>
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">最多展示</label>
-      <NInputNumber
-        v-model:value="blockProps.count"
+      <NumberField
+        v-model="blockProps.count"
         :min="1"
         :max="6"
         class="w-full"

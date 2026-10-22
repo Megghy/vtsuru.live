@@ -105,7 +105,7 @@ watch([targetUserId, token], () => {
 </script>
 
 <template>
-  <div class="danmaku-vote-obs-page">
+  <div class="w-screen h-screen overflow-hidden bg-transparent">
     <DanmakuVoteCard
       :data="voteData"
       :theme="currentTheme"
@@ -115,13 +115,3 @@ watch([targetUserId, token], () => {
     />
   </div>
 </template>
-
-<style scoped>
-/* 铺满整页，对齐完全交给卡片自身，页不再重复补偿 */
-.danmaku-vote-obs-page {
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
-  background: transparent;
-}
-</style>

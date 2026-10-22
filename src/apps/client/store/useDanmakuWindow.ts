@@ -335,6 +335,17 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。')
       return
     }
+    // 移除窗口默认黑色背景，使其完全透明
+    try {
+      await danmakuWindow.value.setBackgroundColor(null)
+    } catch (err) {
+      console.warn('[danmaku-window] 设置透明背景失败，可能是客户端版本过旧:', err)
+      window.$notification.warning({
+        title: '弹幕窗口透明背景不可用',
+        content: '当前客户端版本不支持透明背景特性，请更新到最新版本以获得更好体验',
+        duration: 8000,
+      })
+    }
     console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value)
 
     danmakuWindow.value.onCloseRequested((event) => {
@@ -378,6 +389,8 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       type: 'danmaku',
       data: {
         type: EventDataTypes.Message,
+        uname: '系统',
+        uid: 0,
         msg: '弹幕窗口已打开',
       } as EventModel,
     } satisfies DanmakuWindowBCData)
@@ -500,12 +513,6 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       liveStats.value.likeCount += Math.floor(Math.random() * 3) + 1
     }
     onGetDanmakus(testData)
-
-    postBroadcastMessage(bc, {
-      type: 'test-danmaku',
-      data: testData,
-    } satisfies DanmakuWindowBCData)
-    console.log('[danmaku-window] 发送测试弹幕指令:', testData)
   }
 
   return {

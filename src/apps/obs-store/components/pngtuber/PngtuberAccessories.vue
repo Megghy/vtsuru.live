@@ -2,7 +2,7 @@
 import type { PngtuberAccessory } from '@/shared/pngtuber/types'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
@@ -90,15 +90,14 @@ const fields = [
               class="space-y-1"
             >
               <label class="text-[11px] text-muted-foreground font-medium">{{ f.label }}</label>
-              <NInputNumber
-                :value="a[f.key]"
+              <NumberField
+                :model-value="a[f.key]"
                 :min="f.min"
                 :max="f.max"
                 :step="f.step"
-                size="small"
                 :disabled="disabled"
                 class="w-full"
-                @update:value="(value) => value !== null && patch(a.id, { [f.key]: value })"
+                @update:model-value="(value) => value !== null && patch(a.id, { [f.key]: value })"
               />
             </div>
           </div>

@@ -265,7 +265,7 @@ watch(
       </aside>
 
       <!-- 右侧主内容区域 -->
-      <main class="flex-1 min-w-0 overflow-y-auto open-live-page bg-background">
+      <main class="flex-1 min-w-0 overflow-y-auto open-live-page h-full bg-background">
         <div
           v-if="danmakuClientError"
           class="m-3 p-3 rounded-md border border-destructive/40 bg-destructive/10 text-destructive text-xs flex items-center justify-between"
@@ -343,9 +343,3 @@ watch(
     </footer>
   </div>
 </template>
-
-<style scoped>
-.open-live-page {
-  height: 100%;
-}
-</style>

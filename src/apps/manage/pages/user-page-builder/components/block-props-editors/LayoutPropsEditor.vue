@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
@@ -102,8 +102,8 @@ const verticalOptions = computed(() =>
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">列数</label>
-        <NInputNumber
-          v-model:value="layout.columns"
+        <NumberField
+          v-model="layout.columns"
           :min="1"
           :max="12"
           class="w-full"
@@ -112,8 +112,8 @@ const verticalOptions = computed(() =>
 
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">间距</label>
-        <NInputNumber
-          v-model:value="layout.gap"
+        <NumberField
+          v-model="layout.gap"
           :min="0"
           :max="80"
           class="w-full"

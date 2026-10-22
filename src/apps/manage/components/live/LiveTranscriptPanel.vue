@@ -205,7 +205,7 @@ defineExpose({ load })
 </script>
 
 <template>
-  <div class="live-transcript-panel">
+  <div class="flex flex-col gap-3 w-full">
     <div
       v-if="loading"
       class="py-12 flex justify-center"
@@ -432,12 +432,3 @@ defineExpose({ load })
     </div>
   </div>
 </template>
-
-<style scoped>
-.live-transcript-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-</style>

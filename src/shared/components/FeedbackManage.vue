@@ -226,7 +226,7 @@ watch(
 
 <template>
   <div
-    class="ticket-page"
+    class="flex flex-col min-h-0 w-full"
     :class="{ 'ticket-page--manage': inManage, 'ticket-page--detail': isDetailRoute }"
   >
     <header class="ticket-page__toolbar flex items-center justify-between gap-3 pb-3 border-b border-border/60">
@@ -374,7 +374,7 @@ watch(
 
     <div
       v-else-if="view === 'mine'"
-      class="ticket-workspace pt-3"
+      class="grid grid-cols-1 md:grid-cols-[minmax(280px,360px)_1fr] gap-4 min-h-[520px] pt-3"
       :class="{ 'ticket-workspace--detail': isDetailRoute }"
     >
       <aside class="ticket-list space-y-2">
@@ -549,23 +549,3 @@ watch(
     </Dialog>
   </div>
 </template>
-
-<style scoped>
-.ticket-page {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  width: 100%;
-}
-.ticket-workspace {
-  display: grid;
-  grid-template-columns: minmax(280px, 360px) 1fr;
-  gap: 16px;
-  min-height: 520px;
-}
-@media (max-width: 768px) {
-  .ticket-workspace {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

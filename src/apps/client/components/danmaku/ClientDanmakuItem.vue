@@ -17,11 +17,10 @@ const { typeClass } = useDanmakuUtils(props, emojiData)
 
 <template>
   <div
-    class="flex w-full overflow-hidden will-change-[transform,opacity] p-0 bg-transparent min-h-0"
+    class="flex w-full p-0 bg-transparent"
     :class="[typeClass]"
     :data-disappear="item.disappearAt"
     :style="{
-      marginBottom: 'var(--dw-item-spacing, 4px)',
       fontSize: 'var(--dw-font-size)',
       color: 'var(--dw-text-color)',
     }"

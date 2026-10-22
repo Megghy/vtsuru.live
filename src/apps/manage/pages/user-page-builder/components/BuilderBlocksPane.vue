@@ -132,13 +132,13 @@ const {
                   <button
                     v-else
                     type="button"
-                    class="flex items-center gap-2 p-1.5 rounded hover:bg-muted text-left text-xs transition-colors"
+                    class="flex items-center gap-2 w-full p-1.5 rounded hover:bg-muted text-left text-xs transition-colors cursor-pointer select-none"
                     @click="handleAddBlockMenuSelect(String(opt.key))"
                   >
                     <component
                       :is="opt.icon"
                       v-if="opt.icon"
-                      class="text-muted-foreground shrink-0"
+                      class="size-4 text-muted-foreground shrink-0"
                     />
                     <span>{{ typeof opt.label === 'function' ? opt.key : opt.label }}</span>
                   </button>

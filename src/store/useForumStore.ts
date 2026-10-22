@@ -29,11 +29,9 @@ import type {
   ForumTopicSortTypes,
 } from '@/api/models/forum'
 import { requestWithCaptchaRetry } from '@/shared/captcha'
-import { createNaiveUIApi } from '@/shared/utils'
+import { message } from '@/shared/utils'
 
 export const useForumStore = defineStore('forum', () => {
-  const { message } = createNaiveUIApi(['message'])
-
   const isLoading = ref(false)
   const isLikeLoading = ref(false)
 

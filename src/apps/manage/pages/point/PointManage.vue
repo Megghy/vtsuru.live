@@ -37,7 +37,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -781,7 +781,7 @@ function resetGoods() {
                     <label class="text-xs font-medium text-foreground"
                       >所需积分 <span class="text-destructive">*</span></label
                     >
-                    <NInputNumber
+                    <NumberField
                       v-model="currentGoodsModel.goods.price"
                       placeholder="兑换所需的积分数"
                       :min="0"
@@ -798,7 +798,7 @@ function resetGoods() {
                         />
                         <span>不限库存</span>
                       </label>
-                      <NInputNumber
+                      <NumberField
                         v-if="currentGoodsModel.goods.count !== undefined"
                         v-model="currentGoodsModel.goods.count"
                         :min="0"
@@ -991,7 +991,7 @@ function resetGoods() {
                     </div>
                     <div class="space-y-1">
                       <label class="text-xs font-medium text-foreground">所需积分</label>
-                      <NInputNumber
+                      <NumberField
                         v-model="sub.price"
                         :min="0"
                         class="w-full"
@@ -999,7 +999,7 @@ function resetGoods() {
                     </div>
                     <div class="space-y-1">
                       <label class="text-xs font-medium text-foreground">款式库存</label>
-                      <NInputNumber
+                      <NumberField
                         v-model="sub.stock"
                         placeholder="留空沿用主商品"
                         :min="0"
@@ -1067,7 +1067,7 @@ function resetGoods() {
                   </div>
                   <div class="space-y-1">
                     <label class="text-xs font-medium text-foreground">单人最大兑换数量</label>
-                    <NInputNumber
+                    <NumberField
                       v-model="currentGoodsModel.goods.maxBuyCount"
                       :min="1"
                       class="w-full"

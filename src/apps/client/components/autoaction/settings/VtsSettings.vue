@@ -8,7 +8,7 @@ import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -156,26 +156,24 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-muted-foreground">X:</span>
-                <NInputNumber
-                  :value="action.actionConfig.vtsItemDropX"
+                <NumberField
+                  :model-value="action.actionConfig.vtsItemDropX"
                   placeholder="X"
                   :step="0.05"
-                  size="small"
                   class="w-24"
-                  @update:value="action.actionConfig.vtsItemDropX = $event"
+                  @update:model-value="action.actionConfig.vtsItemDropX = $event"
                 />
               </div>
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-muted-foreground">S:</span>
-                <NInputNumber
-                  :value="action.actionConfig.vtsItemDropSize"
+                <NumberField
+                  :model-value="action.actionConfig.vtsItemDropSize"
                   placeholder="大小"
                   :step="0.01"
                   :min="0"
                   :max="1"
-                  size="small"
                   class="w-24"
-                  @update:value="action.actionConfig.vtsItemDropSize = $event"
+                  @update:model-value="action.actionConfig.vtsItemDropSize = $event"
                 />
               </div>
             </div>
@@ -197,26 +195,24 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-muted-foreground">值:</span>
-                <NInputNumber
-                  :value="action.actionConfig.vtsParamValue"
+                <NumberField
+                  :model-value="action.actionConfig.vtsParamValue"
                   placeholder="值"
                   :step="0.01"
-                  size="small"
                   class="w-24"
-                  @update:value="action.actionConfig.vtsParamValue = $event"
+                  @update:model-value="action.actionConfig.vtsParamValue = $event"
                 />
               </div>
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-muted-foreground">W:</span>
-                <NInputNumber
-                  :value="action.actionConfig.vtsParamWeight"
+                <NumberField
+                  :model-value="action.actionConfig.vtsParamWeight"
                   placeholder="权重"
                   :step="0.1"
                   :min="0"
                   :max="1"
-                  size="small"
                   class="w-24"
-                  @update:value="action.actionConfig.vtsParamWeight = $event"
+                  @update:model-value="action.actionConfig.vtsParamWeight = $event"
                 />
               </div>
             </div>

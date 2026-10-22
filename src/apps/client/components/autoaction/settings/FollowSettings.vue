@@ -3,7 +3,7 @@ import { Info16Regular } from '@vicons/fluent'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -47,13 +47,12 @@ defineProps({
           <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <NInputNumber
-        :value="action.actionConfig.maxUsersPerMsg"
+      <NumberField
+        :model-value="action.actionConfig.maxUsersPerMsg"
         :min="1"
         :max="50"
-        size="small"
         class="w-32"
-        @update:value="action.actionConfig.maxUsersPerMsg = $event || 1"
+        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
       />
     </div>
   </div>

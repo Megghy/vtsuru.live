@@ -381,12 +381,3 @@ watch(
   </Card>
 </template>
 
-<style scoped>
-.preview-pane-content {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
-</style>

@@ -4,7 +4,7 @@ import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
@@ -121,15 +121,14 @@ function addSlot() {
               "
             />
           </div>
-          <NInputNumber
-            :value="slot.value"
+          <NumberField
+            :model-value="slot.value"
             :min="slot.min"
             :max="slot.max"
             :step="slot.step"
             :disabled="!vts.connected"
-            size="small"
             class="w-28"
-            @update:value="
+            @update:model-value="
               (val) => {
                 slot.value = (val ?? 0) as number
                 updateSlot({ ...slot })
@@ -160,48 +159,44 @@ function addSlot() {
             />
             <div class="flex items-center gap-1">
               <span class="text-muted-foreground">权重:</span>
-              <NInputNumber
+              <NumberField
                 v-model="slot.weight"
                 :min="0"
                 :step="0.1"
                 placeholder="权重"
-                size="small"
                 class="w-20"
-                @update:value="updateSlot({ ...slot })"
+                @update:model-value="updateSlot({ ...slot })"
               />
             </div>
             <div class="flex items-center gap-1">
               <span class="text-muted-foreground">最小:</span>
-              <NInputNumber
+              <NumberField
                 v-model="slot.min"
                 :step="0.1"
                 placeholder="最小值"
-                size="small"
                 class="w-20"
-                @update:value="updateSlot({ ...slot })"
+                @update:model-value="updateSlot({ ...slot })"
               />
             </div>
             <div class="flex items-center gap-1">
               <span class="text-muted-foreground">最大:</span>
-              <NInputNumber
+              <NumberField
                 v-model="slot.max"
                 :step="0.1"
                 placeholder="最大值"
-                size="small"
                 class="w-20"
-                @update:value="updateSlot({ ...slot })"
+                @update:model-value="updateSlot({ ...slot })"
               />
             </div>
             <div class="flex items-center gap-1">
               <span class="text-muted-foreground">步长:</span>
-              <NInputNumber
+              <NumberField
                 v-model="slot.step"
                 :min="0.0001"
                 :step="0.01"
                 placeholder="步长"
-                size="small"
                 class="w-20"
-                @update:value="updateSlot({ ...slot })"
+                @update:model-value="updateSlot({ ...slot })"
               />
             </div>
           </div>

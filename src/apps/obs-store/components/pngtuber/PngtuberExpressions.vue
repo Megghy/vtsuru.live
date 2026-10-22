@@ -6,7 +6,7 @@ import type { ImageSlot, PngtuberExpression, PngtuberState } from '@/shared/pngt
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
@@ -270,14 +270,14 @@ function recordKey(event: KeyboardEvent) {
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground font-medium">持续时长 (ms)</label>
-        <NInputNumber
-          :value="expression.durationMs"
+        <NumberField
+          :model-value="expression.durationMs"
           :disabled="disabled"
           :min="100"
           :max="600000"
           :step="100"
           class="w-full"
-          @update:value="(value) => value !== null && patch({ durationMs: value })"
+          @update:model-value="(value) => value !== null && patch({ durationMs: value })"
         />
       </div>
 

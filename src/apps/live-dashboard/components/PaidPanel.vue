@@ -3,7 +3,7 @@ import { ArrowSort16Regular, CheckmarkCircle16Regular, Clock16Regular, Filter16R
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Switch } from '@/shared/ui/switch'
 
@@ -67,15 +67,14 @@ function markAllRead() {
           class="w-[220px] p-3 text-xs"
           align="end"
         >
-          <div class="gift-filter">
+          <div class="grid gap-2 w-[200px] text-xs">
             <label class="text-muted-foreground">最低金额（元），大航海不受影响</label>
-            <NInputNumber
+            <NumberField
               v-model="dashboard.settings.giftMinPrice"
-              size="small"
               :min="0"
               :step="1"
             />
-            <label class="gift-filter__row">
+            <label class="flex-between items-center">
               显示免费礼物
               <Switch v-model="dashboard.settings.showFreeGift" />
             </label>
@@ -99,18 +98,3 @@ function markAllRead() {
     </EventList>
   </PanelShell>
 </template>
-
-<style scoped>
-.gift-filter {
-  display: grid;
-  gap: 8px;
-  width: 200px;
-  font-size: 12px;
-}
-
-.gift-filter__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-</style>

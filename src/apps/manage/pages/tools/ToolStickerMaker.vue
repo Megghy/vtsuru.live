@@ -13,7 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { useMessage } from '@/shared/utils'
@@ -159,12 +159,11 @@ async function onRemoveBgConfirm(blob: Blob) {
             <span class="font-medium text-foreground text-sm panel-title"> 设置 </span>
             <div class="prop-row">
               <span>尺寸</span>
-              <NInputNumber
+              <NumberField
                 v-model="opts.size"
                 :min="64"
                 :max="512"
                 :step="32"
-                size="small"
                 class="flex-1"
               />
             </div>
@@ -287,11 +286,10 @@ async function onRemoveBgConfirm(blob: Blob) {
               <Input v-model="(selectedLayer as TextLayer).text" />
               <div class="prop-row">
                 <span>字号</span>
-                <NInputNumber
+                <NumberField
                   v-model="(selectedLayer as TextLayer).fontSize"
                   :min="8"
                   :max="120"
-                  size="small"
                   class="w-[70px]"
                 />
               </div>

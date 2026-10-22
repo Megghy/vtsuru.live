@@ -9,7 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -94,13 +94,13 @@ function onChange() {
 
           <div class="flex items-center border rounded-md overflow-hidden text-xs w-[250px]">
             <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">最大队列长度</span>
-            <NInputNumber
-              v-model:value="settings.queueMaxSize"
+            <NumberField
+              v-model="settings.queueMaxSize"
               :min="0"
               :max="1000"
               placeholder="0为不限制"
               class="border-0 shadow-none flex-1"
-              @update:value="onChange"
+              @update:model-value="onChange"
             />
           </div>
 
@@ -141,11 +141,11 @@ function onChange() {
           >
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[270px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">最低粉丝牌等级</span>
-              <NInputNumber
-                v-model:value="settings.fanMedalMinLevel"
+              <NumberField
+                v-model="settings.fanMedalMinLevel"
                 :min="0"
                 class="border-0 shadow-none flex-1"
-                @update:value="onChange"
+                @update:model-value="onChange"
               />
             </div>
             <label class="flex items-center gap-2 cursor-pointer text-xs">
@@ -212,12 +212,12 @@ function onChange() {
           >
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[250px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">最低礼物价值 (元)</span>
-              <NInputNumber
-                v-model:value="settings.minGiftPrice"
+              <NumberField
+                v-model="settings.minGiftPrice"
                 :min="0.1"
                 :step="0.1"
                 class="border-0 shadow-none flex-1"
-                @update:value="onChange"
+                @update:model-value="onChange"
               />
             </div>
 
@@ -360,38 +360,38 @@ function onChange() {
           >
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">普通用户 CD (秒)</span>
-              <NInputNumber
-                v-model:value="settings.cooldownSecond"
+              <NumberField
+                v-model="settings.cooldownSecond"
                 :min="0"
                 class="border-0 shadow-none flex-1"
-                @update:value="onChange"
+                @update:model-value="onChange"
               />
             </div>
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">舰长 CD (秒)</span>
-              <NInputNumber
-                v-model:value="settings.jianzhangCooldownSecond"
+              <NumberField
+                v-model="settings.jianzhangCooldownSecond"
                 :min="0"
                 class="border-0 shadow-none flex-1"
-                @update:value="onChange"
+                @update:model-value="onChange"
               />
             </div>
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">提督 CD (秒)</span>
-              <NInputNumber
-                v-model:value="settings.tiduCooldownSecond"
+              <NumberField
+                v-model="settings.tiduCooldownSecond"
                 :min="0"
                 class="border-0 shadow-none flex-1"
-                @update:value="onChange"
+                @update:model-value="onChange"
               />
             </div>
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">总督 CD (秒)</span>
-              <NInputNumber
-                v-model:value="settings.zongduCooldownSecond"
+              <NumberField
+                v-model="settings.zongduCooldownSecond"
                 :min="0"
                 class="border-0 shadow-none flex-1"
-                @update:value="onChange"
+                @update:model-value="onChange"
               />
             </div>
           </div>

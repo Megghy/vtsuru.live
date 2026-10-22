@@ -11,7 +11,7 @@ import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { copyToClipboard } from '@/shared/utils'
 
@@ -94,16 +94,16 @@ const obsUrl = computed(() =>
       </DialogHeader>
 
       <div class="overflow-y-auto max-h-[calc(90vh-110px)] pr-1 pt-4">
-        <div class="obs-config-modal__body">
+        <div class="grid grid-cols-[minmax(320px,1fr)_280px] gap-6 items-start max-[720px]:grid-cols-1">
           <!-- 左侧：操作、链接与配置 -->
-          <div class="obs-config-modal__main">
+          <div class="flex flex-col gap-4 min-w-0">
             <Alert class="text-xs py-2 bg-muted/50 border-muted">
               <AlertDescription>{{ description }}</AlertDescription>
             </Alert>
 
             <!-- 核心区域：OBS 浏览器源链接与复制 -->
-            <div class="obs-config-modal__section">
-              <div class="obs-config-modal__section-title">OBS 浏览器源链接</div>
+            <div class="flex flex-col gap-2">
+              <div class="text-[13px] font-medium text-foreground">OBS 浏览器源链接</div>
               <div class="flex items-center gap-2">
                 <Input
                   :model-value="obsUrl"
@@ -125,9 +125,9 @@ const obsUrl = computed(() =>
             <!-- 样式与速度配置 -->
             <div
               v-if="showStyleOptions"
-              class="obs-config-modal__section"
+              class="flex flex-col gap-2"
             >
-              <div class="obs-config-modal__section-title">样式与速度</div>
+              <div class="text-[13px] font-medium text-foreground">样式与速度</div>
               <div class="flex flex-col gap-2.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <Button
@@ -155,9 +155,8 @@ const obsUrl = computed(() =>
                 <div class="flex items-center gap-2">
                   <div class="flex items-center border rounded-md overflow-hidden text-xs w-[200px]">
                     <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">滚动速度</span>
-                    <NInputNumber
-                      v-model:value="speedModel"
-                      size="small"
+                    <NumberField
+                      v-model="speedModel"
                       :min="0.5"
                       :max="5"
                       :step="0.1"
@@ -201,9 +200,9 @@ const obsUrl = computed(() =>
           </div>
 
           <!-- 右侧：实时预览 -->
-          <div class="obs-config-modal__side">
-            <div class="obs-config-modal__preview-label">实时预览 (280 × 500)</div>
-            <div class="obs-config-modal__preview">
+          <div class="flex flex-col items-center gap-2">
+            <div class="text-xs text-muted-foreground">实时预览 (280 × 500)</div>
+            <div class="h-[500px] w-[280px] relative border border-dashed border-border rounded-lg overflow-hidden bg-muted">
               <slot
                 v-if="effectiveUserId"
                 name="preview"
@@ -213,7 +212,7 @@ const obsUrl = computed(() =>
               <Empty
                 v-else
                 description="无法预览：未获取到用户信息"
-                class="obs-config-modal__empty"
+                class="pt-[140px]"
               />
             </div>
           </div>
@@ -223,62 +222,3 @@ const obsUrl = computed(() =>
   </Dialog>
 </template>
 
-<style scoped>
-.obs-config-modal__body {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) 280px;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 720px) {
-  .obs-config-modal__body {
-    grid-template-columns: 1fr;
-  }
-}
-
-.obs-config-modal__main {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-
-.obs-config-modal__section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.obs-config-modal__section-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-
-.obs-config-modal__side {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.obs-config-modal__preview-label {
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.obs-config-modal__preview {
-  height: 500px;
-  width: 280px;
-  position: relative;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--muted);
-}
-
-.obs-config-modal__empty {
-  padding-top: 140px;
-}
-</style>

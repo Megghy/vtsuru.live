@@ -2,7 +2,7 @@
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -44,8 +44,8 @@ const levelOptions = [
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">尺寸</label>
-        <NInputNumber
-          v-model:value="blockProps.size"
+        <NumberField
+          v-model="blockProps.size"
           :min="128"
           :max="512"
           :step="16"
@@ -87,8 +87,8 @@ const levelOptions = [
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">边距</label>
-        <NInputNumber
-          v-model:value="blockProps.margin"
+        <NumberField
+          v-model="blockProps.margin"
           :min="0"
           :max="32"
           :step="1"

@@ -5,7 +5,7 @@ import { watch } from 'vue'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const autoActionStore = useAutoAction()
@@ -50,13 +50,12 @@ watch(
             <TooltipContent class="text-xs"> 每隔多少秒触发一次全局定时任务 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <NInputNumber
-          :value="autoActionStore.globalIntervalSeconds"
+        <NumberField
+          :model-value="autoActionStore.globalIntervalSeconds"
           :min="10"
           :max="7200"
-          size="small"
           class="w-32"
-          @update:value="autoActionStore.globalIntervalSeconds = $event || 300"
+          @update:model-value="autoActionStore.globalIntervalSeconds = $event || 300"
         />
       </div>
 

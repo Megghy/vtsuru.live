@@ -2,7 +2,7 @@
 import type { DanmujiConfig } from '@/shared/danmujiConfig'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -45,7 +45,7 @@ defineEmits<{ reset: [] }>()
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         <div class="space-y-1">
           <label class="text-xs text-muted-foreground">最大消息积压数</label>
-          <NInputNumber
+          <NumberField
             v-model="config.maxNumber"
             :min="10"
             :max="300"
@@ -53,7 +53,7 @@ defineEmits<{ reset: [] }>()
         </div>
         <div class="space-y-1">
           <label class="text-xs text-muted-foreground">最低礼物价值 (元)</label>
-          <NInputNumber
+          <NumberField
             v-model="config.minGiftPrice"
             :min="0"
             :step="0.1"

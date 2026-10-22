@@ -11,7 +11,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
@@ -115,7 +115,7 @@ async function download() {
               @click="applyStyle(s)"
             >
               <span
-                class="color-dot"
+                class="inline-block size-2.5 rounded-full"
                 :style="{ background: s.fg, boxShadow: `0 0 0 2px ${s.bg}` }"
               />
               {{ s.label }}
@@ -126,7 +126,7 @@ async function download() {
         <div class="flex flex-wrap items-center gap-4">
           <div class="flex flex-col gap-2">
             <span class="text-xs text-muted-foreground"> 尺寸 </span>
-            <NInputNumber
+            <NumberField
               v-model="size"
               :min="128"
               :max="1024"
@@ -134,14 +134,14 @@ async function download() {
               class="w-[100px]"
             />
           </div>
-          <div class="flex flex-col gap-2 color-picker-wrap">
+          <div class="flex flex-col gap-2 w-[200px]">
             <span class="text-xs text-muted-foreground"> 前景色 </span>
             <ColorPicker
               v-model="foreground"
               :show-alpha="false"
             />
           </div>
-          <div class="flex flex-col gap-2 color-picker-wrap">
+          <div class="flex flex-col gap-2 w-[200px]">
             <span class="text-xs text-muted-foreground"> 背景色 </span>
             <ColorPicker
               v-model="background"
@@ -152,7 +152,7 @@ async function download() {
 
         <div
           ref="qrContainer"
-          class="qr-preview tool-checkerboard"
+          class="flex-center p-6 border border-border rounded-lg tool-checkerboard"
         >
           <QrcodeVue
             v-if="text"
@@ -183,23 +183,3 @@ async function download() {
     </CardContent>
   </Card>
 </template>
-
-<style scoped>
-.qr-preview {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-}
-.color-picker-wrap {
-  width: 200px;
-}
-.color-dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-}
-</style>

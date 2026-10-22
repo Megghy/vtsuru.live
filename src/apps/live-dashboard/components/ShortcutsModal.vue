@@ -43,58 +43,25 @@ const GROUPS = [
       <DialogHeader>
         <DialogTitle>快捷键</DialogTitle>
       </DialogHeader>
-      <div class="shortcuts">
+      <div class="grid gap-1.5 text-[13px]">
         <template
           v-for="group in GROUPS"
           :key="group.title"
         >
-          <div class="shortcuts__title">
+          <div class="mt-1.5 font-semibold">
             {{ group.title }}
           </div>
           <div
             v-for="[key, desc] in group.items"
             :key="key"
-            class="shortcuts__row"
+            class="flex-between"
           >
-            <kbd>{{ key }}</kbd>
+            <kbd class="px-1.5 border border-border rounded bg-muted font-inherit text-xs">{{ key }}</kbd>
             <span>{{ desc }}</span>
           </div>
         </template>
-        <div class="shortcuts__hint">输入框聚焦时快捷键不生效</div>
+        <div class="mt-1.5 text-xs text-muted-foreground">输入框聚焦时快捷键不生效</div>
       </div>
     </DialogContent>
   </Dialog>
 </template>
-
-<style scoped>
-.shortcuts {
-  display: grid;
-  gap: 6px;
-  font-size: 13px;
-}
-
-.shortcuts__title {
-  margin-top: 6px;
-  font-weight: 600;
-}
-
-.shortcuts__row {
-  display: flex;
-  justify-content: space-between;
-}
-
-kbd {
-  padding: 0 6px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--muted);
-  font-family: inherit;
-  font-size: 12px;
-}
-
-.shortcuts__hint {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-</style>

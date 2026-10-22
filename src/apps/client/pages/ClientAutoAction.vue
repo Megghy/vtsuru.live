@@ -39,7 +39,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -488,13 +488,12 @@ const triggerTypeOptions = [
                         两条弹幕之间的最小发送间隔，过短可能导致被B站吞弹幕。建议 1000ms 以上。
                       </span>
                     </div>
-                    <NInputNumber
-                      :value="biliFunc.danmakuInterval"
+                    <NumberField
+                      :model-value="biliFunc.danmakuInterval"
                       :min="100"
                       :step="100"
-                      size="small"
                       class="w-32"
-                      @update:value="biliFunc.setDanmakuInterval($event || 1000)"
+                      @update:model-value="biliFunc.setDanmakuInterval($event || 1000)"
                     />
                   </div>
 
@@ -505,13 +504,12 @@ const triggerTypeOptions = [
                         私信发送频率限制，建议保持默认 1000ms 或更高以避免触发 B 站频控。
                       </span>
                     </div>
-                    <NInputNumber
-                      :value="biliFunc.pmInterval"
+                    <NumberField
+                      :model-value="biliFunc.pmInterval"
                       :min="1000"
                       :step="500"
-                      size="small"
                       class="w-32"
-                      @update:value="biliFunc.setPmInterval($event || 1000)"
+                      @update:model-value="biliFunc.setPmInterval($event || 1000)"
                     />
                   </div>
                 </CardContent>

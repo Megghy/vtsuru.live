@@ -63,23 +63,23 @@ function describe(e: DashboardEvent) {
 </script>
 
 <template>
-  <div class="history">
+  <div class="grid gap-1.5 text-xs">
     <div
       v-if="history"
-      class="history__summary"
+      class="flex-between text-muted-foreground"
     >
       <span>本地记录 {{ history.length }} 条</span>
       <span v-if="summary.spent > 0">累计消费 {{ formatPrice(summary.spent) }}</span>
     </div>
     <div
       v-if="summary.names.length > 1"
-      class="history__meta"
+      class="text-muted-foreground wrap-anywhere"
     >
       曾用名：{{ summary.names.join('、') }}
     </div>
     <div
       v-if="summary.medals.length"
-      class="history__meta"
+      class="text-muted-foreground wrap-anywhere"
     >
       勋章：
       <span
@@ -115,13 +115,13 @@ function describe(e: DashboardEvent) {
         </TabsTrigger>
       </TabsList>
     </Tabs>
-    <div class="history__list">
+    <div class="max-h-[240px] overflow-y-auto grid gap-0.5 content-start">
       <div
         v-for="e in list"
         :key="e.key"
-        class="history__row"
+        class="flex gap-1.5 items-baseline"
       >
-        <span class="history__time">{{
+        <span class="text-muted-foreground shrink-0 tabular-nums">{{
           new Date(e.time).toLocaleString('zh-CN', {
             hour12: false,
             month: '2-digit',
@@ -130,17 +130,17 @@ function describe(e: DashboardEvent) {
             minute: '2-digit',
           })
         }}</span>
-        <span class="history__type">{{ EVENT_TYPE_LABELS[e.type] }}</span>
-        <span class="history__text">{{ describe(e) }}</span>
+        <span class="text-muted-foreground shrink-0 tabular-nums">{{ EVENT_TYPE_LABELS[e.type] }}</span>
+        <span class="flex-1 min-w-0 wrap-anywhere">{{ describe(e) }}</span>
         <span
           v-if="PAID_TYPES.has(e.type) && e.price > 0"
-          class="history__price"
+          class="shrink-0 font-semibold"
           >{{ formatPrice(e.price) }}</span
         >
       </div>
       <div
         v-if="history && !list.length"
-        class="history__empty"
+        class="text-muted-foreground text-center py-2"
       >
         没有记录
       </div>
@@ -149,62 +149,7 @@ function describe(e: DashboardEvent) {
 </template>
 
 <style scoped>
-.history {
-  display: grid;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.history__summary {
-  display: flex;
-  justify-content: space-between;
-  color: var(--muted-foreground);
-}
-
-.history__meta {
-  color: var(--muted-foreground);
-  overflow-wrap: anywhere;
-}
-
 .history__medal + .history__medal::before {
   content: '、';
-}
-
-.history__list {
-  max-height: 240px;
-  overflow-y: auto;
-  display: grid;
-  gap: 2px;
-  align-content: start;
-}
-
-.history__row {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-}
-
-.history__time,
-.history__type {
-  color: var(--muted-foreground);
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.history__text {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.history__price {
-  flex-shrink: 0;
-  font-weight: 600;
-}
-
-.history__empty {
-  color: var(--muted-foreground);
-  text-align: center;
-  padding: 8px 0;
 }
 </style>

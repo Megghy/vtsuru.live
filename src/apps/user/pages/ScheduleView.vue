@@ -49,7 +49,7 @@ const componentType = computed(
     props.userInfo?.extra?.templateTypes.schedule?.toLowerCase() ??
     '',
 )
-const selectedTemplate = computed(() => ScheduleTemplateMap[componentType.value] ?? ScheduleTemplateMap[''])
+const selectedTemplate = computed(() => ScheduleTemplateMap[componentType.value] ?? ScheduleTemplateMap.default ?? ScheduleTemplateMap[''])
 const isLoading = computed(() => loadingData.value || loadingConfig.value)
 
 async function loadSchedule() {

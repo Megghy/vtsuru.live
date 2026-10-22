@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
@@ -72,8 +72,8 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">展示周数 1~8</label>
-        <NInputNumber
-          v-model:value="blockProps.weeksCount"
+        <NumberField
+          v-model="blockProps.weeksCount"
           :min="1"
           :max="8"
           class="w-full"
@@ -185,8 +185,8 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">网格列数</label>
-        <NInputNumber
-          v-model:value="blockProps.columns"
+        <NumberField
+          v-model="blockProps.columns"
           :min="1"
           :max="6"
           class="w-full"
@@ -194,8 +194,8 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">最多数量</label>
-        <NInputNumber
-          v-model:value="blockProps.maxItems"
+        <NumberField
+          v-model="blockProps.maxItems"
           :min="1"
           :max="50"
           class="w-full"
@@ -274,8 +274,8 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">高度 px</label>
-        <NInputNumber
-          v-model:value="blockProps.height"
+        <NumberField
+          v-model="blockProps.height"
           :min="propertyNumberRange('height')?.min"
           :max="propertyNumberRange('height')?.max"
           class="w-full"

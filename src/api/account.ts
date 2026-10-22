@@ -25,7 +25,7 @@ import type { AccountControllerTempResponseAloginModel } from '@/api/generated/m
 import type { PrepareAccountBiliAuthResponse } from '@/api/generated/model/prepareAccountBiliAuthResponse'
 import type { ResponseAccountInfo } from '@/api/generated/model/responseAccountInfo'
 import { persistedRemoveItem } from '@/shared/storage/persist'
-import { createNaiveUIApi } from '@/shared/utils'
+import { message } from '@/shared/utils'
 
 import type { FunctionTypes } from './api-models'
 import { cookie } from './auth'
@@ -52,8 +52,6 @@ export const isLoadingAccount = ref(true)
 export const isLoggedIn = computed<boolean>(() => {
   return ACCOUNT.value.id > 0
 })
-
-const { message } = createNaiveUIApi(['message'])
 
 export async function GetSelfAccount(token?: string) {
   if (cookie.value?.cookie || token) {

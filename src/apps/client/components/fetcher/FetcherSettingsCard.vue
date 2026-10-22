@@ -25,17 +25,22 @@ async function onSwitchDanmakuClientMode(type: 'openlive' | 'direct', force: boo
     showToast.info('当前已是该模式')
     return
   }
-  const noticeRef = window.$notification?.info?.({
-    title: 'WebEventFetcher',
-    content: '正在关闭弹幕服务器...',
-    closable: false,
+  const noticeId = 'webfetcher-switch'
+  showToast.loading('WebEventFetcher', {
+    id: noticeId,
+    description: '正在关闭弹幕服务器...',
+    duration: Infinity,
   })
   settings.settings.useDanmakuClientType = type
   settings.save()
   await webfetcher.Stop()
-  if (noticeRef) noticeRef.content = '正在连接弹幕服务器...'
+  showToast.loading('WebEventFetcher', {
+    id: noticeId,
+    description: '正在连接弹幕服务器...',
+    duration: Infinity,
+  })
   const result = await callStartDanmakuClient()
-  noticeRef?.destroy?.()
+  showToast.dismiss(noticeId)
   if (result.success) {
     window.$notification?.success?.({
       title: 'WebEventFetcher',

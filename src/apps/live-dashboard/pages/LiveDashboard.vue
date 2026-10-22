@@ -99,16 +99,16 @@ onUnmounted(() => void dashboard.stop())
 
 <template>
   <div
-    class="live-dashboard"
+    class="flex flex-col h-dvh overflow-hidden bg-background text-foreground"
     :style="{ fontSize: `${dashboard.settings.fontSize}px` }"
   >
     <Spin
       v-if="isLoadingAccount"
-      class="live-dashboard__center"
+      class="m-auto"
     />
     <div
       v-else-if="!isLoggedIn"
-      class="live-dashboard__center flex flex-col items-center justify-center p-6 text-center"
+      class="m-auto flex flex-col items-center justify-center p-6 text-center"
     >
       <h2 class="text-xl font-semibold mb-2">请先登录</h2>
       <p class="text-sm text-muted-foreground mb-4">中控台需要登录并绑定直播间后使用</p>
@@ -122,7 +122,7 @@ onUnmounted(() => void dashboard.stop())
     <template v-else>
       <DashboardToolbar />
       <Splitpanes
-        class="live-dashboard__panes dash-split"
+        class="flex-1 min-h-0 dash-split"
         :horizontal="layout.vertical"
         :maximize-panes="false"
         @resized="onResized"
@@ -157,34 +157,6 @@ onUnmounted(() => void dashboard.stop())
     </template>
   </div>
 </template>
-
-<style scoped>
-.live-dashboard {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  overflow: hidden;
-  background: var(--background);
-  color: var(--foreground);
-}
-
-.live-dashboard__center {
-  margin: auto;
-}
-
-.live-dashboard__panes {
-  flex: 1;
-  min-height: 0;
-}
-
-.live-dashboard :deep(.toolbar) {
-  font-size: 14px;
-}
-
-.live-dashboard :deep(.panel__head) {
-  font-size: 12px;
-}
-</style>
 
 <style>
 /* splitpanes 分隔条：细线 + 悬停高亮，替代默认主题 */

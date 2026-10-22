@@ -15,7 +15,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Separator } from '@/shared/ui/separator'
@@ -392,11 +392,10 @@ watch(
               <template v-if="setting.givePointsForCheckIn">
                 <div class="flex items-center gap-2 max-w-xs">
                   <span class="text-muted-foreground shrink-0 w-20">基础积分:</span>
-                  <NInputNumber
-                    v-model:value="setting.baseCheckInPoints"
+                  <NumberField
+                    v-model="setting.baseCheckInPoints"
                     :disabled="!canEdit"
                     :min="0"
-                    size="small"
                     class="w-24"
                     @blur="updateSettings"
                   />
@@ -425,22 +424,20 @@ watch(
                   <div class="flex items-center gap-4 flex-wrap">
                     <div class="flex items-center gap-2">
                       <span class="text-muted-foreground text-[11px]">每日递增:</span>
-                      <NInputNumber
-                        v-model:value="setting.bonusPointsPerDay"
+                      <NumberField
+                        v-model="setting.bonusPointsPerDay"
                         :disabled="!canEdit"
                         :min="0"
-                        size="small"
                         class="w-20"
                         @blur="updateSettings"
                       />
                     </div>
                     <div class="flex items-center gap-2">
                       <span class="text-muted-foreground text-[11px]">最大奖励:</span>
-                      <NInputNumber
-                        v-model:value="setting.maxBonusPoints"
+                      <NumberField
+                        v-model="setting.maxBonusPoints"
                         :disabled="!canEdit"
                         :min="0"
-                        size="small"
                         class="w-20"
                         @blur="updateSettings"
                       />
@@ -505,31 +502,28 @@ watch(
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div class="flex items-center gap-2 p-2 rounded border border-border/80">
                 <span class="text-muted-foreground w-12 text-xs">舰长:</span>
-                <NInputNumber
-                  v-model:value="setting.jianzhangPoint"
+                <NumberField
+                  v-model="setting.jianzhangPoint"
                   :disabled="!canEdit"
                   :min="0"
-                  size="small"
                   class="flex-1"
                 />
               </div>
               <div class="flex items-center gap-2 p-2 rounded border border-border/80">
                 <span class="text-muted-foreground w-12 text-xs">提督:</span>
-                <NInputNumber
-                  v-model:value="setting.tiduPoint"
+                <NumberField
+                  v-model="setting.tiduPoint"
                   :disabled="!canEdit"
                   :min="0"
-                  size="small"
                   class="flex-1"
                 />
               </div>
               <div class="flex items-center gap-2 p-2 rounded border border-border/80">
                 <span class="text-muted-foreground w-12 text-xs">总督:</span>
-                <NInputNumber
-                  v-model:value="setting.zongduPoint"
+                <NumberField
+                  v-model="setting.zongduPoint"
                   :disabled="!canEdit"
                   :min="0"
-                  size="small"
                   class="flex-1"
                 />
               </div>
@@ -554,13 +548,12 @@ watch(
           <CardContent class="p-3.5 pt-0 space-y-2 text-xs">
             <div class="flex items-center gap-2 max-w-sm">
               <span class="text-muted-foreground w-24 shrink-0">SC 转换倍率:</span>
-              <NInputNumber
-                v-model:value="setting.scPointPercent"
+              <NumberField
+                v-model="setting.scPointPercent"
                 :disabled="!canEdit"
                 :min="0"
                 :max="1"
                 :step="0.01"
-                size="small"
                 class="w-24"
               />
               <Button
@@ -623,11 +616,10 @@ watch(
                 class="pl-6 flex items-center gap-2"
               >
                 <span class="text-muted-foreground text-[11px]">奖励积分:</span>
-                <NInputNumber
-                  v-model:value="setting.dailyFirstDanmakuPoints"
+                <NumberField
+                  v-model="setting.dailyFirstDanmakuPoints"
                   :disabled="!canEdit"
                   :min="0"
-                  size="small"
                   class="w-24"
                   @blur="updateSettings"
                 />
@@ -685,23 +677,21 @@ watch(
                   <span class="text-muted-foreground text-[11px]">
                     {{ setting.useDailyFirstGiftPercent ? '价值比例:' : '奖励积分:' }}
                   </span>
-                  <NInputNumber
+                  <NumberField
                     v-if="!setting.useDailyFirstGiftPercent"
-                    v-model:value="setting.dailyFirstGiftPoints"
+                    v-model="setting.dailyFirstGiftPoints"
                     :disabled="!canEdit"
                     :min="0"
-                    size="small"
                     class="w-24"
                     @blur="updateSettings"
                   />
-                  <NInputNumber
+                  <NumberField
                     v-else
-                    v-model:value="setting.dailyFirstGiftPercent"
+                    v-model="setting.dailyFirstGiftPercent"
                     :disabled="!canEdit"
                     :min="0"
                     :max="1"
                     :step="0.01"
-                    size="small"
                     class="w-24"
                     @blur="updateSettings"
                   />
@@ -754,13 +744,12 @@ watch(
               class="flex items-center gap-2 max-w-sm pt-1"
             >
               <span class="text-muted-foreground w-24 shrink-0">礼物转换倍率:</span>
-              <NInputNumber
-                v-model:value="setting.giftPointPercent"
+              <NumberField
+                v-model="setting.giftPointPercent"
                 :disabled="!canEdit"
                 :min="0"
                 :max="1"
                 :step="0.01"
-                size="small"
                 class="w-24"
               />
               <Button
@@ -818,13 +807,12 @@ watch(
                   </div>
 
                   <div class="flex items-center gap-1.5 shrink-0">
-                    <NInputNumber
-                      :value="setting.giftPercentMap[item[0]]"
+                    <NumberField
+                      :model-value="setting.giftPercentMap[item[0]]"
                       :disabled="!canEdit"
                       :min="0"
-                      size="small"
                       class="w-20"
-                      @update:value="(v) => (setting.giftPercentMap[item[0]] = v ? v : 0)"
+                      @update:model-value="(v) => (setting.giftPercentMap[item[0]] = v ? v : 0)"
                       @blur="updateSettings"
                     />
                     <Popconfirm
@@ -887,11 +875,10 @@ watch(
 
             <div class="space-y-1">
               <label class="font-medium text-foreground">给予积分 *</label>
-              <NInputNumber
-                v-model:value="addGiftModel.point"
+              <NumberField
+                v-model="addGiftModel.point"
                 placeholder="请输入积分数量"
                 :min="1"
-                size="small"
                 class="w-full"
                 @keydown="handleKeyDown"
               />

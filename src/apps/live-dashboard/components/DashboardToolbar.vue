@@ -118,8 +118,8 @@ const SEARCH_HELP = [
 </script>
 
 <template>
-  <header class="toolbar">
-    <div class="toolbar__search">
+  <header class="relative flex items-center gap-3 h-11 px-2.5 border-b border-border bg-card shrink-0 min-w-0 text-sm">
+    <div class="flex items-center gap-1.5 shrink-0">
       <div class="relative w-[180px]">
         <TooltipProvider>
           <Tooltip>
@@ -262,7 +262,7 @@ const SEARCH_HELP = [
     <VueDraggable
       v-model="activeToolbarKeys"
       :animation="150"
-      class="toolbar__stats"
+      class="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto no-scrollbar"
       ghost-class="stat-ghost"
     >
       <template
@@ -274,12 +274,12 @@ const SEARCH_HELP = [
           <Tooltip>
             <TooltipTrigger as-child>
               <button
-                class="stat stat--button"
+                class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 select-none appearance-none border-0 font-inherit text-inherit cursor-pointer text-left hover:bg-popover"
                 type="button"
                 @click="stats.reset()"
               >
-                <span class="stat__label">统计时长</span>
-                <span class="stat__value">{{ formatDuration(stats.duration) }}</span>
+                <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">统计时长</span>
+                <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatDuration(stats.duration) }}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent class="text-xs">点击重置统计（仅影响顶部数据）</TooltipContent>
@@ -289,24 +289,24 @@ const SEARCH_HELP = [
         <!-- 弹幕数 -->
         <div
           v-else-if="key === 'danmaku'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
-          <span class="stat__label">弹幕</span>
-          <span class="stat__value">{{ stats.counters.danmaku }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">弹幕</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.counters.danmaku }}</span>
         </div>
 
         <!-- 在线观众 -->
         <div
           v-else-if="key === 'onlineRank'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
           :title="
             officialStats.onlineRank !== null
               ? '在线高能观众数（每 15 秒更新或实时推送）'
               : '未获取时显示近 20 分钟互动去重用户数'
           "
         >
-          <span class="stat__label">在线观众</span>
-          <span class="stat__value">{{
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">在线观众</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
             officialStats.onlineRankText ||
             (officialStats.onlineRank !== null ? officialStats.onlineRank : stats.onlineCount)
           }}</span>
@@ -315,15 +315,15 @@ const SEARCH_HELP = [
         <!-- 本场点赞 -->
         <div
           v-else-if="key === 'totalLikes'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
           :title="
             officialStats.totalLikes !== null
               ? `本场累计总点赞数：${officialStats.totalLikes}（会话接收点赞：${stats.counters.like}）`
               : '会话内收到的点赞数'
           "
         >
-          <span class="stat__label">本场点赞</span>
-          <span class="stat__value">{{
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">本场点赞</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
             officialStats.totalLikes !== null ? formatStatCount(officialStats.totalLikes) : stats.counters.like
           }}</span>
         </div>
@@ -331,11 +331,11 @@ const SEARCH_HELP = [
         <!-- 累计看过 -->
         <div
           v-else-if="key === 'watched'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
           title="累计观看人次"
         >
-          <span class="stat__label">累计看过</span>
-          <span class="stat__value">{{
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">累计看过</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
             officialStats.watchedText ||
             (officialStats.watchedCount !== null ? formatStatCount(officialStats.watchedCount) : '暂无')
           }}</span>
@@ -344,67 +344,67 @@ const SEARCH_HELP = [
         <!-- 人气值 -->
         <div
           v-else-if="key === 'popularity'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
           title="直播间热度值"
         >
-          <span class="stat__label">人气</span>
-          <span class="stat__value">{{ officialStats.popularity ?? dashboard.officialOnline ?? '暂无' }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">人气</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ officialStats.popularity ?? dashboard.officialOnline ?? '暂无' }}</span>
         </div>
 
         <!-- 近 20 分钟互动 -->
         <div
           v-else-if="key === 'activeUsers'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
           title="最近 20 分钟内收到互动事件的去重用户数"
         >
-          <span class="stat__label">近 20 分钟互动</span>
-          <span class="stat__value">{{ stats.onlineCount }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">近 20 分钟互动</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.onlineCount }}</span>
         </div>
 
         <!-- 总收益 -->
         <div
           v-else-if="key === 'totalRevenue'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
           title="本场礼物、SC 与大航海汇总"
         >
-          <span class="stat__label">总收益</span>
-          <span class="stat__value">{{ formatPrice(stats.totals.totalRevenue) }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">总收益</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(stats.totals.totalRevenue) }}</span>
         </div>
 
         <!-- 醒目留言 -->
         <div
           v-else-if="key === 'sc'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
-          <span class="stat__label">醒目留言</span>
-          <span class="stat__value">{{ formatPrice(stats.totals.sc) }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">醒目留言</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(stats.totals.sc) }}</span>
         </div>
 
         <!-- 礼物 -->
         <div
           v-else-if="key === 'gift'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
-          <span class="stat__label">礼物</span>
-          <span class="stat__value">{{ formatPrice(stats.totals.gift) }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">礼物</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(stats.totals.gift) }}</span>
         </div>
 
         <!-- 大航海 -->
         <div
           v-else-if="key === 'guard'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
-          <span class="stat__label">大航海</span>
-          <span class="stat__value">{{ stats.totals.guardCount }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">大航海</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.totals.guardCount }}</span>
         </div>
 
         <!-- 每分钟事件 -->
         <div
           v-else-if="key === 'perMinute'"
-          class="stat"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
-          <span class="stat__label">每分钟事件</span>
-          <span class="stat__value">{{ stats.perMinute }}</span>
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">每分钟事件</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.perMinute }}</span>
         </div>
 
         <!-- Top Payers -->
@@ -412,29 +412,30 @@ const SEARCH_HELP = [
           <div
             v-for="payer in stats.topPayers"
             :key="payer.userKey"
-            class="payer"
+            class="flex items-center gap-1.5 py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none"
             :title="payer.uname"
           >
             <img
               v-if="payer.uface"
+              class="size-[22px] rounded-full shrink-0"
               :src="avatarUrl(payer.uface, 48)"
               referrerpolicy="no-referrer"
             />
-            <div class="payer__text">
-              <span class="stat__label">{{ payer.uname }}</span>
-              <span class="stat__value">{{ formatPrice(payer.total) }}</span>
+            <div class="flex flex-col min-w-0">
+              <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap max-w-20 truncate">{{ payer.uname }}</span>
+              <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(payer.total) }}</span>
             </div>
           </div>
         </template>
       </template>
     </VueDraggable>
 
-    <div class="toolbar__actions">
+    <div class="flex items-center gap-1 shrink-0">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
             <span
-              class="status-dot"
+              class="size-2 rounded-full inline-block cursor-help"
               :style="{ background: statusColor }"
             />
           </TooltipTrigger>
@@ -503,138 +504,16 @@ const SEARCH_HELP = [
     </div>
     <div
       v-if="reconnecting"
-      class="toolbar__progress"
+      class="toolbar__progress absolute inset-x-0 bottom-0 h-0.5 bg-[var(--brand)]"
     />
   </header>
 </template>
 
 <style scoped>
-.toolbar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 44px;
-  padding: 0 10px;
-  border-bottom: 1px solid var(--border);
-  background: var(--card);
-  flex-shrink: 0;
-  min-width: 0;
-}
-
-.toolbar__search {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-
-.toolbar__stats {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-.toolbar__stats::-webkit-scrollbar {
-  display: none;
-}
-
 .stat-ghost {
   opacity: 0.35;
 }
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  padding: 2px 8px;
-  border-radius: var(--radius);
-  background: var(--muted);
-  flex-shrink: 0;
-  cursor: grab;
-  user-select: none;
-}
-.stat:active {
-  cursor: grabbing;
-}
-.stat--button {
-  border: none;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-.stat--button:hover {
-  background: var(--popover);
-}
-
-.stat__label {
-  font-size: 10px;
-  color: var(--muted-foreground);
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
-.stat__value {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--foreground);
-  font-feature-settings: 'tnum';
-  white-space: nowrap;
-}
-
-.payer {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border-radius: var(--radius);
-  background: var(--muted);
-  flex-shrink: 0;
-  cursor: grab;
-  user-select: none;
-}
-.payer img {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.payer__text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.payer .stat__label {
-  max-width: 80px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.toolbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-  cursor: help;
-}
-
 .toolbar__progress {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  height: 2px;
-  background: var(--brand);
   animation: progress 1s infinite linear;
 }
 

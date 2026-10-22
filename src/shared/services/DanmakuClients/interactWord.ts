@@ -19,7 +19,7 @@ const fansMedalType = new Type('FansMedal')
   .add(new Field('medalName', 3, 'string'))
   .add(new Field('isLighted', 8, 'int64'))
 
-const userBaseType = new Type('UserBase').add(new Field('face', 2, 'string'))
+const userBaseType = new Type('UserBase').add(new Field('name', 1, 'string')).add(new Field('face', 2, 'string'))
 const userInfoType = new Type('UserInfo').add(new Field('base', 2, 'UserBase'))
 const interactWordType = new Type('InteractWord')
   .add(new Field('uid', 1, 'int64'))
@@ -38,7 +38,7 @@ export function decodeInteractWord(pb: string): InteractionData {
 
   return {
     uid: data.uid,
-    uname: data.uname,
+    uname: data.uname || data.uinfo?.base?.name || '',
     msgType: data.msgType,
     timestamp: data.timestamp,
     privilegeType: data.privilegeType,

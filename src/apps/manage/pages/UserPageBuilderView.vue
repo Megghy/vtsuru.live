@@ -10,7 +10,7 @@ import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Spin } from '@/shared/ui/spin'
 import { useDialog, useMessage } from '@/shared/utils'
 
@@ -312,7 +312,7 @@ onBeforeRouteLeave(() => {
 </script>
 
 <template>
-  <div class="user-page-builder">
+  <div class="user-page-builder h-[calc(100dvh-var(--vtsuru-header-height))] w-full p-[var(--vtsuru-content-padding)] box-border overflow-hidden flex flex-col gap-3">
     <ManagePageHeader
       title="主页装修"
       subtitle="配置个人主页、视觉主题与展示块"
@@ -327,12 +327,12 @@ onBeforeRouteLeave(() => {
     </ManagePageHeader>
 
     <Spin
-      class="builder-spin"
+      class="flex-1 min-h-0 overflow-hidden flex flex-col"
       :show="editor.isLoading.value"
     >
       <div
         v-if="editor.loadStatus.value === 'error'"
-        class="load-error flex flex-col items-center justify-center p-8 text-center"
+        class="m-auto flex flex-col items-center justify-center p-8 text-center"
       >
         <div class="mb-2 text-lg font-semibold text-destructive">页面配置加载失败</div>
         <p class="mb-4 text-sm text-muted-foreground">{{ editor.error.value || '请检查网络连接后重试' }}</p>
@@ -384,7 +384,7 @@ onBeforeRouteLeave(() => {
 
         <div
           ref="builderBodyEl"
-          class="builder-body"
+          class="builder-body flex-1 min-h-0 flex flex-col gap-2"
           :data-workspace-mode="workspaceMode"
         >
           <span
@@ -395,7 +395,7 @@ onBeforeRouteLeave(() => {
           >
           <div
             v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1"
-            class="workspace-tabs inline-flex rounded-md border border-input p-0.5 bg-muted/40"
+            class="shrink-0 max-w-full overflow-x-auto inline-flex rounded-md border border-input p-0.5 bg-muted/40"
           >
             <Button
               size="xs"
@@ -410,7 +410,7 @@ onBeforeRouteLeave(() => {
           </div>
 
           <div
-            class="builder-pane-grid"
+            class="builder-pane-grid grid gap-1.5 flex-1 min-w-0 min-h-0"
             :class="{ 'is-legacy': isLegacyMode, 'is-non-block': !isBlockMode }"
             :style="workspaceGridStyle"
           >
@@ -500,15 +500,14 @@ onBeforeRouteLeave(() => {
                 >
                   自动填充
                 </span>
-                <NInputNumber
+                <NumberField
                   v-else
-                  :value="columnWidths[id]"
+                  :model-value="columnWidths[id]"
                   :min="COLUMN_META[id].minPx"
                   :max="COLUMN_META[id].maxPx"
                   :step="20"
-                  size="small"
                   style="width: 112px"
-                  @update:value="(value) => setColumnWidth(id, value)"
+                  @update:model-value="(value) => setColumnWidth(id, value)"
                 />
               </div>
             </VueDraggable>
@@ -553,7 +552,7 @@ onBeforeRouteLeave(() => {
                     v-for="(issue, idx) in editor.publishCheckIssues.value"
                     :key="`${issue.pageKey}:${issue.blockId}:${issue.fieldPath}:${idx}`"
                     type="button"
-                    class="validation-error-link text-left text-xs underline hover:opacity-80"
+                    class="flex w-full h-auto justify-start my-0.5 text-left whitespace-normal text-xs underline hover:opacity-80"
                     @click="focusPublishValidationIssue(issue)"
                   >
                     {{ issue.message }}
@@ -616,72 +615,8 @@ onBeforeRouteLeave(() => {
 <style src="./user-page-builder/components/ui-transitions.css"></style>
 
 <style scoped>
-.validation-error-link {
-  display: flex;
-  width: 100%;
-  height: auto;
-  justify-content: flex-start;
-  margin: 2px 0;
-  text-align: left;
-  white-space: normal;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.user-page-builder {
-  height: calc(100dvh - var(--vtsuru-header-height));
-  width: 100%;
-  padding: var(--vtsuru-content-padding);
-  box-sizing: border-box;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.builder-spin {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.load-error {
-  margin: auto;
-}
-
-.builder-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.workspace-tabs {
-  flex: none;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
 .builder-pane-grid {
-  display: grid;
   grid-template-columns: var(--builder-wide-columns);
-  gap: 6px;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
 }
 
 .builder-pane-slot {

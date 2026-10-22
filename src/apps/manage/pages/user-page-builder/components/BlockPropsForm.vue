@@ -189,7 +189,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
     <Accordion
       v-model="expandedCommonSections"
       type="multiple"
-      class="block-common-sections border rounded-lg bg-card mt-2 p-2"
+      class="w-auto box-border border rounded-lg bg-card mt-2 p-2"
     >
       <AccordionItem
         value="defaults"
@@ -316,9 +316,3 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
   </div>
 </template>
 
-<style scoped>
-.block-common-sections {
-  width: auto;
-  box-sizing: border-box;
-}
-</style>

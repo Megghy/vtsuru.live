@@ -5,7 +5,7 @@ import type { ManualUserFormModel } from '@/apps/open-live/components/lottery/lo
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 
 const props = defineProps<{
   show: boolean
@@ -80,9 +80,8 @@ function submit() {
         <div class="flex items-center gap-3">
           <span class="w-20 text-muted-foreground shrink-0 text-right">粉丝牌等级</span>
           <div class="w-[140px]">
-            <NInputNumber
-              v-model:value="form.fans_medal_level"
-              size="small"
+            <NumberField
+              v-model="form.fans_medal_level"
               :disabled="disabled"
               :min="0"
               :max="50"
@@ -103,9 +102,8 @@ function submit() {
         <div class="flex items-center gap-3">
           <span class="w-20 text-muted-foreground shrink-0 text-right">舰长等级</span>
           <div class="w-[140px]">
-            <NInputNumber
-              v-model:value="form.guard_level"
-              size="small"
+            <NumberField
+              v-model="form.guard_level"
               :disabled="disabled"
               :min="0"
               :max="3"

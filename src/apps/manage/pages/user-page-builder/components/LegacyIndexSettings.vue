@@ -340,12 +340,12 @@ await loadIndexInfo()
     <!-- 主页模板 -->
     <div class="flex flex-col gap-2">
       <div class="text-xs font-semibold text-muted-foreground uppercase">主页模板</div>
-      <div class="index-template-picker">
-        <div class="index-template-picker__copy">
-          <div class="index-template-picker__title">
+      <div class="flex flex-col gap-2.5 p-3 border border-border rounded-lg bg-muted">
+        <div class="flex min-w-0 flex-col gap-1">
+          <div class="text-foreground text-sm font-semibold">
             {{ selectedIndexTemplate.name }}
           </div>
-          <div class="index-template-picker__desc">支持头图、头像框、荣誉、直播状态和精选内容。</div>
+          <div class="text-muted-foreground text-xs leading-normal">支持头图、头像框、荣誉、直播状态和精选内容。</div>
         </div>
         <div class="flex items-center gap-2 w-full">
           <Select
@@ -667,30 +667,3 @@ await loadIndexInfo()
   </Dialog>
 </template>
 
-<style scoped>
-.index-template-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--muted);
-}
-.index-template-picker__copy {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 4px;
-}
-.index-template-picker__title {
-  color: var(--foreground);
-  font-size: 14px;
-  font-weight: 600;
-}
-.index-template-picker__desc {
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.5;
-}
-</style>

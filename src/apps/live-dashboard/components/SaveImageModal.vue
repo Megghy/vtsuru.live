@@ -97,12 +97,12 @@ const copy = () =>
       </DialogHeader>
       <div
         v-if="event"
-        class="image-dialog"
+        class="grid grid-cols-1 sm:grid-cols-[1fr_180px] gap-4"
       >
-        <div class="image-dialog__stage">
+        <div class="image-dialog__stage overflow-auto p-3 rounded-md">
           <div
             ref="target"
-            class="image-target"
+            class="image-target box-border mx-auto"
             :class="{
               'image-target--pad': options.padding,
               'image-target--no-medal': !options.showMedal,
@@ -123,7 +123,7 @@ const copy = () =>
             />
             <div
               v-if="options.watermark"
-              class="image-target__mark"
+              class="flex gap-2 justify-end mt-1.5 px-1.5 text-[11px] text-muted-foreground"
             >
               <span>VTsuru</span>
               <span>{{ account.name || '' }}</span>
@@ -200,30 +200,9 @@ const copy = () =>
 </template>
 
 <style scoped>
-.image-dialog {
-  display: grid;
-  grid-template-columns: 1fr 180px;
-  gap: 16px;
-}
-
-@media (max-width: 640px) {
-  .image-dialog {
-    grid-template-columns: 1fr;
-  }
-}
-
 .image-dialog__stage {
-  overflow: auto;
-  padding: 12px;
-  border-radius: 6px;
   background: repeating-conic-gradient(var(--muted) 0% 25%, transparent 0% 50%) 50% / 16px 16px;
 }
-
-.image-target {
-  box-sizing: border-box;
-  margin: 0 auto;
-}
-
 .image-target--pad {
   padding: 16px;
 }
@@ -240,28 +219,5 @@ const copy = () =>
 .image-target--blur-avatar :deep(.dm-avatar),
 .image-target--blur-avatar :deep(.paid__avatar) {
   filter: blur(4px);
-}
-
-.image-target__mark {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-  margin-top: 6px;
-  padding: 0 6px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.image-dialog__options {
-  display: grid;
-  gap: 8px;
-  align-content: start;
-  font-size: 13px;
-}
-
-.image-dialog__buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
 }
 </style>

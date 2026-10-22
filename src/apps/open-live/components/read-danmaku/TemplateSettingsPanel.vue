@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
@@ -264,7 +264,7 @@ function fireMock() {
 </script>
 
 <template>
-  <div class="panel">
+  <div class="flex flex-col gap-2.5">
     <Alert
       v-if="!supportsFollow"
       class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs py-2"
@@ -335,13 +335,13 @@ function fireMock() {
         </div>
 
         <AccordionContent class="pb-3 pt-1">
-          <div class="rules-list">
+          <div class="flex flex-col gap-2">
             <div
               v-for="(rule, ri) in settings.templates[row.eventKey]?.rules ?? []"
               :key="ri"
-              class="rule-card"
+              class="border border-border rounded-md p-2 flex flex-col gap-1.5"
             >
-              <div class="rule-header">
+              <div class="flex-between">
                 <span class="text-[11px] text-muted-foreground">规则 {{ ri + 1 }}</span>
                 <div class="flex items-center gap-1">
                   <Button
@@ -365,7 +365,7 @@ function fireMock() {
                 v-model="rule.template"
                 :placeholder="`模板文本，如: ${row.label}...`"
               />
-              <div class="conditions-section">
+              <div class="mt-1">
                 <div class="flex items-center justify-between mb-1">
                   <span class="text-[11px] text-muted-foreground">
                     {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
@@ -382,7 +382,7 @@ function fireMock() {
                 <div
                   v-for="(cond, ci) in rule.conditions"
                   :key="ci"
-                  class="condition-row"
+                  class="flex items-center gap-1 mb-1"
                 >
                   <Select
                     v-model="cond.field"
@@ -429,11 +429,10 @@ function fireMock() {
                     v-if="!isTextField(cond.field)"
                     class="w-[100px]"
                   >
-                    <NInputNumber
-                      :value="cond.value as number"
-                      size="small"
+                    <NumberField
+                      :model-value="cond.value as number"
                       :min="0"
-                      @update:value="(v: number | null) => (cond.value = v ?? 0)"
+                      @update:model-value="(v: number | null) => (cond.value = v ?? 0)"
                     />
                   </div>
                   <Input
@@ -482,7 +481,7 @@ function fireMock() {
       >
         <AccordionTrigger class="py-2 text-xs hover:no-underline font-medium"> 模拟触发 </AccordionTrigger>
         <AccordionContent class="pb-3">
-          <div class="mock-section text-xs">
+          <div class="flex flex-col gap-2 text-xs">
             <div class="flex items-center gap-2 flex-wrap">
               <Select
                 :model-value="String(mockData.type)"
@@ -522,9 +521,8 @@ function fireMock() {
               <div class="flex items-center gap-1.5">
                 <span class="text-[11px] text-muted-foreground">价格</span>
                 <div class="w-[80px]">
-                  <NInputNumber
-                    v-model:value="mockData.price"
-                    size="small"
+                  <NumberField
+                    v-model="mockData.price"
                     :min="0"
                   />
                 </div>
@@ -532,9 +530,8 @@ function fireMock() {
               <div class="flex items-center gap-1.5">
                 <span class="text-[11px] text-muted-foreground">数量</span>
                 <div class="w-[80px]">
-                  <NInputNumber
-                    v-model:value="mockData.num"
-                    size="small"
+                  <NumberField
+                    v-model="mockData.num"
                     :min="0"
                   />
                 </div>
@@ -542,9 +539,8 @@ function fireMock() {
               <div class="flex items-center gap-1.5">
                 <span class="text-[11px] text-muted-foreground">舰长</span>
                 <div class="w-[70px]">
-                  <NInputNumber
-                    v-model:value="mockData.guard_level"
-                    size="small"
+                  <NumberField
+                    v-model="mockData.guard_level"
                     :min="0"
                     :max="3"
                   />
@@ -553,9 +549,8 @@ function fireMock() {
               <div class="flex items-center gap-1.5">
                 <span class="text-[11px] text-muted-foreground">勋章</span>
                 <div class="w-[70px]">
-                  <NInputNumber
-                    v-model:value="mockData.fans_medal_level"
-                    size="small"
+                  <NumberField
+                    v-model="mockData.fans_medal_level"
                     :min="0"
                     :max="40"
                   />
@@ -582,11 +577,10 @@ function fireMock() {
       />
       <span>定时播报</span>
       <div class="w-[80px]">
-        <NInputNumber
-          v-model:value="settings.timedBroadcast.intervalMinutes"
+        <NumberField
+          v-model="settings.timedBroadcast.intervalMinutes"
           :min="1"
           :max="120"
-          size="small"
           :disabled="!settings.timedBroadcast.enabled"
         />
       </div>
@@ -597,7 +591,7 @@ function fireMock() {
       <div
         v-for="(_, i) in settings.timedBroadcast.texts"
         :key="i"
-        class="broadcast-row"
+        class="flex items-center gap-1"
       >
         <Input
           size="xs"
@@ -626,47 +620,3 @@ function fireMock() {
   </div>
 </template>
 
-<style scoped>
-.panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.broadcast-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.rules-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.rule-card {
-  border: 1px solid var(--border, #e0e0e0);
-  border-radius: 6px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.rule-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.conditions-section {
-  margin-top: 4px;
-}
-.condition-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-.mock-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-</style>

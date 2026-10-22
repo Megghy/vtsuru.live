@@ -122,7 +122,7 @@ watch(show, (visible) => {
           />
         </div>
 
-        <div class="style-filter-scroll">
+        <div class="overflow-x-auto pb-0.5">
           <div class="inline-flex rounded-lg border bg-muted p-0.5 text-muted-foreground text-xs">
             <button
               v-for="option in styleOptions"
@@ -141,7 +141,7 @@ watch(show, (visible) => {
 
         <div
           ref="iconGridHost"
-          class="icon-grid-host overflow-y-auto"
+          class="min-w-0 h-[min(58vh,528px)] border border-border rounded-md bg-muted overflow-y-auto"
         >
           <div
             v-if="iconRows.length"
@@ -150,7 +150,7 @@ watch(show, (visible) => {
             <div
               v-for="row in iconRows"
               :key="row.key"
-              class="icon-grid-row"
+              class="grid gap-2 min-h-[76px]"
               :style="{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }"
             >
               <button
@@ -210,23 +210,3 @@ watch(show, (visible) => {
   </Dialog>
 </template>
 
-<style scoped>
-.style-filter-scroll {
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.icon-grid-host {
-  min-width: 0;
-  height: min(58vh, 528px);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--muted);
-}
-
-.icon-grid-row {
-  display: grid;
-  gap: 8px;
-  min-height: 76px;
-}
-</style>

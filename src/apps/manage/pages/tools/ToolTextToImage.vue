@@ -7,7 +7,7 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
@@ -241,11 +241,10 @@ async function download() {
                   }
                 "
               />
-              <NInputNumber
+              <NumberField
                 v-model="style.fontSize"
                 :min="14"
                 :max="48"
-                size="small"
                 class="w-20"
               />
             </div>
@@ -263,12 +262,11 @@ async function download() {
                   }
                 "
               />
-              <NInputNumber
+              <NumberField
                 v-model="style.lineHeight"
                 :min="1.2"
                 :max="2.5"
                 :step="0.1"
-                size="small"
                 class="w-20"
               />
             </div>
@@ -286,11 +284,10 @@ async function download() {
                   }
                 "
               />
-              <NInputNumber
+              <NumberField
                 v-model="style.padding"
                 :min="16"
                 :max="80"
-                size="small"
                 class="w-20"
               />
             </div>
@@ -308,12 +305,11 @@ async function download() {
                   }
                 "
               />
-              <NInputNumber
+              <NumberField
                 v-model="style.maxWidth"
                 :min="400"
                 :max="1200"
                 :step="50"
-                size="small"
                 class="w-24"
               />
             </div>

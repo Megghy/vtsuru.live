@@ -132,22 +132,23 @@ onBeforeUnmount(() => recognition?.abort())
 
 <template>
   <TooltipProvider>
-    <div class="composer">
+    <div class="flex flex-col gap-2">
       <div
         v-if="images.length"
-        class="composer__previews"
+        class="flex gap-2 overflow-x-auto py-1"
       >
         <div
           v-for="(img, i) in images"
           :key="i"
-          class="composer__preview"
+          class="relative shrink-0 size-14 rounded-md overflow-hidden border border-border"
         >
           <img
             :src="img"
             alt="附件"
+            class="size-full object-cover block"
           />
           <button
-            class="composer__preview-del"
+            class="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/65 text-white border-0 cursor-pointer inline-flex-center p-0 hover:bg-black/85"
             type="button"
             title="移除"
             @click="removeImage(i)"
@@ -160,13 +161,13 @@ onBeforeUnmount(() => recognition?.abort())
         </div>
       </div>
 
-      <div class="composer__row">
+      <div class="flex gap-2 items-end">
         <Tooltip>
           <TooltipTrigger as-child>
             <Button
               variant="ghost"
               size="icon"
-              class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground"
+              class="size-8 rounded-full text-muted-foreground hover:text-foreground"
               :disabled="loading || images.length >= MAX_IMAGES"
               @click="fileInput?.click()"
             >
@@ -192,8 +193,8 @@ onBeforeUnmount(() => recognition?.abort())
             <Button
               variant="ghost"
               size="icon"
-              class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground"
-              :class="{ 'composer__mic--on text-primary!': listening }"
+              class="size-8 rounded-full text-muted-foreground hover:text-foreground"
+              :class="{ 'composer-mic-on text-primary!': listening }"
               :disabled="loading"
               @click="toggleSpeech"
             >
@@ -212,7 +213,7 @@ onBeforeUnmount(() => recognition?.abort())
           rows="1"
           placeholder="描述你想做的事, 或粘贴/上传日程截图让我识别"
           :disabled="loading"
-          class="composer__input min-h-[38px] max-h-32 text-xs resize-none py-2"
+          class="flex-1 min-w-0 min-h-[38px] max-h-32 text-xs resize-none py-2"
           @keydown="onKeydown"
           @paste="onPaste"
         />
@@ -220,7 +221,7 @@ onBeforeUnmount(() => recognition?.abort())
         <Button
           v-if="loading"
           variant="destructive"
-          class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0"
+          class="h-[38px] px-3 flex items-center gap-1 shrink-0"
           @click="emit('stop')"
         >
           <component
@@ -231,7 +232,7 @@ onBeforeUnmount(() => recognition?.abort())
         </Button>
         <Button
           v-else
-          class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0"
+          class="h-[38px] px-3 flex items-center gap-1 shrink-0"
           :disabled="!text.trim() && !images.length"
           @click="submit"
         >
@@ -247,26 +248,7 @@ onBeforeUnmount(() => recognition?.abort())
 </template>
 
 <style scoped>
-.composer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.composer__row {
-  display: flex;
-  gap: 8px;
-  align-items: flex-end;
-}
-.composer__input {
-  flex: 1;
-  min-width: 0;
-}
-.composer__btn,
-.composer__attach {
-  flex: 0 0 auto;
-}
-.composer__mic--on {
-  color: var(--brand, #23ade5);
+.composer-mic-on {
   animation: composer-mic-pulse 1.4s ease-in-out infinite;
 }
 @keyframes composer-mic-pulse {
@@ -279,45 +261,5 @@ onBeforeUnmount(() => recognition?.abort())
     transform: scale(1.15);
     opacity: 0.75;
   }
-}
-.composer__previews {
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding: 4px 0;
-}
-.composer__preview {
-  position: relative;
-  flex: 0 0 auto;
-  width: 56px;
-  height: 56px;
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-.composer__preview img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.composer__preview-del {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: rgba(0, 0, 0, 0.65);
-  color: #fff;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-.composer__preview-del:hover {
-  background: rgba(0, 0, 0, 0.85);
 }
 </style>

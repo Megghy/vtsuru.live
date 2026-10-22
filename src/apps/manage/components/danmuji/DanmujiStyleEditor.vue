@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DanmujiStyle } from '@/shared/danmujiStyle'
 import { Checkbox } from '@/shared/ui/checkbox'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const style = defineModel<DanmujiStyle>({ required: true })
@@ -34,11 +34,11 @@ const presets = [
 
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">字号</label>
-      <NInputNumber
-        :value="style.fontSize"
+      <NumberField
+        :model-value="style.fontSize"
         :min="10"
         :max="72"
-        @update:value="
+        @update:model-value="
           (value) => {
             if (value !== null) style.fontSize = value
           }
@@ -48,12 +48,12 @@ const presets = [
 
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">不透明度</label>
-      <NInputNumber
-        :value="style.opacity"
+      <NumberField
+        :model-value="style.opacity"
         :min="0"
         :max="1"
         :step="0.1"
-        @update:value="
+        @update:model-value="
           (value) => {
             if (value !== null) style.opacity = value
           }
@@ -63,11 +63,11 @@ const presets = [
 
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">消息保留秒数（0 为不隐藏）</label>
-      <NInputNumber
-        :value="style.autoHide"
+      <NumberField
+        :model-value="style.autoHide"
         :min="0"
         :max="3600"
-        @update:value="
+        @update:model-value="
           (value) => {
             if (value !== null) style.autoHide = value
           }
@@ -94,11 +94,11 @@ const presets = [
       class="col-span-full space-y-1 pt-1"
     >
       <label class="text-xs text-muted-foreground">置顶礼物最低金额（元）</label>
-      <NInputNumber
-        :value="style.pinnedMinPrice"
+      <NumberField
+        :model-value="style.pinnedMinPrice"
         :min="0"
         :max="100000"
-        @update:value="
+        @update:model-value="
           (value) => {
             if (value !== null) style.pinnedMinPrice = value
           }

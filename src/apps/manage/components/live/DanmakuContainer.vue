@@ -264,7 +264,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="danmaku-container-wrapper">
+  <div class="flex flex-col gap-3 w-full">
     <!-- 用户单人弹幕弹窗 -->
     <Dialog v-model:open="showModal">
       <DialogContent class="max-w-2xl max-h-[85vh] flex flex-col p-4">
@@ -645,12 +645,3 @@ defineExpose({
     </div>
   </div>
 </template>
-
-<style scoped>
-.danmaku-container-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-</style>

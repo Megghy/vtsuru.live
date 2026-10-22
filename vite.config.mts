@@ -149,7 +149,7 @@ export default defineConfig({
             },
             {
               name: 'ui-vendor',
-              test: /[\\/]node_modules[\\/](naive-ui|@vueuse[\\/]core)[\\/]/,
+              test: /[\\/]node_modules[\\/]@vueuse[\\/]core[\\/]/,
               priority: -10,
             },
             // 精细化切分大体积依赖，提升缓存与首屏体积可控性

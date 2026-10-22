@@ -5,7 +5,7 @@ import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
@@ -54,7 +54,7 @@ function removeMapping(scene: string) {
         </div>
 
         <div class="flex items-center gap-1.5">
-          <NInputNumber
+          <NumberField
             :model-value="vts.obsLinkConfig.debounceMs"
             :min="0"
             :step="50"

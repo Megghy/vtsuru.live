@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
@@ -27,8 +27,8 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
     </div>
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">最多显示</label>
-      <NInputNumber
-        v-model:value="blockProps.maxItems"
+      <NumberField
+        v-model="blockProps.maxItems"
         :min="3"
         :max="30"
         class="w-full"

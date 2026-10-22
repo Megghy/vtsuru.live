@@ -24,7 +24,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
@@ -520,38 +520,35 @@ function toggleFilterType(val: string, checked: boolean) {
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">宽度 (px)</span>
-                <NInputNumber
-                  :value="danmakuWindow.danmakuWindowSetting.width"
+                <NumberField
+                  :model-value="danmakuWindow.danmakuWindowSetting.width"
                   :min="200"
                   :max="3840"
-                  size="small"
                   class="w-full"
-                  @update:value="
+                  @update:model-value="
                     danmakuWindow.setDanmakuWindowSize($event || 300, danmakuWindow.danmakuWindowSetting.height)
                   "
                 />
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">高度 (px)</span>
-                <NInputNumber
-                  :value="danmakuWindow.danmakuWindowSetting.height"
+                <NumberField
+                  :model-value="danmakuWindow.danmakuWindowSetting.height"
                   :min="200"
                   :max="2160"
-                  size="small"
                   class="w-full"
-                  @update:value="
+                  @update:model-value="
                     danmakuWindow.setDanmakuWindowSize(danmakuWindow.danmakuWindowSetting.width, $event || 400)
                   "
                 />
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">X 坐标</span>
-                <NInputNumber
-                  :value="danmakuWindow.danmakuWindowSetting.x"
+                <NumberField
+                  :model-value="danmakuWindow.danmakuWindowSetting.x"
                   :min="0"
-                  size="small"
                   class="w-full"
-                  @update:value="
+                  @update:model-value="
                     danmakuWindow.danmakuWindowSetting.x = $event || 0;
                     danmakuWindow.updateWindowPosition()
                   "
@@ -559,12 +556,11 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
               <div class="space-y-1">
                 <span class="text-xs text-muted-foreground">Y 坐标</span>
-                <NInputNumber
-                  :value="danmakuWindow.danmakuWindowSetting.y"
+                <NumberField
+                  :model-value="danmakuWindow.danmakuWindowSetting.y"
                   :min="0"
-                  size="small"
                   class="w-full"
-                  @update:value="
+                  @update:model-value="
                     danmakuWindow.danmakuWindowSetting.y = $event || 0;
                     danmakuWindow.updateWindowPosition()
                   "
@@ -639,14 +635,13 @@ function toggleFilterType(val: string, checked: boolean) {
               class="flex items-center justify-between text-xs py-1"
             >
               <span class="text-muted-foreground">动画持续时间 (ms)</span>
-              <NInputNumber
-                :value="danmakuWindow.danmakuWindowSetting.animationDuration"
+              <NumberField
+                :model-value="danmakuWindow.danmakuWindowSetting.animationDuration"
                 :min="0"
                 :max="1000"
                 :step="50"
-                size="small"
                 class="w-32"
-                @update:value="danmakuWindow.danmakuWindowSetting.animationDuration = $event || 300"
+                @update:model-value="danmakuWindow.danmakuWindowSetting.animationDuration = $event || 300"
               />
             </div>
           </CardContent>
@@ -661,25 +656,23 @@ function toggleFilterType(val: string, checked: boolean) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div class="flex items-center justify-between text-xs">
                 <span class="text-muted-foreground">最大保留弹幕数</span>
-                <NInputNumber
-                  :value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount"
+                <NumberField
+                  :model-value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount"
                   :min="10"
                   :max="200"
-                  size="small"
                   class="w-32"
-                  @update:value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount = $event || 50"
+                  @update:model-value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount = $event || 50"
                 />
               </div>
               <div class="flex items-center justify-between text-xs">
                 <span class="text-muted-foreground">自动消失时间 (秒)</span>
-                <NInputNumber
-                  :value="danmakuWindow.danmakuWindowSetting.autoDisappearTime"
+                <NumberField
+                  :model-value="danmakuWindow.danmakuWindowSetting.autoDisappearTime"
                   :min="0"
                   :max="600"
                   :step="5"
-                  size="small"
                   class="w-32"
-                  @update:value="danmakuWindow.danmakuWindowSetting.autoDisappearTime = $event || 0"
+                  @update:model-value="danmakuWindow.danmakuWindowSetting.autoDisappearTime = $event || 0"
                 />
               </div>
             </div>

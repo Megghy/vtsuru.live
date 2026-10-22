@@ -19,7 +19,7 @@ import {
 } from '@/shared/questionDisplayPresets'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
@@ -100,7 +100,7 @@ function resetToDefault() {
 </script>
 
 <template>
-  <div class="style-panel space-y-5 text-xs">
+  <div class="w-full min-w-0 space-y-5 text-xs">
     <!-- 预设 -->
     <div class="preset-section space-y-2.5">
       <div class="preset-header flex items-center justify-between">
@@ -208,8 +208,8 @@ function resetToDefault() {
       <div class="grid grid-cols-2 gap-3">
         <div class="space-y-1">
           <label class="text-[11px] text-muted-foreground font-medium">内容字号</label>
-          <NInputNumber
-            v-model:value="setting.fontSize"
+          <NumberField
+            v-model="setting.fontSize"
             :min="12"
             :max="160"
           />
@@ -238,8 +238,8 @@ function resetToDefault() {
 
         <div class="space-y-1">
           <label class="text-[11px] text-muted-foreground font-medium">昵称字号</label>
-          <NInputNumber
-            v-model:value="setting.nameFontSize"
+          <NumberField
+            v-model="setting.nameFontSize"
             :min="12"
             :max="120"
           />
@@ -281,8 +281,8 @@ function resetToDefault() {
             class="flex-1"
             @update:model-value="setting.lineHeight = $event?.[0] ?? 1.5"
           />
-          <NInputNumber
-            v-model:value="setting.lineHeight"
+          <NumberField
+            v-model="setting.lineHeight"
             :min="1"
             :max="3"
             :step="0.05"
@@ -354,8 +354,8 @@ function resetToDefault() {
             class="flex-1"
             @update:model-value="setting.contentMaxWidth = $event?.[0] ?? 0"
           />
-          <NInputNumber
-            v-model:value="setting.contentMaxWidth"
+          <NumberField
+            v-model="setting.contentMaxWidth"
             :min="0"
             :max="80"
             :step="1"
@@ -441,8 +441,8 @@ function resetToDefault() {
             class="flex-1"
             @update:model-value="setting.backgroundOpacity = $event?.[0] ?? 100"
           />
-          <NInputNumber
-            v-model:value="setting.backgroundOpacity"
+          <NumberField
+            v-model="setting.backgroundOpacity"
             :min="0"
             :max="100"
             class="w-20"
@@ -453,24 +453,24 @@ function resetToDefault() {
       <div class="grid grid-cols-2 gap-3">
         <div class="space-y-1">
           <label class="text-[11px] text-muted-foreground font-medium">内边距 (px)</label>
-          <NInputNumber
-            v-model:value="setting.contentPadding"
+          <NumberField
+            v-model="setting.contentPadding"
             :min="0"
             :max="96"
           />
         </div>
         <div class="space-y-1">
           <label class="text-[11px] text-muted-foreground font-medium">卡片圆角 (px)</label>
-          <NInputNumber
-            v-model:value="setting.borderRadius"
+          <NumberField
+            v-model="setting.borderRadius"
             :min="0"
             :max="64"
           />
         </div>
         <div class="space-y-1">
           <label class="text-[11px] text-muted-foreground font-medium">边框宽度 (px)</label>
-          <NInputNumber
-            v-model:value="setting.borderWidth"
+          <NumberField
+            v-model="setting.borderWidth"
             :min="0"
             :max="32"
           />
@@ -564,8 +564,8 @@ function resetToDefault() {
 
       <div class="space-y-1">
         <label class="text-[11px] text-muted-foreground font-medium">单图最大高度 (px)</label>
-        <NInputNumber
-          v-model:value="setting.imageMaxHeight"
+        <NumberField
+          v-model="setting.imageMaxHeight"
           :min="80"
           :max="1080"
         />
@@ -573,10 +573,3 @@ function resetToDefault() {
     </section>
   </div>
 </template>
-
-<style scoped>
-.style-panel {
-  width: 100%;
-  min-width: 0;
-}
-</style>

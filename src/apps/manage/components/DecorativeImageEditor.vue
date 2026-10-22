@@ -8,7 +8,7 @@ import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Slider } from '@/shared/ui/slider'
 import { useMessage } from '@/shared/utils'
 
@@ -222,44 +222,40 @@ function moveImage(id: number, offset: -1 | 1) {
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-3">
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground">X (%)</span>
-            <NInputNumber
+            <NumberField
               :model-value="image.x"
               :disabled="disabled"
               :min="0"
               :max="100"
-              size="small"
               class="w-full"
               @update:model-value="updateImage(image.id, { x: $event ?? 0 })"
             />
           </div>
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground">Y (%)</span>
-            <NInputNumber
+            <NumberField
               :model-value="image.y"
               :disabled="disabled"
               :min="0"
               :max="100"
-              size="small"
               class="w-full"
               @update:model-value="updateImage(image.id, { y: $event ?? 0 })"
             />
           </div>
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground">宽度 (%)</span>
-            <NInputNumber
+            <NumberField
               :model-value="image.width"
               :disabled="disabled"
               :min="1"
-              size="small"
               class="w-full"
               @update:model-value="updateImage(image.id, { width: $event ?? 1 })"
             />
           </div>
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground">层级</span>
-            <NInputNumber
+            <NumberField
               :model-value="image.zIndex"
-              size="small"
               readonly
               class="w-full opacity-60"
             />

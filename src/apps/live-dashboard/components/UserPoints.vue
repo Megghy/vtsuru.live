@@ -5,7 +5,7 @@ import { ref, watch } from 'vue'
 import { getUserPointHistories, giveUserPoint } from '@/api/point-user'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Spin } from '@/shared/ui/spin'
 import { useMessage } from '@/shared/utils'
 
@@ -77,11 +77,11 @@ async function give(sign: 1 | -1) {
       >
     </div>
     <div class="user-points__form flex items-center gap-1.5">
-      <NInputNumber
+      <NumberField
         v-model="count"
-        size="tiny"
+        size="xs"
         :min="0.1"
-        :show-button="false"
+        :show-buttons="false"
         class="w-16"
       />
       <Input
@@ -121,41 +121,3 @@ async function give(sign: 1 | -1) {
   </div>
 </template>
 
-<style scoped>
-.user-points {
-  display: grid;
-  gap: 6px;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-
-.user-points__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.user-points__label {
-  color: var(--muted-foreground);
-}
-
-.user-points__value {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.user-points__error {
-  color: var(--vtsuru-error);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-points__form {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-</style>

@@ -168,10 +168,10 @@ function onPickSuggestion(text: string) {
 </script>
 
 <template>
-  <div class="chat-window">
+  <div class="flex flex-col h-full min-h-0">
     <div
       ref="scrollRef"
-      class="chat-window__scroll overflow-y-auto"
+      class="flex-1 min-h-0 overflow-y-auto"
       @scroll="onScroll"
     >
       <AssistantMessageList
@@ -190,31 +190,31 @@ function onPickSuggestion(text: string) {
       />
       <div
         v-else-if="store.messagesLoading"
-        class="chat-window__loading"
+        class="flex-center py-16 px-4"
       >
         <Spin />
       </div>
       <div
         v-else
-        class="chat-window__welcome"
+        class="flex flex-col items-center gap-2 pt-12 px-4 pb-6 text-center"
       >
-        <div class="chat-window__welcome-icon">
+        <div class="flex-center size-12 rounded-xl bg-[var(--brand-soft,rgba(35,173,229,0.12))] text-[var(--brand,#23ade5)] mb-1">
           <component
             :is="Sparkle24Regular"
             class="size-6 text-primary"
           />
         </div>
-        <div class="chat-window__welcome-title">有什么可以帮你的?</div>
-        <div class="chat-window__welcome-sub">用自然语言管理日程、查询数据, 或上传截图让我识别</div>
+        <div class="text-base font-semibold text-foreground">有什么可以帮你的?</div>
+        <div class="text-[13px] text-muted-foreground max-w-[380px]">用自然语言管理日程、查询数据, 或上传截图让我识别</div>
         <div
           v-if="digest.length"
-          class="chat-window__digest"
+          class="flex flex-col gap-1.5 w-full max-w-[440px] mt-2"
         >
           <button
             v-for="d in digest"
             :key="d.kind + d.text"
             type="button"
-            class="chat-window__digest-item"
+            class="flex items-center gap-2 py-2 px-3 rounded-lg bg-muted border border-border text-foreground text-xs text-left cursor-pointer transition hover:enabled:border-[var(--brand)] hover:enabled:bg-[var(--brand-soft)]"
             :disabled="store.sending"
             @click="onPickSuggestion(d.prompt)"
           >
@@ -225,12 +225,12 @@ function onPickSuggestion(text: string) {
             <span>{{ d.text }}</span>
           </button>
         </div>
-        <div class="chat-window__suggestions">
+        <div class="flex flex-wrap gap-2 justify-center max-w-[520px] mt-3">
           <button
             v-for="s in suggestions"
             :key="s"
             type="button"
-            class="chat-window__chip"
+            class="py-1.5 px-3 rounded-2xl bg-muted border border-border text-foreground text-xs cursor-pointer transition hover:enabled:border-[var(--brand)] hover:enabled:text-[var(--brand)]"
             :disabled="store.sending"
             @click="onPickSuggestion(s)"
           >
@@ -238,7 +238,7 @@ function onPickSuggestion(text: string) {
           </button>
           <button
             type="button"
-            class="chat-window__chip chat-window__chip--roll"
+            class="inline-flex items-center gap-1 py-1.5 px-3 rounded-2xl bg-muted border border-border text-muted-foreground text-xs cursor-pointer transition hover:enabled:text-foreground hover:enabled:border-[var(--brand)]"
             :disabled="store.sending"
             title="换一批"
             @click="rollSuggestions"
@@ -253,7 +253,7 @@ function onPickSuggestion(text: string) {
       </div>
     </div>
 
-    <div class="chat-window__composer">
+    <div class="shrink-0 pt-2.5 mt-1.5 border-t border-border">
       <AssistantComposer
         ref="composerRef"
         :loading="store.sending"
@@ -264,114 +264,3 @@ function onPickSuggestion(text: string) {
   </div>
 </template>
 
-<style scoped>
-.chat-window {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-.chat-window__scroll {
-  flex: 1 1 0;
-  min-height: 0;
-}
-.chat-window__loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 16px;
-}
-.chat-window__composer {
-  flex: 0 0 auto;
-  padding-top: 10px;
-  margin-top: 6px;
-  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.18));
-}
-
-.chat-window__welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 48px 16px 24px;
-  text-align: center;
-}
-.chat-window__welcome-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  background: var(--brand-soft, rgba(35, 173, 229, 0.12));
-  color: var(--brand, #23ade5);
-  margin-bottom: 4px;
-}
-.chat-window__welcome-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-.chat-window__welcome-sub {
-  font-size: 13px;
-  color: var(--muted-foreground);
-  max-width: 380px;
-}
-.chat-window__digest {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  width: 100%;
-  max-width: 440px;
-  margin-top: 8px;
-}
-.chat-window__digest-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--muted);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  font-size: 12px;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.18s;
-}
-.chat-window__digest-item:hover:not(:disabled) {
-  border-color: var(--brand);
-  background: var(--brand-soft);
-}
-.chat-window__suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  max-width: 520px;
-  margin-top: 12px;
-}
-.chat-window__chip {
-  padding: 6px 12px;
-  border-radius: 16px;
-  background: var(--muted);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.18s;
-}
-.chat-window__chip:hover:not(:disabled) {
-  border-color: var(--brand);
-  color: var(--brand);
-}
-.chat-window__chip--roll {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--muted-foreground);
-}
-.chat-window__chip--roll:hover:not(:disabled) {
-  color: var(--foreground);
-}
-</style>

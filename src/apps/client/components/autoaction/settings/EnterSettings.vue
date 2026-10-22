@@ -3,7 +3,7 @@ import { Info16Regular } from '@vicons/fluent'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -64,14 +64,13 @@ const enterFilterModeOptions = [
           <TooltipContent class="text-xs"> 仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <NInputNumber
-        :value="action.triggerConfig.enterMedalMinLevel"
+      <NumberField
+        :model-value="action.triggerConfig.enterMedalMinLevel"
         :min="0"
         :max="40"
         placeholder="0"
-        size="small"
         class="w-28"
-        @update:value="action.triggerConfig.enterMedalMinLevel = $event || 0"
+        @update:model-value="action.triggerConfig.enterMedalMinLevel = $event || 0"
       />
     </div>
 
@@ -104,13 +103,12 @@ const enterFilterModeOptions = [
           <TooltipContent class="text-xs"> 单条欢迎弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <NInputNumber
-        :value="action.actionConfig.maxUsersPerMsg"
+      <NumberField
+        :model-value="action.actionConfig.maxUsersPerMsg"
         :min="1"
         :max="50"
-        size="small"
         class="w-32"
-        @update:value="action.actionConfig.maxUsersPerMsg = $event || 1"
+        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
       />
     </div>
   </div>

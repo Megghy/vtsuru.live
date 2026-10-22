@@ -18,8 +18,17 @@ const { emojiData } = storeToRefs(useLiveEmoji())
 const danmakuUtils = useDanmakuUtils(props, emojiData)
 
 // 直接从工具函数获取计算属性，不再需要getBaseProp方法
-const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsedMessage, medalColor, giftDisplay } =
-  danmakuUtils
+const {
+  typeClass,
+  guardLevelClass,
+  showAvatar,
+  guardColor,
+  scColorClass,
+  parsedMessage,
+  medalColor,
+  giftDisplay,
+  displayName,
+} = danmakuUtils
 </script>
 
 <template>
@@ -43,7 +52,7 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
           class="username"
           :style="{ color: item.type === EventDataTypes.SC ? '#222' : '#fff' }"
         >
-          {{ item?.uname || '匿名用户' }}
+          {{ displayName }}
         </span>
         <!-- 卡片右侧徽章 -->
         <template v-if="item.type === EventDataTypes.SC">
@@ -143,7 +152,7 @@ const { typeClass, guardLevelClass, showAvatar, guardColor, scColorClass, parsed
           class="username"
           :style="{ color: '#fff' }"
         >
-          {{ item?.uname || '匿名用户' }}
+          {{ displayName }}
         </span>
         <span
           v-if="item.guard_level && item.guard_level > 0"

@@ -7,7 +7,7 @@ import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Badge } from '@/shared/ui/badge'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -173,27 +173,25 @@ const customJsModified = computed(() => {
 
           <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
             <span class="text-xs font-medium text-foreground">延迟执行 (秒)</span>
-            <NInputNumber
-              :value="action.actionConfig.delaySeconds"
+            <NumberField
+              :model-value="action.actionConfig.delaySeconds"
               :min="0"
               :max="600"
               placeholder="0"
-              size="small"
               class="w-28"
-              @update:value="action.actionConfig.delaySeconds = $event || 0"
+              @update:model-value="action.actionConfig.delaySeconds = $event || 0"
             />
           </div>
 
           <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
             <span class="text-xs font-medium text-foreground">冷却时间 (秒)</span>
-            <NInputNumber
-              :value="action.actionConfig.cooldownSeconds"
+            <NumberField
+              :model-value="action.actionConfig.cooldownSeconds"
               :min="0"
               :max="3600"
               placeholder="0"
-              size="small"
               class="w-28"
-              @update:value="action.actionConfig.cooldownSeconds = $event || 0"
+              @update:model-value="action.actionConfig.cooldownSeconds = $event || 0"
             />
           </div>
         </AccordionContent>

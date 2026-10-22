@@ -25,7 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
@@ -291,7 +291,7 @@ async function applyCleanup(applyAll: boolean) {
       <CardContent class="p-3.5 pt-0">
         <div class="flex items-center gap-3 flex-wrap text-xs">
           <span class="text-muted-foreground">最近</span>
-          <NInputNumber
+          <NumberField
             v-model="dayCount"
             :min="1"
             :max="90"
@@ -299,7 +299,7 @@ async function applyCleanup(applyAll: boolean) {
           />
           <span class="text-muted-foreground">天</span>
           <span class="text-muted-foreground ml-2">窗口</span>
-          <NInputNumber
+          <NumberField
             v-model="windowSeconds"
             :min="1"
             :max="30"
@@ -352,21 +352,21 @@ async function applyCleanup(applyAll: boolean) {
 
         <div class="flex items-center gap-3 flex-wrap text-xs">
           <span class="text-muted-foreground">舰长</span>
-          <NInputNumber
+          <NumberField
             v-model="manualPointValues.jianzhang"
             :min="0"
             :disabled="pointMode !== 'manual'"
             class="w-24"
           />
           <span class="text-muted-foreground">提督</span>
-          <NInputNumber
+          <NumberField
             v-model="manualPointValues.tidu"
             :min="0"
             :disabled="pointMode !== 'manual'"
             class="w-24"
           />
           <span class="text-muted-foreground">总督</span>
-          <NInputNumber
+          <NumberField
             v-model="manualPointValues.zongdu"
             :min="0"
             :disabled="pointMode !== 'manual'"

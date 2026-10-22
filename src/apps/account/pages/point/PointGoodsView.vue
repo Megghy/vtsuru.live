@@ -203,7 +203,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="point-goods-container space-y-4">
+  <div class="w-full min-w-0 space-y-4">
     <!-- 未认证提示 -->
     <div
       v-if="!useAuth.isAuthed"
@@ -480,9 +480,3 @@ onMounted(async () => {
   </div>
 </template>
 
-<style scoped>
-.point-goods-container {
-  width: 100%;
-  min-width: 0;
-}
-</style>

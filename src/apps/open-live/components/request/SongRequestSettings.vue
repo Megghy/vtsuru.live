@@ -10,7 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { NumberField } from '@/shared/ui/number-field'
 
 const defaultSettings = {
   orderPrefix: '点播',
@@ -112,12 +112,11 @@ async function updateSettings() {
 
         <div class="flex items-center gap-1.5 w-[320px] max-w-full">
           <span class="text-xs text-muted-foreground shrink-0 w-24">最大队列长度</span>
-          <NInputNumber
-            :value="settings.queueMaxSize"
+          <NumberField
+            :model-value="settings.queueMaxSize"
             :disabled="!liveRequest.configCanEdit"
-            size="small"
             class="flex-1"
-            @update:value="settings.queueMaxSize = $event || 10"
+            @update:model-value="settings.queueMaxSize = $event || 10"
           />
           <Button
             variant="secondary"
@@ -173,12 +172,11 @@ async function updateSettings() {
               class="flex items-center gap-1.5 w-[280px] max-w-full"
             >
               <span class="text-xs text-muted-foreground shrink-0">最低粉丝牌等级</span>
-              <NInputNumber
-                :value="settings.fanMedalMinLevel"
+              <NumberField
+                :model-value="settings.fanMedalMinLevel"
                 :disabled="!liveRequest.configCanEdit"
-                size="small"
                 class="flex-1"
-                @update:value="settings.fanMedalMinLevel = $event || 0"
+                @update:model-value="settings.fanMedalMinLevel = $event || 0"
               />
               <Button
                 variant="secondary"
@@ -258,12 +256,11 @@ async function updateSettings() {
             class="flex items-center gap-1.5 w-[260px] max-w-full"
           >
             <span class="text-xs text-muted-foreground shrink-0">最低 SC 价格</span>
-            <NInputNumber
-              :value="settings.scMinPrice"
+            <NumberField
+              :model-value="settings.scMinPrice"
               :disabled="!liveRequest.configCanEdit"
-              size="small"
               class="flex-1"
-              @update:value="settings.scMinPrice = $event || 30"
+              @update:model-value="settings.scMinPrice = $event || 30"
             />
             <Button
               variant="secondary"
@@ -383,12 +380,11 @@ async function updateSettings() {
         >
           <div class="flex items-center gap-1.5 w-[260px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-16">普通弹幕</span>
-            <NInputNumber
-              :value="settings.cooldownSecond"
+            <NumberField
+              :model-value="settings.cooldownSecond"
               :disabled="!liveRequest.configCanEdit"
-              size="small"
               class="flex-1"
-              @update:value="settings.cooldownSecond = $event || 1200"
+              @update:model-value="settings.cooldownSecond = $event || 1200"
             />
             <Button
               variant="secondary"
@@ -402,12 +398,11 @@ async function updateSettings() {
 
           <div class="flex items-center gap-1.5 w-[240px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-12">舰长</span>
-            <NInputNumber
-              :value="settings.jianzhangCooldownSecond"
+            <NumberField
+              :model-value="settings.jianzhangCooldownSecond"
               :disabled="!liveRequest.configCanEdit"
-              size="small"
               class="flex-1"
-              @update:value="settings.jianzhangCooldownSecond = $event || 900"
+              @update:model-value="settings.jianzhangCooldownSecond = $event || 900"
             />
             <Button
               variant="secondary"
@@ -421,12 +416,11 @@ async function updateSettings() {
 
           <div class="flex items-center gap-1.5 w-[240px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-12">提督</span>
-            <NInputNumber
-              :value="settings.tiduCooldownSecond"
+            <NumberField
+              :model-value="settings.tiduCooldownSecond"
               :disabled="!liveRequest.configCanEdit"
-              size="small"
               class="flex-1"
-              @update:value="settings.tiduCooldownSecond = $event || 600"
+              @update:model-value="settings.tiduCooldownSecond = $event || 600"
             />
             <Button
               variant="secondary"
@@ -440,12 +434,11 @@ async function updateSettings() {
 
           <div class="flex items-center gap-1.5 w-[240px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-12">总督</span>
-            <NInputNumber
-              :value="settings.zongduCooldownSecond"
+            <NumberField
+              :model-value="settings.zongduCooldownSecond"
               :disabled="!liveRequest.configCanEdit"
-              size="small"
               class="flex-1"
-              @update:value="settings.zongduCooldownSecond = $event || 300"
+              @update:model-value="settings.zongduCooldownSecond = $event || 300"
             />
             <Button
               variant="secondary"
@@ -463,12 +456,11 @@ async function updateSettings() {
           class="flex items-center gap-1.5 w-[260px] max-w-full pt-2 border-t"
         >
           <span class="text-xs text-muted-foreground shrink-0 w-16">网页点播</span>
-          <NInputNumber
-            :value="settings.webCooldownSecond"
+          <NumberField
+            :model-value="settings.webCooldownSecond"
             :disabled="!liveRequest.configCanEdit"
-            size="small"
             class="flex-1"
-            @update:value="settings.webCooldownSecond = $event || 600"
+            @update:model-value="settings.webCooldownSecond = $event || 600"
           />
           <Button
             variant="secondary"

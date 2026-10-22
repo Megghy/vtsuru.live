@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
-import { NInputNumber } from '@/shared/ui/NInputNumber'
+import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
@@ -160,7 +160,7 @@ function groupSelection() {
       <!-- 当处于具体区块选中状态时，顶部提供返回页面配置入口 -->
       <div
         v-if="isSelectingBlock"
-        class="editing-block-banner"
+        class="py-2 px-2.5 rounded-md bg-[var(--brand-tint,rgba(0,150,255,0.08))] border border-[var(--brand-soft,rgba(0,150,255,0.2))]"
       >
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-1.5 text-xs font-semibold">
@@ -189,21 +189,21 @@ function groupSelection() {
       <!-- 页面级基础信息（非单区块编辑时完整呈现） -->
       <div
         v-if="!isSelectingBlock"
-        class="page-mode-section"
+        class="flex flex-col gap-2"
       >
-        <div class="section-title">
+        <div>
           <span class="text-xs font-semibold text-foreground">页面搭建模式</span>
         </div>
-        <div class="mode-cards-grid">
+        <div class="flex flex-col gap-2">
           <div
             v-for="opt in PAGE_MODE_OPTIONS"
             :key="opt.value"
-            class="mode-card"
-            :class="{ 'is-active': editor.currentPage.value.mode === opt.value }"
+            class="py-2.5 px-3 rounded-lg border border-border bg-muted cursor-pointer transition flex flex-col gap-1 hover:border-primary hover:bg-popover"
+            :class="{ 'border-primary bg-[var(--brand-tint,rgba(0,150,255,0.08))] shadow-[0_0_0_1px_var(--primary)]': editor.currentPage.value.mode === opt.value }"
             @click="handleModeChange(opt.value)"
           >
-            <div class="mode-card__header">
-              <span class="mode-card__title">{{ opt.label }}</span>
+            <div class="flex-between">
+              <span class="text-[13px] font-semibold text-foreground">{{ opt.label }}</span>
               <Tag
                 v-if="opt.tag"
                 variant="outline"
@@ -212,7 +212,7 @@ function groupSelection() {
                 {{ opt.tag }}
               </Tag>
             </div>
-            <div class="mode-card__desc">
+            <div class="text-xs leading-snug text-muted-foreground">
               {{ opt.description }}
             </div>
           </div>
@@ -281,7 +281,7 @@ function groupSelection() {
 
               <div class="flex flex-col gap-1">
                 <label class="text-xs text-muted-foreground">排序权重</label>
-                <NInputNumber
+                <NumberField
                   v-model="editor.currentPage.value.navOrder"
                   placeholder="数字越小越靠前"
                 />
@@ -431,7 +431,7 @@ function groupSelection() {
               <div
                 v-else-if="editor.selectedBlocks.value.length > 1"
                 key="multi"
-                class="multi-selection-panel"
+                class="grid gap-2 mt-2 p-2.5 border border-border rounded-md bg-muted"
               >
                 <span class="text-xs font-semibold">已选择 {{ editor.selectedBlocks.value.length }} 个区块</span>
                 <div class="flex flex-wrap gap-1.5">
@@ -513,9 +513,9 @@ function groupSelection() {
               <div
                 v-else
                 key="overview-workbench"
-                class="page-overview-workbench"
+                class="p-3 border border-border rounded-lg bg-muted"
               >
-                <div class="workbench-stats">
+                <div class="flex flex-col gap-1.5">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-1.5 text-xs font-semibold">
                       <component
@@ -531,7 +531,7 @@ function groupSelection() {
                       已添加 {{ blocksCount }} 个区块
                     </Badge>
                   </div>
-                  <div class="workbench-hint">点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。</div>
+                  <div class="text-xs text-muted-foreground leading-normal">点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。</div>
                 </div>
 
                 <div class="h-px bg-border my-2" />
@@ -650,93 +650,3 @@ function groupSelection() {
 
 <style scoped src="./ui-transitions.css"></style>
 
-<style scoped>
-.editing-block-banner {
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--brand-tint, rgba(0, 150, 255, 0.08));
-  border: 1px solid var(--brand-soft, rgba(0, 150, 255, 0.2));
-}
-
-.page-mode-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mode-cards-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mode-card {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: var(--muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.mode-card:hover {
-  border-color: var(--primary);
-  background: var(--popover);
-}
-
-.mode-card.is-active {
-  border-color: var(--primary);
-  background: var(--brand-tint, rgba(0, 150, 255, 0.08));
-  box-shadow: 0 0 0 1px var(--primary);
-}
-
-.mode-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mode-card__title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-
-.mode-card__desc {
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--muted-foreground);
-}
-
-.page-overview-workbench {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--muted);
-}
-
-.workbench-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.workbench-hint {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  line-height: 1.5;
-}
-
-.multi-selection-panel {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--muted);
-}
-</style>

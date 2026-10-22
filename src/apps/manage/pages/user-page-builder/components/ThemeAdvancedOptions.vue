@@ -5,7 +5,7 @@ import type { UserPageAppearanceTheme } from '@/apps/user-page/themeConfig'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import { NInputNumber } from '@/shared/ui/NInputNumber'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tag } from '@/shared/ui/tag'
 
@@ -106,7 +106,7 @@ const radiusPresets = [
         <PropsGrid :min-item-width="210">
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">圆角大小</label>
-            <NInputNumber
+            <NumberField
               v-model="radius"
               :min="0"
               :max="32"
@@ -170,7 +170,7 @@ const radiusPresets = [
 
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">表面不透明度 %</label>
-            <NInputNumber
+            <NumberField
               v-model="surfaceOpacity"
               :min="15"
               :max="100"
