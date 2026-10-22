@@ -28,12 +28,7 @@ import { ActionType } from '@/apps/client/store/autoAction/types'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { isTauri } from '@/shared/config'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/shared/ui/accordion'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -95,12 +90,20 @@ const macroProgress = computed(() => {
           >
             {{ status.text }}
           </Badge>
-          <Button v-if="!vts.connected && !vts.connecting" variant="secondary" class="gap-1.5" @click="run(() => vts.connect())"
+          <Button
+            v-if="!vts.connected && !vts.connecting"
+            variant="secondary"
+            class="gap-1.5"
+            @click="run(() => vts.connect())"
           >
             <PlugConnected24Filled class="size-3.5" />
             连接
           </Button>
-          <Button v-else variant="secondary" class="gap-1.5" @click="run(() => vts.disconnect())"
+          <Button
+            v-else
+            variant="secondary"
+            class="gap-1.5"
+            @click="run(() => vts.disconnect())"
           >
             <PlugDisconnected24Filled class="size-3.5" />
             {{ vts.connecting ? '取消' : '断开' }}
@@ -113,9 +116,7 @@ const macroProgress = computed(() => {
       v-if="!isTauri()"
       class="border-destructive/20 bg-destructive/10 text-destructive py-2.5 px-3"
     >
-      <AlertDescription class="text-xs m-0">
-        当前不是桌面客户端环境，无法连接本地 VTube Studio。
-      </AlertDescription>
+      <AlertDescription class="text-xs m-0"> 当前不是桌面客户端环境，无法连接本地 VTube Studio。 </AlertDescription>
     </Alert>
 
     <template v-else>
@@ -149,7 +150,11 @@ const macroProgress = computed(() => {
               v-if="vts.lastRttMs != null"
               variant="outline"
               class="text-xs h-5 px-1.5"
-              :class="vts.lastRttMs < 50 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'border-amber-500/40 text-amber-600 bg-amber-500/10'"
+              :class="
+                vts.lastRttMs < 50
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
+              "
             >
               延迟 {{ vts.lastRttMs }}ms
             </Badge>
@@ -206,29 +211,47 @@ const macroProgress = computed(() => {
         class="w-full vts-tabs"
       >
         <TabsList class="grid w-full max-w-lg grid-cols-4">
-          <TabsTrigger value="deck" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="deck"
+            class="text-xs gap-1.5"
+          >
             <Grid24Regular class="size-3.5" />
             操作台
           </TabsTrigger>
-          <TabsTrigger value="actions" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="actions"
+            class="text-xs gap-1.5"
+          >
             <VideoPerson24Filled class="size-3.5" />
             热键与宏
           </TabsTrigger>
-          <TabsTrigger value="items" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="items"
+            class="text-xs gap-1.5"
+          >
             <Flash24Filled class="size-3.5" />
             道具与参数
           </TabsTrigger>
-          <TabsTrigger value="settings" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="settings"
+            class="text-xs gap-1.5"
+          >
             <Settings24Filled class="size-3.5" />
             设置
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="deck" class="pt-3">
+        <TabsContent
+          value="deck"
+          class="pt-3"
+        >
           <VtsDeck />
         </TabsContent>
 
-        <TabsContent value="actions" class="pt-3 space-y-3 client-readable">
+        <TabsContent
+          value="actions"
+          class="pt-3 space-y-3 client-readable"
+        >
           <VtsHotkeyBoard
             :hotkeys="vts.hotkeys"
             :model-name="vts.currentModelName"
@@ -241,12 +264,18 @@ const macroProgress = computed(() => {
           <VtsPanicPanel />
         </TabsContent>
 
-        <TabsContent value="items" class="pt-3 space-y-3 client-readable">
+        <TabsContent
+          value="items"
+          class="pt-3 space-y-3 client-readable"
+        >
           <VtsItemPanel />
           <VtsParameterPanel />
         </TabsContent>
 
-        <TabsContent value="settings" class="pt-3 space-y-3 client-readable">
+        <TabsContent
+          value="settings"
+          class="pt-3 space-y-3 client-readable"
+        >
           <VtsConnectionCard />
           <VtsObsLinkPanel />
 
@@ -255,9 +284,7 @@ const macroProgress = computed(() => {
             class="border rounded-md px-3 bg-card"
           >
             <AccordionItem value="profiles">
-              <AccordionTrigger class="text-xs font-semibold py-2.5">
-                配置方案与备份
-              </AccordionTrigger>
+              <AccordionTrigger class="text-xs font-semibold py-2.5"> 配置方案与备份 </AccordionTrigger>
               <AccordionContent class="pt-2 pb-3 space-y-3">
                 <VtsProfilePanel />
                 <VtsImportExportCard />
@@ -280,22 +307,25 @@ const macroProgress = computed(() => {
                   <Badge
                     variant="outline"
                     class="text-[10px] h-4.5 px-1.5"
-                    :class="a.enabled ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+                    :class="
+                      a.enabled ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'
+                    "
                   >
                     {{ a.enabled ? '启用' : '禁用' }}
                   </Badge>
                   <span class="font-medium text-xs text-foreground">{{ a.name || '未命名操作' }}</span>
                 </div>
-                <Button variant="secondary" @click="router.push({ name: 'client-auto-action-manage' })">
+                <Button
+                  variant="secondary"
+                  @click="router.push({ name: 'client-auto-action-manage' })"
+                >
                   前往自动操作
                 </Button>
               </AccordionContent>
             </AccordionItem>
 
             <AccordionItem value="history">
-              <AccordionTrigger class="text-xs font-semibold py-2.5">
-                操作记录
-              </AccordionTrigger>
+              <AccordionTrigger class="text-xs font-semibold py-2.5"> 操作记录 </AccordionTrigger>
               <AccordionContent class="pt-2 pb-3">
                 <VtsHistoryPanel />
               </AccordionContent>

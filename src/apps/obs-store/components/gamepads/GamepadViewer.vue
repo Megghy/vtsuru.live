@@ -5,8 +5,6 @@ import { toast } from 'vue-sonner'
 
 import { controllerBodies, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import { useGamepadStore } from '@/store/useGamepadStore'
-import type { GamepadType } from '@/types/gamepad'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -15,14 +13,10 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
+import { useGamepadStore } from '@/store/useGamepadStore'
+import type { GamepadType } from '@/types/gamepad'
 
 const GamepadDisplay = defineAsyncComponent(() => import('./GamepadDisplay.vue'))
 
@@ -38,9 +32,7 @@ const gamepadTypeOptions: { label: string; value: GamepadType }[] = [
 
 const config = computed(() => gamepadConfigs[selectedType.value])
 const bodies = computed(() => controllerBodies[selectedType.value] || [])
-const bodyOptions = computed(() =>
-  bodies.value.map((b) => ({ label: b.name, value: b.id })),
-)
+const bodyOptions = computed(() => bodies.value.map((b) => ({ label: b.name, value: b.id })))
 
 // --- 底壳与外观 ---
 const bodyKey = computed(() => `gamepad-body-${selectedType.value}`)
@@ -59,7 +51,8 @@ const validBodyId = computed(() => {
 const pressedColorKey = computed(() => `gamepad-pressed-color-${selectedType.value}`)
 const customPressedColor = usePersistedStorage<string | null>(pressedColorKey, null)
 const enableCustomColor = computed({
-  get: () => customPressedColor.value !== null && customPressedColor.value !== 'null' && customPressedColor.value !== '',
+  get: () =>
+    customPressedColor.value !== null && customPressedColor.value !== 'null' && customPressedColor.value !== '',
   set: (v) => {
     customPressedColor.value = v ? '#38bdf8' : null
   },
@@ -121,18 +114,17 @@ async function copyObsUrl() {
         <!-- 顶部标题与 OBS 快捷操作 -->
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div class="gp-title">
-              游戏手柄 OBS 渲染组件
-            </div>
+            <div class="gp-title">游戏手柄 OBS 渲染组件</div>
             <div class="text-xs text-muted-foreground mt-0.5">
               将玩家实时手柄操作（按键、双摇杆、线性扳机）以高帧率投射到 OBS 画面中
             </div>
           </div>
           <div class="flex items-center gap-2">
-            <Button @click="copyObsUrl">
-              复制 OBS 链接
-            </Button>
-            <Button variant="outline" as-child>
+            <Button @click="copyObsUrl"> 复制 OBS 链接 </Button>
+            <Button
+              variant="outline"
+              as-child
+            >
               <a
                 :href="displayRelativeUrl"
                 target="_blank"
@@ -157,7 +149,12 @@ async function copyObsUrl() {
                 正在运行仿真测试演示动画（自动模拟摇杆画圆与按键交替触发）
               </AlertDescription>
             </div>
-            <Button size="xs" variant="outline" class="h-6 text-[11px] border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10" @click="gamepadStore.stopSimulation">
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px] border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+              @click="gamepadStore.stopSimulation"
+            >
               退出测试
             </Button>
           </div>
@@ -170,7 +167,12 @@ async function copyObsUrl() {
             <AlertDescription class="text-xs text-current m-0">
               未检测到游戏手柄连接。按下手柄任意按键唤醒，或开启动态仿真测试：
             </AlertDescription>
-            <Button size="xs" variant="outline" class="h-6 text-[11px] border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10" @click="gamepadStore.startSimulation">
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px] border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
+              @click="gamepadStore.startSimulation"
+            >
               开启仿真测试
             </Button>
           </div>
@@ -211,13 +213,28 @@ async function copyObsUrl() {
 
           <div class="gp-stage-overlay-tools">
             <div class="flex items-center gap-1.5">
-              <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
+              <Button
+                size="xs"
+                class="h-6 text-[11px] px-2"
+                :variant="previewBg === 'checker' ? 'default' : 'outline'"
+                @click="previewBg = 'checker'"
+              >
                 网格底
               </Button>
-              <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
+              <Button
+                size="xs"
+                class="h-6 text-[11px] px-2"
+                :variant="previewBg === 'dark' ? 'default' : 'outline'"
+                @click="previewBg = 'dark'"
+              >
                 暗黑底
               </Button>
-              <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
+              <Button
+                size="xs"
+                class="h-6 text-[11px] px-2"
+                :variant="previewBg === 'transparent' ? 'default' : 'outline'"
+                @click="previewBg = 'transparent'"
+              >
                 透明底
               </Button>
             </div>
@@ -232,9 +249,7 @@ async function copyObsUrl() {
           <div class="flex flex-wrap items-center gap-4">
             <div class="flex items-center gap-2">
               <span class="text-xs text-foreground min-w-[60px]">手柄类型:</span>
-              <Select
-                v-model="selectedType"
-              >
+              <Select v-model="selectedType">
                 <SelectTrigger class="w-[180px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -256,9 +271,7 @@ async function copyObsUrl() {
               class="flex items-center gap-2"
             >
               <span class="text-xs text-foreground min-w-[60px]">手柄外观:</span>
-              <Select
-                v-model="selectedBodyId"
-              >
+              <Select v-model="selectedBodyId">
                 <SelectTrigger class="w-[220px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -313,7 +326,11 @@ async function copyObsUrl() {
               :max="50"
               :step="1"
               class="w-[180px] max-w-[280px]"
-              @update:model-value="(val) => { if (val?.[0] !== undefined) stickSensitivity = val[0] }"
+              @update:model-value="
+                (val) => {
+                  if (val?.[0] !== undefined) stickSensitivity = val[0]
+                }
+              "
             />
             <NInputNumber
               :value="stickSensitivity"
@@ -323,7 +340,11 @@ async function copyObsUrl() {
               class="w-[80px]"
               @update:value="stickSensitivity = $event || 15"
             />
-            <Button size="xs" variant="outline" @click="stickSensitivity = 15">
+            <Button
+              size="xs"
+              variant="outline"
+              @click="stickSensitivity = 15"
+            >
               重置
             </Button>
           </div>
@@ -336,7 +357,11 @@ async function copyObsUrl() {
               :max="0.25"
               :step="0.01"
               class="w-[180px] max-w-[280px]"
-              @update:model-value="(val) => { if (val?.[0] !== undefined) gamepadStore.deadzone = val[0] }"
+              @update:model-value="
+                (val) => {
+                  if (val?.[0] !== undefined) gamepadStore.deadzone = val[0]
+                }
+              "
             />
             <NInputNumber
               :value="gamepadStore.deadzone"
@@ -347,9 +372,7 @@ async function copyObsUrl() {
               class="w-[80px]"
               @update:value="gamepadStore.deadzone = $event || 0.08"
             />
-            <span class="text-xs text-muted-foreground">
-              (过滤手柄微小零点漂移，默认 0.08)
-            </span>
+            <span class="text-xs text-muted-foreground"> (过滤手柄微小零点漂移，默认 0.08) </span>
           </div>
 
           <!-- OBS 使用指南 -->
@@ -359,9 +382,7 @@ async function copyObsUrl() {
           </div>
 
           <div class="gp-obs-guide">
-            <div class="gp-guide-step">
-              1. 在 OBS「来源」窗口中点击 <b>+</b>，添加 <b>浏览器 (Browser)</b> 来源。
-            </div>
+            <div class="gp-guide-step">1. 在 OBS「来源」窗口中点击 <b>+</b>，添加 <b>浏览器 (Browser)</b> 来源。</div>
             <div class="gp-guide-step">
               2. 将 URL 设为下方链接，推荐分辨率设为 <b>宽度 800，高度 500</b>（保持手柄比例）。
             </div>
@@ -369,23 +390,34 @@ async function copyObsUrl() {
               3. 勾选 <b>“关闭源时卸载浏览器”</b> 与 <b>“在 OBS 中控制音频”</b>（如有需要）。
             </div>
             <div class="gp-url-box flex items-center gap-2 mt-2">
-              <Input :value="displayAbsoluteUrl" readonly class="flex-1" />
-              <Button @click="copyObsUrl">
-                复制
-              </Button>
+              <Input
+                :value="displayAbsoluteUrl"
+                readonly
+                class="flex-1"
+              />
+              <Button @click="copyObsUrl"> 复制 </Button>
             </div>
           </div>
 
           <!-- 高级 ViewBox 设置 -->
           <details class="group mt-2 border rounded-md p-2.5 text-xs">
-            <summary class="font-medium cursor-pointer list-none flex items-center justify-between text-muted-foreground hover:text-foreground">
+            <summary
+              class="font-medium cursor-pointer list-none flex items-center justify-between text-muted-foreground hover:text-foreground"
+            >
               <span>高级布局与 ViewBox 微调</span>
               <span class="transition-transform group-open:rotate-180">▾</span>
             </summary>
             <div class="flex items-center gap-2 mt-3 pt-2 border-t">
               <span class="text-xs">自定义 ViewBox:</span>
-              <Input v-model="customViewBox" :placeholder="config.defaultViewBox" class="w-[220px]" />
-              <Button variant="outline" @click="customViewBox = ''">
+              <Input
+                v-model="customViewBox"
+                :placeholder="config.defaultViewBox"
+                class="w-[220px]"
+              />
+              <Button
+                variant="outline"
+                @click="customViewBox = ''"
+              >
                 恢复默认
               </Button>
             </div>
@@ -394,7 +426,10 @@ async function copyObsUrl() {
       </CardContent>
     </Card>
 
-    <Card v-else class="p-6 text-center text-muted-foreground text-sm">
+    <Card
+      v-else
+      class="p-6 text-center text-muted-foreground text-sm"
+    >
       无效的游戏手柄配置
     </Card>
   </div>
@@ -463,12 +498,14 @@ async function copyObsUrl() {
 .bg-checker {
   background-color: #1e1e24;
   background-image:
-    linear-gradient(45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #2b2b36 75%),
-    linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
+    linear-gradient(45deg, #2b2b36 25%, transparent 25%), linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b36 75%), linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
   background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
 }
 
 .bg-dark {

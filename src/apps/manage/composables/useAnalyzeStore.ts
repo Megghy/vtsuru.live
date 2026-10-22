@@ -26,9 +26,8 @@ export const useAnalyzeStore = defineStore('manage-analyze', () => {
    * SWR 加载策略：
    * - 若无缓存：开启 loading 骨架态阻断
    * - 若已有缓存：立即秒开渲染，仅置 refreshing 进行后台静默拉取
-   * - force = true：显式手动刷新
    */
-  async function loadData(force = false): Promise<void> {
+  async function loadData(): Promise<void> {
     const hasExistingData = !!analyzeData.value
 
     if (!hasExistingData) {

@@ -1,28 +1,18 @@
 <script setup lang="ts">
-import {
-  DocumentArrowDown20Regular,
-  Money24Regular,
-  Search24Filled,
-} from '@vicons/fluent'
+import { DocumentArrowDown20Regular, Money24Regular, Search24Filled } from '@vicons/fluent'
 import { saveAs } from 'file-saver'
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import DanmakuItem from '@/apps/manage/components/live/DanmakuItem.vue'
 import { GetString } from '@/apps/manage/components/live/danmakuExport'
+import DanmakuItem from '@/apps/manage/components/live/DanmakuItem.vue'
 import SimpleVirtualList from '@/apps/manage/components/live/SimpleVirtualList.vue'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Spin } from '@/shared/ui/spin'
@@ -244,7 +234,7 @@ function handleExport() {
       new Blob([GetString(accountInfo.value, props.currentLive, source, exportType.value)], {
         type: 'text/plain;charset=utf-8',
       }),
-      `${Date.now()}_${props.currentLive.startAt}_${props.currentLive.title.replace(/[\/\\]/g, '-')}_${accountInfo.value?.name ?? 'live'}.${exportType.value}`,
+      `${Date.now()}_${props.currentLive.startAt}_${props.currentLive.title.replace(/[/\\]/g, '-')}_${accountInfo.value?.name ?? 'live'}.${exportType.value}`,
     )
     showExportModal.value = false
     message.success('弹幕导出成功')
@@ -301,20 +291,35 @@ defineExpose({
         <DialogHeader>
           <DialogTitle class="text-sm font-semibold">导出弹幕数据</DialogTitle>
         </DialogHeader>
-        <div v-if="isExporting" class="py-6 flex justify-center">
+        <div
+          v-if="isExporting"
+          class="py-6 flex justify-center"
+        >
           <Spin />
         </div>
-        <div v-else class="flex flex-col gap-4 py-2">
+        <div
+          v-else
+          class="flex flex-col gap-4 py-2"
+        >
           <div>
             <div class="text-xs text-muted-foreground mb-2">选择导出格式</div>
             <div class="grid grid-cols-3 gap-2">
-              <Button :variant="exportType === 'json' ? 'default' : 'outline'" @click="exportType = 'json'">
+              <Button
+                :variant="exportType === 'json' ? 'default' : 'outline'"
+                @click="exportType = 'json'"
+              >
                 JSON 完整
               </Button>
-              <Button :variant="exportType === 'xml' ? 'default' : 'outline'" @click="exportType = 'xml'">
+              <Button
+                :variant="exportType === 'xml' ? 'default' : 'outline'"
+                @click="exportType = 'xml'"
+              >
                 XML 标准
               </Button>
-              <Button :variant="exportType === 'csv' ? 'default' : 'outline'" @click="exportType = 'csv'">
+              <Button
+                :variant="exportType === 'csv' ? 'default' : 'outline'"
+                @click="exportType = 'csv'"
+              >
                 CSV 表格
               </Button>
             </div>
@@ -326,16 +331,25 @@ defineExpose({
               :checked="onlyExportFilteredDanmakus"
               @update:checked="onlyExportFilteredDanmakus = $event"
             />
-            <label for="export-filtered" class="text-xs cursor-pointer">
+            <label
+              for="export-filtered"
+              class="text-xs cursor-pointer"
+            >
               仅导出当前筛选后的弹幕 (当前 {{ filteredDanmakuCount }} 条)
             </label>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" @click="showExportModal = false">
+          <Button
+            variant="outline"
+            @click="showExportModal = false"
+          >
             取消
           </Button>
-          <Button :disabled="isExporting" @click="handleExport">
+          <Button
+            :disabled="isExporting"
+            @click="handleExport"
+          >
             立即导出
           </Button>
         </DialogFooter>
@@ -350,8 +364,15 @@ defineExpose({
           <!-- 搜索输入 -->
           <div class="flex flex-wrap items-center gap-2">
             <div class="relative w-64">
-              <component :is="Search24Filled" class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-              <Input v-model="keyword" placeholder="搜索发言内容、用户名或 UID..." class="pl-8" />
+              <component
+                :is="Search24Filled"
+                class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground"
+              />
+              <Input
+                v-model="keyword"
+                placeholder="搜索发言内容、用户名或 UID..."
+                class="pl-8"
+              />
             </div>
 
             <div class="flex items-center gap-1.5">
@@ -360,7 +381,11 @@ defineExpose({
                 :checked="enableRegex"
                 @update:checked="enableRegex = $event"
               />
-              <label for="filter-regex" class="text-xs cursor-pointer select-none">正则</label>
+              <label
+                for="filter-regex"
+                class="text-xs cursor-pointer select-none"
+                >正则</label
+              >
             </div>
 
             <div class="flex items-center gap-1.5">
@@ -369,7 +394,11 @@ defineExpose({
                 :checked="deselect"
                 @update:checked="deselect = $event"
               />
-              <label for="filter-deselect" class="text-xs cursor-pointer select-none">反选</label>
+              <label
+                for="filter-deselect"
+                class="text-xs cursor-pointer select-none"
+                >反选</label
+              >
             </div>
           </div>
 
@@ -381,7 +410,11 @@ defineExpose({
                 :checked="hideEmoji"
                 @update:checked="hideEmoji = $event"
               />
-              <label for="filter-hide-emoji" class="text-xs cursor-pointer select-none">隐藏表情</label>
+              <label
+                for="filter-hide-emoji"
+                class="text-xs cursor-pointer select-none"
+                >隐藏表情</label
+              >
             </div>
 
             <div class="flex items-center gap-1.5">
@@ -390,13 +423,23 @@ defineExpose({
                 :checked="hideAvatar"
                 @update:checked="hideAvatar = $event"
               />
-              <label for="filter-hide-avatar" class="text-xs cursor-pointer select-none">隐藏头像</label>
+              <label
+                for="filter-hide-avatar"
+                class="text-xs cursor-pointer select-none"
+                >隐藏头像</label
+              >
             </div>
 
             <div class="h-4 w-px bg-border" />
 
-            <Button variant="outline" @click="showExportModal = true">
-              <component :is="DocumentArrowDown20Regular" class="size-3.5 mr-1" />
+            <Button
+              variant="outline"
+              @click="showExportModal = true"
+            >
+              <component
+                :is="DocumentArrowDown20Regular"
+                class="size-3.5 mr-1"
+              />
               导出弹幕
             </Button>
           </div>
@@ -453,7 +496,11 @@ defineExpose({
               <button
                 type="button"
                 class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="price === undefined ? 'bg-primary text-primary-foreground border-primary font-semibold' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'"
+                :class="
+                  price === undefined
+                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                "
                 @click="handlePriceQuickSelect(undefined)"
               >
                 不限
@@ -461,7 +508,11 @@ defineExpose({
               <button
                 type="button"
                 class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="price === 0.1 ? 'bg-primary text-primary-foreground border-primary font-semibold' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'"
+                :class="
+                  price === 0.1
+                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                "
                 @click="handlePriceQuickSelect(0.1)"
               >
                 ≥0.1
@@ -469,7 +520,11 @@ defineExpose({
               <button
                 type="button"
                 class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="price === 1 ? 'bg-primary text-primary-foreground border-primary font-semibold' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'"
+                :class="
+                  price === 1
+                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                "
                 @click="handlePriceQuickSelect(1)"
               >
                 ≥1
@@ -477,7 +532,11 @@ defineExpose({
               <button
                 type="button"
                 class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="price === 30 ? 'bg-primary text-primary-foreground border-primary font-semibold' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'"
+                :class="
+                  price === 30
+                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                "
                 @click="handlePriceQuickSelect(30)"
               >
                 ≥30
@@ -485,7 +544,11 @@ defineExpose({
               <button
                 type="button"
                 class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="price === 100 ? 'bg-primary text-primary-foreground border-primary font-semibold' : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'"
+                :class="
+                  price === 100
+                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
+                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+                "
                 @click="handlePriceQuickSelect(100)"
               >
                 ≥100
@@ -500,7 +563,11 @@ defineExpose({
                 :checked="orderDecreasing"
                 @update:checked="orderDecreasing = $event"
               />
-              <label for="filter-order-dec" class="text-xs cursor-pointer select-none">时间倒序</label>
+              <label
+                for="filter-order-dec"
+                class="text-xs cursor-pointer select-none"
+                >时间倒序</label
+              >
             </div>
 
             <div class="flex items-center gap-1.5">
@@ -509,22 +576,32 @@ defineExpose({
                 :checked="orderByPrice"
                 @update:checked="orderByPrice = $event"
               />
-              <label for="filter-order-price" class="text-xs cursor-pointer select-none">按金额排序</label>
+              <label
+                for="filter-order-price"
+                class="text-xs cursor-pointer select-none"
+                >按金额排序</label
+              >
             </div>
           </div>
         </div>
       </div>
 
       <!-- 底部状态计数条 -->
-      <div class="mt-2.5 pt-2 border-t border-border flex justify-between items-center text-xs text-muted-foreground font-mono">
+      <div
+        class="mt-2.5 pt-2 border-t border-border flex justify-between items-center text-xs text-muted-foreground font-mono"
+      >
         <span>
-          显示 <strong class="text-foreground">{{ filteredDanmakuCount.toLocaleString() }}</strong> / {{ totalDanmakuCount.toLocaleString() }} 条事件
+          显示 <strong class="text-foreground">{{ filteredDanmakuCount.toLocaleString() }}</strong> /
+          {{ totalDanmakuCount.toLocaleString() }} 条事件
         </span>
         <span
           v-if="totalFilteredPrice > 0"
           class="flex items-center gap-1 text-emerald-500"
         >
-          <component :is="Money24Regular" class="size-3.5" />
+          <component
+            :is="Money24Regular"
+            class="size-3.5"
+          />
           筛选范围打赏: <strong>¥{{ totalFilteredPrice.toLocaleString() }}</strong>
         </span>
       </div>

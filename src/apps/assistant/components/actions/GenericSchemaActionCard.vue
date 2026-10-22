@@ -143,7 +143,13 @@ function displayValue(f: EditableField) {
               :placeholder="f.label"
               @update:model-value="setFieldValue(i, f.key, $event)"
             />
-            <Input size="xs" v-else :model-value="fieldValue(i, f.key)" :placeholder="f.type === 'tags' ? '逗号分隔' : f.label" @update:model-value="setFieldValue(i, f.key, $event)" />
+            <Input
+              size="xs"
+              v-else
+              :model-value="fieldValue(i, f.key)"
+              :placeholder="f.type === 'tags' ? '逗号分隔' : f.label"
+              @update:model-value="setFieldValue(i, f.key, $event)"
+            />
           </div>
         </div>
 
@@ -164,9 +170,13 @@ function displayValue(f: EditableField) {
               v-if="fieldChanged(f)"
               class="struct-field__val struct-field__val--changed inline-flex items-center gap-1 flex-wrap px-1.5 py-0.5 rounded bg-emerald-500/10"
             >
-              <span class="line-through text-muted-foreground">{{ f.before || (f.type === 'tags' ? '无' : '空') }}</span>
+              <span class="line-through text-muted-foreground">{{
+                f.before || (f.type === 'tags' ? '无' : '空')
+              }}</span>
               <span class="struct-field__arrow text-muted-foreground">→</span>
-              <span class="struct-field__after text-emerald-600 dark:text-emerald-400 font-medium">{{ displayValue(f) }}</span>
+              <span class="struct-field__after text-emerald-600 dark:text-emerald-400 font-medium">{{
+                displayValue(f)
+              }}</span>
             </span>
             <span
               v-else

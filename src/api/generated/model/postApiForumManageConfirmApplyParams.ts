@@ -7,6 +7,6 @@
  */
 
 export type PostApiForumManageConfirmApplyParams = {
-forum?: number;
-id?: number;
-};
+  forum?: number
+  id?: number
+}

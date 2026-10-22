@@ -5,26 +5,26 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruDataFileStorageStorageProviderKind } from './vTsuruDataFileStorageStorageProviderKind';
-import type { VTsuruDataFileStorageStorageTargetStatus } from './vTsuruDataFileStorageStorageTargetStatus';
+import type { VTsuruDataFileStorageStorageProviderKind } from './vTsuruDataFileStorageStorageProviderKind'
+import type { VTsuruDataFileStorageStorageTargetStatus } from './vTsuruDataFileStorageStorageTargetStatus'
 
 export interface ResponseStorageTarget {
-  id: number;
-  name: string;
-  provider: VTsuruDataFileStorageStorageProviderKind;
+  id: number
+  name: string
+  provider: VTsuruDataFileStorageStorageProviderKind
   /** @nullable */
-  endpoint?: string | null;
+  endpoint?: string | null
   /** @nullable */
-  region?: string | null;
+  region?: string | null
   /** @nullable */
-  bucket?: string | null;
+  bucket?: string | null
   /** @nullable */
-  rootPath?: string | null;
-  status: VTsuruDataFileStorageStorageTargetStatus;
-  isSite: boolean;
-  hasCredentials: boolean;
-  fileCount: number;
-  usedBytes: number;
-  createTime: string;
-  updateTime: string;
+  rootPath?: string | null
+  status: VTsuruDataFileStorageStorageTargetStatus
+  isSite: boolean
+  hasCredentials: boolean
+  fileCount: number
+  usedBytes: number
+  createTime: string
+  updateTime: string
 }

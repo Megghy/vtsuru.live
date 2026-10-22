@@ -39,7 +39,15 @@ const BACKGROUND = { transparent: null, white: '#ffffff', black: '#000000' } as 
 const canCopy = typeof ClipboardItem !== 'undefined' && !!navigator.clipboard?.write
 const watermarkTime = computed(() =>
   event.value
-    ? new Date(event.value.time).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+    ? new Date(event.value.time).toLocaleString('zh-CN', {
+        timeZone: 'Asia/Shanghai',
+        hour12: false,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+      })
     : '',
 )
 
@@ -64,7 +72,12 @@ async function exec(action: (blob: Blob) => Promise<void> | void) {
 }
 
 const save = () =>
-  exec((blob) => saveAs(blob, `vtsuru-dashboard-${event.value!.type}-${event.value!.uid || event.value!.ouid}-${event.value!.time}.png`))
+  exec((blob) =>
+    saveAs(
+      blob,
+      `vtsuru-dashboard-${event.value!.type}-${event.value!.uid || event.value!.ouid}-${event.value!.time}.png`,
+    ),
+  )
 
 const copy = () =>
   exec(async (blob) => {
@@ -152,7 +165,13 @@ const copy = () =>
             额外留白
           </label>
           <div class="flex items-center gap-1 mt-1">
-            <Button v-for="mode in (['transparent', 'white', 'black'] as const)" :key="mode" :variant="options.background === mode ? 'default' : 'outline'" class="flex-1 px-1" @click="options.background = mode">
+            <Button
+              v-for="mode in ['transparent', 'white', 'black'] as const"
+              :key="mode"
+              :variant="options.background === mode ? 'default' : 'outline'"
+              class="flex-1 px-1"
+              @click="options.background = mode"
+            >
               {{ mode === 'transparent' ? '透明' : mode === 'white' ? '白色' : '黑色' }}
             </Button>
           </div>
@@ -160,10 +179,18 @@ const copy = () =>
       </div>
       <DialogFooter>
         <div class="image-dialog__buttons flex justify-end gap-2 w-full">
-          <Button v-if="canCopy" variant="outline" :disabled="busy" @click="copy">
+          <Button
+            v-if="canCopy"
+            variant="outline"
+            :disabled="busy"
+            @click="copy"
+          >
             复制到剪贴板
           </Button>
-          <Button :disabled="busy" @click="save">
+          <Button
+            :disabled="busy"
+            @click="save"
+          >
             保存图片
           </Button>
         </div>

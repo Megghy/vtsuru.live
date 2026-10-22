@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointControllerRequestBuyPointGoodsModelServiceAnswers } from './pointControllerRequestBuyPointGoodsModelServiceAnswers';
-import type { PointControllerRequestBuySubItemModel } from './pointControllerRequestBuySubItemModel';
+import type { PointControllerRequestBuyPointGoodsModelServiceAnswers } from './pointControllerRequestBuyPointGoodsModelServiceAnswers'
+import type { PointControllerRequestBuySubItemModel } from './pointControllerRequestBuySubItemModel'
 
 export interface PointControllerRequestBuyPointGoodsModel {
-  vId: number;
-  goodsId: number;
-  count: number;
+  vId: number
+  goodsId: number
+  count: number
   /** @nullable */
-  addressId?: string | null;
+  addressId?: string | null
   /** @nullable */
-  remark?: string | null;
+  remark?: string | null
   /** @nullable */
-  selectedSubItems?: PointControllerRequestBuySubItemModel[] | null;
+  selectedSubItems?: PointControllerRequestBuySubItemModel[] | null
   /** @nullable */
-  serviceAnswers?: PointControllerRequestBuyPointGoodsModelServiceAnswers;
+  serviceAnswers?: PointControllerRequestBuyPointGoodsModelServiceAnswers
 }

@@ -3,12 +3,9 @@ import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import BlockCard from '../BlockCard.vue'
-import {
-  buttonAppearanceClass,
-  buttonAppearanceStyle,
-  normalizeButtonAppearance,
-} from '../buttonAppearance'
+import { buttonAppearanceClass, buttonAppearanceStyle, normalizeButtonAppearance } from '../buttonAppearance'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
+
 import '../buttonAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()
@@ -142,11 +139,7 @@ const itemsClass = computed(() => {
   >
     <div
       class="buttons-container flex"
-      :class="[
-        direction === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
-        justifyClass,
-        itemsClass,
-      ]"
+      :class="[direction === 'vertical' ? 'flex-col' : 'flex-row flex-wrap', justifyClass, itemsClass]"
       :style="{ gap: `${gap}px` }"
     >
       <template

@@ -153,9 +153,7 @@ const weekOptions = computed<WeekOption[]>(() => {
 
 const currentWeekIndex = computed(() => weekOptions.value.findIndex((option) => option.value === selectedWeek.value))
 const hasPreviousWeek = computed(() => currentWeekIndex.value > 0)
-const hasNextWeek = computed(
-  () => currentWeekIndex.value >= 0 && currentWeekIndex.value < weekOptions.value.length - 1,
-)
+const hasNextWeek = computed(() => currentWeekIndex.value >= 0 && currentWeekIndex.value < weekOptions.value.length - 1)
 
 function moveWeek(offset: number) {
   const option = weekOptions.value[currentWeekIndex.value + offset]
@@ -290,8 +288,8 @@ const nowLeftPercent = computed(() => minutesToPercent(nowMinutes.value))
 // 今日索引 (0 ~ 6: 周一到周日)
 const todayDayIndex = computed(() => {
   if (!isCurrentRealWeek.value) return -1
-  const now = new Date()
-  return (now.getDay() + 6) % 7
+  const currentDate = new Date()
+  return (currentDate.getDay() + 6) % 7
 })
 
 // 分类图例与筛选
@@ -466,13 +464,15 @@ defineExpose({ Config, DefaultConfig })
       <header class="timegrid-header">
         <div class="timegrid-header__title-group">
           <div class="timegrid-header__eyebrow">
-            <component :is="CalendarLtr20Regular" class="size-3.5 inline" aria-hidden="true" />
+            <component
+              :is="CalendarLtr20Regular"
+              class="size-3.5 inline"
+              aria-hidden="true"
+            />
             <span>WEEKLY TIMELINE</span>
           </div>
           <h2 class="timegrid-header__title">{{ effectiveConfig.heading }}</h2>
-          <p class="timegrid-header__meta">
-            {{ streamerName }} · {{ effectiveConfig.subheading }}
-          </p>
+          <p class="timegrid-header__meta">{{ streamerName }} · {{ effectiveConfig.subheading }}</p>
         </div>
 
         <div class="timegrid-header__badges">
@@ -483,7 +483,11 @@ defineExpose({ Config, DefaultConfig })
             <span>聚焦时段 {{ activeTimeRange.startHour }}:00 - {{ activeTimeRange.endHour }}:00</span>
           </span>
           <span class="timegrid-badge timegrid-badge--accent">
-            <component :is="Clock20Regular" class="size-3.5 inline" aria-hidden="true" />
+            <component
+              :is="Clock20Regular"
+              class="size-3.5 inline"
+              aria-hidden="true"
+            />
             <span>北京时间 (UTC+8)</span>
           </span>
           <span
@@ -509,7 +513,10 @@ defineExpose({ Config, DefaultConfig })
             title="上一周"
             @click="moveWeek(-1)"
           >
-            <component :is="ChevronLeft20Regular" class="size-4" />
+            <component
+              :is="ChevronLeft20Regular"
+              class="size-4"
+            />
           </button>
 
           <div class="timegrid-controls__range">
@@ -548,7 +555,10 @@ defineExpose({ Config, DefaultConfig })
             title="下一周"
             @click="moveWeek(1)"
           >
-            <component :is="ChevronRight20Regular" class="size-4" />
+            <component
+              :is="ChevronRight20Regular"
+              class="size-4"
+            />
           </button>
 
           <button
@@ -568,7 +578,10 @@ defineExpose({ Config, DefaultConfig })
             :disabled="saving"
             @click="saveScheduleImage"
           >
-            <component :is="ArrowDownload20Regular" class="size-4" />
+            <component
+              :is="ArrowDownload20Regular"
+              class="size-4"
+            />
             <span>{{ saving ? '生成中...' : '导出海报' }}</span>
           </button>
         </div>
@@ -604,7 +617,11 @@ defineExpose({ Config, DefaultConfig })
               <PopoverContent class="timegrid-popover w-60 p-3 text-xs space-y-2">
                 <h4 class="timegrid-popover__title font-semibold text-foreground">{{ item.title || '未命名活动' }}</h4>
                 <div class="timegrid-popover__time-row flex items-center gap-1.5 text-muted-foreground text-[11px]">
-                  <component :is="Clock20Regular" class="size-3.5 inline" aria-hidden="true" />
+                  <component
+                    :is="Clock20Regular"
+                    class="size-3.5 inline"
+                    aria-hidden="true"
+                  />
                   <span>{{ day.label }} ({{ day.date }}) · {{ formatEventTime(item.time) }}</span>
                 </div>
                 <div
@@ -615,7 +632,11 @@ defineExpose({ Config, DefaultConfig })
                     color: item.tagColor || 'var(--timegrid-accent)',
                   }"
                 >
-                  <component :is="Tag20Regular" class="size-3 inline" aria-hidden="true" />
+                  <component
+                    :is="Tag20Regular"
+                    class="size-3 inline"
+                    aria-hidden="true"
+                  />
                   <span>{{ item.tag }}</span>
                 </div>
               </PopoverContent>
@@ -746,9 +767,15 @@ defineExpose({ Config, DefaultConfig })
 
                   <!-- 弹层详情卡片 -->
                   <PopoverContent class="timegrid-popover w-64 p-3 text-xs space-y-2">
-                    <h4 class="timegrid-popover__title font-semibold text-foreground">{{ entry.item.title || '未命名直播' }}</h4>
+                    <h4 class="timegrid-popover__title font-semibold text-foreground">
+                      {{ entry.item.title || '未命名直播' }}
+                    </h4>
                     <div class="timegrid-popover__time-row flex items-center gap-1.5 text-muted-foreground text-[11px]">
-                      <component :is="Clock20Regular" class="size-3.5 inline" aria-hidden="true" />
+                      <component
+                        :is="Clock20Regular"
+                        class="size-3.5 inline"
+                        aria-hidden="true"
+                      />
                       <span>{{ day.label }} ({{ day.date }}) · {{ entry.item.time }}</span>
                     </div>
                     <div
@@ -760,7 +787,11 @@ defineExpose({ Config, DefaultConfig })
                         border: `1px solid color-mix(in srgb, ${entry.color} 36%, transparent)`,
                       }"
                     >
-                      <component :is="Tag20Regular" class="size-3 inline" aria-hidden="true" />
+                      <component
+                        :is="Tag20Regular"
+                        class="size-3 inline"
+                        aria-hidden="true"
+                      />
                       <span>{{ entry.item.tag }}</span>
                     </div>
                     <div
@@ -773,7 +804,10 @@ defineExpose({ Config, DefaultConfig })
                         rel="noopener noreferrer"
                         class="inline-flex items-center gap-1 text-primary text-xs hover:underline"
                       >
-                        <component :is="Open20Regular" class="size-3.5" />
+                        <component
+                          :is="Open20Regular"
+                          class="size-3.5"
+                        />
                         前往直播间
                       </a>
                     </div>

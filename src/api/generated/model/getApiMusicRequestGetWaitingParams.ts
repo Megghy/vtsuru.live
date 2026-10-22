@@ -7,5 +7,5 @@
  */
 
 export type GetApiMusicRequestGetWaitingParams = {
-id?: number;
-};
+  id?: number
+}

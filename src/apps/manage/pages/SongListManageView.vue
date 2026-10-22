@@ -3,7 +3,6 @@ import { MoreHorizontal24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { useMessage } from '@/shared/utils'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -18,12 +17,8 @@ import { parseSongListCsv, parsedRowsToSongsInfo } from '@/apps/manage/composabl
 import SongList from '@/components/SongList.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
+import { useMessage } from '@/shared/utils'
 import { objectsToCSV } from '@/shared/utils'
 
 const message = useMessage()
@@ -42,7 +37,9 @@ const songListUrl = computed(() =>
 async function getSongs() {
   isLoading.value = true
   try {
-    const data = (await getApiSongListGet({ id: accountInfo.value?.id != null ? String(accountInfo.value.id) : undefined })) as unknown as {
+    const data = (await getApiSongListGet({
+      id: accountInfo.value?.id != null ? String(accountInfo.value.id) : undefined,
+    })) as unknown as {
       code: number
       data: any
     }
@@ -161,17 +158,27 @@ onMounted(getSongs)
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button variant="default" @click="showModal = true">
+          <Button
+            variant="default"
+            @click="showModal = true"
+          >
             添加歌曲
           </Button>
 
-          <Button variant="outline" :loading="isLoading || isImporting" @click="getSongs">
+          <Button
+            variant="outline"
+            :loading="isLoading || isImporting"
+            @click="getSongs"
+          >
             刷新
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="outline" :loading="isImporting">
+              <Button
+                variant="outline"
+                :loading="isImporting"
+              >
                 <component
                   :is="MoreHorizontal24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -180,21 +187,11 @@ onMounted(getSongs)
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem @click="handleMoreAction('template')">
-                修改展示模板
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="handleMoreAction('export')">
-                导出为 CSV
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="handleMoreAction('import')">
-                从 CSV 导入
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="handleMoreAction('live-request')">
-                前往点播管理页
-              </DropdownMenuItem>
-              <DropdownMenuItem @click="handleMoreAction('song-list')">
-                前往歌单展示页
-              </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('template')"> 修改展示模板 </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('export')"> 导出为 CSV </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('import')"> 从 CSV 导入 </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('live-request')"> 前往点播管理页 </DropdownMenuItem>
+              <DropdownMenuItem @click="handleMoreAction('song-list')"> 前往歌单展示页 </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

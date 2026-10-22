@@ -1,11 +1,6 @@
 <script setup lang="ts">
-import {
-  Gift20Regular,
-  PeopleCommunity20Regular,
-  Trophy20Regular,
-  VehicleShip20Regular,
-} from '@vicons/fluent'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { Gift20Regular, PeopleCommunity20Regular, Trophy20Regular, VehicleShip20Regular } from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
@@ -182,14 +177,14 @@ watch(
     <div class="gw-header">
       <span class="gw-header__title">礼物与排行</span>
       <div class="gw-header__status">
-          <span
-            v-if="onlineGuardList.length > 0"
-            class="gw-guard-badge"
-            title="当前在场大航海人数"
-          >
-            <VehicleShip20Regular class="size-3.5 inline-block" />
-            <span>在场 {{ onlineGuardList.length }}</span>
-          </span>
+        <span
+          v-if="onlineGuardList.length > 0"
+          class="gw-guard-badge"
+          title="当前在场大航海人数"
+        >
+          <VehicleShip20Regular class="size-3.5 inline-block" />
+          <span>在场 {{ onlineGuardList.length }}</span>
+        </span>
       </div>
     </div>
     <div class="gw-body">

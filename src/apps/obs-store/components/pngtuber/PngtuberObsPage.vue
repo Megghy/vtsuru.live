@@ -89,9 +89,7 @@ function retry() {
           v-if="!userId"
           class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-1.5 px-2"
         >
-          <AlertDescription class="text-xs m-0">
-            链接缺少用户 ID，请从管理页重新复制浏览器源链接。
-          </AlertDescription>
+          <AlertDescription class="text-xs m-0"> 链接缺少用户 ID，请从管理页重新复制浏览器源链接。 </AlertDescription>
         </Alert>
         <Alert
           v-if="state.inputMode === 'client' || state.inputMode === 'obs'"
@@ -105,11 +103,12 @@ function retry() {
           v-if="state.inputMode === 'controller'"
           class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-1.5 px-2"
         >
-          <AlertDescription class="text-xs m-0">
-            请保持同频道管理页打开并启动麦克风。
-          </AlertDescription>
+          <AlertDescription class="text-xs m-0"> 请保持同频道管理页打开并启动麦克风。 </AlertDescription>
         </Alert>
-        <Button variant="outline" @click="retry">
+        <Button
+          variant="outline"
+          @click="retry"
+        >
           重新加载 / 重试连接
         </Button>
         <div class="text-[11px] text-muted-foreground">

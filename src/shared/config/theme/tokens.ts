@@ -57,7 +57,6 @@ export interface ThemeTokens {
   shadow1: string
   shadow2: string
   shadowPopover: string
-
 }
 
 interface SurfacePalette {
@@ -104,7 +103,6 @@ function createTokens(isDark: boolean, surfaces: SurfacePalette): ThemeTokens {
   const brandRail = pickByMode(isDark, rgba(brand[400], 0.22), rgba(brand[400], 0.18))
   const brandSoft = pickByMode(isDark, rgba(brand[400], 0.14), rgba(brand[400], 0.1))
   const brandTint = pickByMode(isDark, rgba(brand[400], 0.18), rgba(brand[400], 0.14))
-
 
   // 浮层阴影：暗色统一加 1px 极弱描边，与页面背景剥离
   const shadowGlow = isDark ? `0 0 0 1px ${rgba(neutral[50], 0.06)}` : ''
@@ -167,7 +165,7 @@ export function buildSiteTokens(isDark: boolean): ThemeTokens {
       : {
           canvas: '#ffffff',
           surface: '#ffffff',
-          surfaceHover: neutral[50],
+          surfaceHover: neutral[100],
           inset: neutral[50],
           elevated: '#ffffff',
           cardBorderColor: neutral[300],
@@ -190,7 +188,7 @@ export function buildManageTokens(isDark: boolean): ThemeTokens {
       : {
           canvas: neutral[100],
           surface: '#ffffff',
-          surfaceHover: neutral[50],
+          surfaceHover: neutral[100],
           inset: neutral[200],
           elevated: '#ffffff',
           cardBorderColor: neutral[300],

@@ -5,13 +5,13 @@ import { toast } from 'vue-sonner'
 import { callStartDanmakuClient, resetDanmakuClientInitState } from '@/apps/client/data/initialize'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useSettings } from '@/apps/client/store/useSettings'
-import { useWebFetcher } from '@/store/useWebFetcher'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useWebFetcher } from '@/store/useWebFetcher'
 
 const webfetcher = useWebFetcher()
 const biliCookie = useBiliCookie()
@@ -104,7 +104,14 @@ async function handleToggleEventFetcher(enabled: boolean) {
             <span class="text-xs text-muted-foreground">
               {{ settings.settings.enableEventFetcher ? '已启用' : '已禁用' }}
             </span>
-            <Switch :checked="settings.settings.enableEventFetcher" :disabled="webfetcher.state === 'connecting'" @update:checked="settings.settings.enableEventFetcher = $event; handleToggleEventFetcher($event)" />
+            <Switch
+              :checked="settings.settings.enableEventFetcher"
+              :disabled="webfetcher.state === 'connecting'"
+              @update:checked="
+                settings.settings.enableEventFetcher = $event
+                handleToggleEventFetcher($event)
+              "
+            />
           </div>
         </div>
 
@@ -128,7 +135,11 @@ async function handleToggleEventFetcher(enabled: boolean) {
             type="button"
             :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
             class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="settings.settings.useDanmakuClientType === 'openlive' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            :class="
+              settings.settings.useDanmakuClientType === 'openlive'
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:text-foreground'
+            "
             @click="onSwitchDanmakuClientMode('openlive')"
           >
             开放平台
@@ -145,16 +156,18 @@ async function handleToggleEventFetcher(enabled: boolean) {
                   直接连接
                 </button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">
-                请先登录 B 站账号以使用直接连接模式
-              </TooltipContent>
+              <TooltipContent class="text-xs"> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
             </Tooltip>
             <button
               v-else
               type="button"
               :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
               class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-              :class="settings.settings.useDanmakuClientType === 'direct' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+              :class="
+                settings.settings.useDanmakuClientType === 'direct'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'hover:text-foreground'
+              "
               @click="onSwitchDanmakuClientMode('direct')"
             >
               直接连接
@@ -175,7 +188,11 @@ async function handleToggleEventFetcher(enabled: boolean) {
           "
         >
           <template #trigger>
-            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher">
+            <Button
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10"
+              :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
+            >
               强制重启弹幕客户端
             </Button>
           </template>

@@ -336,7 +336,10 @@ onBeforeRouteLeave(() => {
       >
         <div class="mb-2 text-lg font-semibold text-destructive">页面配置加载失败</div>
         <p class="mb-4 text-sm text-muted-foreground">{{ editor.error.value || '请检查网络连接后重试' }}</p>
-        <Button :loading="editor.isLoading.value" @click="editor.init">
+        <Button
+          :loading="editor.isLoading.value"
+          @click="editor.init"
+        >
           重试
         </Button>
       </div>
@@ -360,10 +363,19 @@ onBeforeRouteLeave(() => {
           <AlertDescription>
             <div>检测到另一服务端版本上的本地修改，当前显示服务端内容。</div>
             <div class="mt-2 flex gap-2">
-              <Button size="xs" variant="outline" class="px-2" @click="editor.discardConflictingLocalDraft">
+              <Button
+                size="xs"
+                variant="outline"
+                class="px-2"
+                @click="editor.discardConflictingLocalDraft"
+              >
                 放弃本地修改
               </Button>
-              <Button size="xs" class="bg-amber-600 px-2 text-white hover:bg-amber-700" @click="editor.restoreConflictingLocalDraft">
+              <Button
+                size="xs"
+                class="bg-amber-600 px-2 text-white hover:bg-amber-700"
+                @click="editor.restoreConflictingLocalDraft"
+              >
                 恢复本地修改
               </Button>
             </div>
@@ -385,7 +397,14 @@ onBeforeRouteLeave(() => {
             v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1"
             class="workspace-tabs inline-flex rounded-md border border-input p-0.5 bg-muted/40"
           >
-            <Button size="xs" v-for="id in responsivePaneIds" :key="id" :variant="selectedResponsivePane === id ? 'secondary' : 'ghost'" class="px-3" @click="selectResponsivePane(id)">
+            <Button
+              size="xs"
+              v-for="id in responsivePaneIds"
+              :key="id"
+              :variant="selectedResponsivePane === id ? 'secondary' : 'ghost'"
+              class="px-3"
+              @click="selectResponsivePane(id)"
+            >
               {{ COLUMN_META[id].label }}
             </Button>
           </div>
@@ -437,13 +456,22 @@ onBeforeRouteLeave(() => {
               <DialogTitle>编辑器布局</DialogTitle>
             </DialogHeader>
             <div class="flex gap-2 mb-3">
-              <Button variant="outline" @click="applyPreset('content')">
+              <Button
+                variant="outline"
+                @click="applyPreset('content')"
+              >
                 内容优先
               </Button>
-              <Button variant="outline" @click="applyPreset('preview')">
+              <Button
+                variant="outline"
+                @click="applyPreset('preview')"
+              >
                 预览优先
               </Button>
-              <Button variant="outline" @click="applyPreset('compact')">
+              <Button
+                variant="outline"
+                @click="applyPreset('compact')"
+              >
                 紧凑编辑
               </Button>
             </div>
@@ -485,12 +513,13 @@ onBeforeRouteLeave(() => {
               </div>
             </VueDraggable>
             <DialogFooter class="flex sm:justify-between justify-between items-center mt-4">
-              <Button variant="outline" @click="resetLayout">
+              <Button
+                variant="outline"
+                @click="resetLayout"
+              >
                 重置顺序和列宽
               </Button>
-              <Button @click="layoutModal = false">
-                完成
-              </Button>
+              <Button @click="layoutModal = false"> 完成 </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -563,10 +592,14 @@ onBeforeRouteLeave(() => {
               </Alert>
             </div>
             <DialogFooter class="flex sm:justify-end justify-end gap-2 mt-4">
-              <Button variant="outline" @click="editor.publishModal.value = false">
+              <Button
+                variant="outline"
+                @click="editor.publishModal.value = false"
+              >
                 取消
               </Button>
-              <Button :disabled="editor.publishCheckIssues.value.length> 0"
+              <Button
+                :disabled="editor.publishCheckIssues.value.length > 0"
                 :loading="editor.isSaving.value"
                 @click="editor.confirmPublish"
               >
@@ -605,10 +638,6 @@ onBeforeRouteLeave(() => {
   border: 0;
 }
 
-.user-page-builder :deep(.n-button .n-button__content) {
-  gap: 6px;
-}
-
 .user-page-builder {
   height: calc(100dvh - var(--vtsuru-header-height));
   width: 100%;
@@ -621,14 +650,6 @@ onBeforeRouteLeave(() => {
 }
 
 .builder-spin {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.builder-spin :deep(.n-spin-content) {
   flex: 1;
   min-height: 0;
   overflow: hidden;
@@ -652,10 +673,6 @@ onBeforeRouteLeave(() => {
   flex: none;
   max-width: 100%;
   overflow-x: auto;
-}
-
-.workspace-tabs :deep(.n-button) {
-  min-width: 72px;
 }
 
 .builder-pane-grid {

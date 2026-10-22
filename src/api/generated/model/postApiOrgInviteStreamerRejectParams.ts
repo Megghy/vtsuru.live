@@ -7,5 +7,5 @@
  */
 
 export type PostApiOrgInviteStreamerRejectParams = {
-token?: string;
-};
+  token?: string
+}

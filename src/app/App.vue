@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { provideThemeScope } from '@/shared/config/theme/scope'
 import { computed, defineAsyncComponent, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
-import { Toaster } from 'vue-sonner'
 
 import TempComponent from '@/app/components/TempComponent.vue'
 import { applyThemeCssVars, buildSiteTokens, getThemeCssVars } from '@/shared/config/theme'
+import { provideThemeScope } from '@/shared/config/theme/scope'
+import { Toaster } from '@/shared/ui/sonner'
 import { isDarkMode } from '@/shared/utils'
 
 // 将大型布局组件改为异步组件，避免打入入口包
@@ -56,10 +56,16 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div :style="shellStyle" class="app-root text-foreground bg-background antialiased">
+  <div
+    :style="shellStyle"
+    class="app-root text-foreground bg-background antialiased"
+  >
     <Suspense>
       <TempComponent>
-        <div :style="shellStyle" class="app-shell w-full h-full">
+        <div
+          :style="shellStyle"
+          class="app-shell w-full h-full"
+        >
           <UserLayout v-if="layout === 'user'" />
           <ManageLayout v-else-if="layout === 'manage'" />
           <OpenLiveLayout v-else-if="layout === 'open-live'" />
@@ -76,7 +82,11 @@ watchEffect(() => {
         </div>
       </template>
     </Suspense>
-    <Toaster richColors position="top-right" :theme="isDarkMode ? 'dark' : 'light'" />
+    <Toaster
+      richColors
+      position="top-right"
+      :theme="isDarkMode ? 'dark' : 'light'"
+    />
   </div>
 </template>
 

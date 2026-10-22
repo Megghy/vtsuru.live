@@ -5,129 +5,129 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SettingQuestionDisplayQuestionDisplayAlign } from './settingQuestionDisplayQuestionDisplayAlign';
-import type { SettingQuestionDisplayQuestionDisplayImageLayout } from './settingQuestionDisplayQuestionDisplayImageLayout';
-import type { SettingQuestionDisplayQuestionDisplayShadow } from './settingQuestionDisplayQuestionDisplayShadow';
-import type { SettingQuestionDisplayQuestionDisplayTransition } from './settingQuestionDisplayQuestionDisplayTransition';
-import type { SettingQuestionDisplayQuestionDisplayVerticalAlign } from './settingQuestionDisplayQuestionDisplayVerticalAlign';
+import type { SettingQuestionDisplayQuestionDisplayAlign } from './settingQuestionDisplayQuestionDisplayAlign'
+import type { SettingQuestionDisplayQuestionDisplayImageLayout } from './settingQuestionDisplayQuestionDisplayImageLayout'
+import type { SettingQuestionDisplayQuestionDisplayShadow } from './settingQuestionDisplayQuestionDisplayShadow'
+import type { SettingQuestionDisplayQuestionDisplayTransition } from './settingQuestionDisplayQuestionDisplayTransition'
+import type { SettingQuestionDisplayQuestionDisplayVerticalAlign } from './settingQuestionDisplayQuestionDisplayVerticalAlign'
 
 export interface SettingQuestionDisplay {
   /**
-     * @minLength 0
-     * @maxLength 50
-     * @nullable
-     */
-  font?: string | null;
+   * @minLength 0
+   * @maxLength 50
+   * @nullable
+   */
+  font?: string | null
   /**
-     * @minLength 0
-     * @maxLength 50
-     * @nullable
-     */
-  nameFont?: string | null;
+   * @minLength 0
+   * @maxLength 50
+   * @nullable
+   */
+  nameFont?: string | null
   /**
-     * @minimum 12
-     * @maximum 160
-     */
-  fontSize: number;
+   * @minimum 12
+   * @maximum 160
+   */
+  fontSize: number
   /**
-     * @minimum 100
-     * @maximum 900
-     * @nullable
-     */
-  fontWeight?: number | null;
+   * @minimum 100
+   * @maximum 900
+   * @nullable
+   */
+  fontWeight?: number | null
   /**
-     * @minimum 12
-     * @maximum 120
-     */
-  nameFontSize: number;
+   * @minimum 12
+   * @maximum 120
+   */
+  nameFontSize: number
   /**
-     * @minimum 1
-     * @maximum 3
-     */
-  lineHeight: number;
+   * @minimum 1
+   * @maximum 3
+   */
+  lineHeight: number
   /**
-     * @minimum -0.1
-     * @maximum 1
-     */
-  letterSpacing: number;
+   * @minimum -0.1
+   * @maximum 1
+   */
+  letterSpacing: number
   /**
-     * @minimum -0.1
-     * @maximum 1
-     */
-  nameLetterSpacing: number;
+   * @minimum -0.1
+   * @maximum 1
+   */
+  nameLetterSpacing: number
   /**
-     * @minimum 0
-     * @maximum 80
-     */
-  contentMaxWidth: number;
+   * @minimum 0
+   * @maximum 80
+   */
+  contentMaxWidth: number
   /**
-     * @minLength 6
-     * @maxLength 6
-     * @nullable
-     * @pattern ^[0-9A-Fa-f]{6}$
-     */
-  fontColor?: string | null;
+   * @minLength 6
+   * @maxLength 6
+   * @nullable
+   * @pattern ^[0-9A-Fa-f]{6}$
+   */
+  fontColor?: string | null
   /**
-     * @minLength 6
-     * @maxLength 6
-     * @nullable
-     * @pattern ^[0-9A-Fa-f]{6}$
-     */
-  nameFontColor?: string | null;
+   * @minLength 6
+   * @maxLength 6
+   * @nullable
+   * @pattern ^[0-9A-Fa-f]{6}$
+   */
+  nameFontColor?: string | null
   /**
-     * @minimum 100
-     * @maximum 900
-     * @nullable
-     */
-  nameFontWeight?: number | null;
+   * @minimum 100
+   * @maximum 900
+   * @nullable
+   */
+  nameFontWeight?: number | null
   /**
-     * @minimum 0
-     * @maximum 32
-     * @nullable
-     */
-  borderWidth?: number | null;
+   * @minimum 0
+   * @maximum 32
+   * @nullable
+   */
+  borderWidth?: number | null
   /**
-     * @minLength 6
-     * @maxLength 6
-     * @nullable
-     * @pattern ^[0-9A-Fa-f]{6}$
-     */
-  borderColor?: string | null;
+   * @minLength 6
+   * @maxLength 6
+   * @nullable
+   * @pattern ^[0-9A-Fa-f]{6}$
+   */
+  borderColor?: string | null
   /**
-     * @minLength 6
-     * @maxLength 6
-     * @nullable
-     * @pattern ^[0-9A-Fa-f]{6}$
-     */
-  backgroundColor?: string | null;
+   * @minLength 6
+   * @maxLength 6
+   * @nullable
+   * @pattern ^[0-9A-Fa-f]{6}$
+   */
+  backgroundColor?: string | null
   /**
-     * @minimum 0
-     * @maximum 100
-     */
-  backgroundOpacity: number;
+   * @minimum 0
+   * @maximum 100
+   */
+  backgroundOpacity: number
   /**
-     * @minimum 0
-     * @maximum 96
-     */
-  contentPadding: number;
+   * @minimum 0
+   * @maximum 96
+   */
+  contentPadding: number
   /**
-     * @minimum 0
-     * @maximum 64
-     */
-  borderRadius: number;
+   * @minimum 0
+   * @maximum 64
+   */
+  borderRadius: number
   /**
-     * @minimum 80
-     * @maximum 1080
-     */
-  imageMaxHeight: number;
-  transition: SettingQuestionDisplayQuestionDisplayTransition;
-  imageLayout: SettingQuestionDisplayQuestionDisplayImageLayout;
-  shadow: SettingQuestionDisplayQuestionDisplayShadow;
-  textShadow: SettingQuestionDisplayQuestionDisplayShadow;
-  showUserName: boolean;
-  showImage: boolean;
-  showBrand: boolean;
-  align: SettingQuestionDisplayQuestionDisplayAlign;
-  verticalAlign: SettingQuestionDisplayQuestionDisplayVerticalAlign;
-  syncScroll: boolean;
+   * @minimum 80
+   * @maximum 1080
+   */
+  imageMaxHeight: number
+  transition: SettingQuestionDisplayQuestionDisplayTransition
+  imageLayout: SettingQuestionDisplayQuestionDisplayImageLayout
+  shadow: SettingQuestionDisplayQuestionDisplayShadow
+  textShadow: SettingQuestionDisplayQuestionDisplayShadow
+  showUserName: boolean
+  showImage: boolean
+  showBrand: boolean
+  align: SettingQuestionDisplayQuestionDisplayAlign
+  verticalAlign: SettingQuestionDisplayQuestionDisplayVerticalAlign
+  syncScroll: boolean
 }

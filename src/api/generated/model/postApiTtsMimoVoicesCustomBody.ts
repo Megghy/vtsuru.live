@@ -7,9 +7,9 @@
  */
 
 export type PostApiTtsMimoVoicesCustomBody = {
-  name?: string;
-  type?: string;
-  description?: string;
-  directorNote?: string;
-  audioFile?: Blob | File;
-};
+  name?: string
+  type?: string
+  description?: string
+  directorNote?: string
+  audioFile?: Blob | File
+}

@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { FollowingControllerDirectoryEntry } from './followingControllerDirectoryEntry';
+import type { FollowingControllerDirectoryEntry } from './followingControllerDirectoryEntry'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfFollowingControllerDirectoryEntryArray {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: FollowingControllerDirectoryEntry[] | null;
+  data: FollowingControllerDirectoryEntry[] | null
 }

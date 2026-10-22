@@ -11,18 +11,12 @@ import {
   DEFAULT_COSYVOICE_VOICE,
   listCosyVoiceCustomVoices,
 } from '@/apps/open-live/voice-providers/cosyvoice'
-import { useSpeechService } from '@/store/useSpeechService'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
@@ -44,7 +38,7 @@ const modelOptions = computed(() =>
 )
 
 function modelNote(option: { disabled?: boolean; note?: string }) {
-  return option.disabled ? '需要填写自己的 DashScope Key，并使用声音复刻/声音设计音色。' : (option.note || '')
+  return option.disabled ? '需要填写自己的 DashScope Key，并使用声音复刻/声音设计音色。' : option.note || ''
 }
 
 async function refreshCustomVoices() {
@@ -103,7 +97,12 @@ watch(hasUserKey, (value) => {
       label="DashScope API Key"
       hint="需要前往阿里云百炼创建语音服务实例并获取 API Key, 否则使用本站默认的共享 Key, 可能会遇到排队或调用失败的情况"
     >
-      <Input v-model="settings.providers.cosyvoice.apiKey" type="password" placeholder="sk-xxxx" autocomplete="new-password" />
+      <Input
+        v-model="settings.providers.cosyvoice.apiKey"
+        type="password"
+        placeholder="sk-xxxx"
+        autocomplete="new-password"
+      />
       <span class="text-[11px] text-muted-foreground">
         <a
           href="https://bailian.console.aliyun.com/"
@@ -132,7 +131,10 @@ watch(hasUserKey, (value) => {
             <div class="flex items-center justify-between gap-3 w-full">
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-1.5 font-semibold">
-                  <LockClosed16Filled v-if="opt.disabled" class="size-3 text-muted-foreground shrink-0" />
+                  <LockClosed16Filled
+                    v-if="opt.disabled"
+                    class="size-3 text-muted-foreground shrink-0"
+                  />
                   <span :class="opt.disabled ? 'text-muted-foreground' : 'text-foreground'">{{ opt.label }}</span>
                 </div>
                 <span class="text-[11px] text-muted-foreground line-clamp-1 font-normal">{{ modelNote(opt) }}</span>
@@ -164,13 +166,19 @@ watch(hasUserKey, (value) => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="outline" class="w-8 p-0 shrink-0" :disabled="!hasUserKey || customVoiceLoading" @click="refreshCustomVoices">
-                  <ArrowSync20Regular class="size-4" :class="{ 'animate-spin': customVoiceLoading }" />
+                <Button
+                  variant="outline"
+                  class="w-8 p-0 shrink-0"
+                  :disabled="!hasUserKey || customVoiceLoading"
+                  @click="refreshCustomVoices"
+                >
+                  <ArrowSync20Regular
+                    class="size-4"
+                    :class="{ 'animate-spin': customVoiceLoading }"
+                  />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                从当前用户 DashScope Key 拉取声音复刻/设计音色
-              </TooltipContent>
+              <TooltipContent> 从当前用户 DashScope Key 拉取声音复刻/设计音色 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>

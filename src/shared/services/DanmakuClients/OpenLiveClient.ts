@@ -104,10 +104,9 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     message: string
   }> {
     try {
-      const data = (await postApiOpenLiveStart(
-        this.authInfo?.Code ? (this.authInfo as any) : undefined,
-        { signal },
-      )) as unknown as {
+      const data = (await postApiOpenLiveStart(this.authInfo?.Code ? (this.authInfo as any) : undefined, {
+        signal,
+      })) as unknown as {
         code: number
         data: OpenLiveInfo
         message: string

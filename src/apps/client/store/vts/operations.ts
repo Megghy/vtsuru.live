@@ -64,7 +64,12 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
 
   async function moveModel(t: ModelTransform) {
     const payload = { ...t }
-    await call('moveModel', undefined, async (c) => c.moveModel({ ...payload, valuesAreRelativeToModel: false }), payload)
+    await call(
+      'moveModel',
+      undefined,
+      async (c) => c.moveModel({ ...payload, valuesAreRelativeToModel: false }),
+      payload,
+    )
   }
 
   async function applyPreset(presetId: string) {
@@ -150,7 +155,8 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
   }
 
   async function unloadItems({ instanceIDs = [], fileNames = [] }: { instanceIDs?: string[]; fileNames?: string[] }) {
-    if (instanceIDs.length === 0 && fileNames.length === 0) throw new Error('ItemUnload 失败：未指定 instanceIDs 或 fileNames')
+    if (instanceIDs.length === 0 && fileNames.length === 0)
+      throw new Error('ItemUnload 失败：未指定 instanceIDs 或 fileNames')
     await call(
       'itemUnload',
       [...fileNames, ...instanceIDs].join(','),
@@ -187,7 +193,9 @@ export function createVtsOperations(config: VtsConfig, conn: VtsConnection, hist
         try {
           await request(async (c) =>
             c.itemMove({
-              itemsToMove: [{ itemInstanceID: instanceID, timeInSeconds: 0.6, fadeMode: 'easeIn', positionX: x, positionY: -0.2 }],
+              itemsToMove: [
+                { itemInstanceID: instanceID, timeInSeconds: 0.6, fadeMode: 'easeIn', positionX: x, positionY: -0.2 },
+              ],
             }),
           )
           const landed = await conn.waitForItemEvent(instanceID, ['DroppedPinned', 'DroppedUnpinned'], 1600)

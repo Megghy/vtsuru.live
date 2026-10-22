@@ -2,15 +2,9 @@
 import { Play20Filled } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import { useSpeechService } from '@/store/useSpeechService'
 import { Button } from '@/shared/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { useSpeechService } from '@/store/useSpeechService'
 
 const props = defineProps<{
   modelValue: string
@@ -70,7 +64,12 @@ async function onPreview() {
         </SelectContent>
       </Select>
     </div>
-    <Button variant="outline" :loading="previewing" class="gap-1 h-9 shrink-0" @click="onPreview">
+    <Button
+      variant="outline"
+      :loading="previewing"
+      class="gap-1 h-9 shrink-0"
+      @click="onPreview"
+    >
       <Play20Filled class="size-3.5" />
       试听
     </Button>

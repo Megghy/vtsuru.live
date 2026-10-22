@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserIndexModel } from './responseUserIndexModel';
+import type { ResponseUserIndexModel } from './responseUserIndexModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseUserIndexModel {
-  message: string;
-  code: number;
-  data: ResponseUserIndexModel;
+  message: string
+  code: number
+  data: ResponseUserIndexModel
 }

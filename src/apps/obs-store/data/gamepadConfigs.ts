@@ -3,35 +3,30 @@ import { markRaw } from 'vue'
 
 // --- PS5 DualSense 底壳 ---
 import PS5BodyWhiteComp from '@/assets/controller/Body/DS/DualSense VSCView SVG.svg?component'
-import PS5BodyBlackComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Midnight Black.svg?component'
 import PS5BodyRedComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Cosmic Red.svg?component'
 import PS5BodyPurpleComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Galactic Purple.svg?component'
+import PS5BodyBlackComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Midnight Black.svg?component'
 import PS5BodyPinkComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Nova Pink.svg?component'
-
-// --- PS4 底壳 ---
-import PS4BodyBlackComp from '@/assets/controller/Body/DS4/DS4 VSC SVG.svg?component'
-import PS4BodyFrontComp from '@/assets/controller/Body/DS4/DS4 VSC Front SVG.svg?component'
-import PS4V2BodyBlackComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG.svg?component'
 import PS4V2BodyWhiteComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Glacier White.svg?component'
+import PS4V2BodyGoldComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Gold.svg?component'
 import PS4V2BodyRedComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Magma Red.svg?component'
 import PS4V2BodyBlueComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Midnight Blue.svg?component'
-import PS4V2BodyGoldComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Gold.svg?component'
-
+import PS4V2BodyBlackComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG.svg?component'
+import PS4BodyFrontComp from '@/assets/controller/Body/DS4/DS4 VSC Front SVG.svg?component'
+// --- PS4 底壳 ---
+import PS4BodyBlackComp from '@/assets/controller/Body/DS4/DS4 VSC SVG.svg?component'
 // --- Switch Pro 底壳 ---
 import SwitchProBodyComp from '@/assets/controller/Body/SwitchPro/Switch Pro Controller VSCView.svg?component'
-
 // --- Xbox One 底壳 ---
 import XboxBodyBlackComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView Black.svg?component'
 import XboxBodyWhiteComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView White.svg?component'
 import XboxBodyBlueComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Blue.svg?component'
 import XboxBodyRedComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Red.svg?component'
-
 // --- Xbox Series X 底壳 ---
 import XboxSXBlackComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Black.svg?component'
-import XboxSXWhiteComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView White.svg?component'
 import XboxSXBlueComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Blue.svg?component'
 import XboxSXRedComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Red.svg?component'
-
+import XboxSXWhiteComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView White.svg?component'
 import type { AllGamepadConfigs, GamepadType } from '@/types/gamepad'
 
 export interface BodyOptionConfig {

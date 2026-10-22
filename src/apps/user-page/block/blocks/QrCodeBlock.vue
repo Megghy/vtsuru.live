@@ -95,12 +95,31 @@ function downloadPng() {
         </span>
       </div>
       <div class="flex justify-center flex-wrap gap-2">
-        <Button v-if="linkUrl" as="a" :href="linkUrl" target="_blank" rel="noopener noreferrer" variant="outline" class="font-medium">
-          <component :is="OpenOutline" class="size-3.5 mr-1.5" />
+        <Button
+          v-if="linkUrl"
+          as="a"
+          :href="linkUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="outline"
+          class="font-medium"
+        >
+          <component
+            :is="OpenOutline"
+            class="size-3.5 mr-1.5"
+          />
           打开链接
         </Button>
-        <Button variant="outline" class="font-medium" :disabled="!canRender" @click="downloadPng">
-          <component :is="DownloadOutline" class="size-3.5 mr-1.5" />
+        <Button
+          variant="outline"
+          class="font-medium"
+          :disabled="!canRender"
+          @click="downloadPng"
+        >
+          <component
+            :is="DownloadOutline"
+            class="size-3.5 mr-1.5"
+          />
           下载 PNG
         </Button>
       </div>

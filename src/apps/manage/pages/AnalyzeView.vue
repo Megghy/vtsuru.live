@@ -32,7 +32,6 @@ import {
 } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { useMessage } from '@/shared/utils'
 import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -55,25 +54,19 @@ import {
 } from '@/apps/manage/composables/analyzeRange'
 import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
 import { useAnalyzeStore } from '@/apps/manage/composables/useAnalyzeStore'
-import { isDarkMode } from '@/shared/utils'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { DateRangePicker } from '@/shared/ui/date-picker'
 import { Input } from '@/shared/ui/input'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Switch } from '@/shared/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
-import { DateRangePicker } from '@/shared/ui/date-picker'
+import { useMessage } from '@/shared/utils'
+import { isDarkMode } from '@/shared/utils'
 
 // 注册 ECharts 必要组件
 echarts.use([
@@ -642,7 +635,7 @@ async function loadData() {
 
 async function refreshData() {
   try {
-    await analyzeStore.loadData(true)
+    await analyzeStore.loadData()
     message.success('数据已刷新')
   } catch (err: any) {
     message.error(err?.message || '刷新数据失败')
@@ -680,11 +673,30 @@ onUnmounted(() => {
       <template #action>
         <div class="flex items-center gap-2 flex-wrap">
           <!-- 预设选择器 -->
-          <ToggleGroup v-model="activePreset" type="single">
-            <ToggleGroupItem value="7d" @click="setPreset('7d')">近7天</ToggleGroupItem>
-            <ToggleGroupItem value="30d" @click="setPreset('30d')">近30天</ToggleGroupItem>
-            <ToggleGroupItem value="60d" @click="setPreset('60d')">近60天</ToggleGroupItem>
-            <ToggleGroupItem value="all" @click="setPreset('all')">全部</ToggleGroupItem>
+          <ToggleGroup
+            v-model="activePreset"
+            type="single"
+          >
+            <ToggleGroupItem
+              value="7d"
+              @click="setPreset('7d')"
+              >近7天</ToggleGroupItem
+            >
+            <ToggleGroupItem
+              value="30d"
+              @click="setPreset('30d')"
+              >近30天</ToggleGroupItem
+            >
+            <ToggleGroupItem
+              value="60d"
+              @click="setPreset('60d')"
+              >近60天</ToggleGroupItem
+            >
+            <ToggleGroupItem
+              value="all"
+              @click="setPreset('all')"
+              >全部</ToggleGroupItem
+            >
           </ToggleGroup>
 
           <!-- 自定义日期区间 -->
@@ -697,7 +709,11 @@ onUnmounted(() => {
           />
 
           <!-- 刷新按钮 -->
-          <Button variant="outline" :loading="refreshing" @click="refreshData">
+          <Button
+            variant="outline"
+            :loading="refreshing"
+            @click="refreshData"
+          >
             <component
               :is="ArrowClockwise24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -737,9 +753,7 @@ onUnmounted(() => {
       v-else-if="!hasData"
       class="p-12 text-center"
     >
-      <div class="text-muted-foreground text-sm">
-        暂无直播分析数据
-      </div>
+      <div class="text-muted-foreground text-sm">暂无直播分析数据</div>
       <div class="text-xs text-muted-foreground/70 mt-1">
         系统会自动采集并维护你的直播数据，开播后将在此生成全景图表与复盘洞察。
       </div>
@@ -768,7 +782,9 @@ onUnmounted(() => {
           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
         >
           <span class="text-muted-foreground">单日最高收益</span>
-          <span class="font-bold text-amber-500 font-mono">¥{{ formatNumber(currentMilestones.maxIncomeDay.value) }}</span>
+          <span class="font-bold text-amber-500 font-mono"
+            >¥{{ formatNumber(currentMilestones.maxIncomeDay.value) }}</span
+          >
           <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxIncomeDay.dateStr }}</span>
         </div>
 
@@ -777,7 +793,9 @@ onUnmounted(() => {
           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
         >
           <span class="text-muted-foreground">单日弹幕狂欢</span>
-          <span class="font-bold text-emerald-500 font-mono">{{ formatNumber(currentMilestones.maxDanmakuDay.value) }} 条</span>
+          <span class="font-bold text-emerald-500 font-mono"
+            >{{ formatNumber(currentMilestones.maxDanmakuDay.value) }} 条</span
+          >
           <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxDanmakuDay.dateStr }}</span>
         </div>
 
@@ -786,7 +804,9 @@ onUnmounted(() => {
           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
         >
           <span class="text-muted-foreground">最长开播</span>
-          <span class="font-bold text-purple-500 font-mono">{{ (currentMilestones.maxDurationDay.value / 60).toFixed(1) }} 小时</span>
+          <span class="font-bold text-purple-500 font-mono"
+            >{{ (currentMilestones.maxDurationDay.value / 60).toFixed(1) }} 小时</span
+          >
           <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxDurationDay.dateStr }}</span>
         </div>
 
@@ -795,7 +815,9 @@ onUnmounted(() => {
           class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
         >
           <span class="text-muted-foreground">互动峰值</span>
-          <span class="font-bold text-cyan-500 font-mono">{{ formatNumber(currentMilestones.maxInteractionDay.value) }} 人</span>
+          <span class="font-bold text-cyan-500 font-mono"
+            >{{ formatNumber(currentMilestones.maxInteractionDay.value) }} 人</span
+          >
           <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxInteractionDay.dateStr }}</span>
         </div>
       </div>
@@ -863,8 +885,14 @@ onUnmounted(() => {
             </div>
 
             <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
-              <span>时薪: <strong class="text-foreground font-mono">¥{{ currentSummary.hourlyIncome.toFixed(1) }}</strong></span>
-              <span>场均: <strong class="text-foreground font-mono">¥{{ currentSummary.dailyAvgIncome.toFixed(1) }}</strong></span>
+              <span
+                >时薪:
+                <strong class="text-foreground font-mono">¥{{ currentSummary.hourlyIncome.toFixed(1) }}</strong></span
+              >
+              <span
+                >场均:
+                <strong class="text-foreground font-mono">¥{{ currentSummary.dailyAvgIncome.toFixed(1) }}</strong></span
+              >
             </div>
           </CardContent>
         </Card>
@@ -902,8 +930,18 @@ onUnmounted(() => {
             </div>
 
             <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
-              <span>互动: <strong class="text-foreground font-mono">{{ formatNumber(currentSummary.totalInteractions) }}</strong></span>
-              <span>点赞: <strong class="text-foreground font-mono">{{ formatNumber(currentSummary.totalLikeCount) }}</strong></span>
+              <span
+                >互动:
+                <strong class="text-foreground font-mono">{{
+                  formatNumber(currentSummary.totalInteractions)
+                }}</strong></span
+              >
+              <span
+                >点赞:
+                <strong class="text-foreground font-mono">{{
+                  formatNumber(currentSummary.totalLikeCount)
+                }}</strong></span
+              >
             </div>
           </CardContent>
         </Card>
@@ -935,13 +973,24 @@ onUnmounted(() => {
             </div>
 
             <div class="text-xs text-muted-foreground flex items-center justify-between">
-              <span>付费观众: <strong class="text-foreground">{{ formatNumber(currentSummary.payingUsers) }}人</strong></span>
+              <span
+                >付费观众:
+                <strong class="text-foreground">{{ formatNumber(currentSummary.payingUsers) }}人</strong></span
+              >
               <span>客单价: ¥{{ currentSummary.avgIncomePerPayingUser.toFixed(1) }}</span>
             </div>
 
             <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
-              <span>渗透率: <strong class="text-foreground font-mono">{{ currentSummary.payingRate.toFixed(1) }}%</strong></span>
-              <span>日均: <strong class="text-foreground font-mono">{{ currentSummary.dailyAvgInteractions.toFixed(0) }}人</strong></span>
+              <span
+                >渗透率:
+                <strong class="text-foreground font-mono">{{ currentSummary.payingRate.toFixed(1) }}%</strong></span
+              >
+              <span
+                >日均:
+                <strong class="text-foreground font-mono"
+                  >{{ currentSummary.dailyAvgInteractions.toFixed(0) }}人</strong
+                ></span
+              >
             </div>
           </CardContent>
         </Card>
@@ -975,13 +1024,24 @@ onUnmounted(() => {
             <div class="text-xs text-muted-foreground flex items-center justify-between">
               <span>周期开播率</span>
               <span class="font-semibold text-foreground">
-                {{ filteredChartData.length > 0 ? ((currentSummary.activeLiveDays / filteredChartData.length) * 100).toFixed(0) : 0 }}%
+                {{
+                  filteredChartData.length > 0
+                    ? ((currentSummary.activeLiveDays / filteredChartData.length) * 100).toFixed(0)
+                    : 0
+                }}%
               </span>
             </div>
 
             <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
-              <span>场均: <strong class="text-foreground font-mono">{{ (currentSummary.avgLiveMinutesPerSession / 60).toFixed(1) }}h</strong></span>
-              <span>总场次: <strong class="text-foreground font-mono">{{ currentSummary.totalSessions }}场</strong></span>
+              <span
+                >场均:
+                <strong class="text-foreground font-mono"
+                  >{{ (currentSummary.avgLiveMinutesPerSession / 60).toFixed(1) }}h</strong
+                ></span
+              >
+              <span
+                >总场次: <strong class="text-foreground font-mono">{{ currentSummary.totalSessions }}场</strong></span
+              >
             </div>
           </CardContent>
         </Card>
@@ -999,14 +1059,38 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center gap-2">
-            <ToggleGroup v-model="activeMetricPreset" type="single" size="xs">
-              <ToggleGroupItem value="income" @click="applyMetricPreset('income')">收益拆解</ToggleGroupItem>
-              <ToggleGroupItem value="danmaku" @click="applyMetricPreset('danmaku')">弹幕互动</ToggleGroupItem>
-              <ToggleGroupItem value="audience" @click="applyMetricPreset('audience')">观众付费</ToggleGroupItem>
-              <ToggleGroupItem value="all" @click="applyMetricPreset('all')">全维概览</ToggleGroupItem>
+            <ToggleGroup
+              v-model="activeMetricPreset"
+              type="single"
+              size="xs"
+            >
+              <ToggleGroupItem
+                value="income"
+                @click="applyMetricPreset('income')"
+                >收益拆解</ToggleGroupItem
+              >
+              <ToggleGroupItem
+                value="danmaku"
+                @click="applyMetricPreset('danmaku')"
+                >弹幕互动</ToggleGroupItem
+              >
+              <ToggleGroupItem
+                value="audience"
+                @click="applyMetricPreset('audience')"
+                >观众付费</ToggleGroupItem
+              >
+              <ToggleGroupItem
+                value="all"
+                @click="applyMetricPreset('all')"
+                >全维概览</ToggleGroupItem
+              >
             </ToggleGroup>
 
-            <ToggleGroup v-model="chartViewType" type="single" size="xs">
+            <ToggleGroup
+              v-model="chartViewType"
+              type="single"
+              size="xs"
+            >
               <ToggleGroupItem value="trend">折线</ToggleGroupItem>
               <ToggleGroupItem value="bar">柱状</ToggleGroupItem>
             </ToggleGroup>
@@ -1025,7 +1109,12 @@ onUnmounted(() => {
               class="w-2.5 h-2.5 rounded-full"
               :style="{ backgroundColor: metric.color }"
             />
-            <span :class="{ 'font-semibold text-foreground': selectedMetrics.includes(metric.value), 'text-muted-foreground/60': !selectedMetrics.includes(metric.value) }">
+            <span
+              :class="{
+                'font-semibold text-foreground': selectedMetrics.includes(metric.value),
+                'text-muted-foreground/60': !selectedMetrics.includes(metric.value),
+              }"
+            >
               {{ metric.label }}
             </span>
           </div>
@@ -1059,7 +1148,11 @@ onUnmounted(() => {
               <div class="font-mono font-semibold">
                 ¥{{ formatNumber(currentSummary.giftIncome) }}
                 <span class="text-muted-foreground font-normal ml-1">
-                  ({{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.giftIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%)
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.giftIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
                 </span>
               </div>
             </div>
@@ -1072,7 +1165,11 @@ onUnmounted(() => {
               <div class="font-mono font-semibold">
                 ¥{{ formatNumber(currentSummary.scIncome) }}
                 <span class="text-muted-foreground font-normal ml-1">
-                  ({{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.scIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%)
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.scIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
                 </span>
               </div>
             </div>
@@ -1088,7 +1185,11 @@ onUnmounted(() => {
               <div class="font-mono font-semibold">
                 ¥{{ formatNumber(currentSummary.guardIncome) }}
                 <span class="text-muted-foreground font-normal ml-1">
-                  ({{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.guardIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%)
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.guardIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
                 </span>
               </div>
             </div>
@@ -1104,7 +1205,11 @@ onUnmounted(() => {
               <div class="font-mono font-semibold text-emerald-500">
                 ¥{{ formatNumber(currentSummary.offlineIncome) }}
                 <span class="text-muted-foreground font-normal ml-1">
-                  ({{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.offlineIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%)
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.offlineIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
                 </span>
               </div>
             </div>
@@ -1195,7 +1300,9 @@ onUnmounted(() => {
               class="h-4 w-4 text-brand shrink-0"
             />
             <span>
-              <strong>{{ bestDayInsight.income.dayName }}</strong> 场均收益最高 (¥{{ bestDayInsight.income.avgIncome.toFixed(1) }})，建议将关键活动安排在该日。
+              <strong>{{ bestDayInsight.income.dayName }}</strong> 场均收益最高 (¥{{
+                bestDayInsight.income.avgIncome.toFixed(1)
+              }})，建议将关键活动安排在该日。
             </span>
           </div>
         </Card>
@@ -1239,7 +1346,8 @@ onUnmounted(() => {
                   <span class="font-semibold">{{ area.area }}</span>
                 </div>
                 <div class="text-[11px] text-muted-foreground mt-1">
-                  {{ area.sessionCount }} 场直播 · {{ (area.totalLiveMinutes / 60).toFixed(1) }} 小时 · 场均 {{ formatNumber(area.avgDanmaku) }} 弹幕
+                  {{ area.sessionCount }} 场直播 · {{ (area.totalLiveMinutes / 60).toFixed(1) }} 小时 · 场均
+                  {{ formatNumber(area.avgDanmaku) }} 弹幕
                 </div>
               </div>
               <div class="text-right font-mono">
@@ -1261,7 +1369,11 @@ onUnmounted(() => {
               <span>单场直播高光 TOP 5</span>
             </div>
 
-            <ToggleGroup v-model="activeTopSessionTab" type="single" size="xs">
+            <ToggleGroup
+              v-model="activeTopSessionTab"
+              type="single"
+              size="xs"
+            >
               <ToggleGroupItem value="income">最高收益</ToggleGroupItem>
               <ToggleGroupItem value="danmaku">最密弹幕</ToggleGroupItem>
               <ToggleGroupItem value="duration">最长开播</ToggleGroupItem>
@@ -1279,7 +1391,11 @@ onUnmounted(() => {
             class="space-y-2 max-h-80 overflow-y-auto pr-1"
           >
             <div
-              v-for="(session, idx) in (activeTopSessionTab === 'income' ? topSessionsByIncome : activeTopSessionTab === 'danmaku' ? topSessionsByDanmaku : topSessionsByDuration)"
+              v-for="(session, idx) in activeTopSessionTab === 'income'
+                ? topSessionsByIncome
+                : activeTopSessionTab === 'danmaku'
+                  ? topSessionsByDanmaku
+                  : topSessionsByDuration"
               :key="session.id"
               class="p-2.5 rounded-lg border border-border bg-card/60 flex items-center gap-2.5 text-xs"
             >
@@ -1300,7 +1416,8 @@ onUnmounted(() => {
                   <span
                     class="font-semibold truncate"
                     :title="session.title"
-                  >{{ session.title }}</span>
+                    >{{ session.title }}</span
+                  >
                   <Badge
                     variant="outline"
                     class="text-[9px] px-1 py-0 h-3.5 shrink-0"
@@ -1316,7 +1433,9 @@ onUnmounted(() => {
               <div class="text-right font-mono shrink-0">
                 <template v-if="activeTopSessionTab === 'income'">
                   <span class="font-bold text-amber-500">¥{{ formatNumber(session.totalIncome) }}</span>
-                  <span class="text-[10px] text-muted-foreground block">{{ formatNumber(session.danmakuCount) }} 条弹幕</span>
+                  <span class="text-[10px] text-muted-foreground block"
+                    >{{ formatNumber(session.danmakuCount) }} 条弹幕</span
+                  >
                 </template>
                 <template v-else-if="activeTopSessionTab === 'danmaku'">
                   <span class="font-bold text-emerald-500">{{ formatNumber(session.danmakuCount) }} 条</span>
@@ -1351,11 +1470,16 @@ onUnmounted(() => {
               class="flex items-center gap-1.5 text-xs text-muted-foreground mr-2"
               @click.stop
             >
-              <Switch :checked="showOnlyLiveDays" @update:checked="(val) => (showOnlyLiveDays = val)"
+              <Switch
+                :checked="showOnlyLiveDays"
+                @update:checked="(val) => (showOnlyLiveDays = val)"
               />
               <span>仅开播日</span>
             </div>
-            <Button size="icon-xs" variant="ghost">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+            >
               <component :is="isDailyTableExpanded ? ChevronUp24Regular : ChevronDown24Regular" />
             </Button>
           </div>
@@ -1392,18 +1516,14 @@ onUnmounted(() => {
                 >
                   互动人次 {{ dailyTableSortKey === 'interactions' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
                 </TableHead>
-                <TableHead class="text-right">
-                  付费人数
-                </TableHead>
+                <TableHead class="text-right"> 付费人数 </TableHead>
                 <TableHead
                   class="text-right cursor-pointer"
                   @click="toggleDailySort('duration')"
                 >
                   开播时长 {{ dailyTableSortKey === 'duration' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
                 </TableHead>
-                <TableHead class="text-right">
-                  点赞数
-                </TableHead>
+                <TableHead class="text-right"> 点赞数 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -1437,7 +1557,8 @@ onUnmounted(() => {
                   <span
                     v-else
                     class="text-muted-foreground"
-                  >-</span>
+                    >-</span
+                  >
                 </TableCell>
                 <TableCell class="text-right font-mono text-xs">
                   {{ row.likeCount > 0 ? formatNumber(row.likeCount) : '-' }}

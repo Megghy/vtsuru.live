@@ -7,27 +7,27 @@
  */
 
 export interface AnalyzePeriodSummary {
-  totalIncome: number;
-  giftIncome: number;
-  scIncome: number;
-  guardIncome: number;
-  offlineIncome: number;
-  offlineGuardIncome: number;
-  offlineScIncome: number;
-  grandTotalIncome: number;
-  offlineGuardCount: number;
-  totalIncomeWithGuard: number;
-  totalInteractions: number;
-  totalDanmakuCount: number;
-  totalLiveMinutes: number;
-  dailyAvgIncome: number;
-  dailyAvgDanmaku: number;
-  incomeTrend: number;
-  interactionTrend: number;
-  danmakuTrend: number;
-  activeLiveDays: number;
-  interactionUsers: number;
-  payingUsers: number;
-  interactionUsersTrend: number;
-  payingUsersTrend: number;
+  totalIncome: number
+  giftIncome: number
+  scIncome: number
+  guardIncome: number
+  offlineIncome: number
+  offlineGuardIncome: number
+  offlineScIncome: number
+  grandTotalIncome: number
+  offlineGuardCount: number
+  totalIncomeWithGuard: number
+  totalInteractions: number
+  totalDanmakuCount: number
+  totalLiveMinutes: number
+  dailyAvgIncome: number
+  dailyAvgDanmaku: number
+  incomeTrend: number
+  interactionTrend: number
+  danmakuTrend: number
+  activeLiveDays: number
+  interactionUsers: number
+  payingUsers: number
+  interactionUsersTrend: number
+  payingUsersTrend: number
 }

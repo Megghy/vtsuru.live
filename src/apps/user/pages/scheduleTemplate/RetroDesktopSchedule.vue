@@ -78,184 +78,184 @@ defineExpose({ Config, DefaultConfig })
         :class="`retro-board--${effectiveConfig.desktopStyle}`"
         :style="{ '--week-dir': weekDirection || 1 }"
       >
-      <div
-        class="retro-scanlines"
-        aria-hidden="true"
-      />
+        <div
+          class="retro-scanlines"
+          aria-hidden="true"
+        />
 
-      <div
-        class="retro-desktop-icon retro-desktop-icon--trash"
-        aria-hidden="true"
-      >
-        <span class="retro-icon retro-icon--trash" />
-        <b>回收站</b>
-      </div>
-      <div
-        class="retro-desktop-icon retro-desktop-icon--heart"
-        aria-hidden="true"
-      >
-        <span class="retro-icon retro-icon--heart">
-          <i />
-          <i />
-        </span>
-        <b>BROKEN HEART</b>
-      </div>
-      <div
-        class="retro-desktop-icon retro-desktop-icon--internet"
-        aria-hidden="true"
-      >
-        <span class="retro-icon retro-icon--internet">e</span>
-        <b>Internet Explorer</b>
-      </div>
-
-      <div
-        class="retro-cursor retro-cursor--first"
-        aria-hidden="true"
-      />
-      <div
-        class="retro-cursor retro-cursor--second"
-        aria-hidden="true"
-      />
-
-      <main class="retro-window">
-        <header
-          class="retro-titlebar"
-          :class="`retro-titlebar--${effectiveConfig.titleBarStyle}`"
+        <div
+          class="retro-desktop-icon retro-desktop-icon--trash"
+          aria-hidden="true"
         >
-          <span
-            class="retro-titlebar__app-icon"
-            aria-hidden="true"
-            >S</span
-          >
-          <h2>{{ effectiveConfig.windowTitle }}</h2>
-          <div
-            class="retro-window-controls"
-            aria-hidden="true"
-          >
-            <span>_</span>
-            <span>□</span>
-            <span>X</span>
-          </div>
-        </header>
-
-        <nav
-          class="retro-menubar"
-          aria-label="程序菜单"
+          <span class="retro-icon retro-icon--trash" />
+          <b>回收站</b>
+        </div>
+        <div
+          class="retro-desktop-icon retro-desktop-icon--heart"
+          aria-hidden="true"
         >
-          <span><u>文</u>件(F)</span>
-          <span><u>编</u>辑(E)</span>
-          <span><u>查</u>看(V)</span>
-          <span><u>帮</u>助(H)</span>
-        </nav>
-
-        <div class="retro-addressbar">
-          <span>地址(D)</span>
-          <strong>C:\STREAM\SCHEDULE\WEEK_{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
-          <span class="retro-addressbar__go">转到</span>
+          <span class="retro-icon retro-icon--heart">
+            <i />
+            <i />
+          </span>
+          <b>BROKEN HEART</b>
+        </div>
+        <div
+          class="retro-desktop-icon retro-desktop-icon--internet"
+          aria-hidden="true"
+        >
+          <span class="retro-icon retro-icon--internet">e</span>
+          <b>Internet Explorer</b>
         </div>
 
-        <section class="retro-workspace">
-          <header class="retro-hero">
-            <div>
-              <p>WEEKLY STREAM PROGRAM</p>
-              <h3>{{ streamerName }} 的直播日程</h3>
+        <div
+          class="retro-cursor retro-cursor--first"
+          aria-hidden="true"
+        />
+        <div
+          class="retro-cursor retro-cursor--second"
+          aria-hidden="true"
+        />
+
+        <main class="retro-window">
+          <header
+            class="retro-titlebar"
+            :class="`retro-titlebar--${effectiveConfig.titleBarStyle}`"
+          >
+            <span
+              class="retro-titlebar__app-icon"
+              aria-hidden="true"
+              >S</span
+            >
+            <h2>{{ effectiveConfig.windowTitle }}</h2>
+            <div
+              class="retro-window-controls"
+              aria-hidden="true"
+            >
+              <span>_</span>
+              <span>□</span>
+              <span>X</span>
             </div>
-            <dl>
-              <div>
-                <dt>DATE</dt>
-                <dd>{{ weekLabel }}</dd>
-              </div>
-              <div>
-                <dt>FILES</dt>
-                <dd>{{ eventCount }} 个直播项目</dd>
-              </div>
-            </dl>
           </header>
 
-          <ol class="retro-days schedule-day-stagger">
-            <li
-              v-for="(day, dayIndex) in days"
-              :key="day.english"
-              class="retro-day"
-              :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
-              :style="{ '--day-index': dayIndex }"
-            >
-              <header class="retro-day__folder">
-                <span
-                  class="retro-folder-icon"
-                  aria-hidden="true"
-                />
-                <span class="retro-day__name">{{ day.english }}_{{ day.shortLabel }}</span>
-                <time>{{ day.date }}</time>
-              </header>
+          <nav
+            class="retro-menubar"
+            aria-label="程序菜单"
+          >
+            <span><u>文</u>件(F)</span>
+            <span><u>编</u>辑(E)</span>
+            <span><u>查</u>看(V)</span>
+            <span><u>帮</u>助(H)</span>
+          </nav>
 
-              <div
-                v-if="day.items.length"
-                class="retro-day__files"
-              >
-                <article
-                  v-for="(item, itemIndex) in day.items"
-                  :key="item.id || itemIndex"
-                  class="retro-file"
-                  :style="item.tagColor ? { '--file-accent': item.tagColor } : undefined"
-                >
-                  <span
-                    class="retro-txt-icon"
-                    aria-hidden="true"
-                    >TXT</span
-                  >
-                  <div class="retro-file__copy">
-                    <strong>{{ item.title || '未命名直播' }}</strong>
-                    <span>{{ item.tag || '直播' }}_{{ itemIndex + 1 }}.txt</span>
-                  </div>
-                  <time>{{ item.time || '待定' }}</time>
-                </article>
+          <div class="retro-addressbar">
+            <span>地址(D)</span>
+            <strong>C:\STREAM\SCHEDULE\WEEK_{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
+            <span class="retro-addressbar__go">转到</span>
+          </div>
+
+          <section class="retro-workspace">
+            <header class="retro-hero">
+              <div>
+                <p>WEEKLY STREAM PROGRAM</p>
+                <h3>{{ streamerName }} 的直播日程</h3>
               </div>
+              <dl>
+                <div>
+                  <dt>DATE</dt>
+                  <dd>{{ weekLabel }}</dd>
+                </div>
+                <div>
+                  <dt>FILES</dt>
+                  <dd>{{ eventCount }} 个直播项目</dd>
+                </div>
+              </dl>
+            </header>
 
-              <div
-                v-else
-                class="retro-error"
-                role="status"
+            <ol class="retro-days schedule-day-stagger">
+              <li
+                v-for="(day, dayIndex) in days"
+                :key="day.english"
+                class="retro-day"
+                :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
+                :style="{ '--day-index': dayIndex }"
               >
-                <div class="retro-error__title">
-                  <span>Error</span>
-                  <b aria-hidden="true">X</b>
-                </div>
-                <div class="retro-error__body">
+                <header class="retro-day__folder">
                   <span
-                    class="retro-error__icon"
+                    class="retro-folder-icon"
                     aria-hidden="true"
-                    >!</span
-                  >
-                  <p><strong>Error 404:</strong> 肝脏未找到，主播正在休眠</p>
-                </div>
+                  />
+                  <span class="retro-day__name">{{ day.english }}_{{ day.shortLabel }}</span>
+                  <time>{{ day.date }}</time>
+                </header>
+
                 <div
-                  class="retro-error__actions"
-                  aria-hidden="true"
+                  v-if="day.items.length"
+                  class="retro-day__files"
                 >
-                  <span>确定</span>
-                  <span>取消</span>
+                  <article
+                    v-for="(item, itemIndex) in day.items"
+                    :key="item.id || itemIndex"
+                    class="retro-file"
+                    :style="item.tagColor ? { '--file-accent': item.tagColor } : undefined"
+                  >
+                    <span
+                      class="retro-txt-icon"
+                      aria-hidden="true"
+                      >TXT</span
+                    >
+                    <div class="retro-file__copy">
+                      <strong>{{ item.title || '未命名直播' }}</strong>
+                      <span>{{ item.tag || '直播' }}_{{ itemIndex + 1 }}.txt</span>
+                    </div>
+                    <time>{{ item.time || '待定' }}</time>
+                  </article>
                 </div>
-              </div>
-            </li>
-          </ol>
-        </section>
 
-        <footer class="retro-statusbar">
-          <span>{{ days.length }} 个文件夹</span>
-          <span>{{ eventCount }} 个对象</span>
-          <span>系统状态: ONLINE</span>
-        </footer>
-      </main>
+                <div
+                  v-else
+                  class="retro-error"
+                  role="status"
+                >
+                  <div class="retro-error__title">
+                    <span>Error</span>
+                    <b aria-hidden="true">X</b>
+                  </div>
+                  <div class="retro-error__body">
+                    <span
+                      class="retro-error__icon"
+                      aria-hidden="true"
+                      >!</span
+                    >
+                    <p><strong>Error 404:</strong> 肝脏未找到，主播正在休眠</p>
+                  </div>
+                  <div
+                    class="retro-error__actions"
+                    aria-hidden="true"
+                  >
+                    <span>确定</span>
+                    <span>取消</span>
+                  </div>
+                </div>
+              </li>
+            </ol>
+          </section>
 
-      <div
-        class="retro-taskbar"
-        aria-hidden="true"
-      >
-        <span class="retro-start">▰ 开始</span>
-        <span class="retro-task">S {{ effectiveConfig.windowTitle }}</span>
-        <time>20:00</time>
-      </div>
+          <footer class="retro-statusbar">
+            <span>{{ days.length }} 个文件夹</span>
+            <span>{{ eventCount }} 个对象</span>
+            <span>系统状态: ONLINE</span>
+          </footer>
+        </main>
+
+        <div
+          class="retro-taskbar"
+          aria-hidden="true"
+        >
+          <span class="retro-start">▰ 开始</span>
+          <span class="retro-task">S {{ effectiveConfig.windowTitle }}</span>
+          <time>20:00</time>
+        </div>
       </div>
     </Transition>
   </section>

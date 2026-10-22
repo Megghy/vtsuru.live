@@ -23,7 +23,12 @@ const emit = defineEmits<{
 <template>
   <Popover>
     <PopoverTrigger as-child>
-      <Button class="w-full justify-start px-2.5 truncate" :disabled="disabled" :variant="armed ? 'destructive' : 'outline'" @click="emit('trigger')">
+      <Button
+        class="w-full justify-start px-2.5 truncate"
+        :disabled="disabled"
+        :variant="armed ? 'destructive' : 'outline'"
+        @click="emit('trigger')"
+      >
         <span
           v-if="custom?.color"
           class="hotkey-color-dot"
@@ -35,7 +40,9 @@ const emit = defineEmits<{
           :src="custom.iconDataUrl"
           alt=""
         />
-        <span class="hotkey-label truncate">{{ armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID }}</span>
+        <span class="hotkey-label truncate">{{
+          armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID
+        }}</span>
       </Button>
     </PopoverTrigger>
     <PopoverContent class="w-72 p-3 text-xs flex flex-col gap-2">
@@ -55,13 +62,26 @@ const emit = defineEmits<{
         </div>
       </div>
       <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[var(--border)]">
-        <Button variant="secondary" class="h-6 text-[11px] px-2" :disabled="onDeck" @click="emit('add-to-deck')">
+        <Button
+          variant="secondary"
+          class="h-6 text-[11px] px-2"
+          :disabled="onDeck"
+          @click="emit('add-to-deck')"
+        >
           {{ onDeck ? '已在操作台' : '加入操作台' }}
         </Button>
-        <Button variant="outline" class="h-6 text-[11px] px-2" @click="emit('toggle-pinned')">
+        <Button
+          variant="outline"
+          class="h-6 text-[11px] px-2"
+          @click="emit('toggle-pinned')"
+        >
           {{ custom?.pinned ? '取消置顶' : '置顶' }}
         </Button>
-        <Button variant="outline" class="h-6 text-[11px] px-2" @click="emit('edit')">
+        <Button
+          variant="outline"
+          class="h-6 text-[11px] px-2"
+          @click="emit('edit')"
+        >
           自定义外观
         </Button>
       </div>

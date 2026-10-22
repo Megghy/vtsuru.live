@@ -13,7 +13,7 @@ const iconLoaders = new Map<string, () => Promise<Component>>()
 
 for (const [path, loader] of Object.entries(iconModules)) {
   const name = path.match(/\/([^/]+)\.js$/)?.[1]
-  if (name) iconLoaders.set(name, loader)
+  if (name) iconLoaders.set(name, loader as () => Promise<Component>)
 }
 
 export const USER_PAGE_NAV_ICON_NAMES = Object.freeze([...iconLoaders.keys()].toSorted())

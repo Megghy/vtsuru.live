@@ -7,7 +7,7 @@
  */
 
 export interface ResponseCheckInModel {
-  checkInTime: number;
-  consecutiveDays: number;
-  pointsGained: number;
+  checkInTime: number
+  consecutiveDays: number
+  pointsGained: number
 }

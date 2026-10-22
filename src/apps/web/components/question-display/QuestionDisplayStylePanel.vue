@@ -112,8 +112,14 @@ function resetToDefault() {
           @positive-click="resetToDefault"
         >
           <template #trigger>
-            <Button variant="ghost" class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1">
-              <component :is="ArrowReset24Regular" class="size-3.5" />
+            <Button
+              variant="ghost"
+              class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
+            >
+              <component
+                :is="ArrowReset24Regular"
+                class="size-3.5"
+              />
               重置
             </Button>
           </template>
@@ -134,7 +140,9 @@ function resetToDefault() {
           ]"
           @click="applyPreset(preset.value)"
         >
-          <div class="preset-preview-wrap relative w-full h-12 rounded overflow-hidden flex items-center justify-center border border-border/50">
+          <div
+            class="preset-preview-wrap relative w-full h-12 rounded overflow-hidden flex items-center justify-center border border-border/50"
+          >
             <div
               class="preset-preview w-full h-full p-1.5 flex flex-col justify-center items-center text-center transition"
               :style="{
@@ -160,7 +168,10 @@ function resetToDefault() {
               v-if="isPresetSelected(preset.value)"
               class="selected-badge absolute top-1 right-1 size-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xs"
             >
-              <component :is="Checkmark16Regular" class="size-2.5" />
+              <component
+                :is="Checkmark16Regular"
+                class="size-2.5"
+              />
             </span>
           </div>
           <strong class="preset-name text-xs text-foreground mt-0.5">{{ preset.name }}</strong>
@@ -293,7 +304,11 @@ function resetToDefault() {
               :key="al.value"
               type="button"
               class="flex-1 py-1 text-center rounded transition"
-              :class="setting.align === al.value ? 'bg-background shadow-xs text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'"
+              :class="
+                setting.align === al.value
+                  ? 'bg-background shadow-xs text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
               @click="setting.align = al.value"
             >
               {{ al.label }}
@@ -312,7 +327,11 @@ function resetToDefault() {
               :key="val.value"
               type="button"
               class="flex-1 py-1 text-center rounded transition"
-              :class="setting.verticalAlign === val.value ? 'bg-background shadow-xs text-foreground font-medium' : 'text-muted-foreground hover:text-foreground'"
+              :class="
+                setting.verticalAlign === val.value
+                  ? 'bg-background shadow-xs text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
               @click="setting.verticalAlign = val.value"
             >
               {{ val.label }}

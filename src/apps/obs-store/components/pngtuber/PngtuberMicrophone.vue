@@ -7,13 +7,7 @@ import { useAudioReactive } from '@/shared/pngtuber/useAudioReactive'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Progress } from '@/shared/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const props = withDefaults(
   defineProps<{
@@ -89,7 +83,8 @@ const currentDeviceLabel = computed(() => {
       v-if="obs"
       class="text-xs text-muted-foreground leading-relaxed"
     >
-      这里选择的是当前 OBS 浏览器源的输入设备。网页管理页的设备选择不会同步到 OBS。若无法采集，请使用控制页或客户端输入。
+      这里选择的是当前 OBS 浏览器源的输入设备。网页管理页的设备选择不会同步到
+      OBS。若无法采集，请使用控制页或客户端输入。
     </div>
 
     <div class="space-y-1">
@@ -101,7 +96,11 @@ const currentDeviceLabel = computed(() => {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="default" class="text-xs">系统默认麦克风</SelectItem>
+          <SelectItem
+            value="default"
+            class="text-xs"
+            >系统默认麦克风</SelectItem
+          >
           <SelectItem
             v-for="d in deviceList.filter((item) => item.deviceId !== 'default')"
             :key="d.deviceId"
@@ -120,21 +119,40 @@ const currentDeviceLabel = computed(() => {
     </div>
 
     <div class="flex items-center gap-2 flex-wrap">
-      <Button variant="outline" :disabled="isStarting" @click="isListening ? audio.stopListening() : audio.startListening()">
+      <Button
+        variant="outline"
+        :disabled="isStarting"
+        @click="isListening ? audio.stopListening() : audio.startListening()"
+      >
         {{ isListening ? '停止麦克风' : '启动 / 重试麦克风' }}
       </Button>
-      <Button variant="outline" @click="audio.refreshDevices()">
+      <Button
+        variant="outline"
+        @click="audio.refreshDevices()"
+      >
         刷新设备
       </Button>
-      <Button v-if="!obs" variant="outline" @click="audio.simulateSpeaking(true)">
+      <Button
+        v-if="!obs"
+        variant="outline"
+        @click="audio.simulateSpeaking(true)"
+      >
         模拟说话 1.5s
       </Button>
-      <Button v-if="!obs" variant="outline" :disabled="disabled || !isListening || isCalibrating" @click="calibrate">
+      <Button
+        v-if="!obs"
+        variant="outline"
+        :disabled="disabled || !isListening || isCalibrating"
+        @click="calibrate"
+      >
         噪声校准
       </Button>
     </div>
 
-    <div v-if="isCalibrating" class="text-xs text-amber-500">
+    <div
+      v-if="isCalibrating"
+      class="text-xs text-amber-500"
+    >
       请保持安静，正在采样环境噪声（3 秒）…
     </div>
 

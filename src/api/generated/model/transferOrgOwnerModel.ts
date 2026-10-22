@@ -7,5 +7,5 @@
  */
 
 export interface TransferOrgOwnerModel {
-  targetUserId: number;
+  targetUserId: number
 }

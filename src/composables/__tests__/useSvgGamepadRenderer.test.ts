@@ -3,14 +3,10 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { ref } from 'vue'
 
 import {
-  applyColorToElement,
   extractOriginalFill,
-  findElementByAliases,
-  findColorTargets,
   getAutoPressedColor,
   lerpColor,
   parseHexOrRgb,
-  restoreElementColor,
   toHex,
   useSvgGamepadRenderer,
 } from '@/composables/useSvgGamepadRenderer'
@@ -297,8 +293,12 @@ describe('useSvgGamepadRenderer 单元测试', () => {
       ]
       gamepad.activeGamepadIndex = 0
 
-      const stickEl = Array.from(containerSmall.querySelectorAll('*')).find((el) => el.getAttribute('inkscape:label') === 'Left Stick')!
-      const triggerEl = Array.from(containerSmall.querySelectorAll('*')).find((el) => el.getAttribute('inkscape:label') === 'Right Trigger')!
+      const stickEl = Array.from(containerSmall.querySelectorAll('*')).find(
+        (el) => el.getAttribute('inkscape:label') === 'Left Stick',
+      )!
+      const triggerEl = Array.from(containerSmall.querySelectorAll('*')).find(
+        (el) => el.getAttribute('inkscape:label') === 'Right Trigger',
+      )!
 
       // 在 500px viewBox 下，scaleFactor 为 0.5
       // 摇杆位移 0.8 * 10 * 0.5 = 4.00

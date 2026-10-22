@@ -103,7 +103,10 @@ watch(show, (visible) => {
 </script>
 
 <template>
-  <Dialog :open="show" @update:open="(val) => (show = val)">
+  <Dialog
+    :open="show"
+    @update:open="(val) => (show = val)"
+  >
     <DialogContent class="max-w-[min(860px,94vw)] p-6">
       <DialogHeader>
         <DialogTitle class="text-base font-semibold"> 选择导航图标 </DialogTitle>
@@ -112,7 +115,11 @@ watch(show, (visible) => {
       <div class="page-icon-picker space-y-3">
         <div class="relative">
           <SearchOutline class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input v-model="search" class="pl-8" placeholder="搜索图标名称" />
+          <Input
+            v-model="search"
+            class="pl-8"
+            placeholder="搜索图标名称"
+          />
         </div>
 
         <div class="style-filter-scroll">
@@ -122,7 +129,9 @@ watch(show, (visible) => {
               :key="option.value"
               type="button"
               class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all"
-              :class="styleFilter === option.value ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'"
+              :class="
+                styleFilter === option.value ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'
+              "
               @click="styleFilter = option.value"
             >
               {{ option.label }}
@@ -130,8 +139,14 @@ watch(show, (visible) => {
           </div>
         </div>
 
-        <div ref="iconGridHost" class="icon-grid-host overflow-y-auto">
-          <div v-if="iconRows.length" class="icon-grid-list space-y-2 p-2">
+        <div
+          ref="iconGridHost"
+          class="icon-grid-host overflow-y-auto"
+        >
+          <div
+            v-if="iconRows.length"
+            class="icon-grid-list space-y-2 p-2"
+          >
             <div
               v-for="row in iconRows"
               :key="row.key"
@@ -148,26 +163,48 @@ watch(show, (visible) => {
                 :aria-pressed="icon === props.value"
                 @click="selectIcon(icon)"
               >
-                <component :is="resolveUserPageNavIcon(icon)" class="size-6 shrink-0 mb-1" />
+                <component
+                  :is="resolveUserPageNavIcon(icon)"
+                  class="size-6 shrink-0 mb-1"
+                />
                 <span class="text-[11px] truncate w-full text-center">{{ getUserPageNavIconLabel(icon) }}</span>
               </button>
             </div>
           </div>
-          <div v-else-if="loading" class="picker-state h-full flex items-center justify-center">
+          <div
+            v-else-if="loading"
+            class="picker-state h-full flex items-center justify-center"
+          >
             <Spin />
           </div>
-          <div v-else-if="loadError" class="picker-state h-full flex items-center justify-center text-xs text-destructive">
+          <div
+            v-else-if="loadError"
+            class="picker-state h-full flex items-center justify-center text-xs text-destructive"
+          >
             {{ loadError }}
           </div>
-          <div v-else class="picker-state h-full flex items-center justify-center text-xs text-muted-foreground">
+          <div
+            v-else
+            class="picker-state h-full flex items-center justify-center text-xs text-muted-foreground"
+          >
             未找到匹配图标
           </div>
         </div>
       </div>
 
       <DialogFooter class="flex flex-row justify-between items-center sm:justify-between pt-2">
-        <Button variant="outline" @click="selectIcon(undefined)"> 使用默认图标 </Button>
-        <Button variant="outline" @click="show = false"> 取消 </Button>
+        <Button
+          variant="outline"
+          @click="selectIcon(undefined)"
+        >
+          使用默认图标
+        </Button>
+        <Button
+          variant="outline"
+          @click="show = false"
+        >
+          取消
+        </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

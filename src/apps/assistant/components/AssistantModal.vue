@@ -43,18 +43,35 @@ function onClose() {
     @update:open="!$event && onClose()"
   >
     <DialogContent class="sm:max-w-4xl h-[85vh] max-h-[850px] p-0 flex flex-col overflow-hidden gap-0">
-      <DialogHeader class="px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 shrink-0">
+      <DialogHeader
+        class="px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 shrink-0"
+      >
         <div class="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="icon" class="assistant-modal__menu-btn size-7 -ml-1 text-muted-foreground" @click="drawerVisible = true">
-            <component :is="LineHorizontal320Regular" class="size-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            class="assistant-modal__menu-btn size-7 -ml-1 text-muted-foreground"
+            @click="drawerVisible = true"
+          >
+            <component
+              :is="LineHorizontal320Regular"
+              class="size-4"
+            />
           </Button>
 
           <DialogTitle class="text-sm font-semibold text-foreground">VTsuru 助手</DialogTitle>
 
           <Popover>
             <PopoverTrigger as-child>
-              <Button variant="ghost" size="icon" class="size-6 text-muted-foreground hover:text-foreground">
-                <component :is="QuestionCircle20Regular" class="size-3.5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-6 text-muted-foreground hover:text-foreground"
+              >
+                <component
+                  :is="QuestionCircle20Regular"
+                  class="size-3.5"
+                />
               </Button>
             </PopoverTrigger>
             <PopoverContent class="w-72 p-3 text-xs space-y-2">
@@ -81,15 +98,24 @@ function onClose() {
         </div>
 
         <div class="flex items-center gap-1 mr-6">
-          <Button variant="ghost" class="flex items-center gap-1" @click="store.reset">
-            <component :is="Add20Regular" class="size-3.5" />
+          <Button
+            variant="ghost"
+            class="flex items-center gap-1"
+            @click="store.reset"
+          >
+            <component
+              :is="Add20Regular"
+              class="size-3.5"
+            />
             新对话
           </Button>
         </div>
       </DialogHeader>
 
       <div class="assistant-modal__layout flex flex-1 min-h-0 overflow-hidden p-4 gap-3">
-        <aside class="assistant-modal__sidebar w-52 shrink-0 border-r border-border/60 pr-3 overflow-hidden flex flex-col">
+        <aside
+          class="assistant-modal__sidebar w-52 shrink-0 border-r border-border/60 pr-3 overflow-hidden flex flex-col"
+        >
           <AssistantConversationList />
         </aside>
 
@@ -105,7 +131,10 @@ function onClose() {
     :open="drawerVisible"
     @update:open="drawerVisible = $event"
   >
-    <SheetContent side="left" class="w-64 p-4 flex flex-col">
+    <SheetContent
+      side="left"
+      class="w-64 p-4 flex flex-col"
+    >
       <SheetHeader class="pb-3 border-b border-border/60">
         <SheetTitle class="text-sm font-semibold">历史会话</SheetTitle>
       </SheetHeader>

@@ -3,11 +3,7 @@ import type { Ref } from 'vue'
 
 import type { VideoCollectTable } from '@/api/api-models'
 import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import {
-  getPageBackgroundCssVars,
-  getUserPageThemeCssVars,
-  resolvePageBackground,
-} from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserCustomCss } from '@/apps/user-page/runtime/customCss'

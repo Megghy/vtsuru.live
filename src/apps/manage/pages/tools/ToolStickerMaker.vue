@@ -9,20 +9,14 @@ import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/component
 import RemoveBgDialog from '@/apps/manage/components/tools/RemoveBgDialog.vue'
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { useMessage } from '@/shared/utils'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 const editorRef = ref<InstanceType<typeof CanvasEditor>>()
@@ -123,7 +117,10 @@ async function onRemoveBgConfirm(blob: Blob) {
         >
           {{ (blobSize / 1024).toFixed(1) }} KB
         </span>
-        <Button :disabled="!opts.bgImageUrl" @click="download">
+        <Button
+          :disabled="!opts.bgImageUrl"
+          @click="download"
+        >
           下载
         </Button>
       </div>
@@ -141,9 +138,7 @@ async function onRemoveBgConfirm(blob: Blob) {
         <div class="flex flex-col items-center gap-2">
           <ImageOutline class="w-9 h-9 text-muted-foreground" />
           <span class="text-sm font-medium">拖拽或点击上传源图片</span>
-          <span class="text-xs text-muted-foreground">
-            将作为表情包背景
-          </span>
+          <span class="text-xs text-muted-foreground"> 将作为表情包背景 </span>
         </div>
       </div>
 
@@ -161,9 +156,7 @@ async function onRemoveBgConfirm(blob: Blob) {
         <div class="panels">
           <!-- Settings -->
           <div class="panel">
-            <span class="font-medium text-foreground text-sm panel-title">
-              设置
-            </span>
+            <span class="font-medium text-foreground text-sm panel-title"> 设置 </span>
             <div class="prop-row">
               <span>尺寸</span>
               <NInputNumber
@@ -203,10 +196,17 @@ async function onRemoveBgConfirm(blob: Blob) {
                 :max="1"
                 :step="0.05"
                 class="flex-1"
-                @update:model-value="(val) => { if (val?.[0] !== undefined) opts.quality = val[0] }"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) opts.quality = val[0]
+                  }
+                "
               />
             </div>
-            <Button variant="outline" class="w-full mt-1" @click="() => openBgPicker()"
+            <Button
+              variant="outline"
+              class="w-full mt-1"
+              @click="() => openBgPicker()"
             >
               更换背景图
             </Button>
@@ -217,10 +217,19 @@ async function onRemoveBgConfirm(blob: Blob) {
             <div class="flex justify-between items-center panel-title">
               <span class="font-medium text-foreground text-sm"> 图层 </span>
               <div class="flex items-center gap-1">
-                <Button size="icon" variant="outline" class="h-6 w-6" @click="editorRef?.addTextLayer()">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  class="h-6 w-6"
+                  @click="editorRef?.addTextLayer()"
+                >
                   <TextOutline class="w-3.5 h-3.5" />
                 </Button>
-                <Button size="icon" variant="outline" class="h-6 w-6" @click="() => openImgPicker()"
+                <Button
+                  size="icon"
+                  variant="outline"
+                  class="h-6 w-6"
+                  @click="() => openImgPicker()"
                 >
                   <ImageOutline class="w-3.5 h-3.5" />
                 </Button>
@@ -253,7 +262,12 @@ async function onRemoveBgConfirm(blob: Blob) {
                 <span class="text-xs flex-1 truncate">
                   {{ layer.name }}
                 </span>
-                <Button size="icon" variant="ghost" class="h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10" @click.stop="editorRef?.removeLayer(layer.id)">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  class="h-5 w-5 text-destructive hover:text-destructive hover:bg-destructive/10"
+                  @click.stop="editorRef?.removeLayer(layer.id)"
+                >
                   <TrashOutline class="w-3 h-3" />
                 </Button>
               </div>
@@ -262,16 +276,12 @@ async function onRemoveBgConfirm(blob: Blob) {
 
           <!-- Properties -->
           <div class="panel">
-            <span class="font-medium text-foreground text-sm panel-title">
-              属性
-            </span>
+            <span class="font-medium text-foreground text-sm panel-title"> 属性 </span>
             <div
               v-if="!selectedLayer"
               class="props-empty"
             >
-              <span class="text-xs text-muted-foreground">
-                选中图层编辑
-              </span>
+              <span class="text-xs text-muted-foreground"> 选中图层编辑 </span>
             </div>
             <template v-if="selectedLayer?.type === 'text'">
               <Input v-model="(selectedLayer as TextLayer).text" />
@@ -311,7 +321,11 @@ async function onRemoveBgConfirm(blob: Blob) {
                   <button
                     type="button"
                     class="h-7 px-2.5 text-xs font-bold transition-colors border-r border-input last:border-r-0 cursor-pointer"
-                    :class="(selectedLayer as TextLayer).bold ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'"
+                    :class="
+                      (selectedLayer as TextLayer).bold
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background hover:bg-muted'
+                    "
                     @click="(selectedLayer as TextLayer).bold = !(selectedLayer as TextLayer).bold"
                   >
                     B
@@ -319,7 +333,11 @@ async function onRemoveBgConfirm(blob: Blob) {
                   <button
                     type="button"
                     class="h-7 px-2.5 text-xs italic transition-colors border-r border-input last:border-r-0 cursor-pointer"
-                    :class="(selectedLayer as TextLayer).italic ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'"
+                    :class="
+                      (selectedLayer as TextLayer).italic
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background hover:bg-muted'
+                    "
                     @click="(selectedLayer as TextLayer).italic = !(selectedLayer as TextLayer).italic"
                   >
                     I
@@ -327,7 +345,11 @@ async function onRemoveBgConfirm(blob: Blob) {
                   <button
                     type="button"
                     class="h-7 px-2.5 text-xs underline transition-colors cursor-pointer"
-                    :class="(selectedLayer as TextLayer).underline ? 'bg-primary text-primary-foreground' : 'bg-background hover:bg-muted'"
+                    :class="
+                      (selectedLayer as TextLayer).underline
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-background hover:bg-muted'
+                    "
                     @click="(selectedLayer as TextLayer).underline = !(selectedLayer as TextLayer).underline"
                   >
                     U
@@ -355,7 +377,11 @@ async function onRemoveBgConfirm(blob: Blob) {
                   :min="0"
                   :max="10"
                   class="flex-1"
-                  @update:model-value="(val) => { if (val?.[0] !== undefined) (selectedLayer as TextLayer).strokeWidth = val[0] }"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) (selectedLayer as TextLayer).strokeWidth = val[0]
+                    }
+                  "
                 />
               </div>
             </template>
@@ -368,7 +394,11 @@ async function onRemoveBgConfirm(blob: Blob) {
                   :max="1"
                   :step="0.05"
                   class="flex-1"
-                  @update:model-value="(val) => { if (val?.[0] !== undefined) (selectedLayer as ImageLayer).opacity = val[0] }"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) (selectedLayer as ImageLayer).opacity = val[0]
+                    }
+                  "
                 />
               </div>
               <div class="prop-row">
@@ -385,10 +415,18 @@ async function onRemoveBgConfirm(blob: Blob) {
                   :min="0"
                   :max="10"
                   class="flex-1"
-                  @update:model-value="(val) => { if (val?.[0] !== undefined) (selectedLayer as ImageLayer).strokeWidth = val[0] }"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) (selectedLayer as ImageLayer).strokeWidth = val[0]
+                    }
+                  "
                 />
               </div>
-              <Button variant="outline" class="w-full mt-1" @click="showRemoveBg = true">
+              <Button
+                variant="outline"
+                class="w-full mt-1"
+                @click="showRemoveBg = true"
+              >
                 去背景
               </Button>
             </template>

@@ -9,8 +9,8 @@ import { createSignalRHub } from './hub'
 import { startFetcher } from './session'
 
 function configPath() {
-  return [join(process.cwd(), 'config.json'), join(dirname(fileURLToPath(import.meta.url)), 'config.json')].find((path) =>
-    existsSync(path),
+  return [join(process.cwd(), 'config.json'), join(dirname(fileURLToPath(import.meta.url)), 'config.json')].find(
+    (path) => existsSync(path),
   )
 }
 

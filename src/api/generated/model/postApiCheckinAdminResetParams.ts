@@ -7,5 +7,5 @@
  */
 
 export type PostApiCheckinAdminResetParams = {
-ouId?: string;
-};
+  ouId?: string
+}

@@ -230,11 +230,16 @@ watch(
     :class="{ 'ticket-page--manage': inManage, 'ticket-page--detail': isDetailRoute }"
   >
     <header class="ticket-page__toolbar flex items-center justify-between gap-3 pb-3 border-b border-border/60">
-      <div v-if="isLoggedIn" class="flex items-center gap-1 bg-muted p-0.5 rounded-lg text-xs">
+      <div
+        v-if="isLoggedIn"
+        class="flex items-center gap-1 bg-muted p-0.5 rounded-lg text-xs"
+      >
         <button
           type="button"
           class="px-3 py-1 rounded-md transition font-medium"
-          :class="view === 'mine' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'"
+          :class="
+            view === 'mine' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
+          "
           @click="view = 'mine'"
         >
           我的工单
@@ -242,7 +247,11 @@ watch(
         <button
           type="button"
           class="px-3 py-1 rounded-md transition font-medium"
-          :class="view === 'public' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'"
+          :class="
+            view === 'public'
+              ? 'bg-background text-foreground shadow-xs'
+              : 'text-muted-foreground hover:text-foreground'
+          "
           @click="view = 'public'"
         >
           公开工单
@@ -256,11 +265,29 @@ watch(
       </strong>
 
       <div class="ticket-page__actions flex items-center gap-2">
-        <Button variant="ghost" size="icon" class="size-8 text-muted-foreground hover:text-foreground" title="刷新" :disabled="loadingList" @click="loadTickets">
-          <component :is="ArrowClockwise24Regular" class="size-4" :class="{ 'animate-spin': loadingList }" />
+        <Button
+          variant="ghost"
+          size="icon"
+          class="size-8 text-muted-foreground hover:text-foreground"
+          title="刷新"
+          :disabled="loadingList"
+          @click="loadTickets"
+        >
+          <component
+            :is="ArrowClockwise24Regular"
+            class="size-4"
+            :class="{ 'animate-spin': loadingList }"
+          />
         </Button>
-        <Button v-if="isLoggedIn" class="flex items-center gap-1" @click="showCreate = true">
-          <component :is="Add24Regular" class="size-3.5" />
+        <Button
+          v-if="isLoggedIn"
+          class="flex items-center gap-1"
+          @click="showCreate = true"
+        >
+          <component
+            :is="Add24Regular"
+            class="size-3.5"
+          />
           新建工单
         </Button>
       </div>
@@ -270,13 +297,21 @@ watch(
       v-if="tickets.length || filtering"
       class="ticket-page__filters flex flex-wrap items-center gap-2 pt-3"
     >
-      <Input v-model="keyword" placeholder="搜索标题或编号" class="w-48" />
+      <Input
+        v-model="keyword"
+        placeholder="搜索标题或编号"
+        class="w-48"
+      />
       <Select v-model="statusFilter">
         <SelectTrigger class="w-28">
           <SelectValue placeholder="状态" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" class="text-xs">全部状态</SelectItem>
+          <SelectItem
+            value="all"
+            class="text-xs"
+            >全部状态</SelectItem
+          >
           <SelectItem
             v-for="opt in supportTicketStatusOptions"
             :key="opt.value"
@@ -292,7 +327,11 @@ watch(
           <SelectValue placeholder="类型" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" class="text-xs">全部类型</SelectItem>
+          <SelectItem
+            value="all"
+            class="text-xs"
+            >全部类型</SelectItem
+          >
           <SelectItem
             v-for="opt in supportTicketTypeOptions"
             :key="opt.value"
@@ -412,7 +451,11 @@ watch(
 
           <div class="space-y-1">
             <label class="font-medium text-foreground">标题 *</label>
-            <Input v-model="draft.title" maxlength="160" placeholder="用一句话概括问题" />
+            <Input
+              v-model="draft.title"
+              maxlength="160"
+              placeholder="用一句话概括问题"
+            />
           </div>
 
           <div class="space-y-1">
@@ -435,13 +478,20 @@ watch(
                 :key="item.id"
                 class="relative size-16 rounded-md border border-border overflow-hidden group"
               >
-                <img :src="item.url" class="size-full object-cover" alt="" />
+                <img
+                  :src="item.url"
+                  class="size-full object-cover"
+                  alt=""
+                />
                 <button
                   type="button"
                   class="absolute top-1 right-1 size-4 rounded-full bg-black/60 text-white flex items-center justify-center opacity-80 hover:opacity-100"
                   @click="removeFile(i)"
                 >
-                  <component :is="Dismiss16Regular" class="size-2.5" />
+                  <component
+                    :is="Dismiss16Regular"
+                    class="size-2.5"
+                  />
                 </button>
               </div>
 
@@ -451,7 +501,10 @@ watch(
                 class="size-16 rounded-md border border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition"
                 @click="fileInputRef?.click()"
               >
-                <component :is="Image24Regular" class="size-5" />
+                <component
+                  :is="Image24Regular"
+                  class="size-5"
+                />
                 <span class="text-[10px]">添加</span>
               </button>
               <input
@@ -478,10 +531,17 @@ watch(
         </div>
 
         <DialogFooter class="pt-2 border-t border-border/60">
-          <Button variant="outline" :disabled="creating" @click="showCreate = false">
+          <Button
+            variant="outline"
+            :disabled="creating"
+            @click="showCreate = false"
+          >
             取消
           </Button>
-          <Button :disabled="creating || !draft.title.trim() || !draft.content.trim()" @click="submitTicket">
+          <Button
+            :disabled="creating || !draft.title.trim() || !draft.content.trim()"
+            @click="submitTicket"
+          >
             创建工单
           </Button>
         </DialogFooter>

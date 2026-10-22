@@ -7,11 +7,11 @@
  */
 
 export interface ResponsePointGuardDuplicateEntryModel {
-  eventId: number;
-  time: number;
-  message: string;
-  guardLevel: number;
-  num: number;
-  price: number;
-  isDuplicate: boolean;
+  eventId: number
+  time: number
+  message: string
+  guardLevel: number
+  num: number
+  price: number
+  isDuplicate: boolean
 }

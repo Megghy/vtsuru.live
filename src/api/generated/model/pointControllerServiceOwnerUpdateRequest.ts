@@ -5,17 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus';
+import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus'
 
 export interface PointControllerServiceOwnerUpdateRequest {
-  orderId: number;
-  status?: PointOrderDataPointOrderStatus;
+  orderId: number
+  status?: PointOrderDataPointOrderStatus
   /** @nullable */
-  reason?: string | null;
+  reason?: string | null
   /** @nullable */
-  appointmentAt?: number | null;
+  appointmentAt?: number | null
   /** @nullable */
-  deliveryUrl?: string | null;
+  deliveryUrl?: string | null
   /** @nullable */
-  message?: string | null;
+  message?: string | null
 }

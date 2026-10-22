@@ -122,9 +122,7 @@ async function getPointHistory() {
     const target = pointTarget.value
     if (!target) return []
 
-    const data = (await getApiPointGetUserHistories(
-      getHistoryParams(target) as any,
-    )) as unknown as {
+    const data = (await getApiPointGetUserHistories(getHistoryParams(target) as any)) as unknown as {
       code: number
       message?: string
       data: ResponsePointHisrotyModel[]
@@ -205,13 +203,21 @@ onMounted(async () => {
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-4">
             <Avatar class="size-14 border border-border">
-              <AvatarImage :src="user.info.avatar" fallback-src="/img/no-face.png" />
+              <AvatarImage
+                :src="user.info.avatar"
+                fallback-src="/img/no-face.png"
+              />
               <AvatarFallback>{{ user.info.name?.slice(0, 2) || '用户' }}</AvatarFallback>
             </Avatar>
             <div class="space-y-1">
               <div class="flex items-center gap-2">
                 <span class="text-base font-semibold text-foreground">{{ user.info.name || '未知用户' }}</span>
-                <Tag :type="user.isAuthed ? 'success' : 'warning'" size="small" round :bordered="false">
+                <Tag
+                  :type="user.isAuthed ? 'success' : 'warning'"
+                  size="small"
+                  round
+                  :bordered="false"
+                >
                   {{ user.isAuthed ? '已认证' : '未认证' }}
                 </Tag>
               </div>
@@ -222,7 +228,12 @@ onMounted(async () => {
             </div>
           </div>
 
-          <Button variant="outline" class="gap-1.5" :disabled="!canAdjustPoint" @click="showAddPointModal = true">
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            :disabled="!canAdjustPoint"
+            @click="showAddPointModal = true"
+          >
             <AddSquare24Regular class="size-4" />
             积分调整
           </Button>
@@ -254,15 +265,25 @@ onMounted(async () => {
     </Card>
 
     <!-- 数据标签页 -->
-    <Tabs default-value="orders" class="w-full">
+    <Tabs
+      default-value="orders"
+      class="w-full"
+    >
       <TabsList>
         <TabsTrigger value="orders">订单记录</TabsTrigger>
         <TabsTrigger value="history">积分流水</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="orders" class="pt-3">
+      <TabsContent
+        value="orders"
+        class="pt-3"
+      >
         <Spin :show="isLoading">
-          <Empty v-if="orders.length === 0" description="暂无订单" class="py-8" />
+          <Empty
+            v-if="orders.length === 0"
+            description="暂无订单"
+            class="py-8"
+          />
           <PointOrderCard
             v-else
             :order="orders"
@@ -272,9 +293,16 @@ onMounted(async () => {
         </Spin>
       </TabsContent>
 
-      <TabsContent value="history" class="pt-3">
+      <TabsContent
+        value="history"
+        class="pt-3"
+      >
         <Spin :show="isLoading">
-          <Empty v-if="!pointHistory.length" description="暂无积分记录" class="py-8" />
+          <Empty
+            v-if="!pointHistory.length"
+            description="暂无积分记录"
+            class="py-8"
+          />
           <PointHistoryCard
             v-else
             :histories="pointHistory"
@@ -325,7 +353,10 @@ onMounted(async () => {
         </div>
 
         <DialogFooter>
-          <Button :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0 || isLoading" @click="givePoint">
+          <Button
+            :disabled="!canAdjustPoint || !addPointCount || addPointCount === 0 || isLoading"
+            @click="givePoint"
+          >
             {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '确认给予' : '确认扣除' }}
           </Button>
         </DialogFooter>

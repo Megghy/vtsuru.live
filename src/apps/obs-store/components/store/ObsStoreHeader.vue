@@ -2,11 +2,7 @@
 import { Search24Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import {
-  OBS_CATEGORIES,
-  getCategoryCounts,
-  obsComponentList,
-} from '@/apps/obs-store/registry'
+import { OBS_CATEGORIES, getCategoryCounts, obsComponentList } from '@/apps/obs-store/registry'
 import type { ObsCategory, ObsComponentStatus } from '@/apps/obs-store/registry'
 import { Input } from '@/shared/ui/input'
 
@@ -39,20 +35,23 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
     <div class="header-main-row">
       <div class="title-block">
         <div class="flex items-center gap-2">
-          <h1 class="page-title">
-            OBS 独立组件
-          </h1>
+          <h1 class="page-title">OBS 独立组件</h1>
           <span class="ready-badge">{{ availableCount }} 个可用</span>
         </div>
-        <p class="page-desc">
-          收录独立 OBS 浏览器源。纯本地组件即开即用，需要同步的组件会在配置台保存并实时更新。
-        </p>
+        <p class="page-desc">收录独立 OBS 浏览器源。纯本地组件即开即用，需要同步的组件会在配置台保存并实时更新。</p>
       </div>
 
       <!-- 搜索框 -->
       <div class="search-box relative">
-        <Search24Regular class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-        <Input :value="props.search" placeholder="搜索组件或标签..." class="pl-8 w-full" @input="emit('update:search', ($event.target as HTMLInputElement).value)" />
+        <Search24Regular
+          class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
+        />
+        <Input
+          :value="props.search"
+          placeholder="搜索组件或标签..."
+          class="pl-8 w-full"
+          @input="emit('update:search', ($event.target as HTMLInputElement).value)"
+        />
       </div>
     </div>
 
@@ -85,7 +84,9 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
           :key="opt.value"
           type="button"
           class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-          :class="props.statusFilter === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+          :class="
+            props.statusFilter === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
+          "
           @click="emit('update:statusFilter', opt.value)"
         >
           {{ opt.label }}

@@ -83,9 +83,7 @@ async function saveScheduleImage() {
     saveAs(blob, `${props.fileName}.png`)
   } catch (error) {
     console.error(error)
-    toast.error(
-      error instanceof Error && error.message.includes('字体') ? '字体加载失败，请稍后重试' : '保存图片失败',
-    )
+    toast.error(error instanceof Error && error.message.includes('字体') ? '字体加载失败，请稍后重试' : '保存图片失败')
   } finally {
     saving.value = false
   }
@@ -106,12 +104,18 @@ async function saveScheduleImage() {
         title="上一周"
         @click="moveWeek(-1)"
       >
-        <component :is="ChevronLeft20Regular" class="size-4" />
+        <component
+          :is="ChevronLeft20Regular"
+          class="size-4"
+        />
       </button>
 
       <div class="schedule-week-toolbar__current">
         <div class="schedule-week-toolbar__meta">
-          <component :is="CalendarLtr20Regular" class="size-3.5" />
+          <component
+            :is="CalendarLtr20Regular"
+            class="size-3.5"
+          />
           <span>排期周次</span>
           <b v-if="selectedOption">{{ selectedOption.year }} · 第 {{ selectedOption.week }} 周</b>
         </div>
@@ -120,10 +124,14 @@ async function saveScheduleImage() {
           :model-value="selectedWeek"
           @update:model-value="selectedWeek = String($event)"
         >
-          <SelectTrigger class="h-10 w-full bg-[var(--schedule-toolbar-resolved-control-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]">
+          <SelectTrigger
+            class="h-10 w-full bg-[var(--schedule-toolbar-resolved-control-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]"
+          >
             <SelectValue placeholder="选择周次" />
           </SelectTrigger>
-          <SelectContent class="bg-[var(--schedule-toolbar-resolved-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]">
+          <SelectContent
+            class="bg-[var(--schedule-toolbar-resolved-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]"
+          >
             <SelectItem
               v-for="opt in options"
               :key="opt.value"
@@ -150,7 +158,10 @@ async function saveScheduleImage() {
         title="下一周"
         @click="moveWeek(1)"
       >
-        <component :is="ChevronRight20Regular" class="size-4" />
+        <component
+          :is="ChevronRight20Regular"
+          class="size-4"
+        />
       </button>
     </div>
 
@@ -162,7 +173,10 @@ async function saveScheduleImage() {
       :aria-busy="saving"
       @click="saveScheduleImage"
     >
-      <component :is="ArrowDownload20Regular" class="size-4" />
+      <component
+        :is="ArrowDownload20Regular"
+        class="size-4"
+      />
       <span>{{ saving ? '正在生成' : '保存图片' }}</span>
     </button>
   </nav>
@@ -186,10 +200,7 @@ async function saveScheduleImage() {
     --schedule-toolbar-border,
     var(--vtsuru-block-border, var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border))))
   );
-  --schedule-toolbar-resolved-accent: var(
-    --schedule-toolbar-accent,
-    var(--vtsuru-page-primary, var(--brand))
-  );
+  --schedule-toolbar-resolved-accent: var(--schedule-toolbar-accent, var(--vtsuru-page-primary, var(--brand)));
   --schedule-toolbar-resolved-control-bg: var(
     --schedule-toolbar-control-bg,
     color-mix(in srgb, var(--schedule-toolbar-resolved-bg) 84%, transparent)
@@ -198,11 +209,7 @@ async function saveScheduleImage() {
     --schedule-toolbar-control-bg-hover,
     color-mix(in srgb, var(--schedule-toolbar-resolved-accent) 12%, var(--schedule-toolbar-resolved-bg))
   );
-  --schedule-toolbar-resolved-focus: color-mix(
-    in srgb,
-    var(--schedule-toolbar-resolved-accent) 24%,
-    transparent
-  );
+  --schedule-toolbar-resolved-focus: color-mix(in srgb, var(--schedule-toolbar-resolved-accent) 24%, transparent);
   --schedule-toolbar-resolved-radius: var(--vtsuru-page-radius, 14px);
 
   display: flex;

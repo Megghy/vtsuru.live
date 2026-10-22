@@ -86,7 +86,14 @@ const previewBoxStyle = computed(() => {
     <DialogContent class="max-w-[860px] max-h-[90vh] overflow-hidden flex flex-col p-6">
       <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
         <DialogTitle class="text-base font-semibold">OBS 抽奖组件</DialogTitle>
-        <Button v-if="url" as="a" variant="outline" target="_blank" :href="url" class="mr-6 gap-1">
+        <Button
+          v-if="url"
+          as="a"
+          variant="outline"
+          target="_blank"
+          :href="url"
+          class="mr-6 gap-1"
+        >
           <Open24Regular class="size-4" />
           浏览
         </Button>
@@ -97,9 +104,7 @@ const previewBoxStyle = computed(() => {
           <!-- 左侧：链接与配置 -->
           <div class="lottery-obs-modal__main">
             <Alert class="text-xs py-2 bg-muted/50 border-muted">
-              <AlertDescription>
-                将抽奖等待队列与中奖揭榜结果实时展示在 OBS 浏览器源中。
-              </AlertDescription>
+              <AlertDescription> 将抽奖等待队列与中奖揭榜结果实时展示在 OBS 浏览器源中。 </AlertDescription>
             </Alert>
 
             <!-- 显示版型 -->
@@ -153,8 +158,15 @@ const previewBoxStyle = computed(() => {
                 v-else
                 class="flex items-center gap-2"
               >
-                <Input :model-value="url" readonly class="font-mono" />
-                <Button class="shrink-0 gap-1.5" @click="copyToClipboard(url)">
+                <Input
+                  :model-value="url"
+                  readonly
+                  class="font-mono"
+                />
+                <Button
+                  class="shrink-0 gap-1.5"
+                  @click="copyToClipboard(url)"
+                >
                   <Copy24Regular class="size-4" />
                   复制
                 </Button>
@@ -170,9 +182,7 @@ const previewBoxStyle = computed(() => {
                 value="help"
                 class="border-none"
               >
-                <AccordionTrigger class="py-2 text-xs hover:no-underline">
-                  OBS 使用说明
-                </AccordionTrigger>
+                <AccordionTrigger class="py-2 text-xs hover:no-underline"> OBS 使用说明 </AccordionTrigger>
                 <AccordionContent class="text-muted-foreground text-xs pb-3 space-y-1">
                   <p>1. 在 OBS 来源中添加一个新的「浏览器」源。</p>
                   <p>2. 将上方链接复制并粘贴到「URL」栏中。</p>

@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseBiliLiveReserveModel } from './responseBiliLiveReserveModel';
+import type { ResponseBiliLiveReserveModel } from './responseBiliLiveReserveModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseBiliLiveReserveModel {
-  message: string;
-  code: number;
-  data: ResponseBiliLiveReserveModel;
+  message: string
+  code: number
+  data: ResponseBiliLiveReserveModel
 }

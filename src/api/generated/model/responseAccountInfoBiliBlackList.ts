@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type ResponseAccountInfoBiliBlackList = {[key: string]: string};
+export type ResponseAccountInfoBiliBlackList = { [key: string]: string }

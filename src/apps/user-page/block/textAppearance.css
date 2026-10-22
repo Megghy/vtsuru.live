@@ -60,15 +60,7 @@
 }
 
 .vtsuru-text-fx--rainbow {
-  background-image: linear-gradient(
-    90deg,
-    #ff4d6d,
-    #ffd166,
-    #06d6a0,
-    #4cc9f0,
-    #b5179e,
-    #ff4d6d
-  );
+  background-image: linear-gradient(90deg, #ff4d6d, #ffd166, #06d6a0, #4cc9f0, #b5179e, #ff4d6d);
   background-size: 220% 100%;
   color: transparent !important;
   -webkit-background-clip: text;

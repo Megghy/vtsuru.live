@@ -56,9 +56,7 @@ const bodies = computed(() => controllerBodies[effectiveType.value] || [])
 
 const selectedBody = computed(() => {
   if (effectiveBodyId.value) {
-    const match = bodies.value.find(
-      (b) => b.id === effectiveBodyId.value || b.name === effectiveBodyId.value,
-    )
+    const match = bodies.value.find((b) => b.id === effectiveBodyId.value || b.name === effectiveBodyId.value)
     if (match) return match
   }
   return bodies.value[0]
@@ -66,14 +64,9 @@ const selectedBody = computed(() => {
 
 const bodySvgComponent = computed(() => selectedBody.value?.body || config.value?.bodySvg)
 const viewBoxString = computed(
-  () =>
-    effectiveViewBox.value ||
-    selectedBody.value?.defaultViewBox ||
-    config.value?.defaultViewBox,
+  () => effectiveViewBox.value || selectedBody.value?.defaultViewBox || config.value?.defaultViewBox,
 )
-const activeAspectRatio = computed(
-  () => selectedBody.value?.aspectRatio || config.value?.aspectRatio || '16 / 10',
-)
+const activeAspectRatio = computed(() => selectedBody.value?.aspectRatio || config.value?.aspectRatio || '16 / 10')
 
 // SVG 容器引用与直接 DOM 渲染驱动
 const bodySvgRef = ref<ComponentPublicInstance | null>(null)

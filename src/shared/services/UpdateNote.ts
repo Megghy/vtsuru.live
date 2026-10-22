@@ -23,10 +23,8 @@ export const updateNotes: updateNoteType[] = [
       {
         type: 'optimize',
         title: '日程表更新',
-        content: [
-          ['加了一堆日程表样式'],
-        ],
-      }
+        content: [['加了一堆日程表样式']],
+      },
     ],
   },
   {

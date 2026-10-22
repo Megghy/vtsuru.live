@@ -9,10 +9,7 @@ export interface PointUserRef {
 
 /** 按时间倒序；积分为各条 point 之和 */
 export async function getUserPointHistories(user: PointUserRef) {
-  return unwrapOk(
-    await getApiPointGetUserHistories({ id: user.ouid }),
-    '获取积分记录失败',
-  )
+  return unwrapOk(await getApiPointGetUserHistories({ id: user.ouid }), '获取积分记录失败')
 }
 
 /** count 可为负；返回操作后的总积分 */

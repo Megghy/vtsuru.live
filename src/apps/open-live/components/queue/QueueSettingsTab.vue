@@ -48,16 +48,45 @@ function onChange() {
           <div class="flex items-center gap-2 flex-wrap">
             <div class="flex items-center border rounded-md overflow-hidden text-xs w-[350px]">
               <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">弹幕关键词</span>
-              <Input v-model="settings.keyword" placeholder="留空则禁用弹幕加入" class="border-0 shadow-none" @change="onChange" />
+              <Input
+                v-model="settings.keyword"
+                placeholder="留空则禁用弹幕加入"
+                class="border-0 shadow-none"
+                @change="onChange"
+              />
             </div>
             <div class="flex items-center border rounded-md p-0.5 gap-0.5 bg-muted/30">
-              <Button type="button" class="px-2.5" :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'" @click="settings.matchType = KeywordMatchType.Full; onChange()">
+              <Button
+                type="button"
+                class="px-2.5"
+                :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'"
+                @click="
+                  settings.matchType = KeywordMatchType.Full
+                  onChange()
+                "
+              >
                 完全
               </Button>
-              <Button type="button" class="px-2.5" :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'" @click="settings.matchType = KeywordMatchType.Contains; onChange()">
+              <Button
+                type="button"
+                class="px-2.5"
+                :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'"
+                @click="
+                  settings.matchType = KeywordMatchType.Contains
+                  onChange()
+                "
+              >
                 包含
               </Button>
-              <Button type="button" class="px-2.5" :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'" @click="settings.matchType = KeywordMatchType.Regex; onChange()">
+              <Button
+                type="button"
+                class="px-2.5"
+                :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'"
+                @click="
+                  settings.matchType = KeywordMatchType.Regex
+                  onChange()
+                "
+              >
                 正则
               </Button>
             </div>
@@ -78,7 +107,12 @@ function onChange() {
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.enableOnStreaming"
-              @update:checked="(val: boolean) => { settings.enableOnStreaming = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.enableOnStreaming = val
+                  onChange()
+                }
+              "
             />
             <span>仅在直播时允许加入</span>
           </label>
@@ -91,7 +125,12 @@ function onChange() {
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.allowAllDanmaku"
-              @update:checked="(val: boolean) => { settings.allowAllDanmaku = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.allowAllDanmaku = val
+                  onChange()
+                }
+              "
             />
             <span>允许所有用户通过弹幕加入 (无视下方限制)</span>
           </label>
@@ -112,21 +151,36 @@ function onChange() {
             <label class="flex items-center gap-2 cursor-pointer text-xs">
               <Checkbox
                 :checked="settings.needJianzhang"
-                @update:checked="(val: boolean) => { settings.needJianzhang = val; onChange() }"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.needJianzhang = val
+                    onChange()
+                  }
+                "
               />
               <span>需要舰长</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-xs">
               <Checkbox
                 :checked="settings.needTidu"
-                @update:checked="(val: boolean) => { settings.needTidu = val; onChange() }"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.needTidu = val
+                    onChange()
+                  }
+                "
               />
               <span>需要提督</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer text-xs">
               <Checkbox
                 :checked="settings.needZongdu"
-                @update:checked="(val: boolean) => { settings.needZongdu = val; onChange() }"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.needZongdu = val
+                    onChange()
+                  }
+                "
               />
               <span>需要总督</span>
             </label>
@@ -142,7 +196,12 @@ function onChange() {
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.allowGift"
-              @update:checked="(val: boolean) => { settings.allowGift = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.allowGift = val
+                  onChange()
+                }
+              "
             />
             <span>允许通过发送指定礼物直接加入队列</span>
           </label>
@@ -164,18 +223,43 @@ function onChange() {
 
             <div class="flex items-center gap-2 text-xs">
               <span class="text-muted-foreground shrink-0">指定礼物名称</span>
-              <Input :model-value="(settings.giftNames || []).join(',')" placeholder="多个礼物名以英文逗号分隔，留空不限" class="w-[320px]" @update:model-value="(val: string | number) => {
-                  settings.giftNames = String(val).split(',').map((s: string) => s.trim()).filter(Boolean);
-                  onChange();
-                }"
+              <Input
+                :model-value="(settings.giftNames || []).join(',')"
+                placeholder="多个礼物名以英文逗号分隔，留空不限"
+                class="w-[320px]"
+                @update:model-value="
+                  (val: string | number) => {
+                    settings.giftNames = String(val)
+                      .split(',')
+                      .map((s: string) => s.trim())
+                      .filter(Boolean)
+                    onChange()
+                  }
+                "
               />
             </div>
 
             <div class="flex items-center border rounded-md p-0.5 gap-0.5 bg-muted/30 w-fit">
-              <Button type="button" class="px-2.5" :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'" @click="settings.giftFilterType = QueueGiftFilterType.And; onChange()">
+              <Button
+                type="button"
+                class="px-2.5"
+                :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'"
+                @click="
+                  settings.giftFilterType = QueueGiftFilterType.And
+                  onChange()
+                "
+              >
                 需同时满足名称和价值
               </Button>
-              <Button type="button" class="px-2.5" :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'" @click="settings.giftFilterType = QueueGiftFilterType.Or; onChange()">
+              <Button
+                type="button"
+                class="px-2.5"
+                :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'"
+                @click="
+                  settings.giftFilterType = QueueGiftFilterType.Or
+                  onChange()
+                "
+              >
                 满足名称或价值之一
               </Button>
             </div>
@@ -183,7 +267,12 @@ function onChange() {
             <label class="flex items-center gap-2 cursor-pointer text-xs">
               <Checkbox
                 :checked="settings.sendGiftDirectJoin"
-                @update:checked="(val: boolean) => { settings.sendGiftDirectJoin = val; onChange() }"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.sendGiftDirectJoin = val
+                    onChange()
+                  }
+                "
               />
               <span>赠送符合条件的礼物后自动加入队列</span>
               <TooltipProvider>
@@ -201,7 +290,12 @@ function onChange() {
             <label class="flex items-center gap-2 cursor-pointer text-xs">
               <Checkbox
                 :checked="settings.sendGiftIgnoreLimit"
-                @update:checked="(val: boolean) => { settings.sendGiftIgnoreLimit = val; onChange() }"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.sendGiftIgnoreLimit = val
+                    onChange()
+                  }
+                "
               />
               <span>赠送符合条件的礼物后无视上述用户限制 (粉丝牌/舰长等)</span>
             </label>
@@ -212,7 +306,12 @@ function onChange() {
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.allowIncreasePaymentBySendGift"
-              @update:checked="(val: boolean) => { settings.allowIncreasePaymentBySendGift = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.allowIncreasePaymentBySendGift = val
+                  onChange()
+                }
+              "
             />
             <span>允许通过送礼累计队列中的付费金额 (影响付费排序)</span>
           </label>
@@ -224,7 +323,12 @@ function onChange() {
             <label class="flex items-center gap-2 cursor-pointer text-xs">
               <Checkbox
                 :checked="settings.allowIncreaseByAnyPayment"
-                @update:checked="(val: boolean) => { settings.allowIncreaseByAnyPayment = val; onChange() }"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.allowIncreaseByAnyPayment = val
+                    onChange()
+                  }
+                "
               />
               <span>允许发送任意礼物叠加金额 (否则仅限上方指定的礼物)</span>
             </label>
@@ -240,7 +344,12 @@ function onChange() {
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.enableCooldown"
-              @update:checked="(val: boolean) => { settings.enableCooldown = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.enableCooldown = val
+                  onChange()
+                }
+              "
             />
             <span>启用排队冷却 (用户完成后需等待一段时间才能再次加入)</span>
           </label>
@@ -301,21 +410,36 @@ function onChange() {
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.showRequireInfo"
-              @update:checked="(val: boolean) => { settings.showRequireInfo = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.showRequireInfo = val
+                  onChange()
+                }
+              "
             />
             <span>在 OBS 组件底部显示加入要求信息</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.showPayment"
-              @update:checked="(val: boolean) => { settings.showPayment = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.showPayment = val
+                  onChange()
+                }
+              "
             />
             <span>在 OBS 组件和列表项中显示付费金额</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="settings.showFanMadelInfo"
-              @update:checked="(val: boolean) => { settings.showFanMadelInfo = val; onChange() }"
+              @update:checked="
+                (val: boolean) => {
+                  settings.showFanMadelInfo = val
+                  onChange()
+                }
+              "
             />
             <span>在 OBS 组件和列表项中显示用户粉丝牌</span>
           </label>
@@ -327,7 +451,7 @@ function onChange() {
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
               :checked="isWarnMessageAutoClose"
-              @update:checked="(val: boolean) => isWarnMessageAutoClose = val"
+              @update:checked="(val: boolean) => (isWarnMessageAutoClose = val)"
             />
             <span>自动关闭"加入队列失败"的通知消息 (默认3秒)</span>
           </label>

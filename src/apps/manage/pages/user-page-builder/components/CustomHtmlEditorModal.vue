@@ -239,28 +239,53 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
 </script>
 
 <template>
-  <Dialog :open="show" @update:open="updateShow">
+  <Dialog
+    :open="show"
+    @update:open="updateShow"
+  >
     <DialogContent class="max-w-[min(1600px,96vw)] h-[min(920px,94dvh)] p-0 flex flex-col gap-0 overflow-hidden">
       <DialogHeader class="p-3.5 border-b flex flex-row items-center justify-between shrink-0">
         <DialogTitle class="text-base font-semibold"> 自定义 HTML/CSS </DialogTitle>
         <div class="flex items-center gap-2 pr-6">
-          <Tag v-if="codeIssues.length" variant="destructive" class="text-xs">
+          <Tag
+            v-if="codeIssues.length"
+            variant="destructive"
+            class="text-xs"
+          >
             {{ codeIssues.length }} 个问题
           </Tag>
-          <Button variant="outline" @click="closeEditor"> 取消 </Button>
+          <Button
+            variant="outline"
+            @click="closeEditor"
+          >
+            取消
+          </Button>
           <Button @click="applyChanges"> 应用 </Button>
         </div>
       </DialogHeader>
 
-      <div class="workspace flex-1 min-h-0" :class="{ 'resources-hidden': !resourcesVisible }">
-        <aside v-if="resourcesVisible" class="resources-pane flex flex-col border-r bg-muted/20">
+      <div
+        class="workspace flex-1 min-h-0"
+        :class="{ 'resources-hidden': !resourcesVisible }"
+      >
+        <aside
+          v-if="resourcesVisible"
+          class="resources-pane flex flex-col border-r bg-muted/20"
+        >
           <div class="p-3 border-b flex flex-col gap-2 shrink-0">
             <div class="flex justify-between items-center">
               <span class="text-xs font-semibold text-foreground">图片资源</span>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon" variant="ghost" class="size-7" :disabled="uploading" aria-label="上传图片" @click="uploadInput?.click()">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      :disabled="uploading"
+                      aria-label="上传图片"
+                      @click="uploadInput?.click()"
+                    >
                       <CloudUploadOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -268,7 +293,11 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Input v-model="resourceSearch" size="xs" placeholder="搜索文件" />
+            <Input
+              v-model="resourceSearch"
+              size="xs"
+              placeholder="搜索文件"
+            />
             <input
               ref="uploadInput"
               type="file"
@@ -278,7 +307,10 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
             />
           </div>
           <div class="flex-1 min-h-0 overflow-y-auto p-2">
-            <div v-if="filteredResources.length" class="resource-list space-y-1">
+            <div
+              v-if="filteredResources.length"
+              class="resource-list space-y-1"
+            >
               <button
                 v-for="file in filteredResources"
                 :key="file.id"
@@ -296,11 +328,16 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                 />
                 <span class="resource-copy flex-1 min-w-0">
                   <strong class="block truncate text-foreground">{{ file.name || `资源 #${file.id}` }}</strong>
-                  <small class="text-muted-foreground">#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small>
+                  <small class="text-muted-foreground"
+                    >#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small
+                  >
                 </span>
               </button>
             </div>
-            <div v-else-if="!resources.isLoading.value" class="py-8 text-center text-xs text-muted-foreground">
+            <div
+              v-else-if="!resources.isLoading.value"
+              class="py-8 text-center text-xs text-muted-foreground"
+            >
               没有可用图片
             </div>
           </div>
@@ -308,7 +345,11 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
 
         <section class="code-pane flex flex-col min-h-0 border-r">
           <div class="pane-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0">
-            <Tabs :model-value="activeLanguage" class="w-auto" @update:model-value="(val) => (activeLanguage = val as any)">
+            <Tabs
+              :model-value="activeLanguage"
+              class="w-auto"
+              @update:model-value="(val) => (activeLanguage = val as any)"
+            >
               <TabsList size="xs">
                 <TabsTrigger value="html"> HTML </TabsTrigger>
                 <TabsTrigger value="css"> CSS </TabsTrigger>
@@ -318,7 +359,13 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon" variant="ghost" class="size-7" aria-label="切换资源栏" @click="resourcesVisible = !resourcesVisible">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="切换资源栏"
+                      @click="resourcesVisible = !resourcesVisible"
+                    >
                       <FolderOpenOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -326,7 +373,13 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="icon" variant="ghost" class="size-7" aria-label="格式化代码" @click="codeEditor?.formatDocument()">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="格式化代码"
+                      @click="codeEditor?.formatDocument()"
+                    >
                       <CodeWorkingOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -355,27 +408,62 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
         </section>
 
         <section class="preview-pane flex flex-col min-h-0 bg-muted/10">
-          <div class="pane-toolbar preview-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0">
+          <div
+            class="pane-toolbar preview-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0"
+          >
             <span class="text-xs font-semibold text-foreground"> 实时预览 </span>
             <div class="flex items-center gap-1.5">
               <div class="inline-flex rounded-md border p-0.5 bg-muted">
-                <Button size="icon" :variant="previewDevice === 'desktop' ? 'default' : 'ghost'" class="size-6" aria-label="桌面预览" @click="previewDevice = 'desktop'">
+                <Button
+                  size="icon"
+                  :variant="previewDevice === 'desktop' ? 'default' : 'ghost'"
+                  class="size-6"
+                  aria-label="桌面预览"
+                  @click="previewDevice = 'desktop'"
+                >
                   <DesktopOutline class="size-3.5" />
                 </Button>
-                <Button size="icon" :variant="previewDevice === 'mobile' ? 'default' : 'ghost'" class="size-6" aria-label="移动预览" @click="previewDevice = 'mobile'">
+                <Button
+                  size="icon"
+                  :variant="previewDevice === 'mobile' ? 'default' : 'ghost'"
+                  class="size-6"
+                  aria-label="移动预览"
+                  @click="previewDevice = 'mobile'"
+                >
                   <PhonePortraitOutline class="size-3.5" />
                 </Button>
               </div>
-              <Button size="icon" variant="ghost" class="size-7" :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'" @click="previewDark = !previewDark">
-                <SunnyOutline v-if="previewDark" class="size-4" />
-                <MoonOutline v-else class="size-4" />
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-7"
+                :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
+                @click="previewDark = !previewDark"
+              >
+                <SunnyOutline
+                  v-if="previewDark"
+                  class="size-4"
+                />
+                <MoonOutline
+                  v-else
+                  class="size-4"
+                />
               </Button>
             </div>
           </div>
           <div class="flex-1 min-h-0 overflow-y-auto">
-            <div class="preview-stage min-h-full p-4 flex justify-center" :class="{ dark: previewDark }">
-              <div class="preview-content" :style="previewStyle">
-                <CustomHtmlBlock :block-props="draft" :theme="previewTheme" />
+            <div
+              class="preview-stage min-h-full p-4 flex justify-center"
+              :class="{ dark: previewDark }"
+            >
+              <div
+                class="preview-content"
+                :style="previewStyle"
+              >
+                <CustomHtmlBlock
+                  :block-props="draft"
+                  :theme="previewTheme"
+                />
               </div>
             </div>
           </div>

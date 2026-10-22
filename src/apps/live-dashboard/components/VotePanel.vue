@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useNow } from '@vueuse/core'
-import { Open16Regular, Stop16Regular } from '@vicons/fluent'
 import { openUrl } from '@tauri-apps/plugin-opener'
+import { Open16Regular, Stop16Regular } from '@vicons/fluent'
+import { useNow } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
 import { CURRENT_HOST, isTauri } from '@/shared/config'
@@ -36,7 +36,12 @@ const title = ref('')
 const optionsText = ref('')
 const duration = ref(60)
 const allowMultiple = ref(false)
-const draftOptions = computed(() => optionsText.value.split('\n').map((line) => line.trim()).filter(Boolean))
+const draftOptions = computed(() =>
+  optionsText.value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean),
+)
 
 function applyPreset(preset: VotePreset) {
   title.value = preset.title
@@ -105,7 +110,10 @@ function openManage() {
           class="vote__option"
           :class="{ 'vote__option--lead': standings.leaders.some((l) => l.index === option.index) }"
         >
-          <div class="vote__bar" :style="{ width: `${option.percentage}%` }" />
+          <div
+            class="vote__bar"
+            :style="{ width: `${option.percentage}%` }"
+          />
           <span class="vote__index">{{ option.index }}</span>
           <span class="vote__text">{{ option.text }}</span>
           <span class="vote__count">{{ option.count }} · {{ Math.round(option.percentage) }}%</span>
@@ -113,20 +121,39 @@ function openManage() {
         <div class="vote__foot">
           <span class="vote__outcome">{{ outcome }}</span>
           <template v-if="active">
-            <Button v-for="seconds in [30, 60]" :key="seconds" variant="secondary" class="h-6 px-2" :disabled="busy" @click="vote.extend(seconds)">
+            <Button
+              v-for="seconds in [30, 60]"
+              :key="seconds"
+              variant="secondary"
+              class="h-6 px-2"
+              :disabled="busy"
+              @click="vote.extend(seconds)"
+            >
               +{{ seconds }}s
             </Button>
             <Popconfirm @positive-click="vote.end(session.id)">
               <template #trigger>
-                <Button variant="outline" class="h-6 px-2 text-amber-500 border-amber-500 hover:bg-amber-500/10" :disabled="busy">
-                  <component :is="Stop16Regular" class="h-3.5 w-3.5 mr-1" />
+                <Button
+                  variant="outline"
+                  class="h-6 px-2 text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                  :disabled="busy"
+                >
+                  <component
+                    :is="Stop16Regular"
+                    class="h-3.5 w-3.5 mr-1"
+                  />
                   结束
                 </Button>
               </template>
               提前结束并展示结果？
             </Popconfirm>
           </template>
-          <Button v-else variant="secondary" class="h-6 px-2" @click="reuse">
+          <Button
+            v-else
+            variant="secondary"
+            class="h-6 px-2"
+            @click="reuse"
+          >
             复用选项
           </Button>
         </div>
@@ -137,11 +164,21 @@ function openManage() {
         class="vote__form"
       >
         <div class="vote__presets flex flex-wrap gap-1">
-          <Button v-for="(preset, index) in presets" :key="index" variant="ghost" class="h-6 px-2 text-muted-foreground" @click="applyPreset(preset)">
+          <Button
+            v-for="(preset, index) in presets"
+            :key="index"
+            variant="ghost"
+            class="h-6 px-2 text-muted-foreground"
+            @click="applyPreset(preset)"
+          >
             {{ preset.name }}
           </Button>
         </div>
-        <Input v-model="title" placeholder="投票标题" maxlength="50" />
+        <Input
+          v-model="title"
+          placeholder="投票标题"
+          maxlength="50"
+        />
         <Textarea
           v-model="optionsText"
           class="text-xs min-h-[64px]"
@@ -159,18 +196,18 @@ function openManage() {
             <span class="text-xs text-muted-foreground shrink-0">秒</span>
           </div>
           <label class="flex items-center gap-1.5 text-xs cursor-pointer">
-            <Checkbox
-              v-model:checked="allowMultiple"
-            />
+            <Checkbox v-model:checked="allowMultiple" />
             允许多选
           </label>
-          <Button class="ml-auto" :disabled="busy || !title.trim() || draftOptions.length < 2" @click="create">
+          <Button
+            class="ml-auto"
+            :disabled="busy || !title.trim() || draftOptions.length < 2"
+            @click="create"
+          >
             发起
           </Button>
         </div>
-        <div class="vote__hint text-xs text-muted-foreground">
-          时长为 0 表示不限时；新投票会结束当前进行中的投票
-        </div>
+        <div class="vote__hint text-xs text-muted-foreground">时长为 0 表示不限时；新投票会结束当前进行中的投票</div>
       </section>
     </div>
   </PanelShell>
@@ -297,6 +334,8 @@ function openManage() {
 }
 
 @keyframes pulse {
-  50% { opacity: 0.35; }
+  50% {
+    opacity: 0.35;
+  }
 }
 </style>

@@ -262,7 +262,8 @@ function handleVariableInsert(text: string) {
       <CardTitle class="text-sm font-semibold">
         {{ title }}
       </CardTitle>
-      <Button v-if="mergedPlaceholders.length > 0"
+      <Button
+        v-if="mergedPlaceholders.length > 0"
         variant="ghost"
         size="xs"
         class="flex items-center gap-1"
@@ -286,12 +287,8 @@ function handleVariableInsert(text: string) {
       class="editor-tabs w-full"
     >
       <TabsList class="mb-3">
-        <TabsTrigger value="editor">
-          编辑
-        </TabsTrigger>
-        <TabsTrigger value="examples">
-          示例库
-        </TabsTrigger>
+        <TabsTrigger value="editor"> 编辑 </TabsTrigger>
+        <TabsTrigger value="examples"> 示例库 </TabsTrigger>
       </TabsList>
 
       <TabsContent
@@ -320,7 +317,12 @@ function handleVariableInsert(text: string) {
 
             <!-- 实时预览切换与区域 -->
             <div class="flex items-center justify-between mt-1">
-              <Button size="xs" variant="ghost" class="px-2 flex items-center gap-1" @click="showLivePreview = !showLivePreview">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="px-2 flex items-center gap-1"
+                @click="showLivePreview = !showLivePreview"
+              >
                 <component
                   :is="showLivePreview ? LiveOff24Regular : Code24Regular"
                   class="h-4 w-4"
@@ -341,11 +343,13 @@ function handleVariableInsert(text: string) {
                 <span
                   v-if="previewResult"
                   class="text-sm font-sans"
-                >{{ previewResult }}</span>
+                  >{{ previewResult }}</span
+                >
                 <span
                   v-else
                   class="text-xs text-muted-foreground italic"
-                >等待输入...</span>
+                  >等待输入...</span
+                >
               </div>
             </div>
           </div>
@@ -396,9 +400,7 @@ function handleVariableInsert(text: string) {
     </Tabs>
 
     <!-- 语法弹窗 -->
-    <Dialog
-      v-model:open="showSyntaxModal"
-    >
+    <Dialog v-model:open="showSyntaxModal">
       <DialogContent class="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>模板语法与变量说明</DialogTitle>
@@ -406,9 +408,7 @@ function handleVariableInsert(text: string) {
 
         <ScrollArea class="h-[60vh] pr-4">
           <Alert class="mb-4">
-            <AlertTitle class="text-sm font-bold mb-1">
-              模板语法说明
-            </AlertTitle>
+            <AlertTitle class="text-sm font-bold mb-1"> 模板语法说明 </AlertTitle>
             <AlertDescription class="text-xs space-y-2">
               <p>模板支持插入变量和执行 JavaScript。</p>
               <Separator class="my-2" />
@@ -422,16 +422,21 @@ function handleVariableInsert(text: string) {
                 <strong>2. JS 表达式求值 (<code>js:</code>):</strong><br />
                 使用 <code>{{ '\{\{js: 表达式\}\}' }}</code> 执行单个 JS 表达式并插入结果 (隐式返回)。<br />
                 适合简单计算、字符串操作、三元运算等。<br />
-                示例: <code>{{ '\{\{js: user.guardLevel > 0 ? "舰长" : "非舰长\}\}' }}</code><br />
+                示例: <code>{{ '\{\{js: user.guardLevel > 0 ? "舰长" : "非舰长\}\}' }}</code
+                ><br />
                 示例: <code>{{ '\{\{js: gift.price * gift.count\}\}' }}</code>
               </div>
               <Separator class="my-2" />
               <div>
                 <strong>3. JS 代码块执行 (<code>js+:</code> 或 <code>js-run:</code>):</strong><br />
                 使用 <code>{{ '\{\{js+: 代码...\}\}' }}</code> 执行多行 JS 代码。<br />
-                <span class="text-amber-500 font-semibold">需要显式使用 <code>return</code> 语句来指定输出到模板的值。</span><br />
+                <span class="text-amber-500 font-semibold"
+                  >需要显式使用 <code>return</code> 语句来指定输出到模板的值。</span
+                ><br />
                 适合需要临时变量、多步逻辑或调用 <code>getData/setData</code> 等函数的场景。<br />
-                <pre class="bg-muted p-2 rounded mt-1 overflow-x-auto text-[11px]"><code>{{ '\{\{js+:\n  const count = (getData(\'greetCount\') || 0) + 1;\n  setData(\'greetCount\', count);\n  return \`这是第 ${count} 次问候！\`;\n\}\}' }}</code></pre>
+                <pre
+                  class="bg-muted p-2 rounded mt-1 overflow-x-auto text-[11px]"
+                ><code>{{ '\{\{js+:\n  const count = (getData(\'greetCount\') || 0) + 1;\n  setData(\'greetCount\', count);\n  return \`这是第 ${count} 次问候！\`;\n\}\}' }}</code></pre>
               </div>
             </AlertDescription>
           </Alert>
@@ -483,16 +488,15 @@ function handleVariableInsert(text: string) {
             </AccordionItem>
           </Accordion>
 
-          <div class="text-xs font-bold mb-2">
-            可用变量 (基础):
-          </div>
+          <div class="text-xs font-bold mb-2">可用变量 (基础):</div>
           <div class="space-y-1 text-xs">
             <div
               v-for="(ph, idx) in mergedPlaceholders"
               :key="idx"
               class="placeholder-item"
             >
-              <code class="bg-muted px-1.5 py-0.5 rounded text-[11px] font-mono mr-1.5">{{ ph.name }}</code>: {{ ph.description }}
+              <code class="bg-muted px-1.5 py-0.5 rounded text-[11px] font-mono mr-1.5">{{ ph.name }}</code
+              >: {{ ph.description }}
             </div>
           </div>
         </ScrollArea>

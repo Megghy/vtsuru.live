@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import { Separator } from '@/shared/ui/separator'
-import { Empty } from '@/shared/ui/empty'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
@@ -10,6 +8,8 @@ import { Vue3Marquee } from 'vue3-marquee'
 import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
 import { QueueSortType, SongRequestFrom } from '@/api/api-models'
 import { getApiLiveRequestGetToday } from '@/api/generated/live-request/live-request'
+import { Empty } from '@/shared/ui/empty'
+import { Separator } from '@/shared/ui/separator'
 
 const props = defineProps<{
   id?: number

@@ -7,28 +7,12 @@ import type { VtsMacro, VtsMacroStep } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -208,12 +192,8 @@ function runMacro(macroId: string) {
     <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
       <CardTitle class="text-sm font-semibold">组合动作 (宏)</CardTitle>
       <div class="flex items-center gap-2">
-        <Button @click="addMacro">
-          新建宏
-        </Button>
-        <span class="text-xs text-muted-foreground">
-          按顺序执行所有步骤，任一步失败即终止
-        </span>
+        <Button @click="addMacro"> 新建宏 </Button>
+        <span class="text-xs text-muted-foreground"> 按顺序执行所有步骤，任一步失败即终止 </span>
       </div>
     </CardHeader>
 
@@ -229,13 +209,26 @@ function runMacro(macroId: string) {
         </div>
 
         <div class="flex items-center gap-1.5 flex-wrap">
-          <Button size="xs" :disabled="!vts.connected" @click="runMacro(m.id)">
+          <Button
+            size="xs"
+            :disabled="!vts.connected"
+            @click="runMacro(m.id)"
+          >
             运行
           </Button>
-          <Button size="xs" variant="outline" @click="openEdit(m)">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="openEdit(m)"
+          >
             编辑
           </Button>
-          <Button size="xs" variant="outline" class="gap-1" @click="cloneMacro(m)">
+          <Button
+            size="xs"
+            variant="outline"
+            class="gap-1"
+            @click="cloneMacro(m)"
+          >
             <CopyOutline class="size-3" />
             克隆
           </Button>
@@ -244,7 +237,11 @@ function runMacro(macroId: string) {
             @positive-click="vts.removeMacro(m.id)"
           >
             <template #trigger>
-              <Button size="xs" variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
+              <Button
+                size="xs"
+                variant="outline"
+                class="border-destructive/40 text-destructive hover:bg-destructive/10"
+              >
                 删除
               </Button>
             </template>
@@ -262,13 +259,19 @@ function runMacro(macroId: string) {
       </DialogHeader>
 
       <div class="flex-1 overflow-y-auto space-y-3 pt-2 text-xs pr-1">
-        <Input v-model="macroName" placeholder="宏名称" />
+        <Input
+          v-model="macroName"
+          placeholder="宏名称"
+        />
 
         <div class="flex items-center justify-between gap-2">
           <span class="text-xs text-muted-foreground">拖拽排序，串行执行</span>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
-              <Button variant="secondary" class="gap-1">
+              <Button
+                variant="secondary"
+                class="gap-1"
+              >
                 <AddOutline class="size-3.5" />
                 添加步骤
               </Button>
@@ -315,7 +318,10 @@ function runMacro(macroId: string) {
                     :model-value="element.step.type"
                     @update:model-value="(v) => setStepType(element.id, v as StepType)"
                   >
-                    <SelectTrigger size="xs" class="w-full">
+                    <SelectTrigger
+                      size="xs"
+                      class="w-full"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -332,7 +338,12 @@ function runMacro(macroId: string) {
                 </div>
               </div>
 
-              <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10" @click="removeStep(element.id)">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                @click="removeStep(element.id)"
+              >
                 <TrashOutline class="size-3.5" />
               </Button>
             </div>
@@ -411,7 +422,12 @@ function runMacro(macroId: string) {
               v-else-if="element.step.type === 'injectParam'"
               class="flex flex-wrap items-center gap-2"
             >
-              <Input :value="element.step.parameterId" placeholder="参数 ID" class="w-40" @input="patchStep(element.id, { parameterId: ($event.target as HTMLInputElement).value })" />
+              <Input
+                :value="element.step.parameterId"
+                placeholder="参数 ID"
+                class="w-40"
+                @input="patchStep(element.id, { parameterId: ($event.target as HTMLInputElement).value })"
+              />
               <NInputNumber
                 :value="element.step.value"
                 placeholder="值"
@@ -456,7 +472,9 @@ function runMacro(macroId: string) {
                 </Select>
               </div>
               <div class="flex items-center gap-1.5 cursor-pointer select-none">
-                <Switch :checked="element.step.visible" @update:checked="(v: boolean) => patchStep(element.id, { visible: v })"
+                <Switch
+                  :checked="element.step.visible"
+                  @update:checked="(v: boolean) => patchStep(element.id, { visible: v })"
                 />
                 <span class="text-muted-foreground">{{ element.step.visible ? '显示' : '隐藏' }}</span>
               </div>
@@ -492,7 +510,12 @@ function runMacro(macroId: string) {
               v-else-if="element.step.type === 'playAudio'"
               class="flex flex-wrap items-center gap-2"
             >
-              <Input :value="element.step.url" placeholder="音效 URL" class="flex-1 min-w-[200px]" @input="patchStep(element.id, { url: ($event.target as HTMLInputElement).value })" />
+              <Input
+                :value="element.step.url"
+                placeholder="音效 URL"
+                class="flex-1 min-w-[200px]"
+                @input="patchStep(element.id, { url: ($event.target as HTMLInputElement).value })"
+              />
               <NInputNumber
                 :value="element.step.volume ?? 0.8"
                 placeholder="音量"
@@ -504,7 +527,9 @@ function runMacro(macroId: string) {
                 @update:value="(v) => patchStep(element.id, { volume: Number(v ?? 0.8) })"
               />
               <div class="flex items-center gap-1.5 cursor-pointer select-none">
-                <Switch :checked="element.step.waitForEnd ?? false" @update:checked="(v: boolean) => patchStep(element.id, { waitForEnd: v })"
+                <Switch
+                  :checked="element.step.waitForEnd ?? false"
+                  @update:checked="(v: boolean) => patchStep(element.id, { waitForEnd: v })"
                 />
                 <span class="text-muted-foreground">等待结束</span>
               </div>
@@ -514,10 +539,18 @@ function runMacro(macroId: string) {
 
         <div class="flex items-center justify-between pt-2">
           <div class="flex items-center gap-1.5 cursor-pointer select-none">
-            <Switch :checked="showAdvancedJson" @update:checked="showAdvancedJson = $event" />
+            <Switch
+              :checked="showAdvancedJson"
+              @update:checked="showAdvancedJson = $event"
+            />
             <span class="text-muted-foreground">JSON 预览</span>
           </div>
-          <Button size="xs" variant="ghost" class="h-6 text-muted-foreground" @click="macroSteps = []">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="h-6 text-muted-foreground"
+            @click="macroSteps = []"
+          >
             清空步骤
           </Button>
         </div>
@@ -531,12 +564,13 @@ function runMacro(macroId: string) {
       </div>
 
       <div class="flex items-center justify-end gap-2 pt-3 border-t">
-        <Button variant="ghost" @click="showEdit = false">
+        <Button
+          variant="ghost"
+          @click="showEdit = false"
+        >
           取消
         </Button>
-        <Button @click="saveMacro">
-          保存
-        </Button>
+        <Button @click="saveMacro"> 保存 </Button>
       </div>
     </DialogContent>
   </Dialog>

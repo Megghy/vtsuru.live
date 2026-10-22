@@ -7,8 +7,8 @@
  */
 
 export interface ResponsePointGuardDuplicateLevelCounts {
-  jianzhang: number;
-  tidu: number;
-  zongdu: number;
-  total: number;
+  jianzhang: number
+  tidu: number
+  zongdu: number
+  total: number
 }

@@ -109,7 +109,10 @@ function getStyle(p: Platform) {
     <div class="supporter-block">
       <div class="block-header">
         <div class="header-icon">
-          <component :is="HeartIcon" class="size-4.5" />
+          <component
+            :is="HeartIcon"
+            class="size-4.5"
+          />
         </div>
         <span class="header-title">{{ cfg.title }}</span>
       </div>
@@ -141,14 +144,20 @@ function getStyle(p: Platform) {
         >
           <div class="card-glow" />
           <div class="icon-box">
-            <component :is="getIcon(it.platform)" class="size-6" />
+            <component
+              :is="getIcon(it.platform)"
+              class="size-6"
+            />
           </div>
           <div class="card-content">
             <span class="platform-name">{{ it.label || platformLabel(it.platform) }}</span>
             <span class="action-text">前往 {{ platformLabel(it.platform) }} 支持</span>
           </div>
           <div class="arrow-icon">
-            <component :is="ArrowForwardOutline" class="size-5" />
+            <component
+              :is="ArrowForwardOutline"
+              class="size-5"
+            />
           </div>
         </a>
       </div>

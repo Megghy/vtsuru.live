@@ -323,8 +323,16 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" class="size-6 p-0" :aria-label="b.hidden ? '显示区块' : '隐藏区块'" @click.stop="b.hidden = !b.hidden">
-                <component :is="b.hidden ? EyeOffOutline : EyeOutline" class="size-3.5" />
+              <Button
+                variant="ghost"
+                class="size-6 p-0"
+                :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
+                @click.stop="b.hidden = !b.hidden"
+              >
+                <component
+                  :is="b.hidden ? EyeOffOutline : EyeOutline"
+                  class="size-3.5"
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{{ b.hidden ? '显示区块' : '隐藏区块' }}</TooltipContent>
@@ -334,8 +342,16 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" class="size-6 p-0" aria-label="在预览中定位" @click.stop="scrollToPreviewBlock(b.id)">
-                <component :is="LocateOutline" class="size-3.5" />
+              <Button
+                variant="ghost"
+                class="size-6 p-0"
+                aria-label="在预览中定位"
+                @click.stop="scrollToPreviewBlock(b.id)"
+              >
+                <component
+                  :is="LocateOutline"
+                  class="size-3.5"
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent>在预览中定位</TooltipContent>
@@ -344,12 +360,26 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button variant="ghost" class="size-6 p-0" aria-label="更多区块操作" @click.stop>
-              <component :is="EllipsisHorizontalOutline" class="size-3.5" />
+            <Button
+              variant="ghost"
+              class="size-6 p-0"
+              aria-label="更多区块操作"
+              @click.stop
+            >
+              <component
+                :is="EllipsisHorizontalOutline"
+                class="size-3.5"
+              />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" class="w-44 text-xs">
-            <template v-for="item in props.blockActionOptions" :key="item.key">
+          <DropdownMenuContent
+            align="end"
+            class="w-44 text-xs"
+          >
+            <template
+              v-for="item in props.blockActionOptions"
+              :key="item.key"
+            >
               <DropdownMenuSeparator v-if="item.type === 'divider'" />
               <DropdownMenuItem
                 v-else
@@ -357,7 +387,11 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
                 :class="item.key === 'delete' ? 'text-destructive focus:text-destructive' : ''"
                 @click="props.onBlockAction(String(item.key), b.id)"
               >
-                <component :is="item.icon" v-if="item.icon" class="mr-2" />
+                <component
+                  :is="item.icon"
+                  v-if="item.icon"
+                  class="mr-2"
+                />
                 {{ item.label }}
               </DropdownMenuItem>
             </template>

@@ -4,22 +4,11 @@ import { computed, ref, watch } from 'vue'
 
 import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import type { BlockNode, BlockType, BlockVisibility } from '@/apps/user-page/block/schema'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/shared/ui/accordion'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
 import BasicContentPropsEditor from './block-props-editors/BasicContentPropsEditor.vue'
@@ -206,9 +195,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
         value="defaults"
         class="border-b-0"
       >
-        <AccordionTrigger class="text-xs font-semibold py-2">
-          卡片外观与命名
-        </AccordionTrigger>
+        <AccordionTrigger class="text-xs font-semibold py-2"> 卡片外观与命名 </AccordionTrigger>
         <AccordionContent class="pt-2 pb-1">
           <PropsGrid :row-gap="0">
             <div
@@ -216,7 +203,11 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
               data-validation-field="name"
             >
               <label class="text-xs text-muted-foreground">区块备注名称</label>
-              <Input v-model="blockNameModel" maxlength="50" placeholder="例如：直播信息 · 紧凑" />
+              <Input
+                v-model="blockNameModel"
+                maxlength="50"
+                placeholder="例如：直播信息 · 紧凑"
+              />
             </div>
 
             <div
@@ -224,7 +215,10 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
               class="flex items-center justify-between pt-4"
             >
               <label class="text-xs text-muted-foreground">显示边框</label>
-              <Switch :checked="blockFramedModel" @update:checked="blockFramedModel = $event" />
+              <Switch
+                :checked="blockFramedModel"
+                @update:checked="blockFramedModel = $event"
+              />
             </div>
 
             <div
@@ -232,7 +226,10 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
               class="flex items-center justify-between pt-4"
             >
               <label class="text-xs text-muted-foreground">显示背景</label>
-              <Switch :checked="blockBackgroundedModel" @update:checked="blockBackgroundedModel = $event" />
+              <Switch
+                :checked="blockBackgroundedModel"
+                @update:checked="blockBackgroundedModel = $event"
+              />
             </div>
           </PropsGrid>
         </AccordionContent>

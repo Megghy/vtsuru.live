@@ -18,7 +18,7 @@ const segments = computed(() => parseMessage(props.msg, liveEmoji.merged))
     :alt="msg"
     referrerpolicy="no-referrer"
     loading="lazy"
-  >
+  />
   <template v-else>
     <template
       v-for="(seg, i) in segments"
@@ -31,12 +31,13 @@ const segments = computed(() => parseMessage(props.msg, liveEmoji.merged))
         :alt="seg.name"
         referrerpolicy="no-referrer"
         loading="lazy"
-      >
+      />
       <span
         v-else-if="seg.kind === 'spoiler'"
         class="spoiler"
         :title="seg.text"
-      >{{ seg.text }}</span>
+        >{{ seg.text }}</span
+      >
       <template v-else>{{ seg.text }}</template>
     </template>
   </template>

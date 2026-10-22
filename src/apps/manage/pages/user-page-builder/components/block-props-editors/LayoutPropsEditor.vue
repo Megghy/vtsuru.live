@@ -70,9 +70,7 @@ const verticalOptions = computed(() =>
 
 <template>
   <div class="space-y-3">
-    <div class="text-xs font-semibold">
-      布局设置
-    </div>
+    <div class="text-xs font-semibold">布局设置</div>
     <PropsGrid
       :col-gap="8"
       :row-gap="0"

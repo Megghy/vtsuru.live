@@ -7,6 +7,6 @@
  */
 
 export interface SongListControllerBatchUpdate {
-  ids: string[];
-  data: string[];
+  ids: string[]
+  data: string[]
 }

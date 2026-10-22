@@ -7,7 +7,7 @@
  */
 
 export interface CheckInControllerBatchCheckInRequest {
-  authIds: number[];
-  uIds: number[];
-  oIds: string[];
+  authIds: number[]
+  uIds: number[]
+  oIds: string[]
 }

@@ -252,7 +252,10 @@ onMounted(async () => {
 
 <template>
   <div class="space-y-4">
-    <div v-if="isLoading && orders.length === 0" class="py-16 flex justify-center">
+    <div
+      v-if="isLoading && orders.length === 0"
+      class="py-16 flex justify-center"
+    >
       <Spin />
     </div>
 
@@ -311,7 +314,11 @@ onMounted(async () => {
                 <SelectValue placeholder="主播" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" class="text-xs">全部主播</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部主播</SelectItem
+                >
                 <SelectItem
                   v-for="s in streamerOptions"
                   :key="s.value"
@@ -331,10 +338,26 @@ onMounted(async () => {
                 <SelectValue placeholder="订单类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" class="text-xs">全部类型</SelectItem>
-                <SelectItem :value="String(GoodsTypes.Physical)" class="text-xs">实体订单</SelectItem>
-                <SelectItem :value="String(GoodsTypes.Virtual)" class="text-xs">虚拟订单</SelectItem>
-                <SelectItem :value="String(GoodsTypes.Service)" class="text-xs">服务订单</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部类型</SelectItem
+                >
+                <SelectItem
+                  :value="String(GoodsTypes.Physical)"
+                  class="text-xs"
+                  >实体订单</SelectItem
+                >
+                <SelectItem
+                  :value="String(GoodsTypes.Virtual)"
+                  class="text-xs"
+                  >虚拟订单</SelectItem
+                >
+                <SelectItem
+                  :value="String(GoodsTypes.Service)"
+                  class="text-xs"
+                  >服务订单</SelectItem
+                >
               </SelectContent>
             </Select>
 
@@ -346,13 +369,41 @@ onMounted(async () => {
                 <SelectValue placeholder="订单状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" class="text-xs">全部状态</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.Completed)" class="text-xs">已完成</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.Pending)" class="text-xs">待处理</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.Shipped)" class="text-xs">已发货</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.InProgress)" class="text-xs">进行中</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.Rejected)" class="text-xs">已拒绝</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.Cancelled)" class="text-xs">已取消</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部状态</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.Completed)"
+                  class="text-xs"
+                  >已完成</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.Pending)"
+                  class="text-xs"
+                  >待处理</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.Shipped)"
+                  class="text-xs"
+                  >已发货</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.InProgress)"
+                  class="text-xs"
+                  >进行中</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.Rejected)"
+                  class="text-xs"
+                  >已拒绝</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.Cancelled)"
+                  class="text-xs"
+                  >已取消</SelectItem
+                >
               </SelectContent>
             </Select>
 
@@ -364,7 +415,11 @@ onMounted(async () => {
                 <SelectValue placeholder="按用户筛选" />
               </SelectTrigger>
               <SelectContent class="max-h-56">
-                <SelectItem value="all" class="text-xs">全部用户</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部用户</SelectItem
+                >
                 <SelectItem
                   v-for="c in new List(orders).DistinctBy((s) => s.customer.userId).ToArray()"
                   :key="c.customer.userId"
@@ -382,8 +437,15 @@ onMounted(async () => {
             </label>
           </div>
 
-          <Button variant="ghost" class="flex items-center gap-1 text-muted-foreground hover:text-foreground" @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))">
-            <component :is="Filter24Regular" class="size-3.5" />
+          <Button
+            variant="ghost"
+            class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+            @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))"
+          >
+            <component
+              :is="Filter24Regular"
+              class="size-3.5"
+            />
             重置筛选
           </Button>
         </div>
@@ -393,12 +455,26 @@ onMounted(async () => {
         <!-- 操作行 -->
         <div class="flex flex-wrap items-center justify-between gap-2.5">
           <div class="flex items-center gap-2">
-            <Button variant="outline" class="flex items-center gap-1" @click="refresh">
-              <component :is="ArrowSync24Regular" class="size-3.5" />
+            <Button
+              variant="outline"
+              class="flex items-center gap-1"
+              @click="refresh"
+            >
+              <component
+                :is="ArrowSync24Regular"
+                class="size-3.5"
+              />
               刷新
             </Button>
-            <Button variant="outline" class="flex items-center gap-1" @click="exportData">
-              <component :is="ArrowDownload24Regular" class="size-3.5" />
+            <Button
+              variant="outline"
+              class="flex items-center gap-1"
+              @click="exportData"
+            >
+              <component
+                :is="ArrowDownload24Regular"
+                class="size-3.5"
+              />
               导出数据
             </Button>
           </div>
@@ -412,8 +488,15 @@ onMounted(async () => {
               @positive-click="openStatusUpdateModal"
             >
               <template #trigger>
-                <Button variant="outline" class="flex items-center gap-1" :disabled="!selectedItem?.length">
-                  <component :is="Edit24Regular" class="size-3.5" />
+                <Button
+                  variant="outline"
+                  class="flex items-center gap-1"
+                  :disabled="!selectedItem?.length"
+                >
+                  <component
+                    :is="Edit24Regular"
+                    class="size-3.5"
+                  />
                   批量更新状态 ({{ selectedItem?.length ?? 0 }})
                 </Button>
               </template>
@@ -429,8 +512,15 @@ onMounted(async () => {
               @positive-click="deleteOrder"
             >
               <template #trigger>
-                <Button variant="destructive" class="flex items-center gap-1" :disabled="!selectedItem?.length">
-                  <component :is="Delete24Regular" class="size-3.5" />
+                <Button
+                  variant="destructive"
+                  class="flex items-center gap-1"
+                  :disabled="!selectedItem?.length"
+                >
+                  <component
+                    :is="Delete24Regular"
+                    class="size-3.5"
+                  />
                   批量删除 ({{ selectedItem?.length ?? 0 }})
                 </Button>
               </template>
@@ -465,18 +555,36 @@ onMounted(async () => {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem :value="String(PointOrderStatus.Completed)" class="text-xs">已完成</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.Pending)" class="text-xs">等待发货</SelectItem>
-                <SelectItem :value="String(PointOrderStatus.Shipped)" class="text-xs">已发货</SelectItem>
+                <SelectItem
+                  :value="String(PointOrderStatus.Completed)"
+                  class="text-xs"
+                  >已完成</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.Pending)"
+                  class="text-xs"
+                  >等待发货</SelectItem
+                >
+                <SelectItem
+                  :value="String(PointOrderStatus.Shipped)"
+                  class="text-xs"
+                  >已发货</SelectItem
+                >
               </SelectContent>
             </Select>
           </div>
 
           <DialogFooter class="pt-2 border-t border-border/60">
-            <Button variant="outline" @click="showStatusModal = false">
+            <Button
+              variant="outline"
+              @click="showStatusModal = false"
+            >
               取消
             </Button>
-            <Button :disabled="targetStatus === undefined" @click="batchUpdateOrderStatus">
+            <Button
+              :disabled="targetStatus === undefined"
+              @click="batchUpdateOrderStatus"
+            >
               确认更新
             </Button>
           </DialogFooter>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { EyeOff16Regular } from '@vicons/fluent'
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { computed } from 'vue'
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 import { formatClock } from '../core/format'
 import { useDashboardUi } from '../store/ui'
@@ -68,7 +69,10 @@ const victim = computed(() => grid.value.nextVictim())
             title="隐藏这条弹幕（刷新后恢复）"
             @click="grid.hide(index)"
           >
-            <component :is="EyeOff16Regular" class="h-4 w-4" />
+            <component
+              :is="EyeOff16Regular"
+              class="h-4 w-4"
+            />
           </button>
         </div>
         <div class="card-slot__body">

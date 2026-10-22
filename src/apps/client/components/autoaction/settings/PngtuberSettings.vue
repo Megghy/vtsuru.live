@@ -11,13 +11,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const props = defineProps<{ action: AutoActionItem }>()
 const driver = usePngtuberDriver()
@@ -65,7 +59,10 @@ function test() {
 
     <div class="space-y-1">
       <span class="text-xs text-muted-foreground">频道</span>
-      <Input v-model="action.actionConfig.pngtuberChannel" placeholder="default" />
+      <Input
+        v-model="action.actionConfig.pngtuberChannel"
+        placeholder="default"
+      />
     </div>
 
     <div class="space-y-1">
@@ -88,7 +85,10 @@ function test() {
         </Select>
       </div>
       <div v-else>
-        <Input v-model="action.actionConfig.pngtuberExpressionId" placeholder="填写表情 ID" />
+        <Input
+          v-model="action.actionConfig.pngtuberExpressionId"
+          placeholder="填写表情 ID"
+        />
       </div>
     </div>
 
@@ -106,15 +106,25 @@ function test() {
     </div>
 
     <div class="flex items-center gap-4 text-xs pt-1">
-      <RouterLink :to="{ name: 'client-pngtuber' }" class="text-primary hover:underline">
+      <RouterLink
+        :to="{ name: 'client-pngtuber' }"
+        class="text-primary hover:underline"
+      >
         前往启动驱动 →
       </RouterLink>
-      <RouterLink :to="{ name: 'client-pngtuber-model', query: { channel: targetChannel } }" class="text-primary hover:underline">
+      <RouterLink
+        :to="{ name: 'client-pngtuber-model', query: { channel: targetChannel } }"
+        class="text-primary hover:underline"
+      >
         编辑目标频道表情 →
       </RouterLink>
     </div>
 
-    <Button class="w-full" :disabled="testing || !action.actionConfig.pngtuberExpressionId?.trim()" @click="test">
+    <Button
+      class="w-full"
+      :disabled="testing || !action.actionConfig.pngtuberExpressionId?.trim()"
+      @click="test"
+    >
       {{ testing ? '切换中...' : '测试切换表情' }}
     </Button>
   </div>

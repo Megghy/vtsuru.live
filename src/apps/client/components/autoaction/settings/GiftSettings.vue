@@ -9,13 +9,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -99,10 +93,13 @@ function removeGiftName(index: number) {
         }}
       </span>
       <div class="flex items-center gap-2">
-        <Input v-model="tempGiftName" placeholder="输入礼物名称..." class="flex-1" @keyup.enter="addGiftName" />
-        <Button @click="addGiftName">
-          添加
-        </Button>
+        <Input
+          v-model="tempGiftName"
+          placeholder="输入礼物名称..."
+          class="flex-1"
+          @keyup.enter="addGiftName"
+        />
+        <Button @click="addGiftName"> 添加 </Button>
       </div>
 
       <div class="tag-container flex flex-wrap items-center gap-1.5 p-2 rounded border bg-muted/20 min-h-[36px]">
@@ -158,9 +155,7 @@ function removeGiftName(index: number) {
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <Switch v-model:checked="action.triggerConfig.includeQuantity" />
@@ -175,9 +170,7 @@ function removeGiftName(index: number) {
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            单条感谢弹幕中最多合并展示的用户数量
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <NInputNumber
@@ -199,9 +192,7 @@ function removeGiftName(index: number) {
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            单个用户在同一次感谢中最多显示的礼物种类数
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 单个用户在同一次感谢中最多显示的礼物种类数 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <NInputNumber

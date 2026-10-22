@@ -49,7 +49,7 @@ const timeText = computed(() => {
         :src="avatarUrl(event.uface, 64)"
         referrerpolicy="no-referrer"
         loading="lazy"
-      >
+      />
       <div class="paid__who">
         <div class="paid__line">
           <EventBadges
@@ -76,7 +76,7 @@ const timeText = computed(() => {
               class="paid__gift-icon"
               :src="event.giftIcon"
               referrerpolicy="no-referrer"
-            >
+            />
             {{ paidSummary(event) }}
           </span>
           <span class="paid__time">{{ timeText }}</span>

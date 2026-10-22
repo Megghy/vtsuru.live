@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsAssistantToolEventDto } from './vTsuruCoreAIContractsAssistantToolEventDto';
+import type { VTsuruCoreAIContractsAssistantToolEventDto } from './vTsuruCoreAIContractsAssistantToolEventDto'
 
 /**
  * 答复前"工作过程"的有序片段, 与前端 AssistantProcessStep 对应。
  * Kind=reasoning 时 Text 有效; Kind=tool 时 Tool 有效。按时序排列以还原交错过程。
  */
 export interface VTsuruCoreAIContractsAssistantProcessStepDto {
-  kind: string;
+  kind: string
   /** @nullable */
-  text?: string | null;
-  tool?: VTsuruCoreAIContractsAssistantToolEventDto;
+  text?: string | null
+  tool?: VTsuruCoreAIContractsAssistantToolEventDto
 }

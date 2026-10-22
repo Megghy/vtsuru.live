@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  ChatbubblesOutline,
-  PeopleOutline,
-  TimeOutline,
-  WalletOutline,
-} from '@vicons/ionicons5'
+import { ChatbubblesOutline, PeopleOutline, TimeOutline, WalletOutline } from '@vicons/ionicons5'
 import { format } from 'date-fns'
 import { computed, watch } from 'vue'
 
@@ -80,13 +75,22 @@ function getHeatmapColor(val: number) {
       </SheetHeader>
 
       <ScrollArea class="flex-1 pr-2">
-        <div v-if="d.loading.value && !d.detail.value" class="py-12 flex justify-center">
+        <div
+          v-if="d.loading.value && !d.detail.value"
+          class="py-12 flex justify-center"
+        >
           <Spin />
         </div>
-        <div v-else-if="!d.detail.value" class="py-10">
+        <div
+          v-else-if="!d.detail.value"
+          class="py-10"
+        >
           <Empty description="暂无数据" />
         </div>
-        <div v-else class="space-y-3.5 text-xs">
+        <div
+          v-else
+          class="space-y-3.5 text-xs"
+        >
           <!-- 统计指标网格 -->
           <div class="grid grid-cols-2 gap-2">
             <Card class="border border-border/80">
@@ -102,7 +106,8 @@ function getHeatmapColor(val: number) {
               <CardContent class="p-3 space-y-0.5">
                 <span class="text-[11px] text-muted-foreground block">直播时长</span>
                 <span class="text-base font-semibold font-mono text-foreground">
-                  {{ d.detail.value.summary.liveDurationMinutes }} <span class="text-xs font-normal text-muted-foreground">min</span>
+                  {{ d.detail.value.summary.liveDurationMinutes }}
+                  <span class="text-xs font-normal text-muted-foreground">min</span>
                 </span>
               </CardContent>
             </Card>
@@ -145,7 +150,10 @@ function getHeatmapColor(val: number) {
           </Card>
 
           <!-- 主播设置（管理员权限） -->
-          <Card v-if="isOrgAdmin" class="border border-border/80">
+          <Card
+            v-if="isOrgAdmin"
+            class="border border-border/80"
+          >
             <CardHeader class="p-3 pb-2 border-b border-border/60">
               <CardTitle class="text-xs font-semibold">主播设置</CardTitle>
             </CardHeader>
@@ -160,8 +168,16 @@ function getHeatmapColor(val: number) {
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1" class="text-xs">Active</SelectItem>
-                    <SelectItem value="3" class="text-xs">Removed</SelectItem>
+                    <SelectItem
+                      value="1"
+                      class="text-xs"
+                      >Active</SelectItem
+                    >
+                    <SelectItem
+                      value="3"
+                      class="text-xs"
+                      >Removed</SelectItem
+                    >
                   </SelectContent>
                 </Select>
               </div>
@@ -176,7 +192,9 @@ function getHeatmapColor(val: number) {
                 />
               </div>
 
-              <Button :disabled="d.saving.value" @click="d.save(() => emit('saved'))"
+              <Button
+                :disabled="d.saving.value"
+                @click="d.save(() => emit('saved'))"
               >
                 {{ d.saving.value ? '保存中...' : '保存设置' }}
               </Button>
@@ -189,10 +207,16 @@ function getHeatmapColor(val: number) {
               <CardTitle class="text-xs font-semibold">直播记录</CardTitle>
             </CardHeader>
             <CardContent class="p-3">
-              <div v-if="d.lives.value.length === 0" class="py-6">
+              <div
+                v-if="d.lives.value.length === 0"
+                class="py-6"
+              >
                 <Empty description="暂无直播记录" />
               </div>
-              <div v-else class="divide-y divide-border/60 space-y-2">
+              <div
+                v-else
+                class="divide-y divide-border/60 space-y-2"
+              >
                 <div
                   v-for="live in d.lives.value"
                   :key="live.liveId"
@@ -210,7 +234,10 @@ function getHeatmapColor(val: number) {
                       {{ live.title }}
                     </strong>
                     <div class="flex items-center gap-1 text-[11px] text-muted-foreground">
-                      <component :is="TimeOutline" class="size-3 inline" />
+                      <component
+                        :is="TimeOutline"
+                        class="size-3 inline"
+                      />
                       <span>{{ format(live.startAt, 'yyyy-MM-dd HH:mm') }}</span>
                       <template v-if="live.stopAt">
                         <span>- {{ format(live.stopAt, 'HH:mm') }}</span>
@@ -218,23 +245,39 @@ function getHeatmapColor(val: number) {
                     </div>
                     <div class="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
                       <span class="inline-flex items-center gap-1">
-                        <component :is="WalletOutline" class="size-3" />
+                        <component
+                          :is="WalletOutline"
+                          class="size-3"
+                        />
                         {{ live.totalIncomeWithGuard.toFixed(0) }}
                       </span>
                       <span class="inline-flex items-center gap-1">
-                        <component :is="PeopleOutline" class="size-3" />
+                        <component
+                          :is="PeopleOutline"
+                          class="size-3"
+                        />
                         {{ live.interactionCount }}
                       </span>
                       <span class="inline-flex items-center gap-1">
-                        <component :is="ChatbubblesOutline" class="size-3" />
+                        <component
+                          :is="ChatbubblesOutline"
+                          class="size-3"
+                        />
                         {{ live.danmakusCount }}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div v-if="d.hasMore.value" class="pt-3 flex justify-center">
-                  <Button variant="outline" :disabled="d.loading.value" @click="d.loadMore">
+                <div
+                  v-if="d.hasMore.value"
+                  class="pt-3 flex justify-center"
+                >
+                  <Button
+                    variant="outline"
+                    :disabled="d.loading.value"
+                    @click="d.loadMore"
+                  >
                     {{ d.loading.value ? '加载中...' : '加载更多' }}
                   </Button>
                 </div>

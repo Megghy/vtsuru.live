@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Empty } from '@/shared/ui/empty'
 import { computed, toRef } from 'vue'
+
+import { Empty } from '@/shared/ui/empty'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
 import { useObsListAnimation } from './useObsListAnimation'
@@ -37,37 +38,60 @@ const topSubtitle = computed(() => {
     <!-- 头部当前处理中提示 -->
     <div class="obs-trans-header">
       <div class="obs-trans-current-row">
-        <span class="obs-trans-dot" :class="{ 'is-active': current.active }" />
+        <span
+          class="obs-trans-dot"
+          :class="{ 'is-active': current.active }"
+        />
         <span class="obs-trans-status-tag">{{ current.active ? 'NOW' : 'IDLE' }}</span>
         <span class="obs-trans-current-title">{{ current.active ? current.title : current.emptyText }}</span>
       </div>
-      <div v-if="topSubtitle && current.active" class="obs-trans-current-sub">
+      <div
+        v-if="topSubtitle && current.active"
+        class="obs-trans-current-sub"
+      >
         {{ topSubtitle }}
       </div>
     </div>
 
     <!-- 列表容器 -->
-    <div ref="listContainerRef" class="obs-trans-list-container">
+    <div
+      ref="listContainerRef"
+      class="obs-trans-list-container"
+    >
       <template v-if="items.length > 0">
         <div
           ref="listInnerRef"
           class="obs-trans-list-inner"
           :class="{ animating: isMoreThanContainer }"
         >
-          <TransitionGroup name="obs-trans-item-anim" tag="div" class="obs-trans-list">
+          <TransitionGroup
+            name="obs-trans-item-anim"
+            tag="div"
+            class="obs-trans-list"
+          >
             <div
               v-for="(item, index) in items"
               :key="item.id"
               class="obs-trans-item"
             >
-              <span class="obs-trans-num" :class="{ 'rank-1': index === 0 }">
+              <span
+                class="obs-trans-num"
+                :class="{ 'rank-1': index === 0 }"
+              >
                 #{{ index + 1 }}
               </span>
               <div class="obs-trans-content">
                 <span class="obs-trans-primary">{{ item.primary }}</span>
-                <span v-if="item.secondary" class="obs-trans-secondary">{{ item.secondary }}</span>
+                <span
+                  v-if="item.secondary"
+                  class="obs-trans-secondary"
+                  >{{ item.secondary }}</span
+                >
               </div>
-              <div v-if="(item.badges?.length ?? 0) > 0" class="obs-trans-badges">
+              <div
+                v-if="(item.badges?.length ?? 0) > 0"
+                class="obs-trans-badges"
+              >
                 <span
                   v-for="(badge, bIdx) in item.badges ?? []"
                   :key="`${item.id}-${bIdx}-${badge.text}`"
@@ -99,8 +123,13 @@ const topSubtitle = computed(() => {
   padding: 4px;
   box-sizing: border-box;
   color: #fff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.8),
-    -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.95),
+    0 0 8px rgba(0, 0, 0, 0.8),
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
   overflow: hidden;
   font-variant-numeric: tabular-nums;
 }
@@ -169,8 +198,12 @@ const topSubtitle = computed(() => {
 }
 
 @keyframes obs-trans-scroll {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(v-bind(animationTranslateYCss)); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(v-bind(animationTranslateYCss));
+  }
 }
 
 .obs-trans-list {

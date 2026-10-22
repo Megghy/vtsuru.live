@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ObsStoreControllerAvatarAsset } from './obsStoreControllerAvatarAsset';
+import type { ObsStoreControllerAvatarAsset } from './obsStoreControllerAvatarAsset'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfObsStoreControllerAvatarAsset {
-  message: string;
-  code: number;
-  data: ObsStoreControllerAvatarAsset;
+  message: string
+  code: number
+  data: ObsStoreControllerAvatarAsset
 }

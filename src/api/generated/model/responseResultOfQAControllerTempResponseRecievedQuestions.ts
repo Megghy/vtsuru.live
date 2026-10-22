@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QAControllerTempResponseRecievedQuestions } from './qAControllerTempResponseRecievedQuestions';
+import type { QAControllerTempResponseRecievedQuestions } from './qAControllerTempResponseRecievedQuestions'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfQAControllerTempResponseRecievedQuestions {
-  message: string;
-  code: number;
-  data: QAControllerTempResponseRecievedQuestions;
+  message: string
+  code: number
+  data: QAControllerTempResponseRecievedQuestions
 }

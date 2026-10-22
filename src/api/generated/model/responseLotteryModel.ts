@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LotteryUserInfo } from './lotteryUserInfo';
+import type { LotteryUserInfo } from './lotteryUserInfo'
 
 export interface ResponseLotteryModel {
-  createTime: number;
-  total: number;
-  users: LotteryUserInfo[];
+  createTime: number
+  total: number
+  users: LotteryUserInfo[]
 }

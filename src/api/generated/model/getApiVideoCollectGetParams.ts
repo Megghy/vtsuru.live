@@ -7,5 +7,5 @@
  */
 
 export type GetApiVideoCollectGetParams = {
-id?: string;
-};
+  id?: string
+}

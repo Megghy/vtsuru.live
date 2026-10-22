@@ -7,7 +7,7 @@
  */
 
 export interface PointControllerRequestUpdateOrderExpressModel {
-  id: number;
-  trackingNumber: string;
-  expressCompany: string;
+  id: number
+  trackingNumber: string
+  expressCompany: string
 }

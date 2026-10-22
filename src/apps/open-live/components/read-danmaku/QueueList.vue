@@ -2,10 +2,10 @@
 import { Dismiss20Filled } from '@vicons/fluent'
 import { ref } from 'vue'
 
-import { useSpeechService } from '@/store/useSpeechService'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { ScrollArea } from '@/shared/ui/scroll-area'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import QueueItem from './QueueItem.vue'
 
@@ -42,13 +42,10 @@ function onDragEnd() {
 <template>
   <div class="queue-list">
     <div class="header">
-      <span class="font-semibold text-xs text-foreground">
-        播报队列
-      </span>
-      <span class="text-xs text-muted-foreground">
-        {{ speakQueue.length }} 项
-      </span>
-      <Button v-if="speakQueue.length> 0"
+      <span class="font-semibold text-xs text-foreground"> 播报队列 </span>
+      <span class="text-xs text-muted-foreground"> {{ speakQueue.length }} 项 </span>
+      <Button
+        v-if="speakQueue.length > 0"
         variant="ghost"
         size="sm"
         class="h-6 text-xs text-destructive hover:bg-destructive/10 ml-auto gap-1 px-2"

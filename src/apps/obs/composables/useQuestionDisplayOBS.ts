@@ -2,10 +2,7 @@ import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, toVa
 import type { MaybeRefOrGetter } from 'vue'
 
 import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
-import {
-  getApiQaGetCurrentAndSettings,
-  getApiQaGetHash,
-} from '@/api/generated/qa/qa'
+import { getApiQaGetCurrentAndSettings, getApiQaGetHash } from '@/api/generated/qa/qa'
 import { QueryRequestError } from '@/api/query'
 import { QUESTION_API_URL } from '@/shared/config'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
@@ -51,13 +48,13 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
 
   const isActive = computed(() => (options.active === undefined ? true : toValue(options.active)))
   const isVisible = computed(() => (options.visible === undefined ? true : toValue(options.visible)))
-  const userIdValue = computed(() => parsePositiveId(options.userId === undefined ? undefined : toValue(options.userId)))
+  const userIdValue = computed(() =>
+    parsePositiveId(options.userId === undefined ? undefined : toValue(options.userId)),
+  )
   const tokenValue = computed(() => String(toValue(options.token) ?? '').trim())
   const hasIdentity = computed(() => Boolean(userIdValue.value) || Boolean(tokenValue.value))
 
-  const shouldRun = computed(
-    () => componentActive.value && isActive.value && isVisible.value && hasIdentity.value,
-  )
+  const shouldRun = computed(() => componentActive.value && isActive.value && isVisible.value && hasIdentity.value)
 
   function identityParams(): Record<string, string> {
     const params: Record<string, string> = {}
@@ -90,10 +87,11 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
       return false
     }
 
-    const response = (await getApiQaGetCurrentAndSettings(
-      identityParams(),
-      { signal, timeoutMs: REQUEST_TIMEOUT_MS, retryOnFailover: false } as any,
-    )) as unknown as {
+    const response = (await getApiQaGetCurrentAndSettings(identityParams(), {
+      signal,
+      timeoutMs: REQUEST_TIMEOUT_MS,
+      retryOnFailover: false,
+    } as any)) as unknown as {
       code: number
       data: QuestionDisplaySnapshot
     }
@@ -110,10 +108,11 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   async function fetchVersion(signal: AbortSignal): Promise<void> {
     if (!hasIdentity.value) return
 
-    const response = (await getApiQaGetHash(
-      identityParams(),
-      { signal, timeoutMs: REQUEST_TIMEOUT_MS, retryOnFailover: false } as any,
-    )) as unknown as {
+    const response = (await getApiQaGetHash(identityParams(), {
+      signal,
+      timeoutMs: REQUEST_TIMEOUT_MS,
+      retryOnFailover: false,
+    } as any)) as unknown as {
       code: number
       data?: string
     }

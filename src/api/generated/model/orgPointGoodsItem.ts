@@ -7,10 +7,10 @@
  */
 
 export interface OrgPointGoodsItem {
-  id: number;
-  name: string;
+  id: number
+  name: string
   /** @nullable */
-  description?: string | null;
-  price: number;
-  stock: number;
+  description?: string | null
+  price: number
+  stock: number
 }

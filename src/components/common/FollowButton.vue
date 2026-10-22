@@ -33,7 +33,13 @@ async function toggle() {
 </script>
 
 <template>
-  <Button v-if="ACCOUNT.id !== userId" :variant="following ? 'outline' : 'default'" class="px-2.5" :disabled="following === undefined || busy" @click.stop="toggle">
+  <Button
+    v-if="ACCOUNT.id !== userId"
+    :variant="following ? 'outline' : 'default'"
+    class="px-2.5"
+    :disabled="following === undefined || busy"
+    @click.stop="toggle"
+  >
     {{ following ? '已关注 · 取消' : '关注' }}<template v-if="followers !== undefined"> · {{ followers }}</template>
   </Button>
 

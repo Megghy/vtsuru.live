@@ -7,11 +7,11 @@
  */
 
 export interface SongDataSongRequestOption {
-  needJianzhang: boolean;
-  needTidu: boolean;
-  needZongdu: boolean;
+  needJianzhang: boolean
+  needTidu: boolean
+  needZongdu: boolean
   /** @nullable */
-  scMinPrice?: number | null;
+  scMinPrice?: number | null
   /** @nullable */
-  fanMedalMinLevel?: number | null;
+  fanMedalMinLevel?: number | null
 }

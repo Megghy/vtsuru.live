@@ -38,8 +38,8 @@ function expression(value: unknown): PngtuberExpression {
   result.playback = choice(raw.playback, 'continue', ['continue', 'restart', 'once'])
   if (raw.accessories !== undefined) {
     if (!Array.isArray(raw.accessories) || raw.accessories.length > 12) throw new Error('每个表情最多 12 个配件')
-    result.accessories = raw.accessories.map((value) => {
-      const a = record(value)
+    result.accessories = raw.accessories.map((val) => {
+      const a = record(val)
       return {
         id: text(a.id),
         name: text(a.name, '配件'),

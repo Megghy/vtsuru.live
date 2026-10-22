@@ -215,9 +215,7 @@ function handleTitleClick() {
             客户端设置
           </span>
         </template>
-        <template #description>
-          配置系统启动行为、界面外观、桌面通知与数据备份
-        </template>
+        <template #description> 配置系统启动行为、界面外观、桌面通知与数据备份 </template>
       </ClientPageHeader>
     </Card>
 
@@ -270,7 +268,11 @@ function handleTitleClick() {
             <AlertTitle>操作错误</AlertTitle>
             <AlertDescription class="flex items-center justify-between">
               <span>{{ errorMsg }}</span>
-              <Button variant="ghost" class="h-6 px-2" @click="errorMsg = null">
+              <Button
+                variant="ghost"
+                class="h-6 px-2"
+                @click="errorMsg = null"
+              >
                 关闭
               </Button>
             </AlertDescription>
@@ -293,7 +295,10 @@ function handleTitleClick() {
                         label="开机时自动启动应用"
                         label-placement="left"
                       >
-                        <Switch :checked="isStartOnBoot" :disabled="isLoading || isUpdatingAutostart" @update:checked="val => isStartOnBoot = val"
+                        <Switch
+                          :checked="isStartOnBoot"
+                          :disabled="isLoading || isUpdatingAutostart"
+                          @update:checked="(val) => (isStartOnBoot = val)"
                         />
                       </LabelItem>
 
@@ -302,7 +307,14 @@ function handleTitleClick() {
                         label="启动后静默最小化到系统托盘"
                         label-placement="left"
                       >
-                        <Switch :checked="setting.settings.bootAsMinimized" @update:checked="val => { setting.settings.bootAsMinimized = val; setting.save() }"
+                        <Switch
+                          :checked="setting.settings.bootAsMinimized"
+                          @update:checked="
+                            (val) => {
+                              setting.settings.bootAsMinimized = val
+                              setting.save()
+                            }
+                          "
                         />
                       </LabelItem>
                     </CardContent>
@@ -328,7 +340,8 @@ function handleTitleClick() {
                             <label
                               for="theme-light"
                               class="text-xs cursor-pointer"
-                            >亮色</label>
+                              >亮色</label
+                            >
                           </div>
                           <div class="flex items-center space-x-1.5">
                             <RadioGroupItem
@@ -338,7 +351,8 @@ function handleTitleClick() {
                             <label
                               for="theme-dark"
                               class="text-xs cursor-pointer"
-                            >暗色</label>
+                              >暗色</label
+                            >
                           </div>
                           <div class="flex items-center space-x-1.5">
                             <RadioGroupItem
@@ -348,7 +362,8 @@ function handleTitleClick() {
                             <label
                               for="theme-auto"
                               class="text-xs cursor-pointer"
-                            >跟随系统</label>
+                              >跟随系统</label
+                            >
                           </div>
                         </RadioGroup>
                       </div>
@@ -372,11 +387,16 @@ function handleTitleClick() {
                     <div class="notification-master-row">
                       <div>
                         <span class="font-bold text-xs text-[var(--foreground)]">桌面通知总开关</span>
-                        <div class="setting-hint">
-                          开启后，选中的事件将在 Windows 桌面右下角推送通知
-                        </div>
+                        <div class="setting-hint">开启后，选中的事件将在 Windows 桌面右下角推送通知</div>
                       </div>
-                      <Switch :checked="setting.settings.enableNotification" @update:checked="val => { setting.settings.enableNotification = val; setting.save() }"
+                      <Switch
+                        :checked="setting.settings.enableNotification"
+                        @update:checked="
+                          (val) => {
+                            setting.settings.enableNotification = val
+                            setting.save()
+                          }
+                        "
                       />
                     </div>
 
@@ -397,7 +417,9 @@ function handleTitleClick() {
                             {{ item.desc }}
                           </div>
                         </div>
-                        <Switch :checked="isNotificationTypeEnabled(item.type)" @update:checked="(val) => toggleNotificationType(item.type, val)"
+                        <Switch
+                          :checked="isNotificationTypeEnabled(item.type)"
+                          @update:checked="(val) => toggleNotificationType(item.type, val)"
                         />
                       </div>
                     </div>
@@ -433,12 +455,8 @@ function handleTitleClick() {
                   <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3.5">
                     <div class="about-hero">
                       <div class="about-title-row">
-                        <span class="font-bold text-base text-[var(--foreground)]">
-                          VTsuru EventFetcher
-                        </span>
-                        <Tag variant="secondary">
-                          v{{ currentVersion }}
-                        </Tag>
+                        <span class="font-bold text-base text-[var(--foreground)]"> VTsuru EventFetcher </span>
+                        <Tag variant="secondary"> v{{ currentVersion }} </Tag>
                       </div>
                       <span class="text-xs text-[var(--muted-foreground)]">
                         专为 Bilibili 主播打造的现代化全功能直播辅助与事件采集桌面客户端
@@ -489,11 +507,14 @@ function handleTitleClick() {
                     <div class="flex items-center justify-between">
                       <div>
                         <span class="font-bold text-xs text-[var(--foreground)]">在线检查更新</span>
-                        <div class="setting-hint">
-                          查询服务端最新客户端版本并自动更新
-                        </div>
+                        <div class="setting-hint">查询服务端最新客户端版本并自动更新</div>
                       </div>
-                      <Button variant="secondary" class="gap-1.5" :disabled="isCheckingUpdate" @click="handleCheckUpdate">
+                      <Button
+                        variant="secondary"
+                        class="gap-1.5"
+                        :disabled="isCheckingUpdate"
+                        @click="handleCheckUpdate"
+                      >
                         <component
                           :is="ArrowSync24Regular"
                           class="w-4 h-4"

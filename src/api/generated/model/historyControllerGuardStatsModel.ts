@@ -7,11 +7,11 @@
  */
 
 export interface HistoryControllerGuardStatsModel {
-  totalCount: number;
-  governorCount: number;
-  admiralCount: number;
-  captainCount: number;
-  avgAccompanyDays: number;
-  maxAccompanyDays: number;
-  lastUpdateTime: string;
+  totalCount: number
+  governorCount: number
+  admiralCount: number
+  captainCount: number
+  avgAccompanyDays: number
+  maxAccompanyDays: number
+  lastUpdateTime: string
 }

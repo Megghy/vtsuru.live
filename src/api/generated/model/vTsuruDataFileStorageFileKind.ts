@@ -9,8 +9,8 @@
 /**
  * 允许上传的内容大类，与具体扩展名解耦。
  */
-export type VTsuruDataFileStorageFileKind = typeof VTsuruDataFileStorageFileKind[keyof typeof VTsuruDataFileStorageFileKind];
-
+export type VTsuruDataFileStorageFileKind =
+  (typeof VTsuruDataFileStorageFileKind)[keyof typeof VTsuruDataFileStorageFileKind]
 
 export const VTsuruDataFileStorageFileKind = {
   NUMBER_0: 0,
@@ -19,4 +19,4 @@ export const VTsuruDataFileStorageFileKind = {
   NUMBER_3: 3,
   NUMBER_4: 4,
   NUMBER_5: 5,
-} as const;
+} as const

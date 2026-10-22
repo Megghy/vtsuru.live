@@ -7,5 +7,5 @@
  */
 
 export type GetApiOrgOrgIdPointsGoodsParams = {
-streamerId?: number;
-};
+  streamerId?: number
+}

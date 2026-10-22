@@ -7,8 +7,8 @@
  */
 
 export type PostApiNotificationReadParams = {
-/**
- * 消息id
- */
-id?: string[];
-};
+  /**
+   * 消息id
+   */
+  id?: string[]
+}

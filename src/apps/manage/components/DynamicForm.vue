@@ -6,12 +6,14 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { UploadConfig } from '@/api/account'
 import type { UploadFileResponse } from '@/api/api-models'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
-import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor, SelectOption } from '@/shared/types/VTsuruConfigTypes'
-import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 import type { UploadFileInfo } from '@/shared/types/upload'
-import { toImageUploadFileList } from '@/shared/utils/uploadFileHelper'
-import { useMessage } from '@/shared/utils'
-
+import type {
+  ConfigItemDefinition,
+  DecorativeImageProperties,
+  RGBAColor,
+  SelectOption,
+} from '@/shared/types/VTsuruConfigTypes'
+import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
@@ -20,15 +22,11 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Progress } from '@/shared/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
+import { toImageUploadFileList } from '@/shared/utils/uploadFileHelper'
 
 import DecorativeImageEditor from './DecorativeImageEditor.vue'
 
@@ -396,7 +394,10 @@ onBeforeUnmount(() => {
     @submit.prevent="onSubmit"
   >
     <div class="dynamic-form__footer flex justify-end mb-4">
-      <Button type="submit" :disabled="isUploading">
+      <Button
+        type="submit"
+        :disabled="isUploading"
+      >
         {{ isUploading ? '保存中...' : '提交' }}
       </Button>
     </div>
@@ -428,7 +429,12 @@ onBeforeUnmount(() => {
             @update:pending-files="updateDecorativeFiles(item.key, $event)"
           />
 
-          <Input v-else-if="item.type === 'string'" v-model="configData[item.key]" :placeholder="item.placeholder" :type="item.inputType || 'text'" />
+          <Input
+            v-else-if="item.type === 'string'"
+            v-model="configData[item.key]"
+            :placeholder="item.placeholder"
+            :type="item.inputType || 'text'"
+          />
 
           <Select
             v-else-if="item.type === 'select'"
@@ -438,7 +444,11 @@ onBeforeUnmount(() => {
               <SelectValue :placeholder="item.placeholder || '请选择'" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-if="item.clearable" value="">请选择</SelectItem>
+              <SelectItem
+                v-if="item.clearable"
+                value=""
+                >请选择</SelectItem
+              >
               <SelectItem
                 v-for="opt in getSelectOptions(item)"
                 :key="String(opt.value)"
@@ -465,7 +475,10 @@ onBeforeUnmount(() => {
             @update:model-value="configData[item.key] = $event"
           />
 
-          <div v-else-if="item.type === 'sliderNumber'" class="space-y-1.5 pt-1">
+          <div
+            v-else-if="item.type === 'sliderNumber'"
+            class="space-y-1.5 pt-1"
+          >
             <div class="flex justify-between text-[11px] text-muted-foreground">
               <span>数值</span>
               <span>{{ configData[item.key] ?? 0 }}</span>
@@ -479,12 +492,18 @@ onBeforeUnmount(() => {
             />
           </div>
 
-          <div v-else-if="item.type === 'boolean'" class="flex items-center gap-2 pt-1">
+          <div
+            v-else-if="item.type === 'boolean'"
+            class="flex items-center gap-2 pt-1"
+          >
             <Checkbox
               :checked="configData[item.key]"
               @update:checked="configData[item.key] = $event"
             />
-            <span class="text-xs text-foreground cursor-pointer" @click="configData[item.key] = !configData[item.key]">
+            <span
+              class="text-xs text-foreground cursor-pointer"
+              @click="configData[item.key] = !configData[item.key]"
+            >
               启用
             </span>
             <TooltipProvider v-if="item.description">
@@ -500,14 +519,21 @@ onBeforeUnmount(() => {
           </div>
 
           <!-- 文件上传区 -->
-          <div v-else-if="item.type === 'file'" class="space-y-2">
+          <div
+            v-else-if="item.type === 'file'"
+            class="space-y-2"
+          >
             <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
               <div
                 v-for="(f, fIdx) in fileList[item.key] ?? []"
                 :key="f.id"
                 class="relative aspect-square rounded-md border border-border overflow-hidden group bg-muted/20"
               >
-                <img :src="f.url" :alt="f.name" class="w-full h-full object-cover" />
+                <img
+                  :src="f.url"
+                  :alt="f.name"
+                  class="w-full h-full object-cover"
+                />
                 <button
                   type="button"
                   class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
@@ -545,12 +571,24 @@ onBeforeUnmount(() => {
         </DialogHeader>
         <div class="space-y-3 py-2">
           <p class="text-xs text-muted-foreground">{{ uploadStage }}</p>
-          <Progress :model-value="uploadProgress" class="h-2" />
-          <p v-if="totalFilesToUpload > 0" class="text-xs text-muted-foreground">
+          <Progress
+            :model-value="uploadProgress"
+            class="h-2"
+          />
+          <p
+            v-if="totalFilesToUpload > 0"
+            class="text-xs text-muted-foreground"
+          >
             {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件
           </p>
-          <div v-if="uploadStage === UploadStage.Failed" class="flex justify-end pt-2">
-            <Button variant="outline" @click="showUploadModal = false">
+          <div
+            v-if="uploadStage === UploadStage.Failed"
+            class="flex justify-end pt-2"
+          >
+            <Button
+              variant="outline"
+              @click="showUploadModal = false"
+            >
               关闭
             </Button>
           </div>

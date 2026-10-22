@@ -11,14 +11,7 @@ import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -261,11 +254,15 @@ function getSafeUrl(value?: string) {
       class="traditional-song-list"
       :class="{ 'has-background': config?.backgroundFile?.length }"
       :style="{
-        '--song-list-bg-image': config?.backgroundFile?.length ? `url(&quot;${config.backgroundFile[0].path}&quot;)` : undefined,
+        '--song-list-bg-image': config?.backgroundFile?.length
+          ? `url(&quot;${config.backgroundFile[0].path}&quot;)`
+          : undefined,
       }"
     >
       <div class="content-frame max-w-5xl mx-auto px-4 py-8 space-y-6">
-        <header class="profile-panel flex flex-wrap items-center gap-6 p-6 rounded-2xl bg-card/80 backdrop-blur-md border border-border/80 shadow-xs">
+        <header
+          class="profile-panel flex flex-wrap items-center gap-6 p-6 rounded-2xl bg-card/80 backdrop-blur-md border border-border/80 shadow-xs"
+        >
           <img
             class="profile-avatar size-20 rounded-full object-cover border-2 border-primary/20"
             :src="userInfo?.faceUrl || userInfo?.streamerInfo?.faceUrl || getUserAvatarUrl(userInfo?.id)"
@@ -274,7 +271,9 @@ function getSafeUrl(value?: string) {
           />
           <div class="profile-copy flex-1 min-w-48">
             <p class="eyebrow text-xs font-semibold tracking-wider text-primary uppercase">SONG LIBRARY</p>
-            <h1 class="text-2xl font-bold text-foreground mt-0.5">{{ config?.title ?? `${userInfo?.name ?? ''}的歌单` }}</h1>
+            <h1 class="text-2xl font-bold text-foreground mt-0.5">
+              {{ config?.title ?? `${userInfo?.name ?? ''}的歌单` }}
+            </h1>
             <p
               v-if="config?.description"
               class="profile-summary text-xs text-muted-foreground mt-1"
@@ -301,7 +300,10 @@ function getSafeUrl(value?: string) {
               rel="noopener noreferrer"
               class="profile-icon-link p-2 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition size-9 flex items-center justify-center"
             >
-              <component :is="link.icon" class="size-4" />
+              <component
+                :is="link.icon"
+                class="size-4"
+              />
             </a>
             <a
               v-for="link in customLinks"
@@ -323,9 +325,15 @@ function getSafeUrl(value?: string) {
           {{ config.longDescription }}
         </p>
 
-        <main class="song-panel p-5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/80 shadow-xs space-y-4">
+        <main
+          class="song-panel p-5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/80 shadow-xs space-y-4"
+        >
           <div class="filter-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
-            <Input v-model="searchQuery" placeholder="搜索歌名、歌手、语言、标签或备注" class="search-input col-span-1 sm:col-span-2" />
+            <Input
+              v-model="searchQuery"
+              placeholder="搜索歌名、歌手、语言、标签或备注"
+              class="search-input col-span-1 sm:col-span-2"
+            />
             <Select
               :model-value="selectedArtist || 'all'"
               @update:model-value="selectedArtist = $event === 'all' ? null : String($event)"
@@ -334,7 +342,11 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="歌手" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" class="text-xs">全部歌手</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部歌手</SelectItem
+                >
                 <SelectItem
                   v-for="opt in artistOptions"
                   :key="opt.value"
@@ -353,7 +365,11 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="语言" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" class="text-xs">全部语言</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部语言</SelectItem
+                >
                 <SelectItem
                   v-for="opt in languageOptions"
                   :key="opt.value"
@@ -372,7 +388,11 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="标签" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" class="text-xs">全部标签</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部标签</SelectItem
+                >
                 <SelectItem
                   v-for="opt in tagOptions"
                   :key="opt.value"
@@ -402,20 +422,43 @@ function getSafeUrl(value?: string) {
                   </SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="ghost" size="icon" class="size-8 shrink-0 text-muted-foreground" :disabled="!sortKey" :title="sortOrder === 'asc' ? '升序' : '降序'" @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'">
-                <component :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled" class="size-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-8 shrink-0 text-muted-foreground"
+                :disabled="!sortKey"
+                :title="sortOrder === 'asc' ? '升序' : '降序'"
+                @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+              >
+                <component
+                  :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
+                  class="size-4"
+                />
               </Button>
             </div>
           </div>
 
           <div class="result-toolbar flex items-center justify-between gap-3 text-xs pt-1 border-t border-border/50">
-            <span class="result-count text-muted-foreground font-mono">{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span>
+            <span class="result-count text-muted-foreground font-mono"
+              >{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span
+            >
             <div class="toolbar-actions flex items-center gap-2">
-              <Button variant="ghost" class="flex items-center gap-1 text-muted-foreground" :disabled="!hasFilters" @click="clearFilters">
-                <component :is="ArrowCounterclockwise20Filled" class="size-3.5" />
+              <Button
+                variant="ghost"
+                class="flex items-center gap-1 text-muted-foreground"
+                :disabled="!hasFilters"
+                @click="clearFilters"
+              >
+                <component
+                  :is="ArrowCounterclockwise20Filled"
+                  class="size-3.5"
+                />
                 清空
               </Button>
-              <Button variant="secondary" @click="randomOrder">
+              <Button
+                variant="secondary"
+                @click="randomOrder"
+              >
                 随机一首
               </Button>
             </div>
@@ -501,7 +544,10 @@ function getSafeUrl(value?: string) {
                           title="打开歌曲链接"
                           class="text-muted-foreground hover:text-primary p-0.5"
                         >
-                          <component :is="SquareArrowForward24Filled" class="size-3.5" />
+                          <component
+                            :is="SquareArrowForward24Filled"
+                            class="size-3.5"
+                          />
                         </a>
                       </div>
                     </td>
@@ -549,7 +595,11 @@ function getSafeUrl(value?: string) {
                           :key="tag"
                           type="button"
                           class="px-1.5 py-0.5 rounded text-[10px] transition cursor-pointer"
-                          :class="selectedTag === tag ? 'bg-primary text-primary-foreground font-medium' : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+                          :class="
+                            selectedTag === tag
+                              ? 'bg-primary text-primary-foreground font-medium'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          "
                           @click="selectedTag = selectedTag === tag ? null : tag"
                         >
                           {{ tag }}
@@ -564,7 +614,9 @@ function getSafeUrl(value?: string) {
                       />
                     </td>
                     <td class="py-2 px-3">
-                      <span :class="{ 'text-muted-foreground/60': !song.description }">{{ song.description || '无' }}</span>
+                      <span :class="{ 'text-muted-foreground/60': !song.description }">{{
+                        song.description || '无'
+                      }}</span>
                     </td>
                   </tr>
                 </tbody>
@@ -594,10 +646,20 @@ function getSafeUrl(value?: string) {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter class="pt-3">
-            <Button v-if="dialogState.negativeText" variant="outline" @click="dialogState.open = false">
+            <Button
+              v-if="dialogState.negativeText"
+              variant="outline"
+              @click="dialogState.open = false"
+            >
               {{ dialogState.negativeText }}
             </Button>
-            <Button @click="() => { dialogState.onConfirm(); dialogState.open = false; }"
+            <Button
+              @click="
+                () => {
+                  dialogState.onConfirm()
+                  dialogState.open = false
+                }
+              "
             >
               {{ dialogState.positiveText }}
             </Button>

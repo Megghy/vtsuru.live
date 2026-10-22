@@ -5,10 +5,7 @@ import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
-import {
-  getApiCheckinKeyword,
-  getApiCheckinRanking,
-} from '@/api/generated/check-in/check-in'
+import { getApiCheckinKeyword, getApiCheckinRanking } from '@/api/generated/check-in/check-in'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -150,7 +147,10 @@ onMounted(() => {
       <CardHeader class="pb-3 border-b border-border/60">
         <div class="ranking-title flex items-center justify-between">
           <div class="flex items-center gap-2">
-            <component :is="Trophy24Filled" class="size-5 text-amber-500" />
+            <component
+              :is="Trophy24Filled"
+              class="size-5 text-amber-500"
+            />
             <CardTitle class="text-base font-semibold">签到排行榜</CardTitle>
           </div>
           <span
@@ -181,17 +181,35 @@ onMounted(() => {
           </Select>
 
           <div class="relative flex-1 min-w-36">
-            <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input v-model="userFilter" placeholder="搜索用户" class="pl-8 w-full" />
+            <component
+              :is="Search24Regular"
+              class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              v-model="userFilter"
+              placeholder="搜索用户"
+              class="pl-8 w-full"
+            />
           </div>
 
-          <Button class="flex items-center gap-1" :disabled="isLoading" @click="loadCheckInRanking">
-            <component :is="ArrowClockwise24Regular" class="size-3.5" :class="{ 'animate-spin': isLoading }" />
+          <Button
+            class="flex items-center gap-1"
+            :disabled="isLoading"
+            @click="loadCheckInRanking"
+          >
+            <component
+              :is="ArrowClockwise24Regular"
+              class="size-3.5"
+              :class="{ 'animate-spin': isLoading }"
+            />
             刷新
           </Button>
         </div>
 
-        <div v-if="isLoading" class="py-16 flex justify-center">
+        <div
+          v-if="isLoading"
+          class="py-16 flex justify-center"
+        >
           <Spin />
         </div>
 
@@ -318,7 +336,10 @@ onMounted(() => {
         </div>
 
         <Alert class="ranking-info bg-muted/40 border-border/80">
-          <component :is="Info24Filled" class="size-4 text-primary" />
+          <component
+            :is="Info24Filled"
+            class="size-4 text-primary"
+          />
           <AlertDescription class="text-xs text-muted-foreground ml-2">
             签到可获得积分，连续签到有额外奖励。发送“{{ checkInKeyword }}”即可参与签到。
           </AlertDescription>

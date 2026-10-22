@@ -76,8 +76,15 @@ function requestSong(song: SongsInfo) {
 
       <div class="toolbar flex flex-wrap gap-2.5 items-center mb-4">
         <div class="relative search flex-1 min-w-48">
-          <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input v-model="searchKeyword" class="pl-8 w-full" placeholder="搜索歌曲 / 歌手 / 标签…" />
+          <component
+            :is="Search24Regular"
+            class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            v-model="searchKeyword"
+            class="pl-8 w-full"
+            placeholder="搜索歌曲 / 歌手 / 标签…"
+          />
         </div>
         <Select
           :model-value="selectedTag || 'all'"
@@ -87,7 +94,11 @@ function requestSong(song: SongsInfo) {
             <SelectValue placeholder="标签" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all" class="text-xs">全部标签</SelectItem>
+            <SelectItem
+              value="all"
+              class="text-xs"
+              >全部标签</SelectItem
+            >
             <SelectItem
               v-for="opt in tagOptions"
               :key="opt.value"
@@ -148,7 +159,9 @@ function requestSong(song: SongsInfo) {
                 <span>{{ song.name.charAt(0) }}</span>
               </div>
 
-              <span class="cover-index absolute top-1.5 left-1.5 text-[10px] font-mono px-1 py-0.5 rounded bg-black/60 text-white">
+              <span
+                class="cover-index absolute top-1.5 left-1.5 text-[10px] font-mono px-1 py-0.5 rounded bg-black/60 text-white"
+              >
                 {{ String(index + 1).padStart(2, '0') }}
               </span>
 
@@ -166,11 +179,23 @@ function requestSong(song: SongsInfo) {
                 SC ¥{{ song.options.scMinPrice }}
               </span>
 
-              <div class="cover-overlay absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+              <div
+                class="cover-overlay absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2"
+              >
                 <Tooltip v-if="song.url">
                   <TooltipTrigger as-child>
-                    <Button variant="secondary" size="icon" class="size-9 rounded-full bg-background/90 text-foreground hover:bg-background" :aria-label="`试听：${song.name}`" :disabled="isLrcLoading === song.key" @click="previewSong = song">
-                      <component :is="Play24Filled" class="size-4" />
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      class="size-9 rounded-full bg-background/90 text-foreground hover:bg-background"
+                      :aria-label="`试听：${song.name}`"
+                      :disabled="isLrcLoading === song.key"
+                      @click="previewSong = song"
+                    >
+                      <component
+                        :is="Play24Filled"
+                        class="size-4"
+                      />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>试听</TooltipContent>

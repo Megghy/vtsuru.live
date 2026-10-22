@@ -7,11 +7,11 @@
  */
 
 export interface ResponseOrgAuditLogItem {
-  id: number;
-  action: string;
-  detail: string;
-  createdAt: number;
-  userId: number;
+  id: number
+  action: string
+  detail: string
+  createdAt: number
+  userId: number
   /** @nullable */
-  userName?: string | null;
+  userName?: string | null
 }

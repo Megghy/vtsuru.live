@@ -5,27 +5,27 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SongDataSongRequestOption } from './songDataSongRequestOption';
-import type { VTsuruInterfacesSongPlatform } from './vTsuruInterfacesSongPlatform';
+import type { SongDataSongRequestOption } from './songDataSongRequestOption'
+import type { VTsuruInterfacesSongPlatform } from './vTsuruInterfacesSongPlatform'
 
 export interface ResponseSongModel {
-  name: string;
-  createTime: number;
-  updateTime: number;
+  name: string
+  createTime: number
+  updateTime: number
   /** @nullable */
-  translateName?: string | null;
+  translateName?: string | null
   /** @nullable */
-  description?: string | null;
-  id: number;
-  key: string;
-  from: VTsuruInterfacesSongPlatform;
-  author: string[];
+  description?: string | null
+  id: number
+  key: string
+  from: VTsuruInterfacesSongPlatform
+  author: string[]
   /** @nullable */
-  url?: string | null;
+  url?: string | null
   /** @nullable */
-  language?: string[] | null;
-  tags: string[];
-  options?: SongDataSongRequestOption;
+  language?: string[] | null
+  tags: string[]
+  options?: SongDataSongRequestOption
   /** @nullable */
-  cover?: string | null;
+  cover?: string | null
 }

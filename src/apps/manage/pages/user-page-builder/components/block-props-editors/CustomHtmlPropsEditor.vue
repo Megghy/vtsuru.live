@@ -45,7 +45,11 @@ const maxHeight = computed({
 
 <template>
   <div class="flex flex-col gap-2">
-    <Button variant="outline" class="w-full" @click="editorOpen = true">
+    <Button
+      variant="outline"
+      class="w-full"
+      @click="editorOpen = true"
+    >
       <Code2 class="mr-1.5 size-4" />
       打开代码编辑器
     </Button>
@@ -57,10 +61,20 @@ const maxHeight = computed({
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">高度方式</label>
         <div class="inline-flex rounded-md border border-input p-0.5 bg-muted/40">
-          <Button size="xs" :variant="heightMode === 'auto' ? 'secondary' : 'ghost'" class="px-3" @click="heightMode = 'auto'">
+          <Button
+            size="xs"
+            :variant="heightMode === 'auto' ? 'secondary' : 'ghost'"
+            class="px-3"
+            @click="heightMode = 'auto'"
+          >
             自动
           </Button>
-          <Button size="xs" :variant="heightMode === 'fixed' ? 'secondary' : 'ghost'" class="px-3" @click="heightMode = 'fixed'">
+          <Button
+            size="xs"
+            :variant="heightMode === 'fixed' ? 'secondary' : 'ghost'"
+            class="px-3"
+            @click="heightMode = 'fixed'"
+          >
             固定
           </Button>
         </div>

@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  buttonAppearanceClass,
-  buttonAppearanceStyle,
-  normalizeButtonAppearance,
-} from '../buttonAppearance'
+import { buttonAppearanceClass, buttonAppearanceStyle, normalizeButtonAppearance } from '../buttonAppearance'
 import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
 
 describe('buttonAppearance', () => {

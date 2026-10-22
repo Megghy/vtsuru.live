@@ -6,11 +6,11 @@
  * OpenAPI spec version: v1
  */
 
-export type SettingQuestionDisplayQuestionDisplayVerticalAlign = typeof SettingQuestionDisplayQuestionDisplayVerticalAlign[keyof typeof SettingQuestionDisplayQuestionDisplayVerticalAlign];
-
+export type SettingQuestionDisplayQuestionDisplayVerticalAlign =
+  (typeof SettingQuestionDisplayQuestionDisplayVerticalAlign)[keyof typeof SettingQuestionDisplayQuestionDisplayVerticalAlign]
 
 export const SettingQuestionDisplayQuestionDisplayVerticalAlign = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

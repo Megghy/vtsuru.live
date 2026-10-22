@@ -7,7 +7,7 @@
  */
 
 export type GetApiCheckinStatusParams = {
-uId?: number;
-oId?: string;
-authId?: number;
-};
+  uId?: number
+  oId?: string
+  authId?: number
+}

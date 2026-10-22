@@ -94,11 +94,19 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">图片</label>
                 <div class="flex items-center gap-2">
-                  <Button variant="outline" :loading="editor.isUploading.value" @click="editor.triggerUploadItemImage(props.block, index)">
+                  <Button
+                    variant="outline"
+                    :loading="editor.isUploading.value"
+                    @click="editor.triggerUploadItemImage(props.block, index)"
+                  >
                     <ImageIcon class="mr-1.5 size-3.5" />
                     选择图片
                   </Button>
-                  <Button variant="ghost" :disabled="!item.imageFile" @click="editor.clearUploadedItemImage(props.block, index)">
+                  <Button
+                    variant="ghost"
+                    :disabled="!item.imageFile"
+                    @click="editor.clearUploadedItemImage(props.block, index)"
+                  >
                     清除
                   </Button>
                   <img
@@ -111,7 +119,10 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
-                <Input v-model="item.title" maxlength="100" />
+                <Input
+                  v-model="item.title"
+                  maxlength="100"
+                />
               </div>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">正文</label>
@@ -135,8 +146,17 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
                     {{ t }}
                   </Tag>
                   <div class="flex items-center gap-1">
-                    <Input v-model="newTagInput[index]" placeholder="新标签" class="h-6 w-20 px-2" @keydown.enter.prevent="addTag(item, index)" />
-                    <Button variant="outline" class="h-6 px-1.5" @click="addTag(item, index)">
+                    <Input
+                      v-model="newTagInput[index]"
+                      placeholder="新标签"
+                      class="h-6 w-20 px-2"
+                      @keydown.enter.prevent="addTag(item, index)"
+                    />
+                    <Button
+                      variant="outline"
+                      class="h-6 px-1.5"
+                      @click="addTag(item, index)"
+                    >
                       <Plus class="size-3" />
                     </Button>
                   </div>

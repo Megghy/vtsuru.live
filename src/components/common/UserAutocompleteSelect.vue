@@ -133,8 +133,16 @@ watch(
           class="flex items-center justify-between w-full h-8 px-2.5 text-xs rounded-md border border-input bg-background transition-colors hover:border-ring cursor-pointer"
           :class="[disabled ? 'opacity-50 pointer-events-none' : '']"
         >
-          <span v-if="selectedLabel" class="truncate text-foreground">{{ selectedLabel }}</span>
-          <span v-else class="text-muted-foreground">{{ placeholder || '输入B站UID/用户名搜索(可选)' }}</span>
+          <span
+            v-if="selectedLabel"
+            class="truncate text-foreground"
+            >{{ selectedLabel }}</span
+          >
+          <span
+            v-else
+            class="text-muted-foreground"
+            >{{ placeholder || '输入B站UID/用户名搜索(可选)' }}</span
+          >
           <div class="flex items-center gap-1 ml-1 text-muted-foreground">
             <button
               v-if="model && !disabled"
@@ -148,7 +156,10 @@ watch(
           </div>
         </div>
       </PopoverTrigger>
-      <PopoverContent class="w-[320px] p-2 text-xs" align="start">
+      <PopoverContent
+        class="w-[320px] p-2 text-xs"
+        align="start"
+      >
         <div class="relative mb-2">
           <Input
             size="xs"
@@ -157,7 +168,10 @@ watch(
             :model-value="searchInput"
             @input="onSearchInput"
           />
-          <Loader2 v-if="loading" class="absolute right-2 top-1.5 size-3.5 animate-spin text-muted-foreground" />
+          <Loader2
+            v-if="loading"
+            class="absolute right-2 top-1.5 size-3.5 animate-spin text-muted-foreground"
+          />
         </div>
         <div class="max-h-56 overflow-y-auto space-y-0.5">
           <div
@@ -168,9 +182,15 @@ watch(
             @click="selectOption(opt)"
           >
             <span class="truncate pr-2">{{ opt.label }}</span>
-            <Check v-if="opt.value === model" class="size-3.5 shrink-0" />
+            <Check
+              v-if="opt.value === model"
+              class="size-3.5 shrink-0"
+            />
           </div>
-          <div v-if="!loading && options.length === 0" class="py-4 text-center text-muted-foreground text-[11px]">
+          <div
+            v-if="!loading && options.length === 0"
+            class="py-4 text-center text-muted-foreground text-[11px]"
+          >
             {{ searchInput ? '未找到匹配用户' : '请输入关键字开始搜索' }}
           </div>
         </div>

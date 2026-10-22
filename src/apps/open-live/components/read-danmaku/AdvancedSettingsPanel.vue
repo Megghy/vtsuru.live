@@ -1,17 +1,11 @@
 <script setup lang="ts">
-import { useSpeechService } from '@/store/useSpeechService'
 import { Badge } from '@/shared/ui/badge'
 import { Checkbox } from '@/shared/ui/checkbox'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Slider } from '@/shared/ui/slider'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from './SectionField.vue'
 

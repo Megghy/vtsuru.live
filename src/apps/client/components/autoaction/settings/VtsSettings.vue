@@ -9,13 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -57,9 +51,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
             <TooltipTrigger as-child>
               <Info16Regular class="size-4 text-muted-foreground cursor-help" />
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
-              需要 VTS 已连接且已授权
-            </TooltipContent>
+            <TooltipContent class="text-xs"> 需要 VTS 已连接且已授权 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </CardHeader>
@@ -89,7 +81,13 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                 </SelectContent>
               </Select>
             </div>
-            <Button size="xs" variant="ghost" class="w-8 p-0" title="刷新" @click="vts.refreshHotkeys()">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="w-8 p-0"
+              title="刷新"
+              @click="vts.refreshHotkeys()"
+            >
               <ArrowClockwise16Filled class="size-3.5" />
             </Button>
           </div>
@@ -140,7 +138,14 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                   </SelectContent>
                 </Select>
               </div>
-              <Button size="xs" variant="ghost" class="w-8 p-0" :disabled="!vts.connected" title="刷新" @click="vts.refreshItems({ includeFiles: true })">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="w-8 p-0"
+                :disabled="!vts.connected"
+                title="刷新"
+                @click="vts.refreshItems({ includeFiles: true })"
+              >
                 <ArrowClockwise16Filled class="size-3.5" />
               </Button>
             </div>
@@ -181,7 +186,10 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
         <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
           <div class="space-y-1">
             <span class="text-xs text-muted-foreground">参数 ID</span>
-            <Input v-model="action.actionConfig.vtsParamId" placeholder="如 Blush, EyeOpen" />
+            <Input
+              v-model="action.actionConfig.vtsParamId"
+              placeholder="如 Blush, EyeOpen"
+            />
           </div>
 
           <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">

@@ -275,9 +275,7 @@ export const useBiliFunction = defineStore('biliFunction', () => {
             ),
           duration: 0,
         })
-        console.error(
-          `发送弹幕API失败 to: ${roomId} [${message}] - ${json.code} - ${json.message || json.msg}`,
-        )
+        console.error(`发送弹幕API失败 to: ${roomId} [${message}] - ${json.code} - ${json.message || json.msg}`)
         return false
       }
 

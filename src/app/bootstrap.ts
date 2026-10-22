@@ -14,14 +14,11 @@ import { getApiVtsuruVersion } from '@/api/generated/vtsuru/vtsuru'
 import { isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
 import { setSentryUser } from '@/shared/services/sentry'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
-
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useNotificationStore } from '@/store/useNotificationStore'
 
 let currentVersion: string
 let isHaveNewVersion = false
-
-
 
 function isObsOverlay() {
   const path = window.location.pathname

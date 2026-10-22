@@ -7,12 +7,12 @@ import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { useMessage } from '@/shared/utils'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 const account = useAccount()
@@ -84,25 +84,36 @@ async function download() {
     </CardHeader>
     <CardContent class="pt-0">
       <div class="flex flex-col gap-4">
-        <Input v-model="text" placeholder="输入链接或文本" />
+        <Input
+          v-model="text"
+          placeholder="输入链接或文本"
+        />
 
         <div>
-          <span class="text-xs text-muted-foreground mb-1.5 block">
-            链接预设
-          </span>
+          <span class="text-xs text-muted-foreground mb-1.5 block"> 链接预设 </span>
           <div class="flex flex-wrap gap-2">
-            <Button v-for="p in linkPresets" :key="p.label" variant="outline" class="px-2.5" @click="text = p.value">
+            <Button
+              v-for="p in linkPresets"
+              :key="p.label"
+              variant="outline"
+              class="px-2.5"
+              @click="text = p.value"
+            >
               {{ p.label }}
             </Button>
           </div>
         </div>
 
         <div>
-          <span class="text-xs text-muted-foreground mb-1.5 block">
-            配色预设
-          </span>
+          <span class="text-xs text-muted-foreground mb-1.5 block"> 配色预设 </span>
           <div class="flex flex-wrap gap-2">
-            <Button v-for="s in stylePresets" :key="s.label" variant="outline" class="px-2.5 inline-flex items-center gap-1.5" @click="applyStyle(s)">
+            <Button
+              v-for="s in stylePresets"
+              :key="s.label"
+              variant="outline"
+              class="px-2.5 inline-flex items-center gap-1.5"
+              @click="applyStyle(s)"
+            >
               <span
                 class="color-dot"
                 :style="{ background: s.fg, boxShadow: `0 0 0 2px ${s.bg}` }"
@@ -161,7 +172,10 @@ async function download() {
         </div>
 
         <div>
-          <Button :disabled="!text" @click="download">
+          <Button
+            :disabled="!text"
+            @click="download"
+          >
             下载 PNG
           </Button>
         </div>

@@ -89,14 +89,20 @@ function confirmDelete(resource: BuilderResource) {
 </script>
 
 <template>
-  <Dialog :open="show" @update:open="(val) => (show = val)">
+  <Dialog
+    :open="show"
+    @update:open="(val) => (show = val)"
+  >
     <DialogContent class="max-w-[900px] w-[95vw] p-6 max-h-[88vh] flex flex-col gap-4">
       <DialogHeader>
         <DialogTitle class="text-base font-semibold"> 资源管理 </DialogTitle>
       </DialogHeader>
 
       <div class="flex flex-col gap-4 min-h-0 flex-1 overflow-hidden">
-        <Alert v-if="editor.uploadQueue.value.length" :variant="uploadAlertType">
+        <Alert
+          v-if="editor.uploadQueue.value.length"
+          :variant="uploadAlertType"
+        >
           <AlertDescription>
             <div class="flex flex-col gap-1 text-xs">
               <div
@@ -105,7 +111,10 @@ function confirmDelete(resource: BuilderResource) {
                 class="flex items-center justify-between"
               >
                 <span>{{ item.name }}</span>
-                <Tag :variant="uploadStageVariant(item.stage)" class="text-[10px]">
+                <Tag
+                  :variant="uploadStageVariant(item.stage)"
+                  class="text-[10px]"
+                >
                   {{ item.stage }}
                 </Tag>
               </div>
@@ -121,13 +130,23 @@ function confirmDelete(resource: BuilderResource) {
             </template>
           </div>
           <div class="flex items-center gap-2">
-            <Button variant="outline" @click="editor.normalizeRichTextImagesFile">
+            <Button
+              variant="outline"
+              @click="editor.normalizeRichTextImagesFile"
+            >
               整理富文本引用
             </Button>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button size="icon" variant="ghost" class="size-7" :disabled="resources.isLoading.value" aria-label="刷新资源" @click="resources.loadResources">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    class="size-7"
+                    :disabled="resources.isLoading.value"
+                    aria-label="刷新资源"
+                    @click="resources.loadResources"
+                  >
                     <RefreshOutline class="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -137,23 +156,52 @@ function confirmDelete(resource: BuilderResource) {
           </div>
         </div>
 
-        <Tabs :model-value="resources.currentView.value" class="w-full shrink-0" @update:model-value="(val) => (resources.currentView.value = val as any)">
+        <Tabs
+          :model-value="resources.currentView.value"
+          class="w-full shrink-0"
+          @update:model-value="(val) => (resources.currentView.value = val as any)"
+        >
           <TabsList class="w-full justify-start">
-            <TabsTrigger value="all" class="text-xs"> 全部 {{ resources.resources.value.length }} </TabsTrigger>
-            <TabsTrigger value="used" class="text-xs"> 引用中 {{ resources.usedCount.value }} </TabsTrigger>
-            <TabsTrigger value="unused" class="text-xs"> 未使用 {{ resources.unusedCount.value }} </TabsTrigger>
+            <TabsTrigger
+              value="all"
+              class="text-xs"
+            >
+              全部 {{ resources.resources.value.length }}
+            </TabsTrigger>
+            <TabsTrigger
+              value="used"
+              class="text-xs"
+            >
+              引用中 {{ resources.usedCount.value }}
+            </TabsTrigger>
+            <TabsTrigger
+              value="unused"
+              class="text-xs"
+            >
+              未使用 {{ resources.unusedCount.value }}
+            </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        <Alert v-if="resources.loadError.value" variant="destructive" class="text-xs py-2 shrink-0">
+        <Alert
+          v-if="resources.loadError.value"
+          variant="destructive"
+          class="text-xs py-2 shrink-0"
+        >
           <AlertDescription>{{ resources.loadError.value }}</AlertDescription>
         </Alert>
 
         <div class="flex-1 min-h-0 overflow-y-auto relative">
-          <div v-if="resources.isLoading.value" class="py-12 flex items-center justify-center">
+          <div
+            v-if="resources.isLoading.value"
+            class="py-12 flex items-center justify-center"
+          >
             <Spin />
           </div>
-          <div v-else-if="resources.visibleResources.value.length" class="space-y-2 pr-1">
+          <div
+            v-else-if="resources.visibleResources.value.length"
+            class="space-y-2 pr-1"
+          >
             <div
               v-for="file in resources.visibleResources.value"
               :key="file.id"
@@ -193,10 +241,18 @@ function confirmDelete(resource: BuilderResource) {
                       <strong class="text-xs text-foreground truncate">
                         {{ file.name || `资源 #${file.id}` }}
                       </strong>
-                      <Tag v-if="file.missing" variant="destructive" class="text-[10px]">
+                      <Tag
+                        v-if="file.missing"
+                        variant="destructive"
+                        class="text-[10px]"
+                      >
                         文件已失效
                       </Tag>
-                      <Tag v-else :variant="file.locations.length ? 'default' : 'secondary'" class="text-[10px]">
+                      <Tag
+                        v-else
+                        :variant="file.locations.length ? 'default' : 'secondary'"
+                        class="text-[10px]"
+                      >
                         {{ file.locations.length ? `引用 ${file.locations.length} 处` : '未使用' }}
                       </Tag>
                     </div>
@@ -210,11 +266,20 @@ function confirmDelete(resource: BuilderResource) {
                   </div>
                 </div>
 
-                <div v-if="!file.missing" class="flex items-center gap-1 shrink-0">
+                <div
+                  v-if="!file.missing"
+                  class="flex items-center gap-1 shrink-0"
+                >
                   <TooltipProvider>
                     <Tooltip v-if="file.path">
                       <TooltipTrigger as-child>
-                        <Button size="icon" variant="ghost" class="size-7" aria-label="复制资源链接" @click="copyResourcePath(file.path)">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          class="size-7"
+                          aria-label="复制资源链接"
+                          @click="copyResourcePath(file.path)"
+                        >
                           <CopyOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>
@@ -222,7 +287,14 @@ function confirmDelete(resource: BuilderResource) {
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger as-child>
-                        <Button size="icon" variant="ghost" class="size-7 text-destructive hover:text-destructive" aria-label="删除资源" :disabled="resources.deletingId.value === file.id" @click="confirmDelete(file)">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          class="size-7 text-destructive hover:text-destructive"
+                          aria-label="删除资源"
+                          :disabled="resources.deletingId.value === file.id"
+                          @click="confirmDelete(file)"
+                        >
                           <TrashOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>
@@ -232,12 +304,18 @@ function confirmDelete(resource: BuilderResource) {
                 </div>
               </div>
 
-              <div v-if="file.locations.length" class="text-[11px] text-muted-foreground bg-muted/40 p-1.5 rounded">
+              <div
+                v-if="file.locations.length"
+                class="text-[11px] text-muted-foreground bg-muted/40 p-1.5 rounded"
+              >
                 {{ file.locations.join('；') }}
               </div>
             </div>
           </div>
-          <div v-else class="py-12 text-center text-xs text-muted-foreground">
+          <div
+            v-else
+            class="py-12 text-center text-xs text-muted-foreground"
+          >
             当前分类没有资源
           </div>
         </div>

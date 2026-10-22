@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
-import { ColorPaletteOutline, CopyOutline, EyeOffOutline, EyeOutline, ImageOutline, OpenOutline } from '@vicons/ionicons5'
-import { useMessage } from '@/shared/utils'
+import {
+  ColorPaletteOutline,
+  CopyOutline,
+  EyeOffOutline,
+  EyeOutline,
+  ImageOutline,
+  OpenOutline,
+} from '@vicons/ionicons5'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -40,25 +46,13 @@ import {
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 import { copyToClipboard } from '@/shared/utils'
 
 const token = ref('')
@@ -257,19 +251,18 @@ onUnmounted(() => {
     >
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <AlertTitle class="text-xs font-semibold">
-            身份码已失效
-          </AlertTitle>
-          <AlertDescription class="text-xs">
-            你的身份码已失效, 这会导致无法获取直播间数据.
-          </AlertDescription>
+          <AlertTitle class="text-xs font-semibold"> 身份码已失效 </AlertTitle>
+          <AlertDescription class="text-xs"> 你的身份码已失效, 这会导致无法获取直播间数据. </AlertDescription>
         </div>
-        <Button size="xs" variant="destructive" @click="bindBiliCodeModalVisible = true">
+        <Button
+          size="xs"
+          variant="destructive"
+          @click="bindBiliCodeModalVisible = true"
+        >
           更新身份码
         </Button>
       </div>
     </Alert>
-
 
     <!-- 个人主页装扮常驻入口横幅 -->
     <div
@@ -284,9 +277,7 @@ onUnmounted(() => {
           />
         </div>
         <div class="flex flex-col gap-0.5">
-          <div class="text-sm font-semibold text-foreground">
-            个性化你的主播主页
-          </div>
+          <div class="text-sm font-semibold text-foreground">个性化你的主播主页</div>
           <div class="text-xs text-muted-foreground">
             为展示页定制全站壁纸、主题色及日程/歌单/提问箱等模块，打造专属主播风格。
           </div>
@@ -294,14 +285,22 @@ onUnmounted(() => {
       </div>
 
       <div class="flex items-center gap-2">
-        <Button size="xs" variant="outline" @click="goToDecorate('theme')">
+        <Button
+          size="xs"
+          variant="outline"
+          @click="goToDecorate('theme')"
+        >
           <component
             :is="ImageOutline"
             class="h-3.5 w-3.5 mr-1"
           />
           设置背景与主题
         </Button>
-        <Button size="xs" variant="brand" @click="goToDecorate()">
+        <Button
+          size="xs"
+          variant="brand"
+          @click="goToDecorate()"
+        >
           <component
             :is="ColorPaletteOutline"
             class="h-3.5 w-3.5 mr-1"
@@ -359,25 +358,40 @@ onUnmounted(() => {
                 <span
                   v-if="formattedCreateAt"
                   class="text-xs text-muted-foreground"
-                >注册于 {{ formattedCreateAt }}</span>
+                  >注册于 {{ formattedCreateAt }}</span
+                >
               </div>
 
               <div class="flex items-center gap-1.5 flex-wrap">
-                <Button size="xs" variant="outline" @click="goToDecorate('theme')">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="goToDecorate('theme')"
+                >
                   <component
                     :is="ImageOutline"
                     class="h-3.5 w-3.5 mr-1"
                   />
                   更换背景
                 </Button>
-                <Button size="xs" variant="outline" @click="goToDecorate()">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="goToDecorate()"
+                >
                   <component
                     :is="ColorPaletteOutline"
                     class="h-3.5 w-3.5 mr-1"
                   />
                   主页装修
                 </Button>
-                <Button v-if="accountInfo?.name" size="xs" variant="ghost" title="在新标签页查看公开主页" @click="goToUserPublicPage">
+                <Button
+                  v-if="accountInfo?.name"
+                  size="xs"
+                  variant="ghost"
+                  title="在新标签页查看公开主页"
+                  @click="goToUserPublicPage"
+                >
                   <component
                     :is="OpenOutline"
                     class="h-3.5 w-3.5 mr-1"
@@ -387,14 +401,21 @@ onUnmounted(() => {
                 <code class="px-1.5 py-0.5 rounded bg-muted text-xs text-muted-foreground font-mono">
                   #{{ accountInfo?.id }}
                 </code>
-                <Button size="xs" variant="outline" @click="resetNameModalVisible = true">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="resetNameModalVisible = true"
+                >
                   修改用户名
                 </Button>
 
                 <!-- 登出按钮 + AlertDialog -->
                 <AlertDialog>
                   <AlertDialogTrigger as-child>
-                    <Button size="xs" variant="destructive">
+                    <Button
+                      size="xs"
+                      variant="destructive"
+                    >
                       登出
                     </Button>
                   </AlertDialogTrigger>
@@ -426,9 +447,7 @@ onUnmounted(() => {
 
             <!-- 主播 Bilibili 账户卡片 -->
             <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
-              <div class="text-xs font-semibold tracking-wide text-foreground uppercase">
-                主播 Bilibili 账户
-              </div>
+              <div class="text-xs font-semibold tracking-wide text-foreground uppercase">主播 Bilibili 账户</div>
 
               <div
                 v-if="accountInfo?.isBiliVerified"
@@ -465,22 +484,28 @@ onUnmounted(() => {
                             class="h-3 w-3 inline cursor-help"
                           />
                         </TooltipTrigger>
-                        <TooltipContent class="text-xs">
-                          如果你不是主播的话则不需要在意这个提示
-                        </TooltipContent>
+                        <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个提示 </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </Badge>
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <Button size="xs" variant="outline" @click="bindBiliCodeModalVisible = true">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    @click="bindBiliCodeModalVisible = true"
+                  >
                     更新身份码
                   </Button>
 
                   <AlertDialog>
                     <AlertDialogTrigger as-child>
-                      <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10">
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="text-destructive hover:bg-destructive/10"
+                      >
                         解除认证
                       </Button>
                     </AlertDialogTrigger>
@@ -523,15 +548,17 @@ onUnmounted(() => {
                             class="h-3 w-3 inline cursor-help"
                           />
                         </TooltipTrigger>
-                        <TooltipContent class="text-xs">
-                          如果你不是主播的话则不需要在意这个
-                        </TooltipContent>
+                        <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个 </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
                   </Badge>
                 </div>
 
-                <Button size="xs" variant="brand" @click="bindBiliCodeModalVisible = true">
+                <Button
+                  size="xs"
+                  variant="brand"
+                  @click="bindBiliCodeModalVisible = true"
+                >
                   进行绑定
                 </Button>
               </div>
@@ -549,7 +576,12 @@ onUnmounted(() => {
 
               <div class="flex items-center gap-2 max-w-lg">
                 <div class="relative flex-1">
-                  <Input :type="showToken ? 'text' : 'password'" :model-value="accountInfo?.token" readonly class="pr-8 font-mono" />
+                  <Input
+                    :type="showToken ? 'text' : 'password'"
+                    :model-value="accountInfo?.token"
+                    readonly
+                    class="pr-8 font-mono"
+                  />
                   <button
                     type="button"
                     class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
@@ -562,7 +594,12 @@ onUnmounted(() => {
                   </button>
                 </div>
 
-                <Button size="xs" variant="outline" :disabled="!accountInfo?.token" @click="copyToClipboard(accountInfo?.token ?? '')">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  :disabled="!accountInfo?.token"
+                  @click="copyToClipboard(accountInfo?.token ?? '')"
+                >
                   <component
                     :is="CopyOutline"
                     class="h-3.5 w-3.5 mr-1"
@@ -572,7 +609,10 @@ onUnmounted(() => {
 
                 <AlertDialog>
                   <AlertDialogTrigger as-child>
-                    <Button size="xs" variant="destructive">
+                    <Button
+                      size="xs"
+                      variant="destructive"
+                    >
                       重置
                     </Button>
                   </AlertDialogTrigger>
@@ -599,9 +639,7 @@ onUnmounted(() => {
 
             <!-- API 节点切换 -->
             <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
-              <div class="text-xs font-semibold tracking-wide text-foreground uppercase">
-                API 节点设置
-              </div>
+              <div class="text-xs font-semibold tracking-wide text-foreground uppercase">API 节点设置</div>
 
               <div class="flex items-center gap-3 flex-wrap">
                 <span class="text-xs text-muted-foreground">当前使用的 API 节点:</span>
@@ -659,23 +697,32 @@ onUnmounted(() => {
     <Dialog v-model:open="resetNameModalVisible">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-base">
-            修改用户名
-          </DialogTitle>
+          <DialogTitle class="text-base"> 修改用户名 </DialogTitle>
           <DialogDescription class="text-xs">
             用户名是你在 VTsuru 的公开标识，修改后展示页链接和提及名称将同步更新。
           </DialogDescription>
         </DialogHeader>
 
         <div class="py-2">
-          <Input v-model="newName" placeholder="新用户名" @keyup.enter="resetName" />
+          <Input
+            v-model="newName"
+            placeholder="新用户名"
+            @keyup.enter="resetName"
+          />
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="resetNameModalVisible = false">
+          <Button
+            variant="outline"
+            @click="resetNameModalVisible = false"
+          >
             取消
           </Button>
-          <Button variant="brand" :loading="isLoading" @click="resetName">
+          <Button
+            variant="brand"
+            :loading="isLoading"
+            @click="resetName"
+          >
             确定修改
           </Button>
         </DialogFooter>
@@ -686,9 +733,7 @@ onUnmounted(() => {
     <Dialog v-model:open="bindBiliCodeModalVisible">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-base">
-            绑定 / 更新身份码
-          </DialogTitle>
+          <DialogTitle class="text-base"> 绑定 / 更新身份码 </DialogTitle>
           <DialogDescription class="text-xs">
             用于获取 Bilibili 直播间数据。刷新身份码后需要在这里同步更新。
           </DialogDescription>
@@ -696,8 +741,17 @@ onUnmounted(() => {
 
         <div class="space-y-3 py-2">
           <div class="flex gap-2">
-            <Input v-model="biliCode" placeholder="请输入身份码" class="flex-1 font-mono" />
-            <Button as="a" href="https://play-live.bilibili.com/" target="_blank" variant="outline">
+            <Input
+              v-model="biliCode"
+              placeholder="请输入身份码"
+              class="flex-1 font-mono"
+            />
+            <Button
+              as="a"
+              href="https://play-live.bilibili.com/"
+              target="_blank"
+              variant="outline"
+            >
               <component
                 :is="Question24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -706,7 +760,9 @@ onUnmounted(() => {
             </Button>
           </div>
 
-          <div class="text-[11px] text-muted-foreground leading-relaxed p-2.5 rounded bg-muted/40 border border-border/50">
+          <div
+            class="text-[11px] text-muted-foreground leading-relaxed p-2.5 rounded bg-muted/40 border border-border/50"
+          >
             在幻星页面右侧，或前往
             <a
               href="https://link.bilibili.com/p/center/index#/my-room/start-live"
@@ -726,10 +782,18 @@ onUnmounted(() => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="bindBiliCodeModalVisible = false">
+          <Button
+            variant="outline"
+            @click="bindBiliCodeModalVisible = false"
+          >
             取消
           </Button>
-          <Button variant="brand" :disabled="!token" :loading="isLoading" @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()">
+          <Button
+            variant="brand"
+            :disabled="!token"
+            :loading="isLoading"
+            @click="accountInfo?.isBiliVerified ? ChangeBili() : BindBili()"
+          >
             确定
           </Button>
         </DialogFooter>

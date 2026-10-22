@@ -5,38 +5,38 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventDataTypes } from './eventDataTypes';
-import type { SettingPointGiftPercentMap } from './settingPointGiftPercentMap';
-import type { SettingPointGiftPointType } from './settingPointGiftPointType';
+import type { EventDataTypes } from './eventDataTypes'
+import type { SettingPointGiftPercentMap } from './settingPointGiftPercentMap'
+import type { SettingPointGiftPointType } from './settingPointGiftPointType'
 
 export interface SettingPoint {
-  allowType: EventDataTypes[];
-  jianzhangPoint: number;
-  tiduPoint: number;
-  zongduPoint: number;
+  allowType: EventDataTypes[]
+  jianzhangPoint: number
+  tiduPoint: number
+  zongduPoint: number
   /** @nullable */
-  giftPercentMap?: SettingPointGiftPercentMap;
-  scPointPercent?: number;
-  giftPointPercent: number;
-  giftAllowType: SettingPointGiftPointType;
+  giftPercentMap?: SettingPointGiftPercentMap
+  scPointPercent?: number
+  giftPointPercent: number
+  giftAllowType: SettingPointGiftPointType
   /** 是否在售罄时下架 */
-  shouldDiscontinueWhenSoldOut: boolean;
-  enableCheckIn: boolean;
-  checkInKeyword: string;
-  givePointsForCheckIn: boolean;
-  baseCheckInPoints: number;
-  enableConsecutiveBonus: boolean;
-  bonusPointsPerDay: number;
+  shouldDiscontinueWhenSoldOut: boolean
+  enableCheckIn: boolean
+  checkInKeyword: string
+  givePointsForCheckIn: boolean
+  baseCheckInPoints: number
+  enableConsecutiveBonus: boolean
+  bonusPointsPerDay: number
   /** @nullable */
-  maxBonusPoints?: number | null;
-  allowSelfCheckIn: boolean;
-  requireAuth: boolean;
-  enableDailyFirstDanmaku: boolean;
-  dailyFirstDanmakuPoints: number;
-  enableDailyFirstGift: boolean;
-  dailyFirstGiftPoints: number;
-  useDailyFirstGiftPercent: boolean;
-  dailyFirstGiftPercent: number;
-  dailyFirstOnlyOnStreaming: boolean;
-  checkInOnlyOnStreaming: boolean;
+  maxBonusPoints?: number | null
+  allowSelfCheckIn: boolean
+  requireAuth: boolean
+  enableDailyFirstDanmaku: boolean
+  dailyFirstDanmakuPoints: number
+  enableDailyFirstGift: boolean
+  dailyFirstGiftPoints: number
+  useDailyFirstGiftPercent: boolean
+  dailyFirstGiftPercent: number
+  dailyFirstOnlyOnStreaming: boolean
+  checkInOnlyOnStreaming: boolean
 }

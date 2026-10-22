@@ -20,8 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Spin } from '@/shared/ui/spin'
-import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import { toast } from '@/shared/utils'
+import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
 
 const props = defineProps<{
@@ -145,7 +145,10 @@ export const Config = defineTemplateConfig([])
 
 <template>
   <div class="index-template relative">
-    <div v-if="isLoading" class="py-24 flex justify-center">
+    <div
+      v-if="isLoading"
+      class="py-24 flex justify-center"
+    >
       <Spin />
     </div>
     <div v-else>
@@ -171,7 +174,10 @@ export const Config = defineTemplateConfig([])
               class="portrait-frame relative flex items-center justify-center"
             >
               <Avatar class="size-36 rounded-full border-4 border-background shadow-md">
-                <AvatarImage :src="avatar" referrerpolicy="no-referrer" />
+                <AvatarImage
+                  :src="avatar"
+                  referrerpolicy="no-referrer"
+                />
                 <AvatarFallback>{{ streamerName.charAt(0) }}</AvatarFallback>
               </Avatar>
               <img
@@ -186,27 +192,61 @@ export const Config = defineTemplateConfig([])
                 v-if="isStreaming"
                 class="live-mark"
               >
-                <component :is="RadioOutline" class="size-3.5 inline mr-1" /> LIVE
+                <component
+                  :is="RadioOutline"
+                  class="size-3.5 inline mr-1"
+                />
+                LIVE
               </span>
               <span
                 v-else-if="liveReserve"
                 class="live-mark live-mark--reserve"
               >
-                <component :is="CalendarOutline" class="size-3.5 inline mr-1" /> 预告
+                <component
+                  :is="CalendarOutline"
+                  class="size-3.5 inline mr-1"
+                />
+                预告
               </span>
             </div>
 
             <div class="profile-actions">
-              <Button v-if="isOwner" variant="outline" size="lg" class="flex items-center gap-2" @click="$router.push({ name: 'manage-userPageBuilder' })">
-                <component :is="ColorPaletteOutline" class="size-4" />
+              <Button
+                v-if="isOwner"
+                variant="outline"
+                size="lg"
+                class="flex items-center gap-2"
+                @click="$router.push({ name: 'manage-userPageBuilder' })"
+              >
+                <component
+                  :is="ColorPaletteOutline"
+                  class="size-4"
+                />
                 主页装修
               </Button>
-              <Button v-if="props.userInfo?.biliId" variant="outline" size="lg" class="profile-action profile-action--secondary flex items-center gap-2" @click="navigate(`https://space.bilibili.com/${props.userInfo.biliId}`)">
-                <component :is="BilibiliIcon" class="size-4" />
+              <Button
+                v-if="props.userInfo?.biliId"
+                variant="outline"
+                size="lg"
+                class="profile-action profile-action--secondary flex items-center gap-2"
+                @click="navigate(`https://space.bilibili.com/${props.userInfo.biliId}`)"
+              >
+                <component
+                  :is="BilibiliIcon"
+                  class="size-4"
+                />
                 <span class="bili-action__label">B 站主页</span>
               </Button>
-              <Button v-if="props.userInfo?.biliRoomId" size="lg" class="profile-action profile-action--primary flex items-center gap-2" @click="navigate(`https://live.bilibili.com/${props.userInfo.biliRoomId}`)">
-                <component :is="RadioOutline" class="size-4" />
+              <Button
+                v-if="props.userInfo?.biliRoomId"
+                size="lg"
+                class="profile-action profile-action--primary flex items-center gap-2"
+                @click="navigate(`https://live.bilibili.com/${props.userInfo.biliRoomId}`)"
+              >
+                <component
+                  :is="RadioOutline"
+                  class="size-4"
+                />
                 进入直播间
               </Button>
             </div>
@@ -278,7 +318,10 @@ export const Config = defineTemplateConfig([])
         target="_blank"
         rel="noopener noreferrer"
       >
-        <component :is="CalendarOutline" class="size-4 inline mr-1" />
+        <component
+          :is="CalendarOutline"
+          class="size-4 inline mr-1"
+        />
         <span>下次直播 {{ liveReserveLabel }}</span>
         <em>打开直播间</em>
       </a>
@@ -286,14 +329,20 @@ export const Config = defineTemplateConfig([])
         v-else-if="!isStreaming && liveReserve"
         class="notice-strip notice-strip--reserve"
       >
-        <component :is="CalendarOutline" class="size-4 inline mr-1" />
+        <component
+          :is="CalendarOutline"
+          class="size-4 inline mr-1"
+        />
         <span>下次直播 {{ liveReserveLabel }}</span>
       </section>
       <section
         v-if="indexInfo.notification"
         class="notice-strip"
       >
-        <component :is="SparklesOutline" class="size-4 inline mr-1" />
+        <component
+          :is="SparklesOutline"
+          class="size-4 inline mr-1"
+        />
         <span>{{ indexInfo.notification }}</span>
       </section>
 
@@ -323,7 +372,10 @@ export const Config = defineTemplateConfig([])
                 class="link-tile"
               >
                 <span>{{ link[0] }}</span>
-                <component :is="ArrowUpOutline" class="size-3.5 inline" />
+                <component
+                  :is="ArrowUpOutline"
+                  class="size-3.5 inline"
+                />
               </a>
             </div>
           </section>
@@ -347,7 +399,11 @@ export const Config = defineTemplateConfig([])
               >
                 <SimpleVideoCard :video="video" />
                 <span class="video-item__label">
-                  <component :is="PlayOutline" class="size-3.5 inline mr-1" /> {{ video.title }}
+                  <component
+                    :is="PlayOutline"
+                    class="size-3.5 inline mr-1"
+                  />
+                  {{ video.title }}
                 </span>
               </div>
             </div>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { snapdom } from '@zumer/snapdom'
 // @ts-ignore
 import { saveAs } from 'file-saver'
-import { snapdom } from '@zumer/snapdom'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref, useTemplateRef } from 'vue'
 
@@ -10,13 +10,7 @@ import { CURRENT_HOST } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { copyToClipboard, downloadImage, useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -94,7 +88,9 @@ function saveQRCode() {
               </div>
             </div>
 
-            <div class="flex items-center justify-center shrink-0 bg-white/95 p-2 rounded-lg size-24 self-center shadow">
+            <div
+              class="flex items-center justify-center shrink-0 bg-white/95 p-2 rounded-lg size-24 self-center shadow"
+            >
               <QrcodeVue
                 :value="modalShareUrl"
                 level="Q"
@@ -111,9 +107,7 @@ function saveQRCode() {
         <!-- 选项设置 -->
         <div class="space-y-1.5">
           <label class="text-xs text-muted-foreground">附加话题 (可选)</label>
-          <Select
-            v-model="selectedShareTag"
-          >
+          <Select v-model="selectedShareTag">
             <SelectTrigger>
               <SelectValue placeholder="不附加话题" />
             </SelectTrigger>
@@ -134,8 +128,16 @@ function saveQRCode() {
         <div class="space-y-1.5">
           <label class="text-xs text-muted-foreground">分享链接</label>
           <div class="flex items-center gap-2">
-            <Input :model-value="modalShareUrl" readonly class="font-mono flex-1" />
-            <Button variant="outline" :disabled="!modalShareUrl" @click="copyToClipboard(modalShareUrl)">
+            <Input
+              :model-value="modalShareUrl"
+              readonly
+              class="font-mono flex-1"
+            />
+            <Button
+              variant="outline"
+              :disabled="!modalShareUrl"
+              @click="copyToClipboard(modalShareUrl)"
+            >
               复制
             </Button>
           </div>
@@ -144,10 +146,11 @@ function saveQRCode() {
         <Separator />
 
         <div class="flex items-center justify-center gap-3">
-          <Button @click="saveShareImage">
-            保存分享图
-          </Button>
-          <Button variant="outline" @click="saveQRCode">
+          <Button @click="saveShareImage"> 保存分享图 </Button>
+          <Button
+            variant="outline"
+            @click="saveQRCode"
+          >
             保存二维码
           </Button>
         </div>

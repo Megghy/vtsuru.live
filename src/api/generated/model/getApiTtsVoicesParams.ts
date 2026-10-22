@@ -7,5 +7,5 @@
  */
 
 export type GetApiTtsVoicesParams = {
-provider?: string;
-};
+  provider?: string
+}

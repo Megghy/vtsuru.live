@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { ArrowLeft24Regular } from '@vicons/fluent'
 import { useClipboard } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { ArrowLeft24Regular } from '@vicons/fluent'
 import { computed, onActivated, onDeactivated, onScopeDispose, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -19,13 +19,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import PngtuberAppearance from './PngtuberAppearance.vue'
 import PngtuberDisplay from './PngtuberDisplay.vue'
@@ -109,7 +103,7 @@ async function patch(value: Partial<PngtuberState>) {
     const clean = normalizePngtuberState(next)
     const changed = Object.fromEntries(
       Object.entries(clean).filter(
-        ([key, value]) => JSON.stringify(value) !== JSON.stringify(state.value[key as keyof PngtuberState]),
+        ([key, val]) => JSON.stringify(val) !== JSON.stringify(state.value[key as keyof PngtuberState]),
       ),
     )
     if (!writable.value) throw new Error('请登录并等待配置加载完成')
@@ -239,7 +233,11 @@ function changeChannel() {
     class="pngtuber-page"
     :class="{ standalone }"
   >
-    <Button variant="ghost" class="w-fit gap-1.5" @click="goBack">
+    <Button
+      variant="ghost"
+      class="w-fit gap-1.5"
+      @click="goBack"
+    >
       <ArrowLeft24Regular class="size-4" />
       返回
     </Button>
@@ -249,9 +247,7 @@ function changeChannel() {
         v-if="!userId"
         class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2.5 px-3"
       >
-        <AlertDescription class="text-xs text-current m-0">
-          请登录后编辑立绘配置。
-        </AlertDescription>
+        <AlertDescription class="text-xs text-current m-0"> 请登录后编辑立绘配置。 </AlertDescription>
       </Alert>
       <Alert
         v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error"
@@ -259,9 +255,19 @@ function changeChannel() {
       >
         <div class="flex items-center justify-between gap-2">
           <AlertDescription class="text-xs text-current m-0">
-            {{ normalized.error || errorMessage || runtimeError || (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪') }}
+            {{
+              normalized.error ||
+              errorMessage ||
+              runtimeError ||
+              (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪')
+            }}
           </AlertDescription>
-          <Button size="xs" variant="outline" class="h-6 text-[11px] shrink-0" @click="retry">
+          <Button
+            size="xs"
+            variant="outline"
+            class="h-6 text-[11px] shrink-0"
+            @click="retry"
+          >
             重试连接
           </Button>
         </div>
@@ -321,7 +327,10 @@ function changeChannel() {
                 >
                   {{ runtime.away ? '暂离' : runtime.muted ? '静音' : previewSpeaking ? '说话中' : '待机' }}
                 </Badge>
-                <Badge variant="outline" class="text-xs">
+                <Badge
+                  variant="outline"
+                  class="text-xs"
+                >
                   {{ isSyncing ? '保存中' : lastSyncError ? '保存失败' : isReady ? '配置已就绪' : '加载中' }}
                 </Badge>
                 <span class="text-xs text-muted-foreground">音量 {{ Math.round(previewVolume) }}%</span>
@@ -332,10 +341,26 @@ function changeChannel() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="checker" class="text-xs">透明棋盘</SelectItem>
-                  <SelectItem value="dark" class="text-xs">暗色</SelectItem>
-                  <SelectItem value="green" class="text-xs">绿幕</SelectItem>
-                  <SelectItem value="transparent" class="text-xs">透明</SelectItem>
+                  <SelectItem
+                    value="checker"
+                    class="text-xs"
+                    >透明棋盘</SelectItem
+                  >
+                  <SelectItem
+                    value="dark"
+                    class="text-xs"
+                    >暗色</SelectItem
+                  >
+                  <SelectItem
+                    value="green"
+                    class="text-xs"
+                    >绿幕</SelectItem
+                  >
+                  <SelectItem
+                    value="transparent"
+                    class="text-xs"
+                    >透明</SelectItem
+                  >
                 </SelectContent>
               </Select>
 
@@ -365,13 +390,25 @@ function changeChannel() {
               </Alert>
 
               <div class="flex items-center gap-2 flex-wrap">
-                <Button variant="outline" :disabled="controlDisabled" @click="control({ muted: !runtime.muted })">
+                <Button
+                  variant="outline"
+                  :disabled="controlDisabled"
+                  @click="control({ muted: !runtime.muted })"
+                >
                   {{ runtime.muted ? '取消静音' : '静音' }}
                 </Button>
-                <Button variant="outline" :disabled="controlDisabled" @click="control({ away: !runtime.away })">
+                <Button
+                  variant="outline"
+                  :disabled="controlDisabled"
+                  @click="control({ away: !runtime.away })"
+                >
                   {{ runtime.away ? '结束暂离' : '暂离' }}
                 </Button>
-                <Button variant="outline" :disabled="controlDisabled" @click="control({ expressionId: '' })">
+                <Button
+                  variant="outline"
+                  :disabled="controlDisabled"
+                  @click="control({ expressionId: '' })"
+                >
                   默认表情
                 </Button>
               </div>
@@ -384,19 +421,41 @@ function changeChannel() {
             </CardHeader>
             <CardContent class="p-0 space-y-3">
               <div class="flex items-center gap-1.5">
-                <Input v-model="channelDraft" placeholder="频道" maxlength="64" :disabled="busy" class="flex-1" @keyup.enter="changeChannel" />
-                <Button variant="secondary" :disabled="busy" @click="changeChannel">
+                <Input
+                  v-model="channelDraft"
+                  placeholder="频道"
+                  maxlength="64"
+                  :disabled="busy"
+                  class="flex-1"
+                  @keyup.enter="changeChannel"
+                />
+                <Button
+                  variant="secondary"
+                  :disabled="busy"
+                  @click="changeChannel"
+                >
                   切换频道
                 </Button>
               </div>
 
-              <Input :value="obsUrl" readonly placeholder="登录后生成链接" />
+              <Input
+                :value="obsUrl"
+                readonly
+                placeholder="登录后生成链接"
+              />
 
               <div class="flex items-center gap-2 flex-wrap">
-                <Button :disabled="!obsUrl" @click="copyUrl">
+                <Button
+                  :disabled="!obsUrl"
+                  @click="copyUrl"
+                >
                   复制链接
                 </Button>
-                <Button variant="outline" as-child :disabled="!obsUrl">
+                <Button
+                  variant="outline"
+                  as-child
+                  :disabled="!obsUrl"
+                >
                   <a
                     :href="obsUrl || undefined"
                     target="_blank"
@@ -405,7 +464,11 @@ function changeChannel() {
                     打开画面
                   </a>
                 </Button>
-                <Button variant="outline" as-child :disabled="!obsUrl">
+                <Button
+                  variant="outline"
+                  as-child
+                  :disabled="!obsUrl"
+                >
                   <a
                     :href="obsUrl ? `${obsUrl}&debug=1` : undefined"
                     target="_blank"
@@ -429,10 +492,18 @@ function changeChannel() {
             </CardHeader>
             <CardContent class="p-0 space-y-2">
               <div class="flex items-center gap-2">
-                <Button variant="outline" :disabled="!writable || busy" @click="packageInput?.click()">
+                <Button
+                  variant="outline"
+                  :disabled="!writable || busy"
+                  @click="packageInput?.click()"
+                >
                   导入模型包
                 </Button>
-                <Button variant="outline" :disabled="busy || !isReady || !!normalized.error" @click="exportPackage">
+                <Button
+                  variant="outline"
+                  :disabled="busy || !isReady || !!normalized.error"
+                  @click="exportPackage"
+                >
                   导出模型包
                 </Button>
                 <input
@@ -443,9 +514,7 @@ function changeChannel() {
                   @change="importPackage"
                 />
               </div>
-              <div class="text-xs text-muted-foreground">
-                导入会校验模型包并替换当前频道配置。
-              </div>
+              <div class="text-xs text-muted-foreground">导入会校验模型包并替换当前频道配置。</div>
             </CardContent>
           </Card>
         </div>
@@ -492,12 +561,14 @@ function changeChannel() {
 .bg-checker {
   background-color: #1e1e24;
   background-image:
-    linear-gradient(45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #2b2b36 75%),
-    linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
+    linear-gradient(45deg, #2b2b36 25%, transparent 25%), linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b36 75%), linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
   background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
 }
 .bg-dark {
   background: #09090b;

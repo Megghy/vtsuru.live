@@ -54,7 +54,10 @@ const items = computed(() => {
   >
     <template #header>
       <div class="header">
-        <component :is="FlagOutline" class="size-4.5 text-muted-foreground" />
+        <component
+          :is="FlagOutline"
+          class="size-4.5 text-muted-foreground"
+        />
         <span>{{ cfg.title }}</span>
       </div>
     </template>

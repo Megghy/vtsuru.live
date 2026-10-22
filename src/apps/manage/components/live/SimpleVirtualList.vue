@@ -59,7 +59,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(itemsRef, {
   >
     <div
       v-bind="containerProps"
-      style="height: 100%; width: 100%; overflow-y: auto;"
+      style="height: 100%; width: 100%; overflow-y: auto"
     >
       <div v-bind="wrapperProps">
         <template

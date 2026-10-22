@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Empty } from '@/shared/ui/empty'
 import { computed, toRef } from 'vue'
+
+import { Empty } from '@/shared/ui/empty'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
 import { useObsListAnimation } from './useObsListAnimation'
@@ -37,34 +38,54 @@ const topSubtitle = computed(() => {
     <!-- 顶栏状态与标题 -->
     <div class="obs-glass-header">
       <div class="obs-glass-title-row">
-        <span class="obs-glass-dot" :class="{ 'is-active': current.active }" />
+        <span
+          class="obs-glass-dot"
+          :class="{ 'is-active': current.active }"
+        />
         <span class="obs-glass-header-title">{{ title }}</span>
-        <span v-if="countText" class="obs-glass-badge">{{ countText }}</span>
+        <span
+          v-if="countText"
+          class="obs-glass-badge"
+          >{{ countText }}</span
+        >
       </div>
 
       <!-- 当前进行中内容 -->
-      <div class="obs-glass-current-box" :class="{ 'is-active': current.active }">
+      <div
+        class="obs-glass-current-box"
+        :class="{ 'is-active': current.active }"
+      >
         <div class="obs-glass-current-label">
           {{ current.active ? '当前处理' : '当前空闲' }}
         </div>
         <div class="obs-glass-current-name">
           {{ current.active ? current.title : current.emptyText }}
         </div>
-        <div v-if="topSubtitle && current.active" class="obs-glass-current-sub">
+        <div
+          v-if="topSubtitle && current.active"
+          class="obs-glass-current-sub"
+        >
           {{ topSubtitle }}
         </div>
       </div>
     </div>
 
     <!-- 滚动列表容器 -->
-    <div ref="listContainerRef" class="obs-glass-list-container">
+    <div
+      ref="listContainerRef"
+      class="obs-glass-list-container"
+    >
       <template v-if="items.length > 0">
         <div
           ref="listInnerRef"
           class="obs-glass-list-inner"
           :class="{ animating: isMoreThanContainer }"
         >
-          <TransitionGroup name="obs-glass-item-anim" tag="div" class="obs-glass-list">
+          <TransitionGroup
+            name="obs-glass-item-anim"
+            tag="div"
+            class="obs-glass-list"
+          >
             <div
               v-for="(item, index) in items"
               :key="item.id"
@@ -77,13 +98,22 @@ const topSubtitle = computed(() => {
                 {{ index + 1 }}
               </div>
               <div class="obs-glass-content">
-                <div class="obs-glass-primary" :title="item.primary">
+                <div
+                  class="obs-glass-primary"
+                  :title="item.primary"
+                >
                   {{ item.primary }}
                 </div>
-                <div v-if="item.secondary" class="obs-glass-secondary">
+                <div
+                  v-if="item.secondary"
+                  class="obs-glass-secondary"
+                >
                   {{ item.secondary }}
                 </div>
-                <div v-if="(item.badges?.length ?? 0) > 0" class="obs-glass-badges">
+                <div
+                  v-if="(item.badges?.length ?? 0) > 0"
+                  class="obs-glass-badges"
+                >
                   <span
                     v-for="(badge, bIdx) in item.badges ?? []"
                     :key="`${item.id}-${bIdx}-${badge.text}`"
@@ -106,8 +136,15 @@ const topSubtitle = computed(() => {
     </div>
 
     <!-- 底部标签 -->
-    <div v-if="footerTags.length > 0" class="obs-glass-footer">
-      <div v-for="tag in footerTags" :key="tag.type" class="obs-glass-footer-tag">
+    <div
+      v-if="footerTags.length > 0"
+      class="obs-glass-footer"
+    >
+      <div
+        v-for="tag in footerTags"
+        :key="tag.type"
+        class="obs-glass-footer-tag"
+      >
         <span class="tag-lbl">{{ tag.label }}</span>
         <span class="tag-val">{{ tag.value }}</span>
       </div>
@@ -127,7 +164,9 @@ const topSubtitle = computed(() => {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 16px;
   padding: 14px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   color: #fff;
   overflow: hidden;
   box-sizing: border-box;
@@ -161,8 +200,15 @@ const topSubtitle = computed(() => {
 }
 
 @keyframes glass-pulse {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.2); opacity: 0.8; }
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.8;
+  }
 }
 
 .obs-glass-header-title {
@@ -233,8 +279,12 @@ const topSubtitle = computed(() => {
 }
 
 @keyframes obs-glass-scroll {
-  0% { transform: translateY(0); }
-  100% { transform: translateY(v-bind(animationTranslateYCss)); }
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(v-bind(animationTranslateYCss));
+  }
 }
 
 .obs-glass-list {
@@ -268,9 +318,19 @@ const topSubtitle = computed(() => {
   flex-shrink: 0;
 }
 
-.obs-glass-rank.rank-1 { background: #f59e0b; color: #000; box-shadow: 0 0 8px rgba(245, 158, 11, 0.5); }
-.obs-glass-rank.rank-2 { background: #94a3b8; color: #000; }
-.obs-glass-rank.rank-3 { background: #b45309; color: #fff; }
+.obs-glass-rank.rank-1 {
+  background: #f59e0b;
+  color: #000;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+.obs-glass-rank.rank-2 {
+  background: #94a3b8;
+  color: #000;
+}
+.obs-glass-rank.rank-3 {
+  background: #b45309;
+  color: #fff;
+}
 
 .obs-glass-content {
   flex: 1;
@@ -307,12 +367,12 @@ const topSubtitle = computed(() => {
   color: #cbd5e1;
 }
 
-.obs-glass-chip[data-tone="highlight"] {
+.obs-glass-chip[data-tone='highlight'] {
   background: rgba(245, 158, 11, 0.2);
   color: #fbbf24;
 }
 
-.obs-glass-chip[data-tone="success"] {
+.obs-glass-chip[data-tone='success'] {
   background: rgba(34, 197, 94, 0.2);
   color: #4ade80;
 }
@@ -335,6 +395,11 @@ const topSubtitle = computed(() => {
   gap: 4px;
 }
 
-.tag-lbl { color: #64748b; }
-.tag-val { color: #cbd5e1; font-weight: 600; }
+.tag-lbl {
+  color: #64748b;
+}
+.tag-val {
+  color: #cbd5e1;
+  font-weight: 600;
+}
 </style>

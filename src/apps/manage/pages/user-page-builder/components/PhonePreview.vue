@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { provideThemeScope } from '@/shared/config/theme/scope'
 import { computed } from 'vue'
 
 import { getThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 
 export type PreviewViewport = 'phone' | 'tablet' | 'desktop'
 

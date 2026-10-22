@@ -50,10 +50,11 @@ const goToSettings = () => {
       <p>{{ alertConfig.message }}</p>
       <p>如果已经部署 CookieCloud，请尝试重新同步；否则请重新扫码登录。</p>
       <div class="cookie-invalid-alert__actions mt-2 flex flex-wrap gap-2">
-        <Button @click="goToFetcher">
-          前往 EventFetcher
-        </Button>
-        <Button variant="outline" @click="goToSettings">
+        <Button @click="goToFetcher"> 前往 EventFetcher </Button>
+        <Button
+          variant="outline"
+          @click="goToSettings"
+        >
           Cookie 设置
         </Button>
       </div>

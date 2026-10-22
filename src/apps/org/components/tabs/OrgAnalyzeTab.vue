@@ -114,10 +114,16 @@ onUnmounted(disposeChart)
       </Tabs>
     </div>
 
-    <div v-if="loading" class="py-12 flex justify-center">
+    <div
+      v-if="loading"
+      class="py-12 flex justify-center"
+    >
       <Spin />
     </div>
-    <div v-else-if="!summary" class="py-10">
+    <div
+      v-else-if="!summary"
+      class="py-10"
+    >
       <Empty description="暂无分析数据" />
     </div>
     <template v-else>
@@ -131,11 +137,19 @@ onUnmounted(disposeChart)
           <CardContent class="p-3 space-y-1">
             <span class="text-[11px] text-muted-foreground block">{{ card.label }}</span>
             <div class="flex items-baseline gap-1.5 flex-wrap">
-              <span v-if="card.money" class="text-xs font-semibold text-primary">¥</span>
+              <span
+                v-if="card.money"
+                class="text-xs font-semibold text-primary"
+                >¥</span
+              >
               <span class="text-base font-semibold font-mono text-foreground">
                 {{ typeof card.value === 'number' && card.precision ? card.value.toFixed(card.precision) : card.value }}
               </span>
-              <span v-if="card.suffix" class="text-[11px] text-muted-foreground">{{ card.suffix }}</span>
+              <span
+                v-if="card.suffix"
+                class="text-[11px] text-muted-foreground"
+                >{{ card.suffix }}</span
+              >
               <Badge
                 v-if="card.trend != null"
                 variant="outline"
@@ -146,7 +160,10 @@ onUnmounted(disposeChart)
                     : 'text-destructive border-destructive/30 bg-destructive/10'
                 "
               >
-                <component :is="card.trend >= 0 ? TrendingUp : TrendingDown" class="size-3 mr-0.5 inline" />
+                <component
+                  :is="card.trend >= 0 ? TrendingUp : TrendingDown"
+                  class="size-3 mr-0.5 inline"
+                />
                 {{ Math.abs(card.trend) }}%
               </Badge>
             </div>
@@ -156,7 +173,9 @@ onUnmounted(disposeChart)
 
       <!-- 趋势图表 -->
       <Card class="border border-border/80">
-        <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2">
+        <CardHeader
+          class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2"
+        >
           <CardTitle class="text-xs font-semibold">趋势图表</CardTitle>
           <div class="flex items-center gap-1.5 flex-wrap">
             <button
@@ -177,7 +196,10 @@ onUnmounted(disposeChart)
         </CardHeader>
 
         <CardContent class="p-3">
-          <div v-if="!hasChartData" class="py-8">
+          <div
+            v-if="!hasChartData"
+            class="py-8"
+          >
             <Empty description="暂无图表数据" />
           </div>
           <div
@@ -190,7 +212,9 @@ onUnmounted(disposeChart)
 
       <!-- 主播排行榜 Top 10 -->
       <Card class="border border-border/80">
-        <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2">
+        <CardHeader
+          class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2"
+        >
           <CardTitle class="text-xs font-semibold">主播排行榜 Top 10</CardTitle>
           <div class="flex items-center gap-2">
             <Tabs
@@ -205,18 +229,32 @@ onUnmounted(disposeChart)
               </TabsList>
             </Tabs>
 
-            <Button variant="outline" class="gap-1" :disabled="ranking.length === 0" @click="exportRanking">
-              <component :is="DownloadOutline" class="size-3.5" />
+            <Button
+              variant="outline"
+              class="gap-1"
+              :disabled="ranking.length === 0"
+              @click="exportRanking"
+            >
+              <component
+                :is="DownloadOutline"
+                class="size-3.5"
+              />
               导出
             </Button>
           </div>
         </CardHeader>
 
         <CardContent class="p-3">
-          <div v-if="topStreamers.length === 0" class="py-8">
+          <div
+            v-if="topStreamers.length === 0"
+            class="py-8"
+          >
             <Empty description="暂无主播数据" />
           </div>
-          <div v-else class="space-y-2.5">
+          <div
+            v-else
+            class="space-y-2.5"
+          >
             <div
               v-for="(s, i) in topStreamers"
               :key="s.id"
@@ -239,12 +277,18 @@ onUnmounted(disposeChart)
               </span>
 
               <div class="flex-1">
-                <Progress :value="s.pct" class="h-2" />
+                <Progress
+                  :value="s.pct"
+                  class="h-2"
+                />
               </div>
 
               <span class="w-24 text-right font-mono font-semibold text-xs text-foreground shrink-0">
                 {{ rankMetric === 'income' ? rankUnit.income + s.income.toFixed(0) : s[rankMetric] }}
-                <span v-if="rankMetric !== 'income'" class="text-[11px] font-normal text-muted-foreground ml-0.5">
+                <span
+                  v-if="rankMetric !== 'income'"
+                  class="text-[11px] font-normal text-muted-foreground ml-0.5"
+                >
                   {{ rankUnit[rankMetric] }}
                 </span>
               </span>

@@ -87,7 +87,11 @@ function formatTime(sec: number) {
         <h1 class="text-2xl font-bold tracking-tight">正在直播</h1>
         <p class="text-sm text-muted-foreground mt-1">看看主播们在播什么，也可以在这里查看你的关注。</p>
       </div>
-      <Button variant="outline" :disabled="loading" @click="revision++">
+      <Button
+        variant="outline"
+        :disabled="loading"
+        @click="revision++"
+      >
         {{ loading ? '刷新中...' : '刷新' }}
       </Button>
     </header>
@@ -98,13 +102,25 @@ function formatTime(sec: number) {
     >
       <TabsList class="grid w-full max-w-xs grid-cols-3">
         <TabsTrigger value="live">全部直播</TabsTrigger>
-        <TabsTrigger v-if="isLoggedIn" value="following-live">关注的直播</TabsTrigger>
-        <TabsTrigger v-if="isLoggedIn" value="following">全部关注</TabsTrigger>
+        <TabsTrigger
+          v-if="isLoggedIn"
+          value="following-live"
+          >关注的直播</TabsTrigger
+        >
+        <TabsTrigger
+          v-if="isLoggedIn"
+          value="following"
+          >全部关注</TabsTrigger
+        >
       </TabsList>
     </Tabs>
 
     <div class="max-w-md">
-      <Input v-model="search" placeholder="搜索主播、标题或分区..." class="h-9" />
+      <Input
+        v-model="search"
+        placeholder="搜索主播、标题或分区..."
+        class="h-9"
+      />
     </div>
 
     <Alert
@@ -114,7 +130,10 @@ function formatTime(sec: number) {
       <AlertDescription>{{ error }}</AlertDescription>
     </Alert>
 
-    <div v-if="loading && !entries.length" class="py-20 flex justify-center">
+    <div
+      v-if="loading && !entries.length"
+      class="py-20 flex justify-center"
+    >
       <Spin />
     </div>
 
@@ -162,7 +181,10 @@ function formatTime(sec: number) {
             </div>
           </a>
           <div class="streamer-body p-3.5 flex flex-col flex-1 gap-2">
-            <h2 class="text-sm font-semibold line-clamp-1 group-hover:text-primary transition" :title="entry.title || entry.name">
+            <h2
+              class="text-sm font-semibold line-clamp-1 group-hover:text-primary transition"
+              :title="entry.title || entry.name"
+            >
               {{ entry.title || entry.name }}
             </h2>
             <div class="streamer-person flex items-center justify-between gap-2 mt-auto pt-1">
@@ -182,7 +204,9 @@ function formatTime(sec: number) {
                 @changed="changed(entry, $event)"
               />
             </div>
-            <p class="streamer-meta text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/50">
+            <p
+              class="streamer-meta text-[11px] text-muted-foreground flex items-center gap-1.5 pt-1 border-t border-border/50"
+            >
               <span class="truncate">{{ entry.area }}</span>
               <template v-if="entry.updatedAt">
                 <span>·</span>

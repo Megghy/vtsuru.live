@@ -1,5 +1,5 @@
 import { List } from 'linqts'
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, useAccount } from '@/api/account'
 import type { EventModel, SongRequestInfo, SongsInfo } from '@/api/api-models'
@@ -309,9 +309,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     isLoading.value = true
 
     try {
-      const data = await postApiLiveRequestDelete(
-        values.map((s) => s.id),
-      )
+      const data = await postApiLiveRequestDelete(values.map((s) => s.id))
 
       if (data.code == 200) {
         window.$message.success('删除成功')

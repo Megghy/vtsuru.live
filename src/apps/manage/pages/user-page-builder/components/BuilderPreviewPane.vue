@@ -13,11 +13,7 @@ import { useNow } from '@vueuse/core'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
 import { fetchBiliProfile } from '@/apps/user-page/api'
-import {
-  getPageBackgroundCssVars,
-  getUserPageThemeCssVars,
-  resolvePageBackground,
-} from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
@@ -27,18 +23,8 @@ import { IndexTemplateMap } from '@/shared/config/templates'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/shared/ui/popover'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 
@@ -191,8 +177,16 @@ watch(
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button :variant="previewMode === 'select' ? 'default' : 'ghost'" class="size-7 p-0" aria-label="选择区块" @click="previewMode = 'select'">
-                  <component :is="NavigateOutline" class="size-3.5" />
+                <Button
+                  :variant="previewMode === 'select' ? 'default' : 'ghost'"
+                  class="size-7 p-0"
+                  aria-label="选择区块"
+                  @click="previewMode = 'select'"
+                >
+                  <component
+                    :is="NavigateOutline"
+                    class="size-3.5"
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent class="text-xs">选择区块</TooltipContent>
@@ -202,8 +196,16 @@ watch(
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button :variant="previewMode === 'interact' ? 'default' : 'ghost'" class="size-7 p-0" aria-label="操作页面" @click="previewMode = 'interact'">
-                  <component :is="HandLeftOutline" class="size-3.5" />
+                <Button
+                  :variant="previewMode === 'interact' ? 'default' : 'ghost'"
+                  class="size-7 p-0"
+                  aria-label="操作页面"
+                  @click="previewMode = 'interact'"
+                >
+                  <component
+                    :is="HandLeftOutline"
+                    class="size-3.5"
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent class="text-xs">操作页面</TooltipContent>
@@ -218,8 +220,16 @@ watch(
           >
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button :variant="viewport === option.value ? 'default' : 'ghost'" class="size-7 p-0" :aria-label="`${option.label}预览`" @click="viewport = option.value">
-                  <component :is="option.icon" class="size-3.5" />
+                <Button
+                  :variant="viewport === option.value ? 'default' : 'ghost'"
+                  class="size-7 p-0"
+                  :aria-label="`${option.label}预览`"
+                  @click="viewport = option.value"
+                >
+                  <component
+                    :is="option.icon"
+                    class="size-3.5"
+                  />
                 </Button>
               </TooltipTrigger>
               <TooltipContent class="text-xs">{{ option.label }}预览</TooltipContent>
@@ -229,8 +239,15 @@ watch(
 
         <Popover>
           <PopoverTrigger as-child>
-            <Button variant="ghost" class="size-7 p-0" aria-label="预览条件">
-              <component :is="OptionsOutline" class="size-3.5" />
+            <Button
+              variant="ghost"
+              class="size-7 p-0"
+              aria-label="预览条件"
+            >
+              <component
+                :is="OptionsOutline"
+                class="size-3.5"
+              />
             </Button>
           </PopoverTrigger>
           <PopoverContent class="w-64 p-3 text-xs flex flex-col gap-2.5">
@@ -253,8 +270,16 @@ watch(
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" class="size-7 p-0" aria-label="在真实页面中预览草稿" @click="editor.openPreview">
-                <component :is="OpenOutline" class="size-3.5" />
+              <Button
+                variant="ghost"
+                class="size-7 p-0"
+                aria-label="在真实页面中预览草稿"
+                @click="editor.openPreview"
+              >
+                <component
+                  :is="OpenOutline"
+                  class="size-3.5"
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent class="text-xs">在真实页面中预览草稿</TooltipContent>
@@ -316,7 +341,9 @@ watch(
             </template>
             <template v-else-if="editor.currentPage.value.mode === 'contrib'">
               <div class="contrib-preview-placeholder flex items-center justify-center min-h-[320px] p-6">
-                <div class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted">
+                <div
+                  class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
+                >
                   <component
                     :is="CodeSlashOutline"
                     class="size-10 text-primary mb-2"
@@ -325,11 +352,15 @@ watch(
                     扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
                   </div>
                   <div class="text-xs text-muted-foreground leading-relaxed">
-                    扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId 与相关属性，保存后可在外部预览中查看实际渲染效果。
+                    扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId
+                    与相关属性，保存后可在外部预览中查看实际渲染效果。
                   </div>
                   <div class="flex justify-center mt-3.5">
                     <Button @click="editor.openPreview">
-                      <component :is="OpenOutline" class="size-3.5 mr-1" />
+                      <component
+                        :is="OpenOutline"
+                        class="size-3.5 mr-1"
+                      />
                       在对外页面中预览
                     </Button>
                   </div>

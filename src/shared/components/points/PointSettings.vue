@@ -5,10 +5,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { SaveSetting, useAccount } from '@/api/account'
 import type { Setting_Point } from '@/api/api-models'
 import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
-import {
-  getApiOrgOrgIdPointsSettingsDetail,
-  postApiOrgOrgIdPointsSettingsUpdate,
-} from '@/api/generated/org/org'
+import { getApiOrgOrgIdPointsSettingsDetail, postApiOrgOrgIdPointsSettingsUpdate } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
@@ -124,11 +121,9 @@ async function updateSettings() {
     setting.value.giftPercentMap ??= {}
     try {
       unwrapOk(
-        (await postApiOrgOrgIdPointsSettingsUpdate(
-          props.orgId,
-          setting.value as any,
-          { streamerId: props.streamerId },
-        )) as any,
+        (await postApiOrgOrgIdPointsSettingsUpdate(props.orgId, setting.value as any, {
+          streamerId: props.streamerId,
+        })) as any,
         '保存失败',
       )
       toast.success('已保存')
@@ -286,11 +281,17 @@ watch(
         </AlertDescription>
       </Alert>
 
-      <div v-if="isLoading" class="py-12 flex justify-center">
+      <div
+        v-if="isLoading"
+        class="py-12 flex justify-center"
+      >
         <Spin />
       </div>
 
-      <div v-else class="space-y-4">
+      <div
+        v-else
+        class="space-y-4"
+      >
         <!-- 通用设置 -->
         <Card>
           <CardHeader class="p-3.5 pb-2">
@@ -349,7 +350,13 @@ watch(
 
               <div class="flex items-center gap-2 max-w-sm">
                 <span class="text-muted-foreground shrink-0 w-20">签到关键词:</span>
-                <Input v-model="setting.checkInKeyword" :disabled="!canEdit" placeholder="默认: 签到" class="flex-1" @change="updateSettings" />
+                <Input
+                  v-model="setting.checkInKeyword"
+                  :disabled="!canEdit"
+                  placeholder="默认: 签到"
+                  class="flex-1"
+                  @change="updateSettings"
+                />
               </div>
 
               <div class="flex items-center gap-4 flex-wrap">
@@ -393,7 +400,11 @@ watch(
                     class="w-24"
                     @blur="updateSettings"
                   />
-                  <Button variant="outline" :disabled="!canEdit" @click="updateSettings">
+                  <Button
+                    variant="outline"
+                    :disabled="!canEdit"
+                    @click="updateSettings"
+                  >
                     保存
                   </Button>
                 </div>
@@ -434,7 +445,11 @@ watch(
                         @blur="updateSettings"
                       />
                     </div>
-                    <Button variant="outline" :disabled="!canEdit" @click="updateSettings">
+                    <Button
+                      variant="outline"
+                      :disabled="!canEdit"
+                      @click="updateSettings"
+                    >
                       保存
                     </Button>
                   </div>
@@ -520,7 +535,11 @@ watch(
               </div>
             </div>
             <div class="flex justify-end">
-              <Button variant="outline" :disabled="!canEdit" @click="updateSettings">
+              <Button
+                variant="outline"
+                :disabled="!canEdit"
+                @click="updateSettings"
+              >
                 保存配置
               </Button>
             </div>
@@ -544,18 +563,27 @@ watch(
                 size="small"
                 class="w-24"
               />
-              <Button variant="outline" :disabled="!canEdit" @click="updateSettings">
+              <Button
+                variant="outline"
+                :disabled="!canEdit"
+                @click="updateSettings"
+              >
                 保存
               </Button>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="size-7 text-muted-foreground">
-                    <component :is="Info24Filled" class="size-4" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-7 text-muted-foreground"
+                  >
+                    <component
+                      :is="Info24Filled"
+                      class="size-4"
+                    />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  将SC的价格以指定比例转换为积分，如0.5则30元的SC获得15积分
-                </TooltipContent>
+                <TooltipContent> 将SC的价格以指定比例转换为积分，如0.5则30元的SC获得15积分 </TooltipContent>
               </Tooltip>
             </div>
           </CardContent>
@@ -603,7 +631,11 @@ watch(
                   class="w-24"
                   @blur="updateSettings"
                 />
-                <Button variant="outline" :disabled="!canEdit" @click="updateSettings">
+                <Button
+                  variant="outline"
+                  :disabled="!canEdit"
+                  @click="updateSettings"
+                >
                   保存
                 </Button>
               </div>
@@ -629,7 +661,10 @@ watch(
                     <input
                       type="radio"
                       :checked="!setting.useDailyFirstGiftPercent"
-                      @change="setting.useDailyFirstGiftPercent = false; updateSettings()"
+                      @change="
+                        setting.useDailyFirstGiftPercent = false
+                        updateSettings()
+                      "
                     />
                     <span>固定积分</span>
                   </label>
@@ -637,7 +672,10 @@ watch(
                     <input
                       type="radio"
                       :checked="setting.useDailyFirstGiftPercent"
-                      @change="setting.useDailyFirstGiftPercent = true; updateSettings()"
+                      @change="
+                        setting.useDailyFirstGiftPercent = true
+                        updateSettings()
+                      "
                     />
                     <span>按礼物价值比例</span>
                   </label>
@@ -667,7 +705,11 @@ watch(
                     class="w-24"
                     @blur="updateSettings"
                   />
-                  <Button variant="outline" :disabled="!canEdit" @click="updateSettings">
+                  <Button
+                    variant="outline"
+                    :disabled="!canEdit"
+                    @click="updateSettings"
+                  >
                     保存
                   </Button>
                 </div>
@@ -687,7 +729,10 @@ watch(
                 <input
                   type="radio"
                   :checked="setting.giftAllowType === SettingPointGiftAllowType.WhiteList"
-                  @change="setting.giftAllowType = SettingPointGiftAllowType.WhiteList; updateSettings()"
+                  @change="
+                    setting.giftAllowType = SettingPointGiftAllowType.WhiteList
+                    updateSettings()
+                  "
                 />
                 <span>仅包含自定义列表中的礼物</span>
               </label>
@@ -695,7 +740,10 @@ watch(
                 <input
                   type="radio"
                   :checked="setting.giftAllowType === SettingPointGiftAllowType.All"
-                  @change="setting.giftAllowType = SettingPointGiftAllowType.All; updateSettings()"
+                  @change="
+                    setting.giftAllowType = SettingPointGiftAllowType.All
+                    updateSettings()
+                  "
                 />
                 <span>包含所有礼物</span>
               </label>
@@ -715,7 +763,11 @@ watch(
                 size="small"
                 class="w-24"
               />
-              <Button variant="outline" :disabled="!canEdit" @click="updateSettings">
+              <Button
+                variant="outline"
+                :disabled="!canEdit"
+                @click="updateSettings"
+              >
                 保存
               </Button>
             </div>
@@ -735,7 +787,10 @@ watch(
                     {{ Object.keys(setting.giftPercentMap).length }}
                   </Badge>
                 </div>
-                <Button :disabled="!canEdit" @click="showAddGiftModal = true">
+                <Button
+                  :disabled="!canEdit"
+                  @click="showAddGiftModal = true"
+                >
                   添加礼物
                 </Button>
               </div>
@@ -779,8 +834,16 @@ watch(
                       @positive-click="deleteGift(item[0])"
                     >
                       <template #trigger>
-                        <Button variant="ghost" size="icon" class="size-7 text-destructive hover:bg-destructive/10" :disabled="!canEdit">
-                          <component :is="Delete24Regular" class="size-3.5" />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          class="size-7 text-destructive hover:bg-destructive/10"
+                          :disabled="!canEdit"
+                        >
+                          <component
+                            :is="Delete24Regular"
+                            class="size-3.5"
+                          />
                         </Button>
                       </template>
                       确定要删除这个礼物配置吗?
@@ -809,8 +872,15 @@ watch(
           <div class="space-y-3 text-xs">
             <div class="space-y-1">
               <label class="font-medium text-foreground">礼物名称 *</label>
-              <Input v-model="addGiftModel.name" placeholder="请输入礼物名称" @keydown="handleKeyDown" />
-              <span v-if="addGiftModel.nameError" class="text-destructive text-[11px] block">
+              <Input
+                v-model="addGiftModel.name"
+                placeholder="请输入礼物名称"
+                @keydown="handleKeyDown"
+              />
+              <span
+                v-if="addGiftModel.nameError"
+                class="text-destructive text-[11px] block"
+              >
                 {{ addGiftModel.nameError }}
               </span>
             </div>
@@ -825,17 +895,26 @@ watch(
                 class="w-full"
                 @keydown="handleKeyDown"
               />
-              <span v-if="addGiftModel.pointError" class="text-destructive text-[11px] block">
+              <span
+                v-if="addGiftModel.pointError"
+                class="text-destructive text-[11px] block"
+              >
                 {{ addGiftModel.pointError }}
               </span>
             </div>
           </div>
 
           <DialogFooter class="pt-2 border-t border-border/60">
-            <Button variant="outline" @click="showAddGiftModal = false">
+            <Button
+              variant="outline"
+              @click="showAddGiftModal = false"
+            >
               取消
             </Button>
-            <Button :disabled="!addGiftModel.name || !addGiftModel.point || addGiftModel.point <= 0 || isLoading" @click="addGift">
+            <Button
+              :disabled="!addGiftModel.name || !addGiftModel.point || addGiftModel.point <= 0 || isLoading"
+              @click="addGift"
+            >
               确定
             </Button>
           </DialogFooter>

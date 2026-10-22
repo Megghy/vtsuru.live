@@ -2,7 +2,8 @@ import type { DirectDanmakuAuth } from '@vtsuru/danmaku'
 
 import { signWbi, wbiKeyFromUrl } from './wbi'
 
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
 
 interface NavData {
   mid: number
@@ -38,7 +39,11 @@ export async function resolveDirectAuth(input: {
   const nav = await getJson<NavData>('https://api.bilibili.com/x/web-interface/nav', input.cookie, fetchImpl)
   if (nav.code !== 0 || !nav.data) throw new Error(nav.message || '无法从 Cookie 获取用户信息')
 
-  const buvid = await getJson<{ buvid: string }>('https://api.bilibili.com/x/web-frontend/getbuvid', input.cookie, fetchImpl)
+  const buvid = await getJson<{ buvid: string }>(
+    'https://api.bilibili.com/x/web-frontend/getbuvid',
+    input.cookie,
+    fetchImpl,
+  )
   if (buvid.code !== 0 || !buvid.data?.buvid) throw new Error(buvid.message || '无法获取buvid')
 
   const signed = signWbi(

@@ -7,5 +7,5 @@
  */
 
 export type GetApiQaGetTagsParams = {
-id?: string;
-};
+  id?: string
+}

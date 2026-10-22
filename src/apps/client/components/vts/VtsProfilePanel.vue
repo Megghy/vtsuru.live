@@ -65,11 +65,17 @@ async function onImportFileChange(ev: Event) {
     </CardHeader>
     <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
       <div class="flex items-center gap-2 flex-wrap text-xs">
-        <Button variant="outline" @click="addProfile">
+        <Button
+          variant="outline"
+          @click="addProfile"
+        >
           从当前创建
         </Button>
         <label class="cursor-pointer">
-          <Button variant="outline" as-child>
+          <Button
+            variant="outline"
+            as-child
+          >
             <span>导入</span>
           </Button>
           <input
@@ -95,34 +101,36 @@ async function onImportFileChange(ev: Event) {
             >
               当前
             </Tag>
-            <Input v-model="p.name" placeholder="名称" class="w-48" @blur="renameProfile({ ...p })" />
+            <Input
+              v-model="p.name"
+              placeholder="名称"
+              class="w-48"
+              @blur="renameProfile({ ...p })"
+            />
             <span class="text-xs text-[var(--muted-foreground)]">
               预设={{ p.data.presets.length }} 宏={{ p.data.macros.length }} 参数={{ p.data.paramSlots.length }}
             </span>
           </div>
 
           <div class="flex items-center gap-1.5 flex-wrap">
-            <Button @click="applyProfile(p.id)">
-              应用
-            </Button>
-            <Button variant="outline" @click="exportProfile(p)">
+            <Button @click="applyProfile(p.id)"> 应用 </Button>
+            <Button
+              variant="outline"
+              @click="exportProfile(p)"
+            >
               导出
             </Button>
             <Popconfirm
               title="用当前配置覆盖此 Profile?"
               @confirm="captureToProfile(p.id)"
             >
-              <Button variant="outline">
-                覆盖保存
-              </Button>
+              <Button variant="outline"> 覆盖保存 </Button>
             </Popconfirm>
             <Popconfirm
               title="确认删除此 Profile?"
               @confirm="vts.deleteProfile(p.id)"
             >
-              <Button variant="destructive">
-                删除
-              </Button>
+              <Button variant="destructive"> 删除 </Button>
             </Popconfirm>
           </div>
         </div>

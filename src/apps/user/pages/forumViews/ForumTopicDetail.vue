@@ -92,18 +92,16 @@ async function postComment() {
   }
 
   currentCommentContent.value.topic = topicId.value
-  useForum
-    .PostComment(currentCommentContent.value, commentToken.value)
-    .then((success) => {
-      if (success) {
-        showCommentModal.value = false
-        currentCommentContent.value = {} as PostCommentModel
-        commentToken.value = ''
-        refreshComments()
-      } else {
-        refreshCaptcha(commentCaptcha.value)
-      }
-    })
+  useForum.PostComment(currentCommentContent.value, commentToken.value).then((success) => {
+    if (success) {
+      showCommentModal.value = false
+      currentCommentContent.value = {} as PostCommentModel
+      commentToken.value = ''
+      refreshComments()
+    } else {
+      refreshCaptcha(commentCaptcha.value)
+    }
+  })
 }
 
 async function postReply() {
@@ -114,18 +112,16 @@ async function postReply() {
 
   currentReplyContent.value.comment = useForum.replyingComment!.id
   currentReplyContent.value.replyTo = useForum.replyingReply?.id
-  useForum
-    .PostReply(currentReplyContent.value, replyToken.value)
-    .then((success) => {
-      if (success) {
-        useForum.showReplyModal = false
-        currentReplyContent.value = {} as PostReplyModel
-        replyToken.value = ''
-        refreshComments()
-      } else {
-        refreshCaptcha(replyCaptcha.value)
-      }
-    })
+  useForum.PostReply(currentReplyContent.value, replyToken.value).then((success) => {
+    if (success) {
+      useForum.showReplyModal = false
+      currentReplyContent.value = {} as PostReplyModel
+      replyToken.value = ''
+      refreshComments()
+    } else {
+      refreshCaptcha(replyCaptcha.value)
+    }
+  })
 }
 
 function onDeleteComment(id: number) {
@@ -188,11 +184,21 @@ onMounted(async () => {
       <Card class="shadow-xs">
         <CardHeader class="p-3">
           <div class="flex items-center gap-2 text-xs flex-wrap">
-            <Button variant="ghost" class="flex items-center gap-1 text-muted-foreground hover:text-foreground" @click="$router.push({ name: 'user-forum', params: { id: userInfo?.name } })">
-              <component :is="ArrowCircleLeft12Regular" class="size-4" />
+            <Button
+              variant="ghost"
+              class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              @click="$router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
+            >
+              <component
+                :is="ArrowCircleLeft12Regular"
+                class="size-4"
+              />
               返回讨论区
             </Button>
-            <Separator orientation="vertical" class="h-4" />
+            <Separator
+              orientation="vertical"
+              class="h-4"
+            />
             <Badge
               v-if="topic.isDeleted"
               variant="destructive"
@@ -211,7 +217,10 @@ onMounted(async () => {
         <CardHeader class="p-4 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
           <div class="flex items-center gap-2.5">
             <Avatar class="size-8 rounded-full">
-              <AvatarImage :src="getUserAvatarUrl(topic?.user?.id)" referrerpolicy="no-referrer" />
+              <AvatarImage
+                :src="getUserAvatarUrl(topic?.user?.id)"
+                referrerpolicy="no-referrer"
+              />
               <AvatarFallback>{{ topic.user?.name?.charAt(0) }}</AvatarFallback>
             </Avatar>
             <strong class="text-xs font-medium text-foreground">{{ topic.user?.name }}</strong>
@@ -243,7 +252,10 @@ onMounted(async () => {
               :key="uid"
               class="size-6 rounded-full border border-background ring-1 ring-border"
             >
-              <AvatarImage :src="getUserAvatarUrl(uid)" referrerpolicy="no-referrer" />
+              <AvatarImage
+                :src="getUserAvatarUrl(uid)"
+                referrerpolicy="no-referrer"
+              />
               <AvatarFallback class="text-[9px]">U</AvatarFallback>
             </Avatar>
           </div>
@@ -254,7 +266,10 @@ onMounted(async () => {
             <Tooltip>
               <TooltipTrigger as-child>
                 <div class="inline-flex items-center gap-1 text-muted-foreground px-2 py-1 text-xs">
-                  <component :is="Eye24Regular" class="size-3.5" />
+                  <component
+                    :is="Eye24Regular"
+                    class="size-3.5"
+                  />
                   <span>{{ topic.viewCount }}</span>
                 </div>
               </TooltipTrigger>
@@ -263,7 +278,13 @@ onMounted(async () => {
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="outline" class="flex items-center gap-1" :class="{ 'text-destructive border-destructive/30': topic.isLiked }" :disabled="!canOprate || useForum.isLikeLoading" @click=" useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
+                <Button
+                  variant="outline"
+                  class="flex items-center gap-1"
+                  :class="{ 'text-destructive border-destructive/30': topic.isLiked }"
+                  :disabled="!canOprate || useForum.isLikeLoading"
+                  @click="
+                    useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
                       if (success) {
                         topic.isLiked = !topic.isLiked
                         topic.likeCount += topic.isLiked ? 1 : -1
@@ -271,7 +292,10 @@ onMounted(async () => {
                     })
                   "
                 >
-                  <component :is="topic.isLiked ? Heart : HeartOutline" class="size-3.5" />
+                  <component
+                    :is="topic.isLiked ? Heart : HeartOutline"
+                    class="size-3.5"
+                  />
                   <span>{{ topic.likeCount }}</span>
                 </Button>
               </TooltipTrigger>
@@ -280,8 +304,16 @@ onMounted(async () => {
 
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="outline" class="flex items-center gap-1" :disabled="!canOprate" @click="showCommentModal = true">
-                  <component :is="Comment24Regular" class="size-3.5" />
+                <Button
+                  variant="outline"
+                  class="flex items-center gap-1"
+                  :disabled="!canOprate"
+                  @click="showCommentModal = true"
+                >
+                  <component
+                    :is="Comment24Regular"
+                    class="size-3.5"
+                  />
                   <span>{{ topic.commentCount }}</span>
                 </Button>
               </TooltipTrigger>
@@ -306,7 +338,10 @@ onMounted(async () => {
       <Card class="shadow-xs">
         <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
           <strong class="text-xs font-semibold">评论</strong>
-          <Button :disabled="!canOprate" @click="showCommentModal = true">
+          <Button
+            :disabled="!canOprate"
+            @click="showCommentModal = true"
+          >
             发送评论
           </Button>
         </CardHeader>
@@ -320,7 +355,10 @@ onMounted(async () => {
               :total="commentTotal"
               :items-per-page="ps"
               :page="pn"
-              @update:page="pn = $event; refreshComments();"
+              @update:page="
+                pn = $event
+                refreshComments()
+              "
             />
           </div>
 
@@ -351,7 +389,10 @@ onMounted(async () => {
               :total="commentTotal"
               :items-per-page="ps"
               :page="pn"
-              @update:page="pn = $event; refreshComments();"
+              @update:page="
+                pn = $event
+                refreshComments()
+              "
             />
           </div>
         </CardContent>
@@ -377,7 +418,10 @@ onMounted(async () => {
                 v-model="commentToken"
                 class="forum-captcha"
               />
-              <Button :disabled="!commentToken || useForum.isLoading" @click="postComment">
+              <Button
+                :disabled="!commentToken || useForum.isLoading"
+                @click="postComment"
+              >
                 发布
               </Button>
             </div>
@@ -421,7 +465,10 @@ onMounted(async () => {
                 v-model="replyToken"
                 class="forum-captcha"
               />
-              <Button :disabled="!replyToken || useForum.isLoading" @click="postReply">
+              <Button
+                :disabled="!replyToken || useForum.isLoading"
+                @click="postReply"
+              >
                 发布
               </Button>
             </div>

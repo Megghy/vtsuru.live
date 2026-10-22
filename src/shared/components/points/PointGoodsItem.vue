@@ -85,11 +85,16 @@ const priceRangeText = computed(() => {
         class="pin-badge absolute top-2 right-2 size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xs"
         title="置顶商品"
       >
-        <component :is="Pin16Filled" class="size-3.5" />
+        <component
+          :is="Pin16Filled"
+          class="size-3.5"
+        />
       </div>
 
       <!-- 底部浮层信息 -->
-      <div class="cover-overlay absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-between gap-1.5 text-white">
+      <div
+        class="cover-overlay absolute bottom-0 inset-x-0 p-2 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex items-end justify-between gap-1.5 text-white"
+      >
         <!-- 左侧标签组 -->
         <div class="overlay-tags flex items-center gap-1 flex-wrap">
           <Badge
@@ -230,7 +235,10 @@ const priceRangeText = computed(() => {
           class="info-cell col-span-2 flex items-center justify-between p-1 rounded bg-muted/40"
         >
           <span class="label shrink-0 mr-1">🎨 款式</span>
-          <span class="value truncate" :title="subItems.map((s) => s.name).join(' / ')">
+          <span
+            class="value truncate"
+            :title="subItems.map((s) => s.name).join(' / ')"
+          >
             {{ subItems.map((s) => s.name).join(' / ') }}
           </span>
         </div>

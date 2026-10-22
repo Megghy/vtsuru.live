@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgPointStatsModel } from './orgPointStatsModel';
+import type { OrgPointStatsModel } from './orgPointStatsModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfOrgPointStatsModel {
-  message: string;
-  code: number;
-  data: OrgPointStatsModel;
+  message: string
+  code: number
+  data: OrgPointStatsModel
 }

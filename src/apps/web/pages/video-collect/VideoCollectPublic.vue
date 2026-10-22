@@ -6,10 +6,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { DuplicateVideoPolicy } from '@/api/api-models'
-import {
-  getApiVideoCollectGet,
-  postApiVideoCollectAdd,
-} from '@/api/generated/video-collect/video-collect'
+import { getApiVideoCollectGet, postApiVideoCollectAdd } from '@/api/generated/video-collect/video-collect'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
 import { Badge } from '@/shared/ui/badge'
@@ -230,7 +227,10 @@ onUnmounted(() => turnstile.value?.remove())
               class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
               @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
             >
-              <component :is="Person24Regular" class="size-4" />
+              <component
+                :is="Person24Regular"
+                class="size-4"
+              />
               {{ table.owner.name }} 的视频征集
             </button>
             <div class="collect-title-row flex items-center gap-3 mt-2">
@@ -246,10 +246,15 @@ onUnmounted(() => turnstile.value?.remove())
               {{ table.description || '未填写征集说明' }}
             </p>
 
-            <div class="collect-meta grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 p-4 rounded-xl border border-border/80 bg-muted/30 text-xs">
+            <div
+              class="collect-meta grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 p-4 rounded-xl border border-border/80 bg-muted/30 text-xs"
+            >
               <div class="space-y-1">
                 <div class="flex items-center gap-1.5 text-muted-foreground">
-                  <component :is="Clock24Regular" class="size-3.5" />
+                  <component
+                    :is="Clock24Regular"
+                    class="size-3.5"
+                  />
                   <span>开放时间</span>
                 </div>
                 <div class="font-medium font-mono text-foreground">
@@ -264,7 +269,10 @@ onUnmounted(() => turnstile.value?.remove())
               </div>
               <div class="space-y-1">
                 <div class="flex items-center gap-1.5 text-muted-foreground">
-                  <component :is="Clock24Regular" class="size-3.5" />
+                  <component
+                    :is="Clock24Regular"
+                    class="size-3.5"
+                  />
                   <span>截止时间</span>
                 </div>
                 <div class="font-medium font-mono text-foreground">
@@ -279,7 +287,10 @@ onUnmounted(() => turnstile.value?.remove())
               </div>
               <div class="space-y-1">
                 <div class="flex items-center gap-1.5 text-muted-foreground">
-                  <component :is="Video24Regular" class="size-3.5" />
+                  <component
+                    :is="Video24Regular"
+                    class="size-3.5"
+                  />
                   <span>已收集</span>
                 </div>
                 <div class="font-medium font-mono text-foreground">
@@ -300,11 +311,17 @@ onUnmounted(() => turnstile.value?.remove())
                 class="py-8 flex flex-col items-center text-center gap-3"
               >
                 <div class="size-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
-                  <component :is="CheckmarkCircle24Regular" class="size-7" />
+                  <component
+                    :is="CheckmarkCircle24Regular"
+                    class="size-7"
+                  />
                 </div>
                 <h3 class="text-lg font-semibold">推荐成功</h3>
                 <p class="text-xs text-muted-foreground">你的视频推荐已经提交。</p>
-                <Button class="mt-2" @click="submitAnother">
+                <Button
+                  class="mt-2"
+                  @click="submitAnother"
+                >
                   再推荐一个
                 </Button>
               </div>
@@ -339,9 +356,7 @@ onUnmounted(() => turnstile.value?.remove())
               >
                 <h3 class="text-base font-semibold">需要绑定 B 站账号</h3>
                 <p class="text-xs text-muted-foreground">完成身份绑定后即可参与本次视频征集。</p>
-                <Button @click="router.push({ name: 'bili-auth' })">
-                  前往绑定
-                </Button>
+                <Button @click="router.push({ name: 'bili-auth' })"> 前往绑定 </Button>
               </div>
 
               <form
@@ -350,7 +365,10 @@ onUnmounted(() => turnstile.value?.remove())
                 @submit.prevent="addVideo"
               >
                 <div class="submit-panel__heading flex items-start gap-2.5 pb-2 border-b border-border/60">
-                  <component :is="CheckmarkCircle24Regular" class="size-5 text-primary shrink-0 mt-0.5" />
+                  <component
+                    :is="CheckmarkCircle24Regular"
+                    class="size-5 text-primary shrink-0 mt-0.5"
+                  />
                   <div>
                     <h2 class="text-sm font-semibold">推荐视频</h2>
                     <p class="text-xs text-muted-foreground">
@@ -373,14 +391,21 @@ onUnmounted(() => turnstile.value?.remove())
 
                 <div class="space-y-1.5">
                   <label class="text-xs font-medium text-foreground">视频链接或 BV 号</label>
-                  <Input v-model="addModel.video" placeholder="https://www.bilibili.com/video/BV..." class="h-9" />
+                  <Input
+                    v-model="addModel.video"
+                    placeholder="https://www.bilibili.com/video/BV..."
+                    class="h-9"
+                  />
                 </div>
 
                 <div
                   v-if="isBiliAuthed"
                   class="authenticated-user flex items-center gap-1.5 text-xs text-primary font-medium p-2 rounded bg-primary/5 border border-primary/20"
                 >
-                  <component :is="CheckmarkCircle24Regular" class="size-4" />
+                  <component
+                    :is="CheckmarkCircle24Regular"
+                    class="size-4"
+                  />
                   <span>以 {{ addModel.name }}（UID {{ addModel.uid }}）推荐</span>
                 </div>
                 <div
@@ -389,11 +414,22 @@ onUnmounted(() => turnstile.value?.remove())
                 >
                   <div class="space-y-1.5">
                     <label class="text-xs font-medium text-foreground">推荐人</label>
-                    <Input v-model="addModel.name" placeholder="选填" maxlength="50" class="h-9" />
+                    <Input
+                      v-model="addModel.name"
+                      placeholder="选填"
+                      maxlength="50"
+                      class="h-9"
+                    />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-xs font-medium text-foreground">哔哩哔哩 UID</label>
-                    <Input :model-value="addModel.uid != null ? String(addModel.uid) : ''" type="number" placeholder="选填" class="h-9" @update:model-value="addModel.uid = $event ? Number($event) : undefined" />
+                    <Input
+                      :model-value="addModel.uid != null ? String(addModel.uid) : ''"
+                      type="number"
+                      placeholder="选填"
+                      class="h-9"
+                      @update:model-value="addModel.uid = $event ? Number($event) : undefined"
+                    />
                   </div>
                 </div>
 
@@ -416,7 +452,11 @@ onUnmounted(() => turnstile.value?.remove())
                   class="turnstile flex justify-center py-1"
                 />
 
-                <Button type="submit" class="w-full" :disabled="isLoading || !token">
+                <Button
+                  type="submit"
+                  class="w-full"
+                  :disabled="isLoading || !token"
+                >
                   {{ isLoading ? '提交中...' : '提交推荐' }}
                 </Button>
               </form>

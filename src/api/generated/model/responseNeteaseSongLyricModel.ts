@@ -8,7 +8,7 @@
 
 export interface ResponseNeteaseSongLyricModel {
   /** @nullable */
-  lyric?: string | null;
+  lyric?: string | null
   /** @nullable */
-  tlyric?: string | null;
+  tlyric?: string | null
 }

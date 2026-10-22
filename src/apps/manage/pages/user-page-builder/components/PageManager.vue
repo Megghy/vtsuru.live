@@ -5,19 +5,8 @@ import { computed, inject, ref } from 'vue'
 import type { UserPageConfig } from '@/apps/user-page/types'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Tag } from '@/shared/ui/tag'
@@ -95,11 +84,13 @@ function confirmDuplicatePage() {
   <div class="flex flex-col gap-2">
     <div class="page-item">
       <div class="page-item__row flex items-center gap-1">
-        <Button :variant="editor.currentKey.value === 'home' ? 'default' : 'outline'" class="page-item__main w-full justify-start px-2" @click="editor.currentKey.value = 'home'">
+        <Button
+          :variant="editor.currentKey.value === 'home' ? 'default' : 'outline'"
+          class="page-item__main w-full justify-start px-2"
+          @click="editor.currentKey.value = 'home'"
+        >
           <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
-            <span class="truncate text-left flex-1">
-              主页 /@{{ editor.account.value.name || '...' }}
-            </span>
+            <span class="truncate text-left flex-1"> 主页 /@{{ editor.account.value.name || '...' }} </span>
             <Tag
               variant="outline"
               class="text-[10px] h-4.5 px-1 shrink-0"
@@ -113,7 +104,12 @@ function confirmDuplicatePage() {
 
     <div class="h-px bg-border my-1" />
 
-    <Button variant="outline" class="w-full" :disabled="!canCreateMorePages" @click="addPageModal = true">
+    <Button
+      variant="outline"
+      class="w-full"
+      :disabled="!canCreateMorePages"
+      @click="addPageModal = true"
+    >
       新建子页面
     </Button>
 
@@ -132,7 +128,11 @@ function confirmDuplicatePage() {
           :class="{ 'opacity-90': section.hidden }"
         >
           <div class="page-item__row flex items-center gap-1">
-            <Button :variant="editor.currentKey.value === p.slug ? 'default' : 'outline'" class="page-item__main flex-1 min-w-0 justify-start px-2" @click="editor.currentKey.value = p.slug">
+            <Button
+              :variant="editor.currentKey.value === p.slug ? 'default' : 'outline'"
+              class="page-item__main flex-1 min-w-0 justify-start px-2"
+              @click="editor.currentKey.value = p.slug"
+            >
               <div class="page-item__btn-content flex items-center justify-between w-full min-w-0 gap-1">
                 <span class="truncate text-left flex-1">
                   {{ p.title }}
@@ -148,20 +148,36 @@ function confirmDuplicatePage() {
 
             <DropdownMenu>
               <DropdownMenuTrigger as-child>
-                <Button variant="ghost" class="size-7 p-0" aria-label="更多页面操作">
-                  <component :is="EllipsisHorizontalOutline" class="size-3.5" />
+                <Button
+                  variant="ghost"
+                  class="size-7 p-0"
+                  aria-label="更多页面操作"
+                >
+                  <component
+                    :is="EllipsisHorizontalOutline"
+                    class="size-3.5"
+                  />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" class="w-28 text-xs">
+              <DropdownMenuContent
+                align="end"
+                class="w-28 text-xs"
+              >
                 <DropdownMenuItem @click="handlePageAction('duplicate', p.slug)">
-                  <component :is="CopyOutline" class="size-3.5 mr-2" />
+                  <component
+                    :is="CopyOutline"
+                    class="size-3.5 mr-2"
+                  />
                   复制
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   class="text-destructive focus:text-destructive"
                   @click="handlePageAction('delete', p.slug)"
                 >
-                  <component :is="TrashOutline" class="size-3.5 mr-2" />
+                  <component
+                    :is="TrashOutline"
+                    class="size-3.5 mr-2"
+                  />
                   删除
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -180,22 +196,35 @@ function confirmDuplicatePage() {
         <div class="flex flex-col gap-3 py-2">
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium">页面链接标识 (Slug) <span class="text-destructive">*</span></label>
-            <Input v-model="newSlug" placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）" />
+            <Input
+              v-model="newSlug"
+              placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）"
+            />
           </div>
 
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium">搭建模式</label>
-            <RadioGroup v-model="newMode" class="flex flex-col gap-2">
+            <RadioGroup
+              v-model="newMode"
+              class="flex flex-col gap-2"
+            >
               <label
                 v-for="opt in PAGE_MODE_OPTIONS"
                 :key="opt.value"
                 class="flex items-start gap-2 p-2 rounded-lg border border-border cursor-pointer hover:bg-muted/50"
               >
-                <RadioGroupItem :value="opt.value" class="mt-0.5" />
+                <RadioGroupItem
+                  :value="opt.value"
+                  class="mt-0.5"
+                />
                 <div class="flex-1 text-xs">
                   <div class="flex items-center gap-1.5 font-medium">
                     {{ opt.label }}
-                    <Tag v-if="opt.tag" variant="secondary" class="text-[10px] h-4 px-1">
+                    <Tag
+                      v-if="opt.tag"
+                      variant="secondary"
+                      class="text-[10px] h-4 px-1"
+                    >
                       {{ opt.tag }}
                     </Tag>
                   </div>
@@ -214,8 +243,16 @@ function confirmDuplicatePage() {
           </Alert>
         </div>
         <DialogFooter>
-          <Button variant="outline" @click="addPageModal = false">取消</Button>
-          <Button :disabled="!newSlug.trim().length" @click="createPage">创建</Button>
+          <Button
+            variant="outline"
+            @click="addPageModal = false"
+            >取消</Button
+          >
+          <Button
+            :disabled="!newSlug.trim().length"
+            @click="createPage"
+            >创建</Button
+          >
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -232,13 +269,24 @@ function confirmDuplicatePage() {
           </Alert>
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium">新页面标识 (Slug) <span class="text-destructive">*</span></label>
-            <Input v-model="duplicateToSlug" placeholder="例如 links-copy" />
+            <Input
+              v-model="duplicateToSlug"
+              placeholder="例如 links-copy"
+            />
           </div>
           <span class="text-[11px] text-muted-foreground">会自动为复制后的页面生成新的区块 ID，避免与原页面冲突。</span>
         </div>
         <DialogFooter>
-          <Button variant="outline" @click="duplicatePageModal = false">取消</Button>
-          <Button :disabled="!duplicateToSlug.trim().length" @click="confirmDuplicatePage">确定</Button>
+          <Button
+            variant="outline"
+            @click="duplicatePageModal = false"
+            >取消</Button
+          >
+          <Button
+            :disabled="!duplicateToSlug.trim().length"
+            @click="confirmDuplicatePage"
+            >确定</Button
+          >
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -253,8 +301,16 @@ function confirmDuplicatePage() {
           将删除 /{{ deletePageSlug }} 及其中全部配置，此操作可通过撤销恢复。
         </div>
         <DialogFooter>
-          <Button variant="outline" @click="deletePageModal = false">取消</Button>
-          <Button variant="destructive" @click="confirmDeletePage">删除</Button>
+          <Button
+            variant="outline"
+            @click="deletePageModal = false"
+            >取消</Button
+          >
+          <Button
+            variant="destructive"
+            @click="confirmDeletePage"
+            >删除</Button
+          >
         </DialogFooter>
       </DialogContent>
     </Dialog>

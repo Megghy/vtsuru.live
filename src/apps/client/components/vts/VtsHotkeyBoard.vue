@@ -8,21 +8,10 @@ import { newDeckTile } from '@/apps/client/store/vts/deck'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
 import { useVtsAction } from './useVtsAction'
@@ -122,7 +111,10 @@ function togglePinned(hk: VtsHotkeyInfo) {
 
 function addToDeck(hk: VtsHotkeyInfo) {
   const label = getCustom(hk.hotkeyID)?.displayName || hk.name || hk.hotkeyID
-  void run(() => vts.upsertDeckTile({ ...newDeckTile('hotkey', hk.hotkeyID, label), color: getCustom(hk.hotkeyID)?.color }), '已加入操作台')
+  void run(
+    () => vts.upsertDeckTile({ ...newDeckTile('hotkey', hk.hotkeyID, label), color: getCustom(hk.hotkeyID)?.color }),
+    '已加入操作台',
+  )
 }
 
 function disarm() {
@@ -180,9 +172,19 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 
     <CardContent class="p-3 space-y-3">
       <div class="flex items-center gap-2 flex-wrap">
-        <Input v-model="query" placeholder="搜索名称 / 描述 / 类型" class="min-w-[200px] flex-1" />
+        <Input
+          v-model="query"
+          placeholder="搜索名称 / 描述 / 类型"
+          class="min-w-[200px] flex-1"
+        />
         <div class="flex items-center gap-1.5 cursor-pointer select-none">
-          <Switch :checked="safeClick" @update:checked="safeClick = $event; disarm()" />
+          <Switch
+            :checked="safeClick"
+            @update:checked="
+              safeClick = $event
+              disarm()
+            "
+          />
           <span class="text-xs text-muted-foreground">防误触</span>
         </div>
         <div class="w-[110px]">
@@ -202,7 +204,11 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="secondary" :disabled="disabled" @click="emit('refresh')">
+        <Button
+          variant="secondary"
+          :disabled="disabled"
+          @click="emit('refresh')"
+        >
           刷新
         </Button>
       </div>
@@ -267,24 +273,36 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 
         <div class="flex items-center gap-3">
           <div class="flex items-center gap-1.5 cursor-pointer select-none">
-            <Switch :checked="editForm.pinned" @update:checked="editForm.pinned = $event" />
+            <Switch
+              :checked="editForm.pinned"
+              @update:checked="editForm.pinned = $event"
+            />
             <span>置顶</span>
           </div>
-          <Input v-model="editForm.group" placeholder="分组" class="flex-1" />
+          <Input
+            v-model="editForm.group"
+            placeholder="分组"
+            class="flex-1"
+          />
         </div>
 
         <div class="flex items-center gap-3">
-          <Input v-model="editForm.displayName" placeholder="显示名称" class="flex-1" />
+          <Input
+            v-model="editForm.displayName"
+            placeholder="显示名称"
+            class="flex-1"
+          />
           <div class="w-32 shrink-0">
-            <ColorPicker
-              v-model="editForm.color"
-            />
+            <ColorPicker v-model="editForm.color" />
           </div>
         </div>
 
         <div class="flex items-center gap-2">
           <label class="cursor-pointer">
-            <Button variant="outline" as-child>
+            <Button
+              variant="outline"
+              as-child
+            >
               <span>选择图标</span>
             </Button>
             <input
@@ -294,7 +312,11 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
               @change="onIconFileChange"
             />
           </label>
-          <Button variant="ghost" :disabled="!editForm.iconDataUrl" @click="editForm.iconDataUrl = ''">
+          <Button
+            variant="ghost"
+            :disabled="!editForm.iconDataUrl"
+            @click="editForm.iconDataUrl = ''"
+          >
             清除图标
           </Button>
           <img
@@ -306,15 +328,20 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
         </div>
 
         <div class="flex items-center justify-end gap-2 pt-2">
-          <Button variant="ghost" @click="showEdit = false">
+          <Button
+            variant="ghost"
+            @click="showEdit = false"
+          >
             取消
           </Button>
-          <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" @click="clearCustomization">
+          <Button
+            variant="outline"
+            class="border-destructive/40 text-destructive hover:bg-destructive/10"
+            @click="clearCustomization"
+          >
             重置
           </Button>
-          <Button @click="saveEdit">
-            保存
-          </Button>
+          <Button @click="saveEdit"> 保存 </Button>
         </div>
       </div>
     </DialogContent>

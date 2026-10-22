@@ -4,12 +4,12 @@ import { onMounted, ref, watch } from 'vue'
 
 import type { UserBasicInfo } from '@/api/api-models'
 import { getApiUserBasicValue } from '@/api/generated/user/user'
-import { getUserAvatarUrl } from '@/shared/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
+import { getUserAvatarUrl } from '@/shared/utils'
 
 const props = defineProps<{
   user: string | number
@@ -65,12 +65,21 @@ onMounted(() => {
           size="small"
           :description="user ? (isLoading ? '加载中' : '未找到用户') : '未选择用户'"
         />
-        <div v-else class="flex items-center gap-3">
+        <div
+          v-else
+          class="flex items-center gap-3"
+        >
           <Avatar class="size-8">
-            <AvatarImage :src="getUserAvatarUrl(currentUser.id)" referrerpolicy="no-referrer" />
+            <AvatarImage
+              :src="getUserAvatarUrl(currentUser.id)"
+              referrerpolicy="no-referrer"
+            />
             <AvatarFallback>{{ currentUser.name?.slice(0, 2) || '用户' }}</AvatarFallback>
           </Avatar>
-          <Separator orientation="vertical" class="h-4" />
+          <Separator
+            orientation="vertical"
+            class="h-4"
+          />
           <span class="text-xs font-medium text-foreground">
             {{ currentUser.name }}
           </span>

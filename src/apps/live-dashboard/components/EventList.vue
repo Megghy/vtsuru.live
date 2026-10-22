@@ -99,7 +99,12 @@ watch(
     >
       暂无事件
     </div>
-    <Button v-if="!following" class="event-list__resume rounded-full shadow-md" variant="secondary" @click="resume">
+    <Button
+      v-if="!following"
+      class="event-list__resume rounded-full shadow-md"
+      variant="secondary"
+      @click="resume"
+    >
       {{ pending ? `${pending} 条新事件` : anchor === 'bottom' ? '回到底部' : '回到顶部' }}
     </Button>
   </div>

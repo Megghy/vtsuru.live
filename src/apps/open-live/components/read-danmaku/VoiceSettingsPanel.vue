@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useSpeechService } from '@/store/useSpeechService'
 import { Separator } from '@/shared/ui/separator'
 import { Slider } from '@/shared/ui/slider'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import AzureForm from './providers/AzureForm.vue'
 import CosyVoiceForm from './providers/CosyVoiceForm.vue'

@@ -1,17 +1,12 @@
 <script setup lang="ts">
+import { Checkmark24Regular, Copy24Regular, Open24Regular, Settings24Regular } from '@vicons/fluent'
 import { useClipboard } from '@vueuse/core'
-import {
-  Checkmark24Regular,
-  Copy24Regular,
-  Open24Regular,
-  Settings24Regular,
-} from '@vicons/fluent'
 import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
+import { useAccount } from '@/api/account'
 import { getCategoryMeta } from '@/apps/obs-store/registry'
 import type { ObsComponentDefinition } from '@/apps/obs-store/registry'
-import { useAccount } from '@/api/account'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -30,7 +25,7 @@ const { copy, isSupported: isCopySupported } = useClipboard()
 const copied = ref(false)
 
 const isReady = computed(() => props.item.status === 'ready' || props.item.status === 'beta')
-const statusLabel = computed(() => props.item.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中')
+const statusLabel = computed(() => (props.item.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中'))
 const categoryMeta = computed(() => getCategoryMeta(props.item.category))
 
 const absoluteObsUrl = computed(() => {
@@ -92,7 +87,7 @@ async function handleCopy() {
                 ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
                 : isReady
                   ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
-                  : 'text-muted-foreground'
+                  : 'text-muted-foreground',
             ]"
           >
             {{ statusLabel }}
@@ -166,7 +161,10 @@ async function handleCopy() {
     <!-- 卡片底部操作栏 -->
     <div class="card-footer">
       <template v-if="isReady">
-        <Button class="flex-1 gap-1.5" @click="emit('configure', item)">
+        <Button
+          class="flex-1 gap-1.5"
+          @click="emit('configure', item)"
+        >
           <Settings24Regular class="size-4" />
           配置与调试
         </Button>
@@ -175,21 +173,34 @@ async function handleCopy() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="secondary" class="w-8 p-0" @click="handleCopy">
-                  <Checkmark24Regular v-if="copied" class="size-4" />
-                  <Copy24Regular v-else class="size-4" />
+                <Button
+                  variant="secondary"
+                  class="w-8 p-0"
+                  @click="handleCopy"
+                >
+                  <Checkmark24Regular
+                    v-if="copied"
+                    class="size-4"
+                  />
+                  <Copy24Regular
+                    v-else
+                    class="size-4"
+                  />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                复制默认 OBS 浏览器源链接
-              </TooltipContent>
+              <TooltipContent> 复制默认 OBS 浏览器源链接 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
           <TooltipProvider v-if="item.obsPath">
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="secondary" class="w-8 p-0" as-child :disabled="!absoluteObsUrl">
+                <Button
+                  variant="secondary"
+                  class="w-8 p-0"
+                  as-child
+                  :disabled="!absoluteObsUrl"
+                >
                   <a
                     :href="absoluteObsUrl || undefined"
                     target="_blank"
@@ -198,9 +209,7 @@ async function handleCopy() {
                   </a>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                在新标签页预览 OBS 源
-              </TooltipContent>
+              <TooltipContent> 在新标签页预览 OBS 源 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -211,7 +220,10 @@ async function handleCopy() {
           <span class="planned-text">开发规划中，敬请期待</span>
         </div>
         <div class="requirements-row">
-          <span class="requirement-dot" :class="{ local: !item.requiresAccount }" />
+          <span
+            class="requirement-dot"
+            :class="{ local: !item.requiresAccount }"
+          />
           {{ item.requiresAccount ? '需要账号同步' : '纯本地运行' }}
         </div>
       </template>

@@ -4,13 +4,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
 import PngtuberImageSlot from './PngtuberImageSlot.vue'
@@ -54,7 +48,10 @@ const fields = [
 
 <template>
   <div class="space-y-3">
-    <Button variant="outline" class="w-full" :disabled="disabled || accessories.length>= 12"
+    <Button
+      variant="outline"
+      class="w-full"
+      :disabled="disabled || accessories.length >= 12"
       @click="add"
     >
       增加配件（{{ accessories.length }}/12）
@@ -72,7 +69,12 @@ const fields = [
         </summary>
 
         <div class="mt-3 pt-2.5 border-t space-y-3">
-          <Input :value="a.name" placeholder="配件名称" :disabled="disabled" @input="patch(a.id, { name: ($event.target as HTMLInputElement).value })" />
+          <Input
+            :value="a.name"
+            placeholder="配件名称"
+            :disabled="disabled"
+            @input="patch(a.id, { name: ($event.target as HTMLInputElement).value })"
+          />
 
           <PngtuberImageSlot
             :value="a.image"
@@ -110,16 +112,32 @@ const fields = [
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="always" class="text-xs">始终显示</SelectItem>
-              <SelectItem value="speaking" class="text-xs">说话时显示</SelectItem>
-              <SelectItem value="idle" class="text-xs">静止时显示</SelectItem>
+              <SelectItem
+                value="always"
+                class="text-xs"
+                >始终显示</SelectItem
+              >
+              <SelectItem
+                value="speaking"
+                class="text-xs"
+                >说话时显示</SelectItem
+              >
+              <SelectItem
+                value="idle"
+                class="text-xs"
+                >静止时显示</SelectItem
+              >
             </SelectContent>
           </Select>
 
           <div class="flex items-center justify-between gap-2 pt-1">
             <div class="flex items-center gap-2">
               <span class="text-xs">置于立绘前方</span>
-              <Switch :checked="a.front" :disabled="disabled" @update:checked="patch(a.id, { front: $event })" />
+              <Switch
+                :checked="a.front"
+                :disabled="disabled"
+                @update:checked="patch(a.id, { front: $event })"
+              />
             </div>
 
             <Popconfirm
@@ -133,7 +151,12 @@ const fields = [
               "
             >
               <template #trigger>
-                <Button size="xs" variant="outline" class="h-6 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="disabled">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="h-6 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10"
+                  :disabled="disabled"
+                >
                   删除配件
                 </Button>
               </template>

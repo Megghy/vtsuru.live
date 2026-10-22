@@ -7,10 +7,10 @@
  */
 
 export interface PointControllerServiceUserUpdateRequest {
-  orderId: number;
-  cancel: boolean;
+  orderId: number
+  cancel: boolean
   /** @nullable */
-  reason?: string | null;
+  reason?: string | null
   /** @nullable */
-  message?: string | null;
+  message?: string | null
 }

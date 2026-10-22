@@ -3,10 +3,7 @@
   --ranking-muted: var(--vtsuru-surface-fg-muted, var(--muted-foreground));
   --ranking-subtle: var(--vtsuru-surface-fg-subtle, var(--foreground-subtle));
   --ranking-bg: var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg, var(--muted)));
-  --ranking-bg-hover: var(
-    --user-page-theme-surface-bg-hover,
-    var(--vtsuru-page-card-bg-embedded, var(--popover))
-  );
+  --ranking-bg-hover: var(--user-page-theme-surface-bg-hover, var(--vtsuru-page-card-bg-embedded, var(--popover)));
   --ranking-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)));
   --ranking-accent: var(--vtsuru-page-primary, var(--brand));
   min-width: 0;

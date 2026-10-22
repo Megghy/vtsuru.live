@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { decodeClientUpload } from './upload'
 import { startFetcher } from './session'
 import type { EventHub, LiveSession } from './session'
+import { decodeClientUpload } from './upload'
 import { ErrorCodes } from './version'
 
 interface Timer {

@@ -88,7 +88,10 @@ const availableFeatures = computed(() =>
         :to="{ name: feature.routeName, params: { id: props.userInfo?.name } }"
         class="feature-link"
       >
-        <component :is="feature.icon" class="size-5.5 shrink-0" />
+        <component
+          :is="feature.icon"
+          class="size-5.5 shrink-0"
+        />
         <span>{{ feature.label }}</span>
       </RouterLink>
     </nav>

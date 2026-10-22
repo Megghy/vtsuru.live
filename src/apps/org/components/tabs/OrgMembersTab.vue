@@ -31,11 +31,17 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div v-if="loading" class="py-12 flex justify-center">
+  <div
+    v-if="loading"
+    class="py-12 flex justify-center"
+  >
     <Spin />
   </div>
 
-  <div v-else class="space-y-3.5 text-xs">
+  <div
+    v-else
+    class="space-y-3.5 text-xs"
+  >
     <OrgInviteManager
       v-if="isOrgAdmin"
       kind="member"
@@ -51,17 +57,30 @@ onMounted(async () => {
     <!-- 工具栏 -->
     <div class="flex items-center justify-between gap-3 flex-wrap">
       <div class="relative w-56">
-        <Input v-model="search" placeholder="搜索成员名称或ID" class="pl-7" />
-        <component :is="SearchOutline" class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Input
+          v-model="search"
+          placeholder="搜索成员名称或ID"
+          class="pl-7"
+        />
+        <component
+          :is="SearchOutline"
+          class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+        />
       </div>
     </div>
 
-    <div v-if="filtered.length === 0" class="py-10">
+    <div
+      v-if="filtered.length === 0"
+      class="py-10"
+    >
       <Empty description="暂无成员" />
     </div>
 
     <!-- 成员列表 -->
-    <Card v-else class="border border-border/80 overflow-hidden">
+    <Card
+      v-else
+      class="border border-border/80 overflow-hidden"
+    >
       <CardContent class="p-0">
         <div class="divide-y divide-border/60">
           <div
@@ -78,7 +97,10 @@ onMounted(async () => {
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-2">
                   <strong class="font-medium text-foreground text-sm truncate">{{ m.user.name }}</strong>
-                  <Badge variant="outline" class="text-[10px] h-4 px-1 text-primary border-primary/30">
+                  <Badge
+                    variant="outline"
+                    class="text-[10px] h-4 px-1 text-primary border-primary/30"
+                  >
                     {{ roleLabel(m.role) }}
                   </Badge>
                 </div>
@@ -87,9 +109,7 @@ onMounted(async () => {
             </div>
 
             <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
-              <span class="text-[11px] text-muted-foreground">
-                加入于 {{ format(m.joinedAt, 'yyyy-MM-dd') }}
-              </span>
+              <span class="text-[11px] text-muted-foreground"> 加入于 {{ format(m.joinedAt, 'yyyy-MM-dd') }} </span>
 
               <template v-if="myRole === 0 && m.role !== 0 && m.user.id !== orgInfo?.ownerUserId">
                 <Popconfirm
@@ -99,7 +119,10 @@ onMounted(async () => {
                   @positive-click="() => updateRole(m.user.id, 1)"
                 >
                   <template #trigger>
-                    <Button variant="outline" class="h-6 text-[11px] px-2 text-primary">
+                    <Button
+                      variant="outline"
+                      class="h-6 text-[11px] px-2 text-primary"
+                    >
                       设为 Admin
                     </Button>
                   </template>
@@ -113,7 +136,10 @@ onMounted(async () => {
                   @positive-click="() => updateRole(m.user.id, 2)"
                 >
                   <template #trigger>
-                    <Button variant="outline" class="h-6 text-[11px] px-2">
+                    <Button
+                      variant="outline"
+                      class="h-6 text-[11px] px-2"
+                    >
                       设为 Member
                     </Button>
                   </template>
@@ -127,7 +153,10 @@ onMounted(async () => {
                   @positive-click="() => transferOwner(m.user.id)"
                 >
                   <template #trigger>
-                    <Button variant="outline" class="h-6 text-[11px] px-2 text-amber-600 border-amber-500/30 hover:bg-amber-500/10">
+                    <Button
+                      variant="outline"
+                      class="h-6 text-[11px] px-2 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
+                    >
                       移交所有权
                     </Button>
                   </template>
@@ -143,8 +172,15 @@ onMounted(async () => {
                 @positive-click="() => remove(m.user.id)"
               >
                 <template #trigger>
-                  <Button size="icon" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
-                    <component :is="TrashOutline" class="size-3.5" />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                  >
+                    <component
+                      :is="TrashOutline"
+                      class="size-3.5"
+                    />
                   </Button>
                 </template>
                 确定要移除该成员吗？

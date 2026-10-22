@@ -108,11 +108,7 @@ const sizeClasses = computed(() => {
 <template>
   <div
     class="relative inline-flex items-center rounded-md border border-input bg-background transition-colors focus-within:ring-1 focus-within:ring-ring"
-    :class="[
-      sizeClasses,
-      disabled ? 'opacity-50 cursor-not-allowed bg-muted/50' : '',
-      $attrs.class,
-    ]"
+    :class="[sizeClasses, disabled ? 'opacity-50 cursor-not-allowed bg-muted/50' : '', $attrs.class]"
   >
     <button
       v-if="showButton && buttonPlacement === 'both'"
@@ -145,7 +141,10 @@ const sizeClasses = computed(() => {
 
     <slot name="suffix" />
 
-    <div v-if="showButton && buttonPlacement !== 'both'" class="flex items-center gap-0.5 ml-1">
+    <div
+      v-if="showButton && buttonPlacement !== 'both'"
+      class="flex items-center gap-0.5 ml-1"
+    >
       <button
         type="button"
         tabindex="-1"

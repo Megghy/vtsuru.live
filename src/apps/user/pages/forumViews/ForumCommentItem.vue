@@ -76,7 +76,10 @@ function formatFullTime(time: number) {
   <TooltipProvider>
     <div class="flex items-start gap-3 py-3 border-b border-border/50 text-xs">
       <Avatar class="size-8 rounded-full shrink-0">
-        <AvatarImage :src="getUserAvatarUrl(item.user.id)" referrerpolicy="no-referrer" />
+        <AvatarImage
+          :src="getUserAvatarUrl(item.user.id)"
+          referrerpolicy="no-referrer"
+        />
         <AvatarFallback>{{ item.user.name.charAt(0) }}</AvatarFallback>
       </Avatar>
 
@@ -129,7 +132,13 @@ function formatFullTime(time: number) {
         <div class="flex items-center gap-3 pt-1">
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground" :class="{ 'text-destructive': item.isLiked }" :disabled="!canOprate || useForum.isLikeLoading" @click=" useForum.LikeComment(item.id, !item.isLiked).then((success) => {
+              <Button
+                variant="ghost"
+                class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground"
+                :class="{ 'text-destructive': item.isLiked }"
+                :disabled="!canOprate || useForum.isLikeLoading"
+                @click="
+                  useForum.LikeComment(item.id, !item.isLiked).then((success) => {
                     if (success) {
                       item.isLiked = !item.isLiked
                       item.likeCount += item.isLiked ? 1 : -1
@@ -137,7 +146,10 @@ function formatFullTime(time: number) {
                   })
                 "
               >
-                <component :is="item.isLiked ? Heart : HeartOutline" class="size-3.5" />
+                <component
+                  :is="item.isLiked ? Heart : HeartOutline"
+                  class="size-3.5"
+                />
                 <span>{{ item.likeCount }}</span>
               </Button>
             </TooltipTrigger>
@@ -146,8 +158,16 @@ function formatFullTime(time: number) {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="ghost" class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground" :disabled="!canOprate" @click="useForum.SetReplyingComment(item)">
-                <component :is="ArrowReply16Filled" class="size-3.5" />
+              <Button
+                variant="ghost"
+                class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground"
+                :disabled="!canOprate"
+                @click="useForum.SetReplyingComment(item)"
+              >
+                <component
+                  :is="ArrowReply16Filled"
+                  class="size-3.5"
+                />
                 <span>{{ item.replies.length }}</span>
               </Button>
             </TooltipTrigger>

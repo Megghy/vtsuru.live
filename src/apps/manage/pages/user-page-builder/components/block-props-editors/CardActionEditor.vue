@@ -16,7 +16,10 @@ defineProps<{
   <PropsGrid>
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">{{ label }}文字</label>
-      <Input v-model="action.label" placeholder="留空则不显示" />
+      <Input
+        v-model="action.label"
+        placeholder="留空则不显示"
+      />
     </div>
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">{{ label }}目标类型</label>
@@ -52,7 +55,11 @@ defineProps<{
           </SelectItem>
         </SelectContent>
       </Select>
-      <Input v-else v-model="action.url" placeholder="https://..." />
+      <Input
+        v-else
+        v-model="action.url"
+        placeholder="https://..."
+      />
     </div>
   </PropsGrid>
 </template>

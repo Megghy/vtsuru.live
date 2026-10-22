@@ -19,10 +19,7 @@ export function useOrgAnalyze(ctx: OrgContext) {
     if (!ctx.orgId.value) return
     loading.value = true
     try {
-      data.value = unwrapOk(
-        (await getApiOrgOrgIdAnalyze(ctx.orgId.value)) as any,
-        '加载分析数据失败',
-      )
+      data.value = unwrapOk((await getApiOrgOrgIdAnalyze(ctx.orgId.value)) as any, '加载分析数据失败')
       await nextTick()
       await onLoaded?.()
     } catch (err) {

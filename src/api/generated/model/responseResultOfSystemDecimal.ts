@@ -10,7 +10,7 @@
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfSystemDecimal {
-  message: string;
-  code: number;
-  data: number;
+  message: string
+  code: number
+  data: number
 }

@@ -221,12 +221,14 @@ export const useTranscription = defineStore('transcription', () => {
       reconnects = 0
     } finally {
       if (job) await stopJob(job)
-      if (provider === next && !stale(epoch)) return
-      if (provider === next) provider = undefined
-      if (ffmpegJob && stale(epoch)) {
-        const owned = ffmpegJob
-        ffmpegJob = undefined
-        await stopJob(owned)
+      const shouldSkipCleanup = provider === next && !stale(epoch)
+      if (!shouldSkipCleanup) {
+        if (provider === next) provider = undefined
+        if (ffmpegJob && stale(epoch)) {
+          const owned = ffmpegJob
+          ffmpegJob = undefined
+          await stopJob(owned)
+        }
       }
       await next.finish().catch(() => undefined)
     }
@@ -248,9 +250,10 @@ export const useTranscription = defineStore('transcription', () => {
   function reconnectPipeline(error: unknown) {
     if (reconnectTask) return reconnectTask
     const epoch = ++pipelineEpoch
-    reconnectTask = runReconnect(epoch, error).finally(() => {
+    const task = runReconnect(epoch, error).finally(() => {
       reconnectTask = undefined
     })
+    reconnectTask = task
     return reconnectTask
   }
 
@@ -261,7 +264,8 @@ export const useTranscription = defineStore('transcription', () => {
       return
     }
     reconnects++
-    const detail = stderrLine.value && !String(error).includes(stderrLine.value) ? `${error}（${stderrLine.value}）` : String(error)
+    const detail =
+      stderrLine.value && !String(error).includes(stderrLine.value) ? `${error}（${stderrLine.value}）` : String(error)
     runtimeError.value = detail
     status.value = {
       ...status.value,

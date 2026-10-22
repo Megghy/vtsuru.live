@@ -36,8 +36,15 @@ defineExpose({ reset })
       subtitle="管理你的收件地址、B站登录凭证与账户安全设置。"
     >
       <template #actions>
-        <Button variant="outline" class="flex items-center gap-1.5" @click="showAgreement = true">
-          <component :is="DocumentText24Regular" class="size-4" />
+        <Button
+          variant="outline"
+          class="flex items-center gap-1.5"
+          @click="showAgreement = true"
+        >
+          <component
+            :is="DocumentText24Regular"
+            class="size-4"
+          />
           用户协议
         </Button>
       </template>

@@ -7,9 +7,9 @@
  */
 
 export interface ForumForumSectionData {
-  id: number;
-  forumId: number;
-  name: string;
-  description: string;
-  createAt: number;
+  id: number
+  forumId: number
+  name: string
+  description: string
+  createAt: number
 }

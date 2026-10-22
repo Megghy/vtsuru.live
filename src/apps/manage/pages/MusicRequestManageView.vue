@@ -14,7 +14,6 @@ import {
   Settings24Regular,
   ShieldDismiss24Regular,
 } from '@vicons/fluent'
-import { useMessage } from '@/shared/utils'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
@@ -49,26 +48,14 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { ScrollArea } from '@/shared/ui/scroll-area'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { useMessage } from '@/shared/utils'
 import { copyToClipboard } from '@/shared/utils'
 import { formatListForCopy } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -156,7 +143,7 @@ const activeCooldowns = computed(() => {
       }
     })
     .filter((i) => i.remain > 0)
-    .sort((a, b) => b.remain - a.remain)
+    .toSorted((a, b) => b.remain - a.remain)
 })
 
 function cleanCooldown(uid: number) {
@@ -401,14 +388,20 @@ onUnmounted(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button variant="outline" @click="copyWaitingList">
+          <Button
+            variant="outline"
+            @click="copyWaitingList"
+          >
             <component
               :is="Copy24Regular"
               class="h-3.5 w-3.5 mr-1"
             />
             复制点歌单
           </Button>
-          <Button variant="outline" @click="copySongList">
+          <Button
+            variant="outline"
+            @click="copySongList"
+          >
             <component
               :is="MusicNote224Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -515,12 +508,21 @@ onUnmounted(() => {
                   :is="Search24Regular"
                   class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
                 />
-                <Input v-model="waitingFilter" placeholder="搜索歌名或点歌人" class="pl-8" />
+                <Input
+                  v-model="waitingFilter"
+                  placeholder="搜索歌名或点歌人"
+                  class="pl-8"
+                />
               </div>
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="musicRequestStore.waitingMusics.length === 0">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    :disabled="musicRequestStore.waitingMusics.length === 0"
+                  >
                     清空待播
                   </Button>
                 </AlertDialogTrigger>
@@ -596,10 +598,18 @@ onUnmounted(() => {
                   :is="Search24Regular"
                   class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
                 />
-                <Input v-model="songListFilter" placeholder="搜索曲库歌名或歌手" class="pl-8" />
+                <Input
+                  v-model="songListFilter"
+                  placeholder="搜索曲库歌名或歌手"
+                  class="pl-8"
+                />
               </div>
 
-              <Button size="xs" variant="outline" @click="showNeteaseModal = true">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="showNeteaseModal = true"
+              >
                 <component
                   :is="ArrowDownload24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -607,7 +617,12 @@ onUnmounted(() => {
                 网易云导入
               </Button>
 
-              <Button size="xs" variant="outline" :loading="isSyncingMySongList" @click="syncFromMySongList">
+              <Button
+                size="xs"
+                variant="outline"
+                :loading="isSyncingMySongList"
+                @click="syncFromMySongList"
+              >
                 <component
                   :is="ArrowUpload24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -617,7 +632,12 @@ onUnmounted(() => {
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="originMusics.length === 0">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    :disabled="originMusics.length === 0"
+                  >
                     清空曲库
                   </Button>
                 </AlertDialogTrigger>
@@ -662,7 +682,13 @@ onUnmounted(() => {
                   </div>
 
                   <div class="flex items-center gap-1.5 shrink-0">
-                    <Button size="icon-xs" variant="ghost" class="text-primary hover:bg-primary/10" title="试听/播放" @click="musicRequestStore.playMusic(song)">
+                    <Button
+                      size="icon-xs"
+                      variant="ghost"
+                      class="text-primary hover:bg-primary/10"
+                      title="试听/播放"
+                      @click="musicRequestStore.playMusic(song)"
+                    >
                       <component
                         :is="Play24Regular"
                         class="h-3.5 w-3.5"
@@ -671,7 +697,12 @@ onUnmounted(() => {
 
                     <AlertDialog>
                       <AlertDialogTrigger as-child>
-                        <Button size="icon-xs" variant="ghost" class="text-muted-foreground hover:text-destructive hover:bg-destructive/10" title="删除">
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          title="删除"
+                        >
                           <component
                             :is="Delete24Regular"
                             class="h-3.5 w-3.5"
@@ -717,19 +748,24 @@ onUnmounted(() => {
       >
         <Card>
           <CardContent class="p-3 flex items-center justify-between">
-            <span class="text-xs text-muted-foreground">本地记录最近 {{ musicRequestStore.history.length }} 条点歌流水 (最多保留 200 条)</span>
+            <span class="text-xs text-muted-foreground"
+              >本地记录最近 {{ musicRequestStore.history.length }} 条点歌流水 (最多保留 200 条)</span
+            >
             <AlertDialog>
               <AlertDialogTrigger as-child>
-                <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="musicRequestStore.history.length === 0">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="text-destructive hover:bg-destructive/10"
+                  :disabled="musicRequestStore.history.length === 0"
+                >
                   清空历史
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent class="sm:max-w-md">
                 <AlertDialogHeader>
                   <AlertDialogTitle>清空点歌历史？</AlertDialogTitle>
-                  <AlertDialogDescription class="text-xs">
-                    此操作将抹去本地点歌历史流水。
-                  </AlertDialogDescription>
+                  <AlertDialogDescription class="text-xs"> 此操作将抹去本地点歌历史流水。 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>取消</AlertDialogCancel>
@@ -766,10 +802,14 @@ onUnmounted(() => {
                     </Badge>
                     <span class="font-medium text-foreground truncate max-w-[200px]">{{ entry.music.name }}</span>
                     <span class="text-muted-foreground truncate">{{ entry.music.author?.join('/') }}</span>
-                    <span class="text-muted-foreground/80 shrink-0">点歌人: <span class="text-foreground">{{ entry.from?.name ?? '主播' }}</span></span>
+                    <span class="text-muted-foreground/80 shrink-0"
+                      >点歌人: <span class="text-foreground">{{ entry.from?.name ?? '主播' }}</span></span
+                    >
                   </div>
 
-                  <span class="font-mono text-muted-foreground text-[11px] shrink-0">{{ formatHistoryTime(entry.time) }}</span>
+                  <span class="font-mono text-muted-foreground text-[11px] shrink-0">{{
+                    formatHistoryTime(entry.time)
+                  }}</span>
                 </div>
               </div>
             </ScrollArea>
@@ -790,10 +830,20 @@ onUnmounted(() => {
       >
         <Card>
           <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
-            <span class="text-xs text-muted-foreground">观众点歌时若匹配到黑名单关键词或歌名，系统将自动拦截并提示</span>
+            <span class="text-xs text-muted-foreground"
+              >观众点歌时若匹配到黑名单关键词或歌名，系统将自动拦截并提示</span
+            >
             <div class="flex items-center gap-2 w-72">
-              <Input v-model="newBlacklistKeyword" placeholder="输入违规词或禁点歌名" @keyup.enter="addBlacklist" />
-              <Button size="xs" variant="brand" @click="addBlacklist">
+              <Input
+                v-model="newBlacklistKeyword"
+                placeholder="输入违规词或禁点歌名"
+                @keyup.enter="addBlacklist"
+              />
+              <Button
+                size="xs"
+                variant="brand"
+                @click="addBlacklist"
+              >
                 <component
                   :is="Add24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -845,7 +895,11 @@ onUnmounted(() => {
           <CardContent class="p-3 flex items-center justify-between gap-3 flex-wrap">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-muted-foreground">OBS 样式:</span>
-              <ToggleGroup v-model="obsStyleType" type="single" size="xs">
+              <ToggleGroup
+                v-model="obsStyleType"
+                type="single"
+                size="xs"
+              >
                 <ToggleGroupItem value="glass">毛玻璃</ToggleGroupItem>
                 <ToggleGroupItem value="transparent">纯透明</ToggleGroupItem>
                 <ToggleGroupItem value="classic">经典质感</ToggleGroupItem>
@@ -856,14 +910,22 @@ onUnmounted(() => {
 
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-muted-foreground">背景底色:</span>
-              <ToggleGroup v-model="previewBg" type="single" size="xs">
+              <ToggleGroup
+                v-model="previewBg"
+                type="single"
+                size="xs"
+              >
                 <ToggleGroupItem value="checker">棋盘格</ToggleGroupItem>
                 <ToggleGroupItem value="dark">纯暗黑</ToggleGroupItem>
                 <ToggleGroupItem value="light">浅色</ToggleGroupItem>
                 <ToggleGroupItem value="game">模拟游戏</ToggleGroupItem>
               </ToggleGroup>
 
-              <Button size="xs" variant="brand" @click="copyObsLink">
+              <Button
+                size="xs"
+                variant="brand"
+                @click="copyObsLink"
+              >
                 <component
                   :is="Copy24Regular"
                   class="h-3.5 w-3.5 mr-1"
@@ -881,7 +943,8 @@ onUnmounted(() => {
               'bg-[#121214]': previewBg === 'dark',
               'bg-[#f4f4f5]': previewBg === 'light',
               'bg-[#0b132b]': previewBg === 'game',
-              'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]': previewBg === 'checker',
+              'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]':
+                previewBg === 'checker',
             }"
           >
             <div class="w-[380px] max-w-full">
@@ -900,22 +963,28 @@ onUnmounted(() => {
           <!-- 点歌弹幕规则 -->
           <Card>
             <CardHeader class="p-3.5 pb-2">
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-                点歌弹幕规则
-              </CardTitle>
+              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 点歌弹幕规则 </CardTitle>
             </CardHeader>
             <CardContent class="p-3.5 space-y-3.5">
               <div class="flex items-center justify-between gap-3">
                 <span class="text-xs font-medium text-foreground">点歌弹幕前缀</span>
                 <div class="flex items-center gap-2">
-                  <Input v-model="settings.orderPrefix" placeholder="如: 点歌" class="w-32 font-mono" />
+                  <Input
+                    v-model="settings.orderPrefix"
+                    placeholder="如: 点歌"
+                    class="w-32 font-mono"
+                  />
                   <span class="text-xs text-muted-foreground">如: 点歌 晴天</span>
                 </div>
               </div>
 
               <div class="flex items-center justify-between gap-3">
                 <span class="text-xs font-medium text-foreground">音乐搜索平台</span>
-                <ToggleGroup v-model="settings.platform" type="single" size="xs">
+                <ToggleGroup
+                  v-model="settings.platform"
+                  type="single"
+                  size="xs"
+                >
                   <ToggleGroupItem value="netease">网易云音乐</ToggleGroupItem>
                   <ToggleGroupItem value="kugou">酷狗音乐</ToggleGroupItem>
                 </ToggleGroup>
@@ -939,15 +1008,19 @@ onUnmounted(() => {
           <!-- 冷却时间与防刷限制 -->
           <Card>
             <CardHeader class="p-3.5 pb-2">
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-                冷却时间与防刷限制
-              </CardTitle>
+              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 冷却时间与防刷限制 </CardTitle>
             </CardHeader>
             <CardContent class="p-3.5 space-y-3.5">
               <div class="flex items-center justify-between gap-3">
                 <span class="text-xs font-medium text-foreground">个人点歌冷却</span>
                 <div class="flex items-center gap-2">
-                  <Input v-model.number="settings.orderCooldown" type="number" min="0" max="3600" class="w-24 font-mono" />
+                  <Input
+                    v-model.number="settings.orderCooldown"
+                    type="number"
+                    min="0"
+                    max="3600"
+                    class="w-24 font-mono"
+                  />
                   <span class="text-xs text-muted-foreground">秒 (设为 0 不限频)</span>
                 </div>
               </div>
@@ -956,7 +1029,13 @@ onUnmounted(() => {
 
               <div class="flex items-center justify-between">
                 <span class="text-xs text-muted-foreground">当前冷却中观众 ({{ activeCooldowns.length }} 人)</span>
-                <Button size="xs" variant="ghost" class="text-amber-500 hover:bg-amber-500/10" :disabled="activeCooldowns.length === 0" @click="cleanAllCooldowns">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="text-amber-500 hover:bg-amber-500/10"
+                  :disabled="activeCooldowns.length === 0"
+                  @click="cleanAllCooldowns"
+                >
                   解除全部冷却
                 </Button>
               </div>
@@ -997,18 +1076,26 @@ onUnmounted(() => {
     <Dialog v-model:open="showNeteaseModal">
       <DialogContent class="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle class="text-base">
-            从网易云歌单导入曲目到闲置歌单
-          </DialogTitle>
+          <DialogTitle class="text-base"> 从网易云歌单导入曲目到闲置歌单 </DialogTitle>
           <DialogDescription class="text-xs">
-            粘贴网易云音乐歌单链接（例如 <code>https://music.163.com/playlist?id=123456</code>）或纯歌单 ID，点击解析后批量导入。
+            粘贴网易云音乐歌单链接（例如 <code>https://music.163.com/playlist?id=123456</code>）或纯歌单
+            ID，点击解析后批量导入。
           </DialogDescription>
         </DialogHeader>
 
         <div class="space-y-3 py-2">
           <div class="flex gap-2">
-            <Input v-model="neteaseIdInput" placeholder="粘贴网易云歌单链接或歌单 ID" class="flex-1" @keyup.enter="loadNeteasePlaylist" />
-            <Button variant="brand" :loading="isNeteaseLoading" @click="loadNeteasePlaylist">
+            <Input
+              v-model="neteaseIdInput"
+              placeholder="粘贴网易云歌单链接或歌单 ID"
+              class="flex-1"
+              @keyup.enter="loadNeteasePlaylist"
+            />
+            <Button
+              variant="brand"
+              :loading="isNeteaseLoading"
+              @click="loadNeteasePlaylist"
+            >
               解析歌单
             </Button>
           </div>
@@ -1018,12 +1105,22 @@ onUnmounted(() => {
             class="space-y-2 border border-border rounded-lg p-3 bg-muted/20"
           >
             <div class="flex items-center justify-between">
-              <span class="text-xs text-muted-foreground">共解析出 {{ neteaseSongs.length }} 首，已勾选 {{ selectedNeteaseKeys.length }} 首</span>
+              <span class="text-xs text-muted-foreground"
+                >共解析出 {{ neteaseSongs.length }} 首，已勾选 {{ selectedNeteaseKeys.length }} 首</span
+              >
               <div class="flex items-center gap-2">
-                <Button size="xs" variant="ghost" @click="selectAllNetease">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  @click="selectAllNetease"
+                >
                   全选
                 </Button>
-                <Button size="xs" variant="ghost" @click="deselectAllNetease">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  @click="deselectAllNetease"
+                >
                   取消全选
                 </Button>
               </div>
@@ -1038,13 +1135,15 @@ onUnmounted(() => {
                 >
                   <Checkbox
                     :model-value="selectedNeteaseKeys.includes(song.key)"
-                    @update:model-value="(val) => {
-                      if (val) {
-                        selectedNeteaseKeys.push(song.key)
-                      } else {
-                        selectedNeteaseKeys = selectedNeteaseKeys.filter((k) => k !== song.key)
+                    @update:model-value="
+                      (val) => {
+                        if (val) {
+                          selectedNeteaseKeys.push(song.key)
+                        } else {
+                          selectedNeteaseKeys = selectedNeteaseKeys.filter((k) => k !== song.key)
+                        }
                       }
-                    }"
+                    "
                   />
                   <span class="font-medium text-foreground truncate">{{ song.name }}</span>
                   <span class="text-muted-foreground truncate">- {{ song.author.join('/') }}</span>
@@ -1055,10 +1154,18 @@ onUnmounted(() => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="showNeteaseModal = false">
+          <Button
+            variant="outline"
+            @click="showNeteaseModal = false"
+          >
             取消
           </Button>
-          <Button variant="brand" :loading="isNeteaseLoading" :disabled="selectedNeteaseKeys.length === 0" @click="confirmImportNetease">
+          <Button
+            variant="brand"
+            :loading="isNeteaseLoading"
+            :disabled="selectedNeteaseKeys.length === 0"
+            @click="confirmImportNetease"
+          >
             确认导入 ({{ selectedNeteaseKeys.length }} 首)
           </Button>
         </DialogFooter>

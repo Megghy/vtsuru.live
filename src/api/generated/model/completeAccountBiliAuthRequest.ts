@@ -7,8 +7,8 @@
  */
 
 export interface CompleteAccountBiliAuthRequest {
-  proof: string;
+  proof: string
   /** @nullable */
-  password?: string | null;
-  resetPassword: boolean;
+  password?: string | null
+  resetPassword: boolean
 }

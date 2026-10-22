@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataServiceFieldType } from './pointGoodsDataServiceFieldType';
+import type { PointGoodsDataServiceFieldType } from './pointGoodsDataServiceFieldType'
 
 export interface PointGoodsDataServiceField {
-  id: string;
-  label: string;
-  type: PointGoodsDataServiceFieldType;
-  required: boolean;
-  options: string[];
+  id: string
+  label: string
+  type: PointGoodsDataServiceFieldType
+  required: boolean
+  options: string[]
 }

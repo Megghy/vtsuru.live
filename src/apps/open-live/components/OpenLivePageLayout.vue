@@ -57,7 +57,11 @@ defineEmits<{
       <div class="flex items-center justify-between flex-wrap gap-3">
         <div class="flex items-center gap-2.5">
           <span class="text-sm font-medium">{{ switchLabel }}</span>
-          <Switch :checked="enabled" :disabled="loading" @update:checked="$emit('update:enabled', $event)" />
+          <Switch
+            :checked="enabled"
+            :disabled="loading"
+            @update:checked="$emit('update:enabled', $event)"
+          />
         </div>
       </div>
       <slot
@@ -80,7 +84,12 @@ defineEmits<{
         <div>
           <AlertTitle class="text-xs font-semibold text-amber-800 dark:text-amber-300">{{ loginTipText }}</AlertTitle>
         </div>
-        <Button as="a" href="/manage" target="_blank" class="ml-auto">
+        <Button
+          as="a"
+          href="/manage"
+          target="_blank"
+          class="ml-auto"
+        >
           前往登录或注册
         </Button>
       </Alert>

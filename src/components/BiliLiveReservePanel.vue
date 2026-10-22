@@ -39,10 +39,15 @@ const fetchedLabel = computed(() => {
   <section class="bili-reserve">
     <header class="bili-reserve__head">
       <div class="bili-reserve__title">
-        <component :is="CalendarLtr20Regular" class="size-5 shrink-0 text-[#fb7299] mt-0.5" />
+        <component
+          :is="CalendarLtr20Regular"
+          class="size-5 shrink-0 text-[#fb7299] mt-0.5"
+        />
         <div>
           <strong class="text-sm font-semibold text-foreground">B 站直播预约</strong>
-          <p class="text-xs text-muted-foreground">{{ fetchedLabel }} · {{ formatBiliLiveReserveInterval(intervalMinutes) }}</p>
+          <p class="text-xs text-muted-foreground">
+            {{ fetchedLabel }} · {{ formatBiliLiveReserveInterval(intervalMinutes) }}
+          </p>
         </div>
       </div>
 
@@ -52,9 +57,17 @@ const fetchedLabel = computed(() => {
       >
         <div class="flex items-center gap-1.5">
           <span class="text-xs text-muted-foreground">写入日程表</span>
-          <Switch :checked="autoSync" :disabled="syncing" @update:checked="emit('update:autoSync', $event)" />
+          <Switch
+            :checked="autoSync"
+            :disabled="syncing"
+            @update:checked="emit('update:autoSync', $event)"
+          />
         </div>
-        <Button variant="outline" :disabled="refreshing" @click="emit('refresh')">
+        <Button
+          variant="outline"
+          :disabled="refreshing"
+          @click="emit('refresh')"
+        >
           立即刷新
         </Button>
       </div>
@@ -87,7 +100,10 @@ const fetchedLabel = computed(() => {
           rel="noopener noreferrer"
         >
           <span class="bili-reserve__time">
-            <component :is="Clock20Regular" class="size-3.5 inline mr-1" />
+            <component
+              :is="Clock20Regular"
+              class="size-3.5 inline mr-1"
+            />
             {{ formatBiliLiveReserveTime(item.planStart) }}
           </span>
           <strong>{{ item.title }}</strong>
@@ -95,7 +111,10 @@ const fetchedLabel = computed(() => {
         </a>
         <div v-else>
           <span class="bili-reserve__time">
-            <component :is="Clock20Regular" class="size-3.5 inline mr-1" />
+            <component
+              :is="Clock20Regular"
+              class="size-3.5 inline mr-1"
+            />
             {{ formatBiliLiveReserveTime(item.planStart) }}
           </span>
           <strong>{{ item.title }}</strong>

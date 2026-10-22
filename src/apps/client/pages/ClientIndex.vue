@@ -119,7 +119,9 @@ function toggleGiftWindow() {
                 <Badge
                   variant="outline"
                   class="text-xs h-5 px-2"
-                  :class="isStreaming ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+                  :class="
+                    isStreaming ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'
+                  "
                 >
                   {{ isStreaming ? '● 直播中' : '未开播' }}
                 </Badge>
@@ -129,7 +131,9 @@ function toggleGiftWindow() {
                 <span>房间: {{ accountInfo.biliRoomId || '未绑定' }}</span>
                 <span class="dot-divider">·</span>
                 <span>
-                  {{ roomInfo?.parent_area_name ? `${roomInfo.parent_area_name} / ${roomInfo.area_name}` : '未选择分区' }}
+                  {{
+                    roomInfo?.parent_area_name ? `${roomInfo.parent_area_name} / ${roomInfo.area_name}` : '未选择分区'
+                  }}
                 </span>
                 <span class="dot-divider">·</span>
                 <span>UID: {{ accountInfo.streamerInfo?.uId || '—' }}</span>
@@ -138,10 +142,17 @@ function toggleGiftWindow() {
           </div>
 
           <div class="hero-actions">
-            <Button variant="secondary" @click="router.push({ name: 'client-pngtuber' })">
+            <Button
+              variant="secondary"
+              @click="router.push({ name: 'client-pngtuber' })"
+            >
               PNGtuber
             </Button>
-            <Button variant="secondary" class="gap-1.5 text-primary hover:text-primary" @click="openUrl(liveRoomUrl)">
+            <Button
+              variant="secondary"
+              class="gap-1.5 text-primary hover:text-primary"
+              @click="openUrl(liveRoomUrl)"
+            >
               <Open24Regular class="size-3.5" />
               前往直播间
             </Button>
@@ -151,7 +162,10 @@ function toggleGiftWindow() {
               @positive-click="logoutAccount"
             >
               <template #trigger>
-                <Button variant="ghost" class="text-destructive hover:bg-destructive/10 hover:text-destructive">
+                <Button
+                  variant="ghost"
+                  class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
                   退出登录
                 </Button>
               </template>
@@ -179,14 +193,16 @@ function toggleGiftWindow() {
             <Badge
               variant="outline"
               class="text-[10px] h-4.5 px-1.5"
-              :class="webfetcher.state === 'connected' ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'border-destructive/40 text-destructive bg-destructive/10'"
+              :class="
+                webfetcher.state === 'connected'
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'border-destructive/40 text-destructive bg-destructive/10'
+              "
             >
               {{ webfetcher.state === 'connected' ? '运行中' : '已断开' }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">
-            EventFetcher
-          </div>
+          <div class="health-title text-xs font-semibold text-foreground">EventFetcher</div>
           <div class="health-desc text-xs text-muted-foreground mt-0.5">
             模式: {{ webfetcher.webfetcherType === 'direct' ? '直连' : '开放平台' }}
           </div>
@@ -211,9 +227,7 @@ function toggleGiftWindow() {
               {{ cookieBadgeMeta.text }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">
-            B站 Cookie
-          </div>
+          <div class="health-title text-xs font-semibold text-foreground">B站 Cookie</div>
           <div class="health-desc text-xs text-muted-foreground mt-0.5">
             {{ biliCookie.isCookieValid ? '凭据正常运作' : '需要重新扫码' }}
           </div>
@@ -233,14 +247,16 @@ function toggleGiftWindow() {
             <Badge
               variant="outline"
               class="text-[10px] h-4.5 px-1.5"
-              :class="vtsStore.connected ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+              :class="
+                vtsStore.connected
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'text-muted-foreground'
+              "
             >
               {{ vtsStore.connected ? '已连接' : '未连接' }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">
-            VTube Studio
-          </div>
+          <div class="health-title text-xs font-semibold text-foreground">VTube Studio</div>
           <div class="health-desc text-xs text-muted-foreground truncate mt-0.5">
             {{ vtsStore.currentModelName || '未加载模型' }}
           </div>
@@ -260,17 +276,17 @@ function toggleGiftWindow() {
             <Badge
               variant="outline"
               class="text-[10px] h-4.5 px-1.5"
-              :class="activeAutoActionCount > 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+              :class="
+                activeAutoActionCount > 0
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'text-muted-foreground'
+              "
             >
               {{ activeAutoActionCount > 0 ? `${activeAutoActionCount} 条规则` : '未启用' }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">
-            自动操作
-          </div>
-          <div class="health-desc text-xs text-muted-foreground mt-0.5">
-            自动回复 / 答谢
-          </div>
+          <div class="health-title text-xs font-semibold text-foreground">自动操作</div>
+          <div class="health-desc text-xs text-muted-foreground mt-0.5">自动回复 / 答谢</div>
         </CardContent>
       </Card>
     </div>
@@ -292,34 +308,55 @@ function toggleGiftWindow() {
               <Badge
                 variant="outline"
                 class="text-[10px] h-4.5 px-1.5"
-                :class="danmakuWindow.isDanmakuWindowOpen ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+                :class="
+                  danmakuWindow.isDanmakuWindowOpen
+                    ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                    : 'text-muted-foreground'
+                "
               >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '运行中' : '未开启' }}
               </Badge>
             </div>
 
-            <div class="float-window-desc">
-              在桌面上显示弹幕机悬浮窗
-            </div>
+            <div class="float-window-desc">在桌面上显示弹幕机悬浮窗</div>
 
             <div class="float-window-actions">
-              <Button size="xs" variant="secondary" class="h-6 text-[11px]" :class="danmakuWindow.isDanmakuWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'" @click="toggleDanmakuWindow">
+              <Button
+                size="xs"
+                variant="secondary"
+                class="h-6 text-[11px]"
+                :class="
+                  danmakuWindow.isDanmakuWindowOpen
+                    ? 'text-destructive hover:text-destructive'
+                    : 'text-primary hover:text-primary'
+                "
+                @click="toggleDanmakuWindow"
+              >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 gap-1" :disabled="!danmakuWindow.isDanmakuWindowOpen" @click="danmakuWindow.setDanmakuWindowPosition(100, 100)">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 text-[11px] px-2 gap-1"
+                      :disabled="!danmakuWindow.isDanmakuWindowOpen"
+                      @click="danmakuWindow.setDanmakuWindowPosition(100, 100)"
+                    >
                       <ArrowReset24Regular class="size-3" />
                       重置
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs">
-                    重置浮窗至默认坐标
-                  </TooltipContent>
+                  <TooltipContent class="text-xs"> 重置浮窗至默认坐标 </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 text-muted-foreground" @click="router.push({ name: 'client-danmaku-window-manage' })">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 text-[11px] px-2 text-muted-foreground"
+                @click="router.push({ name: 'client-danmaku-window-manage' })"
+              >
                 设置
               </Button>
             </div>
@@ -335,34 +372,55 @@ function toggleGiftWindow() {
               <Badge
                 variant="outline"
                 class="text-[10px] h-4.5 px-1.5"
-                :class="giftWindow.isGiftWindowOpen ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+                :class="
+                  giftWindow.isGiftWindowOpen
+                    ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                    : 'text-muted-foreground'
+                "
               >
                 {{ giftWindow.isGiftWindowOpen ? '运行中' : '未开启' }}
               </Badge>
             </div>
 
-            <div class="float-window-desc">
-              礼物掉落与高能粉丝榜浮窗
-            </div>
+            <div class="float-window-desc">礼物掉落与高能粉丝榜浮窗</div>
 
             <div class="float-window-actions">
-              <Button size="xs" variant="secondary" class="h-6 text-[11px]" :class="giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'" @click="toggleGiftWindow">
+              <Button
+                size="xs"
+                variant="secondary"
+                class="h-6 text-[11px]"
+                :class="
+                  giftWindow.isGiftWindowOpen
+                    ? 'text-destructive hover:text-destructive'
+                    : 'text-primary hover:text-primary'
+                "
+                @click="toggleGiftWindow"
+              >
                 {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 gap-1" :disabled="!giftWindow.isGiftWindowOpen" @click="giftWindow.setPosition(100, 100)">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 text-[11px] px-2 gap-1"
+                      :disabled="!giftWindow.isGiftWindowOpen"
+                      @click="giftWindow.setPosition(100, 100)"
+                    >
                       <ArrowReset24Regular class="size-3" />
                       重置
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs">
-                    重置浮窗至默认坐标
-                  </TooltipContent>
+                  <TooltipContent class="text-xs"> 重置浮窗至默认坐标 </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Button size="xs" variant="ghost" class="h-6 text-[11px] px-2 text-muted-foreground" @click="router.push({ name: 'client-gift-window-manage' })">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 text-[11px] px-2 text-muted-foreground"
+                @click="router.push({ name: 'client-gift-window-manage' })"
+              >
                 设置
               </Button>
             </div>
@@ -431,7 +489,10 @@ function toggleGiftWindow() {
         </div>
 
         <div class="client-index-cover__footer">
-          <Button class="gap-1.5" @click="router.push({ name: 'client-live-manage' })">
+          <Button
+            class="gap-1.5"
+            @click="router.push({ name: 'client-live-manage' })"
+          >
             <Live24Filled class="size-3.5" />
             修改直播标题与分区
           </Button>
@@ -510,9 +571,7 @@ function toggleGiftWindow() {
               class="size-3.5"
               :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
             />
-            <span>
-              本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接
-            </span>
+            <span> 本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接 </span>
           </div>
         </div>
       </Card>
@@ -728,7 +787,9 @@ function toggleGiftWindow() {
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s ease;
+  transition:
+    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    filter 0.35s ease;
 }
 
 .client-index-cover:hover .client-index-cover__img {

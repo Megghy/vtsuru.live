@@ -48,7 +48,11 @@ async function navigateCheck(target: CheckTarget) {
         <Badge
           variant="outline"
           class="text-xs h-6 px-2.5 gap-1.5"
-          :class="control.isLiving.value ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+          :class="
+            control.isLiving.value
+              ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+              : 'text-muted-foreground'
+          "
         >
           <div
             class="size-1.5 rounded-full"
@@ -74,22 +78,34 @@ async function navigateCheck(target: CheckTarget) {
         class="w-full"
       >
         <TabsList class="grid w-full max-w-xs grid-cols-2">
-          <TabsTrigger value="control" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="control"
+            class="text-xs gap-1.5"
+          >
             <Live24Filled class="size-3.5" />
             直播控制
           </TabsTrigger>
-          <TabsTrigger value="obs" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="obs"
+            class="text-xs gap-1.5"
+          >
             <Desktop24Filled class="size-3.5" />
             OBS 与统计
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="control" class="pt-3 space-y-3 client-readable">
+        <TabsContent
+          value="control"
+          class="pt-3 space-y-3 client-readable"
+        >
           <LiveControlPanel :control="control" />
           <LiveStreamInfo :control="control" />
         </TabsContent>
 
-        <TabsContent value="obs" class="pt-3 client-readable">
+        <TabsContent
+          value="obs"
+          class="pt-3 client-readable"
+        >
           <ObsControlPanel :control="control" />
         </TabsContent>
       </Tabs>

@@ -87,9 +87,7 @@ const closeWindow = () => appWindow.hide()
           <TooltipContent side="bottom">
             <div>
               <div class="font-bold">{{ currentLive?.title || '直播中' }}</div>
-              <div class="text-xs opacity-85">
-                点击前往「直播管理」页面
-              </div>
+              <div class="text-xs opacity-85">点击前往「直播管理」页面</div>
             </div>
           </TooltipContent>
         </Tooltip>

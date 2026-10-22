@@ -32,22 +32,9 @@ import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -350,29 +337,39 @@ onMounted(() => {
     <CardContent class="p-3">
       <Tabs default-value="settings">
         <TabsList class="grid w-full grid-cols-3">
-          <TabsTrigger value="settings" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="settings"
+            class="text-xs gap-1.5"
+          >
             <Settings24Regular class="size-3.5" />
             功能设置
           </TabsTrigger>
-          <TabsTrigger value="ranking" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="ranking"
+            class="text-xs gap-1.5"
+          >
             <People24Regular class="size-3.5" />
             签到排行榜
           </TabsTrigger>
-          <TabsTrigger value="test" class="text-xs gap-1.5">
+          <TabsTrigger
+            value="test"
+            class="text-xs gap-1.5"
+          >
             <Flash24Regular class="size-3.5" />
             模拟测试
           </TabsTrigger>
         </TabsList>
 
         <!-- 功能设置 -->
-        <TabsContent value="settings" class="pt-3 space-y-4">
+        <TabsContent
+          value="settings"
+          class="pt-3 space-y-4"
+        >
           <Alert
             v-if="!canEdit"
             class="py-2 px-2.5 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
           >
-            <AlertDescription class="text-xs m-0">
-              加载中或无法编辑设置，请稍后再试
-            </AlertDescription>
+            <AlertDescription class="text-xs m-0"> 加载中或无法编辑设置，请稍后再试 </AlertDescription>
           </Alert>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -385,7 +382,10 @@ onMounted(() => {
                   <span class="text-xs font-medium text-foreground block">启用签到功能</span>
                   <span class="text-[11px] text-muted-foreground block mt-0.5">观众发送签到命令可获得积分</span>
                 </div>
-                <Switch v-model:checked="serverSetting.enableCheckIn" @update:checked="updateServerSettings" />
+                <Switch
+                  v-model:checked="serverSetting.enableCheckIn"
+                  @update:checked="updateServerSettings"
+                />
               </div>
 
               <div
@@ -394,24 +394,36 @@ onMounted(() => {
               >
                 <div class="flex items-center gap-2">
                   <span class="text-xs text-muted-foreground w-20 shrink-0">签到命令 *</span>
-                  <Input :value="serverSetting.checkInKeyword" placeholder="例如：签到" class="flex-1" @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value" />
-                  <Button @click="updateServerSettings">
-                    保存
-                  </Button>
+                  <Input
+                    :value="serverSetting.checkInKeyword"
+                    placeholder="例如：签到"
+                    class="flex-1"
+                    @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value"
+                  />
+                  <Button @click="updateServerSettings"> 保存 </Button>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">要求已认证</span>
-                    <Switch v-model:checked="serverSetting.requireAuth" @update:checked="updateServerSettings" />
+                    <Switch
+                      v-model:checked="serverSetting.requireAuth"
+                      @update:checked="updateServerSettings"
+                    />
                   </div>
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">允许自己签到</span>
-                    <Switch v-model:checked="serverSetting.allowSelfCheckIn" @update:checked="updateServerSettings" />
+                    <Switch
+                      v-model:checked="serverSetting.allowSelfCheckIn"
+                      @update:checked="updateServerSettings"
+                    />
                   </div>
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
                     <span class="text-xs font-medium text-foreground">允许查看排行</span>
-                    <Switch :checked="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)" @update:checked="updateCheckInRanking" />
+                    <Switch
+                      :checked="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)"
+                      @update:checked="updateCheckInRanking"
+                    />
                   </div>
                 </div>
               </div>
@@ -426,7 +438,10 @@ onMounted(() => {
 
               <div class="flex items-center justify-between p-2 rounded border bg-card">
                 <span class="text-xs font-medium text-foreground">启用积分奖励</span>
-                <Switch v-model:checked="serverSetting.givePointsForCheckIn" @update:checked="updateServerSettings" />
+                <Switch
+                  v-model:checked="serverSetting.givePointsForCheckIn"
+                  @update:checked="updateServerSettings"
+                />
               </div>
 
               <div
@@ -440,13 +455,19 @@ onMounted(() => {
                     :min="0"
                     size="small"
                     class="w-32"
-                    @update:value="serverSetting.baseCheckInPoints = $event || 0; updateServerSettings()"
+                    @update:value="
+                      serverSetting.baseCheckInPoints = $event || 0
+                      updateServerSettings()
+                    "
                   />
                 </div>
 
                 <div class="flex items-center justify-between p-2 rounded border bg-card">
                   <span class="text-xs font-medium text-foreground">连续签到奖励</span>
-                  <Switch v-model:checked="serverSetting.enableConsecutiveBonus" @update:checked="updateServerSettings" />
+                  <Switch
+                    v-model:checked="serverSetting.enableConsecutiveBonus"
+                    @update:checked="updateServerSettings"
+                  />
                 </div>
 
                 <div
@@ -460,7 +481,10 @@ onMounted(() => {
                       :min="0"
                       size="small"
                       class="w-28"
-                      @update:value="serverSetting.bonusPointsPerDay = $event || 0; updateServerSettings()"
+                      @update:value="
+                        serverSetting.bonusPointsPerDay = $event || 0
+                        updateServerSettings()
+                      "
                     />
                   </div>
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
@@ -470,7 +494,10 @@ onMounted(() => {
                       :min="0"
                       size="small"
                       class="w-28"
-                      @update:value="serverSetting.maxBonusPoints = $event || 0; updateServerSettings()"
+                      @update:value="
+                        serverSetting.maxBonusPoints = $event || 0
+                        updateServerSettings()
+                      "
                     />
                   </div>
                 </div>
@@ -519,14 +546,21 @@ onMounted(() => {
           </div>
 
           <div class="flex justify-center pt-2">
-            <Button class="px-8" :disabled="!canEdit || isLoading" @click="updateSettings">
+            <Button
+              class="px-8"
+              :disabled="!canEdit || isLoading"
+              @click="updateSettings"
+            >
               {{ isLoading ? '保存中...' : '保存所有更改' }}
             </Button>
           </div>
         </TabsContent>
 
         <!-- 签到排行榜 -->
-        <TabsContent value="ranking" class="pt-3 space-y-3">
+        <TabsContent
+          value="ranking"
+          class="pt-3 space-y-3"
+        >
           <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
             <AlertDescription class="text-xs m-0">
               显示用户签到排行榜。选择时间段可查看不同期间的签到数据。
@@ -558,13 +592,25 @@ onMounted(() => {
 
               <div class="relative w-44">
                 <Search24Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input v-model="userFilter" placeholder="搜索用户名..." class="pl-8 pr-2" />
+                <Input
+                  v-model="userFilter"
+                  placeholder="搜索用户名..."
+                  class="pl-8 pr-2"
+                />
               </div>
             </div>
 
             <div class="flex items-center gap-2">
-              <Button variant="secondary" class="gap-1" :disabled="isLoadingRanking" @click="loadCheckInRanking">
-                <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': isLoadingRanking }" />
+              <Button
+                variant="secondary"
+                class="gap-1"
+                :disabled="isLoadingRanking"
+                @click="loadCheckInRanking"
+              >
+                <ArrowClockwise16Filled
+                  class="size-3.5"
+                  :class="{ 'animate-spin': isLoadingRanking }"
+                />
                 刷新
               </Button>
 
@@ -573,7 +619,10 @@ onMounted(() => {
                 @positive-click="resetAllCheckIn"
               >
                 <template #trigger>
-                  <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
+                  <Button
+                    variant="outline"
+                    class="border-destructive/40 text-destructive hover:bg-destructive/10"
+                  >
                     重置全部
                   </Button>
                 </template>
@@ -616,7 +665,13 @@ onMounted(() => {
                     </TableCell>
 
                     <TableCell class="text-xs text-center">
-                      <span :class="row.consecutiveDays > 0 ? 'text-emerald-600 dark:text-emerald-400 font-medium' : 'text-muted-foreground'">
+                      <span
+                        :class="
+                          row.consecutiveDays > 0
+                            ? 'text-emerald-600 dark:text-emerald-400 font-medium'
+                            : 'text-muted-foreground'
+                        "
+                      >
                         {{ row.consecutiveDays }} 天
                       </span>
                     </TableCell>
@@ -646,7 +701,11 @@ onMounted(() => {
                       >
                         已认证
                       </Badge>
-                      <span v-else class="text-xs text-muted-foreground">否</span>
+                      <span
+                        v-else
+                        class="text-xs text-muted-foreground"
+                        >否</span
+                      >
                     </TableCell>
 
                     <TableCell class="text-xs text-right">
@@ -655,7 +714,12 @@ onMounted(() => {
                         @positive-click="resetUserCheckInByGuid(row.ouId)"
                       >
                         <template #trigger>
-                          <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10" :disabled="isResetting">
+                          <Button
+                            size="xs"
+                            variant="ghost"
+                            class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                            :disabled="isResetting"
+                          >
                             <Delete16Filled class="size-3.5" />
                           </Button>
                         </template>
@@ -666,7 +730,10 @@ onMounted(() => {
                 </template>
                 <template v-else>
                   <TableRow>
-                    <TableCell colspan="7" class="text-center py-8">
+                    <TableCell
+                      colspan="7"
+                      class="text-center py-8"
+                    >
                       <Empty description="暂无签到排行数据" />
                     </TableCell>
                   </TableRow>
@@ -689,7 +756,10 @@ onMounted(() => {
         </TabsContent>
 
         <!-- 模拟测试 -->
-        <TabsContent value="test" class="pt-3 space-y-4 max-w-xl">
+        <TabsContent
+          value="test"
+          class="pt-3 space-y-4 max-w-xl"
+        >
           <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
             <AlertDescription class="text-xs m-0">
               在此可以模拟用户发送签到命令，验证逻辑和回复消息是否正确。
@@ -712,11 +782,17 @@ onMounted(() => {
 
             <div class="space-y-1">
               <span class="text-xs text-muted-foreground">模拟用户名称</span>
-              <Input v-model="testUsername" placeholder="默认为'测试用户'" />
+              <Input
+                v-model="testUsername"
+                placeholder="默认为'测试用户'"
+              />
             </div>
 
             <div class="flex justify-end pt-1">
-              <Button :disabled="!testUid || !serverSetting.enableCheckIn" @click="handleTestCheckIn">
+              <Button
+                :disabled="!testUid || !serverSetting.enableCheckIn"
+                @click="handleTestCheckIn"
+              >
                 开始模拟签到
               </Button>
             </div>
@@ -726,7 +802,13 @@ onMounted(() => {
             v-if="testResult"
             class="pt-1"
           >
-            <Alert :class="testResult.success ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'">
+            <Alert
+              :class="
+                testResult.success
+                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                  : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+              "
+            >
               <AlertTitle class="text-xs font-semibold">
                 {{ testResult.success ? '模拟签到成功' : '模拟签到失败' }}
               </AlertTitle>

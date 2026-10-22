@@ -7,6 +7,6 @@
  */
 
 export interface VtsuruControllerTempResponseEmoiconModel {
-  keyword: string;
-  url: string;
+  keyword: string
+  url: string
 }

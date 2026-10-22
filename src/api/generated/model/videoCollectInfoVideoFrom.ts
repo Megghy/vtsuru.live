@@ -6,10 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type VideoCollectInfoVideoFrom = typeof VideoCollectInfoVideoFrom[keyof typeof VideoCollectInfoVideoFrom];
-
+export type VideoCollectInfoVideoFrom = (typeof VideoCollectInfoVideoFrom)[keyof typeof VideoCollectInfoVideoFrom]
 
 export const VideoCollectInfoVideoFrom = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

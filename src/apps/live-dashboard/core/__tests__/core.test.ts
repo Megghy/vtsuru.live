@@ -31,8 +31,7 @@ function ev(partial: Partial<DashboardEvent>): DashboardEvent {
   }
 }
 
-const match = (query: string, event: DashboardEvent, note?: string) =>
-  createSearchPredicate(query, () => note)(event)
+const match = (query: string, event: DashboardEvent, note?: string) => createSearchPredicate(query, () => note)(event)
 
 describe('search', () => {
   it('parses quoted, negated and multi-value terms', () => {
@@ -76,7 +75,10 @@ describe('card grid', () => {
     grid.ingest(ev({ msg: 'a' }), options)
     grid.ingest(ev({ msg: 'b' }), options)
     grid.ingest(ev({ msg: ' A ' }), options)
-    expect(grid.slots.map((c) => [c?.text, c?.count])).toEqual([['a', 2], ['b', 1]])
+    expect(grid.slots.map((c) => [c?.text, c?.count])).toEqual([
+      ['a', 2],
+      ['b', 1],
+    ])
     // 满格覆盖最沉寂的槽位（b），a 保持原位
     grid.ingest(ev({ msg: 'c' }), options)
     expect(grid.slots.map((c) => c?.text)).toEqual(['a', 'c'])
@@ -126,6 +128,9 @@ describe('message segments', () => {
 
   it('treats unclosed leading spoiler as spoiler to the end', () => {
     expect(parseMessage('||从这里开始', {})).toEqual([{ kind: 'spoiler', text: '从这里开始' }])
-    expect(parseMessage('a||b', {})).toEqual([{ kind: 'text', text: 'a' }, { kind: 'text', text: '||b' }])
+    expect(parseMessage('a||b', {})).toEqual([
+      { kind: 'text', text: 'a' },
+      { kind: 'text', text: '||b' },
+    ])
   })
 })

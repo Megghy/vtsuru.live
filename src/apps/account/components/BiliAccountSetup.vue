@@ -65,16 +65,25 @@ async function submit() {
     <template v-if="proof?.linked && !account.id && !resetting">
       <p>这个 B 站账号已经设置过本站密码，直接登录即可。登录 UID：{{ proof.userId }}</p>
       <div class="space-y-2">
-        <Button class="w-full" @click="router.push({ name: 'manage-index' })">
+        <Button
+          class="w-full"
+          @click="router.push({ name: 'manage-index' })"
+        >
           前往登录
         </Button>
-        <Button variant="secondary" class="w-full" @click="resetting = true">
+        <Button
+          variant="secondary"
+          class="w-full"
+          @click="resetting = true"
+        >
           忘记密码，设置新密码
         </Button>
       </div>
     </template>
     <template v-else-if="proof && !completed">
-      <h3 class="text-base font-medium">{{ resetting ? '重置本站登录密码' : account.id ? '绑定到当前账号' : '设置本站登录密码' }}</h3>
+      <h3 class="text-base font-medium">
+        {{ resetting ? '重置本站登录密码' : account.id ? '绑定到当前账号' : '设置本站登录密码' }}
+      </h3>
       <p>
         登录 UID：<strong>{{ proof.userId }}</strong>
       </p>
@@ -87,14 +96,29 @@ async function submit() {
       >
         <div class="space-y-1.5">
           <label class="text-xs font-medium text-muted-foreground">本站密码</label>
-          <Input v-model="password" type="password" placeholder="6–63 位，包含英文和数字" autocomplete="new-password" />
+          <Input
+            v-model="password"
+            type="password"
+            placeholder="6–63 位，包含英文和数字"
+            autocomplete="new-password"
+          />
         </div>
         <div class="space-y-1.5">
           <label class="text-xs font-medium text-muted-foreground">确认密码</label>
-          <Input v-model="confirmation" type="password" placeholder="再次输入本站密码" autocomplete="new-password" @keydown.enter="submit" />
+          <Input
+            v-model="confirmation"
+            type="password"
+            placeholder="再次输入本站密码"
+            autocomplete="new-password"
+            @keydown.enter="submit"
+          />
         </div>
       </form>
-      <Button class="w-full" :disabled="pending" @click="submit">
+      <Button
+        class="w-full"
+        :disabled="pending"
+        @click="submit"
+      >
         {{ resetting ? '重置密码并查看积分' : account.id ? '确认绑定' : '设置密码并查看积分' }}
       </Button>
     </template>
@@ -107,7 +131,11 @@ async function submit() {
     <p v-else-if="bound">已连接站内账号，可使用 B 站 UID 和本站密码登录。</p>
     <template v-else>
       <p>重新确认 B 站身份后，可设置本站密码，下次直接通过 UID 登录。</p>
-      <Button variant="secondary" class="w-full" @click="emit('restart')">
+      <Button
+        variant="secondary"
+        class="w-full"
+        @click="emit('restart')"
+      >
         认证并设置密码
       </Button>
     </template>

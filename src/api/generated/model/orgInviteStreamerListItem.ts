@@ -5,22 +5,22 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgInviteStatuses } from './orgInviteStatuses';
+import type { OrgInviteStatuses } from './orgInviteStatuses'
 
 export interface OrgInviteStreamerListItem {
-  token: string;
-  joinUrl: string;
-  expiresAt: number;
-  status: OrgInviteStatuses;
-  createdByUserId: number;
+  token: string
+  joinUrl: string
+  expiresAt: number
+  status: OrgInviteStatuses
+  createdByUserId: number
   /** @nullable */
-  createdByName?: string | null;
+  createdByName?: string | null
   /** @nullable */
-  targetStreamerUserId?: number | null;
+  targetStreamerUserId?: number | null
   /** @nullable */
-  targetStreamerUserName?: string | null;
-  usedCount: number;
+  targetStreamerUserName?: string | null
+  usedCount: number
   /** @nullable */
-  lastUsedAt?: number | null;
-  isRevoked: boolean;
+  lastUsedAt?: number | null
+  isRevoked: boolean
 }

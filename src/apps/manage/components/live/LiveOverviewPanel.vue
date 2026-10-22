@@ -64,7 +64,10 @@ const chatterStats = computed(() => {
     if (d.type === EventDataTypes.Message) {
       chatters.add(uid)
     }
-    if ((d.type === EventDataTypes.Gift || d.type === EventDataTypes.SC || d.type === EventDataTypes.Guard) && (d.price || 0) > 0) {
+    if (
+      (d.type === EventDataTypes.Gift || d.type === EventDataTypes.SC || d.type === EventDataTypes.Guard) &&
+      (d.price || 0) > 0
+    ) {
       payers.add(uid)
     }
   }
@@ -133,7 +136,8 @@ const activityBuckets = computed<TimeBucket[]>(() => {
     const bEnd = bStart + bucketDuration
     const sDate = new Date(bStart)
     const eDate = new Date(bEnd)
-    const formatTime = (d: Date) => `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+    const formatTime = (d: Date) =>
+      `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
     return {
       label: formatTime(sDate),
       timeRange: `${formatTime(sDate)} ~ ${formatTime(eDate)}`,
@@ -206,7 +210,10 @@ watch(() => props.live.liveId, fetchRanking)
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
             <span>直播历时</span>
-            <component :is="Clock24Regular" class="size-4.5" />
+            <component
+              :is="Clock24Regular"
+              class="size-4.5"
+            />
           </div>
           <div class="text-xl font-bold font-mono">
             {{ durationText }}
@@ -221,7 +228,10 @@ watch(() => props.live.liveId, fetchRanking)
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
             <span>弹幕总数 / 发言人数</span>
-            <component :is="Chat24Regular" class="size-4.5" />
+            <component
+              :is="Chat24Regular"
+              class="size-4.5"
+            />
           </div>
           <div class="text-xl font-bold font-mono">
             {{ live.danmakusCount.toLocaleString() }}
@@ -237,14 +247,15 @@ watch(() => props.live.liveId, fetchRanking)
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
             <span>总打赏收益</span>
-            <component :is="Money24Regular" class="size-4.5 text-emerald-500" />
+            <component
+              :is="Money24Regular"
+              class="size-4.5 text-emerald-500"
+            />
           </div>
           <div class="text-xl font-bold font-mono text-emerald-500">
             <span class="text-xs mr-0.5">¥</span>{{ live.totalIncome.toLocaleString() }}
           </div>
-          <div class="text-[11px] text-muted-foreground">
-            {{ chatterStats.uniquePayers }} 位付费观众打赏
-          </div>
+          <div class="text-[11px] text-muted-foreground">{{ chatterStats.uniquePayers }} 位付费观众打赏</div>
         </div>
       </Card>
 
@@ -252,15 +263,16 @@ watch(() => props.live.liveId, fetchRanking)
         <div class="flex flex-col gap-1.5">
           <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
             <span>总互动人次</span>
-            <component :is="HandRight24Regular" class="size-4.5" />
+            <component
+              :is="HandRight24Regular"
+              class="size-4.5"
+            />
           </div>
           <div class="text-xl font-bold font-mono">
             {{ live.interactionCount.toLocaleString() }}
             <span class="text-xs font-normal text-muted-foreground">次</span>
           </div>
-          <div class="text-[11px] text-muted-foreground">
-            包含进场、点赞与关注
-          </div>
+          <div class="text-[11px] text-muted-foreground">包含进场、点赞与关注</div>
         </div>
       </Card>
     </div>
@@ -272,7 +284,10 @@ watch(() => props.live.liveId, fetchRanking)
         <div class="flex items-center justify-between pb-2 mb-2 border-b border-border">
           <span class="text-sm font-semibold">弹幕热度时间轴走势</span>
           <span class="text-xs text-muted-foreground flex items-center gap-1">
-            <component :is="DataTrending24Regular" class="size-3.5" />
+            <component
+              :is="DataTrending24Regular"
+              class="size-3.5"
+            />
             直观定位直播高光时刻
           </span>
         </div>
@@ -282,13 +297,20 @@ watch(() => props.live.liveId, fetchRanking)
           class="activity-timeline-container flex-1 flex flex-col justify-end"
         >
           <div class="activity-bars-wrapper flex items-end gap-1 h-36 pt-4 pb-1">
-            <TooltipProvider v-for="(b, idx) in activityBuckets" :key="idx">
+            <TooltipProvider
+              v-for="(b, idx) in activityBuckets"
+              :key="idx"
+            >
               <Tooltip>
                 <TooltipTrigger as-child>
                   <div class="flex-1 flex flex-col items-center h-full justify-end cursor-pointer group">
                     <div
                       class="w-full rounded-t transition-all"
-                      :class="b.income > 0 ? 'bg-amber-500/80 group-hover:bg-amber-500' : 'bg-primary/50 group-hover:bg-primary'"
+                      :class="
+                        b.income > 0
+                          ? 'bg-amber-500/80 group-hover:bg-amber-500'
+                          : 'bg-primary/50 group-hover:bg-primary'
+                      "
                       :style="{ height: `${b.danmakuHeightPercent}%` }"
                     />
                     <span
@@ -302,8 +324,13 @@ watch(() => props.live.liveId, fetchRanking)
                 <TooltipContent>
                   <div class="text-xs space-y-1">
                     <div class="font-medium">{{ b.timeRange }}</div>
-                    <div>💬 弹幕数: <strong>{{ b.danmakuCount }} 条</strong></div>
-                    <div v-if="b.income > 0" class="text-amber-500">
+                    <div>
+                      💬 弹幕数: <strong>{{ b.danmakuCount }} 条</strong>
+                    </div>
+                    <div
+                      v-if="b.income > 0"
+                      class="text-amber-500"
+                    >
                       💰 打赏收益: <strong>¥{{ b.income.toFixed(1) }}</strong>
                     </div>
                   </div>
@@ -322,9 +349,7 @@ watch(() => props.live.liveId, fetchRanking)
 
       <!-- 右侧：打赏与收入构成 (4 cols) -->
       <Card class="lg:col-span-4 p-3.5 flex flex-col">
-        <div class="text-sm font-semibold pb-2 mb-2 border-b border-border">
-          本场打赏构成
-        </div>
+        <div class="text-sm font-semibold pb-2 mb-2 border-b border-border">本场打赏构成</div>
         <div class="flex flex-col gap-3.5 py-1">
           <div class="space-y-1.5">
             <div class="flex justify-between text-xs">
@@ -335,7 +360,10 @@ watch(() => props.live.liveId, fetchRanking)
               <span class="font-mono font-medium">¥{{ incomeBreakdown.sc }} ({{ incomeBreakdown.scPercent }}%)</span>
             </div>
             <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div class="bg-amber-500 h-full rounded-full" :style="{ width: `${incomeBreakdown.scPercent}%` }" />
+              <div
+                class="bg-amber-500 h-full rounded-full"
+                :style="{ width: `${incomeBreakdown.scPercent}%` }"
+              />
             </div>
           </div>
 
@@ -345,10 +373,15 @@ watch(() => props.live.liveId, fetchRanking)
                 <span class="size-2 rounded-full bg-emerald-500" />
                 付费礼物
               </span>
-              <span class="font-mono font-medium">¥{{ incomeBreakdown.gift }} ({{ incomeBreakdown.giftPercent }}%)</span>
+              <span class="font-mono font-medium"
+                >¥{{ incomeBreakdown.gift }} ({{ incomeBreakdown.giftPercent }}%)</span
+              >
             </div>
             <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div class="bg-emerald-500 h-full rounded-full" :style="{ width: `${incomeBreakdown.giftPercent}%` }" />
+              <div
+                class="bg-emerald-500 h-full rounded-full"
+                :style="{ width: `${incomeBreakdown.giftPercent}%` }"
+              />
             </div>
           </div>
 
@@ -358,10 +391,15 @@ watch(() => props.live.liveId, fetchRanking)
                 <span class="size-2 rounded-full bg-indigo-500" />
                 大航海 / 舰长
               </span>
-              <span class="font-mono font-medium">¥{{ incomeBreakdown.guard }} ({{ incomeBreakdown.guardPercent }}%)</span>
+              <span class="font-mono font-medium"
+                >¥{{ incomeBreakdown.guard }} ({{ incomeBreakdown.guardPercent }}%)</span
+              >
             </div>
             <div class="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-              <div class="bg-indigo-500 h-full rounded-full" :style="{ width: `${incomeBreakdown.guardPercent}%` }" />
+              <div
+                class="bg-indigo-500 h-full rounded-full"
+                :style="{ width: `${incomeBreakdown.guardPercent}%` }"
+              />
             </div>
           </div>
         </div>
@@ -373,13 +411,23 @@ watch(() => props.live.liveId, fetchRanking)
       <div class="flex items-center justify-between pb-2 mb-3 border-b border-border">
         <span class="text-sm font-semibold">本场打赏贡献榜 (Top 10)</span>
         <span class="text-xs text-muted-foreground flex items-center gap-1">
-          <component :is="Trophy24Filled" class="size-3.5 text-amber-500" />
+          <component
+            :is="Trophy24Filled"
+            class="size-3.5 text-amber-500"
+          />
           基于观众打赏总额排行
         </span>
       </div>
 
-      <div v-if="isRankingLoading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
-        <Skeleton v-for="i in 5" :key="i" class="h-14 w-full rounded-lg" />
+      <div
+        v-if="isRankingLoading"
+        class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5"
+      >
+        <Skeleton
+          v-for="i in 5"
+          :key="i"
+          class="h-14 w-full rounded-lg"
+        />
       </div>
 
       <div
@@ -401,12 +449,20 @@ watch(() => props.live.liveId, fetchRanking)
           <Avatar class="size-8">
             <AvatarImage :src="rank.uFace" />
             <AvatarFallback>
-              <component :is="Person24Regular" class="size-4" />
+              <component
+                :is="Person24Regular"
+                class="size-4"
+              />
             </AvatarFallback>
           </Avatar>
 
           <div class="min-w-0 flex-1">
-            <div class="text-xs font-medium truncate" :title="rank.uName">{{ rank.uName }}</div>
+            <div
+              class="text-xs font-medium truncate"
+              :title="rank.uName"
+            >
+              {{ rank.uName }}
+            </div>
             <div class="text-xs font-mono font-semibold text-emerald-500">
               <span class="text-[10px]">¥</span>{{ rank.totalPaid.toLocaleString() }}
             </div>

@@ -29,13 +29,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Empty } from '@/shared/ui/empty'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -241,21 +235,41 @@ function toggleFilterType(val: string, checked: boolean) {
         <Badge
           variant="outline"
           class="text-xs h-6 px-2.5"
-          :class="giftWindow.isGiftWindowOpen ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+          :class="
+            giftWindow.isGiftWindowOpen
+              ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+              : 'text-muted-foreground'
+          "
         >
           {{ giftWindow.isGiftWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
         </Badge>
 
-        <Button variant="secondary" :class="giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'" @click="giftWindow.isGiftWindowOpen ? giftWindow.closeWindow() : giftWindow.openWindow()">
+        <Button
+          variant="secondary"
+          :class="
+            giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'
+          "
+          @click="giftWindow.isGiftWindowOpen ? giftWindow.closeWindow() : giftWindow.openWindow()"
+        >
           {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '打开浮窗' }}
         </Button>
 
         <div class="inline-flex rounded-md shadow-sm">
-          <Button variant="secondary" class="gap-1 rounded-r-none border-r border-border" :disabled="!giftWindow.isGiftWindowOpen" @click="giftWindow.sendTestGift()">
+          <Button
+            variant="secondary"
+            class="gap-1 rounded-r-none border-r border-border"
+            :disabled="!giftWindow.isGiftWindowOpen"
+            @click="giftWindow.sendTestGift()"
+          >
             <Send24Filled class="size-3.5 text-sky-500" />
             测试礼物
           </Button>
-          <Button variant="secondary" class="gap-1 rounded-l-none" :disabled="!giftWindow.isGiftWindowOpen" @click="giftWindow.clearGifts()">
+          <Button
+            variant="secondary"
+            class="gap-1 rounded-l-none"
+            :disabled="!giftWindow.isGiftWindowOpen"
+            @click="giftWindow.clearGifts()"
+          >
             <Delete24Regular class="size-3.5 text-amber-500" />
             清空
           </Button>
@@ -270,34 +284,56 @@ function toggleFilterType(val: string, checked: boolean) {
       @update:model-value="onTabChange"
     >
       <TabsList class="grid w-full max-w-xl grid-cols-5">
-        <TabsTrigger value="thank" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="thank"
+          class="text-xs gap-1.5"
+        >
           <Megaphone24Filled class="size-3.5" />
           下播感谢
         </TabsTrigger>
-        <TabsTrigger value="appearance" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="appearance"
+          class="text-xs gap-1.5"
+        >
           <Color24Filled class="size-3.5" />
           外观与主题
         </TabsTrigger>
-        <TabsTrigger value="window" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="window"
+          class="text-xs gap-1.5"
+        >
           <Desktop24Filled class="size-3.5" />
           窗口与布局
         </TabsTrigger>
-        <TabsTrigger value="filter" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="filter"
+          class="text-xs gap-1.5"
+        >
           <Filter24Filled class="size-3.5" />
           筛选与规则
         </TabsTrigger>
-        <TabsTrigger value="history" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="history"
+          class="text-xs gap-1.5"
+        >
           <History24Filled class="size-3.5" />
           往期榜单
         </TabsTrigger>
       </TabsList>
 
       <!-- 下播感谢与实时榜单 -->
-      <TabsContent value="thank" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="thank"
+        class="pt-3 space-y-3 client-readable"
+      >
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
             <CardTitle class="text-sm font-semibold">本场打赏前 50 ➕ 在场舰长名单</CardTitle>
-            <Button variant="secondary" class="gap-1 text-primary" @click="copyThankText">
+            <Button
+              variant="secondary"
+              class="gap-1 text-primary"
+              @click="copyThankText"
+            >
               <Copy24Regular class="size-3.5" />
               一键复制感谢文案
             </Button>
@@ -312,7 +348,10 @@ function toggleFilterType(val: string, checked: boolean) {
                     <Trophy20Regular class="size-4 text-amber-500" />
                     本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
                   </span>
-                  <Badge variant="secondary" class="text-[10px] text-amber-600 bg-amber-500/10">
+                  <Badge
+                    variant="secondary"
+                    class="text-[10px] text-amber-600 bg-amber-500/10"
+                  >
                     上限 {{ giftWindow.settings.rankDisplayCount }} 人
                   </Badge>
                 </div>
@@ -362,7 +401,13 @@ function toggleFilterType(val: string, checked: boolean) {
                             v-if="r.guardLevel > 0"
                             variant="outline"
                             class="text-[9px] h-4 px-1"
-                            :class="r.guardLevel === GuardLevel.Zongdu ? 'text-destructive border-destructive/40 bg-destructive/10' : r.guardLevel === GuardLevel.Tidu ? 'text-amber-600 border-amber-500/40 bg-amber-500/10' : 'text-sky-600 border-sky-500/40 bg-sky-500/10'"
+                            :class="
+                              r.guardLevel === GuardLevel.Zongdu
+                                ? 'text-destructive border-destructive/40 bg-destructive/10'
+                                : r.guardLevel === GuardLevel.Tidu
+                                  ? 'text-amber-600 border-amber-500/40 bg-amber-500/10'
+                                  : 'text-sky-600 border-sky-500/40 bg-sky-500/10'
+                            "
                           >
                             {{ getGuardTitle(r.guardLevel) }}
                           </Badge>
@@ -376,9 +421,7 @@ function toggleFilterType(val: string, checked: boolean) {
                           >
                             在场
                           </Badge>
-                          <span class="text-xs font-bold text-amber-500">
-                            ¥{{ r.score.toLocaleString() }}
-                          </span>
+                          <span class="text-xs font-bold text-amber-500"> ¥{{ r.score.toLocaleString() }} </span>
                         </div>
                       </div>
                     </div>
@@ -418,7 +461,13 @@ function toggleFilterType(val: string, checked: boolean) {
                           <Badge
                             variant="outline"
                             class="text-[9px] h-4 px-1"
-                            :class="g.guardLevel === GuardLevel.Zongdu ? 'text-destructive border-destructive/40 bg-destructive/10' : g.guardLevel === GuardLevel.Tidu ? 'text-amber-600 border-amber-500/40 bg-amber-500/10' : 'text-sky-600 border-sky-500/40 bg-sky-500/10'"
+                            :class="
+                              g.guardLevel === GuardLevel.Zongdu
+                                ? 'text-destructive border-destructive/40 bg-destructive/10'
+                                : g.guardLevel === GuardLevel.Tidu
+                                  ? 'text-amber-600 border-amber-500/40 bg-amber-500/10'
+                                  : 'text-sky-600 border-sky-500/40 bg-sky-500/10'
+                            "
                           >
                             {{ getGuardTitle(g.guardLevel) }}
                           </Badge>
@@ -456,7 +505,10 @@ function toggleFilterType(val: string, checked: boolean) {
       </TabsContent>
 
       <!-- 外观与主题 -->
-      <TabsContent value="appearance" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="appearance"
+        class="pt-3 space-y-3 client-readable"
+      >
         <!-- 主题预设 -->
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b">
@@ -625,7 +677,10 @@ function toggleFilterType(val: string, checked: boolean) {
       </TabsContent>
 
       <!-- 窗口与布局 -->
-      <TabsContent value="window" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="window"
+        class="pt-3 space-y-3 client-readable"
+      >
         <!-- 尺寸与坐标 -->
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b">
@@ -662,7 +717,10 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.x = $event || 0; giftWindow.updateWindowPosition()"
+                  @update:value="
+                    giftWindow.settings.x = $event || 0
+                    giftWindow.updateWindowPosition()
+                  "
                 />
               </div>
               <div class="space-y-1">
@@ -672,13 +730,20 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   size="small"
                   class="w-full"
-                  @update:value="giftWindow.settings.y = $event || 0; giftWindow.updateWindowPosition()"
+                  @update:value="
+                    giftWindow.settings.y = $event || 0
+                    giftWindow.updateWindowPosition()
+                  "
                 />
               </div>
             </div>
 
             <div class="flex justify-end pt-1">
-              <Button variant="secondary" class="gap-1.5" @click="resetWindowPosition">
+              <Button
+                variant="secondary"
+                class="gap-1.5"
+                @click="resetWindowPosition"
+              >
                 <ArrowReset24Regular class="size-3.5" />
                 重置至默认坐标
               </Button>
@@ -719,7 +784,11 @@ function toggleFilterType(val: string, checked: boolean) {
                   :key="opt.value"
                   type="button"
                   class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                  :class="giftWindow.settings.rankViewMode === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                  :class="
+                    giftWindow.settings.rankViewMode === opt.value
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'hover:text-foreground'
+                  "
                   @click="giftWindow.settings.rankViewMode = opt.value as any"
                 >
                   {{ opt.label }}
@@ -761,7 +830,10 @@ function toggleFilterType(val: string, checked: boolean) {
       </TabsContent>
 
       <!-- 筛选与规则 -->
-      <TabsContent value="filter" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="filter"
+        class="pt-3 space-y-3 client-readable"
+      >
         <!-- 显示类型过滤 -->
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b">
@@ -796,7 +868,11 @@ function toggleFilterType(val: string, checked: boolean) {
                 :key="opt.value"
                 type="button"
                 class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                :class="giftWindow.settings.sortBy === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                :class="
+                  giftWindow.settings.sortBy === opt.value
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'hover:text-foreground'
+                "
                 @click="giftWindow.settings.sortBy = opt.value as any"
               >
                 {{ opt.label }}
@@ -914,7 +990,10 @@ function toggleFilterType(val: string, checked: boolean) {
       </TabsContent>
 
       <!-- 历史打赏榜 -->
-      <TabsContent value="history" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="history"
+        class="pt-3 space-y-3 client-readable"
+      >
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b">
             <CardTitle class="text-sm font-semibold">查询历史直播场次榜单</CardTitle>
@@ -942,8 +1021,16 @@ function toggleFilterType(val: string, checked: boolean) {
                 </Select>
               </div>
 
-              <Button variant="secondary" class="gap-1.5" :disabled="isHistoryLoading" @click="loadHistory">
-                <ArrowSync24Filled class="size-3.5" :class="{ 'animate-spin': isHistoryLoading }" />
+              <Button
+                variant="secondary"
+                class="gap-1.5"
+                :disabled="isHistoryLoading"
+                @click="loadHistory"
+              >
+                <ArrowSync24Filled
+                  class="size-3.5"
+                  :class="{ 'animate-spin': isHistoryLoading }"
+                />
                 刷新场次
               </Button>
             </div>
@@ -989,7 +1076,10 @@ function toggleFilterType(val: string, checked: boolean) {
                     />
                     <span class="text-xs font-semibold text-foreground">{{ item.uName }}</span>
                   </div>
-                  <Badge variant="secondary" class="text-xs font-bold text-amber-500">
+                  <Badge
+                    variant="secondary"
+                    class="text-xs font-bold text-amber-500"
+                  >
                     {{ formatPaid(item.totalPaid) }}
                   </Badge>
                 </div>

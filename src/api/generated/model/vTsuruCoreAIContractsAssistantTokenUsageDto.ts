@@ -10,9 +10,9 @@
  * 本轮助手回复的 token 用量。
  */
 export interface VTsuruCoreAIContractsAssistantTokenUsageDto {
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-  cachedInputTokens: number;
-  reasoningTokens: number;
+  inputTokens: number
+  outputTokens: number
+  totalTokens: number
+  cachedInputTokens: number
+  reasoningTokens: number
 }

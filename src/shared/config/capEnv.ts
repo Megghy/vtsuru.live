@@ -1,5 +1,3 @@
-import type {} from 'cap-widget'
-
 import { CAP_HASHWX_URL, CAP_WASM_URL } from './assets'
 
 if (typeof window !== 'undefined') {

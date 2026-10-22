@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VideoCollectInfoVideoFrom } from './videoCollectInfoVideoFrom';
+import type { VideoCollectInfoVideoFrom } from './videoCollectInfoVideoFrom'
 
 export interface VideoCollectInfoVideoSender {
-  sendAt: number;
-  from: VideoCollectInfoVideoFrom;
+  sendAt: number
+  from: VideoCollectInfoVideoFrom
   /** @nullable */
-  sender?: string | null;
+  sender?: string | null
   /** @nullable */
-  senderId?: number | null;
+  senderId?: number | null
   /** @nullable */
-  description?: string | null;
+  description?: string | null
 }

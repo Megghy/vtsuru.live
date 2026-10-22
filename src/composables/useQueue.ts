@@ -1,5 +1,5 @@
 import { List } from 'linqts'
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
 import type { DanmakuUserInfo, EventModel, ResponseQueueModel, Setting_Queue } from '@/api/api-models'
@@ -233,10 +233,10 @@ export const useQueue = defineStore('queue', () => {
       if (!enabled.value) return
       try {
         const data = (await postApiQueueTryAdd(danmaku as any)) as unknown as {
-      code: number
-      message?: string
-      data: ResponseQueueModel
-    }
+          code: number
+          message?: string
+          data: ResponseQueueModel
+        }
         if (data.code === 200) {
           if (data.message === 'EventFetcher') return
           const existingIndex = originQueue.value.findIndex((q) => q.id === data.data.id)
@@ -350,7 +350,7 @@ export const useQueue = defineStore('queue', () => {
     }
     isLoading.value = true
     try {
-        const data = await postApiQueueSetStatus({ id: queueData.id, status: status as any })
+      const data = await postApiQueueSetStatus({ id: queueData.id, status: status as any })
       if (data.code === 200) {
         const item = originQueue.value.find((q) => q.id === queueData.id)
         if (item) {

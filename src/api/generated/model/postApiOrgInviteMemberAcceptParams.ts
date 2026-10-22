@@ -7,5 +7,5 @@
  */
 
 export type PostApiOrgInviteMemberAcceptParams = {
-token?: string;
-};
+  token?: string
+}

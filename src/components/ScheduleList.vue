@@ -82,7 +82,9 @@ function getWeekRangeLabel(year: number, week: number) {
       class="border border-border/80 transition-shadow"
       :class="{ 'ring-1 ring-primary/40': isCurrentWeek(item.year, item.week) }"
     >
-      <CardHeader class="p-3.5 pb-2.5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2">
+      <CardHeader
+        class="p-3.5 pb-2.5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2"
+      >
         <div class="flex items-center gap-2 flex-wrap">
           <span class="font-semibold text-sm text-foreground">{{ item.year }}年第{{ item.week }}周</span>
           <Badge
@@ -101,10 +103,16 @@ function getWeekRangeLabel(year: number, week: number) {
           v-if="isSelf"
           class="flex items-center gap-1.5"
         >
-          <Button variant="outline" @click="emit('onUpdate', item)">
+          <Button
+            variant="outline"
+            @click="emit('onUpdate', item)"
+          >
             编辑
           </Button>
-          <Button variant="outline" @click="emit('onCopy', item)">
+          <Button
+            variant="outline"
+            @click="emit('onCopy', item)"
+          >
             复制
           </Button>
           <Popconfirm
@@ -114,9 +122,7 @@ function getWeekRangeLabel(year: number, week: number) {
             @positive-click="emit('onDelete', item)"
           >
             <template #trigger>
-              <Button variant="destructive">
-                删除
-              </Button>
+              <Button variant="destructive"> 删除 </Button>
             </template>
             确定删除整周日程吗?
           </Popconfirm>
@@ -151,7 +157,10 @@ function getWeekRangeLabel(year: number, week: number) {
                 :class="isSelf ? 'hover:bg-muted/30 cursor-pointer' : ''"
                 @click="isSelf && emit('onUpdate', item)"
               >
-                <component :is="Bed20Regular" class="size-3.5" />
+                <component
+                  :is="Bed20Regular"
+                  class="size-3.5"
+                />
                 <span class="text-[11px] italic">休息</span>
               </div>
 
@@ -187,7 +196,10 @@ function getWeekRangeLabel(year: number, week: number) {
                         v-if="schedule.time"
                         class="text-[10px] text-muted-foreground font-mono flex items-center gap-0.5 shrink-0"
                       >
-                        <component :is="Clock20Regular" class="size-3 inline" />
+                        <component
+                          :is="Clock20Regular"
+                          class="size-3 inline"
+                        />
                         {{ schedule.time }}
                       </span>
                     </div>

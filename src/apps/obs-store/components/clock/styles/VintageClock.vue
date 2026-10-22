@@ -98,19 +98,23 @@ onMounted(() => {
       <span
         v-if="props.state.showDate"
         class="calligraphy-date"
-      >{{ props.clockData.dateStr }}</span>
+        >{{ props.clockData.dateStr }}</span
+      >
       <span
         v-if="props.state.showDate && props.state.showDayOfWeek"
         class="calligraphy-sep"
-      >·</span>
+        >·</span
+      >
       <span
         v-if="props.state.showDayOfWeek"
         class="calligraphy-day"
-      >{{ props.clockData.dayOfWeekEn }}</span>
+        >{{ props.clockData.dayOfWeekEn }}</span
+      >
       <span
         v-if="!props.state.is24Hour && props.clockData.ampm"
         class="calligraphy-ampm"
-      >{{ props.clockData.ampm }}</span>
+        >{{ props.clockData.ampm }}</span
+      >
     </div>
   </div>
 </template>

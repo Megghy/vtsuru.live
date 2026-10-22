@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { UserPagesControllerMyUserPagesStateResponse } from './userPagesControllerMyUserPagesStateResponse';
+import type { UserPagesControllerMyUserPagesStateResponse } from './userPagesControllerMyUserPagesStateResponse'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfUserPagesControllerMyUserPagesStateResponse {
-  message: string;
-  code: number;
-  data: UserPagesControllerMyUserPagesStateResponse;
+  message: string
+  code: number
+  data: UserPagesControllerMyUserPagesStateResponse
 }

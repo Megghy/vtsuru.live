@@ -60,9 +60,7 @@ const embed = computed(() => {
       v-if="!embed"
       class="text-xs py-2 m-2"
     >
-      <AlertDescription>
-        未配置可用的音乐链接
-      </AlertDescription>
+      <AlertDescription> 未配置可用的音乐链接 </AlertDescription>
     </Alert>
     <iframe
       v-else

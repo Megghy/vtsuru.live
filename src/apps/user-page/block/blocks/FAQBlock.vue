@@ -2,12 +2,7 @@
 import { HelpCircleOutline } from '@vicons/ionicons5'
 import { computed } from 'vue'
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/shared/ui/accordion'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -59,7 +54,10 @@ const items = computed(() => {
   >
     <template #header>
       <div class="flex items-center gap-2">
-        <component :is="HelpCircleOutline" class="size-4.5 text-muted-foreground" />
+        <component
+          :is="HelpCircleOutline"
+          class="size-4.5 text-muted-foreground"
+        />
         <span class="font-medium text-sm">{{ cfg.title }}</span>
       </div>
     </template>

@@ -7,8 +7,8 @@
  */
 
 export type GetApiLotteryCommentsParams = {
-/**
- * 动态Id
- */
-id?: number;
-};
+  /**
+   * 动态Id
+   */
+  id?: number
+}

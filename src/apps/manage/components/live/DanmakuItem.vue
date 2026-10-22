@@ -5,11 +5,11 @@ import { computed } from 'vue'
 
 import type { AccountInfo, DanmakuModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import { getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 
 const {
   danmaku,
@@ -91,15 +91,16 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
         class="font-medium hover:underline text-xs cursor-pointer truncate max-w-[160px]"
         @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
       >
-        <span v-if="danmaku.uId === accountInfo?.biliId" class="bg-amber-500/80 px-1 py-0.5 rounded text-[10px]">
+        <span
+          v-if="danmaku.uId === accountInfo?.biliId"
+          class="bg-amber-500/80 px-1 py-0.5 rounded text-[10px]"
+        >
           {{ danmaku.uName }}
         </span>
         <span v-else>{{ danmaku.uName }}</span>
       </button>
 
-      <span class="ml-auto bg-black/25 px-1.5 py-0.5 rounded text-[11px] font-bold">
-        ¥{{ danmaku.price }}
-      </span>
+      <span class="ml-auto bg-black/25 px-1.5 py-0.5 rounded text-[11px] font-bold"> ¥{{ danmaku.price }} </span>
     </div>
     <div class="px-2.5 py-2 text-xs leading-relaxed min-h-[36px] flex items-center">
       {{ danmaku.msg }}
@@ -144,10 +145,16 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
         class="danmaku-name-btn text-xs hover:underline cursor-pointer flex items-center gap-1"
         @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
       >
-        <span v-if="danmaku.uId === accountInfo?.biliId" class="bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1 py-0.5 rounded text-[10px] font-medium">
+        <span
+          v-if="danmaku.uId === accountInfo?.biliId"
+          class="bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1 py-0.5 rounded text-[10px] font-medium"
+        >
           {{ danmaku.uName && danmaku.uName !== '' ? danmaku.uName : '主播' }}
         </span>
-        <span v-else class="danmaku-uname-text font-medium text-foreground">
+        <span
+          v-else
+          class="danmaku-uname-text font-medium text-foreground"
+        >
           {{ danmaku.uName }}<span class="danmaku-colon text-muted-foreground">:</span>
         </span>
       </button>
@@ -194,22 +201,33 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       <TooltipProvider v-if="giftDisplay.hasMysteryBoxGift">
         <Tooltip>
           <TooltipTrigger as-child>
-            <span class="mystery-box-badge inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1 rounded text-[11px]">
+            <span
+              class="mystery-box-badge inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 px-1 rounded text-[11px]"
+            >
               <Box24Regular class="size-3" />
               <span v-if="giftDisplay.mysteryBoxPriceText">{{ giftDisplay.mysteryBoxPriceText }}</span>
             </span>
           </TooltipTrigger>
           <TooltipContent class="text-xs p-2.5 space-y-1">
             <div class="font-semibold text-foreground">盲盒礼物</div>
-            <div v-if="giftDisplay.mysteryBoxName" class="flex justify-between gap-4 text-muted-foreground">
+            <div
+              v-if="giftDisplay.mysteryBoxName"
+              class="flex justify-between gap-4 text-muted-foreground"
+            >
               <span>来源</span>
               <span class="text-foreground">{{ giftDisplay.mysteryBoxName }}</span>
             </div>
-            <div v-if="giftDisplay.mysteryBoxPriceText" class="flex justify-between gap-4 text-muted-foreground">
+            <div
+              v-if="giftDisplay.mysteryBoxPriceText"
+              class="flex justify-between gap-4 text-muted-foreground"
+            >
               <span>盲盒价</span>
               <span class="text-foreground">￥{{ giftDisplay.mysteryBoxPriceText }}</span>
             </div>
-            <div v-if="giftDisplay.giftPriceText" class="flex justify-between gap-4 text-muted-foreground">
+            <div
+              v-if="giftDisplay.giftPriceText"
+              class="flex justify-between gap-4 text-muted-foreground"
+            >
               <span>开出价</span>
               <span class="text-foreground">￥{{ giftDisplay.giftPriceText }}</span>
             </div>
@@ -227,7 +245,10 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       </span>
       <div class="h-3 w-px bg-border inline-block" />
       <span>{{ danmaku.msg }}</span>
-      <span v-if="danmaku.num" class="text-muted-foreground text-[11px]">
+      <span
+        v-if="danmaku.num"
+        class="text-muted-foreground text-[11px]"
+      >
         {{ danmaku.num }} 个
       </span>
     </span>

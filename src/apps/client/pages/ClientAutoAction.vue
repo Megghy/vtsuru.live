@@ -38,21 +38,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -281,7 +269,9 @@ const triggerTypeOptions = [
                 <Badge
                   variant="outline"
                   class="cursor-pointer text-xs h-6 px-2 gap-1.5"
-                  :class="biliFunc.activeDanmakuAccountType === 'bot' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ''"
+                  :class="
+                    biliFunc.activeDanmakuAccountType === 'bot' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ''
+                  "
                   @click="currentMenuKey = 'account-settings'"
                 >
                   <component
@@ -343,11 +333,18 @@ const triggerTypeOptions = [
                 :key="item.key"
                 type="button"
                 class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors text-left"
-                :class="currentMenuKey === item.key ? 'bg-primary text-primary-foreground font-medium shadow-sm' : 'text-foreground hover:bg-muted'"
+                :class="
+                  currentMenuKey === item.key
+                    ? 'bg-primary text-primary-foreground font-medium shadow-sm'
+                    : 'text-foreground hover:bg-muted'
+                "
                 @click="handleMenuUpdate(item.key)"
               >
                 <div class="flex items-center gap-2 truncate">
-                  <component :is="item.icon" class="size-4 shrink-0" />
+                  <component
+                    :is="item.icon"
+                    class="size-4 shrink-0"
+                  />
                   <span class="truncate">{{ item.label }}</span>
                 </div>
 
@@ -358,13 +355,21 @@ const triggerTypeOptions = [
                   <span
                     v-if="getMenuItemStatus(item.key).count > 0 && getMenuItemStatus(item.key).isTriggerType"
                     class="text-[10px] px-1 rounded font-semibold"
-                    :class="currentMenuKey === item.key ? 'bg-primary-foreground text-primary' : 'bg-muted text-muted-foreground'"
+                    :class="
+                      currentMenuKey === item.key
+                        ? 'bg-primary-foreground text-primary'
+                        : 'bg-muted text-muted-foreground'
+                    "
                   >
                     {{ getMenuItemStatus(item.key).count }}
                   </span>
                   <div
                     class="size-1.5 rounded-full"
-                    :class="getMenuItemStatus(item.key).isEnabled ? 'bg-emerald-500 shadow-[0_0_4px_#10b981]' : 'bg-muted-foreground/40'"
+                    :class="
+                      getMenuItemStatus(item.key).isEnabled
+                        ? 'bg-emerald-500 shadow-[0_0_4px_#10b981]'
+                        : 'bg-muted-foreground/40'
+                    "
                   />
                 </div>
               </button>
@@ -380,13 +385,15 @@ const triggerTypeOptions = [
             class="space-y-3.5 max-w-4xl mx-auto"
           >
             <div class="flex items-center gap-3">
-              <Button variant="secondary" class="gap-1.5" @click="backToOverview">
+              <Button
+                variant="secondary"
+                class="gap-1.5"
+                @click="backToOverview"
+              >
                 <ArrowLeft24Filled class="size-3.5" />
                 返回列表
               </Button>
-              <span class="font-semibold text-sm text-foreground">
-                编辑 {{ currentEditingAction.name }}
-              </span>
+              <span class="font-semibold text-sm text-foreground"> 编辑 {{ currentEditingAction.name }} </span>
             </div>
 
             <AutoActionEditor :action="currentEditingAction" />
@@ -432,7 +439,12 @@ const triggerTypeOptions = [
                         {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
                       </Badge>
                     </div>
-                    <Button size="xs" variant="ghost" class="h-6 gap-1 text-primary hover:text-primary" @click="openSetNextModal">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 gap-1 text-primary hover:text-primary"
+                      @click="openSetNextModal"
+                    >
                       <Edit16Regular class="size-3" />
                       手动指定
                     </Button>
@@ -446,7 +458,8 @@ const triggerTypeOptions = [
                 >
                   <AlertTitle class="text-xs font-semibold">功能限制提醒</AlertTitle>
                   <AlertDescription class="text-xs mt-0.5">
-                    当前连接模式 (OpenLive) 无法获取用户 UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
+                    当前连接模式 (OpenLive) 无法获取用户
+                    UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
                   </AlertDescription>
                 </Alert>
               </template>
@@ -541,12 +554,13 @@ const triggerTypeOptions = [
           </Select>
         </div>
         <DialogFooter class="pt-3">
-          <Button variant="secondary" @click="showAddModal = false">
+          <Button
+            variant="secondary"
+            @click="showAddModal = false"
+          >
             取消
           </Button>
-          <Button @click="addAutoAction">
-            确认
-          </Button>
+          <Button @click="addAutoAction"> 确认 </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -578,12 +592,13 @@ const triggerTypeOptions = [
           </span>
         </div>
         <DialogFooter class="pt-3">
-          <Button variant="secondary" @click="showSetNextModal = false">
+          <Button
+            variant="secondary"
+            @click="showSetNextModal = false"
+          >
             取消
           </Button>
-          <Button @click="confirmSetNextAction">
-            确认指定
-          </Button>
+          <Button @click="confirmSetNextAction"> 确认指定 </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -602,12 +617,13 @@ const triggerTypeOptions = [
           />
         </div>
         <DialogFooter class="pt-3">
-          <Button variant="secondary" @click="showTestModal = false">
+          <Button
+            variant="secondary"
+            @click="showTestModal = false"
+          >
             取消
           </Button>
-          <Button @click="confirmTest">
-            确认测试
-          </Button>
+          <Button @click="confirmTest"> 确认测试 </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

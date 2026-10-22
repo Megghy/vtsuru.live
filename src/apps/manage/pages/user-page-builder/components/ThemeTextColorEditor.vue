@@ -88,7 +88,10 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <component :is="Info16Regular" class="size-3.5 text-muted-foreground cursor-help" />
+                <component
+                  :is="Info16Regular"
+                  class="size-3.5 text-muted-foreground cursor-help"
+                />
               </TooltipTrigger>
               <TooltipContent class="max-w-xs text-xs">
                 根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1
@@ -98,16 +101,25 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
           </TooltipProvider>
         </div>
         <div class="pt-1">
-          <Switch :checked="autoTextContrast" @update:checked="autoTextContrast = $event" />
+          <Switch
+            :checked="autoTextContrast"
+            @update:checked="autoTextContrast = $event"
+          />
         </div>
       </div>
 
-      <div v-if="showLightColor" class="flex flex-col gap-1.5">
+      <div
+        v-if="showLightColor"
+        class="flex flex-col gap-1.5"
+      >
         <label class="text-xs text-muted-foreground">亮色模式覆盖</label>
         <ColorPicker v-model="textColorLight" />
       </div>
 
-      <div v-if="showDarkColor" class="flex flex-col gap-1.5">
+      <div
+        v-if="showDarkColor"
+        class="flex flex-col gap-1.5"
+      >
         <label class="text-xs text-muted-foreground">暗色模式覆盖</label>
         <ColorPicker v-model="textColorDark" />
       </div>

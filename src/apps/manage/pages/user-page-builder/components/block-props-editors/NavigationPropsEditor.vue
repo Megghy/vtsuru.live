@@ -28,10 +28,10 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
           :create-item="() => ({ label: '', url: 'https://' })"
           add-text="添加链接"
         >
-          <template #title="{ item, index }">
+          <template #title="{ item, index }: { item: any; index: number }">
             {{ item.label || `链接 ${index + 1}` }}
           </template>
-          <template #default="{ item }">
+          <template #default="{ item }: { item: any }">
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
@@ -39,7 +39,10 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">链接</label>
-                <Input v-model="item.url" placeholder="https://..." />
+                <Input
+                  v-model="item.url"
+                  placeholder="https://..."
+                />
               </div>
             </PropsGrid>
           </template>
@@ -56,7 +59,10 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
       <ButtonAppearanceFields :block="props.block" />
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">按钮文本</label>
-        <Input v-model="blockProps.label" placeholder="例如：衣柜" />
+        <Input
+          v-model="blockProps.label"
+          placeholder="例如：衣柜"
+        />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">跳转类型</label>
@@ -93,7 +99,11 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
             </SelectItem>
           </SelectContent>
         </Select>
-        <Input v-else-if="!blockProps.back" v-model="blockProps.url" placeholder="链接 https://..." />
+        <Input
+          v-else-if="!blockProps.back"
+          v-model="blockProps.url"
+          placeholder="链接 https://..."
+        />
         <div
           v-else
           class="text-xs text-muted-foreground py-1"
@@ -169,11 +179,17 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">显示名 / 无障碍名称</label>
-                <Input v-model="item.label" placeholder="可选" />
+                <Input
+                  v-model="item.label"
+                  placeholder="可选"
+                />
               </div>
               <div class="span-full space-y-1">
                 <label class="text-xs text-muted-foreground">链接</label>
-                <Input v-model="item.url" placeholder="https://..." />
+                <Input
+                  v-model="item.url"
+                  placeholder="https://..."
+                />
               </div>
             </PropsGrid>
           </template>

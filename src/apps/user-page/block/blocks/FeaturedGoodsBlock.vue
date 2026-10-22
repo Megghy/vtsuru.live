@@ -99,7 +99,10 @@ watch(
     <template #header>
       <div class="goods-header flex items-center justify-between w-full">
         <span class="goods-heading flex items-center gap-1.5 font-semibold text-sm">
-          <component :is="StorefrontOutline" class="size-4" />
+          <component
+            :is="StorefrontOutline"
+            class="size-4"
+          />
           精选积分礼物
         </span>
         <RouterLink
@@ -108,9 +111,16 @@ watch(
           :to="{ name: 'user-goods', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
+          <Button
+            variant="ghost"
+            class="text-primary font-medium p-0"
+            @click="navigate"
+          >
             全部商品
-            <component :is="OpenOutline" class="size-3.5 ml-1" />
+            <component
+              :is="OpenOutline"
+              class="size-3.5 ml-1"
+            />
           </Button>
         </RouterLink>
       </div>
@@ -120,9 +130,7 @@ watch(
       v-if="!enabled"
       class="text-xs py-2"
     >
-      <AlertDescription>
-        积分兑换未开放
-      </AlertDescription>
+      <AlertDescription> 积分兑换未开放 </AlertDescription>
     </Alert>
     <Alert
       v-else-if="query.status.value === 'error'"
@@ -131,8 +139,16 @@ watch(
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>积分商品加载失败</span>
-        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
-          <component :is="RefreshOutline" class="size-3" />
+        <Button
+          variant="outline"
+          size="xs"
+          class="gap-1"
+          @click="load(true)"
+        >
+          <component
+            :is="RefreshOutline"
+            class="size-3"
+          />
           重试
         </Button>
       </AlertDescription>
@@ -171,7 +187,10 @@ watch(
               v-else
               class="cover-empty h-full flex items-center justify-center text-muted-foreground text-2xl"
             >
-              <component :is="StorefrontOutline" class="size-8" />
+              <component
+                :is="StorefrontOutline"
+                class="size-8"
+              />
             </div>
             <Badge
               v-if="isSoldOut(item)"

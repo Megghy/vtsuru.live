@@ -1,6 +1,11 @@
 import { computed, ref } from 'vue'
 
-import { persistedGetItemRaw, persistedSetItemRaw, usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
+import {
+  persistedGetItemRaw,
+  persistedSetItemRaw,
+  usePersistedStorage,
+  whenPersistedReady,
+} from '@/shared/storage/persist'
 
 const debugAPI: string =
   import.meta.env.VITE_API == 'dev'
@@ -95,7 +100,6 @@ export function getCurrentAPIUrl(): string {
 }
 
 const FILE_PATH = /^\/f\/\d+(?:\?.*)?$/
-const FILE_PATHNAME = /^\/f\/\d+$/
 
 /** 后端下发的 /f/{id} 拼到当前 API 源站。已是绝对地址的原样返回。 */
 export function resolveFileUrl(path: string | null | undefined): string {

@@ -66,7 +66,10 @@ watch(
     <template #header>
       <div class="ranking-header flex items-center justify-between w-full">
         <span class="ranking-heading flex items-center gap-1.5 font-semibold text-sm">
-          <component :is="TrophyOutline" class="size-4" />
+          <component
+            :is="TrophyOutline"
+            class="size-4"
+          />
           签到排行
         </span>
         <RouterLink
@@ -75,9 +78,16 @@ watch(
           :to="{ name: 'user-checkin', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
+          <Button
+            variant="ghost"
+            class="text-primary font-medium p-0"
+            @click="navigate"
+          >
             完整排行
-            <component :is="OpenOutline" class="size-3.5 ml-1" />
+            <component
+              :is="OpenOutline"
+              class="size-3.5 ml-1"
+            />
           </Button>
         </RouterLink>
       </div>
@@ -87,9 +97,7 @@ watch(
       v-if="!enabled"
       class="text-xs py-2"
     >
-      <AlertDescription>
-        签到排行未开放
-      </AlertDescription>
+      <AlertDescription> 签到排行未开放 </AlertDescription>
     </Alert>
     <Alert
       v-else-if="query.status.value === 'error'"
@@ -98,8 +106,16 @@ watch(
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>签到排行加载失败</span>
-        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
-          <component :is="RefreshOutline" class="size-3" />
+        <Button
+          variant="outline"
+          size="xs"
+          class="gap-1"
+          @click="load(true)"
+        >
+          <component
+            :is="RefreshOutline"
+            class="size-3"
+          />
           重试
         </Button>
       </AlertDescription>

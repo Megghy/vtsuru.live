@@ -7,10 +7,10 @@
  */
 
 export interface AnalyzeOfflineEvent {
-  id: number;
-  name: string;
-  message: string;
-  price: number;
-  type: number;
-  time: number;
+  id: number
+  name: string
+  message: string
+  price: number
+  type: number
+  time: number
 }

@@ -4,8 +4,8 @@ import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
-import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 import { useDialog, useLoadingBar, useMessage, useModal, useNotification } from '@/shared/utils'
+import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 const accountInfo = useAccount()
 

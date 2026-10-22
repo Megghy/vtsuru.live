@@ -7,5 +7,5 @@
  */
 
 export type GetApiVtsuruUserFaceIdParams = {
-size?: number;
-};
+  size?: number
+}

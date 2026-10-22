@@ -63,7 +63,12 @@ export function createVtsConnection(config: VtsConfig, { withHistory }: VtsHisto
   }
 
   /** 带操作历史记录的 API 调用, 用于有副作用的动作 */
-  async function call<T>(kind: VtsOpKind, detail: string | undefined, fn: (c: ApiClient) => Promise<T>, payload?: unknown) {
+  async function call<T>(
+    kind: VtsOpKind,
+    detail: string | undefined,
+    fn: (c: ApiClient) => Promise<T>,
+    payload?: unknown,
+  ) {
     return withHistory(kind, detail, async () => request(fn), payload)
   }
 

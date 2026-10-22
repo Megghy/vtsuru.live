@@ -1,8 +1,8 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { getApiUserBasicValue, getApiUserInfo } from '@/api/generated/user/user'
 import type { ResponseUserInfo } from '@/api/generated/model/responseUserInfo'
+import { getApiUserBasicValue, getApiUserInfo } from '@/api/generated/user/user'
 
 export const USERS = ref<{ [id: string]: ResponseUserInfo }>({})
 

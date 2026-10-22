@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMessage } from '@/shared/utils'
 import { ref, watch } from 'vue'
 
 import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
@@ -9,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { useMessage } from '@/shared/utils'
 
 import BlackListPane from './BlackListPane.vue'
 
@@ -93,9 +93,7 @@ async function SaveComboSetting() {
 <template>
   <Card>
     <CardHeader class="p-3.5 pb-2">
-      <CardTitle class="text-sm font-semibold">
-        系统设置
-      </CardTitle>
+      <CardTitle class="text-sm font-semibold"> 系统设置 </CardTitle>
     </CardHeader>
 
     <CardContent class="p-3.5 pt-0">
@@ -104,12 +102,8 @@ async function SaveComboSetting() {
         class="w-full"
       >
         <TabsList class="grid w-full grid-cols-2 max-w-xs mb-3">
-          <TabsTrigger value="general">
-            常规
-          </TabsTrigger>
-          <TabsTrigger value="blacklist">
-            黑名单
-          </TabsTrigger>
+          <TabsTrigger value="general"> 常规 </TabsTrigger>
+          <TabsTrigger value="blacklist"> 黑名单 </TabsTrigger>
         </TabsList>
 
         <!-- 常规设置 -->
@@ -149,12 +143,14 @@ async function SaveComboSetting() {
                 <Checkbox
                   :model-value="accountInfo.settings.sendEmail.recieveQA"
                   :disabled="isSaving"
-                  @update:model-value="(val) => {
-                    if (accountInfo) {
-                      accountInfo.settings.sendEmail.recieveQA = Boolean(val)
-                      SaveComboSetting()
+                  @update:model-value="
+                    (val) => {
+                      if (accountInfo) {
+                        accountInfo.settings.sendEmail.recieveQA = Boolean(val)
+                        SaveComboSetting()
+                      }
                     }
-                  }"
+                  "
                 />
                 <span>收到新提问时发送邮件</span>
               </label>
@@ -163,12 +159,14 @@ async function SaveComboSetting() {
                 <Checkbox
                   :model-value="accountInfo.settings.sendEmail.recieveQAReply"
                   :disabled="isSaving"
-                  @update:model-value="(val) => {
-                    if (accountInfo) {
-                      accountInfo.settings.sendEmail.recieveQAReply = Boolean(val)
-                      SaveComboSetting()
+                  @update:model-value="
+                    (val) => {
+                      if (accountInfo) {
+                        accountInfo.settings.sendEmail.recieveQAReply = Boolean(val)
+                        SaveComboSetting()
+                      }
                     }
-                  }"
+                  "
                 />
                 <span>提问收到回复时发送邮件</span>
               </label>
@@ -177,12 +175,14 @@ async function SaveComboSetting() {
                 <Checkbox
                   :model-value="accountInfo.settings.sendEmail.receiveOrder"
                   :disabled="isSaving"
-                  @update:model-value="(val) => {
-                    if (accountInfo) {
-                      accountInfo.settings.sendEmail.receiveOrder = Boolean(val)
-                      SaveComboSetting()
+                  @update:model-value="
+                    (val) => {
+                      if (accountInfo) {
+                        accountInfo.settings.sendEmail.receiveOrder = Boolean(val)
+                        SaveComboSetting()
+                      }
                     }
-                  }"
+                  "
                 />
                 <span>积分礼物有新用户兑换时发送邮件</span>
               </label>
@@ -202,12 +202,14 @@ async function SaveComboSetting() {
                 <Checkbox
                   :model-value="accountInfo.settings.questionBox.allowUnregistedUser"
                   :disabled="isSaving"
-                  @update:model-value="(val) => {
-                    if (accountInfo) {
-                      accountInfo.settings.questionBox.allowUnregistedUser = Boolean(val)
-                      SaveComboSetting()
+                  @update:model-value="
+                    (val) => {
+                      if (accountInfo) {
+                        accountInfo.settings.questionBox.allowUnregistedUser = Boolean(val)
+                        SaveComboSetting()
+                      }
                     }
-                  }"
+                  "
                 />
                 <span>允许未注册/未登录用户提问</span>
               </label>
@@ -215,12 +217,14 @@ async function SaveComboSetting() {
                 <Checkbox
                   :model-value="accountInfo.settings.questionBox.allowAnonymous"
                   :disabled="isSaving"
-                  @update:model-value="(val) => {
-                    if (accountInfo) {
-                      accountInfo.settings.questionBox.allowAnonymous = Boolean(val)
-                      SaveComboSetting()
+                  @update:model-value="
+                    (val) => {
+                      if (accountInfo) {
+                        accountInfo.settings.questionBox.allowAnonymous = Boolean(val)
+                        SaveComboSetting()
+                      }
                     }
-                  }"
+                  "
                 />
                 <span>允许匿名提问（关闭后必须实名）</span>
               </label>

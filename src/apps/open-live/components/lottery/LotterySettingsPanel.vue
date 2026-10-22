@@ -42,7 +42,13 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
         <Sparkle24Filled class="size-5 text-amber-500" />
         <span class="font-bold text-base text-foreground">抽奖设置</span>
       </div>
-      <Button size="xs" variant="secondary" class="h-6 text-[11px]" :disabled="isStartLottery" @click="emit('reset')">
+      <Button
+        size="xs"
+        variant="secondary"
+        class="h-6 text-[11px]"
+        :disabled="isStartLottery"
+        @click="emit('reset')"
+      >
         恢复默认
       </Button>
     </div>
@@ -65,7 +71,9 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   type="button"
                   :disabled="isLottering || isStartLottery"
                   class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                  :class="option.type === 'danmaku' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                  :class="
+                    option.type === 'danmaku' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
+                  "
                   @click="option.type = 'danmaku'"
                 >
                   弹幕
@@ -74,7 +82,9 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   type="button"
                   :disabled="isLottering || isStartLottery"
                   class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                  :class="option.type === 'gift' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                  :class="
+                    option.type === 'gift' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
+                  "
                   @click="option.type = 'gift'"
                 >
                   礼物
@@ -86,7 +96,12 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
             <template v-if="option.type === 'danmaku'">
               <div class="flex items-center gap-3">
                 <span class="text-xs text-muted-foreground w-16 shrink-0">弹幕内容</span>
-                <Input v-model="option.danmakuKeyword" :disabled="isStartLottery" placeholder="留空则任意弹幕" class="flex-1" />
+                <Input
+                  v-model="option.danmakuKeyword"
+                  :disabled="isStartLottery"
+                  placeholder="留空则任意弹幕"
+                  class="flex-1"
+                />
               </div>
 
               <div
@@ -99,7 +114,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                     type="button"
                     :disabled="isStartLottery"
                     class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                    :class="option.danmakuFilterType === 'all' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                    :class="
+                      option.danmakuFilterType === 'all'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'hover:text-foreground'
+                    "
                     @click="option.danmakuFilterType = 'all'"
                   >
                     完全一致
@@ -108,7 +127,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                     type="button"
                     :disabled="isStartLottery"
                     class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                    :class="option.danmakuFilterType === 'contains' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                    :class="
+                      option.danmakuFilterType === 'contains'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'hover:text-foreground'
+                    "
                     @click="option.danmakuFilterType = 'contains'"
                   >
                     包含
@@ -117,7 +140,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                     type="button"
                     :disabled="isStartLottery"
                     class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                    :class="option.danmakuFilterType === 'regex' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                    :class="
+                      option.danmakuFilterType === 'regex'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'hover:text-foreground'
+                    "
                     @click="option.danmakuFilterType = 'regex'"
                   >
                     正则
@@ -140,7 +167,12 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                     class="flex-1"
                     @update:value="option.giftMinPrice = $event || 0"
                   />
-                  <Input v-model="option.giftName" :disabled="isStartLottery" placeholder="指定礼物名称" class="flex-1" />
+                  <Input
+                    v-model="option.giftName"
+                    :disabled="isStartLottery"
+                    placeholder="指定礼物名称"
+                    class="flex-1"
+                  />
                 </div>
               </div>
             </template>

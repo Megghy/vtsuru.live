@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QqBotControllerQqBotGroupModel } from './qqBotControllerQqBotGroupModel';
+import type { QqBotControllerQqBotGroupModel } from './qqBotControllerQqBotGroupModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfQqBotControllerQqBotGroupModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: QqBotControllerQqBotGroupModel[] | null;
+  data: QqBotControllerQqBotGroupModel[] | null
 }

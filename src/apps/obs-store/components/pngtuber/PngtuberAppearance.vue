@@ -3,13 +3,7 @@ import type { PngtuberState } from '@/shared/pngtuber/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
 defineProps<{ state: PngtuberState; disabled: boolean }>()
@@ -138,7 +132,11 @@ const switches = [
           class="toggle flex items-center justify-between p-1.5 border rounded-md"
         >
           <span class="text-xs font-medium">{{ label }}</span>
-          <Switch :checked="state[key]" :disabled="disabled" @update:checked="emit('change', { [key]: $event })" />
+          <Switch
+            :checked="state[key]"
+            :disabled="disabled"
+            @update:checked="emit('change', { [key]: $event })"
+          />
         </div>
       </div>
 

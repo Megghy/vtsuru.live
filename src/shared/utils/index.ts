@@ -1,12 +1,12 @@
 import { SquareArrowForward24Filled } from '@vicons/fluent'
 import { usePreferredDark } from '@vueuse/core'
 export { toast } from 'vue-sonner'
-import { toast } from 'vue-sonner'
 import { computed, h } from 'vue'
+import { toast } from 'vue-sonner'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom, ThemeType } from '@/api/api-models'
-import { buildSiteTokens, VTSURU_API_URL } from '@/shared/config'
+import { VTSURU_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import type { UploadFileInfo } from '@/shared/types/upload'
 import FiveSingIcon from '@/svgs/fivesing.svg'
@@ -42,25 +42,42 @@ export function useMessage() {
 }
 
 export const notification = {
-  create: (opts: { title?: string; content?: string; type?: 'info' | 'success' | 'warning' | 'error'; duration?: number }) => {
+  create: (opts: {
+    title?: string
+    content?: string
+    type?: 'info' | 'success' | 'warning' | 'error'
+    duration?: number
+  }) => {
     const fn = toast[opts.type || 'info'] || toast.info
     return fn(opts.title || '', { description: opts.content, duration: opts.duration })
   },
   info: (opts: any) => {
     if (typeof opts === 'string') return toast.info(opts)
-    return toast.info(opts.title || opts.content || '', { description: opts.title ? opts.content : undefined, duration: opts.duration })
+    return toast.info(opts.title || opts.content || '', {
+      description: opts.title ? opts.content : undefined,
+      duration: opts.duration,
+    })
   },
   success: (opts: any) => {
     if (typeof opts === 'string') return toast.success(opts)
-    return toast.success(opts.title || opts.content || '', { description: opts.title ? opts.content : undefined, duration: opts.duration })
+    return toast.success(opts.title || opts.content || '', {
+      description: opts.title ? opts.content : undefined,
+      duration: opts.duration,
+    })
   },
   warning: (opts: any) => {
     if (typeof opts === 'string') return toast.warning(opts)
-    return toast.warning(opts.title || opts.content || '', { description: opts.title ? opts.content : undefined, duration: opts.duration })
+    return toast.warning(opts.title || opts.content || '', {
+      description: opts.title ? opts.content : undefined,
+      duration: opts.duration,
+    })
   },
   error: (opts: any) => {
     if (typeof opts === 'string') return toast.error(opts)
-    return toast.error(opts.title || opts.content || '', { description: opts.title ? opts.content : undefined, duration: opts.duration })
+    return toast.error(opts.title || opts.content || '', {
+      description: opts.title ? opts.content : undefined,
+      duration: opts.duration,
+    })
   },
 }
 
@@ -69,7 +86,14 @@ export function useNotification() {
 }
 
 export const dialog = {
-  warning: (opts: { title?: string; content?: string; positiveText?: string; negativeText?: string; onPositiveClick?: () => void; onNegativeClick?: () => void }) => {
+  warning: (opts: {
+    title?: string
+    content?: string
+    positiveText?: string
+    negativeText?: string
+    onPositiveClick?: () => void
+    onNegativeClick?: () => void
+  }) => {
     if (window.confirm(`${opts.title || '提示'}\n${opts.content || ''}`)) {
       opts.onPositiveClick?.()
     } else {
@@ -335,7 +359,8 @@ export function GetPlayButton(song: SongsInfo) {
       return h(
         'button',
         {
-          class: 'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-[#00BBB3] text-[#00BBB3] hover:bg-[#00BBB3]/10 transition-colors',
+          class:
+            'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-[#00BBB3] text-[#00BBB3] hover:bg-[#00BBB3]/10 transition-colors',
           title: '在5sing打开',
           onClick: () => window.open(`http://5sing.kugou.com/bz/${song.id}.html`),
         },
@@ -346,7 +371,8 @@ export function GetPlayButton(song: SongsInfo) {
       return h(
         'button',
         {
-          class: 'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-[#C20C0C] text-[#C20C0C] hover:bg-[#C20C0C]/10 transition-colors',
+          class:
+            'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-[#C20C0C] text-[#C20C0C] hover:bg-[#C20C0C]/10 transition-colors',
           title: '在网易云打开',
           onClick: () => window.open(`https://music.163.com/#/song?id=${song.id}`),
         },
@@ -357,7 +383,8 @@ export function GetPlayButton(song: SongsInfo) {
         ? h(
             'button',
             {
-              class: 'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-muted-foreground/30 text-foreground hover:bg-muted transition-colors',
+              class:
+                'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-muted-foreground/30 text-foreground hover:bg-muted transition-colors',
               title: '打开链接',
               onClick: () => window.open(song.url),
             },

@@ -41,7 +41,7 @@ const emit = defineEmits<{
 }>()
 
 const targetValues = computed({
-  get: () => props.value.length > 0 ? props.value : props.modelValue,
+  get: () => (props.value.length > 0 ? props.value : props.modelValue),
   set: (val: string[]) => {
     emit('update:modelValue', val)
     emit('update:value', val)
@@ -70,8 +70,7 @@ const filteredSourceOptions = computed(() => {
 // 目标列表项
 const targetOptions = computed(() => {
   const optMap = new Map(props.options.map((o) => [o.value, o]))
-  return targetValues.value
-    .map((v) => optMap.get(v) || { label: v, value: v })
+  return targetValues.value.map((v) => optMap.get(v) || { label: v, value: v })
 })
 
 // 过滤后的目标列表项
@@ -161,10 +160,18 @@ function toggleTargetItem(val: string) {
         </div>
       </div>
 
-      <div v-if="sourceFilterable" class="p-2 border-b">
+      <div
+        v-if="sourceFilterable"
+        class="p-2 border-b"
+      >
         <div class="relative">
           <Search class="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
-          <Input size="xs" v-model="sourceSearch" placeholder="搜索..." class="pl-7.5" />
+          <Input
+            size="xs"
+            v-model="sourceSearch"
+            placeholder="搜索..."
+            class="pl-7.5"
+          />
         </div>
       </div>
 
@@ -204,10 +211,22 @@ function toggleTargetItem(val: string) {
 
     <!-- 中间操作按钮 -->
     <div class="flex flex-col gap-2 shrink-0">
-      <Button variant="outline" size="icon" class="size-8" :disabled="checkedSourceKeys.length === 0" @click="moveToTarget" >
+      <Button
+        variant="outline"
+        size="icon"
+        class="size-8"
+        :disabled="checkedSourceKeys.length === 0"
+        @click="moveToTarget"
+      >
         <ChevronRight class="size-4" />
       </Button>
-      <Button variant="outline" size="icon" class="size-8" :disabled="checkedTargetKeys.length === 0" @click="moveToSource" >
+      <Button
+        variant="outline"
+        size="icon"
+        class="size-8"
+        :disabled="checkedTargetKeys.length === 0"
+        @click="moveToSource"
+      >
         <ChevronLeft class="size-4" />
       </Button>
     </div>
@@ -226,10 +245,18 @@ function toggleTargetItem(val: string) {
         </div>
       </div>
 
-      <div v-if="targetFilterable" class="p-2 border-b">
+      <div
+        v-if="targetFilterable"
+        class="p-2 border-b"
+      >
         <div class="relative">
           <Search class="absolute left-2.5 top-2 size-3.5 text-muted-foreground" />
-          <Input size="xs" v-model="targetSearch" placeholder="搜索已选..." class="pl-7.5" />
+          <Input
+            size="xs"
+            v-model="targetSearch"
+            placeholder="搜索已选..."
+            class="pl-7.5"
+          />
         </div>
       </div>
 

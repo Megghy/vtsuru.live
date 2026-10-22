@@ -9,7 +9,6 @@ import {
   Video24Regular,
 } from '@vicons/fluent'
 import { useSessionStorage } from '@vueuse/core'
-import { useMessage } from '@/shared/utils'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -26,16 +25,11 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { useMessage } from '@/shared/utils'
 
 defineOptions({ name: 'ManageLiveView' })
 
@@ -243,7 +237,11 @@ onBeforeUnmount(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button size="xs" variant="outline" @click="router.push({ name: 'manage-analyze' })">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="router.push({ name: 'manage-analyze' })"
+          >
             <component
               :is="DataTrending24Regular"
               class="h-3.5 w-3.5 mr-1 text-brand"
@@ -251,11 +249,21 @@ onBeforeUnmount(() => {
             深度看板
           </Button>
 
-          <Button size="xs" variant="ghost" :disabled="isLoading" @click="resetFilters">
+          <Button
+            size="xs"
+            variant="ghost"
+            :disabled="isLoading"
+            @click="resetFilters"
+          >
             重置筛选
           </Button>
 
-          <Button size="xs" variant="brand" :loading="isLoading" @click="getAll">
+          <Button
+            size="xs"
+            variant="brand"
+            :loading="isLoading"
+            @click="getAll"
+          >
             <component
               :is="ArrowSync24Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -275,9 +283,7 @@ onBeforeUnmount(() => {
         variant="default"
       >
         <AlertTitle>未认证</AlertTitle>
-        <AlertDescription class="text-xs">
-          尚未进行 Bilibili 认证，请先在认证中心完成账号绑定。
-        </AlertDescription>
+        <AlertDescription class="text-xs"> 尚未进行 Bilibili 认证，请先在认证中心完成账号绑定。 </AlertDescription>
       </Alert>
 
       <Alert
@@ -287,7 +293,12 @@ onBeforeUnmount(() => {
         <AlertTitle>加载失败</AlertTitle>
         <AlertDescription class="text-xs flex items-center justify-between gap-2">
           <span>{{ loadError }}</span>
-          <Button size="xs" variant="outline" :loading="isLoading" @click="getAll">
+          <Button
+            size="xs"
+            variant="outline"
+            :loading="isLoading"
+            @click="getAll"
+          >
             重试
           </Button>
         </AlertDescription>
@@ -320,7 +331,8 @@ onBeforeUnmount(() => {
             <span
               v-else
               class="text-muted-foreground"
-            >当前未开播</span>
+              >当前未开播</span
+            >
           </div>
         </Card>
 
@@ -336,9 +348,7 @@ onBeforeUnmount(() => {
             <span class="text-2xl font-bold font-mono text-foreground">{{ overviewStats.totalHours }}</span>
             <span class="text-xs text-muted-foreground">小时</span>
           </div>
-          <div class="mt-2 text-[11px] text-muted-foreground">
-            历史开播累计时长
-          </div>
+          <div class="mt-2 text-[11px] text-muted-foreground">历史开播累计时长</div>
         </Card>
 
         <Card class="p-3">
@@ -350,12 +360,12 @@ onBeforeUnmount(() => {
             />
           </div>
           <div class="mt-1 flex items-baseline gap-1">
-            <span class="text-2xl font-bold font-mono text-foreground">{{ overviewStats.totalDanmakus.toLocaleString() }}</span>
+            <span class="text-2xl font-bold font-mono text-foreground">{{
+              overviewStats.totalDanmakus.toLocaleString()
+            }}</span>
             <span class="text-xs text-muted-foreground">条</span>
           </div>
-          <div class="mt-2 text-[11px] text-muted-foreground">
-            弹幕与观众发言总量
-          </div>
+          <div class="mt-2 text-[11px] text-muted-foreground">弹幕与观众发言总量</div>
         </Card>
 
         <Card class="p-3">
@@ -368,11 +378,11 @@ onBeforeUnmount(() => {
           </div>
           <div class="mt-1 flex items-baseline gap-1">
             <span class="text-xs text-amber-500 font-bold">¥</span>
-            <span class="text-2xl font-bold font-mono text-amber-500">{{ Number(overviewStats.totalIncome).toLocaleString() }}</span>
+            <span class="text-2xl font-bold font-mono text-amber-500">{{
+              Number(overviewStats.totalIncome).toLocaleString()
+            }}</span>
           </div>
-          <div class="mt-2 text-[11px] text-muted-foreground">
-            礼物 / SC / 舰长打赏
-          </div>
+          <div class="mt-2 text-[11px] text-muted-foreground">礼物 / SC / 舰长打赏</div>
         </Card>
       </div>
 
@@ -386,10 +396,17 @@ onBeforeUnmount(() => {
                 :is="Search24Filled"
                 class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
               />
-              <Input v-model="keyword" placeholder="搜索标题或场次 ID..." class="pl-8" />
+              <Input
+                v-model="keyword"
+                placeholder="搜索标题或场次 ID..."
+                class="pl-8"
+              />
             </div>
 
-            <ToggleGroup v-model="statusFilter" type="single">
+            <ToggleGroup
+              v-model="statusFilter"
+              type="single"
+            >
               <ToggleGroupItem value="all">全部</ToggleGroupItem>
               <ToggleGroupItem value="live">直播中</ToggleGroupItem>
               <ToggleGroupItem value="finished">已结束</ToggleGroupItem>
@@ -409,18 +426,10 @@ onBeforeUnmount(() => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="startAt">
-                      开播时间
-                    </SelectItem>
-                    <SelectItem value="danmakusCount">
-                      弹幕总量
-                    </SelectItem>
-                    <SelectItem value="interactionCount">
-                      互动人次
-                    </SelectItem>
-                    <SelectItem value="totalIncome">
-                      打赏收益
-                    </SelectItem>
+                    <SelectItem value="startAt"> 开播时间 </SelectItem>
+                    <SelectItem value="danmakusCount"> 弹幕总量 </SelectItem>
+                    <SelectItem value="interactionCount"> 互动人次 </SelectItem>
+                    <SelectItem value="totalIncome"> 打赏收益 </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -434,12 +443,8 @@ onBeforeUnmount(() => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="desc">
-                      降序 (高→低)
-                    </SelectItem>
-                    <SelectItem value="asc">
-                      升序 (低→高)
-                    </SelectItem>
+                    <SelectItem value="desc"> 降序 (高→低) </SelectItem>
+                    <SelectItem value="asc"> 升序 (低→高) </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -449,9 +454,18 @@ onBeforeUnmount(() => {
 
             <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span>自动刷新</span>
-              <Switch :checked="enableAutoRefresh" @update:checked="(val) => (enableAutoRefresh = val)"
+              <Switch
+                :checked="enableAutoRefresh"
+                @update:checked="(val) => (enableAutoRefresh = val)"
               />
-              <Input v-if="enableAutoRefresh" v-model.number="refreshSeconds" type="number" min="10" max="300" class="w-16" />
+              <Input
+                v-if="enableAutoRefresh"
+                v-model.number="refreshSeconds"
+                type="number"
+                min="10"
+                max="300"
+                class="w-16"
+              />
             </div>
           </div>
         </div>
@@ -479,11 +493,13 @@ onBeforeUnmount(() => {
           v-if="!filteredAndSortedLives.length"
           class="p-12 text-center"
         >
-          <div class="text-muted-foreground text-sm">
-            未找到符合条件的直播记录
-          </div>
+          <div class="text-muted-foreground text-sm">未找到符合条件的直播记录</div>
           <div class="mt-3">
-            <Button size="xs" variant="outline" @click="resetFilters">
+            <Button
+              size="xs"
+              variant="outline"
+              @click="resetFilters"
+            >
               清空筛选条件
             </Button>
           </div>
@@ -516,26 +532,28 @@ onBeforeUnmount(() => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="10">
-                    10 条/页
-                  </SelectItem>
-                  <SelectItem value="20">
-                    20 条/页
-                  </SelectItem>
-                  <SelectItem value="50">
-                    50 条/页
-                  </SelectItem>
+                  <SelectItem value="10"> 10 条/页 </SelectItem>
+                  <SelectItem value="20"> 20 条/页 </SelectItem>
+                  <SelectItem value="50"> 50 条/页 </SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div class="flex items-center gap-1.5">
-            <Button size="xs" variant="outline" :disabled="page <= 1" @click="page--">
+            <Button
+              size="xs"
+              variant="outline"
+              :disabled="page <= 1"
+              @click="page--"
+            >
               上一页
             </Button>
             <span class="px-2 font-mono">{{ page }} / {{ totalPages }}</span>
-            <Button size="xs" variant="outline" :disabled="page>= totalPages"
+            <Button
+              size="xs"
+              variant="outline"
+              :disabled="page >= totalPages"
               @click="page++"
             >
               下一页

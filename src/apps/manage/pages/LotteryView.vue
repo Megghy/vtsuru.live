@@ -19,14 +19,10 @@ import {
 } from '@vicons/fluent'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
-import { useMessage } from '@/shared/utils'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type {
-  LotteryUserInfo,
-  OpenLiveLotteryUserInfo,
-} from '@/api/api-models'
+import type { LotteryUserInfo, OpenLiveLotteryUserInfo } from '@/api/api-models'
 import {
   getApiLotteryComments,
   getApiLotteryForward,
@@ -76,6 +72,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { useMessage } from '@/shared/utils'
 import { objectsToCSV } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -544,7 +541,11 @@ onUnmounted(() => {
             </div>
 
             <div class="flex items-center gap-2 flex-wrap">
-              <Button :variant="isStartLiveLottery ? 'outline' : 'default'" :class="{ 'border-amber-500 text-amber-500 hover:bg-amber-500/10': isStartLiveLottery }" @click="isStartLiveLottery = !isStartLiveLottery">
+              <Button
+                :variant="isStartLiveLottery ? 'outline' : 'default'"
+                :class="{ 'border-amber-500 text-amber-500 hover:bg-amber-500/10': isStartLiveLottery }"
+                @click="isStartLiveLottery = !isStartLiveLottery"
+              >
                 <component
                   :is="isStartLiveLottery ? Pause24Filled : Play24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -552,7 +553,12 @@ onUnmounted(() => {
                 {{ isStartLiveLottery ? '暂停收集' : '开始收集观众' }}
               </Button>
 
-              <Button variant="secondary" :loading="isLiveLottering" :disabled="currentUsers.length === 0" @click="startLiveLottery">
+              <Button
+                variant="secondary"
+                :loading="isLiveLottering"
+                :disabled="currentUsers.length === 0"
+                @click="startLiveLottery"
+              >
                 <component
                   :is="Sparkle24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -560,7 +566,10 @@ onUnmounted(() => {
                 开始翻牌抽取
               </Button>
 
-              <Button variant="outline" @click="showLiveAddUserModal = true">
+              <Button
+                variant="outline"
+                @click="showLiveAddUserModal = true"
+              >
                 <component
                   :is="PersonAdd24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -568,11 +577,17 @@ onUnmounted(() => {
                 手动加人
               </Button>
 
-              <Button variant="outline" @click="showLiveObsModal = true">
+              <Button
+                variant="outline"
+                @click="showLiveObsModal = true"
+              >
                 OBS 组件大屏
               </Button>
 
-              <Button variant="outline" @click="showLiveHistoryModal = true">
+              <Button
+                variant="outline"
+                @click="showLiveHistoryModal = true"
+              >
                 <component
                   :is="History24Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -582,16 +597,18 @@ onUnmounted(() => {
 
               <AlertDialog>
                 <AlertDialogTrigger as-child>
-                  <Button variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="currentUsers.length === 0">
+                  <Button
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    :disabled="currentUsers.length === 0"
+                  >
                     清空奖池
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent class="sm:max-w-md">
                   <AlertDialogHeader>
                     <AlertDialogTitle>清空当前抽奖池？</AlertDialogTitle>
-                    <AlertDialogDescription class="text-xs">
-                      确定清空当前收集的所有观众吗？
-                    </AlertDialogDescription>
+                    <AlertDialogDescription class="text-xs"> 确定清空当前收集的所有观众吗？ </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>取消</AlertDialogCancel>
@@ -618,9 +635,7 @@ onUnmounted(() => {
                   :is="PeopleQueue24Regular"
                   class="h-4 w-4 text-muted-foreground"
                 />
-                <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-                  实时奖池观众卡片
-                </CardTitle>
+                <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 实时奖池观众卡片 </CardTitle>
               </div>
             </CardHeader>
 
@@ -646,7 +661,8 @@ onUnmounted(() => {
                   :key="user.openId"
                   class="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-card/60 transition-all text-center relative overflow-hidden"
                   :class="{
-                    'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500': cardStates[user.openId]?.isWinner,
+                    'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500':
+                      cardStates[user.openId]?.isWinner,
                     'opacity-30 scale-95': cardStates[user.openId]?.eliminated,
                   }"
                 >
@@ -703,26 +719,44 @@ onUnmounted(() => {
                 :is="Link24Regular"
                 class="h-4 w-4 text-muted-foreground"
               />
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-                输入动态或视频链接
-              </CardTitle>
+              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 输入动态或视频链接 </CardTitle>
             </div>
           </CardHeader>
 
           <CardContent class="p-3.5 space-y-3">
             <div class="flex items-center gap-3 flex-wrap">
               <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                <Button size="xs" :variant="dynamicType === 'comment' ? 'default' : 'ghost'" class="px-2.5" @click="dynamicType = 'comment'">
+                <Button
+                  size="xs"
+                  :variant="dynamicType === 'comment' ? 'default' : 'ghost'"
+                  class="px-2.5"
+                  @click="dynamicType = 'comment'"
+                >
                   评论抽奖
                 </Button>
-                <Button size="xs" :variant="dynamicType === 'forward' ? 'default' : 'ghost'" class="px-2.5" @click="dynamicType = 'forward'">
+                <Button
+                  size="xs"
+                  :variant="dynamicType === 'forward' ? 'default' : 'ghost'"
+                  class="px-2.5"
+                  @click="dynamicType = 'forward'"
+                >
                   转发抽奖
                 </Button>
               </div>
 
               <div class="flex items-center gap-1.5 flex-1 min-w-[280px]">
-                <Input v-model="inputDynamic" placeholder="输入 B站动态 ID、动态链接 (如 https://t.bilibili.com/123456) 或视频链接" class="flex-1" />
-                <Button size="xs" variant="brand" :loading="isDynamicLoading" :disabled="!turnstileToken" @click="fetchDynamicUsers">
+                <Input
+                  v-model="inputDynamic"
+                  placeholder="输入 B站动态 ID、动态链接 (如 https://t.bilibili.com/123456) 或视频链接"
+                  class="flex-1"
+                />
+                <Button
+                  size="xs"
+                  variant="brand"
+                  :loading="isDynamicLoading"
+                  :disabled="!turnstileToken"
+                  @click="fetchDynamicUsers"
+                >
                   拉取用户数据
                 </Button>
               </div>
@@ -746,13 +780,12 @@ onUnmounted(() => {
                   :is="Target24Regular"
                   class="h-4 w-4 text-muted-foreground"
                 />
-                <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-                  候选观众与中奖结果
-                </CardTitle>
+                <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 候选观众与中奖结果 </CardTitle>
               </div>
 
               <div class="flex items-center gap-2">
-                <Button v-if="dynamicResultUsers.length> 0"
+                <Button
+                  v-if="dynamicResultUsers.length > 0"
                   size="xs"
                   variant="outline"
                   @click="exportWinnersCsv"
@@ -764,7 +797,13 @@ onUnmounted(() => {
                   导出中奖 CSV
                 </Button>
 
-                <Button size="xs" variant="brand" :loading="isDynamicLottering" :disabled="validDynamicUsers.length === 0" @click="startDynamicLottery">
+                <Button
+                  size="xs"
+                  variant="brand"
+                  :loading="isDynamicLottering"
+                  :disabled="validDynamicUsers.length === 0"
+                  @click="startDynamicLottery"
+                >
                   开始抽奖 (抽取 {{ dynamicOption.resultCount }} 人)
                 </Button>
               </div>
@@ -780,7 +819,8 @@ onUnmounted(() => {
                   :key="user.uId"
                   class="flex items-center gap-1.5 px-2 py-1 rounded-full border border-border bg-card/60 text-xs transition-all"
                   :class="{
-                    'border-amber-500 bg-amber-500/10 font-bold ring-1 ring-amber-500 text-amber-500': dynamicResultUsers.some((w) => w.uId === user.uId),
+                    'border-amber-500 bg-amber-500/10 font-bold ring-1 ring-amber-500 text-amber-500':
+                      dynamicResultUsers.some((w) => w.uId === user.uId),
                     'opacity-30': dynamicEliminatedIds.has(user.uId),
                     'ring-2 ring-brand scale-105 bg-brand/10': rollingId === user.uId,
                   }"
@@ -817,16 +857,19 @@ onUnmounted(() => {
                     :is="Settings24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-                    抽选条件与过滤
-                  </CardTitle>
+                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 抽选条件与过滤 </CardTitle>
                 </div>
               </CardHeader>
 
               <CardContent class="p-3.5 space-y-3.5">
                 <div class="flex items-center justify-between gap-3">
                   <span class="text-xs font-medium text-foreground">抽取人数</span>
-                  <Input v-model.number="dynamicOption.resultCount" type="number" min="1" class="w-24 font-mono" />
+                  <Input
+                    v-model.number="dynamicOption.resultCount"
+                    type="number"
+                    min="1"
+                    class="w-24 font-mono"
+                  />
                 </div>
 
                 <Separator />
@@ -850,7 +893,14 @@ onUnmounted(() => {
                     class="pl-6 pt-1 flex items-center gap-2"
                   >
                     <span class="text-xs text-muted-foreground">最低等级:</span>
-                    <Input size="xs" v-model.number="dynamicOption.fanCardLevel" type="number" min="1" max="40" class="w-20 font-mono" />
+                    <Input
+                      size="xs"
+                      v-model.number="dynamicOption.fanCardLevel"
+                      type="number"
+                      min="1"
+                      max="40"
+                      class="w-20 font-mono"
+                    />
                   </div>
                 </div>
               </CardContent>

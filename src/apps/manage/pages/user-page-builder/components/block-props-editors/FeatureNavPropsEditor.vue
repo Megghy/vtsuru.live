@@ -44,11 +44,16 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
         >
           <ReorderThreeOutline class="size-5" />
         </span>
-        <component :is="USER_FEATURE_DEFINITION_MAP[item.key].icon" class="size-4 shrink-0 text-foreground" />
+        <component
+          :is="USER_FEATURE_DEFINITION_MAP[item.key].icon"
+          class="size-4 shrink-0 text-foreground"
+        />
         <span class="feature-label text-xs text-foreground truncate flex-1">
           {{ USER_FEATURE_DEFINITION_MAP[item.key].label }}
         </span>
-        <Switch :checked="item.hidden !== true" @update:checked="(value) => setVisible(item, value)"
+        <Switch
+          :checked="item.hidden !== true"
+          @update:checked="(value) => setVisible(item, value)"
         />
       </div>
     </VueDraggable>

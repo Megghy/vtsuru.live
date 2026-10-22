@@ -7,10 +7,10 @@
  */
 
 export interface QqBotControllerQqBotGroupNotifyModel {
-  liveStart: boolean;
-  liveStop: boolean;
-  schedule: boolean;
-  lottery: boolean;
-  vote: boolean;
-  superChat: boolean;
+  liveStart: boolean
+  liveStop: boolean
+  schedule: boolean
+  lottery: boolean
+  vote: boolean
+  superChat: boolean
 }

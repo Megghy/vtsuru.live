@@ -41,7 +41,10 @@ defineProps<{ logs: AuditLog[] }>()
 </script>
 
 <template>
-  <div v-if="logs.length === 0" class="py-8">
+  <div
+    v-if="logs.length === 0"
+    class="py-8"
+  >
     <Empty description="暂无操作记录" />
   </div>
   <div
@@ -59,7 +62,12 @@ defineProps<{ logs: AuditLog[] }>()
         </strong>
         <p class="text-[11px] text-muted-foreground break-all m-0">
           {{ log.detail }}
-          <span v-if="log.action !== actionLabel(log.action)" class="opacity-60"> · {{ log.action }}</span>
+          <span
+            v-if="log.action !== actionLabel(log.action)"
+            class="opacity-60"
+          >
+            · {{ log.action }}</span
+          >
         </p>
       </div>
 

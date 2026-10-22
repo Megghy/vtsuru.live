@@ -20,11 +20,13 @@ const statusFilter = ref<ObsComponentStatus | 'all'>('all')
 const showDrawer = ref(false)
 const selectedComponent = ref<ObsComponentDefinition | null>(null)
 
-const components = computed(() => filterObsComponents({
-  category: category.value,
-  search: search.value,
-  status: statusFilter.value,
-}))
+const components = computed(() =>
+  filterObsComponents({
+    category: category.value,
+    search: search.value,
+    status: statusFilter.value,
+  }),
+)
 
 const queryComponentId = computed(() => firstQueryValue(route.query.component || route.query.active).trim())
 
@@ -111,7 +113,10 @@ watch(
     >
       <Empty description="没有匹配的组件">
         <template #extra>
-          <Button variant="secondary" @click="resetFilters">
+          <Button
+            variant="secondary"
+            @click="resetFilters"
+          >
             清除筛选
           </Button>
         </template>
@@ -121,7 +126,11 @@ watch(
     <ObsComponentDrawer
       v-model:show="showDrawer"
       :component="selectedComponent"
-      @update:show="(value) => { if (!value) closeConfig() }"
+      @update:show="
+        (value) => {
+          if (!value) closeConfig()
+        }
+      "
     />
   </div>
 </template>

@@ -38,9 +38,7 @@ onMounted(() => {
 
 // 解析倒计时或正计时的分与秒
 const parsedTimerParts = computed(() => {
-  const timeStr = props.state.mode === 'countdown'
-    ? props.countdownData.displayTime
-    : props.stopwatchData.displayTime
+  const timeStr = props.state.mode === 'countdown' ? props.countdownData.displayTime : props.stopwatchData.displayTime
 
   const parts = timeStr.split(':')
   if (parts.length === 3) {
@@ -288,12 +286,7 @@ const parsedTimerParts = computed(() => {
   left: 8px;
   width: 6px;
   height: 60%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.05) 80%,
-    transparent 100%
-  );
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.05) 80%, transparent 100%);
   border-radius: 3px;
   pointer-events: none;
 }
@@ -354,9 +347,16 @@ const parsedTimerParts = computed(() => {
 }
 
 @keyframes nixieFlicker {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.85; }
-  72% { opacity: 0.95; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+  72% {
+    opacity: 0.95;
+  }
 }
 
 .nixie-finished-banner {

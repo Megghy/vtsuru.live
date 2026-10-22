@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AccountControllerTempResponseAloginModel } from './accountControllerTempResponseAloginModel';
+import type { AccountControllerTempResponseAloginModel } from './accountControllerTempResponseAloginModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfAccountControllerTempResponseAloginModel {
-  message: string;
-  code: number;
-  data: AccountControllerTempResponseAloginModel;
+  message: string
+  code: number
+  data: AccountControllerTempResponseAloginModel
 }

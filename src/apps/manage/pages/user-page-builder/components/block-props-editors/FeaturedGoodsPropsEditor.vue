@@ -106,9 +106,7 @@ watch(
             >
               <span class="truncate">
                 {{
-                  selectedGoodsIds.length
-                    ? `已选 ${selectedGoodsIds.length} 个商品`
-                    : '不选择时使用上面的自动选择方式'
+                  selectedGoodsIds.length ? `已选 ${selectedGoodsIds.length} 个商品` : '不选择时使用上面的自动选择方式'
                 }}
               </span>
             </button>

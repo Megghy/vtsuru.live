@@ -7,5 +7,5 @@
  */
 
 export type PostApiPointUserDeleteAddressParams = {
-id?: string;
-};
+  id?: string
+}

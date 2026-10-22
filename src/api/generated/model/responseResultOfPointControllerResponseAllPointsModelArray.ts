@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointControllerResponseAllPointsModel } from './pointControllerResponseAllPointsModel';
+import type { PointControllerResponseAllPointsModel } from './pointControllerResponseAllPointsModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfPointControllerResponseAllPointsModelArray {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: PointControllerResponseAllPointsModel[] | null;
+  data: PointControllerResponseAllPointsModel[] | null
 }

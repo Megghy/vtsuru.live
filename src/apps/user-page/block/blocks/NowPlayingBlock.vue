@@ -70,7 +70,10 @@ useIntervalFn(() => {
     <template #header>
       <div class="playing-header flex items-center justify-between w-full">
         <span class="playing-heading flex items-center gap-1.5 font-semibold text-sm">
-          <component :is="MusicalNotesOutline" class="size-4" />
+          <component
+            :is="MusicalNotesOutline"
+            class="size-4"
+          />
           当前播放
         </span>
         <RouterLink
@@ -79,9 +82,16 @@ useIntervalFn(() => {
           :to="{ name: 'user-songList', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
+          <Button
+            variant="ghost"
+            class="text-primary font-medium p-0"
+            @click="navigate"
+          >
             完整点歌页
-            <component :is="OpenOutline" class="size-3.5 ml-1" />
+            <component
+              :is="OpenOutline"
+              class="size-3.5 ml-1"
+            />
           </Button>
         </RouterLink>
       </div>
@@ -91,9 +101,7 @@ useIntervalFn(() => {
       v-if="!enabled"
       class="text-xs py-2"
     >
-      <AlertDescription>
-        点歌功能未开放
-      </AlertDescription>
+      <AlertDescription> 点歌功能未开放 </AlertDescription>
     </Alert>
     <Alert
       v-else-if="query.status.value === 'error'"
@@ -102,8 +110,16 @@ useIntervalFn(() => {
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>当前点歌状态加载失败</span>
-        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
-          <component :is="RefreshOutline" class="size-3" />
+        <Button
+          variant="outline"
+          size="xs"
+          class="gap-1"
+          @click="load(true)"
+        >
+          <component
+            :is="RefreshOutline"
+            class="size-3"
+          />
           重试
         </Button>
       </AlertDescription>
@@ -119,8 +135,13 @@ useIntervalFn(() => {
         v-if="current"
         class="playing-content flex items-center gap-3 p-1"
       >
-        <div class="playing-icon size-10 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary">
-          <component :is="MusicalNotesOutline" class="size-5" />
+        <div
+          class="playing-icon size-10 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary"
+        >
+          <component
+            :is="MusicalNotesOutline"
+            class="size-5"
+          />
         </div>
         <div class="playing-copy flex-1 min-w-0 grid gap-0.5">
           <span class="status text-xs text-muted-foreground">正在演唱</span>

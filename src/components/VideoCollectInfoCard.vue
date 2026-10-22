@@ -99,11 +99,16 @@ function onClick() {
         </p>
       </CardContent>
 
-      <CardFooter class="p-3 pt-0 flex items-center gap-3 text-xs text-muted-foreground border-t border-border/40 mt-1 pt-2">
+      <CardFooter
+        class="p-3 pt-0 flex items-center gap-3 text-xs text-muted-foreground border-t border-border/40 mt-1 pt-2"
+      >
         <Tooltip>
           <TooltipTrigger as-child>
             <div class="flex items-center gap-1 font-mono cursor-default">
-              <component :is="NumberRow24Regular" class="size-3.5" />
+              <component
+                :is="NumberRow24Regular"
+                class="size-3.5"
+              />
               <span>{{ item.videoCount }} / {{ item.maxVideoCount }}</span>
             </div>
           </TooltipTrigger>
@@ -115,7 +120,10 @@ function onClick() {
           <Tooltip>
             <TooltipTrigger as-child>
               <div class="flex items-center gap-1 font-mono cursor-default">
-                <component :is="Clock24Regular" class="size-3.5" />
+                <component
+                  :is="Clock24Regular"
+                  class="size-3.5"
+                />
                 <span>{{ isUpcoming ? '开放倒计时' : '剩余' }} {{ countdownText }}</span>
               </div>
             </TooltipTrigger>

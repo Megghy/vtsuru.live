@@ -102,7 +102,10 @@ function toggleGiftWindow() {
               <span class="status-badge-text">{{ danmakuStatusText }}</span>
             </div>
           </TooltipTrigger>
-          <TooltipContent side="top" align="start">
+          <TooltipContent
+            side="top"
+            align="start"
+          >
             <div>
               <div>
                 <strong>弹幕连接状态：{{ danmakuClient.connectionStatus }}</strong>

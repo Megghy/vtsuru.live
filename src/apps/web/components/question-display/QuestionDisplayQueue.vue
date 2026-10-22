@@ -81,16 +81,36 @@ defineExpose({ scrollToCurrent })
         <div class="heading-actions flex items-center gap-1">
           <Tooltip v-if="currentId">
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="icon" class="size-7" aria-label="定位正在展示的提问" @click="scrollToCurrent">
-                <component :is="Location24Regular" class="size-4" />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7"
+                aria-label="定位正在展示的提问"
+                @click="scrollToCurrent"
+              >
+                <component
+                  :is="Location24Regular"
+                  class="size-4"
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent>定位正在展示的提问</TooltipContent>
           </Tooltip>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="outline" size="icon" class="size-7" :disabled="loading" aria-label="刷新提问队列" @click="emit('refresh')">
-                <component :is="ArrowSync24Regular" class="size-4" :class="{ 'animate-spin': loading }" />
+              <Button
+                variant="outline"
+                size="icon"
+                class="size-7"
+                :disabled="loading"
+                aria-label="刷新提问队列"
+                @click="emit('refresh')"
+              >
+                <component
+                  :is="ArrowSync24Regular"
+                  class="size-4"
+                  :class="{ 'animate-spin': loading }"
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent>刷新提问队列</TooltipContent>
@@ -100,8 +120,15 @@ defineExpose({ scrollToCurrent })
 
       <div class="queue-filters p-3 space-y-2 border-b border-border/60 bg-muted/20 text-xs">
         <div class="relative">
-          <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input v-model="search" placeholder="搜索提问内容" class="pl-8" />
+          <component
+            :is="Search24Regular"
+            class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            v-model="search"
+            placeholder="搜索提问内容"
+            class="pl-8"
+          />
         </div>
 
         <Select
@@ -112,7 +139,11 @@ defineExpose({ scrollToCurrent })
             <SelectValue placeholder="全部话题" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all" class="text-xs">全部话题</SelectItem>
+            <SelectItem
+              value="all"
+              class="text-xs"
+              >全部话题</SelectItem
+            >
             <SelectItem
               v-for="opt in tagOptions"
               :key="opt.value"
@@ -167,7 +198,10 @@ defineExpose({ scrollToCurrent })
                 <div class="meta-right flex items-center gap-1 shrink-0 font-mono">
                   <Tooltip v-if="!item.isPublic">
                     <TooltipTrigger as-child>
-                      <component :is="LockClosed24Regular" class="size-3 text-muted-foreground" />
+                      <component
+                        :is="LockClosed24Regular"
+                        class="size-3 text-muted-foreground"
+                      />
                     </TooltipTrigger>
                     <TooltipContent>
                       {{ item.senderAllowsPublic === false ? '提问者选择不公开展示' : '私密提问' }}
@@ -199,7 +233,10 @@ defineExpose({ scrollToCurrent })
                   variant="outline"
                   class="text-[10px] h-4.5 px-1.5 flex items-center gap-0.5 text-blue-500"
                 >
-                  <component :is="Comment24Regular" class="size-3" />
+                  <component
+                    :is="Comment24Regular"
+                    class="size-3"
+                  />
                   已回复
                 </Badge>
                 <Badge
@@ -213,17 +250,32 @@ defineExpose({ scrollToCurrent })
                   v-if="item.questionImages?.length"
                   class="img-flag inline-flex items-center gap-0.5 text-[10px] text-muted-foreground font-mono"
                 >
-                  <component :is="Image24Regular" class="size-3" />
+                  <component
+                    :is="Image24Regular"
+                    class="size-3"
+                  />
                   {{ item.questionImages.length }}
                 </span>
               </div>
             </button>
 
-            <div class="question-actions flex flex-col items-center justify-between gap-1 border-l border-border/60 pl-1.5">
+            <div
+              class="question-actions flex flex-col items-center justify-between gap-1 border-l border-border/60 pl-1.5"
+            >
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="size-6" :class="item.id === currentId ? 'text-destructive' : 'text-primary'" :aria-label="item.id === currentId ? '清空当前展示' : '展示这条提问'" @click="item.id === currentId ? emit('clear') : emit('show', item)">
-                    <component :is="item.id === currentId ? Dismiss24Regular : Eye24Regular" class="size-3.5" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-6"
+                    :class="item.id === currentId ? 'text-destructive' : 'text-primary'"
+                    :aria-label="item.id === currentId ? '清空当前展示' : '展示这条提问'"
+                    @click="item.id === currentId ? emit('clear') : emit('show', item)"
+                  >
+                    <component
+                      :is="item.id === currentId ? Dismiss24Regular : Eye24Regular"
+                      class="size-3.5"
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{{ item.id === currentId ? '清空当前展示' : '展示这条提问' }}</TooltipContent>
@@ -231,8 +283,18 @@ defineExpose({ scrollToCurrent })
 
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="size-6 text-muted-foreground hover:text-foreground" :disabled="item.isReaded" aria-label="标记为已读" @click="emit('read', item)">
-                    <component :is="Checkmark24Regular" class="size-3.5" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-6 text-muted-foreground hover:text-foreground"
+                    :disabled="item.isReaded"
+                    aria-label="标记为已读"
+                    @click="emit('read', item)"
+                  >
+                    <component
+                      :is="Checkmark24Regular"
+                      class="size-3.5"
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>标记为已读</TooltipContent>
@@ -240,8 +302,18 @@ defineExpose({ scrollToCurrent })
 
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="icon" class="size-6" :class="item.isFavorite ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'" :aria-label="item.isFavorite ? '取消收藏' : '收藏'" @click="emit('favorite', item, !item.isFavorite)">
-                    <component :is="item.isFavorite ? Heart : HeartOutline" class="size-3.5" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    class="size-6"
+                    :class="item.isFavorite ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'"
+                    :aria-label="item.isFavorite ? '取消收藏' : '收藏'"
+                    @click="emit('favorite', item, !item.isFavorite)"
+                  >
+                    <component
+                      :is="item.isFavorite ? Heart : HeartOutline"
+                      class="size-3.5"
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>{{ item.isFavorite ? '取消收藏' : '收藏' }}</TooltipContent>

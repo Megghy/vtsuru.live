@@ -9,8 +9,8 @@ import {
   postApiLiveRequestAddFromWeb,
 } from '@/api/generated/live-request/live-request'
 import { getApiSongListGet } from '@/api/generated/song-list/song-list'
-import type { BiliProfile } from '@/apps/user-page/types'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
+import type { BiliProfile } from '@/apps/user-page/types'
 import { SongListTemplateMap } from '@/shared/config/templates'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
@@ -218,9 +218,7 @@ async function requestSong(song: SongsInfo) {
     }
     const data = (await postApiLiveRequestAddFromWeb(
       params,
-      biliAuth.isAuthed
-        ? { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) }
-        : undefined,
+      biliAuth.isAuthed ? { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) } : undefined,
     )) as unknown as {
       code: number
       message?: string
@@ -321,7 +319,12 @@ onMounted(async () => {
     </Spin>
 
     <!-- 主播自定义按钮 -->
-    <Button v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id" variant="outline" class="absolute right-8 top-5 z-[1000]" @click="showSettingModal = true">
+    <Button
+      v-if="selectedTemplate?.settingName && userInfo?.id === accountInfo.id"
+      variant="outline"
+      class="absolute right-8 top-5 z-[1000]"
+      @click="showSettingModal = true"
+    >
       自定义
     </Button>
 

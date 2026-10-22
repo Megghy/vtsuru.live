@@ -60,21 +60,25 @@ onMounted(() => {
         <span
           v-if="props.state.showSeconds"
           class="pill-sec"
-        >:{{ props.clockData.seconds }}</span>
+          >:{{ props.clockData.seconds }}</span
+        >
         <span
           v-if="!props.state.is24Hour && props.clockData.ampm"
           class="pill-ampm"
-        >{{ props.clockData.ampm }}</span>
+          >{{ props.clockData.ampm }}</span
+        >
       </template>
       <template v-else-if="props.state.mode === 'countdown'">
         <span
           v-if="props.countdownData.isFinished"
           class="pill-finished"
-        >{{ props.state.timerEndText || 'START' }}</span>
+          >{{ props.state.timerEndText || 'START' }}</span
+        >
         <span
           v-else
           class="pill-digits"
-        >{{ props.countdownData.displayTime }}</span>
+          >{{ props.countdownData.displayTime }}</span
+        >
       </template>
       <template v-else-if="props.state.mode === 'stopwatch'">
         <span class="pill-digits">{{ props.stopwatchData.displayTime }}</span>
@@ -89,11 +93,13 @@ onMounted(() => {
       <span
         v-if="props.state.showDayOfWeek"
         class="pill-dow"
-      >{{ props.clockData.dayOfWeekEn }}</span>
+        >{{ props.clockData.dayOfWeekEn }}</span
+      >
       <span
         v-if="props.state.showDate"
         class="pill-date"
-      >{{ props.clockData.dateShort }}</span>
+        >{{ props.clockData.dateShort }}</span
+      >
     </div>
   </div>
 </template>
@@ -112,7 +118,11 @@ onMounted(() => {
   padding: 6px 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
   user-select: none;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Plus Jakarta Sans',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   box-sizing: border-box;
 }
 
@@ -136,8 +146,15 @@ onMounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
 }
 
 .live-text {

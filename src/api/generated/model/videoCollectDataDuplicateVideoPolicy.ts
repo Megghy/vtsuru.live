@@ -6,10 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type VideoCollectDataDuplicateVideoPolicy = typeof VideoCollectDataDuplicateVideoPolicy[keyof typeof VideoCollectDataDuplicateVideoPolicy];
-
+export type VideoCollectDataDuplicateVideoPolicy =
+  (typeof VideoCollectDataDuplicateVideoPolicy)[keyof typeof VideoCollectDataDuplicateVideoPolicy]
 
 export const VideoCollectDataDuplicateVideoPolicy = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

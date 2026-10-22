@@ -2,7 +2,6 @@
 import { Add20Filled, Delete20Filled, Dismiss20Filled } from '@vicons/fluent'
 import { ref } from 'vue'
 
-import { useSpeechService } from '@/store/useSpeechService'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -10,6 +9,7 @@ import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from './SectionField.vue'
 
@@ -77,11 +77,20 @@ function removeReplacement(index: number) {
           <span
             v-if="settings.blacklistUsers.length === 0"
             class="text-xs text-muted-foreground"
-          >无</span>
+            >无</span
+          >
         </div>
         <div class="flex gap-2">
-          <Input size="xs" v-model="newBlacklistUser" placeholder="输入用户名并回车" @keyup.enter="addUser" />
-          <Button class="px-2 shrink-0" @click="addUser">
+          <Input
+            size="xs"
+            v-model="newBlacklistUser"
+            placeholder="输入用户名并回车"
+            @keyup.enter="addUser"
+          />
+          <Button
+            class="px-2 shrink-0"
+            @click="addUser"
+          >
             添加
           </Button>
         </div>
@@ -112,11 +121,20 @@ function removeReplacement(index: number) {
           <span
             v-if="settings.blacklistKeywords.length === 0"
             class="text-xs text-muted-foreground"
-          >无</span>
+            >无</span
+          >
         </div>
         <div class="flex gap-2">
-          <Input size="xs" v-model="newBlacklistKeyword" placeholder="输入关键词并回车" @keyup.enter="addKeyword" />
-          <Button class="px-2 shrink-0" @click="addKeyword">
+          <Input
+            size="xs"
+            v-model="newBlacklistKeyword"
+            placeholder="输入关键词并回车"
+            @keyup.enter="addKeyword"
+          />
+          <Button
+            class="px-2 shrink-0"
+            @click="addKeyword"
+          >
             添加
           </Button>
         </div>
@@ -175,19 +193,41 @@ function removeReplacement(index: number) {
           :key="i"
           class="rule-row"
         >
-          <Input size="xs" v-model="rule.pattern" placeholder="匹配" class="flex-1" />
+          <Input
+            size="xs"
+            v-model="rule.pattern"
+            placeholder="匹配"
+            class="flex-1"
+          />
           <span class="text-xs text-muted-foreground shrink-0">→</span>
-          <Input size="xs" v-model="rule.replacement" placeholder="替换为" class="flex-1" />
+          <Input
+            size="xs"
+            v-model="rule.replacement"
+            placeholder="替换为"
+            class="flex-1"
+          />
           <div class="flex items-center gap-1.5 shrink-0 text-xs text-muted-foreground">
             <span>{{ rule.isRegex ? '正则' : '文本' }}</span>
-            <Switch :checked="rule.isRegex" @update:checked="rule.isRegex = $event" />
+            <Switch
+              :checked="rule.isRegex"
+              @update:checked="rule.isRegex = $event"
+            />
           </div>
-          <Button size="xs" variant="ghost" class="w-7 p-0 text-destructive hover:bg-destructive/10 shrink-0" @click="removeReplacement(i)">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="w-7 p-0 text-destructive hover:bg-destructive/10 shrink-0"
+            @click="removeReplacement(i)"
+          >
             <Delete20Filled class="size-3.5" />
           </Button>
         </div>
       </div>
-      <Button variant="outline" class="gap-1 w-fit" @click="addReplacement">
+      <Button
+        variant="outline"
+        class="gap-1 w-fit"
+        @click="addReplacement"
+      >
         <Add20Filled class="size-3.5" />
         添加规则
       </Button>

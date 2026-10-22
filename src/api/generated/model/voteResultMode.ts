@@ -6,10 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type VoteResultMode = typeof VoteResultMode[keyof typeof VoteResultMode];
-
+export type VoteResultMode = (typeof VoteResultMode)[keyof typeof VoteResultMode]
 
 export const VoteResultMode = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

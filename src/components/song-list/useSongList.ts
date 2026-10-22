@@ -156,7 +156,11 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     isLoading.value = true
     try {
       const payload = songs.map((song) => ({ key: song.key, song }))
-      const { code, data, message: err } = (await postApiSongListUpdateBatch(payload as any)) as unknown as {
+      const {
+        code,
+        data,
+        message: err,
+      } = (await postApiSongListUpdateBatch(payload as any)) as unknown as {
         code: number
         data: SongsInfo[]
         message: string

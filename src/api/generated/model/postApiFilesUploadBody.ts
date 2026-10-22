@@ -7,6 +7,6 @@
  */
 
 export type PostApiFilesUploadBody = {
-  files: (Blob | File)[];
-  store?: string;
-};
+  files: (Blob | File)[]
+  store?: string
+}

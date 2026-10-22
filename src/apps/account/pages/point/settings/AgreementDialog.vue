@@ -1,14 +1,8 @@
 <script setup lang="ts">
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
-import { ScrollArea } from '@/shared/ui/scroll-area'
-
 // @ts-expect-error Markdown files are compiled as Vue components by the Vite plugin.
 import UserAgreement from '@/content/agreements/UserAgreement.md'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 
 const show = defineModel<boolean>('show', { required: true })
 </script>

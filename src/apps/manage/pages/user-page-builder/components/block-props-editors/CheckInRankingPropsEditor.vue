@@ -14,7 +14,10 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
   <PropsGrid>
     <div class="space-y-1">
       <label class="text-xs text-muted-foreground">展示人数</label>
-      <Select :model-value="String(blockProps.count ?? 3)" @update:model-value="(val) => (blockProps.count = Number(val))">
+      <Select
+        :model-value="String(blockProps.count ?? 3)"
+        @update:model-value="(val) => (blockProps.count = Number(val))"
+      >
         <SelectTrigger>
           <SelectValue placeholder="展示人数" />
         </SelectTrigger>

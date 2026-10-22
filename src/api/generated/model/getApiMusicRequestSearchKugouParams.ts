@@ -7,8 +7,8 @@
  */
 
 export type GetApiMusicRequestSearchKugouParams = {
-/**
- * 搜索关键词
- */
-keyword?: string;
-};
+  /**
+   * 搜索关键词
+   */
+  keyword?: string
+}

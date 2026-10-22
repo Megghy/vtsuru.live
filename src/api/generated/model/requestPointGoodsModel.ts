@@ -5,61 +5,61 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
-import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus';
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes';
-import type { PointGoodsDataServiceConfigData } from './pointGoodsDataServiceConfigData';
-import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode';
-import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting';
-import type { RequestPointGoodsModelTempSubPointGoodsModel } from './requestPointGoodsModelTempSubPointGoodsModel';
+import type { APIFileModel } from './aPIFileModel'
+import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus'
+import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
+import type { PointGoodsDataServiceConfigData } from './pointGoodsDataServiceConfigData'
+import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode'
+import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting'
+import type { RequestPointGoodsModelTempSubPointGoodsModel } from './requestPointGoodsModelTempSubPointGoodsModel'
 
 export interface RequestPointGoodsModel {
   /** @nullable */
-  id?: number | null;
+  id?: number | null
   /**
-     * @minLength 0
-     * @maxLength 200
-     */
-  name: string;
+   * @minLength 0
+   * @maxLength 200
+   */
+  name: string
   /** @nullable */
-  count?: number | null;
-  price: number;
+  count?: number | null
+  price: number
   /** @nullable */
-  tags?: string[] | null;
-  cover?: APIFileModel;
-  status: PointGoodsDataGoodsStatus;
-  type: PointGoodsDataGoodsTypes;
+  tags?: string[] | null
+  cover?: APIFileModel
+  status: PointGoodsDataGoodsStatus
+  type: PointGoodsDataGoodsTypes
   /**
-     * @minLength 0
-     * @maxLength 300
-     * @nullable
-     */
-  collectUrl?: string | null;
+   * @minLength 0
+   * @maxLength 300
+   * @nullable
+   */
+  collectUrl?: string | null
   /** @nullable */
-  embedCollectUrl?: boolean | null;
+  embedCollectUrl?: boolean | null
   /**
-     * @minLength 0
-     * @maxLength 500
-     * @nullable
-     */
-  description?: string | null;
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
+  description?: string | null
   /**
-     * @minLength 0
-     * @maxLength 10000
-     * @nullable
-     */
-  content?: string | null;
+   * @minLength 0
+   * @maxLength 10000
+   * @nullable
+   */
+  content?: string | null
   /** @nullable */
-  virtualKeys?: string[] | null;
-  keySelectionMode: PointGoodsDataVirtualKeySelectionMode;
+  virtualKeys?: string[] | null
+  keySelectionMode: PointGoodsDataVirtualKeySelectionMode
   /** @nullable */
-  isPinned?: boolean | null;
-  isAllowRebuy: boolean;
-  maxBuyCount: number;
+  isPinned?: boolean | null
+  isAllowRebuy: boolean
+  maxBuyCount: number
   /** @nullable */
-  maxSubItemSelections?: number | null;
-  setting: RequestPointGoodsModelTempRequestGoodsSetting;
-  serviceConfig?: PointGoodsDataServiceConfigData;
+  maxSubItemSelections?: number | null
+  setting: RequestPointGoodsModelTempRequestGoodsSetting
+  serviceConfig?: PointGoodsDataServiceConfigData
   /** @nullable */
-  subItems?: RequestPointGoodsModelTempSubPointGoodsModel[] | null;
+  subItems?: RequestPointGoodsModelTempSubPointGoodsModel[] | null
 }

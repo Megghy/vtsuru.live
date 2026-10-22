@@ -96,7 +96,10 @@ onBeforeUnmount(() => {
         class="subscription-icon"
         aria-hidden="true"
       >
-        <component :is="CalendarNumberOutline" class="size-5" />
+        <component
+          :is="CalendarNumberOutline"
+          class="size-5"
+        />
       </span>
       <span class="subscription-text">
         <strong>订阅直播日程</strong>
@@ -114,17 +117,36 @@ onBeforeUnmount(() => {
         @focus="selectUrl"
         @click="selectUrl"
       />
-      <Button as-child variant="outline" class="flex items-center gap-1">
+      <Button
+        as-child
+        variant="outline"
+        class="flex items-center gap-1"
+      >
         <a :href="webcalUrl">
-          <component :is="OpenOutline" class="size-3.5" />
+          <component
+            :is="OpenOutline"
+            class="size-3.5"
+          />
           <span class="btn-text-full">打开日历</span>
           <span class="btn-text-short">日历</span>
         </a>
       </Button>
-      <Button variant="outline" class="flex items-center gap-1" :disabled="copyState === 'success'" @click="copyUrl">
-        <component :is="copyState === 'success' ? CheckmarkOutline : CopyOutline" class="size-3.5" />
-        <span class="btn-text-full">{{ copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接' }}</span>
-        <span class="btn-text-short">{{ copyState === 'success' ? '已复制' : copyState === 'error' ? '失败' : '复制' }}</span>
+      <Button
+        variant="outline"
+        class="flex items-center gap-1"
+        :disabled="copyState === 'success'"
+        @click="copyUrl"
+      >
+        <component
+          :is="copyState === 'success' ? CheckmarkOutline : CopyOutline"
+          class="size-3.5"
+        />
+        <span class="btn-text-full">{{
+          copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接'
+        }}</span>
+        <span class="btn-text-short">{{
+          copyState === 'success' ? '已复制' : copyState === 'error' ? '失败' : '复制'
+        }}</span>
       </Button>
 
       <!-- 悬浮坞模式下的设置弹层 -->
@@ -133,8 +155,17 @@ onBeforeUnmount(() => {
         v-model:open="popoverOpen"
       >
         <PopoverTrigger as-child>
-          <Button variant="ghost" size="icon" class="size-8 rounded-full text-muted-foreground hover:text-foreground" :title="`订阅设置 (${settingsSummary})`" :aria-label="`订阅设置 (${settingsSummary})`">
-            <component :is="SettingsOutline" class="size-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            class="size-8 rounded-full text-muted-foreground hover:text-foreground"
+            :title="`订阅设置 (${settingsSummary})`"
+            :aria-label="`订阅设置 (${settingsSummary})`"
+          >
+            <component
+              :is="SettingsOutline"
+              class="size-4"
+            />
           </Button>
         </PopoverTrigger>
 
@@ -155,7 +186,11 @@ onBeforeUnmount(() => {
                 :key="`dock-r-${opt.value}`"
                 type="button"
                 class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-                :class="reminder === opt.value ? 'bg-primary text-primary-foreground font-medium' : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+                :class="
+                  reminder === opt.value
+                    ? 'bg-primary text-primary-foreground font-medium'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                "
                 :aria-pressed="reminder === opt.value"
                 @click="reminder = opt.value"
               >
@@ -172,7 +207,11 @@ onBeforeUnmount(() => {
                 :key="`dock-t-${opt.value}`"
                 type="button"
                 class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-                :class="withTag === opt.value ? 'bg-primary text-primary-foreground font-medium' : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+                :class="
+                  withTag === opt.value
+                    ? 'bg-primary text-primary-foreground font-medium'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                "
                 :aria-pressed="withTag === opt.value"
                 @click="withTag = opt.value"
               >
@@ -206,7 +245,10 @@ onBeforeUnmount(() => {
           aria-controls="schedule-subscription-settings"
           @click="settingsOpen = !settingsOpen"
         >
-          <component :is="SettingsOutline" class="size-3.5" />
+          <component
+            :is="SettingsOutline"
+            class="size-3.5"
+          />
           <span>订阅设置</span>
           <component
             :is="ChevronDownOutline"
@@ -229,7 +271,11 @@ onBeforeUnmount(() => {
             :key="`r-${opt.value}`"
             type="button"
             class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-            :class="reminder === opt.value ? 'bg-primary text-primary-foreground font-medium' : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+            :class="
+              reminder === opt.value
+                ? 'bg-primary text-primary-foreground font-medium'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            "
             :aria-pressed="reminder === opt.value"
             @click="reminder = opt.value"
           >
@@ -244,7 +290,11 @@ onBeforeUnmount(() => {
             :key="`t-${opt.value}`"
             type="button"
             class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-            :class="withTag === opt.value ? 'bg-primary text-primary-foreground font-medium' : 'bg-muted text-muted-foreground hover:bg-muted/80'"
+            :class="
+              withTag === opt.value
+                ? 'bg-primary text-primary-foreground font-medium'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            "
             :aria-pressed="withTag === opt.value"
             @click="withTag = opt.value"
           >

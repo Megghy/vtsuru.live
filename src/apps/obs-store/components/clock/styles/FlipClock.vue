@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-} from 'vue'
+import { computed, onMounted } from 'vue'
 
 import { loadObsStoreFonts } from '@/apps/obs-store/utils/fontLoader'
 
@@ -42,9 +39,7 @@ onMounted(() => {
 
 // 解析倒计时显示时间段 (MM:SS 或 HH:MM:SS)
 const parsedTimerParts = computed(() => {
-  const timeStr = props.state.mode === 'countdown'
-    ? props.countdownData.displayTime
-    : props.stopwatchData.displayTime
+  const timeStr = props.state.mode === 'countdown' ? props.countdownData.displayTime : props.stopwatchData.displayTime
 
   const parts = timeStr.split(':')
   if (parts.length === 3) {
@@ -182,15 +177,18 @@ const parsedTimerParts = computed(() => {
       <span
         v-if="props.state.showDate"
         class="footer-badge"
-      >{{ props.clockData.dateStr }}</span>
+        >{{ props.clockData.dateStr }}</span
+      >
       <span
         v-if="props.state.showDayOfWeek"
         class="footer-badge"
-      >{{ props.clockData.dayOfWeekEn }} ({{ props.clockData.dayOfWeekZh }})</span>
+        >{{ props.clockData.dayOfWeekEn }} ({{ props.clockData.dayOfWeekZh }})</span
+      >
       <span
         v-if="!props.state.is24Hour && props.clockData.ampm"
         class="footer-badge ampm"
-      >{{ props.clockData.ampm }}</span>
+        >{{ props.clockData.ampm }}</span
+      >
     </div>
   </div>
 </template>
@@ -202,7 +200,11 @@ const parsedTimerParts = computed(() => {
   align-items: center;
   min-width: 290px;
   user-select: none;
-  font-family: 'Oswald', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Oswald',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   box-sizing: border-box;
 }
 
@@ -254,8 +256,13 @@ const parsedTimerParts = computed(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(0.97); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.97);
+  }
 }
 
 .flip-footer {

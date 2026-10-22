@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountBlackListAddParams = {
-id?: number;
-};
+  id?: number
+}

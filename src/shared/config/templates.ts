@@ -139,12 +139,7 @@ export const ScheduleTemplateMap: TemplateMapType = {
     component: markRaw(
       defineAsyncComponent(async () => import('@/apps/user/pages/scheduleTemplate/TimeGridSchedule.vue')),
     ),
-    capabilities: [
-      ...scheduleCoreCapabilities,
-      'categorySummary',
-      ...scheduleConfigCapabilities,
-      'backgroundImage',
-    ],
+    capabilities: [...scheduleCoreCapabilities, 'categorySummary', ...scheduleConfigCapabilities, 'backgroundImage'],
   },
 }
 

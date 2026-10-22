@@ -7,12 +7,12 @@
  */
 
 export type GetApiUserAutocompleteParams = {
-/**
- * 搜索关键词: B站UID/主播名/站内用户名/站内ID
- */
-q?: string;
-/**
- * 最多返回数量
- */
-limit?: number;
-};
+  /**
+   * 搜索关键词: B站UID/主播名/站内用户名/站内ID
+   */
+  q?: string
+  /**
+   * 最多返回数量
+   */
+  limit?: number
+}

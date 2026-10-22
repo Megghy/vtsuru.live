@@ -7,5 +7,5 @@
  */
 
 export type GetApiLiveRequestGetActiveParams = {
-id?: number;
-};
+  id?: number
+}

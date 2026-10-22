@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { AlertCircle } from 'lucide-vue-next'
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { ref } from 'vue'
+
 import { Button } from '@/shared/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 withDefaults(
   defineProps<{
@@ -41,21 +42,43 @@ function onCancel(e: MouseEvent) {
     <PopoverTrigger as-child>
       <slot name="trigger" />
     </PopoverTrigger>
-    <PopoverContent class="w-64 p-3 text-xs" align="center" side="top">
+    <PopoverContent
+      class="w-64 p-3 text-xs"
+      align="center"
+      side="top"
+    >
       <div class="flex items-start gap-2.5">
-        <AlertCircle v-if="showIcon" class="size-4 text-amber-500 shrink-0 mt-0.5" />
+        <AlertCircle
+          v-if="showIcon"
+          class="size-4 text-amber-500 shrink-0 mt-0.5"
+        />
         <div class="flex-1 space-y-1">
-          <div v-if="title" class="font-medium text-foreground text-xs">{{ title }}</div>
+          <div
+            v-if="title"
+            class="font-medium text-foreground text-xs"
+          >
+            {{ title }}
+          </div>
           <div class="text-muted-foreground text-xs leading-relaxed">
             <slot />
           </div>
         </div>
       </div>
       <div class="mt-3 flex items-center justify-end gap-1.5">
-        <Button size="xs" variant="ghost" class="h-6 px-2 text-[11px]" @click="onCancel">
+        <Button
+          size="xs"
+          variant="ghost"
+          class="h-6 px-2 text-[11px]"
+          @click="onCancel"
+        >
           {{ negativeText }}
         </Button>
-        <Button size="xs" variant="default" class="h-6 px-2 text-[11px]" @click="onConfirm">
+        <Button
+          size="xs"
+          variant="default"
+          class="h-6 px-2 text-[11px]"
+          @click="onConfirm"
+        >
           {{ positiveText }}
         </Button>
       </div>

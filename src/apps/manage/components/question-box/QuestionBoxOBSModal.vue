@@ -73,13 +73,25 @@ function openWorkbench() {
         <div class="sm:col-span-2 space-y-3">
           <div class="space-y-1.5">
             <label class="text-xs text-muted-foreground">浏览器源链接</label>
-            <Input readonly :model-value="obsUrl" placeholder="登录后可复制 OBS 链接" class="font-mono" />
+            <Input
+              readonly
+              :model-value="obsUrl"
+              placeholder="登录后可复制 OBS 链接"
+              class="font-mono"
+            />
           </div>
-          <Button class="w-full gap-1.5" @click="copyUrl">
+          <Button
+            class="w-full gap-1.5"
+            @click="copyUrl"
+          >
             <Copy24Regular class="size-4" />
             复制链接
           </Button>
-          <Button variant="outline" class="w-full gap-1.5" @click="openWorkbench">
+          <Button
+            variant="outline"
+            class="w-full gap-1.5"
+            @click="openWorkbench"
+          >
             <Open24Regular class="size-4" />
             打开展示页
           </Button>

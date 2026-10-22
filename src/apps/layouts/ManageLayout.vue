@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Bot24Regular } from '@vicons/fluent'
-import { toast } from '@/shared/utils'
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -9,18 +8,24 @@ import { BiliAuthCodeStatusType } from '@/api/api-models'
 import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import ManageAuthGate from '@/apps/manage/components/layout/ManageAuthGate.vue'
+import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
 
 import '@/apps/manage/styles/manage-page.css'
-import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
 import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
 import ManageSider from '@/apps/manage/components/layout/ManageSider.vue'
 import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
 import ManageUserGate from '@/apps/manage/components/layout/ManageUserGate.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { currentAPIKey } from '@/shared/config'
+import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Button } from '@/shared/ui/button'
-import { Toaster } from '@/shared/ui/sonner'
+import { isDarkMode, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
+
+const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
+const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
+provideThemeScope(manageCssVars)
 
 const accountInfo = useAccount()
 const route = useRoute()
@@ -74,7 +79,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="manage-theme bg-background text-foreground h-screen w-full flex flex-col overflow-hidden">
+  <div
+    class="manage-theme bg-background text-foreground h-screen w-full flex flex-col overflow-hidden"
+    :style="manageCssVars"
+  >
     <div
       v-if="showShell"
       class="manage-shell flex-1 min-h-0 flex flex-col overflow-hidden"
@@ -98,7 +106,13 @@ onMounted(() => {
         </div>
       </div>
 
-      <Button variant="brand" size="icon" class="assistant-fab fixed right-5 bottom-[84px] z-[1500] h-11 w-11 rounded-full shadow-lg" title="VTsuru 助手" @click="openAssistant">
+      <Button
+        variant="brand"
+        size="icon"
+        class="assistant-fab fixed right-5 bottom-[84px] z-[1500] h-11 w-11 rounded-full shadow-lg"
+        title="VTsuru 助手"
+        @click="openAssistant"
+      >
         <component
           :is="Bot24Regular"
           class="h-6 w-6"
@@ -109,7 +123,6 @@ onMounted(() => {
     </div>
 
     <ManageAuthGate v-else />
-    <Toaster />
   </div>
 </template>
 

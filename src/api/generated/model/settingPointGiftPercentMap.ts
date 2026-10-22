@@ -9,4 +9,4 @@
 /**
  * @nullable
  */
-export type SettingPointGiftPercentMap = {[key: string]: number} | null;
+export type SettingPointGiftPercentMap = { [key: string]: number } | null

@@ -23,15 +23,15 @@ import {
   OpenOutline,
 } from '@vicons/ionicons5'
 import { useResizeObserver } from '@vueuse/core'
-import { Button } from '@/shared/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getApiVtsuruGetIndexData } from '@/api/generated/vtsuru/vtsuru'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
-import { useBiliAuth } from '@/store/useBiliAuth'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import vtb from '@/svgs/ic_vtuber.svg'
 
 const $router = useRouter()
@@ -291,9 +291,7 @@ onMounted(() => {
                       <span>开始使用</span>
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    进入主播后台，管理直播相关工具与设置
-                  </TooltipContent>
+                  <TooltipContent side="bottom"> 进入主播后台，管理直播相关工具与设置 </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
 
@@ -313,15 +311,16 @@ onMounted(() => {
                       <span>查看积分</span>
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="bottom">
-                    用 Bilibili 认证查看积分和订单，不用注册
-                  </TooltipContent>
+                  <TooltipContent side="bottom"> 用 Bilibili 认证查看积分和订单，不用注册 </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
             </div>
 
             <div class="hero-actions">
-              <Button variant="secondary" @click="$router.push('/@Megghy')">
+              <Button
+                variant="secondary"
+                @click="$router.push('/@Megghy')"
+              >
                 展示
               </Button>
               <Button as-child>
@@ -332,7 +331,10 @@ onMounted(() => {
                   幻星平台
                 </a>
               </Button>
-              <Button variant="outline" @click="$router.push({ name: 'about' })">
+              <Button
+                variant="outline"
+                @click="$router.push({ name: 'about' })"
+              >
                 关于
               </Button>
             </div>
@@ -397,10 +399,11 @@ onMounted(() => {
               <li>支持区块组合、拖拽排序、组件级样式与预览</li>
             </ul>
             <div class="section-actions">
-              <Button @click="$router.push({ name: 'manage-userPageBuilder' })">
-                打开编辑器
-              </Button>
-              <Button variant="secondary" @click="$router.push('/@Megghy')">
+              <Button @click="$router.push({ name: 'manage-userPageBuilder' })"> 打开编辑器 </Button>
+              <Button
+                variant="secondary"
+                @click="$router.push('/@Megghy')"
+              >
                 查看示例
               </Button>
             </div>
@@ -459,11 +462,17 @@ onMounted(() => {
               target="_blank"
               class="flex items-center gap-1.5"
             >
-              <component :is="Info24Filled" class="size-4" />
+              <component
+                :is="Info24Filled"
+                class="size-4"
+              />
               客户端安装说明
             </a>
           </Button>
-          <Button variant="outline" as-child>
+          <Button
+            variant="outline"
+            as-child
+          >
             <a
               href="https://github.com/Megghy/vtsuru-fetvher-client"
               target="_blank"
@@ -471,7 +480,10 @@ onMounted(() => {
               客户端代码
             </a>
           </Button>
-          <Button variant="outline" as-child>
+          <Button
+            variant="outline"
+            as-child
+          >
             <a
               href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
               target="_blank"
@@ -513,7 +525,10 @@ onMounted(() => {
               :disabled="!canScrollRoomsLeft"
               @click="scrollRooms(-1)"
             >
-              <component :is="ChevronLeft24Regular" class="size-4" />
+              <component
+                :is="ChevronLeft24Regular"
+                class="size-4"
+              />
             </button>
             <button
               type="button"
@@ -523,7 +538,10 @@ onMounted(() => {
               :disabled="!canScrollRoomsRight"
               @click="scrollRooms(1)"
             >
-              <component :is="ChevronRight24Regular" class="size-4" />
+              <component
+                :is="ChevronRight24Regular"
+                class="size-4"
+              />
             </button>
             <button
               type="button"

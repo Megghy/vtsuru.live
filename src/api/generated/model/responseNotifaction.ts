@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { NotificationDataNotifactionTypes } from './notificationDataNotifactionTypes';
-import type { ResponseNotifactionExtra } from './responseNotifactionExtra';
-import type { VTsuruEnumsLevelTypes } from './vTsuruEnumsLevelTypes';
+import type { NotificationDataNotifactionTypes } from './notificationDataNotifactionTypes'
+import type { ResponseNotifactionExtra } from './responseNotifactionExtra'
+import type { VTsuruEnumsLevelTypes } from './vTsuruEnumsLevelTypes'
 
 export interface ResponseNotifaction {
-  id: string;
-  createTime: number;
-  title: string;
-  message: string;
-  type: VTsuruEnumsLevelTypes;
-  notifactionType: NotificationDataNotifactionTypes;
+  id: string
+  createTime: number
+  title: string
+  message: string
+  type: VTsuruEnumsLevelTypes
+  notifactionType: NotificationDataNotifactionTypes
   /** @nullable */
-  sender?: number | null;
-  extra: ResponseNotifactionExtra;
-  isReaded: boolean;
+  sender?: number | null
+  extra: ResponseNotifactionExtra
+  isReaded: boolean
 }

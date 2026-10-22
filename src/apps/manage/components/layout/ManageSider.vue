@@ -455,7 +455,11 @@ async function go(name: string, query?: Record<string, string>) {
 
       <DropdownMenu v-if="workspace === 'user' && biliAuth.biliAuth.id && !biliAuth.usesAccountIdentity">
         <DropdownMenuTrigger as-child>
-          <Button variant="secondary" class=".5 w-full flex items-center justify-start gap-2 px-2" :class="{ 'justify-center p-0 w-8.5': collapsed }">
+          <Button
+            variant="secondary"
+            class=".5 w-full flex items-center justify-start gap-2 px-2"
+            :class="{ 'justify-center p-0 w-8.5': collapsed }"
+          >
             <img
               v-if="biliAuth.biliAuth.avatar"
               :src="biliAuth.biliAuth.avatar"
@@ -465,10 +469,14 @@ async function go(name: string, query?: Record<string, string>) {
             <span
               v-if="!collapsed"
               class="truncate text-xs font-normal"
-            >{{ biliAuth.biliAuth.name }}</span>
+              >{{ biliAuth.biliAuth.name }}</span
+            >
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" class="w-48">
+        <DropdownMenuContent
+          align="start"
+          class="w-48"
+        >
           <DropdownMenuItem
             v-for="account in biliAuth.biliTokens"
             :key="account.id"
@@ -478,12 +486,15 @@ async function go(name: string, query?: Record<string, string>) {
             {{ account.name || `UID ${account.uId}` }}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem @click="switchBiliAccount('add')">
-            认证其他账号
-          </DropdownMenuItem>
+          <DropdownMenuItem @click="switchBiliAccount('add')"> 认证其他账号 </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      <Button v-else-if="workspace === 'user' && biliAuth.biliAuth.id" variant="secondary" class=".5 w-full flex items-center justify-start gap-2 px-2" :class="{ 'justify-center p-0 w-8.5': collapsed }">
+      <Button
+        v-else-if="workspace === 'user' && biliAuth.biliAuth.id"
+        variant="secondary"
+        class=".5 w-full flex items-center justify-start gap-2 px-2"
+        :class="{ 'justify-center p-0 w-8.5': collapsed }"
+      >
         <img
           v-if="biliAuth.biliAuth.avatar"
           :src="biliAuth.biliAuth.avatar"
@@ -493,12 +504,22 @@ async function go(name: string, query?: Record<string, string>) {
         <span
           v-if="!collapsed"
           class="truncate text-xs font-normal"
-        >{{ biliAuth.biliAuth.name }}</span>
+          >{{ biliAuth.biliAuth.name }}</span
+        >
       </Button>
 
       <template v-if="workspace === 'streamer'">
         <div class="manage-sider__top-row">
-          <Button variant="secondary" class="sider-top-btn sider-top-btn--panel .5" :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }" :title="collapsed ? '面板' : undefined" @click="go('manage-index')">
+          <Button
+            variant="secondary"
+            class="sider-top-btn sider-top-btn--panel .5"
+            :class="{
+              'w-8.5 p-0 justify-center flex-none': collapsed,
+              'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
+            }"
+            :title="collapsed ? '面板' : undefined"
+            @click="go('manage-index')"
+          >
             <component
               :is="GridOutline"
               class="sider-icon"
@@ -506,10 +527,18 @@ async function go(name: string, query?: Record<string, string>) {
             <span
               v-if="!collapsed"
               class="sider-top-label"
-            >面板</span>
+              >面板</span
+            >
           </Button>
 
-          <Button v-if="!collapsed" size="icon-sm" variant="ghost" class="sider-top-icon-btn .5 w-8.5" title="反馈" @click="go('manage-feedback')">
+          <Button
+            v-if="!collapsed"
+            size="icon-sm"
+            variant="ghost"
+            class="sider-top-icon-btn .5 w-8.5"
+            title="反馈"
+            @click="go('manage-feedback')"
+          >
             <component
               :is="PersonFeedback24Filled"
               class="sider-icon"
@@ -518,7 +547,16 @@ async function go(name: string, query?: Record<string, string>) {
         </div>
 
         <div class="manage-sider__top-row sider-top-row--builder">
-          <Button variant="brand" class="sider-top-btn sider-top-btn--panel .5" :class="{ 'w-8.5 p-0 justify-center flex-none': collapsed, 'flex-1 justify-start px-2.5 gap-2.5': !collapsed }" :title="collapsed ? '主页装修' : undefined" @click="go('manage-userPageBuilder')">
+          <Button
+            variant="brand"
+            class="sider-top-btn sider-top-btn--panel .5"
+            :class="{
+              'w-8.5 p-0 justify-center flex-none': collapsed,
+              'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
+            }"
+            :title="collapsed ? '主页装修' : undefined"
+            @click="go('manage-userPageBuilder')"
+          >
             <component
               :is="ColorPaletteOutline"
               class="sider-icon"
@@ -526,10 +564,18 @@ async function go(name: string, query?: Record<string, string>) {
             <span
               v-if="!collapsed"
               class="sider-btn-label"
-            >主页装修</span>
+              >主页装修</span
+            >
           </Button>
 
-          <Button v-if="!collapsed" size="icon-sm" variant="ghost" class="sider-top-icon-btn .5 w-8.5" title="更换主页背景与主题" @click="go('manage-userPageBuilder', { action: 'theme' })">
+          <Button
+            v-if="!collapsed"
+            size="icon-sm"
+            variant="ghost"
+            class="sider-top-icon-btn .5 w-8.5"
+            title="更换主页背景与主题"
+            @click="go('manage-userPageBuilder', { action: 'theme' })"
+          >
             <component
               :is="ImageOutline"
               class="sider-icon"
@@ -582,10 +628,15 @@ async function go(name: string, query?: Record<string, string>) {
                       />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" class="max-w-xs text-xs p-3">
+                  <TooltipContent
+                    side="right"
+                    class="max-w-xs text-xs p-3"
+                  >
                     <div class="font-medium text-destructive mb-1">可用性警告</div>
                     <div class="text-[11px] text-muted-foreground space-y-1">
-                      <div>当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作。</div>
+                      <div>
+                        当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作。
+                      </div>
                       <div>建议尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。</div>
                     </div>
                   </TooltipContent>
@@ -631,7 +682,9 @@ async function go(name: string, query?: Record<string, string>) {
                     <component
                       :is="Bookmark"
                       class="nav-item__fav-icon w-3 h-3 transition-colors"
-                      :class="isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'"
+                      :class="
+                        isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
+                      "
                     />
                   </button>
                 </RouterLink>
@@ -663,7 +716,9 @@ async function go(name: string, query?: Record<string, string>) {
                     <component
                       :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
                       class="nav-item__fav-icon w-3 h-3 transition-colors"
-                      :class="isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'"
+                      :class="
+                        isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
+                      "
                     />
                   </button>
                 </div>
@@ -790,7 +845,31 @@ async function go(name: string, query?: Record<string, string>) {
 .manage-sider__nav {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--foreground) 28%, transparent) transparent;
+}
+
+.manage-sider__nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.manage-sider__nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.manage-sider__nav::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--foreground) 28%, transparent);
+  border-radius: 999px;
+}
+
+.manage-sider__nav::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--foreground) 50%, transparent);
+}
+
+.manage-sider:hover .manage-sider__nav::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--foreground) 35%, transparent);
 }
 
 .manage-sider__nav-inner {

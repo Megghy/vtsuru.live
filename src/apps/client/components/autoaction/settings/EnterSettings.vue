@@ -4,13 +4,7 @@ import { Info16Regular } from '@vicons/fluent'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -67,9 +61,7 @@ const enterFilterModeOptions = [
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <NInputNumber
@@ -94,9 +86,7 @@ const enterFilterModeOptions = [
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            同一用户在单次直播中多次进入仅触发一次欢迎
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 同一用户在单次直播中多次进入仅触发一次欢迎 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <Switch v-model:checked="action.triggerConfig.preventRepeat" />
@@ -111,9 +101,7 @@ const enterFilterModeOptions = [
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            单条欢迎弹幕中最多合并展示的用户数量
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 单条欢迎弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <NInputNumber

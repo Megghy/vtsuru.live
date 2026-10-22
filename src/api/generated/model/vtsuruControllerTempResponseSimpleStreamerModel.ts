@@ -7,18 +7,18 @@
  */
 
 export interface VtsuruControllerTempResponseSimpleStreamerModel {
-  name: string;
-  uname: string;
-  avatar: string;
-  uid: number;
-  roomId: number;
-  title: string;
-  cover: string;
-  isStreaming: boolean;
-  parentArea: string;
-  area: string;
-  liveStartedAt: number;
+  name: string
+  uname: string
+  avatar: string
+  uid: number
+  roomId: number
+  title: string
+  cover: string
+  isStreaming: boolean
+  parentArea: string
+  area: string
+  liveStartedAt: number
   /** @nullable */
-  reserveTitle?: string | null;
-  reserveAt: number;
+  reserveTitle?: string | null
+  reserveAt: number
 }

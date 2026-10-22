@@ -5,12 +5,7 @@ import { computed } from 'vue'
 import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/shared/ui/accordion'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Badge } from '@/shared/ui/badge'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Switch } from '@/shared/ui/switch'
@@ -170,9 +165,7 @@ const customJsModified = computed(() => {
                     <Info16Regular class="size-3.5 text-muted-foreground" />
                   </div>
                 </TooltipTrigger>
-                <TooltipContent class="text-xs">
-                  开启后此操作不受全局发送频率限制的影响
-                </TooltipContent>
+                <TooltipContent class="text-xs"> 开启后此操作不受全局发送频率限制的影响 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <Switch v-model:checked="action.ignoreCooldown" />
@@ -231,7 +224,9 @@ const customJsModified = computed(() => {
         <AccordionContent class="pt-2 pb-3 space-y-2">
           <div class="text-xs text-muted-foreground">
             使用 JavaScript 语法，仅在返回值为真时执行。例如：
-            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">user.guardLevel &gt; 0 || gift.price &gt;= 10</code>
+            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]"
+              >user.guardLevel &gt; 0 || gift.price &gt;= 10</code
+            >
           </div>
           <Textarea
             v-model="action.logicalExpression"

@@ -8,14 +8,7 @@ import {
   ThumbLike20Regular,
 } from '@vicons/fluent'
 import { nanoid } from 'nanoid'
-import {
-  computed,
-  nextTick,
-  onMounted,
-  onUnmounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
@@ -138,10 +131,7 @@ const hasVisibleStats = computed(() => {
   if (!setting.value) return false
   const s = setting.value
   return (
-    s.showWatchedCount !== false ||
-    s.showLikeCount !== false ||
-    s.showIncome !== false ||
-    s.showOnlineCount !== false
+    s.showWatchedCount !== false || s.showLikeCount !== false || s.showIncome !== false || s.showOnlineCount !== false
   )
 })
 
@@ -392,10 +382,14 @@ watch(
         <div
           v-if="setting.showIncome !== false"
           class="status-pill"
-          :title="setting.hideIncomeAmount ? '本场收益（已脱敏隐藏）' : `本场收益：¥${liveStats.totalIncome.toFixed(1)}`"
+          :title="
+            setting.hideIncomeAmount ? '本场收益（已脱敏隐藏）' : `本场收益：¥${liveStats.totalIncome.toFixed(1)}`
+          "
         >
           <Payment20Regular class="status-icon size-4" />
-          <span class="status-value">¥ {{ setting.hideIncomeAmount ? '***' : formatIncomeDisplay(liveStats.totalIncome) }}</span>
+          <span class="status-value"
+            >¥ {{ setting.hideIncomeAmount ? '***' : formatIncomeDisplay(liveStats.totalIncome) }}</span
+          >
         </div>
 
         <!-- 在线人数 -->

@@ -35,16 +35,25 @@ const emit = defineEmits<{
   request: [song: SongsInfo]
 }>()
 
-const tooltip = computed(() =>
-  getSongRequestTooltip(props.song, props.liveRequestSettings, props.authState),
-)
+const tooltip = computed(() => getSongRequestTooltip(props.song, props.liveRequestSettings, props.authState))
 </script>
 
 <template>
   <TooltipProvider v-if="!hidden">
     <Tooltip :disabled="disabled">
       <TooltipTrigger as-child>
-        <Button :variant="secondary ? 'secondary' : 'default'" :size="circle && !label ? 'icon' : 'sm'" :class="[ circle && !label ? 'size-7 rounded-full' : ' px-2.5', size === 'tiny' && circle ? 'size-6' : '', size === 'large' ? 'h-9 px-4 text-sm' : '', ]" :disabled="disabled || loading" :aria-label="`点歌《${song.name}》`" @click="emit('request', song)">
+        <Button
+          :variant="secondary ? 'secondary' : 'default'"
+          :size="circle && !label ? 'icon' : 'sm'"
+          :class="[
+            circle && !label ? 'size-7 rounded-full' : ' px-2.5',
+            size === 'tiny' && circle ? 'size-6' : '',
+            size === 'large' ? 'h-9 px-4 text-sm' : '',
+          ]"
+          :disabled="disabled || loading"
+          :aria-label="`点歌《${song.name}》`"
+          @click="emit('request', song)"
+        >
           <component
             :is="CloudAdd20Filled"
             class="size-3.5"

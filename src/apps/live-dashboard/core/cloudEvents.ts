@@ -48,5 +48,7 @@ export function missingCloudEvents(local: readonly DashboardEvent[], cloud: read
     times.push(event.time)
     buckets.set(key, times)
   }
-  return cloud.filter((event) => !buckets.get(bucketOf(event))?.some((t) => Math.abs(t - event.time) <= MATCH_WINDOW_MS))
+  return cloud.filter(
+    (event) => !buckets.get(bucketOf(event))?.some((t) => Math.abs(t - event.time) <= MATCH_WINDOW_MS),
+  )
 }

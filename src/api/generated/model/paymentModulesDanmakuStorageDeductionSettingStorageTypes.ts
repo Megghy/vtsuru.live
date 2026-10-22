@@ -6,10 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type PaymentModulesDanmakuStorageDeductionSettingStorageTypes = typeof PaymentModulesDanmakuStorageDeductionSettingStorageTypes[keyof typeof PaymentModulesDanmakuStorageDeductionSettingStorageTypes];
-
+export type PaymentModulesDanmakuStorageDeductionSettingStorageTypes =
+  (typeof PaymentModulesDanmakuStorageDeductionSettingStorageTypes)[keyof typeof PaymentModulesDanmakuStorageDeductionSettingStorageTypes]
 
 export const PaymentModulesDanmakuStorageDeductionSettingStorageTypes = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

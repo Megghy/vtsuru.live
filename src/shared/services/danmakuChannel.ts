@@ -81,7 +81,8 @@ export function createDanmakuChannel(sourceId: string): DanmakuChannel {
         clientType,
         meta,
       } satisfies Payload),
-    requestState: (scope) => postBroadcastMessage(channel, { kind: 'state-request', sourceId, scope } satisfies Payload),
+    requestState: (scope) =>
+      postBroadcastMessage(channel, { kind: 'state-request', sourceId, scope } satisfies Payload),
     onEvent: (listener) => subscribe(eventListeners, listener),
     onState: (listener) => subscribe(stateListeners, listener),
     onStateRequest: (listener) => subscribe(requestListeners, listener),

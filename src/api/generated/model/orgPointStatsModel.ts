@@ -7,11 +7,11 @@
  */
 
 export interface OrgPointStatsModel {
-  totalPointsIssued: number;
-  totalPointsUsed: number;
-  activeUsers: number;
-  totalOrders: number;
-  pendingOrders: number;
-  shippedOrders: number;
-  completedOrders: number;
+  totalPointsIssued: number
+  totalPointsUsed: number
+  activeUsers: number
+  totalOrders: number
+  pendingOrders: number
+  shippedOrders: number
+  completedOrders: number
 }

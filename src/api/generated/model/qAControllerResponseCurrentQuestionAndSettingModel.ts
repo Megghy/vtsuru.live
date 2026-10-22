@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseQAInfo } from './responseQAInfo';
-import type { SettingQuestionDisplay } from './settingQuestionDisplay';
+import type { ResponseQAInfo } from './responseQAInfo'
+import type { SettingQuestionDisplay } from './settingQuestionDisplay'
 
 export interface QAControllerResponseCurrentQuestionAndSettingModel {
-  question?: ResponseQAInfo;
-  setting: SettingQuestionDisplay;
+  question?: ResponseQAInfo
+  setting: SettingQuestionDisplay
 }

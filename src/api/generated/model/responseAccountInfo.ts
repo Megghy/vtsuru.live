@@ -5,52 +5,52 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventFetcherStateModel } from './eventFetcherStateModel';
-import type { LiveReserveInfo } from './liveReserveInfo';
-import type { ResponseAccountInfoBiliBlackList } from './responseAccountInfoBiliBlackList';
-import type { ResponseBiliAuthModel } from './responseBiliAuthModel';
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
-import type { ResponseUserInfoResponseUserInfoExtra } from './responseUserInfoResponseUserInfoExtra';
-import type { StreamerModel } from './streamerModel';
-import type { UserConsumptionSetting } from './userConsumptionSetting';
-import type { UserSetting } from './userSetting';
-import type { VTsuruEnumsBiliAuthCodeStatusType } from './vTsuruEnumsBiliAuthCodeStatusType';
+import type { EventFetcherStateModel } from './eventFetcherStateModel'
+import type { LiveReserveInfo } from './liveReserveInfo'
+import type { ResponseAccountInfoBiliBlackList } from './responseAccountInfoBiliBlackList'
+import type { ResponseBiliAuthModel } from './responseBiliAuthModel'
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
+import type { ResponseUserInfoResponseUserInfoExtra } from './responseUserInfoResponseUserInfoExtra'
+import type { StreamerModel } from './streamerModel'
+import type { UserConsumptionSetting } from './userConsumptionSetting'
+import type { UserSetting } from './userSetting'
+import type { VTsuruEnumsBiliAuthCodeStatusType } from './vTsuruEnumsBiliAuthCodeStatusType'
 
 export interface ResponseAccountInfo {
-  extra?: ResponseUserInfoResponseUserInfoExtra;
-  token: string;
+  extra?: ResponseUserInfoResponseUserInfoExtra
+  token: string
   /** @nullable */
-  bindEmail?: string | null;
-  point: number;
-  settings: UserSetting;
+  bindEmail?: string | null
+  point: number
+  settings: UserSetting
   /** @nullable */
-  currentQuestionId?: number | null;
-  consumptionSettings: UserConsumptionSetting;
-  isEmailVerified: boolean;
-  eventFetcherState: EventFetcherStateModel;
-  biliAuthCodeStatus: VTsuruEnumsBiliAuthCodeStatusType;
+  currentQuestionId?: number | null
+  consumptionSettings: UserConsumptionSetting
+  isEmailVerified: boolean
+  eventFetcherState: EventFetcherStateModel
+  biliAuthCodeStatus: VTsuruEnumsBiliAuthCodeStatusType
   /** @nullable */
-  biliAuthCode?: string | null;
-  blackList: ResponseUserBasicInfo[];
-  biliBlackList: ResponseAccountInfoBiliBlackList;
-  streamerInfo: StreamerModel;
-  biliUserAuthInfo?: ResponseBiliAuthModel;
+  biliAuthCode?: string | null
+  blackList: ResponseUserBasicInfo[]
+  biliBlackList: ResponseAccountInfoBiliBlackList
+  streamerInfo: StreamerModel
+  biliUserAuthInfo?: ResponseBiliAuthModel
   /** @nullable */
-  nextSendEmailTime?: number | null;
-  isServerFetcherOnline: boolean;
-  createAt: number;
-  isBiliVerified: boolean;
+  nextSendEmailTime?: number | null
+  isServerFetcherOnline: boolean
+  createAt: number
+  isBiliVerified: boolean
   /** @nullable */
-  biliId?: number | null;
+  biliId?: number | null
   /** @nullable */
-  biliRoomId?: number | null;
-  canRequestSong: boolean;
+  biliRoomId?: number | null
+  canRequestSong: boolean
   /** @nullable */
-  indexNotification?: string | null;
-  liveReserve?: LiveReserveInfo;
-  name: string;
-  id: number;
-  isBiliAuthed: boolean;
+  indexNotification?: string | null
+  liveReserve?: LiveReserveInfo
+  name: string
+  id: number
+  isBiliAuthed: boolean
   /** @nullable */
-  faceUrl?: string | null;
+  faceUrl?: string | null
 }

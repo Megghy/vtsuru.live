@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfYear } from 'date-fns'
-import { ColorPicker } from '@/shared/ui/color-picker'
-import { useMessage } from '@/shared/utils'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -23,23 +21,12 @@ import { CURRENT_HOST, SCHEDULE_API_URL } from '@/shared/config'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { useMessage } from '@/shared/utils'
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 const currentYear = new Date().getFullYear()
@@ -51,7 +38,9 @@ const yearOptions = [
 const weekOptions = computed(() => {
   const all = getAllWeeks(Number(selectedScheduleYear.value))
   return all.map((week) => {
-    const isExist = (schedules.value?.findIndex((s) => s.year === Number(selectedScheduleYear.value) && s.week === week[0] + 1) ?? -1) > -1
+    const isExist =
+      (schedules.value?.findIndex((s) => s.year === Number(selectedScheduleYear.value) && s.week === week[0] + 1) ??
+        -1) > -1
     return {
       label: `${isExist ? '(已安排) ' : ''}第${week[0] + 1}周 (${week[1]})`,
       value: String(week[0] + 1),
@@ -842,13 +831,25 @@ onMounted(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button size="xs" variant="brand" @click="showAddModal = true">
+          <Button
+            size="xs"
+            variant="brand"
+            @click="showAddModal = true"
+          >
             添加周程
           </Button>
-          <Button size="xs" variant="outline" @click="showBatchAddModal = true">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="showBatchAddModal = true"
+          >
             批量添加
           </Button>
-          <Button size="xs" variant="outline" @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="$router.push({ name: 'manage-index', query: { tab: 'template', template: 'schedule' } })"
+          >
             修改模板
           </Button>
         </div>
@@ -890,12 +891,8 @@ onMounted(() => {
     <Dialog v-model:open="showAddModal">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-base">
-            添加周程
-          </DialogTitle>
-          <DialogDescription class="text-xs">
-            选择年份和未安排的周次以创建新的一周行程表。
-          </DialogDescription>
+          <DialogTitle class="text-base"> 添加周程 </DialogTitle>
+          <DialogDescription class="text-xs"> 选择年份和未安排的周次以创建新的一周行程表。 </DialogDescription>
         </DialogHeader>
 
         <div class="space-y-3 py-2">
@@ -938,10 +935,17 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="showAddModal = false">
+          <Button
+            variant="outline"
+            @click="showAddModal = false"
+          >
             取消
           </Button>
-          <Button variant="brand" :loading="isFetching" @click="addSchedule">
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="addSchedule"
+          >
             添加
           </Button>
         </DialogFooter>
@@ -952,12 +956,8 @@ onMounted(() => {
     <Dialog v-model:open="showCopyModal">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-base">
-            复制周程
-          </DialogTitle>
-          <DialogDescription class="text-xs">
-            只复制手工行程，B 站同步预约不受影响。
-          </DialogDescription>
+          <DialogTitle class="text-base"> 复制周程 </DialogTitle>
+          <DialogDescription class="text-xs"> 只复制手工行程，B 站同步预约不受影响。 </DialogDescription>
         </DialogHeader>
 
         <div class="space-y-3 py-2">
@@ -968,7 +968,11 @@ onMounted(() => {
           >
             <AlertDescription class="text-xs flex items-center justify-between">
               <span>源周或目标周已更新，请加载最新版本。</span>
-              <Button size="xs" variant="outline" @click="loadLatestScheduleVersion">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="loadLatestScheduleVersion"
+              >
                 加载最新
               </Button>
             </AlertDescription>
@@ -1017,22 +1021,25 @@ onMounted(() => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="merge">
-                  合并（保留目标周已有行程）
-                </SelectItem>
-                <SelectItem value="replace">
-                  替换手工行程
-                </SelectItem>
+                <SelectItem value="merge"> 合并（保留目标周已有行程） </SelectItem>
+                <SelectItem value="replace"> 替换手工行程 </SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="showCopyModal = false">
+          <Button
+            variant="outline"
+            @click="showCopyModal = false"
+          >
             取消
           </Button>
-          <Button variant="brand" :loading="isFetching" @click="onCopySchedule">
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="onCopySchedule"
+          >
             确认复制
           </Button>
         </DialogFooter>
@@ -1043,12 +1050,8 @@ onMounted(() => {
     <Dialog v-model:open="showUpdateModal">
       <DialogContent class="sm:max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
-          <DialogTitle class="text-base">
-            编辑周程项
-          </DialogTitle>
-          <DialogDescription class="text-xs">
-            选择星期并为当天安排标签、活动内容与开播时间。
-          </DialogDescription>
+          <DialogTitle class="text-base"> 编辑周程项 </DialogTitle>
+          <DialogDescription class="text-xs"> 选择星期并为当天安排标签、活动内容与开播时间。 </DialogDescription>
         </DialogHeader>
 
         <div class="flex-1 overflow-y-auto space-y-3 py-2 pr-1">
@@ -1059,7 +1062,11 @@ onMounted(() => {
           >
             <AlertDescription class="text-xs flex items-center justify-between">
               <span>当前草稿已保留，加载最新版本会替换草稿。</span>
-              <Button size="xs" variant="outline" @click="loadLatestScheduleVersion">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="loadLatestScheduleVersion"
+              >
                 加载最新版本
               </Button>
             </AlertDescription>
@@ -1082,7 +1089,11 @@ onMounted(() => {
                 </SelectContent>
               </Select>
             </div>
-            <Button size="xs" variant="outline" @click="addScheduleItem">
+            <Button
+              size="xs"
+              variant="outline"
+              @click="addScheduleItem"
+            >
               + 添加行程项
             </Button>
           </div>
@@ -1102,26 +1113,45 @@ onMounted(() => {
               <CardHeader class="p-3 pb-2 flex-row items-center justify-between">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs font-semibold">行程 {{ itemIndex + 1 }}</span>
-                  <Button v-if="itemIndex> 0"
+                  <Button
+                    v-if="itemIndex > 0"
                     size="icon-xs"
                     variant="ghost"
                     @click="moveScheduleItem(itemIndex, 'up')"
                   >
                     ↑
                   </Button>
-                  <Button v-if="itemIndex < updateScheduleModel.days[Number(selectedDay)].length - 1" size="icon-xs" variant="ghost" @click="moveScheduleItem(itemIndex, 'down')">
+                  <Button
+                    v-if="itemIndex < updateScheduleModel.days[Number(selectedDay)].length - 1"
+                    size="icon-xs"
+                    variant="ghost"
+                    @click="moveScheduleItem(itemIndex, 'down')"
+                  >
                     ↓
                   </Button>
                 </div>
 
                 <div class="flex items-center gap-1">
-                  <Button size="xs" variant="ghost" @click="onOpenItemTransferModal('copy', itemIndex)">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    @click="onOpenItemTransferModal('copy', itemIndex)"
+                  >
                     复制
                   </Button>
-                  <Button size="xs" variant="ghost" @click="onOpenItemTransferModal('move', itemIndex)">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    @click="onOpenItemTransferModal('move', itemIndex)"
+                  >
                     移动
                   </Button>
-                  <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="removeScheduleItem(itemIndex)">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    @click="removeScheduleItem(itemIndex)"
+                  >
                     删除
                   </Button>
                 </div>
@@ -1129,14 +1159,30 @@ onMounted(() => {
 
               <CardContent class="p-3 pt-0 space-y-2.5">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <Input size="xs" v-model="item.tag" placeholder="标签名称 (如 杂谈)" class="w-36" maxlength="10" />
-                  <Input size="xs" v-model="item.title" placeholder="事件内容描述" class="flex-1 min-w-[180px]" maxlength="50" />
+                  <Input
+                    size="xs"
+                    v-model="item.tag"
+                    placeholder="标签名称 (如 杂谈)"
+                    class="w-36"
+                    maxlength="10"
+                  />
+                  <Input
+                    size="xs"
+                    v-model="item.title"
+                    placeholder="事件内容描述"
+                    class="flex-1 min-w-[180px]"
+                    maxlength="50"
+                  />
                 </div>
 
                 <div class="flex items-center gap-2 flex-wrap">
                   <div class="flex items-center gap-1">
                     <span class="text-xs text-muted-foreground">时间:</span>
-                    <Input v-model="item.time" type="time" class="w-24" />
+                    <Input
+                      v-model="item.time"
+                      type="time"
+                      class="w-24"
+                    />
                   </div>
                   <div class="flex items-center gap-1">
                     <span class="text-xs text-muted-foreground">颜色:</span>
@@ -1157,10 +1203,17 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="showUpdateModal = false">
+          <Button
+            variant="outline"
+            @click="showUpdateModal = false"
+          >
             取消
           </Button>
-          <Button variant="brand" :loading="isFetching" @click="saveSchedule(Number(selectedDay))">
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="saveSchedule(Number(selectedDay))"
+          >
             保存当天
           </Button>
         </DialogFooter>
@@ -1175,7 +1228,11 @@ onMounted(() => {
             {{ itemTransferMode === 'copy' ? '复制行程项到其他星期' : '移动行程项到其他星期' }}
           </DialogTitle>
           <DialogDescription class="text-xs">
-            {{ itemTransferMode === 'copy' ? '复制会在目标星期新增一条行程项。' : '移动会把当前行程项从本星期移到目标星期。' }}
+            {{
+              itemTransferMode === 'copy'
+                ? '复制会在目标星期新增一条行程项。'
+                : '移动会把当前行程项从本星期移到目标星期。'
+            }}
           </DialogDescription>
         </DialogHeader>
 
@@ -1198,10 +1255,16 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="showItemTransferModal = false">
+          <Button
+            variant="outline"
+            @click="showItemTransferModal = false"
+          >
             取消
           </Button>
-          <Button variant="brand" @click="onConfirmItemTransfer">
+          <Button
+            variant="brand"
+            @click="onConfirmItemTransfer"
+          >
             确定
           </Button>
         </DialogFooter>
@@ -1212,9 +1275,7 @@ onMounted(() => {
     <Dialog v-model:open="showBatchAddModal">
       <DialogContent class="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle class="text-base">
-            批量添加固定行程
-          </DialogTitle>
+          <DialogTitle class="text-base"> 批量添加固定行程 </DialogTitle>
           <DialogDescription class="text-xs">
             一次性把同一条行程添加到连续周的同一天（不存在的周程会自动创建）。
           </DialogDescription>
@@ -1298,14 +1359,28 @@ onMounted(() => {
 
           <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <Input v-model="batchAddItem.tag" placeholder="标签名称" class="w-36" maxlength="10" />
-              <Input v-model="batchAddItem.title" placeholder="事件描述" class="flex-1" maxlength="50" />
+              <Input
+                v-model="batchAddItem.tag"
+                placeholder="标签名称"
+                class="w-36"
+                maxlength="10"
+              />
+              <Input
+                v-model="batchAddItem.title"
+                placeholder="事件描述"
+                class="flex-1"
+                maxlength="50"
+              />
             </div>
 
             <div class="flex items-center gap-3">
               <div class="flex items-center gap-1">
                 <span class="text-muted-foreground">时间:</span>
-                <Input v-model="batchAddItem.time" type="time" class="w-24" />
+                <Input
+                  v-model="batchAddItem.time"
+                  type="time"
+                  class="w-24"
+                />
               </div>
               <div class="flex items-center gap-1">
                 <span class="text-muted-foreground">颜色:</span>
@@ -1324,10 +1399,17 @@ onMounted(() => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="showBatchAddModal = false">
+          <Button
+            variant="outline"
+            @click="showBatchAddModal = false"
+          >
             取消
           </Button>
-          <Button variant="brand" :loading="isFetching" @click="onBatchAddSchedule">
+          <Button
+            variant="brand"
+            :loading="isFetching"
+            @click="onBatchAddSchedule"
+          >
             批量添加
           </Button>
         </DialogFooter>

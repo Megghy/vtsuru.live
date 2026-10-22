@@ -23,7 +23,9 @@ const emit = defineEmits(['update:messages'])
 const MESSAGE_TYPE_MEMBER = constants.MESSAGE_TYPE_MEMBER
 const curTime = ref(new Date())
 const pinnedMessageId = ref(null)
-const pinnedMessage = computed(() => props.messages.find(message => message.id === pinnedMessageId.value && needToShow(message)) ?? null)
+const pinnedMessage = computed(
+  () => props.messages.find((message) => message.id === pinnedMessageId.value && needToShow(message)) ?? null,
+)
 
 // 定时更新进度
 const updateTimerId = window.setInterval(updateProgress, 1000)

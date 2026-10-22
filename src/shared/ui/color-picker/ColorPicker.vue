@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
 import { Pipette } from 'lucide-vue-next'
-import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
-import { Input } from '@/shared/ui/input'
+import { computed, ref, watch } from 'vue'
+
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 const props = withDefaults(
   defineProps<{
@@ -21,8 +22,18 @@ const props = withDefaults(
     disabled: false,
     showAlpha: true,
     swatches: () => [
-      '#000000', '#ffffff', '#ef4444', '#f97316', '#f59e0b', '#10b981',
-      '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#64748b',
+      '#000000',
+      '#ffffff',
+      '#ef4444',
+      '#f97316',
+      '#f59e0b',
+      '#10b981',
+      '#06b6d4',
+      '#3b82f6',
+      '#6366f1',
+      '#8b5cf6',
+      '#ec4899',
+      '#64748b',
     ],
     size: 'small',
   },
@@ -89,7 +100,10 @@ function selectSwatch(swatch: string) {
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent class="w-60 p-3 text-xs" align="start">
+      <PopoverContent
+        class="w-60 p-3 text-xs"
+        align="start"
+      >
         <div class="space-y-3">
           <div class="flex items-center gap-2">
             <div class="relative size-8 shrink-0 overflow-hidden rounded border border-input shadow-inner">
@@ -100,7 +114,13 @@ function selectSwatch(swatch: string) {
                 @input="onNativeColorChange"
               />
             </div>
-            <Input v-model="textInput" class="font-mono uppercase" placeholder="#000000" @blur="onTextChange" @keyup.enter="onTextChange" />
+            <Input
+              v-model="textInput"
+              class="font-mono uppercase"
+              placeholder="#000000"
+              @blur="onTextChange"
+              @keyup.enter="onTextChange"
+            />
           </div>
 
           <div v-if="swatches && swatches.length > 0">

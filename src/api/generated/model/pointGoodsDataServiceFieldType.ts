@@ -6,8 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type PointGoodsDataServiceFieldType = typeof PointGoodsDataServiceFieldType[keyof typeof PointGoodsDataServiceFieldType];
-
+export type PointGoodsDataServiceFieldType =
+  (typeof PointGoodsDataServiceFieldType)[keyof typeof PointGoodsDataServiceFieldType]
 
 export const PointGoodsDataServiceFieldType = {
   NUMBER_0: 0,
@@ -17,4 +17,4 @@ export const PointGoodsDataServiceFieldType = {
   NUMBER_4: 4,
   NUMBER_5: 5,
   NUMBER_6: 6,
-} as const;
+} as const

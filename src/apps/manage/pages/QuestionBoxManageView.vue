@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ArrowSync24Filled, Delete24Filled, Link24Filled, Share24Filled } from '@vicons/fluent'
 import { TrashBin } from '@vicons/ionicons5'
-import {  useMessage  } from '@/shared/utils'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -31,15 +30,10 @@ import {
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
@@ -103,7 +97,13 @@ onMounted(async () => {
     >
       <template #action>
         <div class="flex items-center gap-1.5 flex-wrap">
-          <Button size="icon-sm" variant="outline" :loading="useQB.isLoading" title="刷新" @click="refresh">
+          <Button
+            size="icon-sm"
+            variant="outline"
+            :loading="useQB.isLoading"
+            title="刷新"
+            @click="refresh"
+          >
             <component
               :is="ArrowSync24Filled"
               class="h-3.5 w-3.5"
@@ -113,24 +113,32 @@ onMounted(async () => {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button size="icon-sm" variant="outline" @click="shareModalVisible = true">
+                <Button
+                  size="icon-sm"
+                  variant="outline"
+                  @click="shareModalVisible = true"
+                >
                   <component
                     :is="Share24Filled"
                     class="h-3.5 w-3.5"
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">
-                分享提问箱
-              </TooltipContent>
+              <TooltipContent class="text-xs"> 分享提问箱 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          <Button variant="outline" @click="showOBSModal = true">
+          <Button
+            variant="outline"
+            @click="showOBSModal = true"
+          >
             OBS 组件
           </Button>
 
-          <Button variant="default" @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })">
+          <Button
+            variant="default"
+            @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
+          >
             <component
               :is="Link24Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -196,9 +204,7 @@ onMounted(async () => {
             {{ useQB.trashQuestions.length }}
           </Badge>
         </TabsTrigger>
-        <TabsTrigger value="3">
-          设置
-        </TabsTrigger>
+        <TabsTrigger value="3"> 设置 </TabsTrigger>
       </TabsList>
 
       <!-- 我收到的 Tab -->
@@ -239,7 +245,11 @@ onMounted(async () => {
                   >
                     发给
                   </Badge>
-                  <Button variant="link" class="h-auto p-0 font-semibold text-primary" @click="router.push(`/user/${item.target.id}`)">
+                  <Button
+                    variant="link"
+                    class="h-auto p-0 font-semibold text-primary"
+                    @click="router.push(`/user/${item.target.id}`)"
+                  >
                     {{ item.target.name }}
                   </Button>
                 </div>
@@ -301,16 +311,29 @@ onMounted(async () => {
           >
             <template #footer="{ item }">
               <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
-                <Button size="xs" variant="outline" class="text-primary" @click="useQB.markAsNormal(item)">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="text-primary"
+                  @click="useQB.markAsNormal(item)"
+                >
                   标记为正常
                 </Button>
-                <Button size="xs" variant="outline" class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10" @click="useQB.blacklist(item)">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
+                  @click="useQB.blacklist(item)"
+                >
                   拉黑提问者
                 </Button>
 
                 <AlertDialog>
                   <AlertDialogTrigger as-child>
-                    <Button size="xs" variant="destructive">
+                    <Button
+                      size="xs"
+                      variant="destructive"
+                    >
                       <component
                         :is="Delete24Filled"
                         class="h-3.5 w-3.5 mr-1"
@@ -321,9 +344,7 @@ onMounted(async () => {
                   <AlertDialogContent class="sm:max-w-md">
                     <AlertDialogHeader>
                       <AlertDialogTitle>彻底删除此提问？</AlertDialogTitle>
-                      <AlertDialogDescription class="text-xs">
-                        删除后将无法恢复该提问内容。
-                      </AlertDialogDescription>
+                      <AlertDialogDescription class="text-xs"> 删除后将无法恢复该提问内容。 </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>取消</AlertDialogCancel>

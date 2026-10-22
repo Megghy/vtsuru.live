@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { HistoryControllerResponseAllHistoryModel } from './historyControllerResponseAllHistoryModel';
+import type { HistoryControllerResponseAllHistoryModel } from './historyControllerResponseAllHistoryModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfHistoryControllerResponseAllHistoryModel {
-  message: string;
-  code: number;
-  data: HistoryControllerResponseAllHistoryModel;
+  message: string
+  code: number
+  data: HistoryControllerResponseAllHistoryModel
 }

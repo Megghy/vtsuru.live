@@ -3,10 +3,10 @@ import { CalendarOutline, GameControllerOutline, HomeOutline, PlayCircleOutline,
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
-import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
+import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -139,9 +139,7 @@ const hasCover = computed(
       v-if="!model.available"
       class="text-xs py-2 m-2"
     >
-      <AlertDescription>
-        直播信息暂不可用
-      </AlertDescription>
+      <AlertDescription> 直播信息暂不可用 </AlertDescription>
     </Alert>
 
     <article
@@ -207,7 +205,10 @@ const hasCover = computed(
             v-if="cfg.showArea && model.area"
             class="meta"
           >
-            <component :is="GameControllerOutline" class="size-4 shrink-0" />
+            <component
+              :is="GameControllerOutline"
+              class="size-4 shrink-0"
+            />
             <span>{{ model.area }}</span>
           </div>
           <div
@@ -215,7 +216,10 @@ const hasCover = computed(
             class="meta"
             aria-live="polite"
           >
-            <component :is="PlayCircleOutline" class="size-4 shrink-0" />
+            <component
+              :is="PlayCircleOutline"
+              class="size-4 shrink-0"
+            />
             <span>{{ durationText }}</span>
           </div>
           <a
@@ -225,21 +229,36 @@ const hasCover = computed(
             target="_blank"
             rel="noopener noreferrer"
           >
-            <component :is="CalendarOutline" class="size-4 shrink-0" />
-            <span>下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} · {{ model.liveReserve.title }}</span>
+            <component
+              :is="CalendarOutline"
+              class="size-4 shrink-0"
+            />
+            <span
+              >下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} ·
+              {{ model.liveReserve.title }}</span
+            >
           </a>
           <div
             v-else-if="!model.isStreaming && model.liveReserve"
             class="meta"
           >
-            <component :is="CalendarOutline" class="size-4 shrink-0" />
-            <span>下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} · {{ model.liveReserve.title }}</span>
+            <component
+              :is="CalendarOutline"
+              class="size-4 shrink-0"
+            />
+            <span
+              >下次直播 {{ formatBiliLiveReserveTime(model.liveReserve.planStart) }} ·
+              {{ model.liveReserve.title }}</span
+            >
           </div>
           <div
             v-else-if="model.lastStreamAt"
             class="meta"
           >
-            <component :is="CalendarOutline" class="size-4 shrink-0" />
+            <component
+              :is="CalendarOutline"
+              class="size-4 shrink-0"
+            />
             <span>上次直播：{{ formatTime(model.lastStreamAt) }}</span>
           </div>
         </div>
@@ -248,12 +267,38 @@ const hasCover = computed(
           v-if="cfg.showButtons && (model.spaceUrl || model.liveRoomUrl)"
           class="actions"
         >
-          <Button v-if="model.spaceUrl" as="a" variant="outline" class="font-medium" :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover }" target="_blank" rel="noopener noreferrer" :href="model.spaceUrl" aria-label="打开主播主页（新窗口打开）">
-            <component :is="HomeOutline" class="size-3.5 mr-1.5" />
+          <Button
+            v-if="model.spaceUrl"
+            as="a"
+            variant="outline"
+            class="font-medium"
+            :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover }"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.spaceUrl"
+            aria-label="打开主播主页（新窗口打开）"
+          >
+            <component
+              :is="HomeOutline"
+              class="size-3.5 mr-1.5"
+            />
             主页
           </Button>
-          <Button v-if="model.liveRoomUrl" as="a" :variant="model.isStreaming ? 'default' : 'outline'" class="font-medium" :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover && !model.isStreaming }" target="_blank" rel="noopener noreferrer" :href="model.liveRoomUrl" aria-label="打开直播间（新窗口打开）">
-            <component :is="TvOutline" class="size-3.5 mr-1.5" />
+          <Button
+            v-if="model.liveRoomUrl"
+            as="a"
+            :variant="model.isStreaming ? 'default' : 'outline'"
+            class="font-medium"
+            :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover && !model.isStreaming }"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.liveRoomUrl"
+            aria-label="打开直播间（新窗口打开）"
+          >
+            <component
+              :is="TvOutline"
+              class="size-3.5 mr-1.5"
+            />
             直播间
           </Button>
         </div>

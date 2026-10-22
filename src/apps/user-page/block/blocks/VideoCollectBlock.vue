@@ -85,7 +85,10 @@ watch(
     <template #header>
       <div class="collect-header flex items-center justify-between w-full">
         <span class="collect-heading flex items-center gap-1.5 font-semibold text-sm">
-          <component :is="VideocamOutline" class="size-4" />
+          <component
+            :is="VideocamOutline"
+            class="size-4"
+          />
           当前视频征集
         </span>
         <RouterLink
@@ -94,9 +97,16 @@ watch(
           :to="{ name: 'user-video-collect', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
+          <Button
+            variant="ghost"
+            class="text-primary font-medium p-0"
+            @click="navigate"
+          >
             全部活动
-            <component :is="OpenOutline" class="size-3.5 ml-1" />
+            <component
+              :is="OpenOutline"
+              class="size-3.5 ml-1"
+            />
           </Button>
         </RouterLink>
       </div>
@@ -106,9 +116,7 @@ watch(
       v-if="!enabled"
       class="text-xs py-2"
     >
-      <AlertDescription>
-        视频征集未开放
-      </AlertDescription>
+      <AlertDescription> 视频征集未开放 </AlertDescription>
     </Alert>
     <Alert
       v-else-if="query.status.value === 'error'"
@@ -117,8 +125,16 @@ watch(
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>视频征集加载失败</span>
-        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
-          <component :is="RefreshOutline" class="size-3" />
+        <Button
+          variant="outline"
+          size="xs"
+          class="gap-1"
+          @click="load(true)"
+        >
+          <component
+            :is="RefreshOutline"
+            class="size-3"
+          />
           重试
         </Button>
       </AlertDescription>
@@ -154,7 +170,10 @@ watch(
               {{ item.description }}
             </p>
             <span class="deadline flex items-center gap-1 text-[11px] text-muted-foreground">
-              <component :is="TimerOutline" class="size-3.5" />
+              <component
+                :is="TimerOutline"
+                class="size-3.5"
+              />
               截止 {{ formatEndTime(item.endAt) }}
             </span>
           </div>
@@ -168,7 +187,10 @@ watch(
               class="h-1.5"
             />
           </div>
-          <component :is="OpenOutline" class="size-4 text-muted-foreground shrink-0" />
+          <component
+            :is="OpenOutline"
+            class="size-4 text-muted-foreground shrink-0"
+          />
         </RouterLink>
       </div>
     </div>

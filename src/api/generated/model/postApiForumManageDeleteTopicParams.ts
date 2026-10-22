@@ -7,5 +7,5 @@
  */
 
 export type PostApiForumManageDeleteTopicParams = {
-topic?: number;
-};
+  topic?: number
+}

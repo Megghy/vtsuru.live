@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { NotificationsOutline } from '@vicons/ionicons5'
 import { format } from 'date-fns'
-import { useMessage } from '@/shared/utils'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -18,6 +17,7 @@ import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { ScrollArea } from '@/shared/ui/scroll-area'
+import { useMessage } from '@/shared/utils'
 import { NavigateToNewTab } from '@/shared/utils'
 import { useNotificationStore } from '@/store/useNotificationStore'
 
@@ -203,7 +203,13 @@ watch(
             {{ notificationStore.unreadCount }} 未读
           </Badge>
         </div>
-        <Button size="xs" variant="ghost" class="h-6 text-[11px] text-muted-foreground hover:text-foreground" :disabled="notificationStore.unreadCount === 0" @click.stop="markAllRead">
+        <Button
+          size="xs"
+          variant="ghost"
+          class="h-6 text-[11px] text-muted-foreground hover:text-foreground"
+          :disabled="notificationStore.unreadCount === 0"
+          @click.stop="markAllRead"
+        >
           全部已读
         </Button>
       </div>
@@ -249,17 +255,39 @@ watch(
 
             <div class="flex items-center gap-1.5 pt-1 justify-end flex-wrap">
               <template v-if="isOrgInviteNotification(item)">
-                <Button size="xs" variant="brand" class="h-6 px-2 text-[11px]" @click.stop="acceptOrgInvite(item)">
+                <Button
+                  size="xs"
+                  variant="brand"
+                  class="h-6 px-2 text-[11px]"
+                  @click.stop="acceptOrgInvite(item)"
+                >
                   接受
                 </Button>
-                <Button size="xs" variant="outline" class="h-6 px-2 text-[11px]" @click.stop="rejectOrgInvite(item)">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="h-6 px-2 text-[11px]"
+                  @click.stop="rejectOrgInvite(item)"
+                >
                   拒绝
                 </Button>
               </template>
-              <Button v-if="resolveOpenUrl(item)" size="xs" variant="brand" class="h-6 px-2 text-[11px]" @click.stop="openNotif(item)">
+              <Button
+                v-if="resolveOpenUrl(item)"
+                size="xs"
+                variant="brand"
+                class="h-6 px-2 text-[11px]"
+                @click.stop="openNotif(item)"
+              >
                 打开
               </Button>
-              <Button v-if="!item.isReaded" size="xs" variant="ghost" class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground" @click.stop="markRead(item.id)">
+              <Button
+                v-if="!item.isReaded"
+                size="xs"
+                variant="ghost"
+                class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                @click.stop="markRead(item.id)"
+              >
                 标为已读
               </Button>
             </div>

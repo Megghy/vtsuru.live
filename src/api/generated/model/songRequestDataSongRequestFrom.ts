@@ -6,8 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type SongRequestDataSongRequestFrom = typeof SongRequestDataSongRequestFrom[keyof typeof SongRequestDataSongRequestFrom];
-
+export type SongRequestDataSongRequestFrom =
+  (typeof SongRequestDataSongRequestFrom)[keyof typeof SongRequestDataSongRequestFrom]
 
 export const SongRequestDataSongRequestFrom = {
   NUMBER_0: 0,
@@ -15,4 +15,4 @@ export const SongRequestDataSongRequestFrom = {
   NUMBER_2: 2,
   NUMBER_3: 3,
   NUMBER_4: 4,
-} as const;
+} as const

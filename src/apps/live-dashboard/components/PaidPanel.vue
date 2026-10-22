@@ -23,7 +23,10 @@ const sort = computed({
 })
 
 function markAllRead() {
-  dashboard.setRead(items.value.filter((e) => !dashboard.isRead(e)), true)
+  dashboard.setRead(
+    items.value.filter((e) => !dashboard.isRead(e)),
+    true,
+  )
 }
 </script>
 
@@ -43,12 +46,27 @@ function markAllRead() {
       />
       <Popover v-if="panel === 'gift'">
         <PopoverTrigger as-child>
-          <Button variant="ghost" size="icon" class="h-6 w-6" aria-label="礼物过滤" :class="dashboard.settings.giftMinPrice> 0 || dashboard.settings.showFreeGift ? 'text-primary' : 'text-muted-foreground'"
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-6 w-6"
+            aria-label="礼物过滤"
+            :class="
+              dashboard.settings.giftMinPrice > 0 || dashboard.settings.showFreeGift
+                ? 'text-primary'
+                : 'text-muted-foreground'
+            "
           >
-            <component :is="Filter16Regular" class="h-4 w-4" />
+            <component
+              :is="Filter16Regular"
+              class="h-4 w-4"
+            />
           </Button>
         </PopoverTrigger>
-        <PopoverContent class="w-[220px] p-3 text-xs" align="end">
+        <PopoverContent
+          class="w-[220px] p-3 text-xs"
+          align="end"
+        >
           <div class="gift-filter">
             <label class="text-muted-foreground">最低金额（元），大航海不受影响</label>
             <NInputNumber

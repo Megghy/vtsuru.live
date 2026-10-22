@@ -76,10 +76,7 @@ export function useOrgLives(ctx: OrgContext) {
     if (loaded.value && !force) return
     loading.value = true
     try {
-      lives.value = unwrapOk(
-        (await getApiOrgOrgIdLives(ctx.orgId.value)) as any,
-        '加载直播记录失败',
-      )
+      lives.value = unwrapOk((await getApiOrgOrgIdLives(ctx.orgId.value)) as any, '加载直播记录失败')
       loaded.value = true
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '加载直播记录失败')

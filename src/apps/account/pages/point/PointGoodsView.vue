@@ -211,7 +211,10 @@ onMounted(async () => {
     >
       <div class="font-semibold text-amber-600 dark:text-amber-400">需要认证</div>
       <p class="text-foreground">你尚未进行 Bilibili 账号认证, 可先浏览礼物，认证后可查看积分并兑换礼物。</p>
-      <Button size="xs" @click="$router.push({ name: 'bili-auth' })">
+      <Button
+        size="xs"
+        @click="$router.push({ name: 'bili-auth' })"
+      >
         立即认证
       </Button>
     </div>
@@ -226,7 +229,10 @@ onMounted(async () => {
         <div class="user-status-bar flex flex-wrap items-center justify-between gap-3 pb-2 border-b border-border/60">
           <div class="flex items-center gap-3 flex-wrap">
             <div class="flex items-center gap-1.5 font-medium">
-              <component :is="Person24Regular" class="size-4 text-primary" />
+              <component
+                :is="Person24Regular"
+                class="size-4 text-primary"
+              />
               <strong class="text-sm text-foreground">{{ biliAuth.name }}</strong>
               <Badge
                 v-if="currentRoomGuardLevel > 0"
@@ -237,7 +243,10 @@ onMounted(async () => {
               </Badge>
             </div>
 
-            <Separator orientation="vertical" class="h-4" />
+            <Separator
+              orientation="vertical"
+              class="h-4"
+            />
 
             <div class="flex items-center gap-1 text-muted-foreground">
               <span>当前积分:</span>
@@ -257,12 +266,26 @@ onMounted(async () => {
           </div>
 
           <div class="account-actions flex items-center gap-2">
-            <Button variant="ghost" class="flex items-center gap-1" @click="gotoAuthPage">
-              <component :is="Person24Regular" class="size-3.5" />
+            <Button
+              variant="ghost"
+              class="flex items-center gap-1"
+              @click="gotoAuthPage"
+            >
+              <component
+                :is="Person24Regular"
+                class="size-3.5"
+              />
               账号中心
             </Button>
-            <Button variant="ghost" class="flex items-center gap-1" @click="NavigateToNewTab('/bili-user/settings')">
-              <component :is="ArrowSync24Regular" class="size-3.5" />
+            <Button
+              variant="ghost"
+              class="flex items-center gap-1"
+              @click="NavigateToNewTab('/bili-user/settings')"
+            >
+              <component
+                :is="ArrowSync24Regular"
+                class="size-3.5"
+              />
               切换账号
             </Button>
           </div>
@@ -298,8 +321,15 @@ onMounted(async () => {
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-2.5">
               <div class="relative w-48">
-                <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input v-model="searchKeyword" placeholder="搜索礼物名称..." class="pl-8" />
+                <component
+                  :is="Search24Regular"
+                  class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  v-model="searchKeyword"
+                  placeholder="搜索礼物名称..."
+                  class="pl-8"
+                />
               </div>
 
               <Select v-model="sortOrder">
@@ -307,11 +337,31 @@ onMounted(async () => {
                   <SelectValue placeholder="排序方式" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default" class="text-xs">默认排序</SelectItem>
-                  <SelectItem value="price_asc" class="text-xs">价格从低到高</SelectItem>
-                  <SelectItem value="price_desc" class="text-xs">价格从高到低</SelectItem>
-                  <SelectItem value="name_asc" class="text-xs">名称 A-Z</SelectItem>
-                  <SelectItem value="recent" class="text-xs">最近上架</SelectItem>
+                  <SelectItem
+                    value="default"
+                    class="text-xs"
+                    >默认排序</SelectItem
+                  >
+                  <SelectItem
+                    value="price_asc"
+                    class="text-xs"
+                    >价格从低到高</SelectItem
+                  >
+                  <SelectItem
+                    value="price_desc"
+                    class="text-xs"
+                    >价格从高到低</SelectItem
+                  >
+                  <SelectItem
+                    value="name_asc"
+                    class="text-xs"
+                    >名称 A-Z</SelectItem
+                  >
+                  <SelectItem
+                    value="recent"
+                    class="text-xs"
+                    >最近上架</SelectItem
+                  >
                 </SelectContent>
               </Select>
 
@@ -328,12 +378,27 @@ onMounted(async () => {
             </div>
 
             <div class="toolbar-actions flex items-center gap-2">
-              <Button v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder !== 'default'" variant="ghost" class="flex items-center gap-1 text-muted-foreground hover:text-foreground" @click="clearFilters">
-                <component :is="Filter24Regular" class="size-3.5" />
+              <Button
+                v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder !== 'default'"
+                variant="ghost"
+                class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                @click="clearFilters"
+              >
+                <component
+                  :is="Filter24Regular"
+                  class="size-3.5"
+                />
                 重置筛选
               </Button>
-              <Button variant="outline" class="flex items-center gap-1" @click="refreshCurrentPoint">
-                <component :is="ArrowSync24Regular" class="size-3.5" />
+              <Button
+                variant="outline"
+                class="flex items-center gap-1"
+                @click="refreshCurrentPoint"
+              >
+                <component
+                  :is="ArrowSync24Regular"
+                  class="size-3.5"
+                />
                 刷新积分
               </Button>
             </div>
@@ -343,7 +408,10 @@ onMounted(async () => {
     </Card>
 
     <!-- 礼物列表区域 -->
-    <div v-if="isLoading" class="py-16 flex justify-center">
+    <div
+      v-if="isLoading"
+      class="py-16 flex justify-center"
+    >
       <Spin />
     </div>
 
@@ -388,7 +456,11 @@ onMounted(async () => {
                 </Badge>
               </div>
 
-              <Button class="w-full" :variant="item.isPinned ? 'default' : 'secondary'" @click="onBuyClick(item)">
+              <Button
+                class="w-full"
+                :variant="item.isPinned ? 'default' : 'secondary'"
+                @click="onBuyClick(item)"
+              >
                 {{ getTooltip(item) === '开始兑换' ? (item.isPinned ? '立即兑换' : '兑换') : '查看详情' }}
               </Button>
             </div>

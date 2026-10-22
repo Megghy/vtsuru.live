@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OpenBLiveClientDataAppStartAnchorInfo } from './openBLiveClientDataAppStartAnchorInfo';
-import type { OpenBLiveClientDataAppStartGameInfo } from './openBLiveClientDataAppStartGameInfo';
-import type { OpenBLiveClientDataAppStartWebsocketInfo } from './openBLiveClientDataAppStartWebsocketInfo';
+import type { OpenBLiveClientDataAppStartAnchorInfo } from './openBLiveClientDataAppStartAnchorInfo'
+import type { OpenBLiveClientDataAppStartGameInfo } from './openBLiveClientDataAppStartGameInfo'
+import type { OpenBLiveClientDataAppStartWebsocketInfo } from './openBLiveClientDataAppStartWebsocketInfo'
 
 export interface OpenBLiveClientDataAppStartData {
-  game_info?: OpenBLiveClientDataAppStartGameInfo;
-  websocket_info?: OpenBLiveClientDataAppStartWebsocketInfo;
-  anchor_info?: OpenBLiveClientDataAppStartAnchorInfo;
+  game_info?: OpenBLiveClientDataAppStartGameInfo
+  websocket_info?: OpenBLiveClientDataAppStartWebsocketInfo
+  anchor_info?: OpenBLiveClientDataAppStartAnchorInfo
 }

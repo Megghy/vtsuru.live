@@ -273,7 +273,10 @@ async function applyCleanup(applyAll: boolean) {
 
 <template>
   <div class="flex flex-col gap-4">
-    <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+    <Alert
+      variant="default"
+      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+    >
       <AlertDescription class="text-xs">
         默认会同时扣除重复积分、删除重复事件，并清理 live
         历史里的重复上舰。你可以在执行前取消其中任意动作，也可以切换为手动三档积分值预览和执行。
@@ -288,10 +291,20 @@ async function applyCleanup(applyAll: boolean) {
       <CardContent class="p-3.5 pt-0">
         <div class="flex items-center gap-3 flex-wrap text-xs">
           <span class="text-muted-foreground">最近</span>
-          <NInputNumber v-model="dayCount" :min="1" :max="90" class="w-20" />
+          <NInputNumber
+            v-model="dayCount"
+            :min="1"
+            :max="90"
+            class="w-20"
+          />
           <span class="text-muted-foreground">天</span>
           <span class="text-muted-foreground ml-2">窗口</span>
-          <NInputNumber v-model="windowSeconds" :min="1" :max="30" class="w-20" />
+          <NInputNumber
+            v-model="windowSeconds"
+            :min="1"
+            :max="30"
+            class="w-20"
+          />
           <span class="text-muted-foreground">秒</span>
 
           <div class="flex items-center gap-1.5 ml-2">
@@ -307,8 +320,15 @@ async function applyCleanup(applyAll: boolean) {
             <span class="text-muted-foreground">排除已处理</span>
           </div>
 
-          <Button class="ml-auto gap-1.5" :disabled="scanLoading" @click="scanDuplicates">
-            <ArrowSync24Regular class="size-3.5" :class="{ 'animate-spin': scanLoading }" />
+          <Button
+            class="ml-auto gap-1.5"
+            :disabled="scanLoading"
+            @click="scanDuplicates"
+          >
+            <ArrowSync24Regular
+              class="size-3.5"
+              :class="{ 'animate-spin': scanLoading }"
+            />
             {{ scanLoading ? '扫描中...' : '扫描重复上舰' }}
           </Button>
         </div>
@@ -326,12 +346,8 @@ async function applyCleanup(applyAll: boolean) {
           type="single"
           size="xs"
         >
-          <ToggleGroupItem value="current">
-            按当前积分设置
-          </ToggleGroupItem>
-          <ToggleGroupItem value="manual">
-            手动三档设置
-          </ToggleGroupItem>
+          <ToggleGroupItem value="current"> 按当前积分设置 </ToggleGroupItem>
+          <ToggleGroupItem value="manual"> 手动三档设置 </ToggleGroupItem>
         </ToggleGroup>
 
         <div class="flex items-center gap-3 flex-wrap text-xs">
@@ -356,7 +372,12 @@ async function applyCleanup(applyAll: boolean) {
             :disabled="pointMode !== 'manual'"
             class="w-24"
           />
-          <Button size="xs" variant="outline" :disabled="pointMode !== 'manual'" @click="resetManualPointValues">
+          <Button
+            size="xs"
+            variant="outline"
+            :disabled="pointMode !== 'manual'"
+            @click="resetManualPointValues"
+          >
             恢复当前设置
           </Button>
         </div>
@@ -396,9 +417,17 @@ async function applyCleanup(applyAll: boolean) {
           <Tag type="warning">Live 重复 {{ selectedLiveDuplicates }}</Tag>
 
           <div class="flex items-center gap-2 ml-auto">
-            <Popconfirm positive-text="确认清理" negative-text="取消" @positive-click="applyCleanup(true)">
+            <Popconfirm
+              positive-text="确认清理"
+              negative-text="取消"
+              @positive-click="applyCleanup(true)"
+            >
               <template #trigger>
-                <Button variant="destructive" :disabled="applyLoading" class="gap-1.5">
+                <Button
+                  variant="destructive"
+                  :disabled="applyLoading"
+                  class="gap-1.5"
+                >
                   <Delete24Regular class="size-3.5" />
                   一键清理全部
                 </Button>
@@ -406,7 +435,11 @@ async function applyCleanup(applyAll: boolean) {
               确认按当前筛选条件清理全部重复上舰数据？
             </Popconfirm>
 
-            <Popconfirm positive-text="确认清理" negative-text="取消" @positive-click="applyCleanup(false)">
+            <Popconfirm
+              positive-text="确认清理"
+              negative-text="取消"
+              @positive-click="applyCleanup(false)"
+            >
               <template #trigger>
                 <Button :disabled="applyLoading || selectedRowKeys.length === 0">
                   清理已选用户 ({{ selectedRowKeys.length }})
@@ -419,14 +452,22 @@ async function applyCleanup(applyAll: boolean) {
       </CardContent>
     </Card>
 
-    <Alert v-if="scanResult" variant="default" class="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+    <Alert
+      v-if="scanResult"
+      variant="default"
+      class="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+    >
       <AlertDescription class="text-xs">
         扫描结果：{{ scanResult.duplicatedUserCount }} 位用户，{{ scanResult.duplicateGroupCount }} 组重复，事件重复
         {{ scanResult.duplicateEventCount }} 条，Live 重复 {{ scanResult.duplicateLiveCount }} 条。
       </AlertDescription>
     </Alert>
 
-    <Alert v-if="applyResult" variant="default" class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+    <Alert
+      v-if="applyResult"
+      variant="default"
+      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+    >
       <AlertDescription class="text-xs">
         本次执行：扣除 {{ formatPoints(applyResult.totalPointsDeducted) }} 积分，删除事件
         {{ applyResult.eventRowsDeleted }} 条，删除临时 Live 记录 {{ applyResult.tempEventRowsDeleted }} 条，更新 Live
@@ -440,15 +481,26 @@ async function applyCleanup(applyAll: boolean) {
         <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">重复用户列表</CardTitle>
       </CardHeader>
       <CardContent class="p-0">
-        <Empty v-if="!scanResult" description="先扫描重复上舰数据" class="py-8" />
-        <Empty v-else-if="rows.length === 0" description="当前筛选条件下没有重复上舰" class="py-8" />
+        <Empty
+          v-if="!scanResult"
+          description="先扫描重复上舰数据"
+          class="py-8"
+        />
+        <Empty
+          v-else-if="rows.length === 0"
+          description="当前筛选条件下没有重复上舰"
+          class="py-8"
+        />
         <div v-else>
           <div class="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead class="w-10">
-                    <Checkbox :checked="isAllSelected" @update:checked="toggleSelectAll" />
+                    <Checkbox
+                      :checked="isAllSelected"
+                      @update:checked="toggleSelectAll"
+                    />
                   </TableHead>
                   <TableHead>用户</TableHead>
                   <TableHead class="w-20">组数</TableHead>
@@ -461,7 +513,10 @@ async function applyCleanup(applyAll: boolean) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                <TableRow v-for="row in paginatedRows" :key="row.guardOUId">
+                <TableRow
+                  v-for="row in paginatedRows"
+                  :key="row.guardOUId"
+                >
                   <TableCell>
                     <Checkbox
                       :checked="selectedRowKeys.includes(row.guardOUId)"
@@ -485,7 +540,12 @@ async function applyCleanup(applyAll: boolean) {
                     {{ formatTime(row.firstEventAt) }} ~ {{ formatTime(row.lastEventAt) }}
                   </TableCell>
                   <TableCell class="text-right">
-                    <Button variant="ghost" size="xs" class="gap-1" @click="openDetail(row)">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      class="gap-1"
+                      @click="openDetail(row)"
+                    >
                       <Eye24Regular class="size-3.5" />
                       详情
                     </Button>
@@ -496,15 +556,26 @@ async function applyCleanup(applyAll: boolean) {
           </div>
 
           <!-- 分页栏 -->
-          <div v-if="totalPages > 1" class="flex items-center justify-between px-4 py-3 border-t text-xs">
+          <div
+            v-if="totalPages > 1"
+            class="flex items-center justify-between px-4 py-3 border-t text-xs"
+          >
             <span class="text-muted-foreground">
               共 {{ rows.length }} 条，第 {{ currentPage }} / {{ totalPages }} 页
             </span>
             <div class="flex items-center gap-1">
-              <Button variant="outline" size="xs" :disabled="currentPage <= 1" @click="currentPage--">
+              <Button
+                variant="outline"
+                size="xs"
+                :disabled="currentPage <= 1"
+                @click="currentPage--"
+              >
                 上一页
               </Button>
-              <Button variant="outline" size="xs" :disabled="currentPage>= totalPages"
+              <Button
+                variant="outline"
+                size="xs"
+                :disabled="currentPage >= totalPages"
                 @click="currentPage++"
               >
                 下一页
@@ -525,12 +596,21 @@ async function applyCleanup(applyAll: boolean) {
 
       <div class="flex-1 overflow-y-auto py-2 space-y-3">
         <Spin :show="detailLoading">
-          <Empty v-if="!detailResult && !detailLoading" description="暂无详情" />
+          <Empty
+            v-if="!detailResult && !detailLoading"
+            description="暂无详情"
+          />
           <template v-else-if="detailResult">
-            <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <Alert
+              variant="default"
+              class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+            >
               <AlertDescription class="text-xs">
-                {{ detailResult.user.info?.name || '未知用户' }}：{{ detailResult.user.duplicateGroups }} 组重复，事件重复
-                {{ detailResult.user.duplicateEventCount }} 条，Live 重复 {{ detailResult.user.duplicateLiveCount }} 条。
+                {{ detailResult.user.info?.name || '未知用户' }}：{{
+                  detailResult.user.duplicateGroups
+                }}
+                组重复，事件重复 {{ detailResult.user.duplicateEventCount }} 条，Live 重复
+                {{ detailResult.user.duplicateLiveCount }} 条。
               </AlertDescription>
             </Alert>
 
@@ -544,7 +624,10 @@ async function applyCleanup(applyAll: boolean) {
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <Tag type="warning">{{ sourceTypeLabel(group.sourceType) }}</Tag>
                     <Tag type="info">重复 {{ group.duplicateCount }} 条</Tag>
-                    <span v-if="group.liveTitle" class="font-medium text-foreground">
+                    <span
+                      v-if="group.liveTitle"
+                      class="font-medium text-foreground"
+                    >
                       {{ group.liveTitle }}
                     </span>
                   </div>

@@ -1,5 +1,5 @@
-import { getShadcnCssVars } from './shadcn'
 import { brand, error, hexToRgb, info, pickByMode, rgba, success, warning } from './colors'
+import { getShadcnCssVars } from './shadcn'
 /**
  * 主题入口：统一 shadcn 变量体系，只保留业务特有的补充变量。
  */

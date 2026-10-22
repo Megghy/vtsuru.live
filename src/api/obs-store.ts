@@ -1,14 +1,14 @@
-import {
-  getApiObsStoreSyncGetState,
-  postApiObsStoreSyncUpdateState,
-} from '@/api/generated/obs-store/obs-store'
 import type { ObsStoreControllerResponseObsSyncState } from '@/api/generated/model/obsStoreControllerResponseObsSyncState'
+import { getApiObsStoreSyncGetState, postApiObsStoreSyncUpdateState } from '@/api/generated/obs-store/obs-store'
+
 import { unwrapOk } from './query'
 
 export type ObsSyncStateResponse = ObsStoreControllerResponseObsSyncState
 
 export class ObsSyncConflict extends Error {
-  constructor(public snapshot: ObsSyncStateResponse) { super('配置已在其他窗口更新') }
+  constructor(public snapshot: ObsSyncStateResponse) {
+    super('配置已在其他窗口更新')
+  }
 }
 
 export async function getObsSyncState(

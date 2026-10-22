@@ -50,7 +50,8 @@ const cfg = computed<BlockConfig>(() => {
         : 520,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
-    defaultTag: isBlockPropertyAvailable('feedback', o, 'defaultTag') && typeof o.defaultTag === 'string' ? o.defaultTag : '',
+    defaultTag:
+      isBlockPropertyAvailable('feedback', o, 'defaultTag') && typeof o.defaultTag === 'string' ? o.defaultTag : '',
     showPublicQuestions:
       isBlockPropertyAvailable('feedback', o, 'showPublicQuestions') && typeof o.showPublicQuestions === 'boolean'
         ? o.showPublicQuestions
@@ -109,7 +110,10 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
       #header
     >
       <div class="flex items-center gap-2">
-        <component :is="ChatbubbleOutline" class="size-4.5 text-muted-foreground" />
+        <component
+          :is="ChatbubbleOutline"
+          class="size-4.5 text-muted-foreground"
+        />
         <span class="font-medium text-sm">{{ cfg.title }}</span>
       </div>
     </template>
@@ -127,9 +131,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           v-else
           class="text-xs py-2"
         >
-          <AlertDescription>
-            未加载到用户信息，无法展示站内提问箱
-          </AlertDescription>
+          <AlertDescription> 未加载到用户信息，无法展示站内提问箱 </AlertDescription>
         </Alert>
       </template>
 
@@ -145,15 +147,23 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           v-if="!url"
           class="text-xs py-2"
         >
-          <AlertDescription>
-            未配置跳转链接
-          </AlertDescription>
+          <AlertDescription> 未配置跳转链接 </AlertDescription>
         </Alert>
 
         <template v-else>
           <div class="action-row flex items-center gap-3 mb-4">
-            <Button as="a" variant="outline" target="_blank" rel="noopener noreferrer" :href="url" class="open-btn font-semibold">
-              <component :is="OpenOutline" class="size-3.5 mr-1.5" />
+            <Button
+              as="a"
+              variant="outline"
+              target="_blank"
+              rel="noopener noreferrer"
+              :href="url"
+              class="open-btn font-semibold"
+            >
+              <component
+                :is="OpenOutline"
+                class="size-3.5 mr-1.5"
+              />
               {{ cfg.buttonText }}
             </Button>
             <span class="url-hint text-xs text-muted-foreground truncate flex-1">
@@ -179,9 +189,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
             v-else-if="externalEmbedRejected"
             class="embed-notice text-xs py-2"
           >
-            <AlertDescription>
-              该来源暂不支持安全内嵌，请使用上方按钮访问
-            </AlertDescription>
+            <AlertDescription> 该来源暂不支持安全内嵌，请使用上方按钮访问 </AlertDescription>
           </Alert>
         </template>
       </template>

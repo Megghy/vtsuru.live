@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountBindBiliParams = {
-code?: string;
-};
+  code?: string
+}

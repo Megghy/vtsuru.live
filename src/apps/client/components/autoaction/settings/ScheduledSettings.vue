@@ -55,9 +55,7 @@ const schedulingModeOptions = [
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            开启后将遵循【自动化 -> 消息队列】中的全局定时设置
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 开启后将遵循【自动化 -> 消息队列】中的全局定时设置 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <Switch v-model:checked="useGlobalTimer" />

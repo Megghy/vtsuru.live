@@ -26,14 +26,7 @@ import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { toast } from '@/shared/utils'
 
 import AddressDisplay from './AddressDisplay.vue'
@@ -61,17 +54,42 @@ const statusMeta: Record<
   PointOrderStatus,
   { label: string; badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline'; hint: string; icon: Component }
 > = {
-  [PointOrderStatus.Pending]: { label: '等待发货', badgeVariant: 'outline', hint: '订单已创建，等待处理', icon: Timer24Regular },
+  [PointOrderStatus.Pending]: {
+    label: '等待发货',
+    badgeVariant: 'outline',
+    hint: '订单已创建，等待处理',
+    icon: Timer24Regular,
+  },
   [PointOrderStatus.Shipped]: {
     label: '已发货',
     badgeVariant: 'secondary',
     hint: '订单已发货，可填写或更新物流信息',
     icon: VehicleTruck24Regular,
   },
-  [PointOrderStatus.Completed]: { label: '已完成', badgeVariant: 'default', hint: '订单流程已完成', icon: CheckmarkCircle24Regular },
-  [PointOrderStatus.InProgress]: { label: '进行中', badgeVariant: 'secondary', hint: '服务已接单，正在履约', icon: ArrowSync24Regular },
-  [PointOrderStatus.Rejected]: { label: '已拒绝', badgeVariant: 'destructive', hint: '服务订单已拒绝，积分已退回', icon: Prohibited24Regular },
-  [PointOrderStatus.Cancelled]: { label: '已取消', badgeVariant: 'outline', hint: '订单已取消，积分已退回', icon: DismissCircle24Regular },
+  [PointOrderStatus.Completed]: {
+    label: '已完成',
+    badgeVariant: 'default',
+    hint: '订单流程已完成',
+    icon: CheckmarkCircle24Regular,
+  },
+  [PointOrderStatus.InProgress]: {
+    label: '进行中',
+    badgeVariant: 'secondary',
+    hint: '服务已接单，正在履约',
+    icon: ArrowSync24Regular,
+  },
+  [PointOrderStatus.Rejected]: {
+    label: '已拒绝',
+    badgeVariant: 'destructive',
+    hint: '服务订单已拒绝，积分已退回',
+    icon: Prohibited24Regular,
+  },
+  [PointOrderStatus.Cancelled]: {
+    label: '已取消',
+    badgeVariant: 'outline',
+    hint: '订单已取消，积分已退回',
+    icon: DismissCircle24Regular,
+  },
 }
 
 const loading = computed(() => !!props.loading || actionLoading.value)
@@ -171,16 +189,12 @@ function toggleSelection(id: number, checked: boolean) {
 const isAllSelected = computed(
   () =>
     props.order.length > 0 &&
-    props.order
-      .filter((o) => o.type !== GoodsTypes.Service)
-      .every((o) => selectedItems.value.includes(o.id)),
+    props.order.filter((o) => o.type !== GoodsTypes.Service).every((o) => selectedItems.value.includes(o.id)),
 )
 
 function toggleAll(checked: boolean) {
   if (checked) {
-    updateSelection(
-      props.order.filter((o) => o.type !== GoodsTypes.Service).map((o) => o.id),
-    )
+    updateSelection(props.order.filter((o) => o.type !== GoodsTypes.Service).map((o) => o.id))
   } else {
     updateSelection([])
   }
@@ -274,23 +288,36 @@ function formatRelativeTime(time: number) {
                   :variant="getStatusVariant(row)"
                   class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1 w-fit"
                 >
-                  <component :is="statusMeta[row.status].icon" class="size-3" />
+                  <component
+                    :is="statusMeta[row.status].icon"
+                    class="size-3"
+                  />
                   <span>{{ getStatusLabel(row) }}</span>
                 </Badge>
               </TableCell>
               <TableCell class="py-2.5">
-                <Badge variant="outline" class="text-[10px] h-4.5 px-1 font-normal text-muted-foreground">
+                <Badge
+                  variant="outline"
+                  class="text-[10px] h-4.5 px-1 font-normal text-muted-foreground"
+                >
                   {{ row.type === GoodsTypes.Physical ? '实体' : row.type === GoodsTypes.Service ? '服务' : '虚拟' }}
                 </Badge>
               </TableCell>
-              <TableCell class="py-2.5 text-muted-foreground truncate max-w-28" :title="row.remark">
+              <TableCell
+                class="py-2.5 text-muted-foreground truncate max-w-28"
+                :title="row.remark"
+              >
                 {{ row.remark || '无' }}
               </TableCell>
               <TableCell class="py-2.5 font-mono text-[11px] text-muted-foreground truncate max-w-36">
                 {{ row.trackingNumber || (row.type === GoodsTypes.Virtual ? '无需发货' : '暂无物流') }}
               </TableCell>
               <TableCell class="py-2.5 text-right pr-3">
-                <Button variant="outline" class="px-2" @click="openDetail(row)">
+                <Button
+                  variant="outline"
+                  class="px-2"
+                  @click="openDetail(row)"
+                >
                   详情
                 </Button>
               </TableCell>
@@ -319,7 +346,10 @@ function formatRelativeTime(time: number) {
               :variant="getStatusVariant(item)"
               class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
             >
-              <component :is="statusMeta[item.status].icon" class="size-3" />
+              <component
+                :is="statusMeta[item.status].icon"
+                class="size-3"
+              />
               <span>{{ getStatusLabel(item) }}</span>
             </Badge>
           </div>
@@ -329,7 +359,11 @@ function formatRelativeTime(time: number) {
             {{ item.customer?.name || '未知用户' }} · {{ item.count }} 件 · {{ Number(item.point.toFixed(1)) }} 积分
           </p>
 
-          <Button variant="outline" class="w-full mt-1" @click="openDetail(item)">
+          <Button
+            variant="outline"
+            class="w-full mt-1"
+            @click="openDetail(item)"
+          >
             查看与处理
           </Button>
         </article>
@@ -380,7 +414,10 @@ function formatRelativeTime(time: number) {
                   :variant="getStatusVariant(detail)"
                   class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1 w-fit mt-0.5"
                 >
-                  <component :is="statusMeta[detail.status].icon" class="size-3" />
+                  <component
+                    :is="statusMeta[detail.status].icon"
+                    class="size-3"
+                  />
                   <span>{{ getStatusLabel(detail) }}</span>
                 </Badge>
               </div>
@@ -406,7 +443,10 @@ function formatRelativeTime(time: number) {
                     <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
                     <div class="flex items-center gap-2">
                       <span class="text-muted-foreground">x {{ item.quantity }}</span>
-                      <Badge variant="secondary" class="text-[10px] h-4.5 px-1 font-mono">
+                      <Badge
+                        variant="secondary"
+                        class="text-[10px] h-4.5 px-1 font-mono"
+                      >
                         {{ item.priceSnapshot }} 积分
                       </Badge>
                     </div>
@@ -425,7 +465,9 @@ function formatRelativeTime(time: number) {
 
             <Alert class="text-xs bg-muted/40 border-border/80">
               <AlertTitle class="text-xs font-semibold">状态说明</AlertTitle>
-              <AlertDescription class="text-xs text-muted-foreground">{{ statusMeta[detail.status].hint }}</AlertDescription>
+              <AlertDescription class="text-xs text-muted-foreground">{{
+                statusMeta[detail.status].hint
+              }}</AlertDescription>
             </Alert>
 
             <template v-if="detail.type === GoodsTypes.Physical">
@@ -454,9 +496,20 @@ function formatRelativeTime(time: number) {
               <div class="space-y-2">
                 <span class="text-[11px] font-medium text-muted-foreground block">物流信息</span>
                 <div class="flex flex-col gap-2 p-2.5 rounded-lg border border-border/60 bg-muted/20">
-                  <Input v-model="detail.expressCompany" placeholder="快递公司 (如: 顺丰速运)" />
-                  <Input v-model="detail.trackingNumber" placeholder="填写快递单号" class="font-mono" />
-                  <Button class="self-end" :disabled="actionLoading" @click="saveExpress">
+                  <Input
+                    v-model="detail.expressCompany"
+                    placeholder="快递公司 (如: 顺丰速运)"
+                  />
+                  <Input
+                    v-model="detail.trackingNumber"
+                    placeholder="填写快递单号"
+                    class="font-mono"
+                  />
+                  <Button
+                    class="self-end"
+                    :disabled="actionLoading"
+                    @click="saveExpress"
+                  >
                     更新物流信息
                   </Button>
                 </div>
@@ -474,7 +527,10 @@ function formatRelativeTime(time: number) {
             @positive-click="updateStatus([detail.id], previousStatus(detail)!)"
           >
             <template #trigger>
-              <Button variant="outline" class="text-amber-600 border-amber-500/40 hover:bg-amber-500/10">
+              <Button
+                variant="outline"
+                class="text-amber-600 border-amber-500/40 hover:bg-amber-500/10"
+              >
                 回退到等待发货
               </Button>
             </template>
@@ -489,7 +545,7 @@ function formatRelativeTime(time: number) {
             @positive-click="updateStatus([detail.id], nextStatus(detail)!)"
           >
             <template #trigger>
-              <Button >
+              <Button>
                 {{
                   detail.type === GoodsTypes.Virtual
                     ? '完成订单'

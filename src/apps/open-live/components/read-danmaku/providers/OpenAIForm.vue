@@ -1,15 +1,9 @@
 <script setup lang="ts">
 import { OPENAI_PRESET_VOICES } from '@/apps/open-live/voice-providers/openai'
-import { useSpeechService } from '@/store/useSpeechService'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
@@ -38,15 +32,25 @@ const formatOptions = [
       label="Base URL"
       hint="OpenAI 兼容服务的根路径，会自动追加 /v1/audio/speech"
     >
-      <Input v-model="settings.providers.openai.baseUrl" placeholder="https://api.openai.com" />
+      <Input
+        v-model="settings.providers.openai.baseUrl"
+        placeholder="https://api.openai.com"
+      />
     </SectionField>
 
     <SectionField label="API Key">
-      <Input v-model="settings.providers.openai.apiKey" type="password" placeholder="sk-xxxx" />
+      <Input
+        v-model="settings.providers.openai.apiKey"
+        type="password"
+        placeholder="sk-xxxx"
+      />
     </SectionField>
 
     <SectionField label="模型">
-      <Input v-model="settings.providers.openai.model" placeholder="tts-1" />
+      <Input
+        v-model="settings.providers.openai.model"
+        placeholder="tts-1"
+      />
     </SectionField>
 
     <SectionField label="音色">

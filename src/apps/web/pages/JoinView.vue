@@ -222,12 +222,8 @@ async function rejectStreamer() {
         <template v-else>
           <Alert class="bg-primary/5 border-primary/20 text-foreground">
             <AlertDescription>
-              <template v-if="joinType === 'member'">
-                你正在通过邀请链接加入组织成为成员。
-              </template>
-              <template v-else>
-                你正在通过邀请链接授权组织读取你的直播数据。
-              </template>
+              <template v-if="joinType === 'member'"> 你正在通过邀请链接加入组织成为成员。 </template>
+              <template v-else> 你正在通过邀请链接授权组织读取你的直播数据。 </template>
             </AlertDescription>
           </Alert>
 
@@ -259,7 +255,10 @@ async function rejectStreamer() {
               <template v-if="preview.type === 'member'">
                 <dt class="text-muted-foreground">加入角色</dt>
                 <dd>
-                  <Badge variant="secondary" class="h-5 text-[11px] font-normal">
+                  <Badge
+                    variant="secondary"
+                    class="h-5 text-[11px] font-normal"
+                  >
                     {{ roleLabel(preview.role) }}
                   </Badge>
                 </dd>
@@ -289,9 +288,18 @@ async function rejectStreamer() {
           <template v-else>
             <template v-if="done">
               <div class="py-6 flex flex-col items-center justify-center text-center gap-2">
-                <div class="size-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold">✓</div>
+                <div
+                  class="size-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold"
+                >
+                  ✓
+                </div>
                 <h3 class="text-base font-semibold">已完成</h3>
-                <p v-if="doneOrgName" class="text-xs text-muted-foreground">组织：{{ doneOrgName }}</p>
+                <p
+                  v-if="doneOrgName"
+                  class="text-xs text-muted-foreground"
+                >
+                  组织：{{ doneOrgName }}
+                </p>
               </div>
             </template>
             <template v-else-if="canOperate">
@@ -299,7 +307,11 @@ async function rejectStreamer() {
                 v-if="joinType === 'member'"
                 class="pt-2"
               >
-                <Button class="w-full" :disabled="isBusy" @click="acceptMember">
+                <Button
+                  class="w-full"
+                  :disabled="isBusy"
+                  @click="acceptMember"
+                >
                   {{ isBusy ? '加入中...' : '确认加入' }}
                 </Button>
               </div>
@@ -308,10 +320,19 @@ async function rejectStreamer() {
                 v-else
                 class="flex gap-3 pt-2"
               >
-                <Button class="flex-1" :disabled="isBusy" @click="acceptStreamer">
+                <Button
+                  class="flex-1"
+                  :disabled="isBusy"
+                  @click="acceptStreamer"
+                >
                   {{ isBusy ? '处理中...' : '授权' }}
                 </Button>
-                <Button variant="destructive" class="flex-1" :disabled="isBusy" @click="rejectStreamer">
+                <Button
+                  variant="destructive"
+                  class="flex-1"
+                  :disabled="isBusy"
+                  @click="rejectStreamer"
+                >
                   {{ isBusy ? '处理中...' : '拒绝' }}
                 </Button>
               </div>

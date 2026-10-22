@@ -5,20 +5,20 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointOrderDataServiceAnswer } from './pointOrderDataServiceAnswer';
-import type { PointOrderDataServiceTimelineEntry } from './pointOrderDataServiceTimelineEntry';
+import type { PointOrderDataServiceAnswer } from './pointOrderDataServiceAnswer'
+import type { PointOrderDataServiceTimelineEntry } from './pointOrderDataServiceTimelineEntry'
 
 export interface PointOrderDataServiceOrderData {
-  answers: PointOrderDataServiceAnswer[];
+  answers: PointOrderDataServiceAnswer[]
   /** @nullable */
-  appointmentAt?: string | null;
+  appointmentAt?: string | null
   /** @nullable */
-  deliveryUrl?: string | null;
+  deliveryUrl?: string | null
   /** @nullable */
-  cancelReason?: string | null;
+  cancelReason?: string | null
   /** @nullable */
-  refundedAt?: string | null;
+  refundedAt?: string | null
   /** @nullable */
-  refundHistoryId?: number | null;
-  timeline: PointOrderDataServiceTimelineEntry[];
+  refundHistoryId?: number | null
+  timeline: PointOrderDataServiceTimelineEntry[]
 }

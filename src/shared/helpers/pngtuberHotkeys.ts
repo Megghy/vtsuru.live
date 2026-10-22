@@ -13,9 +13,11 @@ export function createExpressionHotkeys(options: {
   const holds = new Map<string, { id: string; previous: string }>()
   let queue = Promise.resolve()
   function enqueue(action: () => Promise<void>) {
-    queue = queue.then(async () => {
-      if (options.enabled()) await action()
-    }).catch(options.onError)
+    queue = queue
+      .then(async () => {
+        if (options.enabled()) await action()
+      })
+      .catch(options.onError)
     return queue
   }
   function bind(expression: PngtuberExpression) {

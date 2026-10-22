@@ -6,8 +6,7 @@
  * OpenAPI spec version: v1
  */
 
-export type PointFrom = typeof PointFrom[keyof typeof PointFrom];
-
+export type PointFrom = (typeof PointFrom)[keyof typeof PointFrom]
 
 export const PointFrom = {
   NUMBER_0: 0,
@@ -15,4 +14,4 @@ export const PointFrom = {
   NUMBER_2: 2,
   NUMBER_3: 3,
   NUMBER_4: 4,
-} as const;
+} as const

@@ -1,7 +1,7 @@
-import { useMessage } from '@/shared/utils'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
+import { useMessage } from '@/shared/utils'
 
 import { useUserPageContrib } from './useUserPageContrib'
 import { useUserPageEditorCore } from './useUserPageEditorCore'

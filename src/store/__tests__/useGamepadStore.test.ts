@@ -1,13 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import {
-  applyAxisDeadzone,
-  clampStickAxes,
-  createInitialButtonStates,
-  STANDARD_BUTTON_MAP,
-  useGamepadStore,
-} from '../useGamepadStore'
+import { applyAxisDeadzone, clampStickAxes, STANDARD_BUTTON_MAP, useGamepadStore } from '../useGamepadStore'
 
 describe('useGamepadStore 算法与状态测试', () => {
   beforeEach(() => {

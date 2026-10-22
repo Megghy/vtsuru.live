@@ -6,13 +6,7 @@ import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -88,7 +82,11 @@ const priorityOptions = [
         class="space-y-1"
       >
         <span class="text-xs text-muted-foreground">操作名称</span>
-        <Input v-model="action.name" placeholder="例如：给礼物老板点赞" :class="nameInvalid ? 'border-destructive focus-visible:ring-destructive' : ''" />
+        <Input
+          v-model="action.name"
+          placeholder="例如：给礼物老板点赞"
+          :class="nameInvalid ? 'border-destructive focus-visible:ring-destructive' : ''"
+        />
         <div
           v-if="nameInvalid"
           class="text-[11px] text-destructive"
@@ -121,9 +119,7 @@ const priorityOptions = [
                   <Info16Regular class="size-3.5 text-muted-foreground" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">
-                关闭直播后将不会触发此操作
-              </TooltipContent>
+              <TooltipContent class="text-xs"> 关闭直播后将不会触发此操作 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <Switch v-model:checked="action.triggerConfig.onlyDuringLive" />
@@ -138,9 +134,7 @@ const priorityOptions = [
                   <Info16Regular class="size-3.5 text-muted-foreground" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">
-                开启天选时刻期间暂停触发（防止被风控）
-              </TooltipContent>
+              <TooltipContent class="text-xs"> 开启天选时刻期间暂停触发（防止被风控） </TooltipContent>
             </Tooltip>
           </TooltipProvider>
           <Switch v-model:checked="action.triggerConfig.ignoreTianXuan" />

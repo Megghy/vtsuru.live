@@ -1,15 +1,14 @@
 <script setup lang="ts">
 import { ArrowReset24Regular, Copy24Regular } from '@vicons/fluent'
 import { useElementSize, useIntervalFn } from '@vueuse/core'
-import { useMessage } from '@/shared/utils'
 import { computed, onActivated, onDeactivated, ref, shallowRef } from 'vue'
 
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import { EventDataTypes, type EventModel } from '@/api/api-models'
-import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
 import DanmujiRulesEditor from '@/apps/manage/components/danmuji/DanmujiRulesEditor.vue'
 import DanmujiStyleEditor from '@/apps/manage/components/danmuji/DanmujiStyleEditor.vue'
+import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { normalizeDanmujiConfig } from '@/shared/danmujiConfig'
@@ -31,17 +30,12 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Textarea } from '@/shared/ui/textarea'
+import { useMessage } from '@/shared/utils'
 import { copyToClipboard } from '@/shared/utils'
 
 const message = useMessage()
@@ -106,7 +100,11 @@ const testGuard = ref('3')
 const randomize = ref(false)
 const interval = ref(1.5)
 const autoEnabled = ref(false)
-const samples = ['晚上好，今天也来报到啦！', '这一段太精彩了！', '这是一条较长的测试弹幕，用来查看换行、行间距和气泡宽度是否合适。']
+const samples = [
+  '晚上好，今天也来报到啦！',
+  '这一段太精彩了！',
+  '这是一条较长的测试弹幕，用来查看换行、行间距和气泡宽度是否合适。',
+]
 
 async function sendTest(type = EventDataTypes.Message) {
   const event: Partial<EventModel> & { type: EventDataTypes } = {
@@ -218,7 +216,11 @@ onActivated(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button variant="outline" :disabled="!obsUrl" @click="copy(obsUrl, 'OBS 链接')">
+          <Button
+            variant="outline"
+            :disabled="!obsUrl"
+            @click="copy(obsUrl, 'OBS 链接')"
+          >
             <component
               :is="Copy24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -226,7 +228,13 @@ onActivated(() => {
             复制 OBS 链接
           </Button>
 
-          <Button v-if="accountInfo?.id" variant="default" :loading="isSaving" :disabled="isLoading || !isDirty" @click="saveConfig">
+          <Button
+            v-if="accountInfo?.id"
+            variant="default"
+            :loading="isSaving"
+            :disabled="isLoading || !isDirty"
+            @click="saveConfig"
+          >
             {{ isDirty ? '保存配置' : '已同步' }}
           </Button>
         </div>
@@ -241,9 +249,7 @@ onActivated(() => {
             v-if="isLoading"
             class="border-border bg-muted/40 py-2"
           >
-            <AlertDescription class="text-xs">
-              正在读取配置…
-            </AlertDescription>
+            <AlertDescription class="text-xs"> 正在读取配置… </AlertDescription>
           </Alert>
 
           <Tabs
@@ -280,7 +286,10 @@ onActivated(() => {
                   <span>此浏览器留有旧版 CSS，可导入后保存至云端。</span>
                   <AlertDialog>
                     <AlertDialogTrigger as-child>
-                      <Button size="xs" variant="outline">
+                      <Button
+                        size="xs"
+                        variant="outline"
+                      >
                         导入本地 CSS
                       </Button>
                     </AlertDialogTrigger>
@@ -293,9 +302,7 @@ onActivated(() => {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction @click="config.style.customCss = legacyCss">
-                          确认导入
-                        </AlertDialogAction>
+                        <AlertDialogAction @click="config.style.customCss = legacyCss"> 确认导入 </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -305,11 +312,17 @@ onActivated(() => {
               <!-- 自定义覆盖 CSS 编辑器 -->
               <div class="space-y-2 pt-2">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">自定义覆盖 CSS</span>
+                  <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                    >自定义覆盖 CSS</span
+                  >
                   <div class="flex items-center gap-1.5">
                     <AlertDialog>
                       <AlertDialogTrigger as-child>
-                        <Button size="xs" variant="ghost" class="text-muted-foreground hover:text-destructive">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="text-muted-foreground hover:text-destructive"
+                        >
                           <component
                             :is="ArrowReset24Regular"
                             class="h-3.5 w-3.5 mr-1"
@@ -336,7 +349,11 @@ onActivated(() => {
                       </AlertDialogContent>
                     </AlertDialog>
 
-                    <Button size="xs" variant="outline" @click="copy(config.style.customCss, 'CSS')">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      @click="copy(config.style.customCss, 'CSS')"
+                    >
                       <component
                         :is="Copy24Regular"
                         class="h-3.5 w-3.5 mr-1"
@@ -351,7 +368,13 @@ onActivated(() => {
                     v-model:value="config.style.customCss"
                     language="css"
                     :height="360"
-                    :options="{ minimap: { enabled: false }, fontSize: 13, wordWrap: 'on', scrollBeyondLastLine: false, tabSize: 2 }"
+                    :options="{
+                      minimap: { enabled: false },
+                      fontSize: 13,
+                      wordWrap: 'on',
+                      scrollBeyondLastLine: false,
+                      tabSize: 2,
+                    }"
                   />
                 </div>
                 <p class="text-[11px] text-muted-foreground leading-relaxed">
@@ -388,9 +411,23 @@ onActivated(() => {
       <Card class="lg:col-span-5 lg:sticky lg:top-4">
         <CardContent class="p-4 space-y-3.5">
           <div class="flex items-center justify-between gap-2">
-            <span class="text-xs font-semibold text-foreground">实时预览 <span class="text-muted-foreground font-normal ml-1">示例消息</span></span>
+            <span class="text-xs font-semibold text-foreground"
+              >实时预览 <span class="text-muted-foreground font-normal ml-1">示例消息</span></span
+            >
             <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-              <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '深色' }, { key: 'light', label: '浅色' }, { key: 'game', label: '游戏' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" class="h-6 px-2" @click="previewBg = bg.key">
+              <Button
+                v-for="bg in [
+                  { key: 'checker', label: '网格' },
+                  { key: 'dark', label: '深色' },
+                  { key: 'light', label: '浅色' },
+                  { key: 'game', label: '游戏' },
+                ]"
+                :key="bg.key"
+                size="xs"
+                :variant="previewBg === bg.key ? 'default' : 'ghost'"
+                class="h-6 px-2"
+                @click="previewBg = bg.key"
+              >
                 {{ bg.label }}
               </Button>
             </div>
@@ -400,12 +437,26 @@ onActivated(() => {
           <div class="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <div class="flex items-center gap-1">
               <span>宽</span>
-              <Input size="xs" v-model.number="sourceWidth" type="number" min="200" max="3840" class="w-16 font-mono" />
+              <Input
+                size="xs"
+                v-model.number="sourceWidth"
+                type="number"
+                min="200"
+                max="3840"
+                class="w-16 font-mono"
+              />
             </div>
             <span>×</span>
             <div class="flex items-center gap-1">
               <span>高</span>
-              <Input size="xs" v-model.number="sourceHeight" type="number" min="200" max="2160" class="w-16 font-mono" />
+              <Input
+                size="xs"
+                v-model.number="sourceHeight"
+                type="number"
+                min="200"
+                max="2160"
+                class="w-16 font-mono"
+              />
             </div>
             <label class="flex items-center gap-1.5 cursor-pointer ml-auto select-none text-foreground font-medium">
               <Checkbox v-model="fullCanvas" />
@@ -420,7 +471,8 @@ onActivated(() => {
               'bg-[#111318]': previewBg === 'dark',
               'bg-[#eef0f4]': previewBg === 'light',
               'bg-[#171e2c]': previewBg === 'game',
-              'bg-[#202328] bg-[conic-gradient(#2c3036_25%,transparent_0_50%,#2c3036_0_75%,transparent_0)] bg-[size:20px_20px]': previewBg === 'checker',
+              'bg-[#202328] bg-[conic-gradient(#2c3036_25%,transparent_0_50%,#2c3036_0_75%,transparent_0)] bg-[size:20px_20px]':
+                previewBg === 'checker',
             }"
           >
             <div
@@ -429,7 +481,11 @@ onActivated(() => {
             >
               <div
                 class="relative shrink-0 outline-1 outline-dashed outline-slate-500/40"
-                :style="fullCanvas ? { width: `${sourceWidth * scale}px`, height: `${sourceHeight * scale}px` } : { width: '100%', height: '100%' }"
+                :style="
+                  fullCanvas
+                    ? { width: `${sourceWidth * scale}px`, height: `${sourceHeight * scale}px` }
+                    : { width: '100%', height: '100%' }
+                "
               >
                 <div
                   class="absolute inset-0 origin-top-left overflow-hidden"
@@ -451,11 +507,25 @@ onActivated(() => {
           <div class="flex items-center justify-between gap-2 pt-1 border-t border-border flex-wrap">
             <div class="flex items-center gap-1.5">
               <span class="text-xs text-muted-foreground">测试:</span>
-              <Button v-for="event in eventOptions" :key="event.value" size="xs" variant="outline" class="h-6 px-2" :disabled="!previewReady" @click="sendTest(event.value)">
+              <Button
+                v-for="event in eventOptions"
+                :key="event.value"
+                size="xs"
+                variant="outline"
+                class="h-6 px-2"
+                :disabled="!previewReady"
+                @click="sendTest(event.value)"
+              >
                 {{ event.label }}
               </Button>
             </div>
-            <Button size="xs" variant="ghost" class="h-6 text-muted-foreground" :disabled="!previewReady" @click="preview?.clearMessages()">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="h-6 text-muted-foreground"
+              :disabled="!previewReady"
+              @click="preview?.clearMessages()"
+            >
               清空
             </Button>
           </div>
@@ -463,11 +533,23 @@ onActivated(() => {
           <!-- 自动发送与频率 -->
           <div class="flex items-center justify-between gap-3 text-xs flex-wrap">
             <div class="flex items-center gap-2">
-              <Switch :model-value="autoEnabled" :disabled="!previewReady" class="h-5 w-9" @update:model-value="(val) => toggleAuto(Boolean(val))"
+              <Switch
+                :model-value="autoEnabled"
+                :disabled="!previewReady"
+                class="h-5 w-9"
+                @update:model-value="(val) => toggleAuto(Boolean(val))"
               />
               <span class="text-muted-foreground select-none">自动轮播</span>
               <div class="flex items-center gap-1">
-                <Input size="xs" v-model.number="interval" type="number" step="0.2" min="0.3" max="5" class="w-16 font-mono" />
+                <Input
+                  size="xs"
+                  v-model.number="interval"
+                  type="number"
+                  step="0.2"
+                  min="0.3"
+                  max="5"
+                  class="w-16 font-mono"
+                />
                 <span class="text-muted-foreground">秒</span>
               </div>
             </div>
@@ -484,15 +566,27 @@ onActivated(() => {
             <div class="grid grid-cols-2 gap-2 text-xs">
               <div class="space-y-1">
                 <span class="text-muted-foreground">用户名</span>
-                <Input size="xs" v-model="testName" />
+                <Input
+                  size="xs"
+                  v-model="testName"
+                />
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">礼物名称</span>
-                <Input v-model="testGift" size="xs" />
+                <Input
+                  v-model="testGift"
+                  size="xs"
+                />
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">金额 (元)</span>
-                <Input size="xs" v-model.number="testPrice" type="number" min="0" class="font-mono" />
+                <Input
+                  size="xs"
+                  v-model.number="testPrice"
+                  type="number"
+                  min="0"
+                  class="font-mono"
+                />
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">大航海等级</span>
@@ -501,15 +595,9 @@ onActivated(() => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="3">
-                      舰长
-                    </SelectItem>
-                    <SelectItem value="2">
-                      提督
-                    </SelectItem>
-                    <SelectItem value="1">
-                      总督
-                    </SelectItem>
+                    <SelectItem value="3"> 舰长 </SelectItem>
+                    <SelectItem value="2"> 提督 </SelectItem>
+                    <SelectItem value="1"> 总督 </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

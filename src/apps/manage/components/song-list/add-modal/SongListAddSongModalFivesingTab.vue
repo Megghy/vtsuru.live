@@ -7,14 +7,7 @@ import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongLi
 import { FETCH_API } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
@@ -125,13 +118,25 @@ async function addFivesingSongs(song: SongsInfo) {
 <template>
   <div class="space-y-3">
     <div class="flex items-center gap-2">
-      <Input v-model="fivesingSearchInput" placeholder="输入要搜索的歌名" maxlength="15" class="flex-1" @keyup.enter="getFivesingSearchList(true)" />
-      <Button :disabled="!fivesingSearchInput" @click="getFivesingSearchList(true)">
+      <Input
+        v-model="fivesingSearchInput"
+        placeholder="输入要搜索的歌名"
+        maxlength="15"
+        class="flex-1"
+        @keyup.enter="getFivesingSearchList(true)"
+      />
+      <Button
+        :disabled="!fivesingSearchInput"
+        @click="getFivesingSearchList(true)"
+      >
         搜索
       </Button>
     </div>
 
-    <div v-if="fivesingResults.length > 0" class="border rounded-lg overflow-hidden">
+    <div
+      v-if="fivesingResults.length > 0"
+      class="border rounded-lg overflow-hidden"
+    >
       <Table>
         <TableHeader>
           <TableRow>
@@ -142,17 +147,30 @@ async function addFivesingSongs(song: SongsInfo) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow v-for="song in fivesingResults" :key="song.id">
+          <TableRow
+            v-for="song in fivesingResults"
+            :key="song.id"
+          >
             <TableCell class="text-xs font-medium">{{ song.name }}</TableCell>
             <TableCell>
               <div class="flex flex-wrap gap-1">
-                <Tag v-for="author in song.author" :key="author" size="small">
+                <Tag
+                  v-for="author in song.author"
+                  :key="author"
+                  size="small"
+                >
                   {{ author }}
                 </Tag>
               </div>
             </TableCell>
             <TableCell class="text-center">
-              <Button v-if="!song.url" size="xs" variant="outline" :disabled="isGettingFivesingSongPlayUrl === song.id" @click="playFivesingSong(song)">
+              <Button
+                v-if="!song.url"
+                size="xs"
+                variant="outline"
+                :disabled="isGettingFivesingSongPlayUrl === song.id"
+                @click="playFivesingSong(song)"
+              >
                 {{ isGettingFivesingSongPlayUrl === song.id ? '获取中...' : '试听' }}
               </Button>
               <audio
@@ -164,7 +182,10 @@ async function addFivesingSongs(song: SongsInfo) {
               </audio>
             </TableCell>
             <TableCell class="text-center">
-              <Button size="xs" @click="addFivesingSongs(song)">
+              <Button
+                size="xs"
+                @click="addFivesingSongs(song)"
+              >
                 添加
               </Button>
             </TableCell>

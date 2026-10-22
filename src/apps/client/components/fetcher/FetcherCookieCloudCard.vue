@@ -124,30 +124,45 @@ async function manualCheckCookie() {
     </CardHeader>
     <CardContent class="p-3 space-y-3">
       <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-        <AlertDescription class="text-xs m-0">
-          设置 CookieCloud 后扫码登陆的登陆信息将被覆盖
-        </AlertDescription>
+        <AlertDescription class="text-xs m-0"> 设置 CookieCloud 后扫码登陆的登陆信息将被覆盖 </AlertDescription>
       </Alert>
 
       <div class="space-y-2">
         <div class="flex items-center gap-2">
           <span class="text-xs text-muted-foreground w-20 shrink-0">Key</span>
-          <Input v-model="cookieCloudData.key" placeholder="请输入 Key" class="flex-1" />
+          <Input
+            v-model="cookieCloudData.key"
+            placeholder="请输入 Key"
+            class="flex-1"
+          />
         </div>
 
         <div class="flex items-center gap-2">
           <span class="text-xs text-muted-foreground w-20 shrink-0">Password</span>
-          <Input v-model="cookieCloudData.password" placeholder="请输入 Password" type="password" class="flex-1" />
+          <Input
+            v-model="cookieCloudData.password"
+            placeholder="请输入 Password"
+            type="password"
+            class="flex-1"
+          />
         </div>
 
         <div class="flex items-center gap-2">
           <span class="text-xs text-muted-foreground w-20 shrink-0">Host (可选)</span>
-          <Input v-model="cookieCloudData.host" placeholder="请输入 Host (可选)" class="flex-1" />
+          <Input
+            v-model="cookieCloudData.host"
+            placeholder="请输入 Host (可选)"
+            class="flex-1"
+          />
         </div>
       </div>
 
       <div class="flex items-center gap-2 pt-1">
-        <Button v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'" :disabled="isLoadingCookiecloud" @click="setCookieCloud">
+        <Button
+          v-if="biliCookie.cookieCloudState === 'invalid' || biliCookie.cookieCloudState === 'unset'"
+          :disabled="isLoadingCookiecloud"
+          @click="setCookieCloud"
+        >
           保存配置
         </Button>
         <Popconfirm
@@ -164,7 +179,10 @@ async function manualCheckCookie() {
           "
         >
           <template #trigger>
-            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
+            <Button
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10"
+            >
               清除配置
             </Button>
           </template>
@@ -185,7 +203,12 @@ async function manualCheckCookie() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="outline" class="gap-1.5" :disabled="biliCookie.cookieCloudState !== 'valid' || syncCooldown.remaining.value> 0 || isSyncingFromCloud"
+              <Button
+                variant="outline"
+                class="gap-1.5"
+                :disabled="
+                  biliCookie.cookieCloudState !== 'valid' || syncCooldown.remaining.value > 0 || isSyncingFromCloud
+                "
                 @click="manualSyncFromCloud"
               >
                 <CloudDownloadOutline class="size-3.5" />
@@ -209,12 +232,17 @@ async function manualCheckCookie() {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="outline" class="gap-1.5" :disabled="!biliCookie.hasBiliCookie || checkCooldown.remaining.value> 0 || isCheckingCookie"
+              <Button
+                variant="outline"
+                class="gap-1.5"
+                :disabled="!biliCookie.hasBiliCookie || checkCooldown.remaining.value > 0 || isCheckingCookie"
                 @click="manualCheckCookie"
               >
                 <RefreshOutline class="size-3.5" />
                 {{
-                  checkCooldown.remaining.value > 0 ? `检查状态 (${checkCooldown.remaining.value}s)` : '检查 Cookie 状态'
+                  checkCooldown.remaining.value > 0
+                    ? `检查状态 (${checkCooldown.remaining.value}s)`
+                    : '检查 Cookie 状态'
                 }}
               </Button>
             </TooltipTrigger>

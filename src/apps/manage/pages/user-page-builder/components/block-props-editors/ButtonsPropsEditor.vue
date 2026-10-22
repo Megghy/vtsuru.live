@@ -22,7 +22,10 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">边框标题</label>
-        <Input v-model="blockProps.borderTitle" placeholder="例如：导航" />
+        <Input
+          v-model="blockProps.borderTitle"
+          placeholder="例如：导航"
+        />
       </div>
       <div
         v-if="propertyAvailable('borderTitleAlign')"
@@ -113,7 +116,11 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
                     </SelectItem>
                   </SelectContent>
                 </Select>
-                <Input v-else-if="!item.back" v-model="item.url" placeholder="https://..." />
+                <Input
+                  v-else-if="!item.back"
+                  v-model="item.url"
+                  placeholder="https://..."
+                />
                 <span
                   v-else
                   class="text-xs text-muted-foreground"

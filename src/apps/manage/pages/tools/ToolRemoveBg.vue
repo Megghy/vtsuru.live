@@ -6,26 +6,15 @@ import { computed, onMounted, ref } from 'vue'
 
 import { useRemoveBg } from '@/composables/useRemoveBg'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { useMessage } from '@/shared/utils'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Progress } from '@/shared/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/shared/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 const { options, supported, webgpuSupported, progress, checkSupport, preloadModel, processRemoveBg } = useRemoveBg()
@@ -137,14 +126,21 @@ function download() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="outline" :loading="preloading" @click="handlePreload">
+              <Button
+                variant="outline"
+                :loading="preloading"
+                @click="handlePreload"
+              >
                 预加载模型
               </Button>
             </TooltipTrigger>
             <TooltipContent>提前下载模型文件，避免首次处理时等待</TooltipContent>
           </Tooltip>
         </TooltipProvider>
-        <Button :disabled="!resultUrl" @click="download">
+        <Button
+          :disabled="!resultUrl"
+          @click="download"
+        >
           下载结果
         </Button>
       </div>
@@ -244,18 +240,22 @@ function download() {
               :min="0.1"
               :max="1"
               :step="0.05"
-              @update:model-value="(val) => { if (val?.[0] !== undefined) options.quality = val[0] }"
+              @update:model-value="
+                (val) => {
+                  if (val?.[0] !== undefined) options.quality = val[0]
+                }
+              "
             />
           </div>
           <div class="setting-item">
             <span class="text-[11px] text-muted-foreground">后台处理 (Web Worker)</span>
             <div class="pt-1">
-              <Switch :checked="options.proxyToWorker" @update:checked="(v) => (options.proxyToWorker = v)"
+              <Switch
+                :checked="options.proxyToWorker"
+                @update:checked="(v) => (options.proxyToWorker = v)"
               />
             </div>
-            <span class="text-[10px] text-muted-foreground leading-tight">
-              开启后处理不会阻塞页面操作
-            </span>
+            <span class="text-[10px] text-muted-foreground leading-tight"> 开启后处理不会阻塞页面操作 </span>
           </div>
         </div>
 
@@ -272,10 +272,17 @@ function download() {
         <!-- Working area -->
         <template v-else>
           <div class="flex items-center gap-2">
-            <Button variant="outline" @click="openFileDialog()">
+            <Button
+              variant="outline"
+              @click="openFileDialog()"
+            >
               重新选择
             </Button>
-            <Button :loading="processing" :disabled="processing || supported === false" @click="process">
+            <Button
+              :loading="processing"
+              :disabled="processing || supported === false"
+              @click="process"
+            >
               {{ modeOptions.find((m) => m.value === options.mode)?.label ?? '处理' }}
             </Button>
           </div>

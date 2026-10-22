@@ -37,15 +37,15 @@ function addSlot() {
     <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
       <CardTitle class="text-sm font-semibold">参数控制</CardTitle>
       <div class="flex items-center gap-2">
-        <Button @click="addSlot">
-          添加参数槽
-        </Button>
-        <Button variant="outline" :disabled="!vts.connected" @click="vts.stopAllParamHolds">
+        <Button @click="addSlot"> 添加参数槽 </Button>
+        <Button
+          variant="outline"
+          :disabled="!vts.connected"
+          @click="vts.stopAllParamHolds"
+        >
           全部停止持有
         </Button>
-        <span class="text-xs text-muted-foreground">
-          Hold 模式会持续注入参数值
-        </span>
+        <span class="text-xs text-muted-foreground"> Hold 模式会持续注入参数值 </span>
       </div>
     </CardHeader>
 
@@ -70,11 +70,19 @@ function addSlot() {
 
           <div class="flex items-center gap-2 flex-wrap">
             <div class="flex items-center gap-1.5 cursor-pointer select-none">
-              <Switch :checked="slot.hold" :disabled="!vts.connected" @update:checked="(val) => updateSlot({ ...slot, hold: val })"
+              <Switch
+                :checked="slot.hold"
+                :disabled="!vts.connected"
+                @update:checked="(val) => updateSlot({ ...slot, hold: val })"
               />
               <span class="text-xs text-muted-foreground">Hold</span>
             </div>
-            <Button size="xs" variant="outline" :disabled="!vts.connected" @click="injectOnce(slot)">
+            <Button
+              size="xs"
+              variant="outline"
+              :disabled="!vts.connected"
+              @click="injectOnce(slot)"
+            >
               注入
             </Button>
             <Popconfirm
@@ -82,7 +90,11 @@ function addSlot() {
               @positive-click="vts.removeParamSlot(slot.id)"
             >
               <template #trigger>
-                <Button size="xs" variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="border-destructive/40 text-destructive hover:bg-destructive/10"
+                >
                   删除
                 </Button>
               </template>
@@ -99,12 +111,14 @@ function addSlot() {
               :max="slot.max"
               :step="slot.step"
               :disabled="!vts.connected"
-              @update:model-value="(val) => {
-                if (val?.[0] !== undefined) {
-                  slot.value = val[0]
-                  updateSlot({ ...slot })
+              @update:model-value="
+                (val) => {
+                  if (val?.[0] !== undefined) {
+                    slot.value = val[0]
+                    updateSlot({ ...slot })
+                  }
                 }
-              }"
+              "
             />
           </div>
           <NInputNumber
@@ -115,21 +129,35 @@ function addSlot() {
             :disabled="!vts.connected"
             size="small"
             class="w-28"
-            @update:value="(val) => {
-              slot.value = (val ?? 0) as number
-              updateSlot({ ...slot })
-            }"
+            @update:value="
+              (val) => {
+                slot.value = (val ?? 0) as number
+                updateSlot({ ...slot })
+              }
+            "
           />
         </div>
 
         <details class="group text-xs pt-1">
-          <summary class="cursor-pointer font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 select-none">
+          <summary
+            class="cursor-pointer font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 select-none"
+          >
             <span>参数配置</span>
             <span class="transition-transform group-open:rotate-180 text-[10px]">▾</span>
           </summary>
           <div class="flex flex-wrap items-center gap-2 pt-2 border-t mt-2">
-            <Input v-model="slot.name" placeholder="显示名" class="w-28" @blur="updateSlot({ ...slot })" />
-            <Input v-model="slot.parameterId" placeholder="参数 ID" class="w-36" @blur="updateSlot({ ...slot })" />
+            <Input
+              v-model="slot.name"
+              placeholder="显示名"
+              class="w-28"
+              @blur="updateSlot({ ...slot })"
+            />
+            <Input
+              v-model="slot.parameterId"
+              placeholder="参数 ID"
+              class="w-36"
+              @blur="updateSlot({ ...slot })"
+            />
             <div class="flex items-center gap-1">
               <span class="text-muted-foreground">权重:</span>
               <NInputNumber

@@ -112,11 +112,10 @@ export function useStreamerDetail(ctx: OrgContext) {
     loading.value = true
     try {
       const data = unwrapOk(
-        await getApiOrgOrgIdStreamersStreamerUserIdDetail(
-          ctx.orgId.value,
-          selectedId.value,
-          { page: page.value, pageSize: pageSize.value },
-        ),
+        await getApiOrgOrgIdStreamersStreamerUserIdDetail(ctx.orgId.value, selectedId.value, {
+          page: page.value,
+          pageSize: pageSize.value,
+        }),
         '加载失败',
       )
       detail.value = data

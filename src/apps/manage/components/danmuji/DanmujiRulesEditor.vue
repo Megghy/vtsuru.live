@@ -45,11 +45,19 @@ defineEmits<{ reset: [] }>()
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
         <div class="space-y-1">
           <label class="text-xs text-muted-foreground">最大消息积压数</label>
-          <NInputNumber v-model="config.maxNumber" :min="10" :max="300" />
+          <NInputNumber
+            v-model="config.maxNumber"
+            :min="10"
+            :max="300"
+          />
         </div>
         <div class="space-y-1">
           <label class="text-xs text-muted-foreground">最低礼物价值 (元)</label>
-          <NInputNumber v-model="config.minGiftPrice" :min="0" :step="0.1" />
+          <NInputNumber
+            v-model="config.minGiftPrice"
+            :min="0"
+            :step="0.1"
+          />
         </div>
       </div>
     </section>
@@ -58,11 +66,21 @@ defineEmits<{ reset: [] }>()
       <h3 class="font-medium text-foreground">屏蔽与过滤</h3>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">屏蔽用户名（一行一个）</label>
-        <Textarea v-model="config.blockUsers" :rows="3" placeholder="输入要屏蔽的用户名" class="text-xs" />
+        <Textarea
+          v-model="config.blockUsers"
+          :rows="3"
+          placeholder="输入要屏蔽的用户名"
+          class="text-xs"
+        />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">屏蔽关键词（一行一个）</label>
-        <Textarea v-model="config.blockKeywords" :rows="3" placeholder="输入要屏蔽的关键词" class="text-xs" />
+        <Textarea
+          v-model="config.blockKeywords"
+          :rows="3"
+          placeholder="输入要屏蔽的关键词"
+          class="text-xs"
+        />
       </div>
       <p class="text-[11px] text-muted-foreground">规则对新收到的消息生效，可在右侧发送测试消息验证。</p>
     </section>
@@ -73,9 +91,7 @@ defineEmits<{ reset: [] }>()
         description="确定恢复默认功能配置吗？"
         @confirm="$emit('reset')"
       >
-        <Button variant="outline">
-          恢复默认规则
-        </Button>
+        <Button variant="outline"> 恢复默认规则 </Button>
       </Popconfirm>
     </div>
   </div>

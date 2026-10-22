@@ -5,26 +5,26 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LiveReserveInfo } from './liveReserveInfo';
-import type { ResponseUserInfoResponseUserInfoExtra } from './responseUserInfoResponseUserInfoExtra';
-import type { StreamerBaseModel } from './streamerBaseModel';
+import type { LiveReserveInfo } from './liveReserveInfo'
+import type { ResponseUserInfoResponseUserInfoExtra } from './responseUserInfoResponseUserInfoExtra'
+import type { StreamerBaseModel } from './streamerBaseModel'
 
 export interface ResponseUserInfo {
-  createAt: number;
-  isBiliVerified: boolean;
+  createAt: number
+  isBiliVerified: boolean
   /** @nullable */
-  biliId?: number | null;
+  biliId?: number | null
   /** @nullable */
-  biliRoomId?: number | null;
-  canRequestSong: boolean;
+  biliRoomId?: number | null
+  canRequestSong: boolean
   /** @nullable */
-  indexNotification?: string | null;
-  streamerInfo: StreamerBaseModel;
-  liveReserve?: LiveReserveInfo;
-  extra?: ResponseUserInfoResponseUserInfoExtra;
-  name: string;
-  id: number;
-  isBiliAuthed: boolean;
+  indexNotification?: string | null
+  streamerInfo: StreamerBaseModel
+  liveReserve?: LiveReserveInfo
+  extra?: ResponseUserInfoResponseUserInfoExtra
+  name: string
+  id: number
+  isBiliAuthed: boolean
   /** @nullable */
-  faceUrl?: string | null;
+  faceUrl?: string | null
 }

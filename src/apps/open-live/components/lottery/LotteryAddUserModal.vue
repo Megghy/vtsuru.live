@@ -59,12 +59,22 @@ function submit() {
           <span class="w-20 text-muted-foreground shrink-0 text-right">
             <span class="text-destructive mr-0.5">*</span>用户名
           </span>
-          <Input v-model="form.name" :disabled="disabled" placeholder="请输入用户名" class="flex-1" />
+          <Input
+            v-model="form.name"
+            :disabled="disabled"
+            placeholder="请输入用户名"
+            class="flex-1"
+          />
         </div>
 
         <div class="flex items-center gap-3">
           <span class="w-20 text-muted-foreground shrink-0 text-right">头像链接</span>
-          <Input v-model="form.avatar" :disabled="disabled" placeholder="可选，留空则使用内置默认头像" class="flex-1" />
+          <Input
+            v-model="form.avatar"
+            :disabled="disabled"
+            placeholder="可选，留空则使用内置默认头像"
+            class="flex-1"
+          />
         </div>
 
         <div class="flex items-center gap-3">
@@ -82,7 +92,12 @@ function submit() {
 
         <div class="flex items-center gap-3">
           <span class="w-20 text-muted-foreground shrink-0 text-right">粉丝牌名称</span>
-          <Input v-model="form.fans_medal_name" :disabled="disabled" placeholder="粉丝牌名称" class="flex-1" />
+          <Input
+            v-model="form.fans_medal_name"
+            :disabled="disabled"
+            placeholder="粉丝牌名称"
+            class="flex-1"
+          />
         </div>
 
         <div class="flex items-center gap-3">
@@ -100,10 +115,17 @@ function submit() {
       </div>
 
       <DialogFooter class="flex justify-end gap-2 pt-2">
-        <Button variant="outline" :disabled="disabled" @click="showModel = false">
+        <Button
+          variant="outline"
+          :disabled="disabled"
+          @click="showModel = false"
+        >
           取消
         </Button>
-        <Button :disabled="disabled || !form.name" @click="submit">
+        <Button
+          :disabled="disabled || !form.name"
+          @click="submit"
+        >
           添加用户
         </Button>
       </DialogFooter>

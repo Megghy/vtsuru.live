@@ -92,108 +92,108 @@ defineExpose({ Config, DefaultConfig })
         :class="{ 'has-background': effectiveConfig.backgroundFile[0]?.path }"
         :style="boardStyle"
       >
-      <div
-        class="kinari-trim"
-        aria-hidden="true"
-      />
+        <div
+          class="kinari-trim"
+          aria-hidden="true"
+        />
 
-      <header class="kinari-head">
-        <div class="kinari-head__rail">
-          <span>日和町</span>
-          <b>WEEKLY</b>
-        </div>
-        <div class="kinari-head__copy">
-          <p class="kinari-head__eyebrow">今週の放送案内 / PROGRAM BOARD</p>
-          <h2>{{ effectiveConfig.heading }}</h2>
-          <p class="kinari-head__sub">{{ streamerName }} · {{ weekLabel }}</p>
-          <div class="kinari-head__rule"><span /> <span /> <span /></div>
-        </div>
-        <div class="kinari-head__date">
-          <div class="kinari-head__date-copy">
-            <strong>{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
-            <span>WEEK</span>
-            <small>{{ eventCount }} 场安排</small>
+        <header class="kinari-head">
+          <div class="kinari-head__rail">
+            <span>日和町</span>
+            <b>WEEKLY</b>
           </div>
-          <div
-            class="kinari-head__date-copy kinari-head__date-copy--sun"
-            aria-hidden="true"
-          >
-            <strong>{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
-            <span>WEEK</span>
-            <small>{{ eventCount }} 场安排</small>
+          <div class="kinari-head__copy">
+            <p class="kinari-head__eyebrow">今週の放送案内 / PROGRAM BOARD</p>
+            <h2>{{ effectiveConfig.heading }}</h2>
+            <p class="kinari-head__sub">{{ streamerName }} · {{ weekLabel }}</p>
+            <div class="kinari-head__rule"><span /> <span /> <span /></div>
           </div>
-        </div>
-      </header>
-
-      <div class="kinari-banner">
-        <span>お知らせ</span>
-        <strong>每一天都有值得期待的节目</strong>
-        <span>MON — SUN</span>
-      </div>
-
-      <ol class="kinari-days schedule-day-stagger">
-        <li
-          v-for="(day, dayIndex) in days"
-          :key="day.english"
-          class="kinari-day"
-          :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length, 'is-featured': dayIndex === 6 }"
-          :style="{ '--day-index': dayIndex }"
-        >
-          <div class="kinari-day__tab">
-            <span>{{ day.shortLabel }}</span>
-            <b>{{ day.date }}</b>
-          </div>
-          <div class="kinari-day__body">
-            <header class="kinari-day__identity">
-              <div>
-                <span>{{ day.english }}</span>
-                <strong>{{ day.label }}</strong>
-              </div>
-              <em v-if="day.isToday">今日</em>
-            </header>
-            <div
-              v-if="day.items.length"
-              class="kinari-day__events"
-            >
-              <article
-                v-for="(item, itemIndex) in day.items"
-                :key="item.id || itemIndex"
-                class="kinari-event"
-                :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
-              >
-                <time>{{ item.time || '待定' }}</time>
-                <div class="kinari-event__copy">
-                  <strong>{{ item.title || '未命名直播' }}</strong>
-                  <span v-if="item.tag">{{ item.tag }}</span>
-                </div>
-                <span
-                  class="kinari-event__mark"
-                  aria-hidden="true"
-                  >↗</span
-                >
-              </article>
+          <div class="kinari-head__date">
+            <div class="kinari-head__date-copy">
+              <strong>{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
+              <span>WEEK</span>
+              <small>{{ eventCount }} 场安排</small>
             </div>
-            <span
-              v-else
-              class="kinari-day__rest"
-              >本日休息 · また明日</span
-            >
             <div
-              v-if="dayIndex === 6"
-              class="kinari-day__motif"
+              class="kinari-head__date-copy kinari-head__date-copy--sun"
               aria-hidden="true"
             >
-              <span>日和</span>
-              <small>HIYORI TV · CH 07</small>
+              <strong>{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
+              <span>WEEK</span>
+              <small>{{ eventCount }} 场安排</small>
             </div>
           </div>
-        </li>
-      </ol>
+        </header>
 
-      <footer class="kinari-foot">
-        <span>{{ streamerName }}</span>
-        <span>また来週、町角で</span>
-      </footer>
+        <div class="kinari-banner">
+          <span>お知らせ</span>
+          <strong>每一天都有值得期待的节目</strong>
+          <span>MON — SUN</span>
+        </div>
+
+        <ol class="kinari-days schedule-day-stagger">
+          <li
+            v-for="(day, dayIndex) in days"
+            :key="day.english"
+            class="kinari-day"
+            :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length, 'is-featured': dayIndex === 6 }"
+            :style="{ '--day-index': dayIndex }"
+          >
+            <div class="kinari-day__tab">
+              <span>{{ day.shortLabel }}</span>
+              <b>{{ day.date }}</b>
+            </div>
+            <div class="kinari-day__body">
+              <header class="kinari-day__identity">
+                <div>
+                  <span>{{ day.english }}</span>
+                  <strong>{{ day.label }}</strong>
+                </div>
+                <em v-if="day.isToday">今日</em>
+              </header>
+              <div
+                v-if="day.items.length"
+                class="kinari-day__events"
+              >
+                <article
+                  v-for="(item, itemIndex) in day.items"
+                  :key="item.id || itemIndex"
+                  class="kinari-event"
+                  :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+                >
+                  <time>{{ item.time || '待定' }}</time>
+                  <div class="kinari-event__copy">
+                    <strong>{{ item.title || '未命名直播' }}</strong>
+                    <span v-if="item.tag">{{ item.tag }}</span>
+                  </div>
+                  <span
+                    class="kinari-event__mark"
+                    aria-hidden="true"
+                    >↗</span
+                  >
+                </article>
+              </div>
+              <span
+                v-else
+                class="kinari-day__rest"
+                >本日休息 · また明日</span
+              >
+              <div
+                v-if="dayIndex === 6"
+                class="kinari-day__motif"
+                aria-hidden="true"
+              >
+                <span>日和</span>
+                <small>HIYORI TV · CH 07</small>
+              </div>
+            </div>
+          </li>
+        </ol>
+
+        <footer class="kinari-foot">
+          <span>{{ streamerName }}</span>
+          <span>また来週、町角で</span>
+        </footer>
       </div>
     </Transition>
   </section>

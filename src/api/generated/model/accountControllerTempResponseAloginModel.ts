@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseAccountInfo } from './responseAccountInfo';
+import type { ResponseAccountInfo } from './responseAccountInfo'
 
 export interface AccountControllerTempResponseAloginModel {
-  account: ResponseAccountInfo;
-  token: string;
+  account: ResponseAccountInfo
+  token: string
 }

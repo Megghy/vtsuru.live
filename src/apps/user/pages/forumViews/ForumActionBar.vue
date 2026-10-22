@@ -46,8 +46,17 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
             @positive-click="emit('delete')"
           >
             <template #trigger>
-              <Button variant="ghost" size="icon" class="size-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10" :class="{ 'text-destructive': hardDelete }" :disabled="!canOperate">
-                <component :is="Delete24Filled" class="size-3.5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                :class="{ 'text-destructive': hardDelete }"
+                :disabled="!canOperate"
+              >
+                <component
+                  :is="Delete24Filled"
+                  class="size-3.5"
+                />
               </Button>
             </template>
             {{ hardDelete ? hardDeleteConfirm : deleteConfirm }}
@@ -65,8 +74,16 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
             @positive-click="emit('restore')"
           >
             <template #trigger>
-              <Button variant="ghost" size="icon" class="size-7 rounded-full text-muted-foreground hover:text-foreground" :disabled="!canOperate">
-                <component :is="SyncCircleSharp" class="size-3.5" />
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                :disabled="!canOperate"
+              >
+                <component
+                  :is="SyncCircleSharp"
+                  class="size-3.5"
+                />
               </Button>
             </template>
             {{ restoreConfirm }}

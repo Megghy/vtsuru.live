@@ -83,8 +83,15 @@ function requestSong(song: SongsInfo) {
 
     <div class="toolbar flex flex-wrap gap-2.5 items-center mb-3.5">
       <div class="relative search flex-1 min-w-48">
-        <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input v-model="searchKeyword" class="pl-8" placeholder="搜索歌曲 / 歌手 / 标签…" />
+        <component
+          :is="Search24Regular"
+          class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <Input
+          v-model="searchKeyword"
+          class="pl-8"
+          placeholder="搜索歌曲 / 歌手 / 标签…"
+        />
       </div>
       <Select
         :model-value="selectedAuthor || 'all'"
@@ -94,7 +101,11 @@ function requestSong(song: SongsInfo) {
           <SelectValue placeholder="歌手" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" class="text-xs">全部歌手</SelectItem>
+          <SelectItem
+            value="all"
+            class="text-xs"
+            >全部歌手</SelectItem
+          >
           <SelectItem
             v-for="opt in authorOptions"
             :key="opt.value"
@@ -113,7 +124,11 @@ function requestSong(song: SongsInfo) {
           <SelectValue placeholder="标签" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all" class="text-xs">全部标签</SelectItem>
+          <SelectItem
+            value="all"
+            class="text-xs"
+            >全部标签</SelectItem
+          >
           <SelectItem
             v-for="opt in tagOptions"
             :key="opt.value"
@@ -162,83 +177,94 @@ function requestSong(song: SongsInfo) {
               'is-tag-active': selectedTag && song.tags?.includes(selectedTag),
             }"
           >
-          <div class="row-index">
-            {{ index + 1 }}
-          </div>
-          <div class="row-cover">
-            <img
-              v-if="song.cover"
-              :src="song.cover"
-              :alt="song.name"
-              loading="lazy"
-              referrerpolicy="no-referrer"
-            />
-            <span
-              v-else
-              class="row-cover-fallback"
-              >{{ song.name.charAt(0) }}</span
-            >
-          </div>
-          <div class="row-main">
-            <div class="row-title">
-              <span
-                class="name"
-                :title="song.name"
-                >{{ song.name }}</span
-              >
-              <span
-                v-if="song.translateName"
-                class="translate"
-                >{{ song.translateName }}</span
-              >
-              <SongStatusBadge
-                :song-key="song.key"
-                :singing-keys="singingSongKeySet"
-                :queued-keys="queuedSongKeySet"
-                variant="tag"
+            <div class="row-index">
+              {{ index + 1 }}
+            </div>
+            <div class="row-cover">
+              <img
+                v-if="song.cover"
+                :src="song.cover"
+                :alt="song.name"
+                loading="lazy"
+                referrerpolicy="no-referrer"
               />
-              <SongOptionBadges
-                :options="song.options"
-                variant="semantic"
-                size="tiny"
+              <span
+                v-else
+                class="row-cover-fallback"
+                >{{ song.name.charAt(0) }}</span
+              >
+            </div>
+            <div class="row-main">
+              <div class="row-title">
+                <span
+                  class="name"
+                  :title="song.name"
+                  >{{ song.name }}</span
+                >
+                <span
+                  v-if="song.translateName"
+                  class="translate"
+                  >{{ song.translateName }}</span
+                >
+                <SongStatusBadge
+                  :song-key="song.key"
+                  :singing-keys="singingSongKeySet"
+                  :queued-keys="queuedSongKeySet"
+                  variant="tag"
+                />
+                <SongOptionBadges
+                  :options="song.options"
+                  variant="semantic"
+                  size="tiny"
+                />
+              </div>
+              <div
+                v-if="song.author?.length"
+                class="row-author"
+                :title="song.author.join(' / ')"
+              >
+                {{ song.author.join(' / ') }}
+              </div>
+            </div>
+            <div class="row-tags">
+              <button
+                v-for="tag in (song.tags ?? []).slice(0, 3)"
+                :key="tag"
+                type="button"
+                class="clickable-tag"
+                :class="{ 'is-active': selectedTag === tag }"
+                :aria-pressed="selectedTag === tag"
+                @click="selectedTag = selectedTag === tag ? null : tag"
+              >
+                {{ tag }}
+              </button>
+            </div>
+            <div class="row-actions flex items-center gap-1">
+              <Button
+                v-if="song.url"
+                variant="ghost"
+                size="icon"
+                class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                :disabled="isLrcLoading === song.key"
+                title="试听"
+                @click="previewSong = song"
+              >
+                <component
+                  :is="Play24Filled"
+                  class="size-3.5"
+                />
+              </Button>
+              <SongRequestButton
+                :song="song"
+                :live-request-settings="liveRequestSettings"
+                :auth-state="requestAuthState"
+                :loading="requestingKey === song.key"
+                :hidden="isSelf"
+                @request="requestSong"
               />
             </div>
-            <div
-              v-if="song.author?.length"
-              class="row-author"
-              :title="song.author.join(' / ')"
-            >
-              {{ song.author.join(' / ') }}
-            </div>
-          </div>
-          <div class="row-tags">
-            <button
-              v-for="tag in (song.tags ?? []).slice(0, 3)"
-              :key="tag"
-              type="button"
-              class="clickable-tag"
-              :class="{ 'is-active': selectedTag === tag }"
-              :aria-pressed="selectedTag === tag"
-              @click="selectedTag = selectedTag === tag ? null : tag"
-            >
-              {{ tag }}
-            </button>
-          </div>
-          <div class="row-actions flex items-center gap-1">
-            <Button v-if="song.url" variant="ghost" size="icon" class="size-7 rounded-full text-muted-foreground hover:text-foreground" :disabled="isLrcLoading === song.key" title="试听" @click="previewSong = song">
-              <component :is="Play24Filled" class="size-3.5" />
-            </Button>
-            <SongRequestButton
-              :song="song"
-              :live-request-settings="liveRequestSettings"
-              :auth-state="requestAuthState"
-              :loading="requestingKey === song.key"
-              :hidden="isSelf"
-              @request="requestSong"
-            />
           </div>
         </div>
-      </div>
       </div>
     </Transition>
   </div>

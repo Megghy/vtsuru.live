@@ -40,10 +40,21 @@ const items = computed<MenuItem[]>(() => {
   const { event, x, y } = target
   const hasText = !!event.msg && event.type !== EventDataTypes.Gift && event.type !== EventDataTypes.Guard
   return [
-    { key: 'read', label: dashboard.isRead(event) ? '标为未读' : '标为已读', icon: Checkmark16Regular, run: () => dashboard.toggleRead(event) },
+    {
+      key: 'read',
+      label: dashboard.isRead(event) ? '标为未读' : '标为已读',
+      icon: Checkmark16Regular,
+      run: () => dashboard.toggleRead(event),
+    },
     { key: 'user', label: '用户信息', icon: Person16Regular, run: () => (ui.userMenu = { event, x, y }) },
     { key: 'filter', label: '筛选该用户', icon: Filter16Regular, run: () => dashboard.filterByUser(event, event.key) },
-    { key: 'translate', label: '翻译为中文', icon: Translate16Regular, run: async () => actions.translate(event), show: hasText && !event.emoji },
+    {
+      key: 'translate',
+      label: '翻译为中文',
+      icon: Translate16Regular,
+      run: async () => actions.translate(event),
+      show: hasText && !event.emoji,
+    },
     { key: 'speak', label: '朗读', icon: Speaker216Regular, run: async () => actions.speak(event) },
     { key: 'copy', label: '复制内容', icon: TextQuote16Regular, run: () => copyToClipboard(event.msg), show: hasText },
     { key: 'copy-name', label: '复制用户名', icon: Copy16Regular, run: () => copyToClipboard(event.uname) },
@@ -98,7 +109,10 @@ onUnmounted(() => {
       :class="item.key === 'block' && !actions.isBlocked(menu.event) ? 'text-destructive hover:text-destructive' : ''"
       @click="onSelect(item)"
     >
-      <component :is="item.icon" class="h-4 w-4 shrink-0" />
+      <component
+        :is="item.icon"
+        class="h-4 w-4 shrink-0"
+      />
       <span>{{ item.label }}</span>
     </button>
   </div>

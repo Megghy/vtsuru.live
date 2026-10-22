@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx'
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -14,7 +15,6 @@ import { Input } from '@/shared/ui/input'
 import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { Transfer, type TransferOption } from '@/shared/ui/transfer'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
@@ -203,9 +203,7 @@ async function addUploadFileSong() {
 
   emit('loadingChange', true)
   try {
-    const songsToAdd = uploadSongsFromFile.value.filter((s) =>
-      selecteduploadSongs.value.includes(s.name),
-    )
+    const songsToAdd = uploadSongsFromFile.value.filter((s) => selecteduploadSongs.value.includes(s.name))
 
     const data = await addSongsToSongList(songsToAdd, SongFrom.Custom)
     if (data.code !== 200) {
@@ -226,7 +224,10 @@ async function addUploadFileSong() {
 
 <template>
   <div class="space-y-4">
-    <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2">
+    <Alert
+      variant="default"
+      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2"
+    >
       <AlertDescription class="text-xs">
         Excel 文件格式详见:
         <a
@@ -257,41 +258,74 @@ async function addUploadFileSong() {
         </TooltipProvider>
       </label>
 
-      <div v-if="useCustomColumnMapping" class="p-3 rounded-lg border border-border bg-muted/20 space-y-3">
+      <div
+        v-if="useCustomColumnMapping"
+        class="p-3 rounded-lg border border-border bg-muted/20 space-y-3"
+      >
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div class="space-y-1">
             <label class="text-muted-foreground">歌曲名称 (必填)</label>
-            <Input v-model="columnMappings.name" size="xs" />
+            <Input
+              v-model="columnMappings.name"
+              size="xs"
+            />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">翻译名称</label>
-            <Input v-model="columnMappings.translateName" size="xs" />
+            <Input
+              v-model="columnMappings.translateName"
+              size="xs"
+            />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">作者</label>
-            <Input v-model="columnMappings.author" size="xs" />
+            <Input
+              v-model="columnMappings.author"
+              size="xs"
+            />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">描述</label>
-            <Input v-model="columnMappings.description" size="xs" />
+            <Input
+              v-model="columnMappings.description"
+              size="xs"
+            />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">链接</label>
-            <Input v-model="columnMappings.url" size="xs" />
+            <Input
+              v-model="columnMappings.url"
+              size="xs"
+            />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground">语言</label>
-            <Input v-model="columnMappings.language" size="xs" />
+            <Input
+              v-model="columnMappings.language"
+              size="xs"
+            />
           </div>
           <div class="space-y-1 col-span-full">
             <label class="text-muted-foreground">标签</label>
-            <Input v-model="columnMappings.tags" size="xs" />
+            <Input
+              v-model="columnMappings.tags"
+              size="xs"
+            />
           </div>
         </div>
 
         <div class="flex items-center gap-2 pt-1">
-          <Button size="xs" @click="saveColumnMappings">保存映射</Button>
-          <Button size="xs" variant="outline" @click="resetColumnMappings">重置默认</Button>
+          <Button
+            size="xs"
+            @click="saveColumnMappings"
+            >保存映射</Button
+          >
+          <Button
+            size="xs"
+            variant="outline"
+            @click="resetColumnMappings"
+            >重置默认</Button
+          >
         </div>
       </div>
     </div>
@@ -315,7 +349,10 @@ async function addUploadFileSong() {
       </label>
 
       <div class="flex justify-end">
-        <Button :disabled="!selectedFile" @click="parseExcelFile">
+        <Button
+          :disabled="!selectedFile"
+          @click="parseExcelFile"
+        >
           解析文件
         </Button>
       </div>

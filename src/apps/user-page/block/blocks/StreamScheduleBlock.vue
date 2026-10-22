@@ -61,10 +61,7 @@ const scheduleQuery = useUserPageRuntimeQuery<ScheduleWeekInfo[]>({
   loader: async (signal) => {
     const userId = props.userInfo?.id
     if (!userId) return []
-    const response = (await getApiScheduleGet(
-      { id: String(userId) },
-      { signal },
-    )) as unknown as {
+    const response = (await getApiScheduleGet({ id: String(userId) }, { signal })) as unknown as {
       code: number
       message?: string
       data?: ScheduleWeekInfo[]
@@ -153,8 +150,16 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
     >
       <header class="schedule-header flex items-center justify-between gap-3 p-4 border-b border-border bg-muted/40">
         <div class="header-title-wrap flex items-center gap-2 min-w-0">
-          <component :is="CalendarNumberOutline" class="size-5 text-primary" />
-          <h2 id="schedule-title" class="text-sm font-semibold m-0 leading-none">直播日程</h2>
+          <component
+            :is="CalendarNumberOutline"
+            class="size-5 text-primary"
+          />
+          <h2
+            id="schedule-title"
+            class="text-sm font-semibold m-0 leading-none"
+          >
+            直播日程
+          </h2>
         </div>
         <span class="week-count text-xs text-muted-foreground shrink-0">未来 {{ cfg.weeksCount }} 周</span>
       </header>
@@ -173,8 +178,16 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
         >
           <AlertDescription class="flex items-center justify-between w-full">
             <span>日程加载失败，请稍后重试</span>
-            <Button variant="outline" size="xs" class="gap-1" @click="loadSchedule(true)">
-              <component :is="RefreshOutline" class="size-3" />
+            <Button
+              variant="outline"
+              size="xs"
+              class="gap-1"
+              @click="loadSchedule(true)"
+            >
+              <component
+                :is="RefreshOutline"
+                class="size-3"
+              />
               重试
             </Button>
           </AlertDescription>

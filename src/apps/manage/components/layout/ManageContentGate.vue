@@ -101,7 +101,10 @@ async function resendEmail() {
         :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
       >
         <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
-        <Transition name="page-fade" mode="out-in">
+        <Transition
+          name="page-fade"
+          mode="out-in"
+        >
           <KeepAlive v-if="viewRoute.meta.keepAlive">
             <component
               :is="Component"
@@ -119,7 +122,10 @@ async function resendEmail() {
 
     <template v-else-if="showBindEmail">
       <div class="manage-page manage-page--md">
-        <Alert variant="default" class="mb-3 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+        <Alert
+          variant="default"
+          class="mb-3 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+        >
           <AlertTitle class="text-xs font-semibold">绑定邮箱后使用主播后台</AlertTitle>
           <AlertDescription class="text-xs">
             主播功能需要已验证的邮箱。绑定后我们会发送验证邮件，完成验证即可进入后台。
@@ -139,11 +145,16 @@ async function resendEmail() {
             <div>
               <h2 class="text-lg font-semibold text-foreground">请查收验证邮件</h2>
               <p class="text-xs text-muted-foreground mt-1 max-w-sm">
-                注册时已向 <strong class="text-primary font-medium">{{ displayEmail }}</strong> 发送验证链接，打开邮件中的链接即可进入后台
+                注册时已向
+                <strong class="text-primary font-medium">{{ displayEmail }}</strong>
+                发送验证链接，打开邮件中的链接即可进入后台
               </p>
             </div>
 
-            <Alert variant="default" class="text-left border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <Alert
+              variant="default"
+              class="text-left border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            >
               <Info24Filled class="size-4 shrink-0" />
               <AlertDescription class="text-xs ml-2">
                 如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
@@ -151,20 +162,35 @@ async function resendEmail() {
             </Alert>
 
             <div class="flex items-center gap-2 pt-2">
-              <Button :disabled="!canResendEmail" class="gap-1.5" @click="resendEmail">
+              <Button
+                :disabled="!canResendEmail"
+                class="gap-1.5"
+                @click="resendEmail"
+              >
                 <Mail24Filled class="size-4" />
                 重新发送验证邮件
               </Button>
-              <Tag v-if="!canResendEmail" type="warning" round>
+              <Tag
+                v-if="!canResendEmail"
+                type="warning"
+                round
+              >
                 {{ countdownSeconds }}s 后可重新发送
               </Tag>
             </div>
 
             <Separator class="my-4 w-4/5" />
 
-            <Popconfirm positive-text="退出登录" negative-text="取消" @positive-click="logoutAccount">
+            <Popconfirm
+              positive-text="退出登录"
+              negative-text="取消"
+              @positive-click="logoutAccount"
+            >
               <template #trigger>
-                <Button variant="outline" class="gap-1.5">
+                <Button
+                  variant="outline"
+                  class="gap-1.5"
+                >
                   <PersonFeedback24Filled class="size-4" />
                   切换账号
                 </Button>
@@ -188,7 +214,9 @@ async function resendEmail() {
 
 :deep(.page-fade-enter-active),
 :deep(.page-fade-leave-active) {
-  transition: opacity 140ms cubic-bezier(0.4, 0, 0.2, 1), transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    opacity 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :deep(.page-fade-enter-from) {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Empty } from '@/shared/ui/empty'
 import { toRef } from 'vue'
+
+import { Empty } from '@/shared/ui/empty'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
 import { useObsListAnimation } from './useObsListAnimation'

@@ -7,22 +7,16 @@ import { VueDraggable } from 'vue-draggable-plus'
 
 import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { canvasToBlob, useMessage } from '@/shared/utils'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
+import { canvasToBlob, useMessage } from '@/shared/utils'
 
 type LayoutMode = 'vertical' | 'horizontal' | 'grid'
 type FitMode = 'contain' | 'cover' | 'stretch'
@@ -382,7 +376,11 @@ onBeforeUnmount(clearAll)
           >
             上次导出 {{ formatFileSize(lastExportSize) }}
           </span>
-          <Button :loading="exporting" :disabled="!items.length || outputTooLarge" @click="exportImage">
+          <Button
+            :loading="exporting"
+            :disabled="!items.length || outputTooLarge"
+            @click="exportImage"
+          >
             导出图片
           </Button>
         </div>
@@ -407,12 +405,15 @@ onBeforeUnmount(clearAll)
           <section class="preview-panel">
             <div class="preview-toolbar">
               <div>
-                <div class="font-medium text-foreground"> 实时预览 </div>
+                <div class="font-medium text-foreground">实时预览</div>
                 <span class="preview-meta text-xs text-muted-foreground">
                   {{ outputSizeText }}，预览 {{ Math.round(previewScale * 100) }}%
                 </span>
               </div>
-              <Button variant="outline" @click="openFilePicker()">
+              <Button
+                variant="outline"
+                @click="openFilePicker()"
+              >
                 添加图片
               </Button>
             </div>
@@ -421,9 +422,7 @@ onBeforeUnmount(clearAll)
               v-if="outputTooLarge"
               variant="destructive"
             >
-              <AlertDescription>
-                当前画布超过 80MP，导出可能导致浏览器卡死，请降低尺寸或图片数量。
-              </AlertDescription>
+              <AlertDescription> 当前画布超过 80MP，导出可能导致浏览器卡死，请降低尺寸或图片数量。 </AlertDescription>
             </Alert>
 
             <div
@@ -449,7 +448,8 @@ onBeforeUnmount(clearAll)
                   class="preset-card"
                   :class="{
                     active:
-                      settings.layout === preset.layout && (preset.columns ? settings.columns === preset.columns : true),
+                      settings.layout === preset.layout &&
+                      (preset.columns ? settings.columns === preset.columns : true),
                   }"
                   type="button"
                   @click="applyPreset(preset)"
@@ -619,7 +619,11 @@ onBeforeUnmount(clearAll)
                   :min="0.2"
                   :max="1"
                   :step="0.02"
-                  @update:model-value="(val) => { if (val?.[0] !== undefined) settings.quality = val[0] }"
+                  @update:model-value="
+                    (val) => {
+                      if (val?.[0] !== undefined) settings.quality = val[0]
+                    }
+                  "
                 />
               </div>
 
@@ -633,7 +637,10 @@ onBeforeUnmount(clearAll)
                   />
                 </label>
                 <div class="flex items-center gap-2">
-                  <Switch :checked="settings.transparent" :disabled="settings.format === 'jpeg'" @update:checked="(v) => (settings.transparent = v)"
+                  <Switch
+                    :checked="settings.transparent"
+                    :disabled="settings.format === 'jpeg'"
+                    @update:checked="(v) => (settings.transparent = v)"
                   />
                   <span class="text-xs text-muted-foreground"> 透明背景 </span>
                 </div>
@@ -644,10 +651,20 @@ onBeforeUnmount(clearAll)
               <div class="flex justify-between items-center">
                 <span class="font-medium text-foreground text-sm"> 图片顺序 </span>
                 <div class="flex items-center gap-1.5">
-                  <Button size="xs" variant="outline" class="px-2" @click="sortByName">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="px-2"
+                    @click="sortByName"
+                  >
                     按文件名
                   </Button>
-                  <Button size="xs" variant="ghost" class="px-2" @click="clearAll">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="px-2"
+                    @click="clearAll"
+                  >
                     清空
                   </Button>
                 </div>
@@ -687,7 +704,12 @@ onBeforeUnmount(clearAll)
                       {{ element.width }} x {{ element.height }} · {{ formatFileSize(element.file.size) }}
                     </span>
                   </div>
-                  <Button size="xs" variant="ghost" class="px-2 text-destructive hover:text-destructive hover:bg-destructive/10" @click.stop="removeItem(element.id)">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    @click.stop="removeItem(element.id)"
+                  >
                     删除
                   </Button>
                 </div>
@@ -705,10 +727,20 @@ onBeforeUnmount(clearAll)
                     已选中
                   </Tag>
                   <div class="flex items-center gap-1.5">
-                    <Button variant="outline" class="h-6 px-1.5" :disabled="!canMoveSelectedUp" @click="moveSelected(-1)">
+                    <Button
+                      variant="outline"
+                      class="h-6 px-1.5"
+                      :disabled="!canMoveSelectedUp"
+                      @click="moveSelected(-1)"
+                    >
                       上移
                     </Button>
-                    <Button variant="outline" class="h-6 px-1.5" :disabled="!canMoveSelectedDown" @click="moveSelected(1)">
+                    <Button
+                      variant="outline"
+                      class="h-6 px-1.5"
+                      :disabled="!canMoveSelectedDown"
+                      @click="moveSelected(1)"
+                    >
                       下移
                     </Button>
                   </div>

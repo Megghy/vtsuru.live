@@ -6,11 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type SupportTicketAuthorType = typeof SupportTicketAuthorType[keyof typeof SupportTicketAuthorType];
-
+export type SupportTicketAuthorType = (typeof SupportTicketAuthorType)[keyof typeof SupportTicketAuthorType]
 
 export const SupportTicketAuthorType = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

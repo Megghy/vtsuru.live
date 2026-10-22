@@ -11,13 +11,7 @@ import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Skeleton } from '@/shared/ui/skeleton'
@@ -113,14 +107,28 @@ watch(
         </div>
 
         <div class="flex items-center gap-2">
-          <Button variant="outline" @click="handleGoConsole">
+          <Button
+            variant="outline"
+            @click="handleGoConsole"
+          >
             返回控制台
           </Button>
-          <Button variant="outline" class="gap-1.5" :disabled="isLoading" @click="loadMyOrgs">
-            <RefreshOutline class="size-3.5" :class="{ 'animate-spin': isLoading }" />
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            :disabled="isLoading"
+            @click="loadMyOrgs"
+          >
+            <RefreshOutline
+              class="size-3.5"
+              :class="{ 'animate-spin': isLoading }"
+            />
             刷新
           </Button>
-          <Button class="gap-1.5" @click="showCreateModal = true">
+          <Button
+            class="gap-1.5"
+            @click="showCreateModal = true"
+          >
             <AddOutline class="size-3.5" />
             创建组织
           </Button>
@@ -155,9 +163,7 @@ watch(
             class="py-12"
           >
             <div class="mt-3">
-              <Button @click="showCreateModal = true">
-                创建组织
-              </Button>
+              <Button @click="showCreateModal = true"> 创建组织 </Button>
             </div>
           </Empty>
         </template>
@@ -175,7 +181,10 @@ watch(
             <div>
               <div class="flex justify-between items-start">
                 <BusinessOutline class="size-8 text-primary" />
-                <Badge variant="secondary" class="text-xs">
+                <Badge
+                  variant="secondary"
+                  class="text-xs"
+                >
                   {{ roleLabel(org.role) }}
                 </Badge>
               </div>
@@ -189,7 +198,10 @@ watch(
             </div>
 
             <div class="mt-4 pt-2 border-t">
-              <Button variant="secondary" class="w-full gap-1 text-primary">
+              <Button
+                variant="secondary"
+                class="w-full gap-1 text-primary"
+              >
                 进入管理
                 <ArrowForward class="size-3.5" />
               </Button>
@@ -205,17 +217,31 @@ watch(
             <DialogTitle class="text-base font-semibold">创建新组织</DialogTitle>
           </DialogHeader>
 
-          <form @submit.prevent="createOrg" class="space-y-4 pt-2">
+          <form
+            @submit.prevent="createOrg"
+            class="space-y-4 pt-2"
+          >
             <div class="space-y-1.5">
               <label class="text-xs font-medium text-foreground">组织名称</label>
-              <Input v-model="orgName" placeholder="请输入组织名称" autofocus />
+              <Input
+                v-model="orgName"
+                placeholder="请输入组织名称"
+                autofocus
+              />
             </div>
 
             <DialogFooter class="gap-2">
-              <Button type="button" variant="outline" @click="showCreateModal = false">
+              <Button
+                type="button"
+                variant="outline"
+                @click="showCreateModal = false"
+              >
                 取消
               </Button>
-              <Button type="submit" :disabled="creating">
+              <Button
+                type="submit"
+                :disabled="creating"
+              >
                 {{ creating ? '创建中...' : '创建' }}
               </Button>
             </DialogFooter>

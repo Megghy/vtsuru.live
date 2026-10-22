@@ -206,13 +206,9 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     isUploading.value = true
     uploadQueue.value = files.map((file) => ({ name: file.name, stage: UploadStage.Preparing }))
     try {
-      const uploadedList = await uploadFiles(
-        isBulk ? files : files[0],
-        FileStore.Configs,
-        (stage) => {
-          uploadQueue.value = uploadQueue.value.map((item) => ({ ...item, stage: stage as UploadStage }))
-        },
-      )
+      const uploadedList = await uploadFiles(isBulk ? files : files[0], FileStore.Configs, (stage) => {
+        uploadQueue.value = uploadQueue.value.map((item) => ({ ...item, stage: stage as UploadStage }))
+      })
       if (!uploadedList?.length) throw new Error('上传失败：无返回结果')
       if (ctx.kind === 'pageBackground') {
         project.theme ??= {}

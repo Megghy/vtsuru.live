@@ -21,7 +21,10 @@ onErrorCaptured((e) => {
 </script>
 
 <template>
-  <div v-if="capturedError" class="p-6 text-center space-y-4">
+  <div
+    v-if="capturedError"
+    class="p-6 text-center space-y-4"
+  >
     <div class="inline-flex items-center justify-center size-12 rounded-full bg-destructive/10 text-destructive mb-2">
       <AlertCircle class="size-6" />
     </div>
@@ -32,7 +35,12 @@ onErrorCaptured((e) => {
       {{ capturedError.message || String(capturedError) }}
     </div>
     <div>
-      <Button variant="outline" @click="reset"> 重试 </Button>
+      <Button
+        variant="outline"
+        @click="reset"
+      >
+        重试
+      </Button>
     </div>
   </div>
   <slot v-else />

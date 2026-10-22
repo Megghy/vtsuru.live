@@ -29,9 +29,7 @@ defineProps({
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            同一用户在单次直播中多次关注仅触发一次感谢
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 同一用户在单次直播中多次关注仅触发一次感谢 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <Switch v-model:checked="action.triggerConfig.preventRepeat" />
@@ -46,9 +44,7 @@ defineProps({
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            单条感谢弹幕中最多合并展示的用户数量
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <NInputNumber

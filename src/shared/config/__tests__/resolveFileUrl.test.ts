@@ -21,4 +21,3 @@ describe('resolveFileUrl', () => {
     expect(resolveFileUrl('')).toBe('')
   })
 })
-

@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VoteOBSData } from './voteOBSData';
+import type { VoteOBSData } from './voteOBSData'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfVoteOBSData {
-  message: string;
-  code: number;
-  data: VoteOBSData;
+  message: string
+  code: number
+  data: VoteOBSData
 }

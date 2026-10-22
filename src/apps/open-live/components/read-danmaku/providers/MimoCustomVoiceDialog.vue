@@ -8,18 +8,12 @@ import { GetHeaders } from '@/api/query'
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from '@/apps/open-live/voice-providers/ai-client'
 import { saveVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
 import { TTS_API_URL } from '@/shared/config'
-import { useSpeechService } from '@/store/useSpeechService'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
+import { useSpeechService } from '@/store/useSpeechService'
 
 interface EditVoice {
   id: number
@@ -206,14 +200,9 @@ async function save() {
         type: type.value,
         description: type.value === 'design' ? description.value : undefined,
         directorNote: directorNote.value.trim() ? directorNote.value : undefined,
-        audioFile:
-          type.value === 'clone' && audioFile.value
-            ? audioFile.value
-            : undefined,
+        audioFile: type.value === 'clone' && audioFile.value ? audioFile.value : undefined,
       }
-      const resp = (await postApiTtsMimoVoicesCustom(
-        body as any,
-      )) as unknown as {
+      const resp = (await postApiTtsMimoVoicesCustom(body as any)) as unknown as {
         code: number
         message?: string
         data?: any
@@ -265,7 +254,11 @@ function reset() {
       <div class="space-y-3.5 my-2">
         <div class="space-y-1">
           <label class="text-xs font-semibold text-foreground">名称</label>
-          <Input v-model="name" placeholder="给音色起个名字" :disabled="isEdit" />
+          <Input
+            v-model="name"
+            placeholder="给音色起个名字"
+            :disabled="isEdit"
+          />
         </div>
 
         <div
@@ -299,7 +292,10 @@ function reset() {
               参考音频{{ isEdit ? '（留空保持不变）' : '' }}
             </label>
             <div class="flex items-center gap-2">
-              <Button variant="outline" @click="fileInput?.click()">
+              <Button
+                variant="outline"
+                @click="fileInput?.click()"
+              >
                 {{ audioFile ? audioFile.name : '选择文件 (mp3/wav, 最大 10MB)' }}
               </Button>
               <input
@@ -360,8 +356,16 @@ function reset() {
         <div class="space-y-1">
           <label class="text-xs font-semibold text-foreground">试听文本</label>
           <div class="flex items-center gap-2">
-            <Input v-model="previewText" class="flex-1" />
-            <Button variant="outline" class="shrink-0" :disabled="!canPreview || previewing" @click="preview">
+            <Input
+              v-model="previewText"
+              class="flex-1"
+            />
+            <Button
+              variant="outline"
+              class="shrink-0"
+              :disabled="!canPreview || previewing"
+              @click="preview"
+            >
               {{ previewing ? '试听中...' : '试听' }}
             </Button>
           </div>
@@ -371,17 +375,21 @@ function reset() {
           v-if="!account"
           class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-1.5 px-2"
         >
-          <AlertDescription class="text-xs m-0">
-            需要登录才能保存自定义音色
-          </AlertDescription>
+          <AlertDescription class="text-xs m-0"> 需要登录才能保存自定义音色 </AlertDescription>
         </Alert>
       </div>
 
       <DialogFooter class="gap-2">
-        <Button variant="outline" @click="show = false">
+        <Button
+          variant="outline"
+          @click="show = false"
+        >
           取消
         </Button>
-        <Button :disabled="!canSave || !account || saving" @click="save">
+        <Button
+          :disabled="!canSave || !account || saving"
+          @click="save"
+        >
           {{ isEdit ? '更新' : '保存' }}
         </Button>
       </DialogFooter>

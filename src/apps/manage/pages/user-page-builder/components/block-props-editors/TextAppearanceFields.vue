@@ -38,20 +38,31 @@ const showIntensity = computed(() => {
         <SelectValue placeholder="选择特效" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in effectOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in effectOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>
     </Select>
   </div>
-  <div v-if="showIntensity" class="space-y-1">
+  <div
+    v-if="showIntensity"
+    class="space-y-1"
+  >
     <label class="text-xs text-muted-foreground">特效强度</label>
     <Select v-model="blockProps.effectIntensity">
       <SelectTrigger>
         <SelectValue placeholder="选择强度" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in intensityOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in intensityOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>

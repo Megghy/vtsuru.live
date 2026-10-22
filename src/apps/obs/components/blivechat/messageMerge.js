@@ -6,7 +6,10 @@ export default {
     mergeSimilarText(content) {
       content = content.trim().toLowerCase()
       for (const message of this.iterRecentMessages(5)) {
-        if (message.type === constants.MESSAGE_TYPE_SUPER_CHAT || message.type === constants.MESSAGE_TYPE_GIFT && message.price >= this.appearance.pinnedMinPrice) {
+        if (
+          message.type === constants.MESSAGE_TYPE_SUPER_CHAT ||
+          (message.type === constants.MESSAGE_TYPE_GIFT && message.price >= this.appearance.pinnedMinPrice)
+        ) {
           continue
         }
 

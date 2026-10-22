@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { useEventListener, whenever } from '@vueuse/core'
-import { Button } from '@/shared/ui/button'
-import { Spin } from '@/shared/ui/spin'
 import { Pane, Splitpanes } from 'splitpanes'
-import 'splitpanes/dist/splitpanes.css'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted } from 'vue'
 
 import { isLoadingAccount, isLoggedIn } from '@/api/account'
+
+import 'splitpanes/dist/splitpanes.css'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 import DanmakuPanel from '../components/DanmakuPanel.vue'
@@ -51,7 +52,10 @@ function togglePanel(id: PanelId) {
   layout.value.hidden = hidden.includes(id) ? hidden.filter((h) => h !== id) : [...hidden, id]
 }
 
-const PANEL_KEYS = Object.fromEntries(PANEL_IDS.map((id, index) => [`Digit${index + 1}`, id])) as Record<string, PanelId>
+const PANEL_KEYS = Object.fromEntries(PANEL_IDS.map((id, index) => [`Digit${index + 1}`, id])) as Record<
+  string,
+  PanelId
+>
 
 // 客户端内页面被 KeepAlive 缓存，离开时停用快捷键
 let active = true
@@ -108,7 +112,10 @@ onUnmounted(() => void dashboard.stop())
     >
       <h2 class="text-xl font-semibold mb-2">请先登录</h2>
       <p class="text-sm text-muted-foreground mb-4">中控台需要登录并绑定直播间后使用</p>
-      <Button as="a" href="/manage">
+      <Button
+        as="a"
+        href="/manage"
+      >
         前往登录
       </Button>
     </div>

@@ -5,29 +5,29 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsEditableField } from './vTsuruCoreAIContractsEditableField';
+import type { VTsuruCoreAIContractsEditableField } from './vTsuruCoreAIContractsEditableField'
 
 /**
  * 单条操作预览项 (新增/修改/删除)
  */
 export interface VTsuruCoreAIContractsAssistantPreviewItem {
-  op: string;
+  op: string
   /** @nullable */
-  id?: string | null;
-  title: string;
+  id?: string | null
+  title: string
   /** @nullable */
-  time?: string | null;
+  time?: string | null
   /** @nullable */
-  before?: string | null;
+  before?: string | null
   /** @nullable */
-  after?: string | null;
+  after?: string | null
   /** @nullable */
-  note?: string | null;
+  note?: string | null
   /** @nullable */
-  url?: string | null;
+  url?: string | null
   /**
-     * 可编辑字段, 为空表示该项不可编辑。前端按此渲染输入框, 提交时按 Key 回填 Values。
-     * @nullable
-     */
-  fields?: VTsuruCoreAIContractsEditableField[] | null;
+   * 可编辑字段, 为空表示该项不可编辑。前端按此渲染输入框, 提交时按 Key 回填 Values。
+   * @nullable
+   */
+  fields?: VTsuruCoreAIContractsEditableField[] | null
 }

@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseVoteSession } from './responseVoteSession';
+import type { ResponseVoteSession } from './responseVoteSession'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseVoteSession {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseVoteSession[] | null;
+  data: ResponseVoteSession[] | null
 }

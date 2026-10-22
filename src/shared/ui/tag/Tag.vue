@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { X } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{

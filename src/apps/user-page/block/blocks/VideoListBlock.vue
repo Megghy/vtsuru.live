@@ -64,10 +64,7 @@ const userIndexQuery = useUserPageRuntimeQuery<ResponseUserIndexModel>({
   loader: async (signal) => {
     const userName = props.userInfo?.name
     if (!userName) throw new Error('missing user name')
-    const response = (await getApiUserIndexGet(
-      { id: userName },
-      { signal },
-    )) as unknown as {
+    const response = (await getApiUserIndexGet({ id: userName }, { signal })) as unknown as {
       code: number
       message?: string
       data: ResponseUserIndexModel
@@ -161,8 +158,16 @@ const containerStyle = computed(() => {
       >
         <AlertDescription class="flex items-center justify-between w-full">
           <span>{{ error }}</span>
-          <Button variant="outline" size="xs" class="gap-1" @click="loadUserIndex(true)">
-            <component :is="RefreshOutline" class="size-3" />
+          <Button
+            variant="outline"
+            size="xs"
+            class="gap-1"
+            @click="loadUserIndex(true)"
+          >
+            <component
+              :is="RefreshOutline"
+              class="size-3"
+            />
             重试
           </Button>
         </AlertDescription>
@@ -173,9 +178,7 @@ const containerStyle = computed(() => {
           v-if="videos.length === 0"
           class="text-xs py-2"
         >
-          <AlertDescription>
-            暂无视频
-          </AlertDescription>
+          <AlertDescription> 暂无视频 </AlertDescription>
         </Alert>
         <div
           v-else
@@ -197,9 +200,7 @@ const containerStyle = computed(() => {
           v-if="manualItems.length === 0"
           class="text-xs py-2"
         >
-          <AlertDescription>
-            未配置视频链接
-          </AlertDescription>
+          <AlertDescription> 未配置视频链接 </AlertDescription>
         </Alert>
         <div
           v-else
@@ -215,7 +216,10 @@ const containerStyle = computed(() => {
             :aria-label="`${it.title || '打开视频'}（新窗口打开）`"
           >
             <div class="manual-icon">
-              <component :is="PlayCircleOutline" class="size-5" />
+              <component
+                :is="PlayCircleOutline"
+                class="size-5"
+              />
             </div>
             <div class="manual-content">
               <strong class="manual-title">

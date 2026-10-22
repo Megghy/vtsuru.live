@@ -164,8 +164,17 @@ function applyPreviewFont() {
 
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="outline" size="icon" class="size-8 shrink-0" aria-label="浏览字体库" @click="openFontBrowser">
-                <component :is="TextFont24Regular" class="size-4" />
+              <Button
+                variant="outline"
+                size="icon"
+                class="size-8 shrink-0"
+                aria-label="浏览字体库"
+                @click="openFontBrowser"
+              >
+                <component
+                  :is="TextFont24Regular"
+                  class="size-4"
+                />
               </Button>
             </TooltipTrigger>
             <TooltipContent>浏览字体库</TooltipContent>
@@ -196,8 +205,15 @@ function applyPreviewFont() {
 
           <div class="font-browser-controls flex items-center gap-2">
             <div class="relative flex-1">
-              <component :is="SearchOutline" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-              <Input v-model="fontSearch" placeholder="搜索字体名称..." class="pl-8" />
+              <component
+                :is="SearchOutline"
+                class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                v-model="fontSearch"
+                placeholder="搜索字体名称..."
+                class="pl-8"
+              />
             </div>
 
             <Select
@@ -208,7 +224,11 @@ function applyPreviewFont() {
                 <SelectValue placeholder="全部分类" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all" class="text-xs">全部分类</SelectItem>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部分类</SelectItem
+                >
                 <SelectItem
                   v-for="cat in fontCategoryOptions"
                   :key="cat.value"
@@ -230,7 +250,10 @@ function applyPreviewFont() {
 
           <div class="font-browser-body grid grid-cols-1 md:grid-cols-[1fr_260px] gap-3 flex-1 min-h-0 overflow-hidden">
             <ScrollArea class="h-80 border border-border/80 rounded-lg p-1">
-              <div v-if="browsableFonts.length" class="space-y-1">
+              <div
+                v-if="browsableFonts.length"
+                class="space-y-1"
+              >
                 <GoogleFontBrowserRow
                   v-for="item in browsableFonts.slice(0, 150)"
                   :key="item.family"
@@ -272,7 +295,11 @@ function applyPreviewFont() {
                 </div>
               </div>
 
-              <Button class="w-full" :disabled="model === activePreviewFamily" @click="applyPreviewFont">
+              <Button
+                class="w-full"
+                :disabled="model === activePreviewFamily"
+                @click="applyPreviewFont"
+              >
                 {{ model === activePreviewFamily ? '正在使用' : '使用此字体' }}
               </Button>
             </section>

@@ -7,6 +7,6 @@
  */
 
 export interface OrgJoinResponseModel {
-  orgId: number;
-  orgName: string;
+  orgId: number
+  orgName: string
 }

@@ -7,9 +7,9 @@
  */
 
 export interface LotteryUserCardInfo {
-  name: string;
-  level: number;
-  guardLevel: number;
-  isGuard: boolean;
-  isCharge: boolean;
+  name: string
+  level: number
+  guardLevel: number
+  isGuard: boolean
+  isCharge: boolean
 }

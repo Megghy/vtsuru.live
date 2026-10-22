@@ -3,10 +3,10 @@ import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { ViolationTypes } from '@/api/api-models'
+import { postApiAccountBlackListAdd } from '@/api/generated/account/account'
 import type { QAControllerQATagInfo } from '@/api/generated/model/qAControllerQATagInfo'
 import type { ResponseQAInfo } from '@/api/generated/model/responseQAInfo'
 import type { ResponseQAInfoToTarget } from '@/api/generated/model/responseQAInfoToTarget'
-import { postApiAccountBlackListAdd } from '@/api/generated/account/account'
 import {
   getApiQaGetReceive,
   getApiQaGetSend,
@@ -397,9 +397,7 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   async function batchRead(isRead: boolean) {
     const ids = [...selectedIds.value]
     if (!ids.length) return
-    await Promise.allSettled(
-      ids.map(async (id) => postApiQaRead({ id, read: isRead ? 'true' : ('false' as any) })),
-    )
+    await Promise.allSettled(ids.map(async (id) => postApiQaRead({ id, read: isRead ? 'true' : ('false' as any) })))
     ids.forEach((id) => {
       const q = recieveQuestions.value.find((item) => item.id === id)
       if (q) q.isReaded = isRead
@@ -431,16 +429,16 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       message.warning('所选提问均由提问者选择不公开，请逐条确认后强制公开')
       return
     }
-    await Promise.allSettled(
-      targets.map(async (id) => postApiQaPublic({ id, public: pub as any })),
-    )
+    await Promise.allSettled(targets.map(async (id) => postApiQaPublic({ id, public: pub as any })))
     targets.forEach((id) => {
       const q = recieveQuestions.value.find((item) => item.id === id)
       if (q) q.isPublic = pub
     })
     clearSelection()
     if (skipped.length) {
-      message.success(`已${pub ? '公开' : '设为私密'} ${targets.length} 条，跳过 ${skipped.length} 条提问者未同意的提问`)
+      message.success(
+        `已${pub ? '公开' : '设为私密'} ${targets.length} 条，跳过 ${skipped.length} 条提问者未同意的提问`,
+      )
       return
     }
     message.success(`已批量${pub ? '公开' : '设为私密'}`)
@@ -469,6 +467,9 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       [ViolationTypes.POLITICS]: '政治',
       [ViolationTypes.ADVERTISING]: '广告',
       [ViolationTypes.AGGRESSION]: '攻击性',
+      [ViolationTypes.PASSIVE_AGGRESSIVE]: '阴阳怪气',
+      [ViolationTypes.THREAT]: '现实威胁',
+      [ViolationTypes.TEASING]: '黑称调侃',
     }
     return map[violation] ?? '未知'
   }

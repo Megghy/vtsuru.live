@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { NumberFieldIncrement, type NumberFieldIncrementProps } from 'reka-ui'
 import { Plus } from 'lucide-vue-next'
+import { NumberFieldIncrement, type NumberFieldIncrementProps } from 'reka-ui'
 import { computed, type HTMLAttributes } from 'vue'
 
 import { cn } from '@/shared/utils/cn'

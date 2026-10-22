@@ -19,14 +19,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Spin } from '@/shared/ui/spin'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 use([
   CanvasRenderer,
@@ -225,7 +218,10 @@ onMounted(loadHistoricalData)
             v-if="isLoadingHistory"
             class="absolute inset-0 bg-background/50 backdrop-blur-xs flex items-center justify-center z-10"
           >
-            <Spin :show="true" size="small" />
+            <Spin
+              :show="true"
+              size="small"
+            />
           </div>
 
           <VChart

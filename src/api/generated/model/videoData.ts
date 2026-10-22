@@ -7,19 +7,19 @@
  */
 
 export interface VideoData {
-  title: string;
-  description: string;
-  publistTime: number;
-  ownerName: string;
-  ownerUId: number;
-  cover: string;
-  length: number;
-  partitionId: number;
-  partitionName: string;
+  title: string
+  description: string
+  publistTime: number
+  ownerName: string
+  ownerUId: number
+  cover: string
+  length: number
+  partitionId: number
+  partitionName: string
   /** @nullable */
-  id?: string | null;
-  createTime: string;
-  updateTime: string;
-  isDeleted: boolean;
-  sort: number;
+  id?: string | null
+  createTime: string
+  updateTime: string
+  isDeleted: boolean
+  sort: number
 }

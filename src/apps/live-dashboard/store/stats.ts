@@ -121,5 +121,18 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
 
   const duration = computed(() => now.value - since.value)
 
-  return { since, counters, userCount, onlineCount, perMinute, totals, topPayers, duration, lastEventAt, lastEventType, record, reset }
+  return {
+    since,
+    counters,
+    userCount,
+    onlineCount,
+    perMinute,
+    totals,
+    topPayers,
+    duration,
+    lastEventAt,
+    lastEventType,
+    record,
+    reset,
+  }
 }

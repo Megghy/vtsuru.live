@@ -5,34 +5,34 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
-import type { GuardLevel } from './guardLevel';
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes';
-import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode';
-import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting';
+import type { APIFileModel } from './aPIFileModel'
+import type { GuardLevel } from './guardLevel'
+import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
+import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode'
+import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting'
 
 export interface ResponseSubPointGoodsModel {
-  id: number;
-  name: string;
+  id: number
+  name: string
   /** @nullable */
-  description?: string | null;
+  description?: string | null
   /** @nullable */
-  count?: number | null;
-  price: number;
-  tags: string[];
-  type: PointGoodsDataGoodsTypes;
+  count?: number | null
+  price: number
+  tags: string[]
+  type: PointGoodsDataGoodsTypes
   /** @nullable */
-  collectUrl?: string | null;
-  embedCollectUrl: boolean;
-  isAllowRebuy: boolean;
-  maxBuyCount: number;
-  canFreeBuy: boolean;
-  allowGuardLevel: GuardLevel;
-  setting: RequestPointGoodsModelTempRequestGoodsSetting;
-  cover?: APIFileModel;
+  collectUrl?: string | null
+  embedCollectUrl: boolean
+  isAllowRebuy: boolean
+  maxBuyCount: number
+  canFreeBuy: boolean
+  allowGuardLevel: GuardLevel
+  setting: RequestPointGoodsModelTempRequestGoodsSetting
+  cover?: APIFileModel
   /** @nullable */
-  content?: string | null;
+  content?: string | null
   /** @nullable */
-  virtualKeys?: string[] | null;
-  keySelectionMode?: PointGoodsDataVirtualKeySelectionMode;
+  virtualKeys?: string[] | null
+  keySelectionMode?: PointGoodsDataVirtualKeySelectionMode
 }

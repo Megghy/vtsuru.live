@@ -172,7 +172,9 @@ function navigateToTool(key: ToolKey) {
           @click="navigateToTool(tool.name)"
         >
           <div class="flex items-start gap-3">
-            <div class="p-2 rounded-lg bg-muted text-foreground group-hover:text-brand group-hover:bg-brand-soft/20 transition-colors shrink-0">
+            <div
+              class="p-2 rounded-lg bg-muted text-foreground group-hover:text-brand group-hover:bg-brand-soft/20 transition-colors shrink-0"
+            >
               <component
                 :is="tool.icon"
                 class="h-5 w-5"

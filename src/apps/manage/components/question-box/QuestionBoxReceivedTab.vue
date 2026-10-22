@@ -20,13 +20,7 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import type { SortMode } from '@/store/useQuestionBox'
@@ -103,7 +97,10 @@ const sortOptions = [
     <!-- 筛选工具栏 -->
     <div class="flex items-center justify-between gap-3 flex-wrap mb-3 text-xs">
       <div class="flex items-center gap-3">
-        <Button variant="outline" @click="router.push({ name: 'question-display' })">
+        <Button
+          variant="outline"
+          @click="router.push({ name: 'question-display' })"
+        >
           打开展示展板
         </Button>
         <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
@@ -116,7 +113,11 @@ const sortOptions = [
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <Input v-model="useQB.searchKeyword" placeholder="搜索内容..." class="w-36" />
+        <Input
+          v-model="useQB.searchKeyword"
+          placeholder="搜索内容..."
+          class="w-36"
+        />
 
         <Select
           :model-value="useQB.displayTag ?? 'all'"
@@ -126,7 +127,11 @@ const sortOptions = [
             <SelectValue placeholder="全部话题" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all" class="text-xs">全部话题</SelectItem>
+            <SelectItem
+              value="all"
+              class="text-xs"
+              >全部话题</SelectItem
+            >
             <SelectItem
               v-for="t in useQB.tags"
               :key="t.name"
@@ -174,7 +179,12 @@ const sortOptions = [
           <span>公开</span>
         </label>
 
-        <Button v-if="hasActiveFilters" variant="ghost" class="text-primary" @click="clearFilters">
+        <Button
+          v-if="hasActiveFilters"
+          variant="ghost"
+          class="text-primary"
+          @click="clearFilters"
+        >
           清除筛选
         </Button>
       </div>
@@ -188,7 +198,10 @@ const sortOptions = [
       class="py-12"
     />
 
-    <div v-else class="space-y-3">
+    <div
+      v-else
+      class="space-y-3"
+    >
       <Pagination
         v-if="useQB.recieveQuestionsFiltered.length > ps"
         v-model:page="pn"
@@ -208,22 +221,50 @@ const sortOptions = [
         <template #footer="{ item }">
           <div class="flex items-center gap-2 flex-wrap text-xs pt-1">
             <!-- OBS 投屏快捷切换 -->
-            <Button v-if="useQB.displayQuestion?.id === item.id" size="xs" variant="outline" class="text-emerald-600 dark:text-emerald-400 gap-1 border-emerald-500/30" @click="useQB.clearCurrentQuestion">
+            <Button
+              v-if="useQB.displayQuestion?.id === item.id"
+              size="xs"
+              variant="outline"
+              class="text-emerald-600 dark:text-emerald-400 gap-1 border-emerald-500/30"
+              @click="useQB.clearCurrentQuestion"
+            >
               <Tv20Regular class="size-3.5" />
               取消展示
             </Button>
-            <Button v-else size="xs" variant="outline" class="gap-1" @click="useQB.setCurrentQuestion(item)">
+            <Button
+              v-else
+              size="xs"
+              variant="outline"
+              class="gap-1"
+              @click="useQB.setCurrentQuestion(item)"
+            >
               <Tv20Regular class="size-3.5" />
               投到 OBS
             </Button>
 
-            <Button size="xs" variant="outline" :class="item.isReaded ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'" @click="useQB.read(item, !item.isReaded)">
+            <Button
+              size="xs"
+              variant="outline"
+              :class="item.isReaded ? 'text-amber-600 dark:text-amber-400' : 'text-blue-600 dark:text-blue-400'"
+              @click="useQB.read(item, !item.isReaded)"
+            >
               {{ item.isReaded ? '设为未读' : '设为已读' }}
             </Button>
 
-            <Button size="xs" variant="outline" class="gap-1" @click="useQB.favorite(item, !item.isFavorite)">
-              <Heart v-if="item.isFavorite" class="size-3.5 text-rose-500" />
-              <HeartOutline v-else class="size-3.5" />
+            <Button
+              size="xs"
+              variant="outline"
+              class="gap-1"
+              @click="useQB.favorite(item, !item.isFavorite)"
+            >
+              <Heart
+                v-if="item.isFavorite"
+                class="size-3.5 text-rose-500"
+              />
+              <HeartOutline
+                v-else
+                class="size-3.5"
+              />
               {{ item.isFavorite ? '取消收藏' : '收藏' }}
             </Button>
 
@@ -234,7 +275,11 @@ const sortOptions = [
               :description="`确认拉黑 ${item.sender.name} 吗？该用户的所有提问将被清理。`"
               @confirm="useQB.blacklist(item)"
             >
-              <Button size="xs" variant="outline" class="text-amber-600 dark:text-amber-400">
+              <Button
+                size="xs"
+                variant="outline"
+                class="text-amber-600 dark:text-amber-400"
+              >
                 拉黑提问者
               </Button>
             </Popconfirm>
@@ -242,7 +287,11 @@ const sortOptions = [
             <TooltipProvider v-else>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button size="xs" variant="outline" disabled>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    disabled
+                  >
                     拉黑
                   </Button>
                 </TooltipTrigger>
@@ -257,7 +306,11 @@ const sortOptions = [
               description="确认删除这条提问？"
               @confirm="useQB.DelQA(item.id)"
             >
-              <Button size="xs" variant="outline" class="text-destructive gap-1 hover:text-destructive">
+              <Button
+                size="xs"
+                variant="outline"
+                class="text-destructive gap-1 hover:text-destructive"
+              >
                 <Delete24Filled class="size-3.5" />
                 删除
               </Button>
@@ -273,24 +326,47 @@ const sortOptions = [
               description="提问者选择不公开展示这条内容。确定仍要放到提问页公开列表吗？"
               @confirm="useQB.setPublic(item, true, { force: true })"
             >
-              <Button size="xs" variant="outline" class="gap-1">
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+              >
                 <Eye24Regular class="size-3.5" />
                 公开
               </Button>
             </Popconfirm>
-            <Button v-else size="xs" variant="outline" class="gap-1" @click="useQB.setPublic(item, !item.isPublic)">
-              <EyeOff24Regular v-if="item.isPublic" class="size-3.5" />
-              <Eye24Regular v-else class="size-3.5" />
+            <Button
+              v-else
+              size="xs"
+              variant="outline"
+              class="gap-1"
+              @click="useQB.setPublic(item, !item.isPublic)"
+            >
+              <EyeOff24Regular
+                v-if="item.isPublic"
+                class="size-3.5"
+              />
+              <Eye24Regular
+                v-else
+                class="size-3.5"
+              />
               {{ item.isPublic ? '取消公开' : '公开' }}
             </Button>
-            <Button size="xs" :variant="item.answer ? 'default' : 'secondary'" @click="emit('reply', item)">
+            <Button
+              size="xs"
+              :variant="item.answer ? 'default' : 'secondary'"
+              @click="emit('reply', item)"
+            >
               {{ item.answer ? '修改回复' : '回复' }}
             </Button>
           </div>
         </template>
       </QuestionItems>
 
-      <Separator v-if="useQB.recieveQuestionsFiltered.length > ps" class="my-3" />
+      <Separator
+        v-if="useQB.recieveQuestionsFiltered.length > ps"
+        class="my-3"
+      />
 
       <Pagination
         v-if="useQB.recieveQuestionsFiltered.length > ps"
@@ -312,23 +388,48 @@ const sortOptions = [
         <span class="font-medium text-foreground whitespace-nowrap">已选 {{ useQB.selectedIds.length }} 项</span>
         <div class="h-4 w-px bg-border mx-1" />
 
-        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchRead(true)">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          @click="useQB.batchRead(true)"
+        >
           <Checkmark24Regular class="size-3.5" />
           批量已读
         </Button>
-        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchRead(false)">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          @click="useQB.batchRead(false)"
+        >
           <MailUnread24Regular class="size-3.5" />
           批量未读
         </Button>
-        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchSetPublic(true)">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          @click="useQB.batchSetPublic(true)"
+        >
           <Eye24Regular class="size-3.5" />
           批量公开
         </Button>
-        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchSetPublic(false)">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          @click="useQB.batchSetPublic(false)"
+        >
           <EyeOff24Regular class="size-3.5" />
           批量私密
         </Button>
-        <Button size="xs" variant="outline" class="gap-1" @click="useQB.batchFavorite(true)">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          @click="useQB.batchFavorite(true)"
+        >
           <Heart class="size-3.5 text-rose-500" />
           批量收藏
         </Button>
@@ -338,7 +439,11 @@ const sortOptions = [
           :description="`确认批量删除已选中的 ${useQB.selectedIds.length} 条提问？`"
           @confirm="useQB.batchDelete"
         >
-          <Button size="xs" variant="destructive" class="gap-1">
+          <Button
+            size="xs"
+            variant="destructive"
+            class="gap-1"
+          >
             <Delete24Filled class="size-3.5" />
             批量删除
           </Button>
@@ -346,7 +451,13 @@ const sortOptions = [
 
         <div class="h-4 w-px bg-border mx-1" />
 
-        <Button size="icon" variant="ghost" class="size-6 rounded-full" aria-label="取消选择" @click="useQB.clearSelection">
+        <Button
+          size="icon"
+          variant="ghost"
+          class="size-6 rounded-full"
+          aria-label="取消选择"
+          @click="useQB.clearSelection"
+        >
           <Dismiss24Regular class="size-3.5" />
         </Button>
       </div>

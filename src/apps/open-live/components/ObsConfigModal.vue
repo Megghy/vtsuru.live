@@ -81,7 +81,13 @@ const obsUrl = computed(() =>
     <DialogContent class="max-w-[880px] max-h-[90vh] overflow-hidden flex flex-col p-6">
       <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
         <DialogTitle class="text-base font-semibold">OBS 组件</DialogTitle>
-        <Button as="a" variant="outline" target="_blank" :href="obsUrl" class="mr-6 gap-1">
+        <Button
+          as="a"
+          variant="outline"
+          target="_blank"
+          :href="obsUrl"
+          class="mr-6 gap-1"
+        >
           <Open24Regular class="size-4" />
           浏览
         </Button>
@@ -99,8 +105,17 @@ const obsUrl = computed(() =>
             <div class="obs-config-modal__section">
               <div class="obs-config-modal__section-title">OBS 浏览器源链接</div>
               <div class="flex items-center gap-2">
-                <Input :model-value="obsUrl" readonly placeholder="OBS 组件链接" class="font-mono" />
-                <Button :disabled="!obsUrl" class="shrink-0 gap-1.5" @click="copyToClipboard(obsUrl)">
+                <Input
+                  :model-value="obsUrl"
+                  readonly
+                  placeholder="OBS 组件链接"
+                  class="font-mono"
+                />
+                <Button
+                  :disabled="!obsUrl"
+                  class="shrink-0 gap-1.5"
+                  @click="copyToClipboard(obsUrl)"
+                >
                   <Copy24Regular class="size-4" />
                   复制
                 </Button>
@@ -115,13 +130,25 @@ const obsUrl = computed(() =>
               <div class="obs-config-modal__section-title">样式与速度</div>
               <div class="flex flex-col gap-2.5">
                 <div class="flex items-center gap-2 flex-wrap">
-                  <Button type="button" :variant="styleModel === 'classic' ? 'default' : 'outline'" @click="styleModel = 'classic'">
+                  <Button
+                    type="button"
+                    :variant="styleModel === 'classic' ? 'default' : 'outline'"
+                    @click="styleModel = 'classic'"
+                  >
                     经典黑色
                   </Button>
-                  <Button type="button" :variant="styleModel === 'fresh' ? 'default' : 'outline'" @click="styleModel = 'fresh'">
+                  <Button
+                    type="button"
+                    :variant="styleModel === 'fresh' ? 'default' : 'outline'"
+                    @click="styleModel = 'fresh'"
+                  >
                     清新明亮
                   </Button>
-                  <Button type="button" :variant="styleModel === 'minimal' ? 'default' : 'outline'" @click="styleModel = 'minimal'">
+                  <Button
+                    type="button"
+                    :variant="styleModel === 'minimal' ? 'default' : 'outline'"
+                    @click="styleModel = 'minimal'"
+                  >
                     极简透明
                   </Button>
                 </div>
@@ -162,9 +189,7 @@ const obsUrl = computed(() =>
                 value="help"
                 class="border-none"
               >
-                <AccordionTrigger class="py-2 text-xs hover:no-underline">
-                  OBS 使用说明
-                </AccordionTrigger>
+                <AccordionTrigger class="py-2 text-xs hover:no-underline"> OBS 使用说明 </AccordionTrigger>
                 <AccordionContent class="text-muted-foreground text-xs pb-3 space-y-1">
                   <p>1. 在 OBS 来源中添加一个新的「浏览器」源。</p>
                   <p>2. 将上方链接复制并粘贴到「URL」栏中。</p>

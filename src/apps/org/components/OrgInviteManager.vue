@@ -67,8 +67,15 @@ function submit() {
 
 <template>
   <div class="space-y-3 mb-4">
-    <Accordion type="single" collapsible class="border border-border/80 rounded-lg bg-card">
-      <AccordionItem value="create-invite" class="border-none">
+    <Accordion
+      type="single"
+      collapsible
+      class="border border-border/80 rounded-lg bg-card"
+    >
+      <AccordionItem
+        value="create-invite"
+        class="border-none"
+      >
         <AccordionTrigger class="px-3.5 py-2.5 text-xs font-semibold hover:no-underline">
           {{ kind === 'member' ? '邀请成员' : '邀请主播' }}
         </AccordionTrigger>
@@ -83,8 +90,16 @@ function submit() {
                 <SelectValue placeholder="角色" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1" class="text-xs">Admin</SelectItem>
-                <SelectItem value="2" class="text-xs">Member</SelectItem>
+                <SelectItem
+                  value="1"
+                  class="text-xs"
+                  >Admin</SelectItem
+                >
+                <SelectItem
+                  value="2"
+                  class="text-xs"
+                  >Member</SelectItem
+                >
               </SelectContent>
             </Select>
 
@@ -113,9 +128,7 @@ function submit() {
               @positive-click="submit"
             >
               <template #trigger>
-                <Button :disabled="creating">
-                  生成链接
-                </Button>
+                <Button :disabled="creating"> 生成链接 </Button>
               </template>
               确定要发送邀请吗？
             </Popconfirm>
@@ -127,19 +140,32 @@ function submit() {
     <Card class="border border-border/80">
       <CardHeader class="pb-2.5 border-b border-border/60 flex flex-row items-center justify-between">
         <CardTitle class="text-sm font-semibold">已发出邀请</CardTitle>
-        <Button variant="outline" :disabled="loading" @click="emit('refresh')">
+        <Button
+          variant="outline"
+          :disabled="loading"
+          @click="emit('refresh')"
+        >
           刷新邀请
         </Button>
       </CardHeader>
 
       <CardContent class="pt-3">
-        <div v-if="loading" class="py-8 flex justify-center">
+        <div
+          v-if="loading"
+          class="py-8 flex justify-center"
+        >
           <Spin />
         </div>
-        <div v-else-if="invites.length === 0" class="py-6">
+        <div
+          v-else-if="invites.length === 0"
+          class="py-6"
+        >
           <Empty description="暂无邀请" />
         </div>
-        <div v-else class="divide-y divide-border/60">
+        <div
+          v-else
+          class="divide-y divide-border/60"
+        >
           <div
             v-for="inv in invites"
             :key="inv.token"
@@ -172,16 +198,26 @@ function submit() {
               <span>创建者: {{ inv.createdByUserName || inv.createdByUserId }}</span>
               <span>
                 使用次数: {{ inv.usedCount }}
-                <template v-if="inv.lastUsedAt">
-                  , 最近: {{ format(inv.lastUsedAt, 'MM-dd HH:mm') }}
-                </template>
+                <template v-if="inv.lastUsedAt"> , 最近: {{ format(inv.lastUsedAt, 'MM-dd HH:mm') }} </template>
               </span>
             </div>
 
             <div class="flex items-center gap-2">
-              <Input size="xs" :value="inv.joinUrl" readonly class="font-mono flex-1 bg-muted/30" />
-              <Button variant="outline" class="gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10" @click="copy(inv.joinUrl)">
-                <component :is="Copy20Regular" class="size-3.5" />
+              <Input
+                size="xs"
+                :value="inv.joinUrl"
+                readonly
+                class="font-mono flex-1 bg-muted/30"
+              />
+              <Button
+                variant="outline"
+                class="gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                @click="copy(inv.joinUrl)"
+              >
+                <component
+                  :is="Copy20Regular"
+                  class="size-3.5"
+                />
                 复制
               </Button>
               <Popconfirm
@@ -192,7 +228,10 @@ function submit() {
                 @positive-click="emit('revoke', inv.token)"
               >
                 <template #trigger>
-                  <Button variant="ghost" class="text-destructive hover:bg-destructive/10">
+                  <Button
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                  >
                     撤销
                   </Button>
                 </template>

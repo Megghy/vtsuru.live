@@ -36,7 +36,12 @@ function setup(role: 'viewer' | 'controller' = 'controller', channelId?: string)
     mount(
       defineComponent({
         setup() {
-          bridge = useObsBridge({ componentId: 'counter', channelId, defaultState: { count: 0, title: 'initial' }, role })
+          bridge = useObsBridge({
+            componentId: 'counter',
+            channelId,
+            defaultState: { count: 0, title: 'initial' },
+            role,
+          })
           return () => null
         },
       }),

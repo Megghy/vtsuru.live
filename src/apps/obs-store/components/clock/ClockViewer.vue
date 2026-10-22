@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useClipboard } from '@vueuse/core'
 import {
   ArrowCounterclockwise24Regular,
   Checkmark24Regular,
@@ -8,21 +7,15 @@ import {
   Pause24Regular,
   Play24Regular,
 } from '@vicons/fluent'
-import {
-  computed,
-  onMounted,
-  ref,
-} from 'vue'
+import { useClipboard } from '@vueuse/core'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
-import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
-import {
-  loadObsStoreFonts,
-  OBS_CLOCK_FONTS,
-} from '@/apps/obs-store/utils/fontLoader'
+import { loadObsStoreFonts, OBS_CLOCK_FONTS } from '@/apps/obs-store/utils/fontLoader'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
@@ -32,15 +25,8 @@ import { Slider } from '@/shared/ui/slider'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import ClockDisplay from './ClockDisplay.vue'
-import {
-  CLOCK_THEME_PRESETS,
-  DEFAULT_CLOCK_STATE,
-} from './types'
-import type {
-  ClockAction,
-  ClockMode,
-  ClockState,
-} from './types'
+import { CLOCK_THEME_PRESETS, DEFAULT_CLOCK_STATE } from './types'
+import type { ClockAction, ClockMode, ClockState } from './types'
 
 const { copy, isSupported: isCopySupported } = useClipboard()
 
@@ -49,21 +35,13 @@ const channelId = ref(resolveObsSyncChannel(route.query.channel))
 const channelDraft = ref(channelId.value)
 const copied = ref(false)
 
-const {
-  state,
-  updateState,
-  sendAction,
-  currentHash,
-  isSyncing,
-  lastSyncError,
-  hasPendingChanges,
-  retry,
-} = useObsBridge<ClockState, ClockAction>({
-  componentId: 'clock',
-  channelId,
-  defaultState: DEFAULT_CLOCK_STATE,
-  role: 'controller',
-})
+const { state, updateState, sendAction, currentHash, isSyncing, lastSyncError, hasPendingChanges, retry } =
+  useObsBridge<ClockState, ClockAction>({
+    componentId: 'clock',
+    channelId,
+    defaultState: DEFAULT_CLOCK_STATE,
+    role: 'controller',
+  })
 
 onMounted(() => loadObsStoreFonts(OBS_CLOCK_FONTS))
 
@@ -72,10 +50,15 @@ const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 
 // OBS URL
 const account = useAccount()
-const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
-  path: '/obs-store/clock', host: window.location.origin, credential: 'public-id',
-  userId: account.value.id, params: { channel: channelId.value },
-}))
+const obsAbsoluteUrl = computed(() =>
+  buildObsSourceUrl({
+    path: '/obs-store/clock',
+    host: window.location.origin,
+    credential: 'public-id',
+    userId: account.value.id,
+    params: { channel: channelId.value },
+  }),
+)
 const obsRelativeUrl = obsAbsoluteUrl
 
 async function copyObsUrl() {
@@ -118,7 +101,7 @@ function openPopoutWindow() {
 function toggleTimer() {
   if (state.value.timerRunning) {
     const now = Date.now()
-    const elapsed = state.value.timerElapsed + (state.value.timerStartTime > 0 ? (now - state.value.timerStartTime) : 0)
+    const elapsed = state.value.timerElapsed + (state.value.timerStartTime > 0 ? now - state.value.timerStartTime : 0)
     updateState({
       timerRunning: false,
       timerStartTime: 0,
@@ -187,8 +170,17 @@ const modeOptions: { label: string; value: ClockMode }[] = [
           </div>
 
           <div class="flex items-center gap-1.5">
-            <Input v-model="channelDraft" class="w-[120px]" placeholder="频道" maxlength="64" @keyup.enter="changeChannel" />
-            <Button variant="secondary" @click="changeChannel">
+            <Input
+              v-model="channelDraft"
+              class="w-[120px]"
+              placeholder="频道"
+              maxlength="64"
+              @keyup.enter="changeChannel"
+            />
+            <Button
+              variant="secondary"
+              @click="changeChannel"
+            >
               切换频道
             </Button>
           </div>
@@ -200,7 +192,9 @@ const modeOptions: { label: string; value: ClockMode }[] = [
               :key="opt.value"
               type="button"
               class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-              :class="state.mode === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+              :class="
+                state.mode === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
+              "
               @click="updateState({ mode: opt.value })"
             >
               {{ opt.label }}
@@ -209,26 +203,42 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
           <!-- 快捷操作按钮 -->
           <div class="flex items-center gap-1.5">
-            <Button v-if="lastSyncError" variant="secondary" :disabled="isSyncing" @click="retry">
+            <Button
+              v-if="lastSyncError"
+              variant="secondary"
+              :disabled="isSyncing"
+              @click="retry"
+            >
               重试同步
             </Button>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="secondary" class="gap-1.5" @click="openPopoutWindow">
+                  <Button
+                    variant="secondary"
+                    class="gap-1.5"
+                    @click="openPopoutWindow"
+                  >
                     <Open24Regular class="size-4" />
                     独立小窗
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边
-                </TooltipContent>
+                <TooltipContent> 弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
-            <Button class="gap-1.5" @click="copyObsUrl">
-              <Checkmark24Regular v-if="copied" class="size-4" />
-              <Copy24Regular v-else class="size-4" />
+            <Button
+              class="gap-1.5"
+              @click="copyObsUrl"
+            >
+              <Checkmark24Regular
+                v-if="copied"
+                class="size-4"
+              />
+              <Copy24Regular
+                v-else
+                class="size-4"
+              />
               复制 OBS 源链接
             </Button>
           </div>
@@ -301,8 +311,14 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                   :class="{ 'is-running': state.timerRunning }"
                   @click="toggleTimer"
                 >
-                  <Pause24Regular v-if="state.timerRunning" class="btn-icon" />
-                  <Play24Regular v-else class="btn-icon" />
+                  <Pause24Regular
+                    v-if="state.timerRunning"
+                    class="btn-icon"
+                  />
+                  <Play24Regular
+                    v-else
+                    class="btn-icon"
+                  />
                   <span class="btn-text">{{ state.timerRunning ? '暂停计时' : '开始计时' }}</span>
                 </button>
 
@@ -374,12 +390,20 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
                 <div class="color-item">
                   <span class="color-label">文字颜色</span>
-                  <Input :value="state.textColor" placeholder="默认或 #ffffff" @input="updateState({ textColor: ($event.target as HTMLInputElement).value })" />
+                  <Input
+                    :value="state.textColor"
+                    placeholder="默认或 #ffffff"
+                    @input="updateState({ textColor: ($event.target as HTMLInputElement).value })"
+                  />
                 </div>
 
                 <div class="color-item">
                   <span class="color-label">外壳背景底色</span>
-                  <Input :value="state.bgColor" placeholder="默认或 #1e2024" @input="updateState({ bgColor: ($event.target as HTMLInputElement).value })" />
+                  <Input
+                    :value="state.bgColor"
+                    placeholder="默认或 #1e2024"
+                    @input="updateState({ bgColor: ($event.target as HTMLInputElement).value })"
+                  />
                 </div>
 
                 <div class="color-item">
@@ -392,16 +416,31 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                     :min="0"
                     :max="100"
                     :step="5"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) updateState({ bgOpacity: val[0] }) }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) updateState({ bgOpacity: val[0] })
+                      }
+                    "
                   />
                 </div>
               </div>
 
               <!-- 标题文本输入行 -->
               <div class="text-inputs-row">
-                <Input :value="state.title" placeholder="自定义副标 / 标题文本 (如 LIVE NOW)" class="flex-1" @input="updateState({ title: ($event.target as HTMLInputElement).value })" />
+                <Input
+                  :value="state.title"
+                  placeholder="自定义副标 / 标题文本 (如 LIVE NOW)"
+                  class="flex-1"
+                  @input="updateState({ title: ($event.target as HTMLInputElement).value })"
+                />
 
-                <Input v-if="state.mode === 'countdown'" :value="state.timerEndText" placeholder="倒计时结束提示 (如 LIVE STARTED)" class="flex-1" @input="updateState({ timerEndText: ($event.target as HTMLInputElement).value })" />
+                <Input
+                  v-if="state.mode === 'countdown'"
+                  :value="state.timerEndText"
+                  placeholder="倒计时结束提示 (如 LIVE STARTED)"
+                  class="flex-1"
+                  @input="updateState({ timerEndText: ($event.target as HTMLInputElement).value })"
+                />
               </div>
 
               <!-- 紧凑交互开关矩阵 -->
@@ -482,13 +521,28 @@ const modeOptions: { label: string; value: ClockMode }[] = [
               <div class="flex items-center justify-between mb-2">
                 <span class="deck-label">OBS 画面实时监视器</span>
                 <div class="flex items-center gap-1.5">
-                  <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
+                  <Button
+                    size="xs"
+                    class="h-6 text-[11px] px-2"
+                    :variant="previewBg === 'checker' ? 'default' : 'outline'"
+                    @click="previewBg = 'checker'"
+                  >
                     网格底
                   </Button>
-                  <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
+                  <Button
+                    size="xs"
+                    class="h-6 text-[11px] px-2"
+                    :variant="previewBg === 'dark' ? 'default' : 'outline'"
+                    @click="previewBg = 'dark'"
+                  >
                     暗黑底
                   </Button>
-                  <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
+                  <Button
+                    size="xs"
+                    class="h-6 text-[11px] px-2"
+                    :variant="previewBg === 'transparent' ? 'default' : 'outline'"
+                    @click="previewBg = 'transparent'"
+                  >
                     透明底
                   </Button>
                 </div>
@@ -582,8 +636,12 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 }
 
 @keyframes pulse-dot {
-  from { opacity: 0.4; }
-  to { opacity: 1; }
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .operator-deck-box {
@@ -848,12 +906,14 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 .bg-checker {
   background-color: #1e1e24;
   background-image:
-    linear-gradient(45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #2b2b36 75%),
-    linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
+    linear-gradient(45deg, #2b2b36 25%, transparent 25%), linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b36 75%), linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
   background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
 }
 
 .bg-dark {

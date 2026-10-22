@@ -7,5 +7,5 @@
  */
 
 export type GetApiAccountVerifyParams = {
-target?: string;
-};
+  target?: string
+}

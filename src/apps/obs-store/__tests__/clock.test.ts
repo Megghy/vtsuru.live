@@ -1,13 +1,6 @@
-import {
-  describe,
-  expect,
-  it,
-} from 'vitest'
+import { describe, expect, it } from 'vitest'
 
-import {
-  CLOCK_THEME_PRESETS,
-  DEFAULT_CLOCK_STATE,
-} from '../components/clock/types'
+import { CLOCK_THEME_PRESETS, DEFAULT_CLOCK_STATE } from '../components/clock/types'
 import { clockComponent } from '../registry/items/clock'
 
 describe('OBS Clock & Timer Component', () => {

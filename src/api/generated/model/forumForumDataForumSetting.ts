@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumForumDataForumUserLevels } from './forumForumDataForumUserLevels';
+import type { ForumForumDataForumUserLevels } from './forumForumDataForumUserLevels'
 
 export interface ForumForumDataForumSetting {
-  allowedViewerLevel: ForumForumDataForumUserLevels;
-  allowPost: boolean;
-  allowedPostLevel: ForumForumDataForumUserLevels;
-  requireApply: boolean;
-  requireAuthedToJoin: boolean;
+  allowedViewerLevel: ForumForumDataForumUserLevels
+  allowPost: boolean
+  allowedPostLevel: ForumForumDataForumUserLevels
+  requireApply: boolean
+  requireAuthedToJoin: boolean
   /** 分钟 */
-  sendTopicDelay: number;
+  sendTopicDelay: number
 }

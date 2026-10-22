@@ -7,7 +7,7 @@
  */
 
 export interface KeywordResponse {
-  keyword: string;
-  isEnabled: boolean;
-  requireAuth: boolean;
+  keyword: string
+  isEnabled: boolean
+  requireAuth: boolean
 }

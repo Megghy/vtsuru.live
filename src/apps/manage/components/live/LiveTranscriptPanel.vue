@@ -9,23 +9,14 @@ import {
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
-import {
-  getApiLiveGetTranscriptSegments,
-  getApiLiveGetTranscriptSessions,
-} from '@/api/generated/live/live'
+import { getApiLiveGetTranscriptSegments, getApiLiveGetTranscriptSessions } from '@/api/generated/live/live'
 import { unwrapOk } from '@/api/query'
 import type { TranscriptSegment, TranscriptSegmentPage, TranscriptSession } from '@/shared/models/transcription'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
@@ -80,7 +71,9 @@ const filteredSegments = computed(() => {
 
   const kw = searchKeyword.value.trim().toLowerCase()
   if (kw) {
-    list = list.filter((s) => (s.text && s.text.toLowerCase().includes(kw)) || (s.speaker && s.speaker.toLowerCase().includes(kw)))
+    list = list.filter(
+      (s) => (s.text && s.text.toLowerCase().includes(kw)) || (s.speaker && s.speaker.toLowerCase().includes(kw)),
+    )
   }
 
   return list
@@ -213,7 +206,10 @@ defineExpose({ load })
 
 <template>
   <div class="live-transcript-panel">
-    <div v-if="loading" class="py-12 flex justify-center">
+    <div
+      v-if="loading"
+      class="py-12 flex justify-center"
+    >
       <Spin />
     </div>
 
@@ -222,7 +218,10 @@ defineExpose({ load })
       class="py-12 flex flex-col items-center justify-center gap-3"
     >
       <Empty :description="`转写获取失败: ${error}`" />
-      <Button variant="outline" @click="load">
+      <Button
+        variant="outline"
+        @click="load"
+      >
         重试加载
       </Button>
     </div>
@@ -231,7 +230,10 @@ defineExpose({ load })
       v-else-if="!sessions.length && loaded"
       class="py-12 flex flex-col items-center justify-center gap-2"
     >
-      <component :is="Mic24Regular" class="size-10 text-muted-foreground" />
+      <component
+        :is="Mic24Regular"
+        class="size-10 text-muted-foreground"
+      />
       <Empty description="该场直播未开启语音转写或未采集到音频会话" />
     </div>
 
@@ -249,13 +251,22 @@ defineExpose({ load })
               <div class="flex-1">
                 <Select
                   :model-value="selectedSessionId ?? ''"
-                  @update:model-value="(val) => { selectedSessionId = String(val); val && loadSegments(String(val)) }"
+                  @update:model-value="
+                    (val) => {
+                      selectedSessionId = String(val)
+                      val && loadSegments(String(val))
+                    }
+                  "
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="opt in sessionOptions" :key="opt.value" :value="opt.value">
+                    <SelectItem
+                      v-for="opt in sessionOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -264,12 +275,25 @@ defineExpose({ load })
             </div>
 
             <div class="flex items-center gap-2">
-              <Button variant="outline" :disabled="!segments.length" @click="downloadTxt">
-                <component :is="DocumentText24Regular" class="size-3.5 mr-1" />
+              <Button
+                variant="outline"
+                :disabled="!segments.length"
+                @click="downloadTxt"
+              >
+                <component
+                  :is="DocumentText24Regular"
+                  class="size-3.5 mr-1"
+                />
                 导出 TXT
               </Button>
-              <Button :disabled="!segments.length" @click="downloadSrt">
-                <component :is="DocumentArrowDown20Regular" class="size-3.5 mr-1" />
+              <Button
+                :disabled="!segments.length"
+                @click="downloadSrt"
+              >
+                <component
+                  :is="DocumentArrowDown20Regular"
+                  class="size-3.5 mr-1"
+                />
                 导出 SRT 字幕
               </Button>
             </div>
@@ -279,17 +303,31 @@ defineExpose({ load })
           <div class="flex flex-wrap items-center justify-between gap-2.5">
             <div class="flex items-center gap-2">
               <div class="relative w-60">
-                <component :is="Search24Filled" class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-                <Input v-model="searchKeyword" placeholder="搜索字幕关键词..." class="pl-8" />
+                <component
+                  :is="Search24Filled"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground"
+                />
+                <Input
+                  v-model="searchKeyword"
+                  placeholder="搜索字幕关键词..."
+                  class="pl-8"
+                />
               </div>
 
-              <div v-if="speakerOptions.length > 2" class="w-32">
+              <div
+                v-if="speakerOptions.length > 2"
+                class="w-32"
+              >
                 <Select v-model="selectedSpeaker">
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="opt in speakerOptions" :key="opt.value" :value="opt.value">
+                    <SelectItem
+                      v-for="opt in speakerOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -301,7 +339,10 @@ defineExpose({ load })
               v-if="selectedSession"
               class="flex items-center gap-2 text-xs"
             >
-              <Tag variant="outline" class="text-[11px] h-5 px-1.5">
+              <Tag
+                variant="outline"
+                class="text-[11px] h-5 px-1.5"
+              >
                 {{ providerName(selectedSession.provider) }}
               </Tag>
               <span class="text-muted-foreground">
@@ -311,7 +352,9 @@ defineExpose({ load })
           </div>
         </div>
 
-        <div class="mt-2.5 pt-2 border-t border-border flex justify-between items-center text-xs text-muted-foreground font-mono">
+        <div
+          class="mt-2.5 pt-2 border-t border-border flex justify-between items-center text-xs text-muted-foreground font-mono"
+        >
           <span>
             已加载 <strong class="text-foreground">{{ segments.length.toLocaleString() }}</strong> 条分段
             <template v-if="searchKeyword || selectedSpeaker !== 'all'">
@@ -324,7 +367,10 @@ defineExpose({ load })
 
       <!-- 数据表格 -->
       <Card class="p-0 overflow-hidden">
-        <div v-if="filteredSegments.length" class="max-h-[580px] overflow-y-auto">
+        <div
+          v-if="filteredSegments.length"
+          class="max-h-[580px] overflow-y-auto"
+        >
           <table class="w-full text-xs text-left border-collapse">
             <thead class="bg-muted text-muted-foreground uppercase text-[11px] sticky top-0 z-10">
               <tr>
@@ -343,10 +389,18 @@ defineExpose({ load })
                   {{ formatClock(row.startMs) }}
                 </td>
                 <td class="p-2.5 whitespace-nowrap">
-                  <Tag v-if="row.speaker" variant="secondary" class="text-[10px] h-4.5 px-1">
+                  <Tag
+                    v-if="row.speaker"
+                    variant="secondary"
+                    class="text-[10px] h-4.5 px-1"
+                  >
                     {{ row.speaker }}
                   </Tag>
-                  <span v-else class="text-muted-foreground">—</span>
+                  <span
+                    v-else
+                    class="text-muted-foreground"
+                    >—</span
+                  >
                 </td>
                 <td class="p-2.5">
                   <div class="flex items-center justify-between gap-2">
@@ -357,7 +411,10 @@ defineExpose({ load })
                       title="复制单句"
                       @click="copySegment(row)"
                     >
-                      <component :is="Copy24Regular" class="size-3.5" />
+                      <component
+                        :is="Copy24Regular"
+                        class="size-3.5"
+                      />
                     </button>
                   </div>
                 </td>

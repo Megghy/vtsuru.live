@@ -51,9 +51,7 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
     try {
       const rawId = toValue(currentId)
       const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
-      const data = (await getApiMusicRequestGetWaiting(
-        idStr ? { id: Number(idStr) } : {},
-      )) as unknown as {
+      const data = (await getApiMusicRequestGetWaiting(idStr ? { id: Number(idStr) } : {})) as unknown as {
         code: number
         data: { playing?: WaitMusicInfo; waiting: WaitMusicInfo[] }
       }

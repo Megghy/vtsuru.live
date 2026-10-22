@@ -40,11 +40,17 @@ async function onSaved() {
 </script>
 
 <template>
-  <div v-if="loading" class="py-12 flex justify-center">
+  <div
+    v-if="loading"
+    class="py-12 flex justify-center"
+  >
     <Spin />
   </div>
 
-  <div v-else class="space-y-3.5 text-xs">
+  <div
+    v-else
+    class="space-y-3.5 text-xs"
+  >
     <OrgInviteManager
       v-if="isOrgAdmin"
       kind="streamer"
@@ -59,8 +65,15 @@ async function onSaved() {
     <!-- 工具栏 -->
     <div class="flex items-center justify-between gap-3 flex-wrap">
       <div class="relative w-56">
-        <Input v-model="search" placeholder="搜索主播名称或ID" class="pl-7" />
-        <component :is="SearchOutline" class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Input
+          v-model="search"
+          placeholder="搜索主播名称或ID"
+          class="pl-7"
+        />
+        <component
+          :is="SearchOutline"
+          class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+        />
       </div>
 
       <div
@@ -72,12 +85,18 @@ async function onSaved() {
       </div>
     </div>
 
-    <div v-if="filtered.length === 0" class="py-10">
+    <div
+      v-if="filtered.length === 0"
+      class="py-10"
+    >
       <Empty description="暂无主播" />
     </div>
 
     <!-- 主播列表 -->
-    <Card v-else class="border border-border/80 overflow-hidden">
+    <Card
+      v-else
+      class="border border-border/80 overflow-hidden"
+    >
       <CardContent class="p-0">
         <div class="divide-y divide-border/60">
           <div
@@ -103,13 +122,20 @@ async function onSaved() {
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-2">
                   <strong class="font-medium text-foreground text-sm truncate">{{ s.streamer.name }}</strong>
-                  <Badge variant="secondary" class="text-[10px] h-4.5 px-1.5 font-normal">
+                  <Badge
+                    variant="secondary"
+                    class="text-[10px] h-4.5 px-1.5 font-normal"
+                  >
                     {{ streamerStatusLabel(s.status) }}
                   </Badge>
                   <Badge
                     variant="outline"
                     class="text-[10px] h-4.5 px-1.5 font-normal"
-                    :class="s.streamer.isBiliAuthed ? 'text-emerald-600 border-emerald-500/30' : 'text-muted-foreground border-border/60'"
+                    :class="
+                      s.streamer.isBiliAuthed
+                        ? 'text-emerald-600 border-emerald-500/30'
+                        : 'text-muted-foreground border-border/60'
+                    "
                   >
                     {{ s.streamer.isBiliAuthed ? '已绑定B站' : '未绑定' }}
                   </Badge>
@@ -124,7 +150,10 @@ async function onSaved() {
                 <div v-if="s.respondedAt">响应: {{ format(s.respondedAt, 'yyyy-MM-dd') }}</div>
               </div>
 
-              <div v-if="isOrgAdmin" @click.stop>
+              <div
+                v-if="isOrgAdmin"
+                @click.stop
+              >
                 <Popconfirm
                   title="确定要移除该主播吗？"
                   positive-text="确认移除"
@@ -132,8 +161,15 @@ async function onSaved() {
                   @positive-click="remove(s.streamer.id)"
                 >
                   <template #trigger>
-                    <Button size="icon" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
-                      <component :is="TrashOutline" class="size-3.5" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                    >
+                      <component
+                        :is="TrashOutline"
+                        class="size-3.5"
+                      />
                     </Button>
                   </template>
                   确定要移除该主播吗？

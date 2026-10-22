@@ -33,9 +33,7 @@ onMounted(() => {
 <template>
   <Card class="p-4 space-y-3">
     <div class="flex items-center justify-between">
-      <h3 class="text-sm font-semibold text-foreground">
-        增值服务
-      </h3>
+      <h3 class="text-sm font-semibold text-foreground">增值服务</h3>
     </div>
 
     <Alert
@@ -43,9 +41,7 @@ onMounted(() => {
       variant="default"
     >
       <AlertTitle>开发中</AlertTitle>
-      <AlertDescription class="text-xs">
-        增值服务面板正在开发中（WIP）
-      </AlertDescription>
+      <AlertDescription class="text-xs"> 增值服务面板正在开发中（WIP） </AlertDescription>
     </Alert>
 
     <template v-else>
@@ -54,9 +50,7 @@ onMounted(() => {
         class="w-full space-y-3"
       >
         <TabsList>
-          <TabsTrigger value="overview">
-            概览
-          </TabsTrigger>
+          <TabsTrigger value="overview"> 概览 </TabsTrigger>
         </TabsList>
         <TabsContent
           value="overview"

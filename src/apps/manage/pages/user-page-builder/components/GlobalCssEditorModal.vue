@@ -73,16 +73,38 @@ watch(
 </script>
 
 <template>
-  <Dialog :open="show" @update:open="(val) => { if (!val) closeEditor(); else show = true }">
+  <Dialog
+    :open="show"
+    @update:open="
+      (val) => {
+        if (!val) closeEditor()
+        else show = true
+      }
+    "
+  >
     <DialogContent class="max-w-[min(1100px,94vw)] h-[min(720px,88dvh)] p-0 flex flex-col gap-0 overflow-hidden">
       <DialogHeader class="p-4 border-b flex flex-row items-center justify-between shrink-0">
         <DialogTitle class="text-base font-semibold"> 全局 CSS </DialogTitle>
         <div class="flex items-center gap-2 pr-6">
-          <Tag v-if="issues.length" variant="destructive" class="text-xs">
+          <Tag
+            v-if="issues.length"
+            variant="destructive"
+            class="text-xs"
+          >
             {{ issues.length }} 个问题
           </Tag>
-          <Button variant="outline" @click="closeEditor"> 取消 </Button>
-          <Button :disabled="!!issues.length" @click="applyChanges"> 应用 </Button>
+          <Button
+            variant="outline"
+            @click="closeEditor"
+          >
+            取消
+          </Button>
+          <Button
+            :disabled="!!issues.length"
+            @click="applyChanges"
+          >
+            应用
+          </Button>
         </div>
       </DialogHeader>
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 
-import { useLiveEmoji } from '@/store/useLiveEmoji'
 import { AVATAR_URL } from '@/shared/config'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'

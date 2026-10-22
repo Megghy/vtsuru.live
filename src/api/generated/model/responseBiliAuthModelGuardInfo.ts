@@ -5,6 +5,6 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GuardLevel } from './guardLevel';
+import type { GuardLevel } from './guardLevel'
 
-export type ResponseBiliAuthModelGuardInfo = {[key: string]: GuardLevel};
+export type ResponseBiliAuthModelGuardInfo = { [key: string]: GuardLevel }

@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from "vue"
-import { useVModel } from "@vueuse/core"
+import { useVModel } from '@vueuse/core'
+import type { HTMLAttributes } from 'vue'
+
 import { cn } from '@/shared/utils/cn'
 
 export interface InputProps {
   defaultValue?: string | number
   modelValue?: string | number
-  class?: HTMLAttributes["class"]
+  class?: HTMLAttributes['class']
   size?: 'default' | 'sm' | 'xs' | 'lg'
   type?: string
   placeholder?: string
@@ -19,10 +20,10 @@ const props = withDefaults(defineProps<InputProps>(), {
 })
 
 const emits = defineEmits<{
-  (e: "update:modelValue", payload: string | number): void
+  (e: 'update:modelValue', payload: string | number): void
 }>()
 
-const modelValue = useVModel(props, "modelValue", emits, {
+const modelValue = useVModel(props, 'modelValue', emits, {
   passive: true,
   defaultValue: props.defaultValue,
 })
@@ -42,10 +43,12 @@ const sizeClasses: Record<string, string> = {
     :placeholder="placeholder"
     :disabled="disabled"
     :readonly="readonly"
-    :class="cn(
-      'flex w-full rounded-md border border-input bg-background ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors',
-      sizeClasses[props.size] || sizeClasses.default,
-      props.class,
-    )"
-  >
+    :class="
+      cn(
+        'flex w-full rounded-md border border-input bg-background ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-colors',
+        sizeClasses[props.size] || sizeClasses.default,
+        props.class,
+      )
+    "
+  />
 </template>

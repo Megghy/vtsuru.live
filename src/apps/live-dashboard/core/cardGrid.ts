@@ -47,9 +47,10 @@ export class CardGrid {
 
   resize(size: number) {
     if (size === this.slots.length) return
-    this.slots = size < this.slots.length
-      ? this.slots.slice(0, size)
-      : [...this.slots, ...Array.from({ length: size - this.slots.length }, () => null)]
+    this.slots =
+      size < this.slots.length
+        ? this.slots.slice(0, size)
+        : [...this.slots, ...Array.from({ length: size - this.slots.length }, () => null)]
   }
 
   /** 满格时下一次将被覆盖的槽位，用于淡出预告 */

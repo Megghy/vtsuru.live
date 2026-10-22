@@ -4,13 +4,7 @@ import { computed } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -34,9 +28,7 @@ function setResetPhysicsHotkey(id: string) {
       <CardTitle class="text-sm font-semibold">应急控制</CardTitle>
     </CardHeader>
     <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
-      <p class="text-xs text-[var(--muted-foreground)]">
-        选择 VTS 中已配置的热键来绑定应急操作
-      </p>
+      <p class="text-xs text-[var(--muted-foreground)]">选择 VTS 中已配置的热键来绑定应急操作</p>
 
       <div class="flex items-center gap-3 flex-wrap">
         <div class="w-72">
@@ -59,7 +51,10 @@ function setResetPhysicsHotkey(id: string) {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="destructive" :disabled="!vts.connected" @click="run(() => vts.panicCalibrate(), '已校准')"
+        <Button
+          variant="destructive"
+          :disabled="!vts.connected"
+          @click="run(() => vts.panicCalibrate(), '已校准')"
         >
           一键校准
         </Button>
@@ -86,7 +81,10 @@ function setResetPhysicsHotkey(id: string) {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="destructive" :disabled="!vts.connected" @click="run(() => vts.panicResetPhysics(), '已重置')"
+        <Button
+          variant="destructive"
+          :disabled="!vts.connected"
+          @click="run(() => vts.panicResetPhysics(), '已重置')"
         >
           重置物理
         </Button>

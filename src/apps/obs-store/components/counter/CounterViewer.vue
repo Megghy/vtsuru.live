@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useClipboard } from '@vueuse/core'
 import {
   Add24Regular,
   ArrowCounterclockwise24Regular,
@@ -8,32 +7,22 @@ import {
   Open24Regular,
   Subtract24Regular,
 } from '@vicons/fluent'
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  ref,
-} from 'vue'
+import { useClipboard } from '@vueuse/core'
+import { computed, onActivated, onDeactivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
-import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { ColorPicker } from '@/shared/ui/color-picker'
 
 import CounterDisplay from './CounterDisplay.vue'
 import { DEFAULT_COUNTER_STATE } from './types'
@@ -46,21 +35,13 @@ const channelId = ref(resolveObsSyncChannel(route.query.channel))
 const channelDraft = ref(channelId.value)
 const copied = ref(false)
 
-const {
-  state,
-  updateState,
-  sendAction,
-  currentHash,
-  isSyncing,
-  lastSyncError,
-  hasPendingChanges,
-  retry,
-} = useObsBridge<CounterState, CounterAction>({
-  componentId: 'counter',
-  channelId,
-  defaultState: DEFAULT_COUNTER_STATE,
-  role: 'controller',
-})
+const { state, updateState, sendAction, currentHash, isSyncing, lastSyncError, hasPendingChanges, retry } =
+  useObsBridge<CounterState, CounterAction>({
+    componentId: 'counter',
+    channelId,
+    defaultState: DEFAULT_COUNTER_STATE,
+    role: 'controller',
+  })
 
 // 主题选项
 const themeOptions: { label: string; value: CounterTheme }[] = [
@@ -75,10 +56,15 @@ const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 
 // OBS URL 计算
 const account = useAccount()
-const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
-  path: '/obs-store/counter', host: window.location.origin, credential: 'public-id',
-  userId: account.value.id, params: { channel: channelId.value },
-}))
+const obsAbsoluteUrl = computed(() =>
+  buildObsSourceUrl({
+    path: '/obs-store/counter',
+    host: window.location.origin,
+    credential: 'public-id',
+    userId: account.value.id,
+    params: { channel: channelId.value },
+  }),
+)
 
 function handleIncrement(amount = 1) {
   const newCount = state.value.count + amount
@@ -118,11 +104,7 @@ async function copyObsUrl() {
 function openPopoutWindow() {
   if (typeof window === 'undefined') return
   const url = `/manage/obs-store?component=counter&channel=${encodeURIComponent(channelId.value)}`
-  window.open(
-    url,
-    'VtsuruCounterPopout',
-    'width=420,height=600,menubar=no,toolbar=no,location=no,status=no',
-  )
+  window.open(url, 'VtsuruCounterPopout', 'width=420,height=600,menubar=no,toolbar=no,location=no,status=no')
 }
 
 // 快捷键支持（当未处于 input 输入框时按 +/=/- 直接增减）
@@ -193,34 +175,59 @@ activateKeyboard()
           </div>
 
           <div class="flex items-center gap-1.5">
-            <Input v-model="channelDraft" class="w-[120px]" placeholder="频道" maxlength="64" @keyup.enter="changeChannel" />
-            <Button variant="secondary" @click="changeChannel">
+            <Input
+              v-model="channelDraft"
+              class="w-[120px]"
+              placeholder="频道"
+              maxlength="64"
+              @keyup.enter="changeChannel"
+            />
+            <Button
+              variant="secondary"
+              @click="changeChannel"
+            >
               切换频道
             </Button>
           </div>
 
           <div class="flex items-center gap-2">
-            <Button v-if="lastSyncError" variant="secondary" :disabled="isSyncing" @click="retry">
+            <Button
+              v-if="lastSyncError"
+              variant="secondary"
+              :disabled="isSyncing"
+              @click="retry"
+            >
               重试同步
             </Button>
 
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="secondary" class="gap-1.5" @click="openPopoutWindow">
+                  <Button
+                    variant="secondary"
+                    class="gap-1.5"
+                    @click="openPopoutWindow"
+                  >
                     <Open24Regular class="size-4" />
                     独立小窗
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>
-                  弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边
-                </TooltipContent>
+                <TooltipContent> 弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
-            <Button class="gap-1.5" @click="copyObsUrl">
-              <Checkmark24Regular v-if="copied" class="size-4" />
-              <Copy24Regular v-else class="size-4" />
+            <Button
+              class="gap-1.5"
+              @click="copyObsUrl"
+            >
+              <Checkmark24Regular
+                v-if="copied"
+                class="size-4"
+              />
+              <Copy24Regular
+                v-else
+                class="size-4"
+              />
               复制 OBS 源链接
             </Button>
           </div>
@@ -245,7 +252,8 @@ activateKeyboard()
                 <span
                   v-if="state.target > 0"
                   class="hero-target-denom"
-                >/ {{ state.target }}</span>
+                  >/ {{ state.target }}</span
+                >
               </div>
             </div>
 
@@ -306,13 +314,28 @@ activateKeyboard()
             <div class="flex items-center justify-between mb-2">
               <span class="deck-label">OBS 画面实时监视器</span>
               <div class="flex items-center gap-1.5">
-                <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
+                <Button
+                  size="xs"
+                  class="h-6 text-[11px] px-2"
+                  :variant="previewBg === 'checker' ? 'default' : 'outline'"
+                  @click="previewBg = 'checker'"
+                >
                   网格底
                 </Button>
-                <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
+                <Button
+                  size="xs"
+                  class="h-6 text-[11px] px-2"
+                  :variant="previewBg === 'dark' ? 'default' : 'outline'"
+                  @click="previewBg = 'dark'"
+                >
                   暗黑底
                 </Button>
-                <Button size="xs" class="h-6 text-[11px] px-2" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
+                <Button
+                  size="xs"
+                  class="h-6 text-[11px] px-2"
+                  :variant="previewBg === 'transparent' ? 'default' : 'outline'"
+                  @click="previewBg = 'transparent'"
+                >
                   透明底
                 </Button>
               </div>
@@ -330,28 +353,32 @@ activateKeyboard()
               />
             </div>
 
-            <div class="monitor-tip">
-              推荐 OBS 分辨率: <b>360 × 140 px</b> (浏览器源开启透明背景)
-            </div>
+            <div class="monitor-tip">推荐 OBS 分辨率: <b>360 × 140 px</b> (浏览器源开启透明背景)</div>
           </div>
         </div>
 
         <div class="h-px bg-border my-3.5" />
 
         <!-- 参数与视觉配置 -->
-        <div class="deck-label mb-2">
-          配置与样式微调
-        </div>
+        <div class="deck-label mb-2">配置与样式微调</div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">标题文本</label>
-            <Input :value="state.title" placeholder="例如：艾尔登法环 死亡挑战" @input="updateState({ title: ($event.target as HTMLInputElement).value })" />
+            <Input
+              :value="state.title"
+              placeholder="例如：艾尔登法环 死亡挑战"
+              @input="updateState({ title: ($event.target as HTMLInputElement).value })"
+            />
           </div>
 
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">前缀小标</label>
-            <Input :value="state.prefix" placeholder="例如：DEATHS / WINS" @input="updateState({ prefix: ($event.target as HTMLInputElement).value })" />
+            <Input
+              :value="state.prefix"
+              placeholder="例如：DEATHS / WINS"
+              @input="updateState({ prefix: ($event.target as HTMLInputElement).value })"
+            />
           </div>
 
           <div class="space-y-1.5">
@@ -397,7 +424,10 @@ activateKeyboard()
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">显示目标进度条</label>
             <div class="pt-1">
-              <Switch :checked="state.showProgress" @update:checked="updateState({ showProgress: $event })" />
+              <Switch
+                :checked="state.showProgress"
+                @update:checked="updateState({ showProgress: $event })"
+              />
             </div>
           </div>
         </div>
@@ -457,8 +487,12 @@ activateKeyboard()
 }
 
 @keyframes pulse-dot {
-  from { opacity: 0.4; }
-  to { opacity: 1; }
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .deck-label {
@@ -606,12 +640,14 @@ activateKeyboard()
 .bg-checker {
   background-color: #1e1e24;
   background-image:
-    linear-gradient(45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #2b2b36 75%),
-    linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
+    linear-gradient(45deg, #2b2b36 25%, transparent 25%), linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b36 75%), linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
   background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
 }
 
 .bg-dark {

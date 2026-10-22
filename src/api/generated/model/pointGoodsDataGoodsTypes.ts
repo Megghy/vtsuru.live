@@ -6,11 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type PointGoodsDataGoodsTypes = typeof PointGoodsDataGoodsTypes[keyof typeof PointGoodsDataGoodsTypes];
-
+export type PointGoodsDataGoodsTypes = (typeof PointGoodsDataGoodsTypes)[keyof typeof PointGoodsDataGoodsTypes]
 
 export const PointGoodsDataGoodsTypes = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

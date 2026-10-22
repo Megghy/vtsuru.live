@@ -6,10 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type ForumCommentSortTypes = typeof ForumCommentSortTypes[keyof typeof ForumCommentSortTypes];
-
+export type ForumCommentSortTypes = (typeof ForumCommentSortTypes)[keyof typeof ForumCommentSortTypes]
 
 export const ForumCommentSortTypes = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

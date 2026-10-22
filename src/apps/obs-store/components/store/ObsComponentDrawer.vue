@@ -49,7 +49,7 @@ watch(
 )
 
 const isReady = computed(() => props.component?.status === 'ready')
-const statusLabel = computed(() => props.component?.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中')
+const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中'))
 </script>
 
 <template>
@@ -84,7 +84,7 @@ const statusLabel = computed(() => props.component?.status === 'beta' ? '内测'
                       ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
                       : isReady
                         ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
-                        : 'text-muted-foreground'
+                        : 'text-muted-foreground',
                   ]"
                 >
                   {{ statusLabel }}
@@ -100,7 +100,11 @@ const statusLabel = computed(() => props.component?.status === 'beta' ? '内测'
             v-if="props.component?.managePath"
             class="flex items-center gap-2"
           >
-            <Button variant="secondary" class="gap-1.5" as-child>
+            <Button
+              variant="secondary"
+              class="gap-1.5"
+              as-child
+            >
               <a
                 :href="props.component.managePath"
                 target="_blank"
@@ -127,9 +131,7 @@ const statusLabel = computed(() => props.component?.status === 'beta' ? '内测'
             v-else-if="!isLoading"
             class="placeholder-wrap"
           >
-            <span class="text-sm text-muted-foreground">
-              该组件尚在开发规划中，暂无可用的配置控制台。
-            </span>
+            <span class="text-sm text-muted-foreground"> 该组件尚在开发规划中，暂无可用的配置控制台。 </span>
           </div>
         </Spin>
       </div>

@@ -4,12 +4,6 @@ import { saveAs } from 'file-saver'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
-import type { ExportFormat } from '../core/archive'
-import { clearArchive, countByType, exportArchive, importArchive } from '../core/archive'
-import type { ToolbarStatOption } from '../store/settings'
-import { DEFAULT_TOOLBAR_ORDER, TOOLBAR_STAT_OPTIONS } from '../store/settings'
-import { useDashboardUi } from '../store/ui'
-import { useLiveDashboard } from '../store/useLiveDashboard'
 import { Button } from '@/shared/ui/button'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -18,6 +12,13 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { useMessage } from '@/shared/utils'
+
+import type { ExportFormat } from '../core/archive'
+import { clearArchive, countByType, exportArchive, importArchive } from '../core/archive'
+import type { ToolbarStatOption } from '../store/settings'
+import { DEFAULT_TOOLBAR_ORDER, TOOLBAR_STAT_OPTIONS } from '../store/settings'
+import { useDashboardUi } from '../store/ui'
+import { useLiveDashboard } from '../store/useLiveDashboard'
 
 const message = useMessage()
 
@@ -111,7 +112,10 @@ function resetToolbarOrder() {
 
 <template>
   <Sheet v-model:open="ui.settingsOpen">
-    <SheetContent side="right" class="w-[340px] sm:max-w-[340px] overflow-y-auto">
+    <SheetContent
+      side="right"
+      class="w-[340px] sm:max-w-[340px] overflow-y-auto"
+    >
       <SheetHeader>
         <SheetTitle>中控台设置</SheetTitle>
       </SheetHeader>
@@ -142,7 +146,11 @@ function resetToolbarOrder() {
         <Separator />
         <div class="settings__stat-header flex justify-between items-center">
           <div class="settings__group">顶栏指标项 (支持拖拽排序)</div>
-          <Button variant="ghost" class="h-6 px-2 text-muted-foreground" @click="resetToolbarOrder">
+          <Button
+            variant="ghost"
+            class="h-6 px-2 text-muted-foreground"
+            @click="resetToolbarOrder"
+          >
             重置排序
           </Button>
         </div>
@@ -164,7 +172,10 @@ function resetToolbarOrder() {
                 class="drag-handle cursor-grab text-muted-foreground"
                 title="按住拖拽排序"
               >
-                <component :is="ReorderThreeOutline" class="h-4 w-4" />
+                <component
+                  :is="ReorderThreeOutline"
+                  class="h-4 w-4"
+                />
               </span>
               <span>{{ opt.label }}</span>
             </div>
@@ -184,8 +195,7 @@ function resetToolbarOrder() {
             class="w-24"
           />
         </label>
-        <label class="settings__row"
-          >自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide" /></label>
+        <label class="settings__row">自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide" /></label>
         <template v-if="dashboard.settings.card.autoHide">
           <label class="settings__row">
             重复次数达到
@@ -210,7 +220,10 @@ function resetToolbarOrder() {
         <Separator />
         <div class="settings__group">用户备注</div>
         <div class="settings__buttons">
-          <Button variant="outline" @click="exportNotes">
+          <Button
+            variant="outline"
+            @click="exportNotes"
+          >
             导出备注
           </Button>
           <label>
@@ -219,8 +232,12 @@ function resetToolbarOrder() {
               accept=".json"
               class="hidden"
               @change="onImportNotes"
+            />
+            <Button
+              variant="outline"
+              as="span"
+              class="cursor-pointer"
             >
-            <Button variant="outline" as="span" class="cursor-pointer">
               导入备注
             </Button>
           </label>
@@ -242,7 +259,13 @@ function resetToolbarOrder() {
           <span v-if="!counts.length">暂无数据</span>
         </div>
         <div class="settings__buttons">
-          <Button v-for="f in ['json', 'csv', 'xlsx'] as const" :key="f" variant="outline" :disabled="exporting === f" @click="doExport(f)">
+          <Button
+            v-for="f in ['json', 'csv', 'xlsx'] as const"
+            :key="f"
+            variant="outline"
+            :disabled="exporting === f"
+            @click="doExport(f)"
+          >
             导出 {{ f.toUpperCase() }}
           </Button>
         </div>
@@ -253,16 +276,18 @@ function resetToolbarOrder() {
               accept=".json"
               class="hidden"
               @change="onImportEvents"
+            />
+            <Button
+              variant="outline"
+              as="span"
+              class="cursor-pointer"
             >
-            <Button variant="outline" as="span" class="cursor-pointer">
               导入 JSON 归档
             </Button>
           </label>
           <Popconfirm @positive-click="clearAll">
             <template #trigger>
-              <Button variant="destructive">
-                清空本地事件
-              </Button>
+              <Button variant="destructive"> 清空本地事件 </Button>
             </template>
             确定清空全部本地事件？此操作不可撤销。
           </Popconfirm>

@@ -5,8 +5,8 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruEnumsConsumptionTypes } from './vTsuruEnumsConsumptionTypes';
+import type { VTsuruEnumsConsumptionTypes } from './vTsuruEnumsConsumptionTypes'
 
 export type PostApiAccountUpdateConsumptionSettingParams = {
-type?: VTsuruEnumsConsumptionTypes;
-};
+  type?: VTsuruEnumsConsumptionTypes
+}

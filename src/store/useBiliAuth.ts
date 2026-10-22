@@ -1,4 +1,3 @@
-
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
@@ -180,10 +179,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
 
   async function GetSpecificPoint(id: number) {
     try {
-      const data = await getApiPointUserGetPoint(
-        { id },
-        { headers: Object.fromEntries(await getBiliAuthHeaders()) },
-      )
+      const data = await getApiPointUserGetPoint({ id }, { headers: Object.fromEntries(await getBiliAuthHeaders()) })
       if (data.code == 200) {
         return data.data
       } else {

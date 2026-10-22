@@ -61,8 +61,15 @@ onMounted(() => load())
       <!-- 搜索与筛选工具栏 -->
       <div class="flex items-center gap-2 flex-wrap">
         <div class="relative w-52">
-          <Input v-model="search" placeholder="搜索标题/主播" class="pl-7" />
-          <component :is="SearchOutline" class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Input
+            v-model="search"
+            placeholder="搜索标题/主播"
+            class="pl-7"
+          />
+          <component
+            :is="SearchOutline"
+            class="size-3.5 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none"
+          />
         </div>
 
         <Select
@@ -103,23 +110,40 @@ onMounted(() => load())
           </SelectContent>
         </Select>
 
-        <Button variant="outline" class="gap-1" :disabled="view.length === 0" @click="exportLives">
-          <component :is="DownloadOutline" class="size-3.5" />
+        <Button
+          variant="outline"
+          class="gap-1"
+          :disabled="view.length === 0"
+          @click="exportLives"
+        >
+          <component
+            :is="DownloadOutline"
+            class="size-3.5"
+          />
           导出 CSV
         </Button>
 
         <span class="text-[11px] text-muted-foreground ml-auto">共 {{ view.length }} 场</span>
       </div>
 
-      <div v-if="loading" class="py-12 flex justify-center">
+      <div
+        v-if="loading"
+        class="py-12 flex justify-center"
+      >
         <Spin />
       </div>
-      <div v-else-if="view.length === 0" class="py-10">
+      <div
+        v-else-if="view.length === 0"
+        class="py-10"
+      >
         <Empty description="暂无直播记录" />
       </div>
 
       <!-- 直播卡片网格 -->
-      <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <div
+        v-else
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+      >
         <Card
           v-for="item in view"
           :key="item.live.liveId"
@@ -138,7 +162,10 @@ onMounted(() => load())
               v-else
               class="w-full h-full flex items-center justify-center text-muted-foreground"
             >
-              <component :is="TimeOutline" class="size-10" />
+              <component
+                :is="TimeOutline"
+                class="size-10"
+              />
             </div>
 
             <!-- 状态标签 -->
@@ -160,7 +187,9 @@ onMounted(() => load())
             </div>
 
             <!-- 主播信息条 -->
-            <div class="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px]">
+            <div
+              class="absolute bottom-2 left-2 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-[11px]"
+            >
               <img
                 v-if="item.streamer.faceUrl"
                 :src="withImageSize(item.streamer.faceUrl, '@20w')"
@@ -176,7 +205,9 @@ onMounted(() => load())
             <div>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <h4 class="font-medium text-xs text-foreground line-clamp-2 leading-snug m-0 hover:text-primary transition-colors cursor-default">
+                  <h4
+                    class="font-medium text-xs text-foreground line-clamp-2 leading-snug m-0 hover:text-primary transition-colors cursor-default"
+                  >
                     {{ item.live.title }}
                   </h4>
                 </TooltipTrigger>
@@ -187,25 +218,43 @@ onMounted(() => load())
                 <span>{{ item.live.parentArea }} / {{ item.live.area }}</span>
                 <span>
                   {{ format(item.live.startAt, 'MM-dd HH:mm') }}
-                  <template v-if="item.live.stopAt">
-                    - {{ format(item.live.stopAt, 'HH:mm') }}
-                  </template>
+                  <template v-if="item.live.stopAt"> - {{ format(item.live.stopAt, 'HH:mm') }} </template>
                   <template v-else> - Now </template>
                 </span>
               </div>
             </div>
 
-            <div class="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
-              <span class="inline-flex items-center gap-1" title="营收">
-                <component :is="WalletOutline" class="size-3" />
+            <div
+              class="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground"
+            >
+              <span
+                class="inline-flex items-center gap-1"
+                title="营收"
+              >
+                <component
+                  :is="WalletOutline"
+                  class="size-3"
+                />
                 {{ item.live.totalIncomeWithGuard.toFixed(0) }}
               </span>
-              <span class="inline-flex items-center gap-1" title="互动">
-                <component :is="PeopleOutline" class="size-3" />
+              <span
+                class="inline-flex items-center gap-1"
+                title="互动"
+              >
+                <component
+                  :is="PeopleOutline"
+                  class="size-3"
+                />
                 {{ item.live.interactionCount }}
               </span>
-              <span class="inline-flex items-center gap-1" title="弹幕">
-                <component :is="ChatbubblesOutline" class="size-3" />
+              <span
+                class="inline-flex items-center gap-1"
+                title="弹幕"
+              >
+                <component
+                  :is="ChatbubblesOutline"
+                  class="size-3"
+                />
                 {{ item.live.danmakusCount }}
               </span>
             </div>

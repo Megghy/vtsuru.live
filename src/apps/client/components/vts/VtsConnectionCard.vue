@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { DEFAULT_WS_URL } from '@/apps/client/store/vts/config'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { DEFAULT_WS_URL } from '@/apps/client/store/vts/config'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -17,7 +17,9 @@ const wsUrlInput = ref(vts.wsUrl)
 
 const faceTag = computed(() => {
   if (vts.faceFound == null) return null
-  return vts.faceFound ? { variant: 'default' as const, text: '面部已识别' } : { variant: 'secondary' as const, text: '面部丢失' }
+  return vts.faceFound
+    ? { variant: 'default' as const, text: '面部已识别' }
+    : { variant: 'secondary' as const, text: '面部丢失' }
 })
 
 const handText = computed(() => {
@@ -40,13 +42,26 @@ function handleConnect() {
     </CardHeader>
     <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
       <p class="text-xs text-[var(--muted-foreground)]">
-        在 VTube Studio 设置中开启「启动 API」（默认端口 8001）。首次连接时需在 VTS 弹窗中点击「允许」，授权会自动保存，之后启动客户端时自动连接。
+        在 VTube Studio 设置中开启「启动 API」（默认端口 8001）。首次连接时需在 VTS
+        弹窗中点击「允许」，授权会自动保存，之后启动客户端时自动连接。
       </p>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <Tag v-if="vts.connected" variant="default">已连接</Tag>
-        <Tag v-else-if="vts.connecting" variant="secondary">等待 VTS 响应 / 授权中</Tag>
-        <Tag v-else variant="destructive">未连接</Tag>
+        <Tag
+          v-if="vts.connected"
+          variant="default"
+          >已连接</Tag
+        >
+        <Tag
+          v-else-if="vts.connecting"
+          variant="secondary"
+          >等待 VTS 响应 / 授权中</Tag
+        >
+        <Tag
+          v-else
+          variant="destructive"
+          >未连接</Tag
+        >
         <span
           v-if="vts.apiVersion"
           class="text-xs text-[var(--muted-foreground)]"
@@ -68,15 +83,28 @@ function handleConnect() {
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <Input v-model="wsUrlInput" class="min-w-[300px] flex-1" :placeholder="DEFAULT_WS_URL" />
-        <Button v-if="!vts.connected && !vts.connecting" @click="handleConnect">
+        <Input
+          v-model="wsUrlInput"
+          class="min-w-[300px] flex-1"
+          :placeholder="DEFAULT_WS_URL"
+        />
+        <Button
+          v-if="!vts.connected && !vts.connecting"
+          @click="handleConnect"
+        >
           连接
         </Button>
-        <Button v-else variant="outline" @click="run(() => vts.disconnect())"
+        <Button
+          v-else
+          variant="outline"
+          @click="run(() => vts.disconnect())"
         >
           {{ vts.connecting ? '取消' : '断开' }}
         </Button>
-        <Button variant="outline" :disabled="!vts.authToken" @click="run(() => vts.reauthorize())"
+        <Button
+          variant="outline"
+          :disabled="!vts.authToken"
+          @click="run(() => vts.reauthorize())"
         >
           重新授权
         </Button>
@@ -87,9 +115,7 @@ function handleConnect() {
         variant="destructive"
         class="py-2 px-3"
       >
-        <AlertDescription class="text-xs">
-          状态监控异常: {{ vts.monitorLastError }}
-        </AlertDescription>
+        <AlertDescription class="text-xs"> 状态监控异常: {{ vts.monitorLastError }} </AlertDescription>
       </Alert>
     </CardContent>
   </Card>

@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseHistoryModel } from './responseHistoryModel';
+import type { ResponseHistoryModel } from './responseHistoryModel'
 
 export interface HistoryControllerResponseAllHistorySingleModel {
-  records: ResponseHistoryModel[];
-  updateAt: number;
+  records: ResponseHistoryModel[]
+  updateAt: number
 }

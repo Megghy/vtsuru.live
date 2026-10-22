@@ -2,13 +2,7 @@
 import type { PngtuberState } from '@/shared/pngtuber/types'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
 defineProps<{ state: PngtuberState; disabled: boolean }>()
@@ -34,10 +28,26 @@ const fields = [
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="microphone" class="text-xs">麦克风（各展示端独立采集）</SelectItem>
-        <SelectItem value="controller" class="text-xs">控制页麦克风（同步音量）</SelectItem>
-        <SelectItem value="client" class="text-xs">客户端麦克风</SelectItem>
-        <SelectItem value="obs" class="text-xs">OBS 音量（客户端连接）</SelectItem>
+        <SelectItem
+          value="microphone"
+          class="text-xs"
+          >麦克风（各展示端独立采集）</SelectItem
+        >
+        <SelectItem
+          value="controller"
+          class="text-xs"
+          >控制页麦克风（同步音量）</SelectItem
+        >
+        <SelectItem
+          value="client"
+          class="text-xs"
+          >客户端麦克风</SelectItem
+        >
+        <SelectItem
+          value="obs"
+          class="text-xs"
+          >OBS 音量（客户端连接）</SelectItem
+        >
       </SelectContent>
     </Select>
 
@@ -77,7 +87,11 @@ const fields = [
 
     <div class="flex items-center justify-between p-1.5 border rounded-md">
       <span class="text-xs font-medium">噪声抑制</span>
-      <Switch :checked="state.noiseSuppression" :disabled="disabled" @update:checked="emit('change', { noiseSuppression: $event })" />
+      <Switch
+        :checked="state.noiseSuppression"
+        :disabled="disabled"
+        @update:checked="emit('change', { noiseSuppression: $event })"
+      />
     </div>
   </div>
 </template>

@@ -40,7 +40,7 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
       :src="avatarUrl(event.uface)"
       referrerpolicy="no-referrer"
       loading="lazy"
-    >
+    />
     <div
       v-else-if="settings.showAvatar"
       class="dm-avatar dm-avatar--empty"
@@ -63,11 +63,13 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
         <span
           v-if="compact"
           class="dm-action"
-        >{{ INTERACTION_TEXT[event.type] }}</span>
+          >{{ INTERACTION_TEXT[event.type] }}</span
+        >
         <span
           v-if="settings.absoluteTime"
           class="dm-time"
-        >{{ formatClock(event.time) }}</span>
+          >{{ formatClock(event.time) }}</span
+        >
       </div>
       <div
         v-if="!compact"

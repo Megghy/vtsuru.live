@@ -13,14 +13,12 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { useMessage } from '@/shared/utils'
 import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 
 import { useAccount } from '@/api/account'
 import { getApiHistoryGetAll } from '@/api/generated/history/history'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { isDarkMode } from '@/shared/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -29,6 +27,8 @@ import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Separator } from '@/shared/ui/separator'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { useMessage } from '@/shared/utils'
+import { isDarkMode } from '@/shared/utils'
 
 // 初始化 ECharts 组件
 use([
@@ -318,8 +318,7 @@ function processFansChartOptions() {
         for (let i = 0; i < param.length; i++) {
           const status =
             param[i].seriesName === '粉丝数' ? (completeTimeSeries[param[i].dataIndex].exist ? '' : '(未获取)') : ''
-          const statusHtml =
-            status === '' ? '' : `&nbsp;<span style="color:${textColorMuted}">${status}</span>`
+          const statusHtml = status === '' ? '' : `&nbsp;<span style="color:${textColorMuted}">${status}</span>`
           str += `${param[i].marker + param[i].seriesName}：${param[i].data}${statusHtml}<br>`
         }
         return name + str
@@ -341,11 +340,7 @@ function processFansChartOptions() {
         itemStyle: {
           color: (data: any) => {
             const item = completeTimeSeries[data.dataIndex]
-            return !item.exist
-              ? textColorMuted
-              : item.change
-                ? '#10b981'
-                : '#3b82f6'
+            return !item.exist ? textColorMuted : item.change ? '#10b981' : '#3b82f6'
           },
         },
       },
@@ -410,8 +405,7 @@ function processGuardsChartOptions() {
         step: 'middle',
         data: completeTimeSeries.map((item) => item.count),
         itemStyle: {
-          color: (data: any) =>
-            completeTimeSeries[data.dataIndex].exist ? '#3b82f6' : textColorMuted,
+          color: (data: any) => (completeTimeSeries[data.dataIndex].exist ? '#3b82f6' : textColorMuted),
         },
       },
       {
@@ -456,7 +450,13 @@ watch(
       subtitle="粉丝与舰长成长轨迹，需 VTsuruEventFetcher 持续采集"
     >
       <template #action>
-        <Button v-if="accountInfo?.isBiliVerified === true" size="xs" variant="outline" :loading="isLoading" @click="refreshHistory">
+        <Button
+          v-if="accountInfo?.isBiliVerified === true"
+          size="xs"
+          variant="outline"
+          :loading="isLoading"
+          @click="refreshHistory"
+        >
           <component
             :is="ArrowClockwise24Regular"
             class="h-3.5 w-3.5 mr-1"
@@ -483,7 +483,8 @@ watch(
       <Alert variant="default">
         <AlertDescription class="text-xs flex items-center justify-between flex-wrap gap-2">
           <span>
-            由于 B 站收紧风控策略，平台已无法直接抓取公开数据。请主播安装 1.0.6.4 及以上版本的 EventFetcher 本地采集端同步。
+            由于 B 站收紧风控策略，平台已无法直接抓取公开数据。请主播安装 1.0.6.4 及以上版本的 EventFetcher
+            本地采集端同步。
           </span>
           <a
             href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
@@ -501,7 +502,10 @@ watch(
         <div class="flex items-center justify-between flex-wrap gap-2.5">
           <!-- 预设选择器 -->
           <div class="flex items-center gap-2 flex-wrap">
-            <ToggleGroup v-model="activePreset" type="single">
+            <ToggleGroup
+              v-model="activePreset"
+              type="single"
+            >
               <ToggleGroupItem
                 value="7d"
                 @click="setPreset('7d')"
@@ -550,9 +554,7 @@ watch(
               </Button>
             </PopoverTrigger>
             <PopoverContent class="w-80 p-3 text-xs space-y-2">
-              <div class="font-semibold text-foreground">
-                数据采集更新规则
-              </div>
+              <div class="font-semibold text-foreground">数据采集更新规则</div>
               <Separator />
               <div class="space-y-1 text-muted-foreground text-[11px] leading-relaxed">
                 <div>• 当前所有数据均调整为由本地 EventFetcher 每日汇总更新一次。</div>

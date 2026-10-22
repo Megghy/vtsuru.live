@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ReOrderDotsVertical16Regular } from '@vicons/fluent'
+import { computed } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
+
 import { Button } from '@/shared/ui/button'
 import { Switch } from '@/shared/ui/switch'
-import { VueDraggable } from 'vue-draggable-plus'
-import { computed } from 'vue'
 
 import type { PanelId } from '../core/types'
 import { PANEL_IDS, PANEL_TITLES } from '../core/types'
@@ -20,9 +21,7 @@ function toggle(id: PanelId, visible: boolean) {
 
 <template>
   <div class="layout-menu">
-    <div class="layout-menu__label">
-      面板（拖动调整顺序）
-    </div>
+    <div class="layout-menu__label">面板（拖动调整顺序）</div>
     <VueDraggable
       v-model="layout.order"
       :animation="150"
@@ -40,7 +39,9 @@ function toggle(id: PanelId, visible: boolean) {
         />
         <span>{{ PANEL_TITLES[id] }}</span>
         <span class="layout-menu__key">Alt+{{ PANEL_IDS.indexOf(id) + 1 }}</span>
-        <Switch :model-value="!layout.hidden.includes(id)" @update:model-value="(v: boolean) => toggle(id, v)"
+        <Switch
+          :model-value="!layout.hidden.includes(id)"
+          @update:model-value="(v: boolean) => toggle(id, v)"
         />
       </div>
     </VueDraggable>
@@ -56,7 +57,11 @@ function toggle(id: PanelId, visible: boolean) {
       专注模式（隐藏面板原地虚化）
       <Switch v-model="layout.focusMode" />
     </label>
-    <Button variant="secondary" class="w-full" @click="resetLayout(dashboard.settings)">
+    <Button
+      variant="secondary"
+      class="w-full"
+      @click="resetLayout(dashboard.settings)"
+    >
       重置布局
     </Button>
   </div>

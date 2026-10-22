@@ -143,7 +143,10 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
         class="span-full space-y-1"
       >
         <label class="text-xs text-muted-foreground">个人主页链接</label>
-        <Input v-model="blockProps.spaceUrl" placeholder="https://space.bilibili.com/..." />
+        <Input
+          v-model="blockProps.spaceUrl"
+          placeholder="https://space.bilibili.com/..."
+        />
       </div>
     </PropsGrid>
   </div>
@@ -207,7 +210,10 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
         class="span-full space-y-1"
       >
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input v-model="blockProps.title" placeholder="例如：最近视频" />
+        <Input
+          v-model="blockProps.title"
+          placeholder="例如：最近视频"
+        />
       </div>
       <div
         v-if="propertyAvailable('items')"
@@ -226,11 +232,17 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
             <PropsGrid>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">标题</label>
-                <Input v-model="item.title" placeholder="可选" />
+                <Input
+                  v-model="item.title"
+                  placeholder="可选"
+                />
               </div>
               <div class="space-y-1">
                 <label class="text-xs text-muted-foreground">链接</label>
-                <Input v-model="item.url" placeholder="https://..." />
+                <Input
+                  v-model="item.url"
+                  placeholder="https://..."
+                />
               </div>
             </PropsGrid>
           </template>
@@ -275,7 +287,10 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">链接</label>
-        <Input v-model="blockProps.url" placeholder="https://..." />
+        <Input
+          v-model="blockProps.url"
+          placeholder="https://..."
+        />
       </div>
     </PropsGrid>
   </div>

@@ -27,10 +27,7 @@ export function useOrgMembers(ctx: OrgContext) {
     if (!ctx.orgId.value) return
     loading.value = true
     try {
-      members.value = unwrapOk(
-        (await getApiOrgOrgIdMembers(ctx.orgId.value)) as any,
-        '加载成员失败',
-      )
+      members.value = unwrapOk((await getApiOrgOrgIdMembers(ctx.orgId.value)) as any, '加载成员失败')
     } catch (err) {
       toast.error(err instanceof Error ? err.message : '加载成员失败')
     } finally {
@@ -41,10 +38,7 @@ export function useOrgMembers(ctx: OrgContext) {
   async function remove(userId: number) {
     if (!ctx.isOrgAdmin.value || userId <= 0) return
     try {
-      unwrapOk(
-        (await postApiOrgOrgIdMemberRemove(ctx.orgId.value, { targetUserId: userId })) as any,
-        '移除失败',
-      )
+      unwrapOk((await postApiOrgOrgIdMemberRemove(ctx.orgId.value, { targetUserId: userId })) as any, '移除失败')
       toast.success('移除成功')
       await load()
     } catch (err) {
@@ -69,10 +63,7 @@ export function useOrgMembers(ctx: OrgContext) {
   async function transferOwner(userId: number) {
     if (ctx.myRole.value !== 0 || userId <= 0) return
     try {
-      unwrapOk(
-        (await postApiOrgOrgIdTransferOwner(ctx.orgId.value, { targetUserId: userId })) as any,
-        '移交失败',
-      )
+      unwrapOk((await postApiOrgOrgIdTransferOwner(ctx.orgId.value, { targetUserId: userId })) as any, '移交失败')
       toast.success('已移交所有权')
       await load()
       await ctx.loadOrgInfo()

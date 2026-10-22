@@ -7,5 +7,5 @@
  */
 
 export type GetApiUserConfigGetHashParams = {
-name?: string;
-};
+  name?: string
+}

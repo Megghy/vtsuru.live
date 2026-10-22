@@ -36,7 +36,10 @@
   color: var(--schedule-subscription-fg);
   background: color-mix(in srgb, var(--schedule-subscription-accent) 6%, var(--schedule-subscription-bg));
   box-shadow: var(--vtsuru-page-shadow);
-  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease;
 }
 
 /* 吸底悬浮坞 (Docked) 专属样式 */
@@ -52,7 +55,9 @@
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid color-mix(in srgb, var(--schedule-subscription-accent) 28%, var(--schedule-subscription-border));
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32), 0 2px 8px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.32),
+    0 2px 8px rgba(0, 0, 0, 0.12);
   flex-wrap: nowrap;
   gap: 12px;
 }

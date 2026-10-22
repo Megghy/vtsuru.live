@@ -101,7 +101,10 @@ function requestStatus(song: SongsInfo) {
     <template #header>
       <div class="song-header flex items-center justify-between w-full">
         <span class="song-heading flex items-center gap-1.5 font-semibold text-sm">
-          <component :is="MusicalNotesOutline" class="size-4" />
+          <component
+            :is="MusicalNotesOutline"
+            class="size-4"
+          />
           歌单与点歌
         </span>
         <RouterLink
@@ -110,9 +113,16 @@ function requestStatus(song: SongsInfo) {
           :to="{ name: 'user-songList', params: { id: props.userInfo.name } }"
           custom
         >
-          <Button variant="ghost" class="text-primary font-medium p-0" @click="navigate">
+          <Button
+            variant="ghost"
+            class="text-primary font-medium p-0"
+            @click="navigate"
+          >
             完整歌单
-            <component :is="OpenOutline" class="size-3.5 ml-1" />
+            <component
+              :is="OpenOutline"
+              class="size-3.5 ml-1"
+            />
           </Button>
         </RouterLink>
       </div>
@@ -122,9 +132,7 @@ function requestStatus(song: SongsInfo) {
       v-if="!songListEnabled"
       class="text-xs py-2"
     >
-      <AlertDescription>
-        歌单功能未启用
-      </AlertDescription>
+      <AlertDescription> 歌单功能未启用 </AlertDescription>
     </Alert>
     <Alert
       v-else-if="query.status.value === 'error'"
@@ -133,8 +141,16 @@ function requestStatus(song: SongsInfo) {
     >
       <AlertDescription class="flex items-center justify-between w-full">
         <span>歌单加载失败</span>
-        <Button variant="outline" size="xs" class="gap-1" @click="load(true)">
-          <component :is="RefreshOutline" class="size-3" />
+        <Button
+          variant="outline"
+          size="xs"
+          class="gap-1"
+          @click="load(true)"
+        >
+          <component
+            :is="RefreshOutline"
+            class="size-3"
+          />
           重试
         </Button>
       </AlertDescription>
@@ -150,8 +166,15 @@ function requestStatus(song: SongsInfo) {
         v-if="showSearch"
         class="relative mb-2.5"
       >
-        <component :is="SearchOutline" class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-        <Input v-model="search" placeholder="搜索歌曲或歌手" class="pl-8" />
+        <component
+          :is="SearchOutline"
+          class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground"
+        />
+        <Input
+          v-model="search"
+          placeholder="搜索歌曲或歌手"
+          class="pl-8"
+        />
       </div>
       <Empty
         v-if="filteredSongs.length === 0"

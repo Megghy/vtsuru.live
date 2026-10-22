@@ -7,12 +7,12 @@
  */
 
 export type PostApiEventUpdateV3Params = {
-/**
- * 是否使用Cookie
- */
-cookie?: boolean;
-/**
- * 是否是临时事件
- */
-temp?: boolean;
-};
+  /**
+   * 是否使用Cookie
+   */
+  cookie?: boolean
+  /**
+   * 是否是临时事件
+   */
+  temp?: boolean
+}

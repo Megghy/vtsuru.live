@@ -33,9 +33,13 @@ const platformTag = computed(() => {
 </script>
 
 <template>
-  <div class="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card hover:border-brand/30 transition-colors">
+  <div
+    class="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card hover:border-brand/30 transition-colors"
+  >
     <div class="flex items-center gap-2.5 min-w-0">
-      <span class="inline-flex items-center justify-center font-bold w-6 h-6 rounded-full bg-brand/10 text-brand text-xs shrink-0 font-mono">
+      <span
+        class="inline-flex items-center justify-center font-bold w-6 h-6 rounded-full bg-brand/10 text-brand text-xs shrink-0 font-mono"
+      >
         {{ index }}
       </span>
 
@@ -64,44 +68,53 @@ const platformTag = computed(() => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="icon-xs" variant="ghost" class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10" @click="emit('play')">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
+              @click="emit('play')"
+            >
               <component
                 :is="MusicNote2Play20Filled"
                 class="h-4 w-4"
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            播放
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 播放 </TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="icon-xs" variant="ghost" class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10" @click="emit('block')">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+              @click="emit('block')"
+            >
               <component
                 :is="PresenceBlocked16Regular"
                 class="h-4 w-4"
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            加入黑名单
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 加入黑名单 </TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="icon-xs" variant="ghost" class="text-muted-foreground hover:text-destructive hover:bg-destructive/10" @click="emit('cancel')">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+              @click="emit('cancel')"
+            >
               <component
                 :is="Dismiss16Filled"
                 class="h-4 w-4"
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            取消
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 取消 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

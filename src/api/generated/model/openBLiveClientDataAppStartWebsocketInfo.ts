@@ -7,6 +7,6 @@
  */
 
 export interface OpenBLiveClientDataAppStartWebsocketInfo {
-  auth_body?: string;
-  wss_link?: string[];
+  auth_body?: string
+  wss_link?: string[]
 }

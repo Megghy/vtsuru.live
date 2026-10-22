@@ -18,14 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 const USER_DATA_DB_NAME = 'AutoActionUserDataDB'
 const USER_DATA_STORE_NAME = 'userData'
@@ -238,7 +231,10 @@ onMounted(() => {
         <div class="flex items-center gap-2">
           <Flash24Regular class="size-4 text-amber-500" />
           <CardTitle class="text-sm font-semibold">运行时数据 (SessionStorage)</CardTitle>
-          <Badge variant="outline" class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10">
+          <Badge
+            variant="outline"
+            class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
+          >
             临时
           </Badge>
         </div>
@@ -254,12 +250,24 @@ onMounted(() => {
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="relative w-[200px]">
             <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input v-model="runtimeSearch" placeholder="搜索 Key..." class="pl-8 pr-2" />
+            <Input
+              v-model="runtimeSearch"
+              placeholder="搜索 Key..."
+              class="pl-8 pr-2"
+            />
           </div>
 
           <div class="flex items-center gap-2">
-            <Button variant="secondary" class="gap-1" :disabled="runtimeLoading" @click="fetchRuntimeData">
-              <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': runtimeLoading }" />
+            <Button
+              variant="secondary"
+              class="gap-1"
+              :disabled="runtimeLoading"
+              @click="fetchRuntimeData"
+            >
+              <ArrowClockwise16Filled
+                class="size-3.5"
+                :class="{ 'animate-spin': runtimeLoading }"
+              />
               刷新
             </Button>
             <Popconfirm
@@ -267,7 +275,11 @@ onMounted(() => {
               @positive-click="clearRuntimeData"
             >
               <template #trigger>
-                <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1" :disabled="runtimeData.length === 0">
+                <Button
+                  variant="outline"
+                  class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1"
+                  :disabled="runtimeData.length === 0"
+                >
                   <Delete16Filled class="size-3.5" />
                   清除所有
                 </Button>
@@ -300,15 +312,24 @@ onMounted(() => {
                     <Badge
                       variant="secondary"
                       class="text-[10px] h-4.5 px-1.5"
-                      :class="row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''"
+                      :class="
+                        row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''
+                      "
                     >
                       {{ row.type }}
                     </Badge>
                   </TableCell>
                   <TableCell class="text-xs">
                     <div class="flex items-center justify-between gap-2">
-                      <pre class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1">{{ row.valueDisplay }}</pre>
-                      <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
+                      <pre
+                        class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1"
+                        >{{ row.valueDisplay }}</pre>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0"
+                        @click="copyToClipboard(row.valueDisplay)"
+                      >
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -319,7 +340,11 @@ onMounted(() => {
                       @positive-click="deleteRuntimeItem(row.key)"
                     >
                       <template #trigger>
-                        <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                        >
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>
@@ -330,7 +355,10 @@ onMounted(() => {
               </template>
               <template v-else>
                 <TableRow>
-                  <TableCell colspan="4" class="text-center py-6">
+                  <TableCell
+                    colspan="4"
+                    class="text-center py-6"
+                  >
                     <Empty description="当前会话没有运行时数据" />
                   </TableCell>
                 </TableRow>
@@ -347,7 +375,10 @@ onMounted(() => {
         <div class="flex items-center gap-2">
           <Database20Regular class="size-4 text-sky-500" />
           <CardTitle class="text-sm font-semibold">持久化数据 (IndexedDB)</CardTitle>
-          <Badge variant="outline" class="text-[10px] h-4.5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10">
+          <Badge
+            variant="outline"
+            class="text-[10px] h-4.5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10"
+          >
             永久
           </Badge>
         </div>
@@ -363,12 +394,24 @@ onMounted(() => {
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="relative w-[200px]">
             <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-            <Input v-model="persistentSearch" placeholder="搜索 Key..." class="pl-8 pr-2" />
+            <Input
+              v-model="persistentSearch"
+              placeholder="搜索 Key..."
+              class="pl-8 pr-2"
+            />
           </div>
 
           <div class="flex items-center gap-2">
-            <Button variant="secondary" class="gap-1" :disabled="persistentLoading" @click="fetchPersistentData">
-              <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': persistentLoading }" />
+            <Button
+              variant="secondary"
+              class="gap-1"
+              :disabled="persistentLoading"
+              @click="fetchPersistentData"
+            >
+              <ArrowClockwise16Filled
+                class="size-3.5"
+                :class="{ 'animate-spin': persistentLoading }"
+              />
               刷新
             </Button>
             <Popconfirm
@@ -376,7 +419,11 @@ onMounted(() => {
               @positive-click="clearPersistentData"
             >
               <template #trigger>
-                <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1" :disabled="persistentData.length === 0">
+                <Button
+                  variant="outline"
+                  class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1"
+                  :disabled="persistentData.length === 0"
+                >
                   <Delete16Filled class="size-3.5" />
                   清除所有
                 </Button>
@@ -409,15 +456,24 @@ onMounted(() => {
                     <Badge
                       variant="secondary"
                       class="text-[10px] h-4.5 px-1.5"
-                      :class="row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''"
+                      :class="
+                        row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''
+                      "
                     >
                       {{ row.type }}
                     </Badge>
                   </TableCell>
                   <TableCell class="text-xs">
                     <div class="flex items-center justify-between gap-2">
-                      <pre class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1">{{ row.valueDisplay }}</pre>
-                      <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
+                      <pre
+                        class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1"
+                        >{{ row.valueDisplay }}</pre>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0"
+                        @click="copyToClipboard(row.valueDisplay)"
+                      >
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -428,7 +484,11 @@ onMounted(() => {
                       @positive-click="deletePersistentItem(row.key)"
                     >
                       <template #trigger>
-                        <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                        >
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>
@@ -439,7 +499,10 @@ onMounted(() => {
               </template>
               <template v-else>
                 <TableRow>
-                  <TableCell colspan="4" class="text-center py-6">
+                  <TableCell
+                    colspan="4"
+                    class="text-center py-6"
+                  >
                     <Empty description="脚本尚未存储任何持久化数据" />
                   </TableCell>
                 </TableRow>

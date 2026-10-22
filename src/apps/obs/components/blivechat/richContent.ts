@@ -1,4 +1,5 @@
 import type { EventModel } from '@/api/api-models'
+
 import * as constants from './constants'
 
 interface RichContentType {
@@ -12,7 +13,10 @@ interface RichContentType {
 /**
  * 获取富文本内容（处理表情等）
  */
-export async function getRichContent(data: EventModel, emoticonsTrie: { lazyMatch(text: string): { keyword: string; url: string } | null }): Promise<RichContentType[]> {
+export async function getRichContent(
+  data: EventModel,
+  emoticonsTrie: { lazyMatch(text: string): { keyword: string; url: string } | null },
+): Promise<RichContentType[]> {
   const richContent: RichContentType[] = []
 
   // 官方的非文本表情
@@ -123,4 +127,3 @@ async function fillImageContentSizes(richContent: RichContentType[]) {
     }
   }
 }
-

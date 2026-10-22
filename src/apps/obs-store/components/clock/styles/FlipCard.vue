@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import {
-  ref,
-  watch,
-} from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   value: string | number
@@ -258,13 +255,21 @@ watch(
 }
 
 @keyframes shadowIn {
-  0% { opacity: 0; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 @keyframes shadowOut {
-  0% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 /* 中央物理分割黑缝与金属合页 */
@@ -290,8 +295,12 @@ watch(
   z-index: 6;
   pointer-events: none;
 }
-.card-hinge.left { left: 0; }
-.card-hinge.right { right: 0; }
+.card-hinge.left {
+  left: 0;
+}
+.card-hinge.right {
+  right: 0;
+}
 
 .unit-label {
   font-size: 10px;

@@ -13,21 +13,8 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const songRequest = useLiveRequest()
@@ -57,9 +44,7 @@ const filteredSongs = computed(() => {
   if (songRequest.filterSongName) {
     const term = songRequest.filterSongName.toLowerCase()
     list = list.filter((s) =>
-      songRequest.filterSongNameContains
-        ? s.songName.toLowerCase().includes(term)
-        : s.songName.toLowerCase() === term,
+      songRequest.filterSongNameContains ? s.songName.toLowerCase().includes(term) : s.songName.toLowerCase() === term,
     )
   }
 
@@ -93,9 +78,15 @@ function getFromBadge(row: SongRequestInfo) {
     case SongRequestFrom.Danmaku:
       return { text: '弹幕', class: 'border-sky-500/40 text-sky-600 bg-sky-500/10' }
     case SongRequestFrom.SC:
-      return { text: `SuperChat${row.price ? ` | ${row.price}` : ''}`, class: 'border-rose-500/40 text-rose-600 bg-rose-500/10' }
+      return {
+        text: `SuperChat${row.price ? ` | ${row.price}` : ''}`,
+        class: 'border-rose-500/40 text-rose-600 bg-rose-500/10',
+      }
     case SongRequestFrom.Gift:
-      return { text: `礼物${row.price ? ` | ${row.price}` : ''}`, class: 'border-amber-500/40 text-amber-600 bg-amber-500/10' }
+      return {
+        text: `礼物${row.price ? ` | ${row.price}` : ''}`,
+        class: 'border-amber-500/40 text-amber-600 bg-amber-500/10',
+      }
     case SongRequestFrom.Manual:
       return { text: '手动添加', class: 'border-border text-muted-foreground bg-muted/40' }
     case SongRequestFrom.Web:
@@ -126,7 +117,15 @@ function getStatusBadge(status: SongRequestStatus) {
     <!-- 筛选工具栏 -->
     <div class="flex items-center gap-2.5 flex-wrap">
       <div class="flex items-center gap-1.5 w-[250px]">
-        <Input :value="songRequest.filterSongName" placeholder="搜索歌曲..." class="flex-1" @input="songRequest.filterSongName = ($event.target as HTMLInputElement).value; currentPage = 1" />
+        <Input
+          :value="songRequest.filterSongName"
+          placeholder="搜索歌曲..."
+          class="flex-1"
+          @input="
+            songRequest.filterSongName = ($event.target as HTMLInputElement).value
+            currentPage = 1
+          "
+        />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
           <Checkbox
             :checked="songRequest.filterSongNameContains"
@@ -137,7 +136,15 @@ function getStatusBadge(status: SongRequestStatus) {
       </div>
 
       <div class="flex items-center gap-1.5 w-[250px]">
-        <Input :value="songRequest.filterName" placeholder="搜索用户..." class="flex-1" @input="songRequest.filterName = ($event.target as HTMLInputElement).value; currentPage = 1" />
+        <Input
+          :value="songRequest.filterName"
+          placeholder="搜索用户..."
+          class="flex-1"
+          @input="
+            songRequest.filterName = ($event.target as HTMLInputElement).value
+            currentPage = 1
+          "
+        />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
           <Checkbox
             :checked="songRequest.filterNameContains"
@@ -187,7 +194,11 @@ function getStatusBadge(status: SongRequestStatus) {
             <TableRow
               v-for="row in paginatedSongs"
               :key="row.id"
-              :class="row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting ? 'bg-primary/5 hover:bg-primary/10' : ''"
+              :class="
+                row.status === SongRequestStatus.Singing || row.status === SongRequestStatus.Waiting
+                  ? 'bg-primary/5 hover:bg-primary/10'
+                  : ''
+              "
             >
               <TableCell class="text-xs font-medium">
                 {{ row.songName }}
@@ -240,7 +251,13 @@ function getStatusBadge(status: SongRequestStatus) {
                   <TooltipProvider>
                     <Tooltip v-if="row.status === SongRequestStatus.Finish || row.status === SongRequestStatus.Cancel">
                       <TooltipTrigger as-child>
-                        <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40" :disabled="songRequest.isLoading" @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="h-6 w-6 p-0 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                          :disabled="songRequest.isLoading"
+                          @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)"
+                        >
                           <ArrowCounterclockwise24Regular class="size-3.5" />
                         </Button>
                       </TooltipTrigger>
@@ -255,7 +272,12 @@ function getStatusBadge(status: SongRequestStatus) {
                             @positive-click="songRequest.deleteSongs([row])"
                           >
                             <template #trigger>
-                              <Button size="xs" variant="ghost" class="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10" :disabled="songRequest.isLoading">
+                              <Button
+                                size="xs"
+                                variant="ghost"
+                                class="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                :disabled="songRequest.isLoading"
+                              >
                                 <Delete24Filled class="size-3.5" />
                               </Button>
                             </template>
@@ -272,7 +294,10 @@ function getStatusBadge(status: SongRequestStatus) {
           </template>
           <template v-else>
             <TableRow>
-              <TableCell colspan="6" class="text-center py-8">
+              <TableCell
+                colspan="6"
+                class="text-center py-8"
+              >
                 <Empty description="暂无符合条件的点歌记录" />
               </TableCell>
             </TableRow>

@@ -44,15 +44,24 @@ function hasLevel(level: number) {
       <label class="text-xs text-muted-foreground">包含标题级别</label>
       <div class="flex items-center gap-3 pt-1">
         <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
-          <Checkbox :checked="hasLevel(1)" @update:checked="() => toggleLevel(1)" />
+          <Checkbox
+            :checked="hasLevel(1)"
+            @update:checked="() => toggleLevel(1)"
+          />
           <span>一级</span>
         </label>
         <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
-          <Checkbox :checked="hasLevel(2)" @update:checked="() => toggleLevel(2)" />
+          <Checkbox
+            :checked="hasLevel(2)"
+            @update:checked="() => toggleLevel(2)"
+          />
           <span>二级</span>
         </label>
         <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none">
-          <Checkbox :checked="hasLevel(3)" @update:checked="() => toggleLevel(3)" />
+          <Checkbox
+            :checked="hasLevel(3)"
+            @update:checked="() => toggleLevel(3)"
+          />
           <span>三级</span>
         </label>
       </div>

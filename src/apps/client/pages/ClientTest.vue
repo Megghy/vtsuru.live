@@ -42,7 +42,11 @@ async function testNotification() {
         <CardContent class="px-4 pb-4 pt-0">
           <div class="flex flex-col gap-3.5">
             <div class="flex items-center gap-2.5 flex-wrap">
-              <Button variant="secondary" class="gap-1.5" @click="testNotification">
+              <Button
+                variant="secondary"
+                class="gap-1.5"
+                @click="testNotification"
+              >
                 <component
                   :is="Alert24Filled"
                   class="w-4 h-4 text-primary"
@@ -50,7 +54,11 @@ async function testNotification() {
                 测试触发提问通知
               </Button>
 
-              <Button variant="outline" class="gap-1.5" @click="router.push({ name: 'client-danmaku-window-manage' })">
+              <Button
+                variant="outline"
+                class="gap-1.5"
+                @click="router.push({ name: 'client-danmaku-window-manage' })"
+              >
                 <component
                   :is="Chat24Filled"
                   class="w-4 h-4"
@@ -63,7 +71,14 @@ async function testNotification() {
               label="禁用弹幕客户端 (开发调试)"
               description="开启后在开发环境下跳过本地弹幕 WebSocket 连接"
             >
-              <Switch :checked="setting.settings.dev_disableDanmakuClient" @update:checked="val => { setting.settings.dev_disableDanmakuClient = val; setting.save() }"
+              <Switch
+                :checked="setting.settings.dev_disableDanmakuClient"
+                @update:checked="
+                  (val) => {
+                    setting.settings.dev_disableDanmakuClient = val
+                    setting.save()
+                  }
+                "
               />
             </LabelItem>
           </div>

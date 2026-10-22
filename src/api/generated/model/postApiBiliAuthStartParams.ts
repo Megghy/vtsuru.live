@@ -7,8 +7,8 @@
  */
 
 export type PostApiBiliAuthStartParams = {
-/**
- * 认证key
- */
-key?: string;
-};
+  /**
+   * 认证key
+   */
+  key?: string
+}

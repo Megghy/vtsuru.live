@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useSpeechService } from '@/store/useSpeechService'
+import { formatTime } from '@/apps/manage/composables/formatters'
 import { Empty } from '@/shared/ui/empty'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { formatTime } from '@/apps/manage/composables/formatters'
+import { useSpeechService } from '@/store/useSpeechService'
 
 const { spokenHistory, rejectedHistory } = useSpeechService()
 </script>

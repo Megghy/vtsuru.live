@@ -7,7 +7,11 @@ interface OpenLiveStartData {
   anchor_info?: { room_id?: number }
 }
 
-export async function resolveOpenLiveAuth(apiBase: string, token: string, fetchImpl: typeof fetch = fetch): Promise<OpenLiveDanmakuAuth> {
+export async function resolveOpenLiveAuth(
+  apiBase: string,
+  token: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<OpenLiveDanmakuAuth> {
   const response = await fetchImpl(withToken(`${apiBase}api/open-live/start`, token))
   if (!response.ok) throw new Error(`无法开启场次: ${response.status}`)
   const json = (await response.json()) as { code: number; message?: string; data?: OpenLiveStartData }

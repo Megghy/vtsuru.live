@@ -26,6 +26,7 @@ import {
 import { formatNumber, formatTime } from '@/apps/manage/composables/formatters'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
+import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -35,27 +36,13 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import { objectsToCSV, useMessage } from '@/shared/utils'
 
 import PointUserDetailCard from './PointUserDetailCard.vue'
@@ -359,14 +346,23 @@ onMounted(async () => {
     <Alert
       variant="default"
       class="border"
-      :class="pointSourceAlertType === 'warning' ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'"
+      :class="
+        pointSourceAlertType === 'warning'
+          ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+          : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'
+      "
     >
       <div class="flex items-center justify-between flex-wrap gap-2 w-full">
         <div>
           <span class="text-xs font-semibold block">当前积分来源：{{ pointSourceText }}</span>
           <span class="text-[11px] text-muted-foreground mt-0.5 block">{{ pointSourceHelpText }}</span>
         </div>
-        <Button size="xs" variant="outline" class="gap-1" @click="emit('openSourceSettings')">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          @click="emit('openSourceSettings')"
+        >
           <Settings24Regular class="size-3.5" />
           来源设置
         </Button>
@@ -378,7 +374,11 @@ onMounted(async () => {
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative w-56">
           <Search24Regular class="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
-          <Input v-model="searchKeyword" placeholder="搜索用户 (用户名或UID)" class="pl-8" />
+          <Input
+            v-model="searchKeyword"
+            placeholder="搜索用户 (用户名或UID)"
+            class="pl-8"
+          />
         </div>
 
         <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
@@ -395,7 +395,9 @@ onMounted(async () => {
               <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
             </TooltipTrigger>
             <TooltipContent class="max-w-xs text-xs space-y-1">
-              <p>1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)</p>
+              <p>
+                1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)
+              </p>
               <p>2. 用户名只会保持在首条记录出现时的用户名</p>
             </TooltipContent>
           </Tooltip>
@@ -403,22 +405,45 @@ onMounted(async () => {
       </div>
 
       <div class="flex items-center gap-2">
-        <Button size="xs" variant="outline" class="gap-1" @click="refresh">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1"
+          @click="refresh"
+        >
           <ArrowSync24Regular class="size-3.5" />
           刷新
         </Button>
-        <Button size="xs" variant="outline" class="gap-1 text-blue-500 hover:text-blue-600" @click="showGivePointModal = true">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1 text-blue-500 hover:text-blue-600"
+          @click="showGivePointModal = true"
+        >
           <AddSquare24Regular class="size-3.5" />
           积分调整
         </Button>
-        <Button size="xs" variant="outline" class="gap-1 text-blue-500 hover:text-blue-600" @click="exportData">
+        <Button
+          size="xs"
+          variant="outline"
+          class="gap-1 text-blue-500 hover:text-blue-600"
+          @click="exportData"
+        >
           <ArrowDownload24Regular class="size-3.5" />
           导出
         </Button>
 
-        <Popconfirm positive-text="确认重置" negative-text="取消" @positive-click="showResetAllPointsModal = true">
+        <Popconfirm
+          positive-text="确认重置"
+          negative-text="取消"
+          @positive-click="showResetAllPointsModal = true"
+        >
           <template #trigger>
-            <Button size="xs" variant="destructive" class="gap-1">
+            <Button
+              size="xs"
+              variant="destructive"
+              class="gap-1"
+            >
               <Delete24Regular class="size-3.5" />
               重置
             </Button>
@@ -451,16 +476,25 @@ onMounted(async () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow v-for="user in paginatedUsers" :key="user.info.userId || user.info.openId">
+                  <TableRow
+                    v-for="user in paginatedUsers"
+                    :key="user.info.userId || user.info.openId"
+                  >
                     <TableCell>
-                      <Tag :type="user.isAuthed ? 'success' : 'default'" size="small">
+                      <Tag
+                        :type="user.isAuthed ? 'success' : 'default'"
+                        size="small"
+                      >
                         {{ user.isAuthed ? '已认证' : '未认证' }}
                       </Tag>
                     </TableCell>
                     <TableCell>
                       <div class="flex flex-col text-xs">
                         <span class="font-medium text-foreground">{{ user.info?.name || '未知' }}</span>
-                        <span v-if="!user.info?.name" class="text-[11px] text-muted-foreground">
+                        <span
+                          v-if="!user.info?.name"
+                          class="text-[11px] text-muted-foreground"
+                        >
                           ({{ user.info.userId ?? user.info.openId }})
                         </span>
                       </div>
@@ -469,21 +503,49 @@ onMounted(async () => {
                       {{ formatNumber(Number(user.point.toFixed(1))) }}
                     </TableCell>
                     <TableCell class="text-right text-xs">
-                      <span v-if="!user.isAuthed" class="text-muted-foreground text-[11px]">未认证</span>
-                      <span v-else-if="user.orderCount > 0" class="font-mono">{{ formatNumber(user.orderCount) }}</span>
-                      <span v-else class="text-muted-foreground text-[11px]">无订单</span>
+                      <span
+                        v-if="!user.isAuthed"
+                        class="text-muted-foreground text-[11px]"
+                        >未认证</span
+                      >
+                      <span
+                        v-else-if="user.orderCount > 0"
+                        class="font-mono"
+                        >{{ formatNumber(user.orderCount) }}</span
+                      >
+                      <span
+                        v-else
+                        class="text-muted-foreground text-[11px]"
+                        >无订单</span
+                      >
                     </TableCell>
                     <TableCell class="text-xs text-muted-foreground">
                       {{ formatTime(user.updateAt) }}
                     </TableCell>
                     <TableCell class="text-center">
                       <div class="flex items-center justify-center gap-1.5">
-                        <Button variant="ghost" size="xs" class="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10" @click="currentUser = user; showModal = true">
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          class="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
+                          @click="
+                            currentUser = user
+                            showModal = true
+                          "
+                        >
                           详情
                         </Button>
-                        <Popconfirm positive-text="删除" negative-text="取消" @positive-click="deleteUser(user)">
+                        <Popconfirm
+                          positive-text="删除"
+                          negative-text="取消"
+                          @positive-click="deleteUser(user)"
+                        >
                           <template #trigger>
-                            <Button variant="ghost" size="xs" class="text-destructive hover:bg-destructive/10">
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              class="text-destructive hover:bg-destructive/10"
+                            >
                               删除
                             </Button>
                           </template>
@@ -505,7 +567,10 @@ onMounted(async () => {
                 <div class="w-28">
                   <Select
                     :model-value="String(ps)"
-                    @update:model-value="ps = Number($event); pn = 1"
+                    @update:model-value="
+                      ps = Number($event)
+                      pn = 1
+                    "
                   >
                     <SelectTrigger size="xs">
                       <SelectValue />
@@ -520,10 +585,18 @@ onMounted(async () => {
                 </div>
 
                 <div class="flex items-center gap-1">
-                  <Button variant="outline" size="xs" :disabled="pn <= 1" @click="pn--">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    :disabled="pn <= 1"
+                    @click="pn--"
+                  >
                     上一页
                   </Button>
-                  <Button variant="outline" size="xs" :disabled="pn>= totalPages"
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    :disabled="pn >= totalPages"
                     @click="pn++"
                   >
                     下一页
@@ -592,12 +665,20 @@ onMounted(async () => {
 
           <div class="space-y-1">
             <label class="text-xs font-medium text-foreground">备注说明 (选填)</label>
-            <Input v-model="addPointReason" placeholder="请输入备注" maxlength="100" />
+            <Input
+              v-model="addPointReason"
+              placeholder="请输入备注"
+              maxlength="100"
+            />
           </div>
         </div>
 
         <DialogFooter>
-          <Button :loading="isLoading" :disabled="!addPointTarget || !addPointCount" @click="givePoint">
+          <Button
+            :loading="isLoading"
+            :disabled="!addPointTarget || !addPointCount"
+            @click="givePoint"
+          >
             {{ !addPointCount || addPointCount === 0 ? '确定' : addPointCount > 0 ? '给予' : '扣除' }}
           </Button>
         </DialogFooter>
@@ -621,11 +702,19 @@ onMounted(async () => {
           <p class="text-xs text-foreground">
             请输入 <strong class="text-destructive">"{{ RESET_CONFIRM_TEXT }}"</strong> 以确认操作
           </p>
-          <Input v-model="resetConfirmText" placeholder="请输入确认文本" />
+          <Input
+            v-model="resetConfirmText"
+            placeholder="请输入确认文本"
+          />
         </div>
 
         <DialogFooter>
-          <Button variant="destructive" :loading="isLoading" :disabled="resetConfirmText !== RESET_CONFIRM_TEXT" @click="resetAllPoints">
+          <Button
+            variant="destructive"
+            :loading="isLoading"
+            :disabled="resetConfirmText !== RESET_CONFIRM_TEXT"
+            @click="resetAllPoints"
+          >
             确认重置所有用户积分
           </Button>
         </DialogFooter>

@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseLiveInfoModel } from './responseLiveInfoModel';
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
+import type { ResponseLiveInfoModel } from './responseLiveInfoModel'
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 export interface ResponseOrgLiveInfoModel {
-  streamer: ResponseUserBasicInfo;
-  live: ResponseLiveInfoModel;
+  streamer: ResponseUserBasicInfo
+  live: ResponseLiveInfoModel
 }

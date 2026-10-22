@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  ArrowLeft24Regular,
-  Chat24Regular,
-  DataPie24Regular,
-  Mic24Regular,
-} from '@vicons/fluent'
-import {  useMessage  } from '@/shared/utils'
+import { ArrowLeft24Regular, Chat24Regular, DataPie24Regular, Mic24Regular } from '@vicons/fluent'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -17,12 +11,13 @@ import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.v
 import LiveOverviewPanel from '@/apps/manage/components/live/LiveOverviewPanel.vue'
 import LiveTranscriptPanel from '@/apps/manage/components/live/LiveTranscriptPanel.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import { useVTsuruHub } from '@/store/useVTsuruHub'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { useMessage } from '@/shared/utils'
+import { useVTsuruHub } from '@/store/useVTsuruHub'
 
 interface ResponseLiveDetail {
   live: ResponseLiveInfoModel
@@ -47,7 +42,9 @@ const isLiveFinished = computed(() => liveInfo.value?.live?.isFinish === true)
 const pageTitle = computed(() => liveInfo.value?.live?.title || '直播详情')
 const pageSubtitle = computed(() => {
   if (!liveInfo.value) return undefined
-  const area = liveInfo.value.live.area ? `${liveInfo.value.live.parentArea ? `${liveInfo.value.live.parentArea} / ` : ''}${liveInfo.value.live.area}` : ''
+  const area = liveInfo.value.live.area
+    ? `${liveInfo.value.live.parentArea ? `${liveInfo.value.live.parentArea} / ` : ''}${liveInfo.value.live.area}`
+    : ''
   return `场次 ID: ${liveInfo.value.live.liveId}${area ? ` · ${area}` : ''}`
 })
 
@@ -134,7 +131,11 @@ onBeforeUnmount(async () => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <Button size="xs" variant="outline" @click="router.push({ name: 'manage-live' })">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="router.push({ name: 'manage-live' })"
+          >
             <component
               :is="ArrowLeft24Regular"
               class="h-3.5 w-3.5 mr-1"
@@ -241,11 +242,13 @@ onBeforeUnmount(async () => {
       v-else
       class="p-12 text-center"
     >
-      <div class="text-muted-foreground text-sm">
-        未找到对应场次的直播数据
-      </div>
+      <div class="text-muted-foreground text-sm">未找到对应场次的直播数据</div>
       <div class="mt-3">
-        <Button size="xs" variant="brand" @click="loadInitialData">
+        <Button
+          size="xs"
+          variant="brand"
+          @click="loadInitialData"
+        >
           重新加载
         </Button>
       </div>

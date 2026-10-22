@@ -35,7 +35,11 @@ async function load() {
   }
 }
 
-watch(() => props.event.ouid, () => void load(), { immediate: true })
+watch(
+  () => props.event.ouid,
+  () => void load(),
+  { immediate: true },
+)
 
 async function give(sign: 1 | -1) {
   submitting.value = true
@@ -64,11 +68,13 @@ async function give(sign: 1 | -1) {
         v-else-if="error"
         class="user-points__error"
         :title="error"
-      >{{ error }}</span>
+        >{{ error }}</span
+      >
       <span
         v-else
         class="user-points__value"
-      >{{ Number((total ?? 0).toFixed(1)) }}</span>
+        >{{ Number((total ?? 0).toFixed(1)) }}</span
+      >
     </div>
     <div class="user-points__form flex items-center gap-1.5">
       <NInputNumber
@@ -78,12 +84,38 @@ async function give(sign: 1 | -1) {
         :show-button="false"
         class="w-16"
       />
-      <Input size="xs" v-model="reason" class="flex-1" placeholder="原因（可选）" :maxlength="100" />
-      <Button size="icon" variant="secondary" class="w-7 shrink-0 text-primary" :disabled="!count || !!error || submitting" aria-label="增加积分" @click="give(1)">
-        <component :is="Add16Regular" class="h-4 w-4" />
+      <Input
+        size="xs"
+        v-model="reason"
+        class="flex-1"
+        placeholder="原因（可选）"
+        :maxlength="100"
+      />
+      <Button
+        size="icon"
+        variant="secondary"
+        class="w-7 shrink-0 text-primary"
+        :disabled="!count || !!error || submitting"
+        aria-label="增加积分"
+        @click="give(1)"
+      >
+        <component
+          :is="Add16Regular"
+          class="h-4 w-4"
+        />
       </Button>
-      <Button size="icon" variant="secondary" class="w-7 shrink-0" :disabled="!count || !!error || !total || submitting" aria-label="扣除积分" @click="give(-1)">
-        <component :is="Subtract16Regular" class="h-4 w-4" />
+      <Button
+        size="icon"
+        variant="secondary"
+        class="w-7 shrink-0"
+        :disabled="!count || !!error || !total || submitting"
+        aria-label="扣除积分"
+        @click="give(-1)"
+      >
+        <component
+          :is="Subtract16Regular"
+          class="h-4 w-4"
+        />
       </Button>
     </div>
   </div>

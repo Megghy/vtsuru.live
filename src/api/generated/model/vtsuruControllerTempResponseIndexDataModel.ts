@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VtsuruControllerTempResponseSimpleStreamerModel } from './vtsuruControllerTempResponseSimpleStreamerModel';
+import type { VtsuruControllerTempResponseSimpleStreamerModel } from './vtsuruControllerTempResponseSimpleStreamerModel'
 
 export interface VtsuruControllerTempResponseIndexDataModel {
-  userCount: number;
-  streamers: VtsuruControllerTempResponseSimpleStreamerModel[];
+  userCount: number
+  streamers: VtsuruControllerTempResponseSimpleStreamerModel[]
 }

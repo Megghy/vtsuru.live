@@ -2,22 +2,11 @@
 import { computed } from 'vue'
 
 import type { UserPageAppearanceTheme } from '@/apps/user-page/themeConfig'
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/shared/ui/accordion'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { NInputNumber } from '@/shared/ui/NInputNumber'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tag } from '@/shared/ui/tag'
 
 import PropsGrid from './PropsGrid.vue'
@@ -95,7 +84,10 @@ const radiusPresets = [
 
 <template>
   <Accordion class="advanced-options mt-2 border-t border-border">
-    <AccordionItem value="appearance" class="border-b-0">
+    <AccordionItem
+      value="appearance"
+      class="border-b-0"
+    >
       <AccordionTrigger class="text-xs font-semibold py-2">
         <div class="flex items-center justify-between w-full pr-2">
           <span>高级外观选项</span>
@@ -109,9 +101,7 @@ const radiusPresets = [
       </AccordionTrigger>
 
       <AccordionContent class="pt-1 pb-3 flex flex-col gap-3">
-        <span class="text-xs text-muted-foreground">
-          未设置的项目会继承全局主题或使用站点默认值。
-        </span>
+        <span class="text-xs text-muted-foreground"> 未设置的项目会继承全局主题或使用站点默认值。 </span>
 
         <PropsGrid :min-item-width="210">
           <div class="flex flex-col gap-1">
@@ -123,7 +113,13 @@ const radiusPresets = [
               placeholder="默认 6px"
             />
             <div class="flex items-center gap-1 mt-1">
-              <Button v-for="preset in radiusPresets" :key="preset.value" :variant="radius === preset.value ? 'default' : 'ghost'" class="h-5 px-1.5 text-[10px]" @click="radius = preset.value">
+              <Button
+                v-for="preset in radiusPresets"
+                :key="preset.value"
+                :variant="radius === preset.value ? 'default' : 'ghost'"
+                class="h-5 px-1.5 text-[10px]"
+                @click="radius = preset.value"
+              >
                 {{ preset.label }}
               </Button>
             </div>
@@ -212,12 +208,19 @@ const radiusPresets = [
 
           <div class="flex flex-col gap-1">
             <label class="text-xs text-muted-foreground">内容最大宽度</label>
-            <Input v-model="pageMaxWidth" placeholder="默认 820px；例如 100% / 1200px" />
+            <Input
+              v-model="pageMaxWidth"
+              placeholder="默认 820px；例如 100% / 1200px"
+            />
           </div>
         </PropsGrid>
 
         <div class="flex justify-end pt-1">
-          <Button variant="outline" :disabled="!hasAdvancedSettings" @click="clearAdvancedSettings">
+          <Button
+            variant="outline"
+            :disabled="!hasAdvancedSettings"
+            @click="clearAdvancedSettings"
+          >
             恢复高级选项默认值
           </Button>
         </div>

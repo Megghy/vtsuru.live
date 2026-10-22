@@ -50,7 +50,9 @@ function formatRelative(time: number) {
     }"
   >
     <TooltipProvider>
-      <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2 flex-wrap">
+      <CardHeader
+        class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2 flex-wrap"
+      >
         <div class="flex items-center gap-1.5 flex-wrap">
           <Checkbox
             v-if="selectable"
@@ -65,7 +67,10 @@ function formatRelative(time: number) {
             variant="default"
             class="text-[10px] h-4.5 px-1.5 font-normal bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 displaying-tag"
           >
-            <component :is="Tv20Regular" class="size-3" />
+            <component
+              :is="Tv20Regular"
+              class="size-3"
+            />
             OBS 展示中
           </Badge>
 
@@ -221,7 +226,10 @@ function formatRelative(time: number) {
         </template>
       </CardContent>
 
-      <CardFooter v-if="$slots.footer" class="p-3 pt-0 border-t border-border/40 mt-1 pt-2">
+      <CardFooter
+        v-if="$slots.footer"
+        class="p-3 pt-0 border-t border-border/40 mt-1 pt-2"
+      >
         <slot
           name="footer"
           :item="item"

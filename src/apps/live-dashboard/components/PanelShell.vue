@@ -13,12 +13,14 @@ defineSlots<{ actions?: () => unknown; default: () => unknown }>()
       <span
         v-if="count !== undefined"
         class="panel__count"
-      >{{ count }}</span>
+        >{{ count }}</span
+      >
       <span
         v-if="unread"
         class="panel__unread"
         title="未读"
-      >{{ unread }}</span>
+        >{{ unread }}</span
+      >
       <div class="panel__actions">
         <slot name="actions" />
       </div>

@@ -9,12 +9,7 @@ import type { ResponseForumBaseModel } from '@/api/generated/model/responseForum
 import type { ForumTopicBaseModel } from '@/api/models/forum'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/shared/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toast } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
@@ -97,13 +92,19 @@ function formatFullTime(time: number) {
           class="size-4 text-amber-500 inline-flex items-center justify-center shrink-0"
           title="置顶"
         >
-          <component :is="Star24Filled" class="size-3.5" />
+          <component
+            :is="Star24Filled"
+            class="size-3.5"
+          />
         </span>
         <Badge
           variant="outline"
           class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1 shrink-0"
         >
-          <component :is="Chat24Regular" class="size-3" />
+          <component
+            :is="Chat24Regular"
+            class="size-3"
+          />
           <span>{{ item.commentCount }}</span>
         </Badge>
         <span
@@ -120,7 +121,10 @@ function formatFullTime(time: number) {
       <div class="flex items-center gap-2 text-muted-foreground shrink-0 text-xs">
         <template v-if="item.latestRepliedBy">
           <span class="inline-flex items-center gap-1">
-            <component :is="ArrowReply24Filled" class="size-3" />
+            <component
+              :is="ArrowReply24Filled"
+              class="size-3"
+            />
             @{{ item.latestRepliedBy.name }}
           </span>
         </template>
@@ -141,20 +145,36 @@ function formatFullTime(time: number) {
 
         <DropdownMenu v-if="forum.isAdmin">
           <DropdownMenuTrigger as-child>
-            <Button variant="ghost" size="icon" class="size-6 rounded-full text-muted-foreground hover:text-foreground">
-              <component :is="MoreVertical24Filled" class="size-3.5" />
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 rounded-full text-muted-foreground hover:text-foreground"
+            >
+              <component
+                :is="MoreVertical24Filled"
+                class="size-3.5"
+              />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" class="text-xs">
+          <DropdownMenuContent
+            align="end"
+            class="text-xs"
+          >
             <DropdownMenuItem @select="handleDropdownAction('top')">
-              <component :is="Star24Filled" class="size-3.5 mr-1.5 text-amber-500" />
+              <component
+                :is="Star24Filled"
+                class="size-3.5 mr-1.5 text-amber-500"
+              />
               <span>{{ item.isPinned ? '取消置顶' : '置顶' }}</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               class="text-destructive"
               @select="handleDropdownAction(item.isDeleted ? 'restore' : 'delete')"
             >
-              <component :is="item.isDeleted ? SyncCircleSharp : Delete24Filled" class="size-3.5 mr-1.5" />
+              <component
+                :is="item.isDeleted ? SyncCircleSharp : Delete24Filled"
+                class="size-3.5 mr-1.5"
+              />
               <span>{{ item.isDeleted ? '恢复' : '删除' }}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

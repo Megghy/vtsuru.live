@@ -36,7 +36,11 @@ const levelOptions = [
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input v-model="blockProps.title" maxlength="100" placeholder="可选" />
+        <Input
+          v-model="blockProps.title"
+          maxlength="100"
+          placeholder="可选"
+        />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">尺寸</label>

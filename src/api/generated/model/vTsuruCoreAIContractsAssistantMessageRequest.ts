@@ -5,27 +5,27 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsAssistantContextDto } from './vTsuruCoreAIContractsAssistantContextDto';
+import type { VTsuruCoreAIContractsAssistantContextDto } from './vTsuruCoreAIContractsAssistantContextDto'
 
 /**
  * 前端发来的助手消息请求
  */
 export interface VTsuruCoreAIContractsAssistantMessageRequest {
-  message: string;
+  message: string
   /**
-     * 目标会话 Id; 不传则新建会话
-     * @nullable
-     */
-  conversationId?: number | null;
+   * 目标会话 Id; 不传则新建会话
+   * @nullable
+   */
+  conversationId?: number | null
   /**
-     * 需要原地编辑并重跑的用户消息 Id。
-     * @nullable
-     */
-  editMessageId?: number | null;
-  context?: VTsuruCoreAIContractsAssistantContextDto;
+   * 需要原地编辑并重跑的用户消息 Id。
+   * @nullable
+   */
+  editMessageId?: number | null
+  context?: VTsuruCoreAIContractsAssistantContextDto
   /**
-     * 随消息附带的图片 (base64 data URL, 形如 data:image/png;base64,xxxx)。需视觉模型支持。
-     * @nullable
-     */
-  images?: string[] | null;
+   * 随消息附带的图片 (base64 data URL, 形如 data:image/png;base64,xxxx)。需视觉模型支持。
+   * @nullable
+   */
+  images?: string[] | null
 }

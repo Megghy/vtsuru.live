@@ -40,9 +40,19 @@ const timelineData: TimelineRecord[] = [
   { type: 'info', title: '功能添加', content: '点歌允许从网页匿名点歌', time: '2025-3-18' },
   { type: 'success', title: '功能添加', content: '棉花糖添加内容审查功能', time: '2025-3-2' },
   { type: 'info', title: '功能更新', content: '允许棉花糖设置页滚动条进度同步到obs组件', time: '2024-11-23' },
-  { type: 'info', title: '功能更新', content: '礼物兑换允许上舰用户免费兑换, 以及仅允许上舰用户兑换', time: '2024-4-23' },
+  {
+    type: 'info',
+    title: '功能更新',
+    content: '礼物兑换允许上舰用户免费兑换, 以及仅允许上舰用户兑换',
+    time: '2024-4-23',
+  },
   { type: 'info', title: '功能更新', content: '积分订单添加导出功能, 允许删除积分用户', time: '2024-3-22' },
-  { type: 'info', title: '功能更新', content: '1. 点歌(歌势) 修改为点播 2. 棉花糖支持创建话题(标签) 3. 一些bug修复', time: '2024-3-12' },
+  {
+    type: 'info',
+    title: '功能更新',
+    content: '1. 点歌(歌势) 修改为点播 2. 棉花糖支持创建话题(标签) 3. 一些bug修复',
+    time: '2024-3-12',
+  },
   { type: 'info', title: '功能更新', content: '棉花糖添加展示页面', time: '2024-2-20' },
   { type: 'info', title: '功能更新', content: '歌单新增从文件导入', time: '2024-2-10' },
   { type: 'info', title: '功能更新', content: '排队的OBS组件添加设置项', time: '2024-1-27' },
@@ -51,12 +61,12 @@ const timelineData: TimelineRecord[] = [
   { type: 'success', title: '功能添加', content: '弹幕点歌 (点播)', time: '2023-12-24' },
   { type: 'success', title: '功能添加', content: '读弹幕', time: '2023-12-17' },
   { type: 'success', title: '功能添加', content: '直播记录', time: '2023-12-3' },
-  { type: 'info', title: '功能更新', content: '歌单添加 \'简单\' 模板', time: '2023-11-30' },
+  { type: 'info', title: '功能更新', content: "歌单添加 '简单' 模板", time: '2023-11-30' },
   { type: 'success', title: '功能添加', content: '排队', time: '2023-11-25' },
   { type: 'success', title: '功能添加', content: '点歌', time: '2023-11-20' },
   { type: 'success', title: '上架幻星平台', content: '如题', time: '2023-11-4' },
   { type: 'success', title: '功能添加', content: '视频征集', time: '2023-10-30' },
-  { type: 'info', title: '功能更新', content: '日程表添加 \'粉粉\' 模板', time: '2023-10-27' },
+  { type: 'info', title: '功能更新', content: "日程表添加 '粉粉' 模板", time: '2023-10-27' },
   { type: 'info', title: '功能更新', content: '提问箱新增公开选项', time: '2023-10-26' },
   { type: 'success', title: '功能添加', content: '提问箱分享卡片', time: '2023-10-25' },
   { type: 'success', title: '功能添加', content: '舰长及SC记录', time: '2023-10-24', dashed: true },
@@ -70,9 +80,7 @@ const timelineData: TimelineRecord[] = [
       <Card class="w-full shadow-sm">
         <CardHeader class="pb-3 border-b border-border/50">
           <CardTitle class="text-xl font-bold">关于</CardTitle>
-          <p class="text-xs text-muted-foreground mt-1">
-            构建时间: {{ buildTime.date }} ({{ buildTime.relative }})
-          </p>
+          <p class="text-xs text-muted-foreground mt-1">构建时间: {{ buildTime.date }} ({{ buildTime.relative }})</p>
         </CardHeader>
         <CardContent class="pt-5 space-y-6 text-sm text-foreground">
           <div>
@@ -95,7 +103,10 @@ const timelineData: TimelineRecord[] = [
               >
                 反馈页面
               </button>
-              <Separator orientation="vertical" class="h-3" />
+              <Separator
+                orientation="vertical"
+                class="h-3"
+              />
               <a
                 href="mailto:admin@vtsuru.live"
                 class="text-primary hover:underline font-mono"
@@ -111,7 +122,10 @@ const timelineData: TimelineRecord[] = [
           <div class="flex flex-col items-center gap-2 py-2">
             <div class="flex items-center gap-1.5 text-sm text-muted-foreground">
               <span>MADE WITH</span>
-              <component :is="HeartOutline" class="size-4 text-destructive inline" />
+              <component
+                :is="HeartOutline"
+                class="size-4 text-destructive inline"
+              />
               <span>BY</span>
               <a
                 href="https://space.bilibili.com/10021741"
@@ -129,7 +143,10 @@ const timelineData: TimelineRecord[] = [
                 rel="noreferrer"
                 class="flex items-center gap-1 text-muted-foreground hover:text-foreground transition"
               >
-                <component :is="LogoGithub" class="size-3.5" />
+                <component
+                  :is="LogoGithub"
+                  class="size-3.5"
+                />
                 <span>源代码仓库</span>
               </a>
               <a
@@ -138,7 +155,10 @@ const timelineData: TimelineRecord[] = [
                 rel="noreferrer"
                 class="flex items-center gap-1 text-muted-foreground hover:text-foreground transition"
               >
-                <component :is="ServerOutline" class="size-3.5" />
+                <component
+                  :is="ServerOutline"
+                  class="size-3.5"
+                />
                 <span>服务状态</span>
               </a>
             </div>
@@ -152,21 +172,51 @@ const timelineData: TimelineRecord[] = [
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
               <div class="flex items-center gap-2 p-2 rounded-md bg-muted/40">
-                <component :is="CodeOutline" class="size-4 text-emerald-500" />
+                <component
+                  :is="CodeOutline"
+                  class="size-4 text-emerald-500"
+                />
                 <span class="font-medium">前端:</span>
                 <div class="flex gap-1.5 flex-wrap">
-                  <Badge variant="secondary" class="font-normal text-[11px] h-5">Vue 3</Badge>
-                  <Badge variant="secondary" class="font-normal text-[11px] h-5">TypeScript</Badge>
-                  <Badge variant="secondary" class="font-normal text-[11px] h-5">shadcn + UnoCSS</Badge>
+                  <Badge
+                    variant="secondary"
+                    class="font-normal text-[11px] h-5"
+                    >Vue 3</Badge
+                  >
+                  <Badge
+                    variant="secondary"
+                    class="font-normal text-[11px] h-5"
+                    >TypeScript</Badge
+                  >
+                  <Badge
+                    variant="secondary"
+                    class="font-normal text-[11px] h-5"
+                    >shadcn + UnoCSS</Badge
+                  >
                 </div>
               </div>
               <div class="flex items-center gap-2 p-2 rounded-md bg-muted/40">
-                <component :is="ServerOutline" class="size-4 text-blue-500" />
+                <component
+                  :is="ServerOutline"
+                  class="size-4 text-blue-500"
+                />
                 <span class="font-medium">后端:</span>
                 <div class="flex gap-1.5 flex-wrap">
-                  <Badge variant="secondary" class="font-normal text-[11px] h-5">C# .NET 10</Badge>
-                  <Badge variant="secondary" class="font-normal text-[11px] h-5">PostgreSQL</Badge>
-                  <Badge variant="secondary" class="font-normal text-[11px] h-5">Garnet</Badge>
+                  <Badge
+                    variant="secondary"
+                    class="font-normal text-[11px] h-5"
+                    >C# .NET 10</Badge
+                  >
+                  <Badge
+                    variant="secondary"
+                    class="font-normal text-[11px] h-5"
+                    >PostgreSQL</Badge
+                  >
+                  <Badge
+                    variant="secondary"
+                    class="font-normal text-[11px] h-5"
+                    >Garnet</Badge
+                  >
                 </div>
               </div>
             </div>
@@ -231,7 +281,11 @@ const timelineData: TimelineRecord[] = [
           </div>
         </CardContent>
         <CardFooter class="pt-4 border-t border-border/50 flex justify-center">
-          <Button size="lg" class="px-8" @click="$router.push({ name: 'manage-index' })">
+          <Button
+            size="lg"
+            class="px-8"
+            @click="$router.push({ name: 'manage-index' })"
+          >
             回到控制台
           </Button>
         </CardFooter>

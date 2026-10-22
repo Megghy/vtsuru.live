@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseResultOfDictionaryOfSystemStringSystemInt32Data } from './responseResultOfDictionaryOfSystemStringSystemInt32Data';
+import type { ResponseResultOfDictionaryOfSystemStringSystemInt32Data } from './responseResultOfDictionaryOfSystemStringSystemInt32Data'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfDictionaryOfSystemStringSystemInt32 {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseResultOfDictionaryOfSystemStringSystemInt32Data;
+  data: ResponseResultOfDictionaryOfSystemStringSystemInt32Data
 }

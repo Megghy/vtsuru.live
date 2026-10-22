@@ -9,8 +9,9 @@ const props = defineProps<{
   table?: VideoCollectTable | null
 }>()
 
-const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars } =
-  useVideoCollectPageTheme(toRef(props, 'table'))
+const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars } = useVideoCollectPageTheme(
+  toRef(props, 'table'),
+)
 </script>
 
 <template>
@@ -37,7 +38,8 @@ const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars 
   --collect-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)));
   --collect-accent: var(
     --vtsuru-page-canvas-accent,
-    --vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand))
+    --vtsuru-page-primary-readable,
+    var(--vtsuru-page-primary, var(--brand))
   );
 
   position: relative;

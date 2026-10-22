@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { copyToClipboard } from '@/shared/utils'
-import { useSpeechService } from '@/store/useSpeechService'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { copyToClipboard } from '@/shared/utils'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from '../SectionField.vue'
 
@@ -48,7 +42,11 @@ function test() {
           <li>建议使用 HTTPS</li>
           <li>HTTP 将通过代理转发，速度较慢</li>
         </ul>
-        <Button variant="link" class="h-auto p-0 text-sky-600 dark:text-sky-400" as-child>
+        <Button
+          variant="link"
+          class="h-auto p-0 text-sky-600 dark:text-sky-400"
+          as-child
+        >
           <a
             href="https://github.com/Artrajz/vits-simple-api"
             target="_blank"
@@ -63,9 +61,7 @@ function test() {
       v-if="isVtsuruVoiceAPI"
       class="py-2 px-3 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
     >
-      <AlertDescription class="text-xs text-current m-0">
-        当前使用本站测试 API，不保证可用性
-      </AlertDescription>
+      <AlertDescription class="text-xs text-current m-0"> 当前使用本站测试 API，不保证可用性 </AlertDescription>
     </Alert>
 
     <SectionField
@@ -89,14 +85,30 @@ function test() {
           </SelectContent>
         </Select>
 
-        <Input v-model="settings.providers.api.voiceAPI" placeholder="xxx.com/voice?text={{text}}&id=0" class="flex-1" :class="/^(?:https?:\/\/)/.test(settings.providers.api?.voiceAPI?.toLowerCase() ?? '') ? 'border-destructive' : ''" />
+        <Input
+          v-model="settings.providers.api.voiceAPI"
+          placeholder="xxx.com/voice?text={{text}}&id=0"
+          class="flex-1"
+          :class="
+            /^(?:https?:\/\/)/.test(settings.providers.api?.voiceAPI?.toLowerCase() ?? '') ? 'border-destructive' : ''
+          "
+        />
 
-        <Button class="shrink-0" :disabled="speechState.isApiAudioLoading" @click="test">
+        <Button
+          class="shrink-0"
+          :disabled="speechState.isApiAudioLoading"
+          @click="test"
+        >
           {{ speechState.isApiAudioLoading ? '加载中...' : '测试' }}
         </Button>
       </div>
 
-      <Button variant="link" size="xs" class="h-auto p-0 text-[11px] text-primary" @click="copyToClipboard('{{text}}')">
+      <Button
+        variant="link"
+        size="xs"
+        class="h-auto p-0 text-[11px] text-primary"
+        @click="copyToClipboard('{{text}}')"
+      >
         点击复制 &#123;&#123;text&#125;&#125; 占位符
       </Button>
     </SectionField>

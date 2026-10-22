@@ -5,22 +5,22 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VoteOptionDto } from './voteOptionDto';
+import type { VoteOptionDto } from './voteOptionDto'
 
 export interface VoteOBSData {
-  sessionId: number;
-  title: string;
-  options: VoteOptionDto[];
-  totalVotes: number;
-  showResults: boolean;
-  isActive: boolean;
-  isEnding: boolean;
+  sessionId: number
+  title: string
+  options: VoteOptionDto[]
+  totalVotes: number
+  showResults: boolean
+  isActive: boolean
+  isEnding: boolean
   /** @nullable */
-  winnerOption?: string | null;
-  theme: string;
-  roundedCorners: boolean;
-  displayPosition: string;
-  startTime: number;
+  winnerOption?: string | null
+  theme: string
+  roundedCorners: boolean
+  displayPosition: string
+  startTime: number
   /** @nullable */
-  endTime?: number | null;
+  endTime?: number | null
 }

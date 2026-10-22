@@ -1,7 +1,14 @@
 <script setup lang="ts">
-import { provideThemeScope } from '@/shared/config/theme/scope'
 import { WindowWrench20Filled } from '@vicons/fluent'
-import { ChevronBackOutline, ChevronForwardOutline, ColorPaletteOutline, HeartOutline, Home, Moon, Sunny } from '@vicons/ionicons5'
+import {
+  ChevronBackOutline,
+  ChevronForwardOutline,
+  ColorPaletteOutline,
+  HeartOutline,
+  Home,
+  Moon,
+  Sunny,
+} from '@vicons/ionicons5'
 import { useElementSize, useMediaQuery } from '@vueuse/core'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -12,11 +19,7 @@ import { ThemeType } from '@/api/api-models'
 import { useFollowingStates } from '@/api/following'
 import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
-import {
-  getPageBackgroundCssVars,
-  getUserPageThemeCssVars,
-  resolvePageBackground,
-} from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
@@ -35,8 +38,9 @@ import { usePublicPageSeo } from '@/apps/user-page/runtime/seo'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
 import type { BiliProfile, BiliProfileStatus, UserPagesSettings } from '@/apps/user-page/types'
-import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import FollowButton from '@/components/common/FollowButton.vue'
+import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
@@ -70,7 +74,7 @@ const isOwner = computed(() => {
   if (!accountInfo.value?.id || !userInfo.value?.id) return false
   return accountInfo.value.id === userInfo.value.id
 })
-const follows = useFollowingStates(() => userInfo.value ? [userInfo.value.id] : [])
+const follows = useFollowingStates(() => (userInfo.value ? [userInfo.value.id] : []))
 const biliUserInfo = ref<BiliProfile | null>(null)
 const biliProfileStatus = ref<BiliProfileStatus>('idle')
 const loadStatus = ref<'idle' | 'loading' | 'not-found' | 'error' | 'ready'>('idle')
@@ -512,9 +516,7 @@ function scrollToTop() {
   >
     <div class="flex flex-col items-center justify-center gap-3">
       <Empty description="用户未找到或该用户暂未开启个人空间" />
-      <Button @click="$router.push('/')">
-        返回首页
-      </Button>
+      <Button @click="$router.push('/')"> 返回首页 </Button>
     </div>
   </div>
 
@@ -525,9 +527,7 @@ function scrollToTop() {
     <div class="flex flex-col items-center justify-center gap-3">
       <div class="text-base font-semibold">页面加载失败</div>
       <div class="text-xs text-muted-foreground">网络暂时不可用或服务发生异常，请稍后重试</div>
-      <Button @click="retryPublicPage">
-        重新加载
-      </Button>
+      <Button @click="retryPublicPage"> 重新加载 </Button>
     </div>
   </div>
 
@@ -558,29 +558,58 @@ function scrollToTop() {
 
         <div class="layout-header__right flex items-center gap-2">
           <!-- 主题切换开关 -->
-          <Button variant="ghost" class="size-8 p-0" :disabled="isLoading || pageThemeMode !== 'auto'" :title="themeSwitchTitle" @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark">
-            <component :is="effectiveIsDark ? Moon : Sunny" class="size-4" />
+          <Button
+            variant="ghost"
+            class="size-8 p-0"
+            :disabled="isLoading || pageThemeMode !== 'auto'"
+            :title="themeSwitchTitle"
+            @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
+          >
+            <component
+              :is="effectiveIsDark ? Moon : Sunny"
+              class="size-4"
+            />
           </Button>
 
           <!-- 已登录用户操作 -->
           <template v-if="accountInfo?.id">
-            <Button v-if="isOwner" variant="outline" title="进入主页可视化装修与块配置" @click="$router.push({ name: 'manage-userPageBuilder' })">
-              <component :is="ColorPaletteOutline" class="size-4 mr-1" />
+            <Button
+              v-if="isOwner"
+              variant="outline"
+              title="进入主页可视化装修与块配置"
+              @click="$router.push({ name: 'manage-userPageBuilder' })"
+            >
+              <component
+                :is="ColorPaletteOutline"
+                class="size-4 mr-1"
+              />
               <span v-if="isDesktop">装修主页</span>
             </Button>
 
-            <Button variant="outline" @click="$router.push({ name: 'live-directory', query: { tab: 'following' } })">
-              <component :is="HeartOutline" class="size-4 mr-1" />
+            <Button
+              variant="outline"
+              @click="$router.push({ name: 'live-directory', query: { tab: 'following' } })"
+            >
+              <component
+                :is="HeartOutline"
+                class="size-4 mr-1"
+              />
               <span v-if="isDesktop">关注管理</span>
             </Button>
             <Button @click="enterLastWorkspace">
-              <component :is="WindowWrench20Filled" class="size-4 mr-1" />
+              <component
+                :is="WindowWrench20Filled"
+                class="size-4 mr-1"
+              />
               <span v-if="isDesktop">{{ WORKSPACE_LABELS[lastWorkspace] }}</span>
             </Button>
           </template>
 
           <!-- 未登录用户操作 -->
-          <Button v-else @click="registerAndLoginModalVisiable = true">
+          <Button
+            v-else
+            @click="registerAndLoginModalVisiable = true"
+          >
             注册 / 登录
           </Button>
         </div>
@@ -666,14 +695,22 @@ function scrollToTop() {
             </div>
           </div>
 
-          <div v-if="userInfo && !siderCollapsed" class="p-2 text-center">
+          <div
+            v-if="userInfo && !siderCollapsed"
+            class="p-2 text-center"
+          >
             <FollowButton
               :user-id="userInfo.id"
               :following="follows.states.value[userInfo.id]?.isFollowing"
               :followers="follows.states.value[userInfo.id]?.followers"
               @changed="follows.refresh"
             />
-            <div v-if="follows.error.value" class="text-[11px] text-destructive mt-1">{{ follows.error.value }}</div>
+            <div
+              v-if="follows.error.value"
+              class="text-[11px] text-destructive mt-1"
+            >
+              {{ follows.error.value }}
+            </div>
           </div>
 
           <!-- 侧边栏加载状态 -->
@@ -853,7 +890,11 @@ function scrollToTop() {
             <RouterView v-slot="{ Component, route: viewRoute }">
               <KeepAlive :max="4">
                 <div
-                  :class="viewRoute.meta.pageContainer !== 'none' ? ['user-page', viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined] : undefined"
+                  :class="
+                    viewRoute.meta.pageContainer !== 'none'
+                      ? ['user-page', viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined]
+                      : undefined
+                  "
                 >
                   <component
                     :is="Component"

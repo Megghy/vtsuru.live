@@ -464,7 +464,13 @@ export const SHARED_BLOCK_DEFINITIONS = [
     withProps((p, path, errors, context) => {
       if (!context.hidden) requiredString(p, 'text', path, errors)
       optionalEnum(p, 'level', [1, 2, 3], path, errors)
-      optionalEnum(p, 'textEffect', ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'], path, errors)
+      optionalEnum(
+        p,
+        'textEffect',
+        ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'],
+        path,
+        errors,
+      )
       optionalEnum(p, 'effectIntensity', ['low', 'mid', 'high'], path, errors)
     }),
     true,
@@ -477,7 +483,13 @@ export const SHARED_BLOCK_DEFINITIONS = [
     { text: '', textEffect: 'none', effectIntensity: 'mid' },
     withProps((p, path, errors) => {
       if (typeof p.text !== 'string') errors.push(`${path}: text 必须是 string`, 'text')
-      optionalEnum(p, 'textEffect', ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'], path, errors)
+      optionalEnum(
+        p,
+        'textEffect',
+        ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'],
+        path,
+        errors,
+      )
       optionalEnum(p, 'effectIntensity', ['low', 'mid', 'high'], path, errors)
     }),
     true,
@@ -854,7 +866,13 @@ export const SHARED_BLOCK_DEFINITIONS = [
       optionalString(p, 'text', path, errors)
       optionalString(p, 'author', path, errors)
       optionalEnum(p, 'align', ['left', 'center', 'right'], path, errors)
-      optionalEnum(p, 'textEffect', ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'], path, errors)
+      optionalEnum(
+        p,
+        'textEffect',
+        ['none', 'gradient', 'glow', 'shine', 'breathe', 'rainbow', 'typewriter'],
+        path,
+        errors,
+      )
       optionalEnum(p, 'effectIntensity', ['low', 'mid', 'high'], path, errors)
     }),
   ),

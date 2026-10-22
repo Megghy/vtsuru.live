@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 
-import { useQuestionBox } from '@/store/useQuestionBox'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Separator } from '@/shared/ui/separator'
 import { Textarea } from '@/shared/ui/textarea'
+import { useQuestionBox } from '@/store/useQuestionBox'
 
 const show = defineModel<boolean>('show', { required: true })
 const useQB = useQuestionBox()
@@ -47,7 +47,9 @@ function handleKeydown(e: KeyboardEvent) {
             </span>
           </div>
 
-          <div class="p-3 rounded-lg bg-muted/40 text-xs text-foreground whitespace-pre-wrap max-h-36 overflow-y-auto border border-border">
+          <div
+            class="p-3 rounded-lg bg-muted/40 text-xs text-foreground whitespace-pre-wrap max-h-36 overflow-y-auto border border-border"
+          >
             {{ useQB.currentQuestion.question?.message }}
           </div>
 
@@ -68,8 +70,15 @@ function handleKeydown(e: KeyboardEvent) {
         <DialogFooter class="flex items-center justify-between sm:justify-between w-full pt-2">
           <span class="text-[11px] text-muted-foreground">按 Ctrl + Enter 快捷发送</span>
           <div class="flex items-center gap-2">
-            <Button variant="outline" @click="show = false">取消</Button>
-            <Button :disabled="!replyMessage.trim() || useQB.isRepling" @click="submitReply">
+            <Button
+              variant="outline"
+              @click="show = false"
+              >取消</Button
+            >
+            <Button
+              :disabled="!replyMessage.trim() || useQB.isRepling"
+              @click="submitReply"
+            >
               {{ useQB.isRepling ? '发送中...' : useQB.currentQuestion?.answer ? '修改回复' : '发送回复' }}
             </Button>
           </div>

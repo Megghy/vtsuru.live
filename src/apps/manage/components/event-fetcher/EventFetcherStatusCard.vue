@@ -113,12 +113,8 @@ const status = computed<'success' | 'warning' | 'info'>(() => {
           variant="warning"
           class="text-xs"
         >
-          <template v-if="state?.status">
-            异常: {{ Object.values(state.status).join('; ') }}
-          </template>
-          <template v-else>
-            此版本已过期, 请更新
-          </template>
+          <template v-if="state?.status"> 异常: {{ Object.values(state.status).join('; ') }} </template>
+          <template v-else> 此版本已过期, 请更新 </template>
         </Badge>
 
         <Badge
@@ -134,7 +130,13 @@ const status = computed<'success' | 'warning' | 'info'>(() => {
             orientation="vertical"
             class="h-3.5"
           />
-          <Button as="a" href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs" target="_blank" variant="outline" size="xs">
+          <Button
+            as="a"
+            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+            target="_blank"
+            variant="outline"
+            size="xs"
+          >
             关于
           </Button>
         </template>

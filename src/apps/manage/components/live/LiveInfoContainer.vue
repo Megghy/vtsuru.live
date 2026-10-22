@@ -52,9 +52,7 @@ const durationText = computed(() => {
 
 const effectiveIncome = computed(() => {
   const rawIncome =
-    new Date(props.live.startAt) < guartPriceStartData
-      ? props.live.totalIncomeWithGuard
-      : props.live.totalIncome
+    new Date(props.live.startAt) < guartPriceStartData ? props.live.totalIncomeWithGuard : props.live.totalIncome
   return Number(rawIncome || 0).toLocaleString(undefined, {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
@@ -75,7 +73,9 @@ function onClickRow() {
     @click="onClickRow"
   >
     <!-- 封面 -->
-    <div class="relative w-28 h-16 sm:w-36 sm:h-20 rounded-md overflow-hidden bg-muted/60 shrink-0 border border-border">
+    <div
+      class="relative w-28 h-16 sm:w-36 sm:h-20 rounded-md overflow-hidden bg-muted/60 shrink-0 border border-border"
+    >
       <img
         v-if="live.coverUrl && !coverError"
         referrerpolicy="no-referrer"
@@ -84,7 +84,7 @@ function onClickRow() {
         loading="lazy"
         alt="直播封面"
         @error="coverError = true"
-      >
+      />
       <div
         v-else
         class="w-full h-full flex items-center justify-center text-muted-foreground/60"
@@ -145,16 +145,12 @@ function onClickRow() {
           </PopoverTrigger>
           <PopoverContent class="w-56 p-2 text-xs space-y-1">
             <div>开播: {{ format(live.startAt, 'yyyy-MM-dd HH:mm:ss') }}</div>
-            <div v-if="live.isFinish">
-              停播: {{ live.stopAt ? format(live.stopAt, 'yyyy-MM-dd HH:mm:ss') : '-' }}
-            </div>
+            <div v-if="live.isFinish">停播: {{ live.stopAt ? format(live.stopAt, 'yyyy-MM-dd HH:mm:ss') : '-' }}</div>
             <div>历时: {{ durationText }}</div>
           </PopoverContent>
         </Popover>
 
-        <span class="text-[11px]">
-          {{ live.isFinish ? '时长 ' : '已播 ' }}{{ durationText }}
-        </span>
+        <span class="text-[11px]"> {{ live.isFinish ? '时长 ' : '已播 ' }}{{ durationText }} </span>
       </div>
     </div>
 

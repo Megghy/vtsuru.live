@@ -24,7 +24,10 @@ withDefaults(
     <div class="text-xs font-normal">
       <slot>{{ description }}</slot>
     </div>
-    <div v-if="$slots.extra" class="mt-3">
+    <div
+      v-if="$slots.extra"
+      class="mt-3"
+    >
       <slot name="extra" />
     </div>
   </div>

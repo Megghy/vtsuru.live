@@ -65,7 +65,9 @@ export function parseSearch(input: string): Term[] {
     const colon = body.indexOf(':')
     const key = colon > 0 ? body.slice(0, colon).toLowerCase() : ''
     if (!FIELDS.has(key)) return [{ field: 'text', negate, values: [unquote(body)] }]
-    const values = splitOutsideQuotes(body.slice(colon + 1), (ch) => ch === ',').map(unquote).filter(Boolean)
+    const values = splitOutsideQuotes(body.slice(colon + 1), (ch) => ch === ',')
+      .map(unquote)
+      .filter(Boolean)
     return values.length ? [{ field: key as Field, negate, values }] : []
   })
 }

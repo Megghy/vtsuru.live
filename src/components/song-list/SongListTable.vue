@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  ArrowDown24Filled,
-  ArrowUp24Filled,
-  Delete24Filled,
-  NotepadEdit20Filled,
-  Play24Filled,
-} from '@vicons/fluent'
+import { ArrowDown24Filled, ArrowUp24Filled, Delete24Filled, NotepadEdit20Filled, Play24Filled } from '@vicons/fluent'
 import type { VNodeChild } from 'vue'
 import { computed, ref } from 'vue'
 
@@ -24,15 +18,7 @@ import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableEmpty,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { GetPlayButton } from '@/shared/utils'
 
@@ -113,6 +99,17 @@ function getGuardColor(level: number): string {
   return level === 1 ? 'rgb(122, 4, 35)' : level === 2 ? 'rgb(157, 155, 255)' : 'rgb(104, 136, 241)'
 }
 
+function hasSongOptions(options?: SongsInfo['options']): boolean {
+  if (!options) return false
+  return !!(
+    options.needJianzhang ||
+    options.needTidu ||
+    options.needZongdu ||
+    options.scMinPrice ||
+    options.fanMedalMinLevel
+  )
+}
+
 const totalPages = computed(() => Math.max(1, Math.ceil(filteredSongs.value.length / pageSize.value)))
 const pagedSongs = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
@@ -188,7 +185,11 @@ async function handleBatchDelete() {
   <TooltipProvider>
     <Card class="border border-border/80 mb-2.5">
       <CardContent class="p-3 flex flex-wrap items-center gap-2 text-xs">
-        <Input v-model="searchKeyword" placeholder="搜索曲名/译名" class="min-w-[150px] flex-1" />
+        <Input
+          v-model="searchKeyword"
+          placeholder="搜索曲名/译名"
+          class="min-w-[150px] flex-1"
+        />
 
         <Select
           :model-value="selectedAuthorFilter || 'all'"
@@ -198,7 +199,11 @@ async function handleBatchDelete() {
             <SelectValue placeholder="筛选歌手" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
-            <SelectItem value="all" class="text-xs">全部歌手</SelectItem>
+            <SelectItem
+              value="all"
+              class="text-xs"
+              >全部歌手</SelectItem
+            >
             <SelectItem
               v-for="a in authorOptions"
               :key="a.value"
@@ -229,7 +234,14 @@ async function handleBatchDelete() {
 
     <div class="flex items-center justify-between mb-2 text-xs">
       <span class="text-muted-foreground">共 {{ filteredSongs.length }} / {{ songsInternal.length }} 首</span>
-      <Button v-if="isSelf" variant="outline" size="xs" class="border-primary text-primary" :disabled="selectedKeys.length === 0" @click="batchModalRef?.open()">
+      <Button
+        v-if="isSelf"
+        variant="outline"
+        size="xs"
+        class="border-primary text-primary"
+        :disabled="selectedKeys.length === 0"
+        @click="batchModalRef?.open()"
+      >
         批量操作 ({{ selectedKeys.length }})
       </Button>
     </div>
@@ -248,21 +260,24 @@ async function handleBatchDelete() {
 
     <!-- 歌曲表格 -->
     <div class="border border-border/80 rounded-lg overflow-hidden bg-card">
-      <Table>
+      <Table class="table-fixed">
         <TableHeader>
-          <TableRow>
-            <TableHead v-if="isSelf" class="w-10 px-3">
+          <TableRow class="hover:bg-transparent border-b border-border/80 bg-muted/40">
+            <TableHead
+              v-if="isSelf"
+              class="w-10 px-3"
+            >
               <Checkbox
                 :checked="allCurrentPageSelected"
                 @update:checked="toggleSelectAll"
               />
             </TableHead>
-            <TableHead class="min-w-[180px]">曲名</TableHead>
-            <TableHead class="min-w-[120px]">作者</TableHead>
-            <TableHead class="min-w-[90px]">语言</TableHead>
-            <TableHead class="min-w-[120px]">点歌要求</TableHead>
-            <TableHead class="min-w-[100px]">标签</TableHead>
-            <TableHead class="text-right min-w-[140px]">操作</TableHead>
+            <TableHead class="min-w-[200px]">曲名</TableHead>
+            <TableHead class="w-44">作者</TableHead>
+            <TableHead class="w-24">语言</TableHead>
+            <TableHead class="w-36">点歌要求</TableHead>
+            <TableHead class="w-36">标签</TableHead>
+            <TableHead class="w-32 text-right pr-4">操作</TableHead>
           </TableRow>
         </TableHeader>
 
@@ -270,9 +285,12 @@ async function handleBatchDelete() {
           <TableRow
             v-for="row in pagedSongs"
             :key="row.key"
-            class="hover:bg-muted/40 transition-colors"
+            class="border-b border-border/60 hover:bg-muted/40 transition-colors even:bg-muted/[0.14]"
           >
-            <TableCell v-if="isSelf" class="px-3">
+            <TableCell
+              v-if="isSelf"
+              class="px-3"
+            >
               <Checkbox
                 :checked="selectedKeys.includes(row.key)"
                 @update:checked="toggleSelectRow(row.key, $event)"
@@ -304,7 +322,10 @@ async function handleBatchDelete() {
                   >
                     {{ row.name }}
                   </span>
-                  <span v-if="row.translateName" class="text-[11px] text-muted-foreground">
+                  <span
+                    v-if="row.translateName"
+                    class="text-[11px] text-muted-foreground"
+                  >
                     {{ row.translateName }}
                   </span>
                 </div>
@@ -313,9 +334,12 @@ async function handleBatchDelete() {
 
             <!-- 作者 -->
             <TableCell>
-              <div class="flex items-center gap-1 flex-wrap">
+              <div
+                v-if="row.author?.length"
+                class="flex items-center gap-1 flex-wrap"
+              >
                 <button
-                  v-for="a in row.author ?? []"
+                  v-for="a in row.author"
                   :key="a"
                   type="button"
                   class="px-1.5 py-0.5 rounded text-[10px] bg-muted/60 hover:bg-primary/10 hover:text-primary transition"
@@ -324,70 +348,91 @@ async function handleBatchDelete() {
                   {{ a }}
                 </button>
               </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
             </TableCell>
 
             <!-- 语言 -->
             <TableCell>
-              <div class="flex items-center gap-1 flex-wrap">
+              <div
+                v-if="row.language?.length"
+                class="flex items-center gap-1 flex-wrap"
+              >
                 <span
-                  v-for="l in row.language ?? []"
+                  v-for="l in row.language"
                   :key="l"
                   class="text-[11px] text-muted-foreground"
                 >
                   {{ l }}
                 </span>
               </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
             </TableCell>
 
             <!-- 要求 -->
             <TableCell>
               <div
-                v-if="row.options"
+                v-if="hasSongOptions(row.options)"
                 class="flex items-center gap-1 flex-wrap"
               >
                 <Badge
-                  v-if="row.options.needJianzhang"
+                  v-if="row.options!.needJianzhang"
                   class="text-[10px] h-4 px-1 font-normal text-white"
                   :style="{ backgroundColor: getGuardColor(3) }"
                 >
                   舰长
                 </Badge>
                 <Badge
-                  v-if="row.options.needTidu"
+                  v-if="row.options!.needTidu"
                   class="text-[10px] h-4 px-1 font-normal text-white"
                   :style="{ backgroundColor: getGuardColor(2) }"
                 >
                   提督
                 </Badge>
                 <Badge
-                  v-if="row.options.needZongdu"
+                  v-if="row.options!.needZongdu"
                   class="text-[10px] h-4 px-1 font-normal text-white"
                   :style="{ backgroundColor: getGuardColor(1) }"
                 >
                   总督
                 </Badge>
                 <Badge
-                  v-if="row.options.scMinPrice"
+                  v-if="row.options!.scMinPrice"
                   class="text-[10px] h-4 px-1 font-normal text-white"
-                  :style="{ backgroundColor: getSCColor(row.options.scMinPrice) }"
+                  :style="{ backgroundColor: getSCColor(row.options!.scMinPrice) }"
                 >
-                  SC ≥ {{ row.options.scMinPrice }}
+                  SC ≥ {{ row.options!.scMinPrice }}
                 </Badge>
                 <Badge
-                  v-if="row.options.fanMedalMinLevel"
+                  v-if="row.options!.fanMedalMinLevel"
                   variant="secondary"
                   class="text-[10px] h-4 px-1 font-normal text-sky-600 bg-sky-500/10"
                 >
-                  牌 ≥ {{ row.options.fanMedalMinLevel }}
+                  牌 ≥ {{ row.options!.fanMedalMinLevel }}
                 </Badge>
               </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
             </TableCell>
 
             <!-- 标签 -->
             <TableCell>
-              <div class="flex items-center gap-1 flex-wrap">
+              <div
+                v-if="row.tags?.length"
+                class="flex items-center gap-1 flex-wrap"
+              >
                 <Badge
-                  v-for="t in row.tags ?? []"
+                  v-for="t in row.tags"
                   :key="t"
                   variant="secondary"
                   class="text-[10px] h-4 px-1 font-normal"
@@ -395,16 +440,30 @@ async function handleBatchDelete() {
                   {{ t }}
                 </Badge>
               </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
             </TableCell>
 
             <!-- 操作 -->
-            <TableCell class="text-right">
+            <TableCell class="text-right pr-4">
               <div class="flex items-center justify-end gap-1">
                 <template v-if="showListenButton && /\.(?:mp3|flac|ogg|wav|m4a)$/i.test(row.url ?? '')">
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-primary hover:bg-primary/10" :disabled="isLrcLoading === row.key" @click="playingSong = row">
-                        <component :is="Play24Filled" class="size-3.5" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-primary hover:bg-primary/10"
+                        :disabled="isLrcLoading === row.key"
+                        @click="playingSong = row"
+                      >
+                        <component
+                          :is="Play24Filled"
+                          class="size-3.5"
+                        />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>试听</TooltipContent>
@@ -414,8 +473,16 @@ async function handleBatchDelete() {
                 <template v-if="isSelf">
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-muted-foreground hover:text-foreground" @click="moveSong(row.key, -1)">
-                        <component :is="ArrowUp24Filled" class="size-3.5" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                        @click="moveSong(row.key, -1)"
+                      >
+                        <component
+                          :is="ArrowUp24Filled"
+                          class="size-3.5"
+                        />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>上移</TooltipContent>
@@ -423,8 +490,16 @@ async function handleBatchDelete() {
 
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-muted-foreground hover:text-foreground" @click="moveSong(row.key, 1)">
-                        <component :is="ArrowDown24Filled" class="size-3.5" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                        @click="moveSong(row.key, 1)"
+                      >
+                        <component
+                          :is="ArrowDown24Filled"
+                          class="size-3.5"
+                        />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>下移</TooltipContent>
@@ -432,8 +507,16 @@ async function handleBatchDelete() {
 
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-muted-foreground hover:text-foreground" @click="editModalRef?.open(row)">
-                        <component :is="NotepadEdit20Filled" class="size-3.5" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                        @click="editModalRef?.open(row)"
+                      >
+                        <component
+                          :is="NotepadEdit20Filled"
+                          class="size-3.5"
+                        />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>修改</TooltipContent>
@@ -446,8 +529,15 @@ async function handleBatchDelete() {
                     @positive-click="deleteSong(row)"
                   >
                     <template #trigger>
-                      <Button size="icon" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
-                        <component :is="Delete24Filled" class="size-3.5" />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                      >
+                        <component
+                          :is="Delete24Filled"
+                          class="size-3.5"
+                        />
                       </Button>
                     </template>
                     确认删除《{{ row.name }}》？
@@ -471,14 +561,18 @@ async function handleBatchDelete() {
       v-if="totalPages > 1"
       class="flex items-center justify-between gap-2 mt-3 text-xs"
     >
-      <span class="text-muted-foreground text-[11px]">
-        第 {{ currentPage }} / {{ totalPages }} 页
-      </span>
+      <span class="text-muted-foreground text-[11px]"> 第 {{ currentPage }} / {{ totalPages }} 页 </span>
       <div class="flex items-center gap-1.5">
-        <Button variant="outline" :disabled="currentPage <= 1" @click="prevPage">
+        <Button
+          variant="outline"
+          :disabled="currentPage <= 1"
+          @click="prevPage"
+        >
           上一页
         </Button>
-        <Button variant="outline" :disabled="currentPage>= totalPages"
+        <Button
+          variant="outline"
+          :disabled="currentPage >= totalPages"
           @click="nextPage"
         >
           下一页

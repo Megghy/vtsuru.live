@@ -7,9 +7,9 @@
  */
 
 export interface ObsStoreControllerResponseObsSyncState {
-  hash: string;
-  changed: boolean;
+  hash: string
+  changed: boolean
   /** @nullable */
-  data?: string | null;
-  updatedAt: number;
+  data?: string | null
+  updatedAt: number
 }

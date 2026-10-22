@@ -57,17 +57,38 @@ function addExpressions() {
     <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
       <CardTitle class="text-sm font-semibold">操作台</CardTitle>
       <div class="flex items-center gap-2">
-        <Button v-if="editing" variant="outline" class="gap-1" :disabled="!vts.connected || vts.expressions.length === 0" @click="addExpressions">
+        <Button
+          v-if="editing"
+          variant="outline"
+          class="gap-1"
+          :disabled="!vts.connected || vts.expressions.length === 0"
+          @click="addExpressions"
+        >
           <ArrowImport24Regular class="size-3.5" />
           导入当前模型表情
         </Button>
-        <Button v-if="editing" variant="outline" class="gap-1" @click="openEditor()">
+        <Button
+          v-if="editing"
+          variant="outline"
+          class="gap-1"
+          @click="openEditor()"
+        >
           <Add24Regular class="size-3.5" />
           添加格子
         </Button>
-        <Button :variant="editing ? 'default' : 'secondary'" class="gap-1" @click="editing = !editing">
-          <Checkmark24Regular v-if="editing" class="size-3.5" />
-          <Edit24Regular v-else class="size-3.5" />
+        <Button
+          :variant="editing ? 'default' : 'secondary'"
+          class="gap-1"
+          @click="editing = !editing"
+        >
+          <Checkmark24Regular
+            v-if="editing"
+            class="size-3.5"
+          />
+          <Edit24Regular
+            v-else
+            class="size-3.5"
+          />
           {{ editing ? '完成' : '编辑' }}
         </Button>
       </div>
@@ -84,9 +105,7 @@ function addExpressions() {
         v-if="vts.deckShortcutError"
         class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
       >
-        <AlertDescription class="text-xs m-0">
-          全局快捷键注册失败：{{ vts.deckShortcutError }}
-        </AlertDescription>
+        <AlertDescription class="text-xs m-0"> 全局快捷键注册失败：{{ vts.deckShortcutError }} </AlertDescription>
       </Alert>
 
       <div
@@ -95,10 +114,16 @@ function addExpressions() {
       >
         <Empty description="把常用的表情、热键、宏、机位预设放到这里，一键切换">
           <div class="flex items-center justify-center gap-2 mt-3">
-            <Button :disabled="!vts.connected || vts.expressions.length === 0" @click="addExpressions">
+            <Button
+              :disabled="!vts.connected || vts.expressions.length === 0"
+              @click="addExpressions"
+            >
               导入当前模型表情
             </Button>
-            <Button variant="outline" @click="openEditor()">
+            <Button
+              variant="outline"
+              @click="openEditor()"
+            >
               手动添加
             </Button>
           </div>
@@ -145,7 +170,8 @@ function addExpressions() {
           <kbd
             v-if="tile.shortcut"
             class="deck-tile-kbd"
-          >{{ tile.shortcut.replaceAll('Digit', '').replaceAll('Key', '') }}</kbd>
+            >{{ tile.shortcut.replaceAll('Digit', '').replaceAll('Key', '') }}</kbd
+          >
           <button
             v-if="editing"
             type="button"

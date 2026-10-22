@@ -12,6 +12,8 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { ThemeType } from '@/api/api-models'
+import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
@@ -29,6 +31,10 @@ const route = useRoute()
 const router = useRouter()
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 const danmakuClient = useDanmakuClient()
+
+const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
+const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
+provideThemeScope(manageCssVars)
 
 const siderCollapsed = ref(false)
 
@@ -99,9 +105,7 @@ watch(
   >
     <div class="max-w-md w-full text-center space-y-4 p-8 rounded-lg border bg-card">
       <div class="text-destructive font-bold text-xl">无效访问</div>
-      <p class="text-sm text-muted-foreground">
-        请确保您是通过正确的幻星平台 H5 插件链接访问此页面。
-      </p>
+      <p class="text-sm text-muted-foreground">请确保您是通过正确的幻星平台 H5 插件链接访问此页面。</p>
       <div class="pt-2 text-xs text-muted-foreground">
         请前往
         <a
@@ -120,6 +124,7 @@ watch(
   <div
     v-else
     class="h-screen w-full flex flex-col overflow-hidden bg-background text-foreground"
+    :style="manageCssVars"
   >
     <!-- 顶部导航栏 -->
     <header class="h-[60px] border-b border-border flex items-center justify-between px-5 shrink-0 bg-card">
@@ -146,16 +151,34 @@ watch(
           v-if="needsOpenLiveAuth"
           variant="outline"
           class="text-xs h-6 px-2 gap-1.5"
-          :class="danmakuClient.phase === 'error' ? 'border-destructive/40 text-destructive bg-destructive/10' : danmakuClient.connected ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'border-amber-500/40 text-amber-600 bg-amber-500/10'"
+          :class="
+            danmakuClient.phase === 'error'
+              ? 'border-destructive/40 text-destructive bg-destructive/10'
+              : danmakuClient.connected
+                ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
+          "
         >
-          <Sunny v-if="danmakuClient.connected" class="size-3.5" />
-          <Moon v-else class="size-3.5" />
+          <Sunny
+            v-if="danmakuClient.connected"
+            class="size-3.5"
+          />
+          <Moon
+            v-else
+            class="size-3.5"
+          />
           {{ danmakuClient.connectionStatus }}
         </Badge>
 
         <div class="flex items-center gap-2">
-          <Switch :checked="isDarkValue" @update:checked="isDarkValue = $event" />
-          <component :is="isDarkValue ? Moon : Sunny" class="size-4 text-muted-foreground" />
+          <Switch
+            :checked="isDarkValue"
+            @update:checked="isDarkValue = $event"
+          />
+          <component
+            :is="isDarkValue ? Moon : Sunny"
+            class="size-4 text-muted-foreground"
+          />
         </div>
       </div>
     </header>
@@ -174,8 +197,14 @@ watch(
             :title="siderCollapsed ? '展开边栏' : '折叠边栏'"
             @click="siderCollapsed = !siderCollapsed"
           >
-            <ChevronRight16Regular v-if="siderCollapsed" class="size-3.5" />
-            <ChevronLeft16Regular v-else class="size-3.5" />
+            <ChevronRight16Regular
+              v-if="siderCollapsed"
+              class="size-3.5"
+            />
+            <ChevronLeft16Regular
+              v-else
+              class="size-3.5"
+            />
           </button>
         </div>
 
@@ -205,12 +234,17 @@ watch(
             :to="{ name: item.name, query: route.query }"
             class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition"
             :class="[
-              activeMenuKey === item.key ? 'bg-primary/10 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+              activeMenuKey === item.key
+                ? 'bg-primary/10 text-primary font-semibold'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
               siderCollapsed && 'justify-center !px-0',
             ]"
             :title="siderCollapsed ? item.label : undefined"
           >
-            <component :is="item.icon" class="size-4 shrink-0" />
+            <component
+              :is="item.icon"
+              class="size-4 shrink-0"
+            />
             <span v-if="!siderCollapsed">{{ item.label }}</span>
           </RouterLink>
         </nav>
@@ -249,12 +283,16 @@ watch(
         <RouterView v-slot="{ Component, route: viewRoute }">
           <div
             v-if="Component && (!needsOpenLiveAuth || danmakuClient.authInfo)"
-            :class="viewRoute.meta.pageContainer !== 'none' ? [
-              'open-live-page-inner',
-              viewRoute.meta.pageWidth === 'md' && 'open-live-page-inner--md',
-              viewRoute.meta.pageWidth === 'xl' && 'open-live-page-inner--xl',
-              viewRoute.meta.pageWidth === 'full' && 'open-live-page-inner--full',
-            ] : undefined"
+            :class="
+              viewRoute.meta.pageContainer !== 'none'
+                ? [
+                    'open-live-page-inner',
+                    viewRoute.meta.pageWidth === 'md' && 'open-live-page-inner--md',
+                    viewRoute.meta.pageWidth === 'xl' && 'open-live-page-inner--xl',
+                    viewRoute.meta.pageWidth === 'full' && 'open-live-page-inner--full',
+                  ]
+                : undefined
+            "
           >
             <KeepAlive>
               <component
@@ -283,7 +321,9 @@ watch(
     </div>
 
     <!-- 底部信息栏 -->
-    <footer class="h-10 border-t border-border flex items-center justify-center px-5 shrink-0 bg-card text-xs text-muted-foreground">
+    <footer
+      class="h-10 border-t border-border flex items-center justify-center px-5 shrink-0 bg-card text-xs text-muted-foreground"
+    >
       <span>
         © {{ new Date().getFullYear() }}
         <a

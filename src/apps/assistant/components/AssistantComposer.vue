@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  Dismiss12Regular,
-  Image24Regular,
-  Mic24Filled,
-  Mic24Regular,
-  Send24Filled,
-  Stop24Filled,
-} from '@vicons/fluent'
+import { Dismiss12Regular, Image24Regular, Mic24Filled, Mic24Regular, Send24Filled, Stop24Filled } from '@vicons/fluent'
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -159,7 +152,10 @@ onBeforeUnmount(() => recognition?.abort())
             title="移除"
             @click="removeImage(i)"
           >
-            <component :is="Dismiss12Regular" class="size-3" />
+            <component
+              :is="Dismiss12Regular"
+              class="size-3"
+            />
           </button>
         </div>
       </div>
@@ -167,10 +163,17 @@ onBeforeUnmount(() => recognition?.abort())
       <div class="composer__row">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button variant="ghost" size="icon" class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground" :disabled="loading || images.length>= MAX_IMAGES"
+            <Button
+              variant="ghost"
+              size="icon"
+              class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground"
+              :disabled="loading || images.length >= MAX_IMAGES"
               @click="fileInput?.click()"
             >
-              <component :is="Image24Regular" class="size-4" />
+              <component
+                :is="Image24Regular"
+                class="size-4"
+              />
             </Button>
           </TooltipTrigger>
           <TooltipContent>添加图片 (可粘贴截图), 最多 {{ MAX_IMAGES }} 张</TooltipContent>
@@ -186,8 +189,18 @@ onBeforeUnmount(() => recognition?.abort())
 
         <Tooltip v-if="speechSupported">
           <TooltipTrigger as-child>
-            <Button variant="ghost" size="icon" class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground" :class="{ 'composer__mic--on text-primary!': listening }" :disabled="loading" @click="toggleSpeech">
-              <component :is="listening ? Mic24Filled : Mic24Regular" class="size-4" />
+            <Button
+              variant="ghost"
+              size="icon"
+              class="composer__attach size-8 rounded-full text-muted-foreground hover:text-foreground"
+              :class="{ 'composer__mic--on text-primary!': listening }"
+              :disabled="loading"
+              @click="toggleSpeech"
+            >
+              <component
+                :is="listening ? Mic24Filled : Mic24Regular"
+                class="size-4"
+              />
             </Button>
           </TooltipTrigger>
           <TooltipContent>{{ listening ? '点击停止语音输入' : '语音输入 (说话转文字)' }}</TooltipContent>
@@ -204,12 +217,28 @@ onBeforeUnmount(() => recognition?.abort())
           @paste="onPaste"
         />
 
-        <Button v-if="loading" variant="destructive" class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0" @click="emit('stop')">
-          <component :is="Stop24Filled" class="size-3.5" />
+        <Button
+          v-if="loading"
+          variant="destructive"
+          class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0"
+          @click="emit('stop')"
+        >
+          <component
+            :is="Stop24Filled"
+            class="size-3.5"
+          />
           停止
         </Button>
-        <Button v-else class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0" :disabled="!text.trim() && !images.length" @click="submit">
-          <component :is="Send24Filled" class="size-3.5" />
+        <Button
+          v-else
+          class="composer__btn h-[38px] px-3 flex items-center gap-1 shrink-0"
+          :disabled="!text.trim() && !images.length"
+          @click="submit"
+        >
+          <component
+            :is="Send24Filled"
+            class="size-3.5"
+          />
           发送
         </Button>
       </div>

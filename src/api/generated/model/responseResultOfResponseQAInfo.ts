@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseQAInfo } from './responseQAInfo';
+import type { ResponseQAInfo } from './responseQAInfo'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseQAInfo {
-  message: string;
-  code: number;
-  data: ResponseQAInfo;
+  message: string
+  code: number
+  data: ResponseQAInfo
 }

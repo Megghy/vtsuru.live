@@ -1,35 +1,20 @@
 <script setup lang="ts">
-import {
-  ArrowDownload24Regular,
-  ArrowSync24Filled,
-  Delete24Regular,
-  Grid28Filled,
-  List16Filled,
-} from '@vicons/fluent'
+import { ArrowDownload24Regular, ArrowSync24Filled, Delete24Regular, Grid28Filled, List16Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
-import { useMessage } from '@/shared/utils'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes } from '@/api/api-models'
-import {
-  getApiEventGet,
-  postApiEventGuardDelete,
-  postApiEventGuardManual,
-} from '@/api/generated/event/event'
-import {
-  getApiHistoryGuardsList,
-  getApiHistoryGuardsStats,
-} from '@/api/generated/history/history'
+import { getApiEventGet, postApiEventGuardDelete, postApiEventGuardManual } from '@/api/generated/event/event'
+import { getApiHistoryGuardsList, getApiHistoryGuardsStats } from '@/api/generated/history/history'
 import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
 import { AVATAR_URL } from '@/shared/config'
-import { GuidUtils } from '@/shared/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import {
   AlertDialog,
@@ -47,23 +32,12 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { DateRangePicker } from '@/shared/ui/date-picker'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { useMessage } from '@/shared/utils'
+import { GuidUtils } from '@/shared/utils'
 
 interface GuardMemberModel {
   guardOUId: string
@@ -525,18 +499,15 @@ function onTabChange(value: string | number) {
       class="p-6 space-y-4"
     >
       <div class="space-y-3">
-        <div class="font-semibold text-sm text-foreground">
-          这是什么？
-        </div>
+        <div class="font-semibold text-sm text-foreground">这是什么？</div>
         <p class="text-xs text-muted-foreground leading-relaxed">
           可以查看曾经收到的 Superchat 以及上舰记录，并导出为 CSV / JSON 表格。
         </p>
 
-        <div class="font-semibold text-sm text-foreground pt-2">
-          可以直接使用吗？
-        </div>
+        <div class="font-semibold text-sm text-foreground pt-2">可以直接使用吗？</div>
         <p class="text-xs text-muted-foreground leading-relaxed">
-          使用这个功能需要你拥有一个可以 7*24 小时运行 Docker 容器或者 Node.js 脚本的环境（如本地电脑、软路由或云服务器），并保持网络畅通。
+          使用这个功能需要你拥有一个可以 7*24 小时运行 Docker 容器或者 Node.js
+          脚本的环境（如本地电脑、软路由或云服务器），并保持网络畅通。
         </p>
       </div>
 
@@ -561,12 +532,8 @@ function onTabChange(value: string | number) {
         @update:model-value="onTabChange"
       >
         <TabsList class="mb-4">
-          <TabsTrigger value="history">
-            历史记录
-          </TabsTrigger>
-          <TabsTrigger value="current-captains">
-            当前在舰用户
-          </TabsTrigger>
+          <TabsTrigger value="history"> 历史记录 </TabsTrigger>
+          <TabsTrigger value="current-captains"> 当前在舰用户 </TabsTrigger>
         </TabsList>
 
         <!-- Tab 1: 历史记录面板 -->
@@ -603,22 +570,35 @@ function onTabChange(value: string | number) {
               />
 
               <!-- 类型选择 (舰长 / Superchat) -->
-              <ToggleGroup v-model="selectedType" type="single">
-                <ToggleGroupItem :value="EventDataTypes.Guard">
-                  舰长
-                </ToggleGroupItem>
-                <ToggleGroupItem :value="EventDataTypes.SC">
-                  Superchat
-                </ToggleGroupItem>
+              <ToggleGroup
+                v-model="selectedType"
+                type="single"
+              >
+                <ToggleGroupItem :value="EventDataTypes.Guard"> 舰长 </ToggleGroupItem>
+                <ToggleGroupItem :value="EventDataTypes.SC"> Superchat </ToggleGroupItem>
               </ToggleGroup>
 
               <!-- 用户搜索输入 -->
               <div class="flex items-center gap-1">
-                <Input v-model="userFilterInput" placeholder="筛选 UID / OUID / 用户名" class="w-48" @keyup.enter="applyUserFilter" />
-                <Button variant="outline" class="px-2.5" @click="applyUserFilter">
+                <Input
+                  v-model="userFilterInput"
+                  placeholder="筛选 UID / OUID / 用户名"
+                  class="w-48"
+                  @keyup.enter="applyUserFilter"
+                />
+                <Button
+                  variant="outline"
+                  class="px-2.5"
+                  @click="applyUserFilter"
+                >
                   应用
                 </Button>
-                <Button v-if="userFilterInput || Object.keys(userFilterApplied).length" variant="ghost" class="px-2 text-muted-foreground" @click="clearUserFilter">
+                <Button
+                  v-if="userFilterInput || Object.keys(userFilterApplied).length"
+                  variant="ghost"
+                  class="px-2 text-muted-foreground"
+                  @click="clearUserFilter"
+                >
                   清空
                 </Button>
               </div>
@@ -626,16 +606,19 @@ function onTabChange(value: string | number) {
 
             <!-- 导出功能 -->
             <div class="flex items-center gap-2">
-              <ToggleGroup v-model="exportType" type="single">
-                <ToggleGroupItem value="csv">
-                  CSV
-                </ToggleGroupItem>
-                <ToggleGroupItem value="json">
-                  JSON
-                </ToggleGroupItem>
+              <ToggleGroup
+                v-model="exportType"
+                type="single"
+              >
+                <ToggleGroupItem value="csv"> CSV </ToggleGroupItem>
+                <ToggleGroupItem value="json"> JSON </ToggleGroupItem>
               </ToggleGroup>
 
-              <Button variant="outline" :disabled="selectedEvents.length === 0 || isLoading || isLoadingMore" @click="exportData">
+              <Button
+                variant="outline"
+                :disabled="selectedEvents.length === 0 || isLoading || isLoadingMore"
+                @click="exportData"
+              >
                 <component
                   :is="ArrowDownload24Regular"
                   class="size-3.5 mr-1"
@@ -650,12 +633,18 @@ function onTabChange(value: string | number) {
             v-if="selectedType === EventDataTypes.Guard"
             class="p-3 rounded-lg border border-border bg-muted/20 space-y-2.5"
           >
-            <div class="text-xs font-semibold text-muted-foreground">
-              补录上舰流水记录
-            </div>
+            <div class="text-xs font-semibold text-muted-foreground">补录上舰流水记录</div>
             <div class="flex items-center gap-2 flex-wrap">
-              <Input v-model="manualGuardUname" placeholder="用户名" class="w-32" />
-              <Input v-model="manualGuardUserKey" placeholder="UID 或 OUID" class="w-44" />
+              <Input
+                v-model="manualGuardUname"
+                placeholder="用户名"
+                class="w-32"
+              />
+              <Input
+                v-model="manualGuardUserKey"
+                placeholder="UID 或 OUID"
+                class="w-44"
+              />
 
               <div class="w-28">
                 <Select
@@ -666,24 +655,39 @@ function onTabChange(value: string | number) {
                     <SelectValue placeholder="等级" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="舰长">
-                      舰长
-                    </SelectItem>
-                    <SelectItem value="提督">
-                      提督
-                    </SelectItem>
-                    <SelectItem value="总督">
-                      总督
-                    </SelectItem>
+                    <SelectItem value="舰长"> 舰长 </SelectItem>
+                    <SelectItem value="提督"> 提督 </SelectItem>
+                    <SelectItem value="总督"> 总督 </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <Input v-model="manualGuardTime" type="datetime-local" class="w-48" />
-              <Input v-model.number="manualGuardNum" type="number" min="1" placeholder="数量" class="w-20" />
-              <Input v-model.number="manualGuardPrice" type="number" min="0" placeholder="价格(可选)" class="w-28" />
+              <Input
+                v-model="manualGuardTime"
+                type="datetime-local"
+                class="w-48"
+              />
+              <Input
+                v-model.number="manualGuardNum"
+                type="number"
+                min="1"
+                placeholder="数量"
+                class="w-20"
+              />
+              <Input
+                v-model.number="manualGuardPrice"
+                type="number"
+                min="0"
+                placeholder="价格(可选)"
+                class="w-28"
+              />
 
-              <Button variant="default" :loading="manualGuardLoading" :disabled="isLoading || isLoadingMore" @click="addManualGuard">
+              <Button
+                variant="default"
+                :loading="manualGuardLoading"
+                :disabled="isLoading || isLoadingMore"
+                @click="addManualGuard"
+              >
                 添加记录
               </Button>
             </div>
@@ -716,14 +720,23 @@ function onTabChange(value: string | number) {
               </Badge>
             </div>
 
-            <ToggleGroup v-model="displayMode" type="single">
-              <ToggleGroupItem value="grid" aria-label="网格视图">
+            <ToggleGroup
+              v-model="displayMode"
+              type="single"
+            >
+              <ToggleGroupItem
+                value="grid"
+                aria-label="网格视图"
+              >
                 <component
                   :is="Grid28Filled"
                   class="size-3.5"
                 />
               </ToggleGroupItem>
-              <ToggleGroupItem value="column" aria-label="列表视图">
+              <ToggleGroupItem
+                value="column"
+                aria-label="列表视图"
+              >
                 <component
                   :is="List16Filled"
                   class="size-3.5"
@@ -772,15 +785,11 @@ function onTabChange(value: string | number) {
                     <AlertDialogContent class="sm:max-w-md">
                       <AlertDialogHeader>
                         <AlertDialogTitle>删除确认</AlertDialogTitle>
-                        <AlertDialogDescription class="text-xs">
-                          确定删除这条上舰记录？
-                        </AlertDialogDescription>
+                        <AlertDialogDescription class="text-xs"> 确定删除这条上舰记录？ </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction @click="deleteGuardEvent(item)">
-                          确定删除
-                        </AlertDialogAction>
+                        <AlertDialogAction @click="deleteGuardEvent(item)"> 确定删除 </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -791,7 +800,7 @@ function onTabChange(value: string | number) {
                   :src="item.uid ? AVATAR_URL + item.uid : item.uface"
                   referrerpolicy="no-referrer"
                   class="w-12 h-12 rounded-full border border-border object-cover"
-                >
+                />
 
                 <!-- 标签 -->
                 <div class="flex items-center gap-1">
@@ -806,9 +815,7 @@ function onTabChange(value: string | number) {
                     class="text-[10px] px-1.5 py-0.5 rounded-full text-white font-mono font-bold"
                     :style="{
                       backgroundColor:
-                        selectedType === EventDataTypes.Guard
-                          ? GetGuardColor(item.price)
-                          : GetSCColor(item.price),
+                        selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
                     }"
                   >
                     ¥{{ item.price }}
@@ -843,7 +850,12 @@ function onTabChange(value: string | number) {
               v-if="hasMore"
               class="pt-4 flex justify-center"
             >
-              <Button size="xs" variant="outline" :loading="isLoadingMore" @click="loadMore">
+              <Button
+                size="xs"
+                variant="outline"
+                :loading="isLoadingMore"
+                @click="loadMore"
+              >
                 加载更多
               </Button>
             </div>
@@ -861,13 +873,9 @@ function onTabChange(value: string | number) {
                     <TableHead>用户名</TableHead>
                     <TableHead>OUID / UID</TableHead>
                     <TableHead>时间</TableHead>
-                    <TableHead v-if="selectedType === EventDataTypes.Guard">
-                      类型
-                    </TableHead>
+                    <TableHead v-if="selectedType === EventDataTypes.Guard"> 类型 </TableHead>
                     <TableHead>价格</TableHead>
-                    <TableHead v-if="selectedType === EventDataTypes.SC">
-                      内容
-                    </TableHead>
+                    <TableHead v-if="selectedType === EventDataTypes.SC"> 内容 </TableHead>
                     <TableHead
                       v-if="selectedType === EventDataTypes.Guard"
                       class="text-right"
@@ -896,7 +904,9 @@ function onTabChange(value: string | number) {
                       {{ item.uname }}
                     </TableCell>
                     <TableCell class="font-mono text-xs text-muted-foreground">
-                      {{ GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : (item.ouid || item.uid) }}
+                      {{
+                        GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid || item.uid
+                      }}
                     </TableCell>
                     <TableCell class="text-xs text-muted-foreground">
                       {{ format(item.time, 'yyyy-MM-dd HH:mm:ss') }}
@@ -912,9 +922,7 @@ function onTabChange(value: string | number) {
                         class="text-[10px] px-1.5 py-0.5 rounded-full text-white font-mono font-bold"
                         :style="{
                           backgroundColor:
-                            selectedType === EventDataTypes.Guard
-                              ? GetGuardColor(item.price)
-                              : GetSCColor(item.price),
+                            selectedType === EventDataTypes.Guard ? GetGuardColor(item.price) : GetSCColor(item.price),
                         }"
                       >
                         ¥{{ item.price }}
@@ -933,7 +941,11 @@ function onTabChange(value: string | number) {
                     >
                       <AlertDialog v-if="item.id">
                         <AlertDialogTrigger as-child>
-                          <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10">
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            class="text-destructive hover:bg-destructive/10"
+                          >
                             <component
                               :is="Delete24Regular"
                               class="h-3 w-3"
@@ -943,15 +955,11 @@ function onTabChange(value: string | number) {
                         <AlertDialogContent class="sm:max-w-md">
                           <AlertDialogHeader>
                             <AlertDialogTitle>删除确认</AlertDialogTitle>
-                            <AlertDialogDescription class="text-xs">
-                              确定删除这条上舰记录？
-                            </AlertDialogDescription>
+                            <AlertDialogDescription class="text-xs"> 确定删除这条上舰记录？ </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction @click="deleteGuardEvent(item)">
-                              确定删除
-                            </AlertDialogAction>
+                            <AlertDialogAction @click="deleteGuardEvent(item)"> 确定删除 </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
@@ -966,7 +974,12 @@ function onTabChange(value: string | number) {
               v-if="hasMore"
               class="pt-2 flex justify-center"
             >
-              <Button size="xs" variant="outline" :loading="isLoadingMore" @click="loadMore">
+              <Button
+                size="xs"
+                variant="outline"
+                :loading="isLoadingMore"
+                @click="loadMore"
+              >
                 加载更多
               </Button>
             </div>
@@ -984,9 +997,7 @@ function onTabChange(value: string | number) {
             class="grid grid-cols-2 sm:grid-cols-4 gap-3"
           >
             <Card class="p-3">
-              <div class="text-[11px] text-muted-foreground">
-                舰长总数
-              </div>
+              <div class="text-[11px] text-muted-foreground">舰长总数</div>
               <div class="text-xl font-bold font-mono text-foreground mt-0.5">
                 {{ guardStats.totalCount }}
               </div>
@@ -1022,7 +1033,12 @@ function onTabChange(value: string | number) {
 
           <!-- 刷新按钮 -->
           <div class="flex justify-end">
-            <Button size="xs" variant="outline" :loading="guardListLoading" @click="loadGuardList">
+            <Button
+              size="xs"
+              variant="outline"
+              :loading="guardListLoading"
+              @click="loadGuardList"
+            >
               <component
                 :is="ArrowSync24Filled"
                 class="h-3.5 w-3.5 mr-1"
@@ -1039,9 +1055,7 @@ function onTabChange(value: string | number) {
                   <TableHead>OUID / 账号</TableHead>
                   <TableHead>用户名</TableHead>
                   <TableHead>等级</TableHead>
-                  <TableHead class="text-right">
-                    陪伴天数
-                  </TableHead>
+                  <TableHead class="text-right"> 陪伴天数 </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -1061,7 +1075,9 @@ function onTabChange(value: string | number) {
                   :key="row.guardOUId"
                 >
                   <TableCell class="font-mono text-xs font-bold">
-                    {{ GuidUtils.isGuidFromUserId(row.guardOUId) ? GuidUtils.guidToLong(row.guardOUId) : row.guardOUId }}
+                    {{
+                      GuidUtils.isGuidFromUserId(row.guardOUId) ? GuidUtils.guidToLong(row.guardOUId) : row.guardOUId
+                    }}
                   </TableCell>
                   <TableCell class="text-xs">
                     {{ row.username }}
@@ -1071,11 +1087,7 @@ function onTabChange(value: string | number) {
                       class="text-xs font-bold"
                       :style="{
                         color:
-                          row.guardLevel === '总督'
-                            ? '#ff6b9d'
-                            : row.guardLevel === '提督'
-                              ? '#c59aff'
-                              : '#00d1ff',
+                          row.guardLevel === '总督' ? '#ff6b9d' : row.guardLevel === '提督' ? '#c59aff' : '#00d1ff',
                       }"
                     >
                       {{ row.guardLevel }}
@@ -1096,11 +1108,19 @@ function onTabChange(value: string | number) {
           >
             <span>共 {{ guardList.length }} 位在舰用户</span>
             <div class="flex items-center gap-1.5">
-              <Button size="xs" variant="outline" :disabled="guardPaginationPage <= 1" @click="guardPaginationPage--">
+              <Button
+                size="xs"
+                variant="outline"
+                :disabled="guardPaginationPage <= 1"
+                @click="guardPaginationPage--"
+              >
                 上一页
               </Button>
               <span class="px-2 font-mono">{{ guardPaginationPage }} / {{ totalGuardPages }}</span>
-              <Button size="xs" variant="outline" :disabled="guardPaginationPage>= totalGuardPages"
+              <Button
+                size="xs"
+                variant="outline"
+                :disabled="guardPaginationPage >= totalGuardPages"
                 @click="guardPaginationPage++"
               >
                 下一页

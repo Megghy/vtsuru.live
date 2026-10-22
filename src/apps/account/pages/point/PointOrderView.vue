@@ -127,25 +127,46 @@ onMounted(() => void loadOrders())
       subtitle="查看并跟踪你使用积分兑换的实物礼物与互动服务。"
     >
       <template #actions>
-        <Button variant="outline" :disabled="loading" class="flex items-center gap-1.5" @click="refresh">
-          <component :is="ArrowSync24Regular" class="size-4" :class="{ 'animate-spin': loading }" />
+        <Button
+          variant="outline"
+          :disabled="loading"
+          class="flex items-center gap-1.5"
+          @click="refresh"
+        >
+          <component
+            :is="ArrowSync24Regular"
+            class="size-4"
+            :class="{ 'animate-spin': loading }"
+          />
           刷新
         </Button>
       </template>
     </AccountPageHeader>
 
-    <div v-if="loading" class="py-16 flex justify-center">
+    <div
+      v-if="loading"
+      class="py-16 flex justify-center"
+    >
       <Spin />
     </div>
 
     <template v-else>
       <AccountDataPanel :stats="stats">
         <template #toolbar>
-          <div class="order-toolbar flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/20 border-b border-border/60 text-xs">
+          <div
+            class="order-toolbar flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/20 border-b border-border/60 text-xs"
+          >
             <div class="order-filters flex flex-wrap items-center gap-2">
               <div class="relative w-48">
-                <component :is="Search24Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input v-model="keyword" placeholder="搜索礼物名或订单号" class="pl-8" />
+                <component
+                  :is="Search24Regular"
+                  class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  v-model="keyword"
+                  placeholder="搜索礼物名或订单号"
+                  class="pl-8"
+                />
               </div>
 
               <Select v-model="status">
@@ -153,13 +174,41 @@ onMounted(() => void loadOrders())
                   <SelectValue placeholder="订单状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all" class="text-xs">全部状态</SelectItem>
-                  <SelectItem :value="String(PointOrderStatus.Pending)" class="text-xs">待处理</SelectItem>
-                  <SelectItem :value="String(PointOrderStatus.Shipped)" class="text-xs">已发货</SelectItem>
-                  <SelectItem :value="String(PointOrderStatus.InProgress)" class="text-xs">服务进行中</SelectItem>
-                  <SelectItem :value="String(PointOrderStatus.Rejected)" class="text-xs">已拒绝</SelectItem>
-                  <SelectItem :value="String(PointOrderStatus.Cancelled)" class="text-xs">已取消</SelectItem>
-                  <SelectItem :value="String(PointOrderStatus.Completed)" class="text-xs">已完成</SelectItem>
+                  <SelectItem
+                    value="all"
+                    class="text-xs"
+                    >全部状态</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Pending)"
+                    class="text-xs"
+                    >待处理</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Shipped)"
+                    class="text-xs"
+                    >已发货</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.InProgress)"
+                    class="text-xs"
+                    >服务进行中</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Rejected)"
+                    class="text-xs"
+                    >已拒绝</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Cancelled)"
+                    class="text-xs"
+                    >已取消</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Completed)"
+                    class="text-xs"
+                    >已完成</SelectItem
+                  >
                 </SelectContent>
               </Select>
             </div>

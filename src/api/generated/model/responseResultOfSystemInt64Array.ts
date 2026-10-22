@@ -10,8 +10,8 @@
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfSystemInt64Array {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: number[] | null;
+  data: number[] | null
 }

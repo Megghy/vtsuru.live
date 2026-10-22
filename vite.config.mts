@@ -3,12 +3,14 @@
 import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
+import UnoCSS from 'unocss/vite'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import Markdown from 'unplugin-vue-markdown/vite'
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig } from 'vite'
+import checker from 'vite-plugin-checker'
 import svgLoader from 'vite-svg-loader'
-import UnoCSS from 'unocss/vite'
+
 import unoConfig from './uno.config.ts'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
@@ -33,6 +35,15 @@ const removeSodipodiInkscape = {
 export default defineConfig({
   appType: 'spa',
   plugins: [
+    checker({
+      vueTsc: {
+        tsconfigPath: 'tsconfig.json',
+        // 并行模式减少检查时间
+        root: import.meta.dirname,
+      },
+      // 仅在 build 时启用 overlay，避免开发时过多干扰
+      overlay: { initialIsOpen: false },
+    }),
     UnoCSS(unoConfig),
     {
       name: 'drop-ort-wasm',
@@ -86,13 +97,7 @@ export default defineConfig({
     }),
     Markdown(),
     AutoImport({
-      imports: [
-        'vue',
-        'vue-router',
-        '@vueuse/core',
-        'pinia',
-        'date-fns',
-      ],
+      imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', 'date-fns'],
       dts: 'src/auto-imports.d.ts',
     }),
     Components({

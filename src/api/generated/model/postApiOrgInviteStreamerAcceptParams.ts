@@ -7,5 +7,5 @@
  */
 
 export type PostApiOrgInviteStreamerAcceptParams = {
-token?: string;
-};
+  token?: string
+}

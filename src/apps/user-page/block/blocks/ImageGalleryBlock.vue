@@ -242,7 +242,10 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
               aria-label="上一张"
               @click.stop="prevSlide"
             >
-              <component :is="ChevronBackOutline" class="size-4" />
+              <component
+                :is="ChevronBackOutline"
+                class="size-4"
+              />
             </button>
             <button
               type="button"
@@ -250,7 +253,10 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
               aria-label="下一张"
               @click.stop="nextSlide"
             >
-              <component :is="ChevronForwardOutline" class="size-4" />
+              <component
+                :is="ChevronForwardOutline"
+                class="size-4"
+              />
             </button>
           </template>
 

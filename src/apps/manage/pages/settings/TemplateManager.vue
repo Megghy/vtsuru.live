@@ -20,13 +20,7 @@ import { ScheduleTemplateMap, SongListTemplateMap } from '@/shared/config/templa
 import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -271,14 +265,15 @@ async function setAsDisplayTemplate() {
 
 <template>
   <div class="relative flex flex-col gap-3">
-    <div v-if="isSaving" class="absolute inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center">
+    <div
+      v-if="isSaving"
+      class="absolute inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center"
+    >
       <Spin />
     </div>
 
     <Alert class="bg-primary/5 border-primary/20 text-xs py-2 text-primary">
-      <AlertDescription>
-        如果有合适的设计稿或者想法可以给我说然后做成模板捏
-      </AlertDescription>
+      <AlertDescription> 如果有合适的设计稿或者想法可以给我说然后做成模板捏 </AlertDescription>
     </Alert>
 
     <div class="flex flex-wrap items-center gap-3">
@@ -328,12 +323,22 @@ async function setAsDisplayTemplate() {
         </div>
       </div>
 
-      <Button :disabled="isSaving" @click="setAsDisplayTemplate">
+      <Button
+        :disabled="isSaving"
+        @click="setAsDisplayTemplate"
+      >
         设为展示模板
       </Button>
 
-      <Button v-if="settingName" variant="outline" @click="configCollapsed = !configCollapsed">
-        <component :is="configCollapsed ? PanelLeftExpand20Filled : PanelLeftContract20Filled" class="size-3.5 mr-1" />
+      <Button
+        v-if="settingName"
+        variant="outline"
+        @click="configCollapsed = !configCollapsed"
+      >
+        <component
+          :is="configCollapsed ? PanelLeftExpand20Filled : PanelLeftContract20Filled"
+          class="size-3.5 mr-1"
+        />
         {{ configCollapsed ? '展开配置' : '折叠配置' }}
       </Button>
     </div>
@@ -360,7 +365,10 @@ async function setAsDisplayTemplate() {
           共 {{ capabilityCount }} 项{{ capabilityExpanded ? '' : ' · 点击展开' }}
         </span>
       </div>
-      <div v-show="capabilityExpanded" class="flex flex-wrap gap-3.5 mt-2.5">
+      <div
+        v-show="capabilityExpanded"
+        class="flex flex-wrap gap-3.5 mt-2.5"
+      >
         <div
           v-for="g in capabilityGroups"
           :key="g.category"
@@ -370,14 +378,26 @@ async function setAsDisplayTemplate() {
             class="capability-group__head"
             :style="{ color: CapabilityCategories[g.category].color }"
           >
-            <component :is="CapabilityCategories[g.category].icon" class="size-3.5" />
+            <component
+              :is="CapabilityCategories[g.category].icon"
+              class="size-3.5"
+            />
             {{ CapabilityCategories[g.category].name }}
           </span>
-          <TooltipProvider v-for="cap in g.items" :key="cap.id">
+          <TooltipProvider
+            v-for="cap in g.items"
+            :key="cap.id"
+          >
             <Tooltip>
               <TooltipTrigger as-child>
-                <Tag variant="outline" class="text-[11px] h-5 px-1.5 flex items-center gap-1">
-                  <component :is="CapabilityCategories[g.category].icon" class="size-3" />
+                <Tag
+                  variant="outline"
+                  class="text-[11px] h-5 px-1.5 flex items-center gap-1"
+                >
+                  <component
+                    :is="CapabilityCategories[g.category].icon"
+                    class="size-3"
+                  />
                   {{ cap.name }}
                 </Tag>
               </TooltipTrigger>

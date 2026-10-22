@@ -3,16 +3,10 @@ import { computed, ref } from 'vue'
 
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { useMessage } from '@/shared/utils'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 
@@ -74,7 +68,10 @@ async function copyResult() {
             </SelectItem>
           </SelectContent>
         </Select>
-        <Button :loading="translating" @click="doTranslate">
+        <Button
+          :loading="translating"
+          @click="doTranslate"
+        >
           翻译
         </Button>
       </div>
@@ -110,7 +107,13 @@ async function copyResult() {
             </SelectContent>
           </Select>
 
-          <Button variant="ghost" size="icon" class="w-8 rounded-full" title="交换原文和译文" @click="swapTexts">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="w-8 rounded-full"
+            title="交换原文和译文"
+            @click="swapTexts"
+          >
             ⇄
           </Button>
 
@@ -152,7 +155,12 @@ async function copyResult() {
           <div class="translate-column">
             <div class="panel-header">
               <span class="text-xs text-muted-foreground"> 译文 </span>
-              <Button v-if="resultText" variant="link" class="h-auto p-0 text-primary" @click="copyResult">
+              <Button
+                v-if="resultText"
+                variant="link"
+                class="h-auto p-0 text-primary"
+                @click="copyResult"
+              >
                 复制
               </Button>
             </div>

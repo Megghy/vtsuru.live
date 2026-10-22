@@ -56,7 +56,10 @@ watch(
       class="p-6 max-w-md mx-auto"
     >
       <Alert variant="destructive">
-        <component :is="AlertCircleOutline" class="size-4" />
+        <component
+          :is="AlertCircleOutline"
+          class="size-4"
+        />
         <AlertTitle>页面加载失败</AlertTitle>
         <AlertDescription>{{ error }}</AlertDescription>
       </Alert>

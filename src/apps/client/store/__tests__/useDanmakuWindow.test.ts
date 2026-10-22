@@ -2,7 +2,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
 import { useDanmakuWindow } from '../useDanmakuWindow'
 
 vi.mock('@tauri-apps/api/dpi', () => ({

@@ -5,13 +5,7 @@ import { computed } from 'vue'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { NInputNumber } from '@/shared/ui/NInputNumber'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 
@@ -175,17 +169,31 @@ function clearAll() {
       <label class="text-xs text-muted-foreground font-medium">背景类型</label>
       <div class="flex items-center gap-2">
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg flex-1">
-          <Button :variant="type === 'none' ? 'default' : 'ghost'" @click="type = 'none'">
+          <Button
+            :variant="type === 'none' ? 'default' : 'ghost'"
+            @click="type = 'none'"
+          >
             无背景
           </Button>
-          <Button :variant="type === 'color' ? 'default' : 'ghost'" @click="type = 'color'">
+          <Button
+            :variant="type === 'color' ? 'default' : 'ghost'"
+            @click="type = 'color'"
+          >
             纯色底
           </Button>
-          <Button :variant="type === 'image' ? 'default' : 'ghost'" @click="type = 'image'">
+          <Button
+            :variant="type === 'image' ? 'default' : 'ghost'"
+            @click="type = 'image'"
+          >
             图片背景
           </Button>
         </div>
-        <Button variant="outline" class="px-2" :disabled="type === 'none'" @click="clearAll">
+        <Button
+          variant="outline"
+          class="px-2"
+          :disabled="type === 'none'"
+          @click="clearAll"
+        >
           清空
         </Button>
       </div>
@@ -198,12 +206,18 @@ function clearAll() {
       {{ noneHint }}
     </div>
 
-    <div v-if="type === 'color'" class="flex flex-col gap-1.5">
+    <div
+      v-if="type === 'color'"
+      class="flex flex-col gap-1.5"
+    >
       <label class="text-xs text-muted-foreground">背景颜色</label>
       <ColorPicker v-model="color" />
     </div>
 
-    <div v-else-if="type === 'image'" class="flex flex-col gap-3">
+    <div
+      v-else-if="type === 'image'"
+      class="flex flex-col gap-3"
+    >
       <div class="flex flex-col gap-1.5">
         <label class="text-xs text-muted-foreground">背景图片</label>
         <div
@@ -211,7 +225,10 @@ function clearAll() {
           class="upload-dropzone"
           @click="props.target.uploadImage?.()"
         >
-          <component :is="ImageOutline" class="size-6 text-muted-foreground mb-1" />
+          <component
+            :is="ImageOutline"
+            class="size-6 text-muted-foreground mb-1"
+          />
           <div class="text-xs font-medium">点击上传背景图</div>
           <div class="text-[11px] text-muted-foreground">支持 PNG, JPG, WebP 格式</div>
         </div>
@@ -230,11 +247,24 @@ function clearAll() {
             <span class="image-sub">已设置生效</span>
           </div>
           <div class="flex items-center gap-1.5">
-            <Button size="xs" variant="outline" class="px-2" @click="props.target.uploadImage?.()">
+            <Button
+              size="xs"
+              variant="outline"
+              class="px-2"
+              @click="props.target.uploadImage?.()"
+            >
               更换
             </Button>
-            <Button size="xs" variant="destructive" class="px-2" @click="props.target.clearImage?.()">
-              <component :is="TrashOutline" class="size-3.5" />
+            <Button
+              size="xs"
+              variant="destructive"
+              class="px-2"
+              @click="props.target.clearImage?.()"
+            >
+              <component
+                :is="TrashOutline"
+                class="size-3.5"
+              />
             </Button>
           </div>
         </div>
@@ -264,19 +294,31 @@ function clearAll() {
         >
           延伸覆盖侧边导航栏
         </span>
-        <Switch :checked="coverSidebar" @update:checked="coverSidebar = $event" />
+        <Switch
+          :checked="coverSidebar"
+          @update:checked="coverSidebar = $event"
+        />
       </div>
 
       <div class="flex flex-col gap-2 pt-2 border-t border-border">
         <label class="text-xs text-muted-foreground font-medium">遮罩色调与透明度</label>
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
-          <Button :variant="scrimMode === 'auto' ? 'default' : 'ghost'" @click="scrimMode = 'auto'">
+          <Button
+            :variant="scrimMode === 'auto' ? 'default' : 'ghost'"
+            @click="scrimMode = 'auto'"
+          >
             自适应
           </Button>
-          <Button :variant="scrimMode === 'black' ? 'default' : 'ghost'" @click="scrimMode = 'black'">
+          <Button
+            :variant="scrimMode === 'black' ? 'default' : 'ghost'"
+            @click="scrimMode = 'black'"
+          >
             暗黑遮罩
           </Button>
-          <Button :variant="scrimMode === 'white' ? 'default' : 'ghost'" @click="scrimMode = 'white'">
+          <Button
+            :variant="scrimMode === 'white' ? 'default' : 'ghost'"
+            @click="scrimMode = 'white'"
+          >
             纯白遮罩
           </Button>
         </div>
@@ -302,17 +344,29 @@ function clearAll() {
       <div class="flex flex-col gap-2 pt-2 border-t border-border">
         <label class="text-xs text-muted-foreground font-medium">视觉滤镜与模糊</label>
         <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg w-full">
-          <Button :variant="blurMode === 'none' ? 'default' : 'ghost'" @click="blurMode = 'none'">
+          <Button
+            :variant="blurMode === 'none' ? 'default' : 'ghost'"
+            @click="blurMode = 'none'"
+          >
             清晰无滤镜
           </Button>
-          <Button :variant="blurMode === 'background' ? 'default' : 'ghost'" @click="blurMode = 'background'">
+          <Button
+            :variant="blurMode === 'background' ? 'default' : 'ghost'"
+            @click="blurMode = 'background'"
+          >
             模糊背景
           </Button>
-          <Button :variant="blurMode === 'glass' ? 'default' : 'ghost'" @click="blurMode = 'glass'">
+          <Button
+            :variant="blurMode === 'glass' ? 'default' : 'ghost'"
+            @click="blurMode = 'glass'"
+          >
             磨砂玻璃
           </Button>
         </div>
-        <div v-if="blurMode !== 'none'" class="flex items-center gap-3">
+        <div
+          v-if="blurMode !== 'none'"
+          class="flex items-center gap-3"
+        >
           <Slider
             :model-value="[blur]"
             :min="0"

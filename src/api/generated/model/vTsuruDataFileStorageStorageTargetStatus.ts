@@ -9,10 +9,10 @@
 /**
  * 目标是否接收用户上传。Disabled 后不再写入新对象，读取仍然可用。
  */
-export type VTsuruDataFileStorageStorageTargetStatus = typeof VTsuruDataFileStorageStorageTargetStatus[keyof typeof VTsuruDataFileStorageStorageTargetStatus];
-
+export type VTsuruDataFileStorageStorageTargetStatus =
+  (typeof VTsuruDataFileStorageStorageTargetStatus)[keyof typeof VTsuruDataFileStorageStorageTargetStatus]
 
 export const VTsuruDataFileStorageStorageTargetStatus = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

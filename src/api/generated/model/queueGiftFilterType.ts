@@ -6,10 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type QueueGiftFilterType = typeof QueueGiftFilterType[keyof typeof QueueGiftFilterType];
-
+export type QueueGiftFilterType = (typeof QueueGiftFilterType)[keyof typeof QueueGiftFilterType]
 
 export const QueueGiftFilterType = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

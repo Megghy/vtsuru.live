@@ -2,11 +2,12 @@
 import { ArrowSync24Regular, CheckmarkCircle24Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { CheckTarget, PreflightCheck } from './preflight'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
+
+import type { CheckTarget, PreflightCheck } from './preflight'
 
 const props = defineProps<{
   checks: PreflightCheck[]
@@ -46,8 +47,16 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
           </h2>
           <p>连接状态实时更新；登录与 OBS 配置可手动刷新。</p>
         </div>
-        <Button variant="secondary" class="gap-1.5" :disabled="refreshing" @click="$emit('refresh')">
-          <ArrowSync24Regular class="size-3.5" :class="{ 'animate-spin': refreshing }" />
+        <Button
+          variant="secondary"
+          class="gap-1.5"
+          :disabled="refreshing"
+          @click="$emit('refresh')"
+        >
+          <ArrowSync24Regular
+            class="size-3.5"
+            :class="{ 'animate-spin': refreshing }"
+          />
           刷新检查
         </Button>
       </div>
@@ -66,9 +75,7 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
         v-if="error"
         class="border-destructive/20 bg-destructive/10 text-destructive py-2 px-2.5 my-2"
       >
-        <AlertDescription class="text-xs m-0">
-          {{ error }}，请处理后重新检查。
-        </AlertDescription>
+        <AlertDescription class="text-xs m-0"> {{ error }}，请处理后重新检查。 </AlertDescription>
       </Alert>
 
       <ul
@@ -91,7 +98,13 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
             <strong>{{ check.title }}</strong>
             <p>{{ check.detail }}</p>
           </div>
-          <Button v-if="check.status !== 'success'" size="xs" variant="ghost" class="h-6 text-[11px] shrink-0" @click="$emit('navigate', check.target)">
+          <Button
+            v-if="check.status !== 'success'"
+            size="xs"
+            variant="ghost"
+            class="h-6 text-[11px] shrink-0"
+            @click="$emit('navigate', check.target)"
+          >
             {{ targets[check.target] }}
           </Button>
         </li>

@@ -3,12 +3,9 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import BlockCard from '../BlockCard.vue'
-import {
-  buttonAppearanceClass,
-  buttonAppearanceStyle,
-  normalizeButtonAppearance,
-} from '../buttonAppearance'
+import { buttonAppearanceClass, buttonAppearanceStyle, normalizeButtonAppearance } from '../buttonAppearance'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
+
 import '../buttonAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; userInfo?: unknown; biliInfo?: unknown }>()

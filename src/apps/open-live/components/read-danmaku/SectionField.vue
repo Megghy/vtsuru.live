@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Info24Filled } from '@vicons/fluent'
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 defineProps<{
@@ -31,7 +32,8 @@ defineProps<{
       <span
         v-if="value !== undefined"
         class="value"
-      >{{ value }}</span>
+        >{{ value }}</span
+      >
     </div>
     <div class="body">
       <slot />

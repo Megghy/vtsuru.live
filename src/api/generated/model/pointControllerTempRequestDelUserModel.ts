@@ -8,9 +8,9 @@
 
 export interface PointControllerTempRequestDelUserModel {
   /** @nullable */
-  authId?: number | null;
+  authId?: number | null
   /** @nullable */
-  oId?: string | null;
+  oId?: string | null
   /** @nullable */
-  uId?: number | null;
+  uId?: number | null
 }

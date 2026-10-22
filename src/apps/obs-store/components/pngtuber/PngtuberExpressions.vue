@@ -8,13 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import PngtuberAccessories from './PngtuberAccessories.vue'
 import PngtuberImageSlot from './PngtuberImageSlot.vue'
@@ -111,12 +105,16 @@ function recordKey(event: KeyboardEvent) {
       </Select>
 
       <div class="flex items-center gap-2 flex-wrap">
-        <Button variant="outline" :disabled="disabled || state.expressions.length>= 32"
+        <Button
+          variant="outline"
+          :disabled="disabled || state.expressions.length >= 32"
           @click="add()"
         >
           新增
         </Button>
-        <Button variant="outline" :disabled="disabled || state.expressions.length>= 32"
+        <Button
+          variant="outline"
+          :disabled="disabled || state.expressions.length >= 32"
           @click="add(true)"
         >
           复制
@@ -127,18 +125,30 @@ function recordKey(event: KeyboardEvent) {
           @positive-click="remove"
         >
           <template #trigger>
-            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="disabled || state.expressions.length <= 1">
+            <Button
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10"
+              :disabled="disabled || state.expressions.length <= 1"
+            >
               删除
             </Button>
           </template>
           删除此表情及其配件？
         </Popconfirm>
-        <Button :disabled="controlDisabled" @click="emit('activate', expression)">
+        <Button
+          :disabled="controlDisabled"
+          @click="emit('activate', expression)"
+        >
           切换表情
         </Button>
       </div>
 
-      <Input :value="expression.name" :disabled="disabled" placeholder="表情名称" @input="patch({ name: ($event.target as HTMLInputElement).value })" />
+      <Input
+        :value="expression.name"
+        :disabled="disabled"
+        placeholder="表情名称"
+        @input="patch({ name: ($event.target as HTMLInputElement).value })"
+      />
 
       <div class="fields">
         <div class="space-y-1">
@@ -175,7 +185,11 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="" class="text-xs">使用默认表情</SelectItem>
+              <SelectItem
+                value=""
+                class="text-xs"
+                >使用默认表情</SelectItem
+              >
               <SelectItem
                 v-for="opt in options"
                 :key="opt.value"
@@ -200,14 +214,24 @@ function recordKey(event: KeyboardEvent) {
         />
       </div>
 
-      <Button variant="outline" :disabled="disabled || !expression.idleImage" @click="patch({ speakingImage: expression.idleImage })">
+      <Button
+        variant="outline"
+        :disabled="disabled || !expression.idleImage"
+        @click="patch({ speakingImage: expression.idleImage })"
+      >
         将静止立绘用于说话
       </Button>
 
       <div class="fields">
         <div class="space-y-1">
           <label class="text-xs text-muted-foreground font-medium">快捷键（按键录入，退格清除）</label>
-          <Input :value="expression.hotkey" readonly :disabled="disabled" placeholder="点击后按快捷键" @keydown="recordKey" />
+          <Input
+            :value="expression.hotkey"
+            readonly
+            :disabled="disabled"
+            placeholder="点击后按快捷键"
+            @keydown="recordKey"
+          />
         </div>
 
         <div class="space-y-1">
@@ -221,15 +245,30 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="toggle" class="text-xs">切换</SelectItem>
-              <SelectItem value="hold" class="text-xs">按住</SelectItem>
-              <SelectItem value="timed" class="text-xs">定时</SelectItem>
+              <SelectItem
+                value="toggle"
+                class="text-xs"
+                >切换</SelectItem
+              >
+              <SelectItem
+                value="hold"
+                class="text-xs"
+                >按住</SelectItem
+              >
+              <SelectItem
+                value="timed"
+                class="text-xs"
+                >定时</SelectItem
+              >
             </SelectContent>
           </Select>
         </div>
       </div>
 
-      <div v-if="expression.hotkeyMode === 'timed'" class="space-y-1">
+      <div
+        v-if="expression.hotkeyMode === 'timed'"
+        class="space-y-1"
+      >
         <label class="text-xs text-muted-foreground font-medium">持续时长 (ms)</label>
         <NInputNumber
           :value="expression.durationMs"
@@ -257,9 +296,21 @@ function recordKey(event: KeyboardEvent) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="continue" class="text-xs">继续播放</SelectItem>
-            <SelectItem value="restart" class="text-xs">激活时重播</SelectItem>
-            <SelectItem value="once" class="text-xs">播放一次</SelectItem>
+            <SelectItem
+              value="continue"
+              class="text-xs"
+              >继续播放</SelectItem
+            >
+            <SelectItem
+              value="restart"
+              class="text-xs"
+              >激活时重播</SelectItem
+            >
+            <SelectItem
+              value="once"
+              class="text-xs"
+              >播放一次</SelectItem
+            >
           </SelectContent>
         </Select>
       </div>

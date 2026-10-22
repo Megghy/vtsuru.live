@@ -25,7 +25,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
       <SliderRange class="absolute h-full bg-primary" />
     </SliderTrack>
     <SliderThumb
-      v-for="(_, key) in (Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue ?? props.defaultValue])"
+      v-for="(_, key) in Array.isArray(props.modelValue) ? props.modelValue : [props.modelValue ?? props.defaultValue]"
       :key="key"
       class="block size-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent cursor-pointer"
     />

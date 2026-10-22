@@ -44,7 +44,7 @@ const dividerStyle = computed(() => {
   >
     <div
       class="h-px bg-border flex-1"
-      :class="{ 'max-w-[40px]': titlePlacement === 'left', 'hidden': titlePlacement === 'left' && false }"
+      :class="{ 'max-w-[40px]': titlePlacement === 'left', hidden: titlePlacement === 'left' && false }"
     />
     <span
       class="text-xs text-muted-foreground font-medium px-3 shrink-0"

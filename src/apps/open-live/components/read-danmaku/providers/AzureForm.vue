@@ -50,8 +50,6 @@ watch(
       placeholder="zh-CN-XiaoxiaoNeural"
       @focus="loadVoices"
     />
-    <span class="text-[11px] text-muted-foreground">
-      使用本站提供的 Microsoft Azure 语音合成服务
-    </span>
+    <span class="text-[11px] text-muted-foreground"> 使用本站提供的 Microsoft Azure 语音合成服务 </span>
   </SectionField>
 </template>

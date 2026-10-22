@@ -190,14 +190,26 @@ function formatRelative(time: number) {
     <template v-else>
       <header class="ticket-detail__header flex items-start justify-between gap-3 pb-3 border-b border-border/60">
         <div class="flex items-start gap-2 min-w-0">
-          <Button variant="ghost" size="icon" class="size-8 -ml-1 text-muted-foreground hover:text-foreground shrink-0 md:hidden" title="返回工单列表" @click="emit('back')">
-            <component :is="ArrowLeft24Regular" class="size-4" />
+          <Button
+            variant="ghost"
+            size="icon"
+            class="size-8 -ml-1 text-muted-foreground hover:text-foreground shrink-0 md:hidden"
+            title="返回工单列表"
+            @click="emit('back')"
+          >
+            <component
+              :is="ArrowLeft24Regular"
+              class="size-4"
+            />
           </Button>
 
           <div class="ticket-detail__heading min-w-0 space-y-1">
             <div class="ticket-detail__title-row flex items-center gap-2 flex-wrap">
               <h2 class="text-sm font-semibold text-foreground truncate m-0">{{ ticket.title }}</h2>
-              <Badge variant="secondary" class="text-[10px] h-4.5 px-1.5 font-normal">
+              <Badge
+                variant="secondary"
+                class="text-[10px] h-4.5 px-1.5 font-normal"
+              >
                 {{ supportTicketStatusMeta[ticket.status].label }}
               </Badge>
             </div>
@@ -210,8 +222,18 @@ function formatRelative(time: number) {
           </div>
         </div>
 
-        <Button v-if="editable" variant="ghost" size="icon" class="size-8 text-muted-foreground hover:text-foreground shrink-0" title="工单设置" @click="showPreferences = true">
-          <component :is="Settings24Regular" class="size-4" />
+        <Button
+          v-if="editable"
+          variant="ghost"
+          size="icon"
+          class="size-8 text-muted-foreground hover:text-foreground shrink-0"
+          title="工单设置"
+          @click="showPreferences = true"
+        >
+          <component
+            :is="Settings24Regular"
+            class="size-4"
+          />
         </Button>
       </header>
 
@@ -225,7 +247,8 @@ function formatRelative(time: number) {
           class="ticket-message flex flex-col gap-1"
           :class="{
             'items-end': isOwnTicketMessage(editable, item.authorType),
-            'items-start': !isOwnTicketMessage(editable, item.authorType) && item.authorType !== SupportTicketAuthorType.System,
+            'items-start':
+              !isOwnTicketMessage(editable, item.authorType) && item.authorType !== SupportTicketAuthorType.System,
             'items-center py-2 text-muted-foreground text-[11px]': item.authorType === SupportTicketAuthorType.System,
           }"
         >
@@ -260,7 +283,12 @@ function formatRelative(time: number) {
                   :alt="image.name"
                 />
               </div>
-              <p v-if="item.content" class="m-0 text-xs">{{ item.content }}</p>
+              <p
+                v-if="item.content"
+                class="m-0 text-xs"
+              >
+                {{ item.content }}
+              </p>
             </div>
           </template>
         </div>
@@ -277,13 +305,20 @@ function formatRelative(time: number) {
             :key="item.id"
             class="relative size-12 rounded border border-border overflow-hidden group"
           >
-            <img :src="item.url" class="size-full object-cover" alt="" />
+            <img
+              :src="item.url"
+              class="size-full object-cover"
+              alt=""
+            />
             <button
               type="button"
               class="absolute top-0.5 right-0.5 size-3.5 rounded-full bg-black/60 text-white flex items-center justify-center"
               @click="removeFile(i)"
             >
-              <component :is="Dismiss16Regular" class="size-2" />
+              <component
+                :is="Dismiss16Regular"
+                class="size-2"
+              />
             </button>
           </div>
 
@@ -294,7 +329,10 @@ function formatRelative(time: number) {
             title="添加图片"
             @click="fileInputRef?.click()"
           >
-            <component :is="Image24Regular" class="size-4" />
+            <component
+              :is="Image24Regular"
+              class="size-4"
+            />
           </button>
           <input
             ref="fileInputRef"
@@ -324,8 +362,15 @@ function formatRelative(time: number) {
             @positive-click="resolve"
           >
             <template #trigger>
-              <Button variant="outline" class="flex items-center gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10" :disabled="resolving">
-                <component :is="CheckmarkCircle24Regular" class="size-3.5" />
+              <Button
+                variant="outline"
+                class="flex items-center gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                :disabled="resolving"
+              >
+                <component
+                  :is="CheckmarkCircle24Regular"
+                  class="size-3.5"
+                />
                 问题已解决
               </Button>
             </template>
@@ -333,8 +378,15 @@ function formatRelative(time: number) {
           </Popconfirm>
           <div v-else />
 
-          <Button class="flex items-center gap-1" :disabled="!canSend || sending" @click="sendReply">
-            <component :is="Send24Regular" class="size-3.5" />
+          <Button
+            class="flex items-center gap-1"
+            :disabled="!canSend || sending"
+            @click="sendReply"
+          >
+            <component
+              :is="Send24Regular"
+              class="size-3.5"
+            />
             回复
           </Button>
         </div>
@@ -350,7 +402,10 @@ function formatRelative(time: number) {
 
         <div class="space-y-3 text-xs">
           <label class="flex items-start gap-2 cursor-pointer">
-            <Checkbox v-model:checked="isPublic" class="mt-0.5" />
+            <Checkbox
+              v-model:checked="isPublic"
+              class="mt-0.5"
+            />
             <div class="flex flex-col gap-0.5">
               <span class="font-medium text-foreground">公开此工单</span>
               <span class="text-muted-foreground text-[11px]">
@@ -360,7 +415,10 @@ function formatRelative(time: number) {
           </label>
 
           <label class="flex items-start gap-2 cursor-pointer">
-            <Checkbox v-model:checked="emailOnStaffReply" class="mt-0.5" />
+            <Checkbox
+              v-model:checked="emailOnStaffReply"
+              class="mt-0.5"
+            />
             <div class="flex flex-col gap-0.5">
               <span class="font-medium text-foreground">站长回复时发送邮件</span>
               <span class="text-muted-foreground text-[11px]">站内通知不受此选项影响。</span>
@@ -369,10 +427,16 @@ function formatRelative(time: number) {
         </div>
 
         <DialogFooter class="pt-2 border-t border-border/60">
-          <Button variant="outline" @click="showPreferences = false">
+          <Button
+            variant="outline"
+            @click="showPreferences = false"
+          >
             取消
           </Button>
-          <Button :disabled="savingPreferences" @click="savePreferences">
+          <Button
+            :disabled="savingPreferences"
+            @click="savePreferences"
+          >
             保存
           </Button>
         </DialogFooter>

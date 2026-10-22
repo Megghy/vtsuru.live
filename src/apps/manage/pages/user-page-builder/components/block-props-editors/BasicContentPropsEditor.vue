@@ -26,16 +26,28 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
     <PropsGrid>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">显示名称</label>
-        <Input v-model="blockProps.displayName" placeholder="为空则显示账号名" />
+        <Input
+          v-model="blockProps.displayName"
+          placeholder="为空则显示账号名"
+        />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">头像图片</label>
         <div class="flex items-center gap-2">
-          <Button variant="outline" class="gap-1.5" :disabled="editor.isUploading.value" @click="editor.triggerUpload(props.block, 'avatarFile')">
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            :disabled="editor.isUploading.value"
+            @click="editor.triggerUpload(props.block, 'avatarFile')"
+          >
             <PersonCircleOutline class="size-4" />
             上传头像
           </Button>
-          <Button variant="ghost" :disabled="!blockProps.avatarFile" @click="editor.clearUploadedFile(props.block, 'avatarFile')">
+          <Button
+            variant="ghost"
+            :disabled="!blockProps.avatarFile"
+            @click="editor.clearUploadedFile(props.block, 'avatarFile')"
+          >
             清除
           </Button>
           <span class="text-xs text-muted-foreground truncate max-w-[200px]">
@@ -61,7 +73,10 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
     <PropsGrid>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">标题文字</label>
-        <Input v-model="blockProps.text" placeholder="请输入标题" />
+        <Input
+          v-model="blockProps.text"
+          placeholder="请输入标题"
+        />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">标题级别 1/2/3</label>
@@ -126,7 +141,10 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input v-model="blockProps.title" placeholder="可选" />
+        <Input
+          v-model="blockProps.title"
+          placeholder="可选"
+        />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">内容</label>

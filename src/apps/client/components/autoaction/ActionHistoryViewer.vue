@@ -9,6 +9,16 @@ import {
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Pagination } from '@/shared/ui/pagination'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+
 import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
 import {
   clearAllHistory,
@@ -16,22 +26,6 @@ import {
   getHistoryByType,
   HistoryType,
 } from '../../store/autoAction/utils/historyLogger'
-import { Badge } from '@/shared/ui/badge'
-import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Empty } from '@/shared/ui/empty'
-import { Pagination } from '@/shared/ui/pagination'
-import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const loading = ref(true)
 const activeTab = ref(HistoryType.DANMAKU)
@@ -145,8 +139,16 @@ onUnmounted(() => {
       </div>
 
       <div class="flex items-center gap-2">
-        <Button variant="secondary" class="gap-1" :disabled="loading" @click="loadHistory">
-          <ArrowClockwise16Filled class="size-3.5" :class="{ 'animate-spin': loading }" />
+        <Button
+          variant="secondary"
+          class="gap-1"
+          :disabled="loading"
+          @click="loadHistory"
+        >
+          <ArrowClockwise16Filled
+            class="size-3.5"
+            :class="{ 'animate-spin': loading }"
+          />
           刷新
         </Button>
         <Popconfirm
@@ -154,7 +156,10 @@ onUnmounted(() => {
           @positive-click="handleClearAllHistory"
         >
           <template #trigger>
-            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1">
+            <Button
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1"
+            >
               <Delete16Filled class="size-3.5" />
               清空所有
             </Button>
@@ -165,7 +170,10 @@ onUnmounted(() => {
     </CardHeader>
 
     <CardContent class="p-3">
-      <Tabs v-model="activeTab" class="w-full">
+      <Tabs
+        v-model="activeTab"
+        class="w-full"
+      >
         <TabsList class="grid w-full grid-cols-3 max-w-[360px]">
           <TabsTrigger
             v-for="(label, type) in typeNameMap"
@@ -222,7 +230,10 @@ onUnmounted(() => {
                       </Badge>
                     </TableCell>
 
-                    <TableCell class="text-xs font-mono max-w-[300px] truncate" :title="row.content">
+                    <TableCell
+                      class="text-xs font-mono max-w-[300px] truncate"
+                      :title="row.content"
+                    >
                       {{ row.content }}
                     </TableCell>
 
@@ -234,7 +245,11 @@ onUnmounted(() => {
                       >
                         {{ row.target }}
                       </Badge>
-                      <span v-else class="text-muted-foreground">-</span>
+                      <span
+                        v-else
+                        class="text-muted-foreground"
+                        >-</span
+                      >
                     </TableCell>
 
                     <TableCell class="text-center">
@@ -257,7 +272,10 @@ onUnmounted(() => {
                 </template>
                 <template v-else>
                   <TableRow>
-                    <TableCell colspan="5" class="text-center py-8">
+                    <TableCell
+                      colspan="5"
+                      class="text-center py-8"
+                    >
                       <Empty description="暂无历史记录" />
                     </TableCell>
                   </TableRow>
@@ -275,7 +293,11 @@ onUnmounted(() => {
               @positive-click="handleClearHistory(type as HistoryType)"
             >
               <template #trigger>
-                <Button size="xs" variant="ghost" class="h-6 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="h-6 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1"
+                >
                   <Delete16Filled class="size-3" />
                   清空{{ label }}历史
                 </Button>

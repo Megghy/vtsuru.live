@@ -5,23 +5,23 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { HeatmapItem } from './heatmapItem';
-import type { OrgStreamerDataOrgStreamerStatuses } from './orgStreamerDataOrgStreamerStatuses';
-import type { ResponseLiveInfoModel } from './responseLiveInfoModel';
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
-import type { StreamerLiveSummary } from './streamerLiveSummary';
+import type { HeatmapItem } from './heatmapItem'
+import type { OrgStreamerDataOrgStreamerStatuses } from './orgStreamerDataOrgStreamerStatuses'
+import type { ResponseLiveInfoModel } from './responseLiveInfoModel'
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
+import type { StreamerLiveSummary } from './streamerLiveSummary'
 
 export interface ResponseOrgStreamerDetailModel {
-  streamer: ResponseUserBasicInfo;
-  status: OrgStreamerDataOrgStreamerStatuses;
+  streamer: ResponseUserBasicInfo
+  status: OrgStreamerDataOrgStreamerStatuses
   /** @nullable */
-  note?: string | null;
-  addedAt: number;
+  note?: string | null
+  addedAt: number
   /** @nullable */
-  respondedAt?: number | null;
-  summary: StreamerLiveSummary;
-  heatmap: HeatmapItem[];
-  lives: ResponseLiveInfoModel[];
-  page: number;
-  pageSize: number;
+  respondedAt?: number | null
+  summary: StreamerLiveSummary
+  heatmap: HeatmapItem[]
+  lives: ResponseLiveInfoModel[]
+  page: number
+  pageSize: number
 }

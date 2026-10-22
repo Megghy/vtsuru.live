@@ -3,8 +3,8 @@ import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Image24Regular } fr
 import { X } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
 
-import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes'
 import type { UploadFileInfo } from '@/shared/types/upload'
+import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
@@ -113,7 +113,11 @@ function moveImage(id: number, offset: -1 | 1) {
         :key="f.id"
         class="relative aspect-square rounded-md border border-border overflow-hidden group bg-muted/20"
       >
-        <img :src="f.url" :alt="f.name" class="w-full h-full object-cover" />
+        <img
+          :src="f.url"
+          :alt="f.name"
+          class="w-full h-full object-cover"
+        />
         <button
           type="button"
           class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
@@ -143,7 +147,10 @@ function moveImage(id: number, offset: -1 | 1) {
       />
     </div>
 
-    <p v-if="pendingFiles.length" class="text-[11px] text-muted-foreground">
+    <p
+      v-if="pendingFiles.length"
+      class="text-[11px] text-muted-foreground"
+    >
       {{ pendingFiles.length }} 张图片将在保存时上传，可在上方直接移除。
     </p>
 
@@ -174,20 +181,44 @@ function moveImage(id: number, offset: -1 | 1) {
           </div>
 
           <div class="flex items-center gap-1">
-            <Button variant="ghost" size="icon" class="size-6 text-muted-foreground hover:text-foreground" title="下移一层" :disabled="disabled" @click.stop="moveImage(image.id, -1)">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-muted-foreground hover:text-foreground"
+              title="下移一层"
+              :disabled="disabled"
+              @click.stop="moveImage(image.id, -1)"
+            >
               <ArrowDown20Filled class="size-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" class="size-6 text-muted-foreground hover:text-foreground" title="上移一层" :disabled="disabled" @click.stop="moveImage(image.id, 1)">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-muted-foreground hover:text-foreground"
+              title="上移一层"
+              :disabled="disabled"
+              @click.stop="moveImage(image.id, 1)"
+            >
               <ArrowUp20Filled class="size-3.5" />
             </Button>
-            <Button variant="ghost" size="icon" class="size-6 text-destructive/80 hover:text-destructive hover:bg-destructive/10" title="删除" :disabled="disabled" @click.stop="removeImage(image.id)">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+              title="删除"
+              :disabled="disabled"
+              @click.stop="removeImage(image.id)"
+            >
               <Delete20Filled class="size-3.5" />
             </Button>
           </div>
         </div>
       </CardHeader>
 
-      <CardFooter v-if="selectedImageId === image.id" class="p-3 pt-0 flex flex-col gap-3 border-t bg-muted/10">
+      <CardFooter
+        v-if="selectedImageId === image.id"
+        class="p-3 pt-0 flex flex-col gap-3 border-t bg-muted/10"
+      >
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-3">
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground">X (%)</span>

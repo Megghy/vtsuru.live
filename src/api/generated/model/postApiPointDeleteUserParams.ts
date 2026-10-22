@@ -7,7 +7,7 @@
  */
 
 export type PostApiPointDeleteUserParams = {
-authId?: number;
-oId?: string;
-uId?: number;
-};
+  authId?: number
+  oId?: string
+  uId?: number
+}

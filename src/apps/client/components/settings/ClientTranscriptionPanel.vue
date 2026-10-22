@@ -13,19 +13,13 @@ import {
   TRANSCRIPTION_MIN_CLIENT_VERSION,
 } from '@/shared/config/clientVersion'
 import type { TranscriptionProfile, TranscriptionProvider } from '@/shared/models/transcription'
-import { useWebFetcher } from '@/store/useWebFetcher'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { useWebFetcher } from '@/store/useWebFetcher'
 
 const settingsStore = useTranscriptionSettings()
 const transcription = useTranscription()
@@ -72,9 +66,7 @@ const readiness = computed(() => {
   return [
     {
       state: isSupported.value ? 'ok' : 'bad',
-      label: isSupported.value
-        ? `客户端 ${version}`
-        : `需要客户端 ${TRANSCRIPTION_MIN_CLIENT_VERSION} 或更高版本`,
+      label: isSupported.value ? `客户端 ${version}` : `需要客户端 ${TRANSCRIPTION_MIN_CLIENT_VERSION} 或更高版本`,
     },
     {
       state: roomId ? 'ok' : 'bad',
@@ -121,15 +113,25 @@ const notice = computed(() => {
   if (transcription.status.phase === 'reconnecting') {
     const headline = transcription.status.message || '连接中断，正在重新连接'
     const detail = transcription.runtimeError
-    return { class: 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400', text: detail ? `${headline}：${detail}` : headline }
+    return {
+      class: 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      text: detail ? `${headline}：${detail}` : headline,
+    }
   }
   if (transcription.runtimeError && transcription.status.phase === 'error') {
     return { class: 'border-destructive/20 bg-destructive/10 text-destructive', text: transcription.runtimeError }
   }
   if (transcription.archivePaused || transcription.uploadError) {
-    return { class: 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400', text: transcription.uploadError || '归档暂停，转写仍在继续' }
+    return {
+      class: 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      text: transcription.uploadError || '归档暂停，转写仍在继续',
+    }
   }
-  if (transcription.status.message) return { class: 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400', text: transcription.status.message }
+  if (transcription.status.message)
+    return {
+      class: 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400',
+      text: transcription.status.message,
+    }
   return undefined
 })
 
@@ -260,9 +262,7 @@ function removeHotword(index: number) {
       <div class="flex justify-between items-center">
         <div>
           <span class="font-semibold text-sm text-foreground">运行状态</span>
-          <div class="section-description">
-            最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。
-          </div>
+          <div class="section-description">最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。</div>
         </div>
         <Badge
           variant="outline"
@@ -293,20 +293,25 @@ function removeHotword(index: number) {
       </div>
 
       <div class="runtime-actions flex items-center gap-3">
-        <Button v-if="!isRunning" :disabled="startBlocked || isBusy" @click="start">
+        <Button
+          v-if="!isRunning"
+          :disabled="startBlocked || isBusy"
+          @click="start"
+        >
           {{ isBusy ? '启动中...' : '开始转写' }}
         </Button>
-        <Button v-else variant="destructive" :disabled="isBusy" @click="stop">
+        <Button
+          v-else
+          variant="destructive"
+          :disabled="isBusy"
+          @click="stop"
+        >
           {{ isBusy ? '停止中...' : '停止转写' }}
         </Button>
         <span class="text-xs text-muted-foreground">
           已归档 {{ transcription.archivedCount }} 条
-          <template v-if="transcription.pendingCount">
-            ，待上传 {{ transcription.pendingCount }} 条
-          </template>
-          <template v-if="sourceLabel">
-            · {{ sourceLabel }}
-          </template>
+          <template v-if="transcription.pendingCount"> ，待上传 {{ transcription.pendingCount }} 条 </template>
+          <template v-if="sourceLabel"> · {{ sourceLabel }} </template>
         </span>
       </div>
 
@@ -354,15 +359,25 @@ function removeHotword(index: number) {
       <div class="flex justify-between items-center">
         <div>
           <span class="font-semibold text-sm text-foreground">识别服务</span>
-          <div class="section-description">
-            可保存多个本地配置，启动时使用当前选中的配置。
-          </div>
+          <div class="section-description">可保存多个本地配置，启动时使用当前选中的配置。</div>
         </div>
         <div class="flex items-center gap-2">
-          <Button size="xs" variant="outline" class="h-6 text-[11px]" :disabled="isRunning" @click="addProfile('tencent')">
+          <Button
+            size="xs"
+            variant="outline"
+            class="h-6 text-[11px]"
+            :disabled="isRunning"
+            @click="addProfile('tencent')"
+          >
             新增腾讯云
           </Button>
-          <Button size="xs" variant="outline" class="h-6 text-[11px]" :disabled="isRunning" @click="addProfile('openai')">
+          <Button
+            size="xs"
+            variant="outline"
+            class="h-6 text-[11px]"
+            :disabled="isRunning"
+            @click="addProfile('openai')"
+          >
             新增 OpenAI
           </Button>
         </div>
@@ -396,7 +411,11 @@ function removeHotword(index: number) {
           @positive-click="settingsStore.removeActiveProfile()"
         >
           <template #trigger>
-            <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="settingsStore.settings.profiles.length === 1 || isRunning">
+            <Button
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10"
+              :disabled="settingsStore.settings.profiles.length === 1 || isRunning"
+            >
               删除
             </Button>
           </template>
@@ -410,7 +429,12 @@ function removeHotword(index: number) {
       >
         <div class="flex items-center gap-3">
           <span class="w-24 text-muted-foreground shrink-0">配置名称</span>
-          <Input v-model="activeProfile.name" :disabled="isRunning" placeholder="用于区分本地配置" class="flex-1" />
+          <Input
+            v-model="activeProfile.name"
+            :disabled="isRunning"
+            placeholder="用于区分本地配置"
+            class="flex-1"
+          />
         </div>
 
         <div class="flex items-center gap-3">
@@ -425,8 +449,16 @@ function removeHotword(index: number) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tencent" class="text-xs">腾讯云</SelectItem>
-                <SelectItem value="openai" class="text-xs">OpenAI</SelectItem>
+                <SelectItem
+                  value="tencent"
+                  class="text-xs"
+                  >腾讯云</SelectItem
+                >
+                <SelectItem
+                  value="openai"
+                  class="text-xs"
+                  >OpenAI</SelectItem
+                >
               </SelectContent>
             </Select>
           </div>
@@ -483,34 +515,65 @@ function removeHotword(index: number) {
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">App ID</span>
-            <Input v-model="activeProfile.appId" :disabled="isRunning" class="flex-1" />
+            <Input
+              v-model="activeProfile.appId"
+              :disabled="isRunning"
+              class="flex-1"
+            />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">Secret ID</span>
-            <Input v-model="activeProfile.secretId" type="password" :disabled="isRunning" class="flex-1" />
+            <Input
+              v-model="activeProfile.secretId"
+              type="password"
+              :disabled="isRunning"
+              class="flex-1"
+            />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">Secret Key</span>
-            <Input v-model="activeProfile.secretKey" type="password" :disabled="isRunning" class="flex-1" />
+            <Input
+              v-model="activeProfile.secretKey"
+              type="password"
+              :disabled="isRunning"
+              class="flex-1"
+            />
           </div>
         </template>
 
         <template v-else>
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">模型</span>
-            <Input v-model="activeProfile.model" :disabled="isRunning" placeholder="gpt-live-transcribe" class="flex-1" />
+            <Input
+              v-model="activeProfile.model"
+              :disabled="isRunning"
+              placeholder="gpt-live-transcribe"
+              class="flex-1"
+            />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">API 地址</span>
-            <Input v-model="activeProfile.baseUrl" :disabled="isRunning" placeholder="wss://api.openai.com/v1/realtime" class="flex-1" />
+            <Input
+              v-if="activeProfile.provider === 'openai'"
+              v-model="activeProfile.baseUrl"
+              :disabled="isRunning"
+              placeholder="wss://api.openai.com/v1/realtime"
+              class="flex-1"
+            />
           </div>
 
           <div class="flex items-center gap-3">
             <span class="w-24 text-muted-foreground shrink-0">API Key</span>
-            <Input v-model="activeProfile.apiKey" type="password" :disabled="isRunning" class="flex-1" />
+            <Input
+              v-if="activeProfile.provider === 'openai'"
+              v-model="activeProfile.apiKey"
+              type="password"
+              :disabled="isRunning"
+              class="flex-1"
+            />
           </div>
         </template>
 
@@ -534,8 +597,20 @@ function removeHotword(index: number) {
               </button>
             </Badge>
             <div class="flex items-center gap-1">
-              <Input v-model="newHotword" :disabled="isRunning" placeholder="+ 新增热词" class="h-6 w-24" @keyup.enter="addHotword" />
-              <Button size="xs" variant="ghost" class="h-6 px-1.5" :disabled="isRunning || !newHotword.trim()" @click="addHotword">
+              <Input
+                v-model="newHotword"
+                :disabled="isRunning"
+                placeholder="+ 新增热词"
+                class="h-6 w-24"
+                @keyup.enter="addHotword"
+              />
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 px-1.5"
+                :disabled="isRunning || !newHotword.trim()"
+                @click="addHotword"
+              >
                 添加
               </Button>
             </div>

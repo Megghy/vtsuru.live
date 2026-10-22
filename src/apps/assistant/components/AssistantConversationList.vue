@@ -69,14 +69,29 @@ function onScroll(e: Event) {
 
 <template>
   <div class="conv-list">
-    <Button variant="outline" class="conv-list__new w-full border-dashed flex items-center justify-center gap-1.5" @click="store.newConversation">
-      <component :is="Add16Regular" class="size-3.5" />
+    <Button
+      variant="outline"
+      class="conv-list__new w-full border-dashed flex items-center justify-center gap-1.5"
+      @click="store.newConversation"
+    >
+      <component
+        :is="Add16Regular"
+        class="size-3.5"
+      />
       新对话
     </Button>
 
     <div class="relative conv-list__search">
-      <component :is="Search16Regular" class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-      <Input size="xs" v-model="keyword" placeholder="搜索会话" class="pl-8" />
+      <component
+        :is="Search16Regular"
+        class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+      />
+      <Input
+        size="xs"
+        v-model="keyword"
+        placeholder="搜索会话"
+        class="pl-8"
+      />
     </div>
 
     <div
@@ -107,18 +122,44 @@ function onScroll(e: Event) {
         "
         @click="store.switchConversation(conv.id)"
       >
-        <Input v-if="editingId === conv.id" v-model="editingTitle" autofocus class="h-6 px-1.5" @blur="commitRename" @keydown.enter="commitRename" @click.stop />
+        <Input
+          v-if="editingId === conv.id"
+          v-model="editingTitle"
+          autofocus
+          class="h-6 px-1.5"
+          @blur="commitRename"
+          @keydown.enter="commitRename"
+          @click.stop
+        />
         <template v-else>
           <span class="conv-item__title truncate flex-1 min-w-0">{{ conv.title }}</span>
           <span
             class="conv-item__actions flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition"
             @click.stop
           >
-            <Button variant="ghost" size="icon" class="size-6 text-muted-foreground hover:text-foreground" title="重命名" @click="startRename(conv.id, conv.title)">
-              <component :is="Edit16Regular" class="size-3" />
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-muted-foreground hover:text-foreground"
+              title="重命名"
+              @click="startRename(conv.id, conv.title)"
+            >
+              <component
+                :is="Edit16Regular"
+                class="size-3"
+              />
             </Button>
-            <Button variant="ghost" size="icon" class="size-6 text-destructive hover:bg-destructive/10" title="删除" @click="confirmDelete(conv.id, conv.title)">
-              <component :is="Delete16Regular" class="size-3" />
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 text-destructive hover:bg-destructive/10"
+              title="删除"
+              @click="confirmDelete(conv.id, conv.title)"
+            >
+              <component
+                :is="Delete16Regular"
+                class="size-3"
+              />
             </Button>
           </span>
         </template>
@@ -133,7 +174,10 @@ function onScroll(e: Event) {
     </div>
 
     <!-- 删除确认弹窗 -->
-    <AlertDialog :open="Boolean(deleteTarget)" @update:open="!$event && (deleteTarget = null)">
+    <AlertDialog
+      :open="Boolean(deleteTarget)"
+      @update:open="!$event && (deleteTarget = null)"
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle class="text-sm font-semibold">删除会话</AlertDialogTitle>

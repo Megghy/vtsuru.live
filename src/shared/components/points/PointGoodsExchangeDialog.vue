@@ -5,10 +5,7 @@ import { useRouter } from 'vue-router'
 
 import type { AddressInfo, ResponsePointGoodModel, ResponsePointOrder2UserModel } from '@/api/api-models'
 import { GoodsTypes, ServiceFieldType } from '@/api/api-models'
-import {
-  postApiPointBuy,
-  postApiPointUserUpdateAddress,
-} from '@/api/generated/point/point'
+import { postApiPointBuy, postApiPointUserUpdateAddress } from '@/api/generated/point/point'
 import { IMGUR_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
@@ -288,10 +285,9 @@ async function updateAddress() {
 
   isLoading.value = true
   try {
-    const data = (await postApiPointUserUpdateAddress(
-      currentAddress.value as any,
-      { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
-    )) as unknown as {
+    const data = (await postApiPointUserUpdateAddress(currentAddress.value as any, {
+      headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()),
+    })) as unknown as {
       code: number
       message?: string
       data: AddressInfo
@@ -367,9 +363,7 @@ async function buyGoods() {
       {
         vId: props.vId,
         goodsId: good.id,
-        count: hasSubItems.value
-          ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0)
-          : buyCount.value,
+        count: hasSubItems.value ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0) : buyCount.value,
         addressId: selectedAddress.value?.id ?? null,
         remark: remark.value,
         ...(isService.value
@@ -377,11 +371,7 @@ async function buyGoods() {
               serviceAnswers: Object.fromEntries(
                 Object.entries(serviceAnswers.value).map(([id, value]) => [
                   id,
-                  Array.isArray(value)
-                    ? value.join('\n')
-                    : value == null
-                      ? ''
-                      : String(value),
+                  Array.isArray(value) ? value.join('\n') : value == null ? '' : String(value),
                 ]),
               ),
             }
@@ -448,10 +438,16 @@ const requestClose = () => {
               {{ goods.name }}
             </DialogTitle>
             <div class="flex items-center gap-1.5 flex-wrap text-xs">
-              <Badge variant="default" class="text-[10px] h-4.5 px-1.5 font-normal">
+              <Badge
+                variant="default"
+                class="text-[10px] h-4.5 px-1.5 font-normal"
+              >
                 {{ priceText }} 积分
               </Badge>
-              <Badge variant="secondary" class="text-[10px] h-4.5 px-1.5 font-normal">
+              <Badge
+                variant="secondary"
+                class="text-[10px] h-4.5 px-1.5 font-normal"
+              >
                 {{ typeLabel }}
               </Badge>
               <span class="text-muted-foreground text-[11px]">{{ stockText }}</span>
@@ -481,11 +477,15 @@ const requestClose = () => {
               v-if="serviceConfig?.rules"
               class="text-xs bg-muted/40 border-border/80"
             >
-              <AlertDescription class="text-xs whitespace-pre-wrap leading-relaxed">{{ serviceConfig.rules }}</AlertDescription>
+              <AlertDescription class="text-xs whitespace-pre-wrap leading-relaxed">{{
+                serviceConfig.rules
+              }}</AlertDescription>
             </Alert>
             <Alert class="text-xs bg-muted/30 border-border/60">
               <AlertDescription class="text-xs text-muted-foreground">
-                提交后进入待接单状态<span v-if="serviceConfig?.estimatedDays">，预计 {{ serviceConfig.estimatedDays }} 天内完成</span>。主播确认接单后会在订单中更新进度。
+                提交后进入待接单状态<span v-if="serviceConfig?.estimatedDays"
+                  >，预计 {{ serviceConfig.estimatedDays }} 天内完成</span
+                >。主播确认接单后会在订单中更新进度。
               </AlertDescription>
             </Alert>
           </template>
@@ -502,7 +502,11 @@ const requestClose = () => {
             >
               <label class="font-medium text-foreground text-xs flex items-center gap-1">
                 <span>{{ field.label }}</span>
-                <span v-if="field.required" class="text-destructive">*</span>
+                <span
+                  v-if="field.required"
+                  class="text-destructive"
+                  >*</span
+                >
               </label>
 
               <Select
@@ -525,9 +529,20 @@ const requestClose = () => {
                 </SelectContent>
               </Select>
 
-              <Input v-else-if="field.type === ServiceFieldType.Date" :model-value="(serviceAnswers[field.id] as string) || ''" type="date" @update:model-value="serviceAnswers[field.id] = $event" />
+              <Input
+                v-else-if="field.type === ServiceFieldType.Date"
+                :model-value="(serviceAnswers[field.id] as string) || ''"
+                type="date"
+                @update:model-value="serviceAnswers[field.id] = $event"
+              />
 
-              <Input v-else-if="field.type === ServiceFieldType.Number" :model-value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])" type="number" step="any" @update:model-value="serviceAnswers[field.id] = Number($event) || undefined" />
+              <Input
+                v-else-if="field.type === ServiceFieldType.Number"
+                :model-value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])"
+                type="number"
+                step="any"
+                @update:model-value="serviceAnswers[field.id] = Number($event) || undefined"
+              />
 
               <Textarea
                 v-else-if="field.type === ServiceFieldType.Textarea"
@@ -539,7 +554,14 @@ const requestClose = () => {
                 @update:model-value="serviceAnswers[field.id] = $event"
               />
 
-              <Input v-else :model-value="(serviceAnswers[field.id] as string) || ''" :type="field.type === ServiceFieldType.Url ? 'url' : 'text'" :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`" maxlength="300" @update:model-value="serviceAnswers[field.id] = $event" />
+              <Input
+                v-else
+                :model-value="(serviceAnswers[field.id] as string) || ''"
+                :type="field.type === ServiceFieldType.Url ? 'url' : 'text'"
+                :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`"
+                maxlength="300"
+                @update:model-value="serviceAnswers[field.id] = $event"
+              />
             </div>
           </div>
 
@@ -552,9 +574,7 @@ const requestClose = () => {
               <span class="font-medium text-foreground text-xs">选择款式 *</span>
               <span class="text-[11px] text-muted-foreground">
                 可多选，价格累计
-                <template v-if="goods.maxSubItemSelections">
-                  （最多选 {{ goods.maxSubItemSelections }} 种）
-                </template>
+                <template v-if="goods.maxSubItemSelections"> （最多选 {{ goods.maxSubItemSelections }} 种） </template>
               </span>
             </div>
 
@@ -588,7 +608,10 @@ const requestClose = () => {
                   <div class="min-w-0 flex flex-col gap-0.5">
                     <div class="flex items-center gap-1.5">
                       <strong class="font-medium text-foreground text-xs truncate">{{ sub.name }}</strong>
-                      <Badge variant="secondary" class="text-[10px] h-4 px-1 font-mono shrink-0">
+                      <Badge
+                        variant="secondary"
+                        class="text-[10px] h-4 px-1 font-mono shrink-0"
+                      >
                         {{ sub.price }}分
                       </Badge>
                     </div>
@@ -634,7 +657,9 @@ const requestClose = () => {
               <NInputNumber
                 v-model:value="buyCount"
                 :min="1"
-                :max="Math.min(goods.maxBuyCount ?? 100000, (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0))"
+                :max="
+                  Math.min(goods.maxBuyCount ?? 100000, (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0))
+                "
                 size="small"
               />
             </div>
@@ -662,16 +687,35 @@ const requestClose = () => {
                     :value="String(addr.id)"
                     class="text-xs"
                   >
-                    {{ addr.name }} ({{ addr.phone }}) · {{ addr.province }}{{ addr.city }}{{ addr.district }}{{ addr.address }}
+                    {{ addr.name }} ({{ addr.phone }}) · {{ addr.province }}{{ addr.city }}{{ addr.district
+                    }}{{ addr.address }}
                   </SelectItem>
                 </SelectContent>
               </Select>
 
-              <Button variant="outline" size="icon" class="size-8 shrink-0" aria-label="新增收货地址" @click="openAddressModal">
-                <component :is="Add24Regular" class="size-3.5" />
+              <Button
+                variant="outline"
+                size="icon"
+                class="size-8 shrink-0"
+                aria-label="新增收货地址"
+                @click="openAddressModal"
+              >
+                <component
+                  :is="Add24Regular"
+                  class="size-3.5"
+                />
               </Button>
-              <Button variant="outline" size="icon" class="size-8 shrink-0" aria-label="刷新地址列表" @click="refreshAddressList">
-                <component :is="ArrowSync24Regular" class="size-3.5" />
+              <Button
+                variant="outline"
+                size="icon"
+                class="size-8 shrink-0"
+                aria-label="刷新地址列表"
+                @click="refreshAddressList"
+              >
+                <component
+                  :is="ArrowSync24Regular"
+                  class="size-3.5"
+                />
               </Button>
             </div>
           </div>
@@ -698,7 +742,11 @@ const requestClose = () => {
         </div>
 
         <div class="flex items-center gap-2">
-          <Button variant="outline" :disabled="isLoading" @click="requestClose">
+          <Button
+            variant="outline"
+            :disabled="isLoading"
+            @click="requestClose"
+          >
             取消
           </Button>
 
@@ -710,9 +758,7 @@ const requestClose = () => {
             @positive-click="buyGoods"
           >
             <template #trigger>
-              <Button :disabled="!canDoBuy || isLoading">
-                确认兑换
-              </Button>
+              <Button :disabled="!canDoBuy || isLoading"> 确认兑换 </Button>
             </template>
             确定要花费 {{ cost }} 积分兑换 "{{ goods.name }}" 吗？
           </Popconfirm>
@@ -741,7 +787,10 @@ const requestClose = () => {
             <label class="text-muted-foreground text-[11px]">省份</label>
             <Select
               :model-value="currentAddress.province || ''"
-              @update:model-value="currentAddress.province = String($event); onAreaSelectChange(0)"
+              @update:model-value="
+                currentAddress.province = String($event)
+                onAreaSelectChange(0)
+              "
             >
               <SelectTrigger>
                 <SelectValue placeholder="省份" />
@@ -764,7 +813,10 @@ const requestClose = () => {
             <Select
               :model-value="currentAddress.city || ''"
               :disabled="!currentAddress.province"
-              @update:model-value="currentAddress.city = String($event); onAreaSelectChange(1)"
+              @update:model-value="
+                currentAddress.city = String($event)
+                onAreaSelectChange(1)
+              "
             >
               <SelectTrigger>
                 <SelectValue placeholder="城市" />
@@ -787,7 +839,10 @@ const requestClose = () => {
             <Select
               :model-value="currentAddress.district || ''"
               :disabled="!currentAddress.city"
-              @update:model-value="currentAddress.district = String($event); onAreaSelectChange(2)"
+              @update:model-value="
+                currentAddress.district = String($event)
+                onAreaSelectChange(2)
+              "
             >
               <SelectTrigger>
                 <SelectValue placeholder="区/县" />
@@ -842,11 +897,20 @@ const requestClose = () => {
         <div class="grid grid-cols-2 gap-2">
           <div class="space-y-1">
             <label class="text-muted-foreground text-[11px]">联系电话</label>
-            <Input :model-value="currentAddress.phone ? String(currentAddress.phone) : ''" type="tel" placeholder="手机号" class="font-mono" @update:model-value="currentAddress.phone = Number($event) || undefined" />
+            <Input
+              :model-value="currentAddress.phone ? String(currentAddress.phone) : ''"
+              type="tel"
+              placeholder="手机号"
+              class="font-mono"
+              @update:model-value="currentAddress.phone = Number($event) || undefined"
+            />
           </div>
           <div class="space-y-1">
             <label class="text-muted-foreground text-[11px]">联系人</label>
-            <Input v-model="currentAddress.name" placeholder="姓名" />
+            <Input
+              v-model="currentAddress.name"
+              placeholder="姓名"
+            />
           </div>
         </div>
 
@@ -857,10 +921,16 @@ const requestClose = () => {
       </div>
 
       <DialogFooter class="pt-2 border-t border-border/60">
-        <Button variant="outline" @click="showAddressModal = false">
+        <Button
+          variant="outline"
+          @click="showAddressModal = false"
+        >
           取消
         </Button>
-        <Button :disabled="!userAgree || isLoading" @click="updateAddress">
+        <Button
+          :disabled="!userAgree || isLoading"
+          @click="updateAddress"
+        >
           保存地址
         </Button>
       </DialogFooter>
@@ -874,9 +944,7 @@ const requestClose = () => {
   >
     <DialogContent class="sm:max-w-md p-4 space-y-3">
       <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold text-emerald-600 flex items-center gap-1.5">
-          兑换成功！
-        </DialogTitle>
+        <DialogTitle class="text-sm font-semibold text-emerald-600 flex items-center gap-1.5"> 兑换成功！ </DialogTitle>
       </DialogHeader>
 
       <div class="space-y-3 text-xs">
@@ -904,10 +972,18 @@ const requestClose = () => {
       </div>
 
       <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
-        <Button variant="outline" @click="showSuccessModal = false">
+        <Button
+          variant="outline"
+          @click="showSuccessModal = false"
+        >
           关闭
         </Button>
-        <Button @click="showSuccessModal = false; router.push({ name: 'bili-user-orders' })">
+        <Button
+          @click="
+            showSuccessModal = false
+            router.push({ name: 'bili-user-orders' })
+          "
+        >
           查看我的订单
         </Button>
       </DialogFooter>

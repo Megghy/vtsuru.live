@@ -6,8 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type PointOrderDataPointOrderStatus = typeof PointOrderDataPointOrderStatus[keyof typeof PointOrderDataPointOrderStatus];
-
+export type PointOrderDataPointOrderStatus =
+  (typeof PointOrderDataPointOrderStatus)[keyof typeof PointOrderDataPointOrderStatus]
 
 export const PointOrderDataPointOrderStatus = {
   NUMBER_0: 0,
@@ -16,4 +16,4 @@ export const PointOrderDataPointOrderStatus = {
   NUMBER_3: 3,
   NUMBER_4: 4,
   NUMBER_5: 5,
-} as const;
+} as const

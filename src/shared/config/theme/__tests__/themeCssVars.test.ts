@@ -31,19 +31,11 @@ describe('getThemeCssVars', () => {
     const light = getThemeCssVars(lightTokens)
     const dark = getThemeCssVars(darkTokens)
 
-    // Manage light: canvas=#f4f4f5, surface=#ffffff, muted(surfaceHover)=#fafafa
-    expect([light['--background'], light['--card'], light['--muted']]).toEqual([
-      '#f4f4f5',
-      '#ffffff',
-      '#fafafa',
-    ])
+    // Manage light: canvas=#f4f4f5, surface=#ffffff, muted(surfaceHover)=#f4f4f5
+    expect([light['--background'], light['--card'], light['--muted']]).toEqual(['#f4f4f5', '#ffffff', '#f4f4f5'])
 
     // Manage dark: canvas=#18181b, surface=#27272a, muted(surfaceHover)=#3f3f46
-    expect([dark['--background'], dark['--card'], dark['--muted']]).toEqual([
-      '#18181b',
-      '#27272a',
-      '#3f3f46',
-    ])
+    expect([dark['--background'], dark['--card'], dark['--muted']]).toEqual(['#18181b', '#27272a', '#3f3f46'])
 
     // 暗色控件边框必须比 manage surface/control(800) 更亮，placeholder 不能过暗
     expect(darkTokens.borderColor).toBe('#3f3f46')

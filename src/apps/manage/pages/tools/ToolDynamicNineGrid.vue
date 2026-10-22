@@ -9,13 +9,7 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { canvasToBlob, useMessage } from '@/shared/utils'
 
@@ -315,7 +309,10 @@ watchEffect(async () => {
       </CardHeader>
       <CardContent class="space-y-4">
         <!-- Upload -->
-        <Transition name="fade" mode="out-in">
+        <Transition
+          name="fade"
+          mode="out-in"
+        >
           <div
             v-if="!sourceFile"
             ref="dropZoneRef"
@@ -329,9 +326,30 @@ watchEffect(async () => {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <rect x="6" y="6" width="36" height="36" rx="4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
-              <path d="M6 32l10-10 8 8 8-12 10 14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
-              <circle cx="18" cy="18" r="3" stroke="currentColor" stroke-width="2.5" />
+              <rect
+                x="6"
+                y="6"
+                width="36"
+                height="36"
+                rx="4"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M6 32l10-10 8 8 8-12 10 14"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <circle
+                cx="18"
+                cy="18"
+                r="3"
+                stroke="currentColor"
+                stroke-width="2.5"
+              />
             </svg>
             <span class="text-sm font-medium text-foreground">拖拽图片到此处，或点击选择</span>
             <span class="text-xs text-muted-foreground">支持 PNG / JPEG / WebP 格式</span>
@@ -339,8 +357,14 @@ watchEffect(async () => {
         </Transition>
 
         <!-- Edit mode -->
-        <Transition name="fade" mode="out-in">
-          <div v-if="sourceFile && finalBlobs.length === 0" class="space-y-6">
+        <Transition
+          name="fade"
+          mode="out-in"
+        >
+          <div
+            v-if="sourceFile && finalBlobs.length === 0"
+            class="space-y-6"
+          >
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
               <div class="flex flex-col items-center">
                 <div class="relative w-64 h-64 border border-border rounded-lg overflow-hidden bg-muted/40">
@@ -361,9 +385,17 @@ watchEffect(async () => {
                   </div>
                 </div>
                 <div class="flex gap-2 mt-3">
-                  <Button variant="outline" @click="onFilePicked(sourceFile!)">居中裁剪</Button>
+                  <Button
+                    variant="outline"
+                    @click="onFilePicked(sourceFile!)"
+                    >居中裁剪</Button
+                  >
                   <Button @click="openManualCrop">手动裁剪</Button>
-                  <Button variant="ghost" @click="() => openFilePicker()">重新选择</Button>
+                  <Button
+                    variant="ghost"
+                    @click="() => openFilePicker()"
+                    >重新选择</Button
+                  >
                 </div>
               </div>
 
@@ -395,14 +427,21 @@ watchEffect(async () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem v-for="opt in formatOptions" :key="opt.value" :value="opt.value">
+                          <SelectItem
+                            v-for="opt in formatOptions"
+                            :key="opt.value"
+                            :value="opt.value"
+                          >
                             {{ opt.label }}
                           </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
-                  <div v-if="exportSettings.format === 'jpeg'" class="flex items-center justify-between">
+                  <div
+                    v-if="exportSettings.format === 'jpeg'"
+                    class="flex items-center justify-between"
+                  >
                     <span class="text-muted-foreground">质量</span>
                     <div class="w-32">
                       <NInputNumber
@@ -436,7 +475,12 @@ watchEffect(async () => {
             <div class="space-y-3">
               <div class="flex justify-between items-center">
                 <h4 class="font-semibold text-sm text-foreground">九宫格编辑</h4>
-                <Button v-if="hasAnyAdditional" size="xs" variant="ghost" @click="clearAllCellImages">
+                <Button
+                  v-if="hasAnyAdditional"
+                  size="xs"
+                  variant="ghost"
+                  @click="clearAllCellImages"
+                >
                   清空所有附加
                 </Button>
               </div>
@@ -468,14 +512,25 @@ watchEffect(async () => {
               </div>
 
               <!-- Cell editor panel -->
-              <div v-if="expandedCell !== null" class="p-4 rounded-lg border border-border bg-card space-y-3">
+              <div
+                v-if="expandedCell !== null"
+                class="p-4 rounded-lg border border-border bg-card space-y-3"
+              >
                 <div class="flex justify-between items-center">
                   <span class="text-xs font-semibold">第 {{ expandedCell + 1 }} 格 · 附加图片</span>
-                  <Button size="xs" variant="ghost" @click="expandedCell = null">收起</Button>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    @click="expandedCell = null"
+                    >收起</Button
+                  >
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div class="space-y-2">
-                    <div v-if="cellImages[expandedCell].length === 0" class="text-xs text-muted-foreground py-4 text-center">
+                    <div
+                      v-if="cellImages[expandedCell].length === 0"
+                      class="text-xs text-muted-foreground py-4 text-center"
+                    >
                       暂无附加图片，点击下方按钮添加
                     </div>
                     <div
@@ -483,14 +538,22 @@ watchEffect(async () => {
                       :key="j"
                       class="flex items-center gap-2 p-1.5 rounded border border-border bg-background text-xs"
                     >
-                      <img :src="item.url" class="w-10 h-10 object-cover rounded shrink-0" alt="" />
+                      <img
+                        :src="item.url"
+                        class="w-10 h-10 object-cover rounded shrink-0"
+                        alt=""
+                      />
                       <div class="w-24">
                         <Select v-model="item.fit">
                           <SelectTrigger size="xs">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem v-for="opt in fitOptions" :key="opt.value" :value="opt.value">
+                            <SelectItem
+                              v-for="opt in fitOptions"
+                              :key="opt.value"
+                              :value="opt.value"
+                            >
                               {{ opt.label }}
                             </SelectItem>
                           </SelectContent>
@@ -504,19 +567,39 @@ watchEffect(async () => {
                           :step="32"
                         />
                       </div>
-                      <span v-if="item.height === 0" class="text-[11px] text-muted-foreground">自适应</span>
-                      <Button size="xs" variant="ghost" class="text-destructive ml-auto" @click="removeImageFromCell(expandedCell!, j)">
+                      <span
+                        v-if="item.height === 0"
+                        class="text-[11px] text-muted-foreground"
+                        >自适应</span
+                      >
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="text-destructive ml-auto"
+                        @click="removeImageFromCell(expandedCell!, j)"
+                      >
                         ×
                       </Button>
                     </div>
-                    <Button variant="outline" class="w-full border-dashed" @click="addImageToCell(expandedCell!)">
+                    <Button
+                      variant="outline"
+                      class="w-full border-dashed"
+                      @click="addImageToCell(expandedCell!)"
+                    >
                       + 添加图片
                     </Button>
                   </div>
 
-                  <div v-if="cellPreviewUrl" class="flex flex-col items-center">
+                  <div
+                    v-if="cellPreviewUrl"
+                    class="flex flex-col items-center"
+                  >
                     <span class="text-xs text-muted-foreground mb-2">效果预览</span>
-                    <img :src="cellPreviewUrl" alt="预览" class="max-w-[200px] border border-border rounded shadow-sm" />
+                    <img
+                      :src="cellPreviewUrl"
+                      alt="预览"
+                      class="max-w-[200px] border border-border rounded shadow-sm"
+                    />
                   </div>
                 </div>
               </div>
@@ -524,7 +607,12 @@ watchEffect(async () => {
 
             <!-- Action bar -->
             <div class="flex justify-center pt-2">
-              <Button size="lg" class="px-8" :disabled="isGenerating" @click="generateTiles">
+              <Button
+                size="lg"
+                class="px-8"
+                :disabled="isGenerating"
+                @click="generateTiles"
+              >
                 {{ isGenerating ? '生成中...' : '生成九宫格' }}
               </Button>
             </div>
@@ -532,12 +620,22 @@ watchEffect(async () => {
         </Transition>
 
         <!-- Results -->
-        <Transition name="fade" mode="out-in">
-          <div v-if="finalBlobs.length > 0" class="space-y-4">
+        <Transition
+          name="fade"
+          mode="out-in"
+        >
+          <div
+            v-if="finalBlobs.length > 0"
+            class="space-y-4"
+          >
             <div class="flex justify-between items-center">
               <h4 class="font-semibold text-sm text-foreground">生成结果</h4>
               <div class="flex gap-2">
-                <Button variant="outline" @click="backToEdit">返回编辑</Button>
+                <Button
+                  variant="outline"
+                  @click="backToEdit"
+                  >返回编辑</Button
+                >
                 <Button @click="downloadZip">打包下载 ZIP</Button>
               </div>
             </div>
@@ -548,9 +646,15 @@ watchEffect(async () => {
                 class="relative rounded border border-border overflow-hidden group cursor-pointer"
                 @click="downloadSingle(i)"
               >
-                <img :src="url" :alt="`图片 ${i + 1}`" class="w-full h-full object-contain" />
+                <img
+                  :src="url"
+                  :alt="`图片 ${i + 1}`"
+                  class="w-full h-full object-contain"
+                />
                 <span class="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-1 rounded">{{ i + 1 }}</span>
-                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                <div
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                >
                   <span class="text-white text-xs font-medium">下载</span>
                 </div>
               </div>

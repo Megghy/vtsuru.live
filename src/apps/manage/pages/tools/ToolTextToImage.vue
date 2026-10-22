@@ -4,21 +4,15 @@ import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { canvasToBlob, useMessage } from '@/shared/utils'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
+import { canvasToBlob, useMessage } from '@/shared/utils'
 
 const message = useMessage()
 
@@ -155,16 +149,17 @@ async function download() {
   <Card>
     <CardHeader class="flex flex-row items-center justify-between pb-4">
       <CardTitle class="text-base font-semibold">文字转图片</CardTitle>
-      <Button :disabled="!text" @click="download">
+      <Button
+        :disabled="!text"
+        @click="download"
+      >
         下载 PNG
       </Button>
     </CardHeader>
     <CardContent class="pt-0">
       <div class="text-to-image-layout">
         <div class="controls-panel">
-          <span class="text-xs text-muted-foreground mb-2 block">
-            输入文本
-          </span>
+          <span class="text-xs text-muted-foreground mb-2 block"> 输入文本 </span>
           <Textarea
             v-model="text"
             placeholder="在此粘贴长文本，将自动渲染为图片..."
@@ -193,7 +188,9 @@ async function download() {
             </div>
             <div class="flex items-center gap-2">
               <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 加粗 </span>
-              <Switch :checked="style.bold" @update:checked="(v) => (style.bold = v)"
+              <Switch
+                :checked="style.bold"
+                @update:checked="(v) => (style.bold = v)"
               />
             </div>
             <div class="flex items-center gap-2">
@@ -238,7 +235,11 @@ async function download() {
                 :max="48"
                 :step="1"
                 class="flex-1"
-                @update:model-value="(val) => { if (val?.[0] !== undefined) style.fontSize = val[0] }"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.fontSize = val[0]
+                  }
+                "
               />
               <NInputNumber
                 v-model="style.fontSize"
@@ -256,7 +257,11 @@ async function download() {
                 :max="2.5"
                 :step="0.1"
                 class="flex-1"
-                @update:model-value="(val) => { if (val?.[0] !== undefined) style.lineHeight = Number(val[0].toFixed(1)) }"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.lineHeight = Number(val[0].toFixed(1))
+                  }
+                "
               />
               <NInputNumber
                 v-model="style.lineHeight"
@@ -275,7 +280,11 @@ async function download() {
                 :max="80"
                 :step="4"
                 class="flex-1"
-                @update:model-value="(val) => { if (val?.[0] !== undefined) style.padding = val[0] }"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.padding = val[0]
+                  }
+                "
               />
               <NInputNumber
                 v-model="style.padding"
@@ -293,7 +302,11 @@ async function download() {
                 :max="1200"
                 :step="50"
                 class="flex-1"
-                @update:model-value="(val) => { if (val?.[0] !== undefined) style.maxWidth = val[0] }"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.maxWidth = val[0]
+                  }
+                "
               />
               <NInputNumber
                 v-model="style.maxWidth"
@@ -325,15 +338,11 @@ async function download() {
                 class="flex-1"
               />
             </div>
-            <span class="text-xs text-muted-foreground">
-              渐变终色留空则使用纯色背景
-            </span>
+            <span class="text-xs text-muted-foreground"> 渐变终色留空则使用纯色背景 </span>
           </div>
         </div>
         <div class="preview-panel">
-          <span class="text-xs text-muted-foreground mb-2 block">
-            预览
-          </span>
+          <span class="text-xs text-muted-foreground mb-2 block"> 预览 </span>
           <div class="preview-scroll">
             <canvas ref="canvasRef" />
           </div>

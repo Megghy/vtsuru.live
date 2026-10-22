@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VtsuruControllerTempResponseIndexDataModel } from './vtsuruControllerTempResponseIndexDataModel';
+import type { VtsuruControllerTempResponseIndexDataModel } from './vtsuruControllerTempResponseIndexDataModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfVtsuruControllerTempResponseIndexDataModel {
-  message: string;
-  code: number;
-  data: VtsuruControllerTempResponseIndexDataModel;
+  message: string
+  code: number
+  data: VtsuruControllerTempResponseIndexDataModel
 }

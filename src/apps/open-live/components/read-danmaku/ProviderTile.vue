@@ -20,7 +20,8 @@ defineEmits<{ (e: 'click'): void }>()
       <span
         v-if="badge"
         class="badge"
-      >{{ badge }}</span>
+        >{{ badge }}</span
+      >
     </div>
     <p
       v-if="description"

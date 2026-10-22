@@ -2,20 +2,10 @@
 import { computed, inject } from 'vue'
 
 import type { UserPageThemeConfigV1 } from '@/apps/user-page/types'
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/shared/ui/accordion'
+import { AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor from './BackgroundSettingsEditor.vue'
@@ -90,13 +80,16 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
     value="page-bg"
     class="border-b border-border"
   >
-    <AccordionTrigger class="text-xs font-semibold py-2.5">
-      页面背景
-    </AccordionTrigger>
+    <AccordionTrigger class="text-xs font-semibold py-2.5"> 页面背景 </AccordionTrigger>
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
       <div class="flex items-center justify-between text-xs text-muted-foreground">
         <span>不设置时将使用全局背景或默认背景。</span>
-        <Button variant="outline" class="h-6 px-2" :disabled="!page.background" @click="page.background = undefined">
+        <Button
+          variant="outline"
+          class="h-6 px-2"
+          :disabled="!page.background"
+          @click="page.background = undefined"
+        >
           使用全局背景
         </Button>
       </div>
@@ -109,13 +102,16 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
     value="page-theme"
     class="border-b border-border"
   >
-    <AccordionTrigger class="text-xs font-semibold py-2.5">
-      页面主题
-    </AccordionTrigger>
+    <AccordionTrigger class="text-xs font-semibold py-2.5"> 页面主题 </AccordionTrigger>
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
       <div class="flex items-center justify-between text-xs text-muted-foreground">
         <span>不设置时将使用全局主题或站点主题。</span>
-        <Button variant="outline" class="h-6 px-2" :disabled="!page.theme" @click="page.theme = undefined">
+        <Button
+          variant="outline"
+          class="h-6 px-2"
+          :disabled="!page.theme"
+          @click="page.theme = undefined"
+        >
           清除页面主题
         </Button>
       </div>
@@ -124,8 +120,16 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
         <div class="flex flex-col gap-1">
           <label class="text-xs text-muted-foreground">主题色 primary</label>
           <div class="flex items-center gap-2">
-            <ColorPicker v-model="primaryColor" class="flex-1" />
-            <Button variant="outline" class="px-2" :disabled="primaryColor == null" @click="primaryColor = undefined">
+            <ColorPicker
+              v-model="primaryColor"
+              class="flex-1"
+            />
+            <Button
+              variant="outline"
+              class="px-2"
+              :disabled="primaryColor == null"
+              @click="primaryColor = undefined"
+            >
               清除
             </Button>
           </div>
@@ -134,8 +138,16 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
         <div class="flex flex-col gap-1">
           <label class="text-xs text-muted-foreground">内容区域底色</label>
           <div class="flex items-center gap-2">
-            <ColorPicker v-model="backgroundColor" class="flex-1" />
-            <Button variant="outline" class="px-2" :disabled="backgroundColor == null" @click="backgroundColor = undefined">
+            <ColorPicker
+              v-model="backgroundColor"
+              class="flex-1"
+            />
+            <Button
+              variant="outline"
+              class="px-2"
+              :disabled="backgroundColor == null"
+              @click="backgroundColor = undefined"
+            >
               清除
             </Button>
           </div>

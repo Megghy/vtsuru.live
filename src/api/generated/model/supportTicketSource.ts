@@ -6,10 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type SupportTicketSource = typeof SupportTicketSource[keyof typeof SupportTicketSource];
-
+export type SupportTicketSource = (typeof SupportTicketSource)[keyof typeof SupportTicketSource]
 
 export const SupportTicketSource = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

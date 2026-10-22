@@ -1,4 +1,5 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+
 import { DownloadConfig, GetConfigHash } from '@/api/account'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { normalizeDanmujiConfig, type DanmujiConfig } from '@/shared/danmujiConfig'
@@ -7,7 +8,10 @@ import { normalizeDanmujiStyle } from '@/shared/danmujiStyle'
 export function useDanmujiConfig(props: { preview: boolean; config?: DanmujiConfig }) {
   const cloud = ref(normalizeDanmujiConfig())
   const query = Object.fromEntries(
-    ['preset', 'opacity', 'fontSize', 'reverse', 'autoHide', 'pinned', 'pinnedMinPrice'].map(key => [key, useRouteQueryParam(key)]),
+    ['preset', 'opacity', 'fontSize', 'reverse', 'autoHide', 'pinned', 'pinnedMinPrice'].map((key) => [
+      key,
+      useRouteQueryParam(key),
+    ]),
   )
   const config = computed(() => {
     const base = props.config ?? cloud.value
@@ -41,7 +45,12 @@ export function useDanmujiConfig(props: { preview: boolean; config?: DanmujiConf
     }
   }
 
-  onMounted(() => { if (!props.preview) return refresh() })
-  onUnmounted(() => { disposed = true; clearTimeout(timer) })
+  onMounted(() => {
+    if (!props.preview) return refresh()
+  })
+  onUnmounted(() => {
+    disposed = true
+    clearTimeout(timer)
+  })
   return config
 }

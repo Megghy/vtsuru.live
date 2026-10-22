@@ -5,28 +5,28 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes';
-import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus';
-import type { PointOrderDataServiceOrderData } from './pointOrderDataServiceOrderData';
-import type { ResponsePointGoodsModel } from './responsePointGoodsModel';
-import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo';
-import type { ShippingAddressInfo } from './shippingAddressInfo';
+import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
+import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus'
+import type { PointOrderDataServiceOrderData } from './pointOrderDataServiceOrderData'
+import type { ResponsePointGoodsModel } from './responsePointGoodsModel'
+import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo'
+import type { ShippingAddressInfo } from './shippingAddressInfo'
 
 export interface ResponsePointOrder2UserModel {
-  id: number;
-  point: number;
-  type: PointGoodsDataGoodsTypes;
-  address?: ShippingAddressInfo;
-  goods: ResponsePointGoodsModel;
-  status: PointOrderDataPointOrderStatus;
+  id: number
+  point: number
+  type: PointGoodsDataGoodsTypes
+  address?: ShippingAddressInfo
+  goods: ResponsePointGoodsModel
+  status: PointOrderDataPointOrderStatus
   /** @nullable */
-  remark?: string | null;
-  createAt: number;
+  remark?: string | null
+  createAt: number
   /** @nullable */
-  trackingNumber?: string | null;
+  trackingNumber?: string | null
   /** @nullable */
-  expressCompany?: string | null;
+  expressCompany?: string | null
   /** @nullable */
-  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null;
-  serviceData?: PointOrderDataServiceOrderData;
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null
+  serviceData?: PointOrderDataServiceOrderData
 }

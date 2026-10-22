@@ -1,16 +1,17 @@
 <script>
 import { cloneDeep } from 'lodash-es'
 import { defineComponent } from 'vue'
+
 import { defaultDanmujiStyle } from '@/shared/danmujiStyle'
 
 import * as constants from './constants'
 import MembershipItem from './MembershipItem.vue'
+import messageMerge from './messageMerge'
+import messageQueue from './messageQueue'
+import messageScroll from './messageScroll'
 import PaidMessage from './PaidMessage.vue'
 import TextMessage from './TextMessage.vue'
 import Ticker from './Ticker.vue'
-import messageScroll from './messageScroll'
-import messageMerge from './messageMerge'
-import messageQueue from './messageQueue'
 
 export default defineComponent({
   name: 'ChatRenderer',
@@ -67,7 +68,6 @@ export default defineComponent({
 
       customStyleElement: null,
       expiryTimer: null,
-
     }
   },
   computed: {
@@ -97,8 +97,11 @@ export default defineComponent({
     this.expiryTimer = window.setInterval(() => {
       if (!this.appearance.autoHide) return
       const cutoff = Date.now() - this.appearance.autoHide * 1000
-      const expired = new Set([...this.messages, ...this.paidMessages, ...this.messagesBuffer]
-        .filter(message => message.addTime.getTime() <= cutoff).map(message => message.id))
+      const expired = new Set(
+        [...this.messages, ...this.paidMessages, ...this.messagesBuffer]
+          .filter((message) => message.addTime.getTime() <= cutoff)
+          .map((message) => message.id),
+      )
       for (const id of expired) this.handleDelMessage({ id })
       if (expired.size) this.$nextTick(this.maybeResizeScrollContainer)
     }, 1000)
@@ -242,7 +245,10 @@ export default defineComponent({
       // 添加一个本地时间给Ticker用，防止本地时间和服务器时间相差很大的情况
       message.addTime = new Date()
 
-      if (message.type === constants.MESSAGE_TYPE_SUPER_CHAT || message.type === constants.MESSAGE_TYPE_GIFT && message.price >= this.appearance.pinnedMinPrice) {
+      if (
+        message.type === constants.MESSAGE_TYPE_SUPER_CHAT ||
+        (message.type === constants.MESSAGE_TYPE_GIFT && message.price >= this.appearance.pinnedMinPrice)
+      ) {
         this.paidMessages.unshift(cloneDeep(message))
         const MAX_PAID_MESSAGE_NUM = 100
         if (this.paidMessages.length > MAX_PAID_MESSAGE_NUM) {
@@ -338,7 +344,6 @@ export default defineComponent({
       await this.$nextTick()
       this.showNewMessages()
     },
-
   },
 })
 </script>
@@ -376,7 +381,11 @@ export default defineComponent({
             ref="items"
             class="style-scope yt-live-chat-item-list-renderer"
             style="overflow: hidden"
-            :style="{ top: appearance.reverse ? undefined : 0, bottom: appearance.reverse ? 0 : 'auto', transform: `translateY(${Math.floor(appearance.reverse ? scrollPixelsRemaining : -scrollPixelsRemaining)}px)` }"
+            :style="{
+              top: appearance.reverse ? undefined : 0,
+              bottom: appearance.reverse ? 0 : 'auto',
+              transform: `translateY(${Math.floor(appearance.reverse ? scrollPixelsRemaining : -scrollPixelsRemaining)}px)`,
+            }"
           >
             <template
               v-for="message in displayMessages"

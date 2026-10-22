@@ -54,7 +54,11 @@ vi.mock('@/shared/pngtuber/usePngtuberRuntime', () => ({
 vi.mock('@/shared/pngtuber/useAudioReactive', () => ({
   useAudioReactive: () => {
     onScopeDispose(mocks.stopAudio)
-    return { startListening: mocks.startAudio, stopListening: vi.fn().mockResolvedValue(undefined), errorMessage: ref('') }
+    return {
+      startListening: mocks.startAudio,
+      stopListening: vi.fn().mockResolvedValue(undefined),
+      errorMessage: ref(''),
+    }
   },
 }))
 const { usePngtuberDriver } = await import('../usePngtuberDriver')

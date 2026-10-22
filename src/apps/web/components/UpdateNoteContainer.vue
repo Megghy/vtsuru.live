@@ -2,11 +2,11 @@
 import { h } from 'vue'
 import type { VNode } from 'vue'
 
+import type { updateNoteItemContentType } from '@/shared/services/UpdateNote'
+import { updateNotes } from '@/shared/services/UpdateNote'
 import { Badge } from '@/shared/ui/badge'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
-import type { updateNoteItemContentType } from '@/shared/services/UpdateNote'
-import { updateNotes } from '@/shared/services/UpdateNote'
 
 function renderContent(content: updateNoteItemContentType): VNode | string | undefined {
   if (Array.isArray(content)) {
@@ -43,7 +43,7 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
         <div class="grid grid-cols-1 md:grid-cols-[100px_1fr] gap-3 text-xs">
           <template
             v-for="note in item.items"
-            :key="note.title"
+            :key="typeof note.title === 'string' ? note.title : 'note'"
           >
             <div class="flex items-start">
               <Badge

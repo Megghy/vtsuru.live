@@ -8,12 +8,12 @@
 
 export interface RequestCreateBulletVote {
   /**
-     * @minLength 1
-     * @maxLength 100
-     */
-  title: string;
-  options: string[];
-  allowMultipleVotes: boolean;
+   * @minLength 1
+   * @maxLength 100
+   */
+  title: string
+  options: string[]
+  allowMultipleVotes: boolean
   /** @nullable */
-  durationSeconds?: number | null;
+  durationSeconds?: number | null
 }

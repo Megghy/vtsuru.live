@@ -11,18 +11,29 @@
     "builtin": true,
     "browser": true
   },
+  "globals": {
+    "defineProps": "readonly",
+    "defineEmits": "readonly",
+    "defineExpose": "readonly",
+    "withDefaults": "readonly",
+    "defineModel": "readonly"
+  },
   "rules": {
     "no-shadow": "warn",
     "no-underscore-dangle": "off",
+    "no-console": "off",
+    "eqeqeq": "off",
     "import/default": "off",
     "import/no-named-as-default": "off",
+    "import/no-unassigned-import": "off",
     "promise/no-multiple-resolved": "off",
     "promise/always-return": "off",
     "no-await-in-loop": "off",
     "unicorn/consistent-function-scoping": "off",
     "unicorn/prefer-add-event-listener": "off",
-    "import/no-unassigned-import": "off",
     "typescript/no-extraneous-class": "off",
+    "typescript/no-explicit-any": "off",
+    "typescript/ban-ts-comment": "off",
     "unicorn/require-post-message-target-origin": "off"
   }
 }

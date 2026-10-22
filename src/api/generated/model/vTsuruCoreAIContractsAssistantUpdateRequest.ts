@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsProposalEditItem } from './vTsuruCoreAIContractsProposalEditItem';
+import type { VTsuruCoreAIContractsProposalEditItem } from './vTsuruCoreAIContractsProposalEditItem'
 
 /**
  * 编辑提案请求: 按预览下标提交各可编辑字段的新值。服务端保留权威字段 (日期/周/目标 ID 等)。
  */
 export interface VTsuruCoreAIContractsAssistantUpdateRequest {
-  items: VTsuruCoreAIContractsProposalEditItem[];
+  items: VTsuruCoreAIContractsProposalEditItem[]
 }

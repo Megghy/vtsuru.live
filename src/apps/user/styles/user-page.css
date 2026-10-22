@@ -54,13 +54,15 @@
 }
 
 /* 展示页卡片统一质感：磨砂半透明背景、圆角与边框对齐公开页主题体系 */
-.page-root.bg-host .viewer-page-content [class*="card"],
+.page-root.bg-host .viewer-page-content [class*='card'],
 .page-root.bg-host .viewer-page-content .bg-card,
 .page-root.bg-host .viewer-page-content .goods-card,
 .page-root.bg-host .viewer-page-content .ranking-card {
-  background-color: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--popover, var(--card)))) !important;
+  background-color: var(
+    --vtsuru-page-card-bg,
+    var(--user-page-theme-surface-bg, var(--popover, var(--card)))
+  ) !important;
   backdrop-filter: blur(var(--user-page-card-blur, 12px));
   -webkit-backdrop-filter: blur(var(--user-page-card-blur, 12px));
   border-color: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border, var(--border)))) !important;
 }
-

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Key24Regular, Mail24Regular } from '@vicons/fluent'
-import { useMessage } from '@/shared/utils'
 import { computed, onUnmounted, ref } from 'vue'
 
 import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
@@ -12,15 +11,9 @@ import {
 } from '@/api/generated/account/account'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
+import { useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const account = useAccount()
@@ -156,12 +149,15 @@ defineExpose({ reset })
   <section class="rounded-lg border border-border bg-card p-4 space-y-3.5 shadow-sm">
     <header class="flex items-center justify-between gap-3">
       <div>
-        <h2 class="text-sm font-semibold tracking-tight text-foreground">
-          站内账号安全
-        </h2>
+        <h2 class="text-sm font-semibold tracking-tight text-foreground">站内账号安全</h2>
         <span class="text-xs text-muted-foreground">管理用于登录和找回账号的凭据</span>
       </div>
-      <Button size="xs" variant="ghost" class="text-muted-foreground hover:text-destructive" @click="logout">
+      <Button
+        size="xs"
+        variant="ghost"
+        class="text-muted-foreground hover:text-destructive"
+        @click="logout"
+      >
         退出登录
       </Button>
     </header>
@@ -189,7 +185,11 @@ defineExpose({ reset })
           >
             {{ account.isEmailVerified ? '已验证' : account.bindEmail ? '待验证' : '未绑定' }}
           </Badge>
-          <Button size="xs" variant="outline" @click="emailModalVisible = true">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="emailModalVisible = true"
+          >
             {{ emailAction }}
           </Button>
         </div>
@@ -210,7 +210,12 @@ defineExpose({ reset })
           </div>
         </div>
 
-        <Button size="xs" variant="outline" class="shrink-0" @click="passwordModalVisible = true">
+        <Button
+          size="xs"
+          variant="outline"
+          class="shrink-0"
+          @click="passwordModalVisible = true"
+        >
           修改密码
         </Button>
       </article>
@@ -224,33 +229,48 @@ defineExpose({ reset })
         <DialogTitle class="text-base">
           {{ emailAction }}
         </DialogTitle>
-        <DialogDescription class="text-xs">
-          输入邮箱地址以接收验证码并完成安全绑定。
-        </DialogDescription>
+        <DialogDescription class="text-xs"> 输入邮箱地址以接收验证码并完成安全绑定。 </DialogDescription>
       </DialogHeader>
 
       <div class="space-y-3 py-2">
-        <Input v-model="email" type="email" placeholder="邮箱地址" @keyup.enter="sendEmailCode" />
+        <Input
+          v-model="email"
+          type="email"
+          placeholder="邮箱地址"
+          @keyup.enter="sendEmailCode"
+        />
         <div class="flex gap-2">
-          <Input v-model="emailCode" placeholder="邮箱验证码" class="flex-1" @keyup.enter="saveEmail" />
-          <Button type="button" variant="outline" :loading="sendingCode" :disabled="countdownSeconds> 0"
+          <Input
+            v-model="emailCode"
+            placeholder="邮箱验证码"
+            class="flex-1"
+            @keyup.enter="saveEmail"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            :loading="sendingCode"
+            :disabled="countdownSeconds > 0"
             @click="sendEmailCode"
           >
-            <template v-if="countdownSeconds > 0">
-              {{ countdownSeconds }}s
-            </template>
-            <template v-else>
-              发送验证码
-            </template>
+            <template v-if="countdownSeconds > 0"> {{ countdownSeconds }}s </template>
+            <template v-else> 发送验证码 </template>
           </Button>
         </div>
       </div>
 
       <DialogFooter>
-        <Button variant="outline" @click="emailModalVisible = false">
+        <Button
+          variant="outline"
+          @click="emailModalVisible = false"
+        >
           取消
         </Button>
-        <Button variant="brand" :loading="saving" @click="saveEmail">
+        <Button
+          variant="brand"
+          :loading="saving"
+          @click="saveEmail"
+        >
           确认{{ emailAction }}
         </Button>
       </DialogFooter>
@@ -261,25 +281,41 @@ defineExpose({ reset })
   <Dialog v-model:open="passwordModalVisible">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-base">
-          修改登录密码
-        </DialogTitle>
-        <DialogDescription class="text-xs">
-          请输入当前旧密码以及两次新密码。
-        </DialogDescription>
+        <DialogTitle class="text-base"> 修改登录密码 </DialogTitle>
+        <DialogDescription class="text-xs"> 请输入当前旧密码以及两次新密码。 </DialogDescription>
       </DialogHeader>
 
       <div class="space-y-3 py-2">
-        <Input v-model="oldPassword" type="password" placeholder="当前旧密码" />
-        <Input v-model="password" type="password" placeholder="新密码" />
-        <Input v-model="passwordAgain" type="password" placeholder="再次输入新密码" @keyup.enter="savePassword" />
+        <Input
+          v-model="oldPassword"
+          type="password"
+          placeholder="当前旧密码"
+        />
+        <Input
+          v-model="password"
+          type="password"
+          placeholder="新密码"
+        />
+        <Input
+          v-model="passwordAgain"
+          type="password"
+          placeholder="再次输入新密码"
+          @keyup.enter="savePassword"
+        />
       </div>
 
       <DialogFooter>
-        <Button variant="outline" @click="passwordModalVisible = false">
+        <Button
+          variant="outline"
+          @click="passwordModalVisible = false"
+        >
           取消
         </Button>
-        <Button variant="brand" :loading="saving" @click="savePassword">
+        <Button
+          variant="brand"
+          :loading="saving"
+          @click="savePassword"
+        >
           确认修改
         </Button>
       </DialogFooter>

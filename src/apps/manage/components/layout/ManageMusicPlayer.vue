@@ -11,7 +11,6 @@ import {
   VolumeHigh,
 } from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
-import { useMessage } from '@/shared/utils'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
@@ -19,6 +18,7 @@ import APlayer from 'vue3-aplayer'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { useMessage } from '@/shared/utils'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
 const emit = defineEmits<{
@@ -158,14 +158,24 @@ function togglePlayerMinimize() {
               {{ musicRquestStore.waitingMusics.length }}
             </Badge>
 
-            <Button size="icon-xs" variant="ghost" :disabled="musicRquestStore.aplayerMusics.length === 0" @click.stop="togglePlay">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :disabled="musicRquestStore.aplayerMusics.length === 0"
+              @click.stop="togglePlay"
+            >
               <component
                 :is="aplayer?.audio?.paused !== false ? Play : Pause"
                 class="h-3.5 w-3.5"
               />
             </Button>
 
-            <Button size="icon-xs" variant="ghost" :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1" @click.stop="onNextMusic">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
+              @click.stop="onNextMusic"
+            >
               <component
                 :is="PlayForward"
                 class="h-3.5 w-3.5"
@@ -173,7 +183,12 @@ function togglePlayerMinimize() {
             </Button>
           </template>
 
-          <Button size="icon-xs" variant="ghost" :title="isPlayerMinimized ? '展开播放器' : '收起播放器'" @click="togglePlayerMinimize">
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            :title="isPlayerMinimized ? '展开播放器' : '收起播放器'"
+            @click="togglePlayerMinimize"
+          >
             <component
               :is="isPlayerMinimized ? ChevronUp : ChevronDown"
               class="h-4 w-4"
@@ -208,21 +223,39 @@ function togglePlayerMinimize() {
           <div class="flex flex-col items-center gap-1.5">
             <span class="text-[11px] font-medium text-muted-foreground">播放控制</span>
             <div class="flex items-center gap-1">
-              <Button size="icon-sm" variant="outline" title="上一首 / 重播" :disabled="musicRquestStore.aplayerMusics.length === 0" @click="onPreviousMusic">
+              <Button
+                size="icon-sm"
+                variant="outline"
+                title="上一首 / 重播"
+                :disabled="musicRquestStore.aplayerMusics.length === 0"
+                @click="onPreviousMusic"
+              >
                 <component
                   :is="PlayBack"
                   class="h-3.5 w-3.5"
                 />
               </Button>
 
-              <Button size="icon-sm" variant="brand" :title="aplayer?.audio?.paused !== false ? '播放' : '暂停'" :disabled="musicRquestStore.aplayerMusics.length === 0" @click="togglePlay">
+              <Button
+                size="icon-sm"
+                variant="brand"
+                :title="aplayer?.audio?.paused !== false ? '播放' : '暂停'"
+                :disabled="musicRquestStore.aplayerMusics.length === 0"
+                @click="togglePlay"
+              >
                 <component
                   :is="aplayer?.audio?.paused !== false ? Play : Pause"
                   class="h-3.5 w-3.5"
                 />
               </Button>
 
-              <Button size="icon-sm" variant="outline" title="下一首" :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1" @click="onNextMusic">
+              <Button
+                size="icon-sm"
+                variant="outline"
+                title="下一首"
+                :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
+                @click="onNextMusic"
+              >
                 <component
                   :is="PlayForward"
                   class="h-3.5 w-3.5"
@@ -247,7 +280,8 @@ function togglePlayerMinimize() {
               >
                 歌单: {{ musicRquestStore.originMusics.length }}
               </Badge>
-              <Button v-if="musicRquestStore.waitingMusics.length> 0"
+              <Button
+                v-if="musicRquestStore.waitingMusics.length > 0"
                 size="xs"
                 variant="destructive"
                 class="h-5 px-1.5 text-[10px]"
@@ -279,7 +313,7 @@ function togglePlayerMinimize() {
               max="1"
               step="0.01"
               class="h-1.5 w-20 accent-brand bg-muted rounded cursor-pointer"
-            >
+            />
           </div>
         </div>
       </div>

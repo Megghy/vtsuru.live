@@ -7,5 +7,5 @@
  */
 
 export type GetApiPointGetGoodsParams = {
-id?: string;
-};
+  id?: string
+}

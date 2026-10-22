@@ -1,9 +1,5 @@
 <script setup lang="ts">
-import {
-  CloudArchive24Filled,
-  DataTrending24Filled,
-  Desktop24Filled,
-} from '@vicons/fluent'
+import { CloudArchive24Filled, DataTrending24Filled, Desktop24Filled } from '@vicons/fluent'
 import { ref } from 'vue'
 
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
@@ -38,22 +34,34 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       class="w-full fetcher-tabs"
     >
       <TabsList class="grid w-full max-w-md grid-cols-3">
-        <TabsTrigger value="connection" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="connection"
+          class="text-xs gap-1.5"
+        >
           <CloudArchive24Filled class="size-3.5" />
           连接与凭据
         </TabsTrigger>
-        <TabsTrigger value="stats" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="stats"
+          class="text-xs gap-1.5"
+        >
           <DataTrending24Filled class="size-3.5" />
           监控与统计
         </TabsTrigger>
-        <TabsTrigger value="system" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="system"
+          class="text-xs gap-1.5"
+        >
           <Desktop24Filled class="size-3.5" />
           系统与诊断
         </TabsTrigger>
       </TabsList>
 
       <!-- 连接与凭据 -->
-      <TabsContent value="connection" class="pt-3 space-y-3 fetcher-tab-content">
+      <TabsContent
+        value="connection"
+        class="pt-3 space-y-3 fetcher-tab-content"
+      >
         <FetcherSettingsCard class="client-readable" />
 
         <FetcherStatusCard
@@ -70,13 +78,19 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       </TabsContent>
 
       <!-- 实时监控与统计 -->
-      <TabsContent value="stats" class="pt-3 space-y-3 fetcher-tab-content">
+      <TabsContent
+        value="stats"
+        class="pt-3 space-y-3 fetcher-tab-content"
+      >
         <FetcherStatisticsCard v-if="settings.settings.enableEventFetcher" />
         <FetcherDailyStatsCard v-if="settings.settings.enableEventFetcher" />
       </TabsContent>
 
       <!-- 系统与诊断 -->
-      <TabsContent value="system" class="pt-3 space-y-3 fetcher-tab-content">
+      <TabsContent
+        value="system"
+        class="pt-3 space-y-3 fetcher-tab-content"
+      >
         <FetcherSystemCard class="client-readable" />
       </TabsContent>
     </Tabs>

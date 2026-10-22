@@ -106,7 +106,9 @@ export const useGamepadStore = defineStore('gamepad', () => {
   })
 
   const isGamepadConnected = computed(
-    () => isSimulating.value || (activeGamepadIndex.value !== null && Boolean(gamepads.value[activeGamepadIndex.value]?.connected)),
+    () =>
+      isSimulating.value ||
+      (activeGamepadIndex.value !== null && Boolean(gamepads.value[activeGamepadIndex.value]?.connected)),
   )
 
   function resetNormalizedState() {
@@ -141,73 +143,70 @@ export const useGamepadStore = defineStore('gamepad', () => {
     // 更新左摇杆
     const rawLx = gamepad.axes[0] ?? 0
     const rawLy = gamepad.axes[1] ?? 0
-    const filteredL = clampStickAxes(
-      applyAxisDeadzone(rawLx, deadzone.value),
-      applyAxisDeadzone(rawLy, deadzone.value),
-    )
+    const filteredL = clampStickAxes(applyAxisDeadzone(rawLx, deadzone.value), applyAxisDeadzone(rawLy, deadzone.value))
     normalizedGamepadState.sticks.LEFT_STICK.x = filteredL.x
     normalizedGamepadState.sticks.LEFT_STICK.y = filteredL.y
 
     // 更新右摇杆
     const rawRx = gamepad.axes[2] ?? 0
     const rawRy = gamepad.axes[3] ?? 0
-    const filteredR = clampStickAxes(
-      applyAxisDeadzone(rawRx, deadzone.value),
-      applyAxisDeadzone(rawRy, deadzone.value),
-    )
+    const filteredR = clampStickAxes(applyAxisDeadzone(rawRx, deadzone.value), applyAxisDeadzone(rawRy, deadzone.value))
     normalizedGamepadState.sticks.RIGHT_STICK.x = filteredR.x
     normalizedGamepadState.sticks.RIGHT_STICK.y = filteredR.y
   }
 
   // --- 模拟/演示动画驱动 ---
   let simulationTick = 0
-  const { pause: pauseSimLoop, resume: resumeSimLoop } = useRafFn(() => {
-    if (!isSimulating.value) return
-    simulationTick += 0.03
+  const { pause: pauseSimLoop, resume: resumeSimLoop } = useRafFn(
+    () => {
+      if (!isSimulating.value) return
+      simulationTick += 0.03
 
-    // 摇杆画圆动画
-    const lx = Math.cos(simulationTick) * 0.8
-    const ly = Math.sin(simulationTick) * 0.8
-    const rx = Math.cos(-simulationTick * 0.7) * 0.6
-    const ry = Math.sin(-simulationTick * 0.7) * 0.6
+      // 摇杆画圆动画
+      const lx = Math.cos(simulationTick) * 0.8
+      const ly = Math.sin(simulationTick) * 0.8
+      const rx = Math.cos(-simulationTick * 0.7) * 0.6
+      const ry = Math.sin(-simulationTick * 0.7) * 0.6
 
-    normalizedGamepadState.sticks.LEFT_STICK.x = lx
-    normalizedGamepadState.sticks.LEFT_STICK.y = ly
-    normalizedGamepadState.sticks.RIGHT_STICK.x = rx
-    normalizedGamepadState.sticks.RIGHT_STICK.y = ry
+      normalizedGamepadState.sticks.LEFT_STICK.x = lx
+      normalizedGamepadState.sticks.LEFT_STICK.y = ly
+      normalizedGamepadState.sticks.RIGHT_STICK.x = rx
+      normalizedGamepadState.sticks.RIGHT_STICK.y = ry
 
-    // 扳机周期性按压
-    const trigVal = (Math.sin(simulationTick * 1.5) + 1) / 2
-    normalizedGamepadState.buttons.LEFT_SHOULDER_2.value = trigVal
-    normalizedGamepadState.buttons.LEFT_SHOULDER_2.pressed = trigVal > 0.15
-    normalizedGamepadState.buttons.RIGHT_SHOULDER_2.value = 1 - trigVal
-    normalizedGamepadState.buttons.RIGHT_SHOULDER_2.pressed = (1 - trigVal) > 0.15
+      // 扳机周期性按压
+      const trigVal = (Math.sin(simulationTick * 1.5) + 1) / 2
+      normalizedGamepadState.buttons.LEFT_SHOULDER_2.value = trigVal
+      normalizedGamepadState.buttons.LEFT_SHOULDER_2.pressed = trigVal > 0.15
+      normalizedGamepadState.buttons.RIGHT_SHOULDER_2.value = 1 - trigVal
+      normalizedGamepadState.buttons.RIGHT_SHOULDER_2.pressed = 1 - trigVal > 0.15
 
-    // 左右肩键周期性交替按下 (LB / RB / L1 / R1)
-    const shoulderCycle = Math.floor(simulationTick * 1.6) % 4
-    normalizedGamepadState.buttons.LEFT_SHOULDER_1.pressed = shoulderCycle === 0
-    normalizedGamepadState.buttons.LEFT_SHOULDER_1.value = shoulderCycle === 0 ? 1 : 0
-    normalizedGamepadState.buttons.RIGHT_SHOULDER_1.pressed = shoulderCycle === 2
-    normalizedGamepadState.buttons.RIGHT_SHOULDER_1.value = shoulderCycle === 2 ? 1 : 0
+      // 左右肩键周期性交替按下 (LB / RB / L1 / R1)
+      const shoulderCycle = Math.floor(simulationTick * 1.6) % 4
+      normalizedGamepadState.buttons.LEFT_SHOULDER_1.pressed = shoulderCycle === 0
+      normalizedGamepadState.buttons.LEFT_SHOULDER_1.value = shoulderCycle === 0 ? 1 : 0
+      normalizedGamepadState.buttons.RIGHT_SHOULDER_1.pressed = shoulderCycle === 2
+      normalizedGamepadState.buttons.RIGHT_SHOULDER_1.value = shoulderCycle === 2 ? 1 : 0
 
-    // 动作键交替按下
-    const cycle = Math.floor(simulationTick * 2) % 4
-    normalizedGamepadState.buttons.ACTION_DOWN.pressed = cycle === 0
-    normalizedGamepadState.buttons.ACTION_RIGHT.pressed = cycle === 1
-    normalizedGamepadState.buttons.ACTION_LEFT.pressed = cycle === 2
-    normalizedGamepadState.buttons.ACTION_UP.pressed = cycle === 3
+      // 动作键交替按下
+      const cycle = Math.floor(simulationTick * 2) % 4
+      normalizedGamepadState.buttons.ACTION_DOWN.pressed = cycle === 0
+      normalizedGamepadState.buttons.ACTION_RIGHT.pressed = cycle === 1
+      normalizedGamepadState.buttons.ACTION_LEFT.pressed = cycle === 2
+      normalizedGamepadState.buttons.ACTION_UP.pressed = cycle === 3
 
-    // 方向键交替按下
-    const dpadCycle = Math.floor(simulationTick * 1.5) % 4
-    normalizedGamepadState.buttons.DPAD_UP.pressed = dpadCycle === 0
-    normalizedGamepadState.buttons.DPAD_UP.value = dpadCycle === 0 ? 1 : 0
-    normalizedGamepadState.buttons.DPAD_RIGHT.pressed = dpadCycle === 1
-    normalizedGamepadState.buttons.DPAD_RIGHT.value = dpadCycle === 1 ? 1 : 0
-    normalizedGamepadState.buttons.DPAD_DOWN.pressed = dpadCycle === 2
-    normalizedGamepadState.buttons.DPAD_DOWN.value = dpadCycle === 2 ? 1 : 0
-    normalizedGamepadState.buttons.DPAD_LEFT.pressed = dpadCycle === 3
-    normalizedGamepadState.buttons.DPAD_LEFT.value = dpadCycle === 3 ? 1 : 0
-  }, { immediate: false })
+      // 方向键交替按下
+      const dpadCycle = Math.floor(simulationTick * 1.5) % 4
+      normalizedGamepadState.buttons.DPAD_UP.pressed = dpadCycle === 0
+      normalizedGamepadState.buttons.DPAD_UP.value = dpadCycle === 0 ? 1 : 0
+      normalizedGamepadState.buttons.DPAD_RIGHT.pressed = dpadCycle === 1
+      normalizedGamepadState.buttons.DPAD_RIGHT.value = dpadCycle === 1 ? 1 : 0
+      normalizedGamepadState.buttons.DPAD_DOWN.pressed = dpadCycle === 2
+      normalizedGamepadState.buttons.DPAD_DOWN.value = dpadCycle === 2 ? 1 : 0
+      normalizedGamepadState.buttons.DPAD_LEFT.pressed = dpadCycle === 3
+      normalizedGamepadState.buttons.DPAD_LEFT.value = dpadCycle === 3 ? 1 : 0
+    },
+    { immediate: false },
+  )
 
   function startSimulation() {
     isSimulating.value = true

@@ -35,15 +35,26 @@ const { pageEntries } = usePageEntries(editor)
   >
     <CardHeader class="p-2 border-b border-border flex flex-row items-center justify-between space-y-0">
       <Transition name="fade">
-        <CardTitle v-if="!props.collapsed" class="text-xs font-semibold">
+        <CardTitle
+          v-if="!props.collapsed"
+          class="text-xs font-semibold"
+        >
           页面
         </CardTitle>
       </Transition>
       <TooltipProvider v-if="props.collapsible">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button variant="ghost" class="size-7 p-0" :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'" @click="emit('toggle-collapse')">
-              <component :is="props.collapsed ? ChevronForwardOutline : ChevronBackOutline" class="size-3.5" />
+            <Button
+              variant="ghost"
+              class="size-7 p-0"
+              :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'"
+              @click="emit('toggle-collapse')"
+            >
+              <component
+                :is="props.collapsed ? ChevronForwardOutline : ChevronBackOutline"
+                class="size-3.5"
+              />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
@@ -73,8 +84,16 @@ const { pageEntries } = usePageEntries(editor)
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button class="size-7 p-0 rounded-full" :variant="editor.currentKey.value === 'home' ? 'default' : 'ghost'" aria-label="主页" @click="editor.currentKey.value = 'home'">
-                    <component :is="HomeOutline" class="size-3.5" />
+                  <Button
+                    class="size-7 p-0 rounded-full"
+                    :variant="editor.currentKey.value === 'home' ? 'default' : 'ghost'"
+                    aria-label="主页"
+                    @click="editor.currentKey.value = 'home'"
+                  >
+                    <component
+                      :is="HomeOutline"
+                      class="size-3.5"
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">主页</TooltipContent>
@@ -87,8 +106,17 @@ const { pageEntries } = usePageEntries(editor)
             >
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button class="size-7 p-0 rounded-full" :variant="editor.currentKey.value === page.slug ? 'default' : 'ghost'" :class="{ 'opacity-60': !page.navVisible }" :aria-label="page.title" @click="editor.currentKey.value = page.slug">
-                    <component :is="resolveUserPageNavIcon(page.navIcon)" class="size-3.5" />
+                  <Button
+                    class="size-7 p-0 rounded-full"
+                    :variant="editor.currentKey.value === page.slug ? 'default' : 'ghost'"
+                    :class="{ 'opacity-60': !page.navVisible }"
+                    :aria-label="page.title"
+                    @click="editor.currentKey.value = page.slug"
+                  >
+                    <component
+                      :is="resolveUserPageNavIcon(page.navIcon)"
+                      class="size-3.5"
+                    />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">

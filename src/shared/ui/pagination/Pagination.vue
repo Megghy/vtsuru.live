@@ -13,13 +13,7 @@ import {
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const props = withDefaults(
   defineProps<{
@@ -65,12 +59,13 @@ function onSizeChange(val: string | number) {
 
 <template>
   <div class="flex items-center justify-between gap-3 text-xs flex-wrap select-none">
-    <div class="text-muted-foreground text-[11px]">
-      共 {{ actualTotal }} 项
-    </div>
+    <div class="text-muted-foreground text-[11px]">共 {{ actualTotal }} 项</div>
 
     <div class="flex items-center gap-2">
-      <div v-if="showSizePicker" class="flex items-center gap-1 w-28">
+      <div
+        v-if="showSizePicker"
+        class="flex items-center gap-1 w-28"
+      >
         <Select
           :model-value="String(pageSize)"
           @update:model-value="onSizeChange"
@@ -79,7 +74,11 @@ function onSizeChange(val: string | number) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="s in pageSizes" :key="s" :value="String(s)">
+            <SelectItem
+              v-for="s in pageSizes"
+              :key="s"
+              :value="String(s)"
+            >
               {{ s }} 条/页
             </SelectItem>
           </SelectContent>
@@ -94,14 +93,27 @@ function onSizeChange(val: string | number) {
         :show-edges="true"
         @update:page="onPageChange"
       >
-        <PaginationList v-slot="{ items }" class="flex items-center gap-1">
+        <PaginationList
+          v-slot="{ items }"
+          class="flex items-center gap-1"
+        >
           <PaginationFirst as-child>
-            <Button variant="outline" size="icon" class="size-7" :disabled="page <= 1">
+            <Button
+              variant="outline"
+              size="icon"
+              class="size-7"
+              :disabled="page <= 1"
+            >
               <ChevronsLeft class="size-3.5" />
             </Button>
           </PaginationFirst>
           <PaginationPrev as-child>
-            <Button variant="outline" size="icon" class="size-7" :disabled="page <= 1">
+            <Button
+              variant="outline"
+              size="icon"
+              class="size-7"
+              :disabled="page <= 1"
+            >
               <ChevronLeft class="size-3.5" />
             </Button>
           </PaginationPrev>
@@ -113,7 +125,11 @@ function onSizeChange(val: string | number) {
               :value="item.value"
               as-child
             >
-              <Button size="icon" :variant="item.value === page ? 'default' : 'outline'" class="size-7" >
+              <Button
+                size="icon"
+                :variant="item.value === page ? 'default' : 'outline'"
+                class="size-7"
+              >
                 {{ item.value }}
               </Button>
             </PaginationListItem>
@@ -128,12 +144,22 @@ function onSizeChange(val: string | number) {
           </template>
 
           <PaginationNext as-child>
-            <Button variant="outline" size="icon" class="size-7" :disabled="page >= totalPages">
+            <Button
+              variant="outline"
+              size="icon"
+              class="size-7"
+              :disabled="page >= totalPages"
+            >
               <ChevronRight class="size-3.5" />
             </Button>
           </PaginationNext>
           <PaginationLast as-child>
-            <Button variant="outline" size="icon" class="size-7" :disabled="page >= totalPages">
+            <Button
+              variant="outline"
+              size="icon"
+              class="size-7"
+              :disabled="page >= totalPages"
+            >
               <ChevronsRight class="size-3.5" />
             </Button>
           </PaginationLast>

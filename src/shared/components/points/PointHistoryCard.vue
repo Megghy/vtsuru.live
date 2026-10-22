@@ -13,23 +13,16 @@ import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointHisrotyModel } from '@/api/api-models'
 import { EventDataTypes, PointFrom } from '@/api/api-models'
-import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Pagination } from '@/shared/ui/pagination'
 import { Separator } from '@/shared/ui/separator'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 
 import PointGoodsItem from './PointGoodsItem.vue'
 
@@ -50,7 +43,11 @@ watch(
   () => (page.value = 1),
 )
 
-function sourceMeta(row: ResponsePointHisrotyModel): { label: string; badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline'; icon: Component } {
+function sourceMeta(row: ResponsePointHisrotyModel): {
+  label: string
+  badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline'
+  icon: Component
+} {
   switch (row.from) {
     case PointFrom.Danmaku:
       return { label: '直播互动', badgeVariant: 'secondary', icon: Chat24Regular }
@@ -190,7 +187,10 @@ function formatFullTime(time: number) {
                     :variant="sourceMeta(row).badgeVariant"
                     class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
                   >
-                    <component :is="sourceMeta(row).icon" class="size-3" />
+                    <component
+                      :is="sourceMeta(row).icon"
+                      class="size-3"
+                    />
                     <span>{{ sourceMeta(row).label }}</span>
                   </Badge>
                   <a
@@ -205,7 +205,10 @@ function formatFullTime(time: number) {
               </TableCell>
 
               <TableCell class="py-2.5">
-                <div v-if="row.from === PointFrom.Use && row.extra?.goods" class="space-y-0.5">
+                <div
+                  v-if="row.from === PointFrom.Use && row.extra?.goods"
+                  class="space-y-0.5"
+                >
                   <button
                     type="button"
                     class="text-primary hover:underline font-medium cursor-pointer text-left block"
@@ -244,7 +247,10 @@ function formatFullTime(time: number) {
               :variant="sourceMeta(item).badgeVariant"
               class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
             >
-              <component :is="sourceMeta(item).icon" class="size-3" />
+              <component
+                :is="sourceMeta(item).icon"
+                class="size-3"
+              />
               <span>{{ sourceMeta(item).label }}</span>
             </Badge>
             <strong
@@ -257,7 +263,9 @@ function formatFullTime(time: number) {
 
           <p class="text-xs text-foreground m-0 break-words">{{ detailText(item) }}</p>
 
-          <div class="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
+          <div
+            class="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40"
+          >
             <a
               v-if="item.extra?.user?.name"
               :href="`/@${item.extra.user.name}`"
@@ -270,7 +278,12 @@ function formatFullTime(time: number) {
             <span>{{ formatRelativeTime(item.createAt) }}</span>
           </div>
 
-          <Button v-if="item.from === PointFrom.Use && item.extra?.goods" variant="outline" class="w-full mt-1" @click="openGoods(item)">
+          <Button
+            v-if="item.from === PointFrom.Use && item.extra?.goods"
+            variant="outline"
+            class="w-full mt-1"
+            @click="openGoods(item)"
+          >
             查看礼物快照
           </Button>
         </article>
@@ -319,7 +332,10 @@ function formatFullTime(time: number) {
                   <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
                   <div class="flex items-center gap-2">
                     <span class="text-muted-foreground">x {{ item.quantity }}</span>
-                    <Badge variant="secondary" class="text-[10px] h-4.5 px-1 font-normal font-mono">
+                    <Badge
+                      variant="secondary"
+                      class="text-[10px] h-4.5 px-1 font-normal font-mono"
+                    >
                       {{ item.priceSnapshot }} 积分
                     </Badge>
                   </div>

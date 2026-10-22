@@ -104,73 +104,135 @@ defineExpose({ open, close })
         <DialogTitle class="text-sm font-semibold">批量操作 · 已选 {{ selectedCount }} 首</DialogTitle>
       </DialogHeader>
 
-      <Tabs default-value="author" class="w-full">
+      <Tabs
+        default-value="author"
+        class="w-full"
+      >
         <TabsList class="grid grid-cols-5">
-          <TabsTrigger value="author" class="text-xs">作者</TabsTrigger>
-          <TabsTrigger value="tag" class="text-xs">标签</TabsTrigger>
-          <TabsTrigger value="language" class="text-xs">语言</TabsTrigger>
-          <TabsTrigger value="option" class="text-xs">要求</TabsTrigger>
-          <TabsTrigger value="delete" class="text-xs text-destructive">删除</TabsTrigger>
+          <TabsTrigger
+            value="author"
+            class="text-xs"
+            >作者</TabsTrigger
+          >
+          <TabsTrigger
+            value="tag"
+            class="text-xs"
+            >标签</TabsTrigger
+          >
+          <TabsTrigger
+            value="language"
+            class="text-xs"
+            >语言</TabsTrigger
+          >
+          <TabsTrigger
+            value="option"
+            class="text-xs"
+            >要求</TabsTrigger
+          >
+          <TabsTrigger
+            value="delete"
+            class="text-xs text-destructive"
+            >删除</TabsTrigger
+          >
         </TabsList>
 
-        <TabsContent value="author" class="pt-3 space-y-3 text-xs">
+        <TabsContent
+          value="author"
+          class="pt-3 space-y-3 text-xs"
+        >
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1 cursor-pointer">
-              <input type="radio" value="append" v-model="authorMode" />
+              <input
+                type="radio"
+                value="append"
+                v-model="authorMode"
+              />
               <span>追加</span>
             </label>
             <label class="flex items-center gap-1 cursor-pointer">
-              <input type="radio" value="replace" v-model="authorMode" />
+              <input
+                type="radio"
+                value="replace"
+                v-model="authorMode"
+              />
               <span>替换</span>
             </label>
           </div>
-          <Input v-model="batchAuthorText" placeholder="输入作者，多个用空格或逗号分隔" />
+          <Input
+            v-model="batchAuthorText"
+            placeholder="输入作者，多个用空格或逗号分隔"
+          />
           <div class="flex justify-end">
-            <Button @click="handleUpdateAuthor">
-              应用
-            </Button>
+            <Button @click="handleUpdateAuthor"> 应用 </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="tag" class="pt-3 space-y-3 text-xs">
+        <TabsContent
+          value="tag"
+          class="pt-3 space-y-3 text-xs"
+        >
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1 cursor-pointer">
-              <input type="radio" value="append" v-model="tagMode" />
+              <input
+                type="radio"
+                value="append"
+                v-model="tagMode"
+              />
               <span>追加</span>
             </label>
             <label class="flex items-center gap-1 cursor-pointer">
-              <input type="radio" value="replace" v-model="tagMode" />
+              <input
+                type="radio"
+                value="replace"
+                v-model="tagMode"
+              />
               <span>替换</span>
             </label>
           </div>
-          <Input v-model="batchTagText" placeholder="输入标签，多个用空格或逗号分隔" />
+          <Input
+            v-model="batchTagText"
+            placeholder="输入标签，多个用空格或逗号分隔"
+          />
           <div class="flex justify-end">
-            <Button @click="handleUpdateTag">
-              应用
-            </Button>
+            <Button @click="handleUpdateTag"> 应用 </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="language" class="pt-3 space-y-3 text-xs">
+        <TabsContent
+          value="language"
+          class="pt-3 space-y-3 text-xs"
+        >
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1 cursor-pointer">
-              <input type="radio" value="append" v-model="languageMode" />
+              <input
+                type="radio"
+                value="append"
+                v-model="languageMode"
+              />
               <span>追加</span>
             </label>
             <label class="flex items-center gap-1 cursor-pointer">
-              <input type="radio" value="replace" v-model="languageMode" />
+              <input
+                type="radio"
+                value="replace"
+                v-model="languageMode"
+              />
               <span>替换</span>
             </label>
           </div>
-          <Input v-model="batchLanguageText" placeholder="输入语言，多个用空格或逗号分隔" />
+          <Input
+            v-model="batchLanguageText"
+            placeholder="输入语言，多个用空格或逗号分隔"
+          />
           <div class="flex justify-end">
-            <Button @click="handleUpdateLanguage">
-              应用
-            </Button>
+            <Button @click="handleUpdateLanguage"> 应用 </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="option" class="pt-3 space-y-3 text-xs">
+        <TabsContent
+          value="option"
+          class="pt-3 space-y-3 text-xs"
+        >
           <label class="flex items-center gap-1.5 cursor-pointer">
             <Checkbox
               :checked="batchOption != null"
@@ -238,18 +300,25 @@ defineExpose({ open, close })
           </template>
 
           <div class="flex justify-end pt-2">
-            <Button @click="handleUpdateOption">
-              应用
-            </Button>
+            <Button @click="handleUpdateOption"> 应用 </Button>
           </div>
         </TabsContent>
 
-        <TabsContent value="delete" class="pt-3 space-y-3 text-xs">
+        <TabsContent
+          value="delete"
+          class="pt-3 space-y-3 text-xs"
+        >
           <p class="text-destructive leading-relaxed m-0">
             确定要删除选中的 {{ selectedCount }} 首歌曲？此操作不可恢复。
           </p>
           <div class="flex justify-end">
-            <Button variant="destructive" @click="emit('delete'); close()">
+            <Button
+              variant="destructive"
+              @click="
+                emit('delete');
+                close()
+              "
+            >
               确认删除
             </Button>
           </div>

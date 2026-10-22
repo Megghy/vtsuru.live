@@ -148,7 +148,10 @@ function enableFeedbackEmbed(enabled: boolean) {
     <PropsGrid>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input v-model="blockProps.title" placeholder="例如：生日倒计时" />
+        <Input
+          v-model="blockProps.title"
+          placeholder="例如：生日倒计时"
+        />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">目标时间</label>
@@ -176,7 +179,10 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">到达后文案</label>
-        <Input v-model="blockProps.doneText" placeholder="已到达" />
+        <Input
+          v-model="blockProps.doneText"
+          placeholder="已到达"
+        />
       </div>
     </PropsGrid>
   </div>
@@ -219,19 +225,28 @@ function enableFeedbackEmbed(enabled: boolean) {
           <span
             v-if="blockProps.embed && blockProps.embedMode === 'iframe'"
             class="text-destructive"
-          >*</span>
+            >*</span
+          >
         </label>
-        <Input v-model="blockProps.url" placeholder="https://..." />
+        <Input
+          v-model="blockProps.url"
+          placeholder="https://..."
+        />
       </div>
       <div class="span-full space-y-1">
         <div class="flex items-center justify-between py-1">
           <label class="text-xs text-muted-foreground">嵌入到页面</label>
-          <Switch :checked="blockProps.embed" @update:checked="(val) => { blockProps.embed = val; enableFeedbackEmbed(val); }"
+          <Switch
+            :checked="blockProps.embed"
+            @update:checked="
+              (val) => {
+                blockProps.embed = val
+                enableFeedbackEmbed(val)
+              }
+            "
           />
         </div>
-        <div class="rounded p-2 text-xs text-muted-foreground bg-muted/40">
-          开启“嵌入到页面”后，可选择站内提问箱
-        </div>
+        <div class="rounded p-2 text-xs text-muted-foreground bg-muted/40">开启“嵌入到页面”后，可选择站内提问箱</div>
       </div>
       <div
         v-if="propertyAvailable('embedMode')"
@@ -297,11 +312,17 @@ function enableFeedbackEmbed(enabled: boolean) {
     <PropsGrid>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">最大宽度</label>
-        <Input v-model="blockProps.maxWidth" placeholder="例如 100% 或 480px" />
+        <Input
+          v-model="blockProps.maxWidth"
+          placeholder="例如 100% 或 480px"
+        />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">最大高度</label>
-        <Input v-model="blockProps.maxHeight" placeholder="例如 100% 或 320px" />
+        <Input
+          v-model="blockProps.maxHeight"
+          placeholder="例如 100% 或 320px"
+        />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">形状</label>
@@ -318,16 +339,28 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">图片描述 (Alt)</label>
-        <Input v-model="blockProps.alt" placeholder="图片加载失败时显示的文字" />
+        <Input
+          v-model="blockProps.alt"
+          placeholder="图片加载失败时显示的文字"
+        />
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">本地图片</label>
         <div class="flex items-center gap-2">
-          <Button variant="outline" class="gap-1.5" :disabled="editor.isUploading.value" @click="editor.triggerUpload(props.block, 'imageFile')">
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            :disabled="editor.isUploading.value"
+            @click="editor.triggerUpload(props.block, 'imageFile')"
+          >
             <ImageOutline class="size-4" />
             上传图片
           </Button>
-          <Button variant="ghost" :disabled="!blockProps.imageFile" @click="editor.clearUploadedFile(props.block, 'imageFile')">
+          <Button
+            variant="ghost"
+            :disabled="!blockProps.imageFile"
+            @click="editor.clearUploadedFile(props.block, 'imageFile')"
+          >
             清除
           </Button>
           <img
@@ -352,11 +385,17 @@ function enableFeedbackEmbed(enabled: boolean) {
     <PropsGrid>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">嵌入链接 (支持 Bilibili / YouTube)</label>
-        <Input v-model="blockProps.url" placeholder="https://www.youtube.com/watch?v=..." />
+        <Input
+          v-model="blockProps.url"
+          placeholder="https://www.youtube.com/watch?v=..."
+        />
       </div>
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
-        <Input v-model="blockProps.title" placeholder="可选，用于无障碍访问" />
+        <Input
+          v-model="blockProps.title"
+          placeholder="可选，用于无障碍访问"
+        />
       </div>
     </PropsGrid>
   </div>

@@ -50,7 +50,11 @@ describe('event fetcher contract', () => {
     const query = signed.slice(0, signed.lastIndexOf('&w_rid='))
     const rid = signed.slice(signed.lastIndexOf('=') + 1)
     expect(query).toBe('id=7&type=0&wts=1700000000')
-    expect(rid).toBe(createHash('md5').update(query + key).digest('hex'))
+    expect(rid).toBe(
+      createHash('md5')
+        .update(query + key)
+        .digest('hex'),
+    )
     expect(wbiKeyFromUrl(`https://i0.hdslb.com/bfs/wbi/${imgKey}.png`)).toBe(imgKey)
   })
 
@@ -76,9 +80,12 @@ describe('event fetcher contract', () => {
   })
 
   it('turns cookie cloud entries into one cookie header', async () => {
-    expect(cookieHeader([{ name: 'SESSDATA', value: 'abc' }, { name: 'DedeUserID', value: '1' }])).toBe(
-      'SESSDATA=abc; DedeUserID=1',
-    )
+    expect(
+      cookieHeader([
+        { name: 'SESSDATA', value: 'abc' },
+        { name: 'DedeUserID', value: '1' },
+      ]),
+    ).toBe('SESSDATA=abc; DedeUserID=1')
     const header = await fetchCookieCloud({
       host: 'https://cookie.example/',
       key: 'key',
@@ -100,7 +107,9 @@ describe('event fetcher contract', () => {
   })
 
   it('keeps bilibili requests on bilibili and attaches the cookie only when enabled', async () => {
-    expect(await requestBilibili({ url: 'https://evil.example/', useCookie: false, cookieEnabled: false })).toMatchObject({
+    expect(
+      await requestBilibili({ url: 'https://evil.example/', useCookie: false, cookieEnabled: false }),
+    ).toMatchObject({
       Success: false,
       Message: '请求失败: 非bilibili域名',
     })
@@ -196,7 +205,9 @@ describe('event fetcher contract', () => {
 
   it('rejects an account that has not bound bilibili', async () => {
     await expect(
-      fetchAccount('https://api.example/', 'token', async () => jsonResponse({ code: 200, data: { biliAuthCode: null } })),
+      fetchAccount('https://api.example/', 'token', async () =>
+        jsonResponse({ code: 200, data: { biliAuthCode: null } }),
+      ),
     ).rejects.toThrow('尚未绑定')
   })
 

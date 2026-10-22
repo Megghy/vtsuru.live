@@ -1,12 +1,11 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
-
-import { useLiveEmoji } from '@/store/useLiveEmoji'
 import { Box24Regular, Heart24Filled, VehicleShip24Filled } from '@vicons/fluent'
+import { storeToRefs } from 'pinia'
 
 import { EventDataTypes } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 import type { BaseDanmakuItemProps } from './danmakuUtils'
 import { useDanmakuUtils } from './danmakuUtils'

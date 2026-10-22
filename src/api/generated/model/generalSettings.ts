@@ -6,4 +6,6 @@
  * OpenAPI spec version: v1
  */
 
-export interface GeneralSettings { [key: string]: unknown }
+export interface GeneralSettings {
+  [key: string]: unknown
+}

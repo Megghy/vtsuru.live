@@ -7,7 +7,11 @@ export interface AccountInfo {
   authCode: string
 }
 
-export async function fetchAccount(apiBase: string, token: string, fetchImpl: typeof fetch = fetch): Promise<AccountInfo> {
+export async function fetchAccount(
+  apiBase: string,
+  token: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<AccountInfo> {
   const response = await fetchImpl(withToken(`${apiBase}api/account/self`, token))
   if (!response.ok) throw new Error(`无法获取用户信息: ${response.status}`)
   const json = (await response.json()) as {

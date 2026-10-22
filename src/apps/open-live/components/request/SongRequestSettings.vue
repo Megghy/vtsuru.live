@@ -83,21 +83,30 @@ async function updateSettings() {
           <div class="flex items-center gap-1.5 w-[320px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-24">点播弹幕前缀</span>
             <template v-if="liveRequest.configCanEdit">
-              <Input v-model="settings.orderPrefix" class="flex-1" />
-              <Button variant="secondary" class="shrink-0" @click="updateSettings">
+              <Input
+                v-model="settings.orderPrefix"
+                class="flex-1"
+              />
+              <Button
+                variant="secondary"
+                class="shrink-0"
+                @click="updateSettings"
+              >
                 保存
               </Button>
             </template>
-            <Input v-else v-model="liveRequest.defaultPrefix" class="flex-1" />
+            <Input
+              v-else
+              v-model="liveRequest.defaultPrefix"
+              class="flex-1"
+            />
           </div>
 
           <Alert
             v-if="settings.orderPrefix && settings.orderPrefix.includes(' ')"
             class="py-1 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 w-fit"
           >
-            <AlertDescription class="text-xs m-0">
-              前缀包含空格，可能导致用户输入困难。
-            </AlertDescription>
+            <AlertDescription class="text-xs m-0"> 前缀包含空格，可能导致用户输入困难。 </AlertDescription>
           </Alert>
         </div>
 
@@ -110,7 +119,12 @@ async function updateSettings() {
             class="flex-1"
             @update:value="settings.queueMaxSize = $event || 10"
           />
-          <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+          <Button
+            variant="secondary"
+            class="shrink-0"
+            :disabled="!liveRequest.configCanEdit"
+            @click="updateSettings"
+          >
             保存
           </Button>
         </div>
@@ -120,7 +134,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.enableOnStreaming"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.enableOnStreaming = $event; updateSettings()"
+              @update:checked="
+                settings.enableOnStreaming = $event
+                updateSettings()
+              "
             />
             <span>仅在直播时允许加入</span>
           </label>
@@ -128,7 +145,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.allowAllDanmaku"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.allowAllDanmaku = $event; updateSettings()"
+              @update:checked="
+                settings.allowAllDanmaku = $event
+                updateSettings()
+              "
             />
             <span>允许所有弹幕点播</span>
           </label>
@@ -140,7 +160,10 @@ async function updateSettings() {
               <Checkbox
                 :checked="settings.needWearFanMedal"
                 :disabled="!liveRequest.configCanEdit"
-                @update:checked="settings.needWearFanMedal = $event; updateSettings()"
+                @update:checked="
+                  settings.needWearFanMedal = $event
+                  updateSettings()
+                "
               />
               <span>需要拥有粉丝牌</span>
             </label>
@@ -157,7 +180,12 @@ async function updateSettings() {
                 class="flex-1"
                 @update:value="settings.fanMedalMinLevel = $event || 0"
               />
-              <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+              <Button
+                variant="secondary"
+                class="shrink-0"
+                :disabled="!liveRequest.configCanEdit"
+                @click="updateSettings"
+              >
                 保存
               </Button>
             </div>
@@ -166,7 +194,10 @@ async function updateSettings() {
               <Checkbox
                 :checked="settings.needJianzhang"
                 :disabled="!liveRequest.configCanEdit"
-                @update:checked="settings.needJianzhang = $event; updateSettings()"
+                @update:checked="
+                  settings.needJianzhang = $event
+                  updateSettings()
+                "
               />
               <span>只允许舰长</span>
             </label>
@@ -174,7 +205,10 @@ async function updateSettings() {
               <Checkbox
                 :checked="settings.needTidu"
                 :disabled="!liveRequest.configCanEdit"
-                @update:checked="settings.needTidu = $event; updateSettings()"
+                @update:checked="
+                  settings.needTidu = $event
+                  updateSettings()
+                "
               />
               <span>只允许提督</span>
             </label>
@@ -182,7 +216,10 @@ async function updateSettings() {
               <Checkbox
                 :checked="settings.needZongdu"
                 :disabled="!liveRequest.configCanEdit"
-                @update:checked="settings.needZongdu = $event; updateSettings()"
+                @update:checked="
+                  settings.needZongdu = $event
+                  updateSettings()
+                "
               />
               <span>只允许总督</span>
             </label>
@@ -194,7 +231,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.allowSC"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.allowSC = $event; updateSettings()"
+              @update:checked="
+                settings.allowSC = $event
+                updateSettings()
+              "
             />
             <span>允许通过 SuperChat 点播</span>
           </label>
@@ -205,7 +245,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.scIgnoreLimit"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.scIgnoreLimit = $event; updateSettings()"
+              @update:checked="
+                settings.scIgnoreLimit = $event
+                updateSettings()
+              "
             />
             <span>SC 点播无视限制</span>
           </label>
@@ -222,7 +265,12 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.scMinPrice = $event || 30"
             />
-            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+            <Button
+              variant="secondary"
+              class="shrink-0"
+              :disabled="!liveRequest.configCanEdit"
+              @click="updateSettings"
+            >
               保存
             </Button>
           </div>
@@ -241,7 +289,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.onlyAllowSongList"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.onlyAllowSongList = $event; updateSettings()"
+              @update:checked="
+                settings.onlyAllowSongList = $event
+                updateSettings()
+              "
             />
             <span>
               仅允许点
@@ -259,7 +310,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.allowReorderSong"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.allowReorderSong = $event; updateSettings()"
+              @update:checked="
+                settings.allowReorderSong = $event
+                updateSettings()
+              "
             />
             <span>允许重复点歌</span>
           </label>
@@ -267,7 +321,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.allowFromWeb"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.allowFromWeb = $event; updateSettings()"
+              @update:checked="
+                settings.allowFromWeb = $event
+                updateSettings()
+              "
             />
             <span>允许通过网页点歌</span>
           </label>
@@ -278,7 +335,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.allowAnonymousFromWeb"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.allowAnonymousFromWeb = $event; updateSettings()"
+              @update:checked="
+                settings.allowAnonymousFromWeb = $event
+                updateSettings()
+              "
             />
             <span>允许匿名网页点歌</span>
           </label>
@@ -297,7 +357,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.enableCooldown"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.enableCooldown = $event; updateSettings()"
+              @update:checked="
+                settings.enableCooldown = $event
+                updateSettings()
+              "
             />
             <span>启用点播冷却</span>
           </label>
@@ -305,7 +368,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.enableWebCooldown"
               :disabled="!liveRequest.configCanEdit"
-              @update:checked="settings.enableWebCooldown = $event; updateSettings()"
+              @update:checked="
+                settings.enableWebCooldown = $event
+                updateSettings()
+              "
             />
             <span>启用网页点播冷却</span>
           </label>
@@ -324,7 +390,12 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.cooldownSecond = $event || 1200"
             />
-            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+            <Button
+              variant="secondary"
+              class="shrink-0"
+              :disabled="!liveRequest.configCanEdit"
+              @click="updateSettings"
+            >
               保存
             </Button>
           </div>
@@ -338,7 +409,12 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.jianzhangCooldownSecond = $event || 900"
             />
-            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+            <Button
+              variant="secondary"
+              class="shrink-0"
+              :disabled="!liveRequest.configCanEdit"
+              @click="updateSettings"
+            >
               保存
             </Button>
           </div>
@@ -352,7 +428,12 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.tiduCooldownSecond = $event || 600"
             />
-            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+            <Button
+              variant="secondary"
+              class="shrink-0"
+              :disabled="!liveRequest.configCanEdit"
+              @click="updateSettings"
+            >
               保存
             </Button>
           </div>
@@ -366,7 +447,12 @@ async function updateSettings() {
               class="flex-1"
               @update:value="settings.zongduCooldownSecond = $event || 300"
             />
-            <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+            <Button
+              variant="secondary"
+              class="shrink-0"
+              :disabled="!liveRequest.configCanEdit"
+              @click="updateSettings"
+            >
               保存
             </Button>
           </div>
@@ -384,7 +470,12 @@ async function updateSettings() {
             class="flex-1"
             @update:value="settings.webCooldownSecond = $event || 600"
           />
-          <Button variant="secondary" class="shrink-0" :disabled="!liveRequest.configCanEdit" @click="updateSettings">
+          <Button
+            variant="secondary"
+            class="shrink-0"
+            :disabled="!liveRequest.configCanEdit"
+            @click="updateSettings"
+          >
             保存
           </Button>
         </div>
@@ -401,8 +492,16 @@ async function updateSettings() {
           <div class="flex items-center gap-1.5 w-[260px] max-w-full">
             <span class="text-xs text-muted-foreground shrink-0 w-10">标题</span>
             <template v-if="configCanEdit">
-              <Input v-model="settings.obsTitle" placeholder="默认为 点播" class="flex-1" />
-              <Button variant="secondary" class="shrink-0" @click="updateSettings">
+              <Input
+                v-model="settings.obsTitle"
+                placeholder="默认为 点播"
+                class="flex-1"
+              />
+              <Button
+                variant="secondary"
+                class="shrink-0"
+                @click="updateSettings"
+              >
                 保存
               </Button>
             </template>
@@ -411,7 +510,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.showRequireInfo"
               :disabled="!configCanEdit"
-              @update:checked="settings.showRequireInfo = $event; updateSettings()"
+              @update:checked="
+                settings.showRequireInfo = $event
+                updateSettings()
+              "
             />
             <span>显示底部需求信息</span>
           </label>
@@ -419,7 +521,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.showUserName"
               :disabled="!configCanEdit"
-              @update:checked="settings.showUserName = $event; updateSettings()"
+              @update:checked="
+                settings.showUserName = $event
+                updateSettings()
+              "
             />
             <span>显示点播用户名</span>
           </label>
@@ -427,7 +532,10 @@ async function updateSettings() {
             <Checkbox
               :checked="settings.showFanMadelInfo"
               :disabled="!configCanEdit"
-              @update:checked="settings.showFanMadelInfo = $event; updateSettings()"
+              @update:checked="
+                settings.showFanMadelInfo = $event
+                updateSettings()
+              "
             />
             <span>显示点播用户粉丝牌</span>
           </label>

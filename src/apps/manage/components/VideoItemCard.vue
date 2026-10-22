@@ -156,14 +156,18 @@ function triggerPreview() {
         />
       </div>
 
-      <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+      <div
+        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+      >
         <component
           :is="Play24Filled"
           class="h-7 w-7 text-white drop-shadow"
         />
       </div>
 
-      <span class="absolute right-1 bottom-1 px-1 py-0.5 rounded bg-black/75 text-[10px] font-mono text-white leading-none">
+      <span
+        class="absolute right-1 bottom-1 px-1 py-0.5 rounded bg-black/75 text-[10px] font-mono text-white leading-none"
+      >
         {{ formatDuration(videoData.length) }}
       </span>
     </div>
@@ -255,7 +259,8 @@ function triggerPreview() {
         <span
           v-else
           class="text-xs text-muted-foreground"
-        >无推荐人信息</span>
+          >无推荐人信息</span
+        >
       </div>
 
       <!-- 折叠的其他推荐人 -->
@@ -274,14 +279,23 @@ function triggerPreview() {
           <span
             v-if="sender.description"
             class="italic text-foreground"
-          >“{{ sender.description }}”</span>
+            >“{{ sender.description }}”</span
+          >
         </div>
       </div>
     </div>
 
     <!-- 操作按钮组 -->
     <div class="video-actions flex items-center gap-1 shrink-0">
-      <Button v-for="action in actions" :key="action.status" size="xs" :variant="action.variant" :loading="loading" class="px-2" @click="emit('updateStatus', action.status, videoInfo)">
+      <Button
+        v-for="action in actions"
+        :key="action.status"
+        size="xs"
+        :variant="action.variant"
+        :loading="loading"
+        class="px-2"
+        @click="emit('updateStatus', action.status, videoInfo)"
+      >
         <component
           :is="action.icon"
           class="h-3 w-3 mr-1"
@@ -329,14 +343,18 @@ function triggerPreview() {
           <span>封面无法加载</span>
         </div>
 
-        <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div
+          class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        >
           <component
             :is="Play24Filled"
             class="h-10 w-10 text-white drop-shadow"
           />
         </div>
 
-        <span class="absolute right-1.5 bottom-1.5 px-1.5 py-0.5 rounded bg-black/75 text-[10px] font-mono text-white flex items-center gap-1">
+        <span
+          class="absolute right-1.5 bottom-1.5 px-1.5 py-0.5 rounded bg-black/75 text-[10px] font-mono text-white flex items-center gap-1"
+        >
           <component
             :is="Clock24Regular"
             class="h-2.5 w-2.5"
@@ -427,7 +445,15 @@ function triggerPreview() {
 
       <!-- 操作按钮 -->
       <div class="video-actions flex items-center gap-1 pt-2 border-t border-border">
-        <Button v-for="action in actions" :key="action.status" size="xs" :variant="action.variant" :loading="loading" class="flex-1" @click="emit('updateStatus', action.status, videoInfo)">
+        <Button
+          v-for="action in actions"
+          :key="action.status"
+          size="xs"
+          :variant="action.variant"
+          :loading="loading"
+          class="flex-1"
+          @click="emit('updateStatus', action.status, videoInfo)"
+        >
           <component
             :is="action.icon"
             class="h-3 w-3 mr-1"

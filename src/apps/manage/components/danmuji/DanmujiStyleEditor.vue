@@ -2,13 +2,7 @@
 import type { DanmujiStyle } from '@/shared/danmujiStyle'
 import { Checkbox } from '@/shared/ui/checkbox'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const style = defineModel<DanmujiStyle>({ required: true })
 const presets = [
@@ -27,7 +21,11 @@ const presets = [
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="p in presets" :key="p.value" :value="p.value">
+          <SelectItem
+            v-for="p in presets"
+            :key="p.value"
+            :value="p.value"
+          >
             {{ p.label }}
           </SelectItem>
         </SelectContent>
@@ -40,7 +38,11 @@ const presets = [
         :value="style.fontSize"
         :min="10"
         :max="72"
-        @update:value="value => { if (value !== null) style.fontSize = value }"
+        @update:value="
+          (value) => {
+            if (value !== null) style.fontSize = value
+          }
+        "
       />
     </div>
 
@@ -51,7 +53,11 @@ const presets = [
         :min="0"
         :max="1"
         :step="0.1"
-        @update:value="value => { if (value !== null) style.opacity = value }"
+        @update:value="
+          (value) => {
+            if (value !== null) style.opacity = value
+          }
+        "
       />
     </div>
 
@@ -61,7 +67,11 @@ const presets = [
         :value="style.autoHide"
         :min="0"
         :max="3600"
-        @update:value="value => { if (value !== null) style.autoHide = value }"
+        @update:value="
+          (value) => {
+            if (value !== null) style.autoHide = value
+          }
+        "
       />
     </div>
 
@@ -79,13 +89,20 @@ const presets = [
       </label>
     </div>
 
-    <div v-if="style.pinned" class="col-span-full space-y-1 pt-1">
+    <div
+      v-if="style.pinned"
+      class="col-span-full space-y-1 pt-1"
+    >
       <label class="text-xs text-muted-foreground">置顶礼物最低金额（元）</label>
       <NInputNumber
         :value="style.pinnedMinPrice"
         :min="0"
         :max="100000"
-        @update:value="value => { if (value !== null) style.pinnedMinPrice = value }"
+        @update:value="
+          (value) => {
+            if (value !== null) style.pinnedMinPrice = value
+          }
+        "
       />
     </div>
   </div>

@@ -20,9 +20,9 @@ interface LegacyShortcutBinding {
 }
 const LEGACY_SHORTCUTS_KEY = 'vts.shortcuts'
 const LEGACY_TYPE_MAP: Record<LegacyShortcutBinding['actionType'], VtsDeckActionType> = {
-  'hotkey': 'hotkey',
-  'macro': 'macro',
-  'preset': 'preset',
+  hotkey: 'hotkey',
+  macro: 'macro',
+  preset: 'preset',
   'panic-calibrate': 'panicCalibrate',
   'panic-reset': 'panicReset',
 }

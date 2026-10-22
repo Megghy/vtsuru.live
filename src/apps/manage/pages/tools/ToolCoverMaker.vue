@@ -12,13 +12,7 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Textarea } from '@/shared/ui/textarea'
 import { useMessage } from '@/shared/utils'
@@ -138,22 +132,33 @@ async function onRemoveBgConfirm(blob: Blob) {
         <span class="text-xs text-muted-foreground">{{ WIDTH }}×{{ HEIGHT }}</span>
       </div>
       <div class="flex items-center gap-1.5">
-        <Button variant="outline" :disabled="!editorRef?.canUndo" @click="editorRef?.undo()">
+        <Button
+          variant="outline"
+          :disabled="!editorRef?.canUndo"
+          @click="editorRef?.undo()"
+        >
           撤销
         </Button>
-        <Button variant="outline" :disabled="!editorRef?.canRedo" @click="editorRef?.redo()">
+        <Button
+          variant="outline"
+          :disabled="!editorRef?.canRedo"
+          @click="editorRef?.redo()"
+        >
           重做
         </Button>
-        <Button variant="ghost" @click="exportProject">
+        <Button
+          variant="ghost"
+          @click="exportProject"
+        >
           导出项目
         </Button>
-        <Button variant="ghost" @click="() => openImportPicker()"
+        <Button
+          variant="ghost"
+          @click="() => openImportPicker()"
         >
           导入项目
         </Button>
-        <Button @click="download">
-          下载 PNG
-        </Button>
+        <Button @click="download"> 下载 PNG </Button>
       </div>
     </div>
 
@@ -164,12 +169,27 @@ async function onRemoveBgConfirm(blob: Blob) {
           <div class="flex items-center justify-between panel-header">
             <span class="text-xs font-semibold">图层</span>
             <div class="flex gap-0.5">
-              <Button size="icon" variant="ghost" class="size-6 p-0" @click="editorRef?.addTextLayer()">
-                <component :is="TextOutline" class="size-3.5" />
-              </Button>
-              <Button size="icon" variant="ghost" class="size-6 p-0" @click="() => openImgPicker()"
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-6 p-0"
+                @click="editorRef?.addTextLayer()"
               >
-                <component :is="ImageOutline" class="size-3.5" />
+                <component
+                  :is="TextOutline"
+                  class="size-3.5"
+                />
+              </Button>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-6 p-0"
+                @click="() => openImgPicker()"
+              >
+                <component
+                  :is="ImageOutline"
+                  class="size-3.5"
+                />
               </Button>
             </div>
           </div>
@@ -200,20 +220,43 @@ async function onRemoveBgConfirm(blob: Blob) {
                 class="size-3.5 shrink-0"
               />
               <span class="layer-name">{{ layer.name }}</span>
-              <Button size="icon" variant="ghost" class="size-5 p-0" @click.stop="layer.visible = !layer.visible">
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0"
+                @click.stop="layer.visible = !layer.visible"
+              >
                 <component
                   :is="layer.visible ? EyeOutline : EyeOffOutline"
                   class="size-3"
                 />
               </Button>
-              <Button size="icon" variant="ghost" class="size-5 p-0" @click.stop="editorRef?.moveLayer(layer.id, 'up')">
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0"
+                @click.stop="editorRef?.moveLayer(layer.id, 'up')"
+              >
                 ↑
               </Button>
-              <Button size="icon" variant="ghost" class="size-5 p-0" @click.stop="editorRef?.moveLayer(layer.id, 'down')">
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0"
+                @click.stop="editorRef?.moveLayer(layer.id, 'down')"
+              >
                 ↓
               </Button>
-              <Button size="icon" variant="ghost" class="size-5 p-0 text-destructive" @click.stop="editorRef?.removeLayer(layer.id)">
-                <component :is="TrashOutline" class="size-3" />
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-5 p-0 text-destructive"
+                @click.stop="editorRef?.removeLayer(layer.id)"
+              >
+                <component
+                  :is="TrashOutline"
+                  class="size-3"
+                />
               </Button>
             </div>
           </div>
@@ -245,7 +288,11 @@ async function onRemoveBgConfirm(blob: Blob) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in bgTypeOptions" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in bgTypeOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -256,8 +303,14 @@ async function onRemoveBgConfirm(blob: Blob) {
           />
           <template v-if="bg.type === 'gradient'">
             <div class="flex gap-1.5">
-              <ColorPicker v-model="bg.gradientFrom" class="flex-1" />
-              <ColorPicker v-model="bg.gradientTo" class="flex-1" />
+              <ColorPicker
+                v-model="bg.gradientFrom"
+                class="flex-1"
+              />
+              <ColorPicker
+                v-model="bg.gradientTo"
+                class="flex-1"
+              />
             </div>
             <div class="flex items-center gap-2 pt-1">
               <span class="text-[11px] text-muted-foreground w-8 shrink-0">角度</span>
@@ -272,7 +325,11 @@ async function onRemoveBgConfirm(blob: Blob) {
               <span class="w-8 text-right font-mono text-[11px]">{{ bg.gradientAngle }}°</span>
             </div>
           </template>
-          <Button v-if="bg.type === 'image'" variant="outline" class="w-full" @click="() => openBgPicker()"
+          <Button
+            v-if="bg.type === 'image'"
+            variant="outline"
+            class="w-full"
+            @click="() => openBgPicker()"
           >
             选择背景图
           </Button>
@@ -313,7 +370,11 @@ async function onRemoveBgConfirm(blob: Blob) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="opt in fontOptions" :key="opt.value" :value="opt.value">
+                    <SelectItem
+                      v-for="opt in fontOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -328,7 +389,11 @@ async function onRemoveBgConfirm(blob: Blob) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="opt in alignOptions" :key="opt.value" :value="opt.value">
+                    <SelectItem
+                      v-for="opt in alignOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -357,7 +422,9 @@ async function onRemoveBgConfirm(blob: Blob) {
                 <button
                   type="button"
                   class="px-2 py-0.5 text-xs underline"
-                  :class="(selectedLayer as TextLayer).underline ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'"
+                  :class="
+                    (selectedLayer as TextLayer).underline ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  "
                   @click="(selectedLayer as TextLayer).underline = !(selectedLayer as TextLayer).underline"
                 >
                   U
@@ -366,11 +433,17 @@ async function onRemoveBgConfirm(blob: Blob) {
             </div>
             <div class="prop-row">
               <span class="text-muted-foreground">颜色</span>
-              <ColorPicker v-model="(selectedLayer as TextLayer).fill" class="flex-1" />
+              <ColorPicker
+                v-model="(selectedLayer as TextLayer).fill"
+                class="flex-1"
+              />
             </div>
             <div class="prop-row">
               <span class="text-muted-foreground">描边</span>
-              <ColorPicker v-model="(selectedLayer as TextLayer).stroke" class="flex-1" />
+              <ColorPicker
+                v-model="(selectedLayer as TextLayer).stroke"
+                class="flex-1"
+              />
             </div>
             <div class="prop-row">
               <span class="text-muted-foreground">描边宽</span>
@@ -379,7 +452,9 @@ async function onRemoveBgConfirm(blob: Blob) {
                   :model-value="[(selectedLayer as TextLayer).strokeWidth]"
                   :min="0"
                   :max="20"
-                  @update:model-value="(selectedLayer as TextLayer).strokeWidth = $event?.[0] ?? (selectedLayer as TextLayer).strokeWidth"
+                  @update:model-value="
+                    (selectedLayer as TextLayer).strokeWidth = $event?.[0] ?? (selectedLayer as TextLayer).strokeWidth
+                  "
                 />
                 <span class="font-mono text-[11px] w-4">{{ (selectedLayer as TextLayer).strokeWidth }}</span>
               </div>
@@ -394,14 +469,21 @@ async function onRemoveBgConfirm(blob: Blob) {
                   :min="0"
                   :max="1"
                   :step="0.05"
-                  @update:model-value="(selectedLayer as ImageLayer).opacity = $event?.[0] ?? (selectedLayer as ImageLayer).opacity"
+                  @update:model-value="
+                    (selectedLayer as ImageLayer).opacity = $event?.[0] ?? (selectedLayer as ImageLayer).opacity
+                  "
                 />
-                <span class="font-mono text-[11px] w-6">{{ Math.round((selectedLayer as ImageLayer).opacity * 100) }}%</span>
+                <span class="font-mono text-[11px] w-6"
+                  >{{ Math.round((selectedLayer as ImageLayer).opacity * 100) }}%</span
+                >
               </div>
             </div>
             <div class="prop-row">
               <span class="text-muted-foreground">描边</span>
-              <ColorPicker v-model="(selectedLayer as ImageLayer).stroke" class="flex-1" />
+              <ColorPicker
+                v-model="(selectedLayer as ImageLayer).stroke"
+                class="flex-1"
+              />
             </div>
             <div class="prop-row">
               <span class="text-muted-foreground">描边宽</span>
@@ -410,12 +492,18 @@ async function onRemoveBgConfirm(blob: Blob) {
                   :model-value="[(selectedLayer as ImageLayer).strokeWidth]"
                   :min="0"
                   :max="20"
-                  @update:model-value="(selectedLayer as ImageLayer).strokeWidth = $event?.[0] ?? (selectedLayer as ImageLayer).strokeWidth"
+                  @update:model-value="
+                    (selectedLayer as ImageLayer).strokeWidth = $event?.[0] ?? (selectedLayer as ImageLayer).strokeWidth
+                  "
                 />
                 <span class="font-mono text-[11px] w-4">{{ (selectedLayer as ImageLayer).strokeWidth }}</span>
               </div>
             </div>
-            <Button variant="outline" class="w-full mt-2" @click="showRemoveBg = true">
+            <Button
+              variant="outline"
+              class="w-full mt-2"
+              @click="showRemoveBg = true"
+            >
               去背景
             </Button>
           </template>

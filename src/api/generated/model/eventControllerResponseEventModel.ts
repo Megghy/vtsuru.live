@@ -7,6 +7,6 @@
  */
 
 export interface EventControllerResponseEventModel {
-  code: string;
-  version: string;
+  code: string
+  version: string
 }

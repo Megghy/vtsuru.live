@@ -6,9 +6,12 @@ import {
   QuestionDisplayTransition,
   QuestionDisplayVerticalAlign,
 } from '@/api/api-models'
+
 import { createDefaultQuestionDisplaySetting } from './questionDisplayPresets'
 
-export function questionSenderLabel(question?: Pick<QAInfo, 'isAnonymous' | 'anonymousName' | 'sender'> | null): string {
+export function questionSenderLabel(
+  question?: Pick<QAInfo, 'isAnonymous' | 'anonymousName' | 'sender'> | null,
+): string {
   if (!question) return '匿名用户'
   if (question.isAnonymous) return question.anonymousName || '匿名用户'
   return question.sender?.name || question.anonymousName || '匿名用户'

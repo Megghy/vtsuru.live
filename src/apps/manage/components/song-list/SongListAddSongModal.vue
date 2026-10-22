@@ -123,14 +123,20 @@ function openAssistant() {
 
 <template>
   <Dialog v-model:open="showModel">
-    <DialogContent :key="modalRenderKey" class="max-w-4xl max-h-[88vh] flex flex-col p-0">
+    <DialogContent
+      :key="modalRenderKey"
+      class="max-w-4xl max-h-[88vh] flex flex-col p-0"
+    >
       <DialogHeader class="p-4 border-b">
         <DialogTitle class="text-sm font-semibold">添加歌曲</DialogTitle>
       </DialogHeader>
 
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
         <Spin :show="isModalLoading">
-          <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5">
+          <Alert
+            variant="default"
+            class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5"
+          >
             <div class="flex items-center justify-between flex-wrap gap-2 w-full">
               <div class="space-y-0.5">
                 <AlertTitle class="text-xs font-semibold">也可以使用 VTsuru 助手</AlertTitle>
@@ -138,14 +144,22 @@ function openAssistant() {
                   上传歌曲信息截图，或直接粘贴歌曲信息，Agent 会自动识别并生成添加操作。
                 </AlertDescription>
               </div>
-              <Button size="xs" variant="outline" class="gap-1" @click="openAssistant">
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                @click="openAssistant"
+              >
                 <Bot24Regular class="size-3.5" />
                 打开助手
               </Button>
             </div>
           </Alert>
 
-          <Tabs v-model="activeTab" class="w-full">
+          <Tabs
+            v-model="activeTab"
+            class="w-full"
+          >
             <TabsList>
               <TabsTrigger value="custom">手动录入</TabsTrigger>
               <TabsTrigger value="netease">从网易云歌单导入</TabsTrigger>
@@ -154,7 +168,10 @@ function openAssistant() {
               <TabsTrigger value="directory">从文件夹读取</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="custom" class="pt-3">
+            <TabsContent
+              value="custom"
+              class="pt-3"
+            >
               <SongListAddSongModalCustomTab
                 ref="customTabRef"
                 :existing-songs="songs"
@@ -167,7 +184,10 @@ function openAssistant() {
               />
             </TabsContent>
 
-            <TabsContent value="netease" class="pt-3">
+            <TabsContent
+              value="netease"
+              class="pt-3"
+            >
               <SongListAddSongModalNeteaseTab
                 ref="neteaseTabRef"
                 :existing-songs="songs"
@@ -176,7 +196,10 @@ function openAssistant() {
               />
             </TabsContent>
 
-            <TabsContent value="5sing" class="pt-3">
+            <TabsContent
+              value="5sing"
+              class="pt-3"
+            >
               <SongListAddSongModalFivesingTab
                 :existing-songs="songs"
                 @added="onAdded"
@@ -184,7 +207,10 @@ function openAssistant() {
               />
             </TabsContent>
 
-            <TabsContent value="file" class="pt-3">
+            <TabsContent
+              value="file"
+              class="pt-3"
+            >
               <SongListAddSongModalFileTab
                 ref="fileTabRef"
                 :existing-songs="songs"
@@ -193,7 +219,10 @@ function openAssistant() {
               />
             </TabsContent>
 
-            <TabsContent value="directory" class="pt-3">
+            <TabsContent
+              value="directory"
+              class="pt-3"
+            >
               <SongListAddSongModalDirectoryTab
                 ref="directoryTabRef"
                 :existing-songs="songs"
@@ -210,20 +239,38 @@ function openAssistant() {
 
       <DialogFooter class="p-3 border-t bg-muted/10 flex items-center justify-between">
         <span class="text-xs text-muted-foreground">{{ footerConfig.hint }}</span>
-        <div v-if="activeTab === 'custom' && customTabRef" class="flex items-center gap-2">
+        <div
+          v-if="activeTab === 'custom' && customTabRef"
+          class="flex items-center gap-2"
+        >
           <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
             <Checkbox v-model:checked="customTabRef.onlyResetNameOnAdded" />
             <span class="text-muted-foreground">添加完成仅重置歌名</span>
           </label>
-          <Button size="xs" variant="outline" @click="customTabRef.resetAll()">还原</Button>
-          <Button :disabled="!customTabRef.canAdd || isModalLoading" @click="customTabRef.add()">
+          <Button
+            size="xs"
+            variant="outline"
+            @click="customTabRef.resetAll()"
+            >还原</Button
+          >
+          <Button
+            :disabled="!customTabRef.canAdd || isModalLoading"
+            @click="customTabRef.add()"
+          >
             添加歌曲
           </Button>
         </div>
-        <Button v-else-if="footerConfig.tab" :disabled="!footerConfig.tab.canAdd || isModalLoading" @click="footerConfig.tab.add()">
+        <Button
+          v-else-if="footerConfig.tab"
+          :disabled="!footerConfig.tab.canAdd || isModalLoading"
+          @click="footerConfig.tab.add()"
+        >
           {{ footerConfig.tab.label }}
         </Button>
-        <Button v-else disabled>
+        <Button
+          v-else
+          disabled
+        >
           在表格中点击添加
         </Button>
       </DialogFooter>

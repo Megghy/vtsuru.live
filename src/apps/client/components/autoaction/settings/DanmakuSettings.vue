@@ -87,10 +87,13 @@ function removeBlockword(index: number) {
     <div class="settings-group space-y-2.5">
       <span class="font-semibold text-xs text-foreground block">触发关键词</span>
       <div class="flex items-center gap-2">
-        <Input v-model="tempKeyword" placeholder="输入关键词..." class="flex-1" @keyup.enter="addKeyword" />
-        <Button @click="addKeyword">
-          添加
-        </Button>
+        <Input
+          v-model="tempKeyword"
+          placeholder="输入关键词..."
+          class="flex-1"
+          @keyup.enter="addKeyword"
+        />
+        <Button @click="addKeyword"> 添加 </Button>
       </div>
 
       <div class="flex items-center gap-3">
@@ -99,7 +102,11 @@ function removeBlockword(index: number) {
           <button
             type="button"
             class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="action.triggerConfig.keywordMatchType === KeywordMatchType.Full ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            :class="
+              action.triggerConfig.keywordMatchType === KeywordMatchType.Full
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:text-foreground'
+            "
             @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Full"
           >
             完全
@@ -107,7 +114,11 @@ function removeBlockword(index: number) {
           <button
             type="button"
             class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="action.triggerConfig.keywordMatchType === KeywordMatchType.Contains ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            :class="
+              action.triggerConfig.keywordMatchType === KeywordMatchType.Contains
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:text-foreground'
+            "
             @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Contains"
           >
             包含
@@ -115,7 +126,11 @@ function removeBlockword(index: number) {
           <button
             type="button"
             class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="action.triggerConfig.keywordMatchType === KeywordMatchType.Regex ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            :class="
+              action.triggerConfig.keywordMatchType === KeywordMatchType.Regex
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:text-foreground'
+            "
             @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Regex"
           >
             正则
@@ -156,8 +171,17 @@ function removeBlockword(index: number) {
     <div class="settings-group space-y-2.5">
       <span class="font-semibold text-xs text-foreground block">屏蔽关键词</span>
       <div class="flex items-center gap-2">
-        <Input v-model="tempBlockword" placeholder="输入屏蔽词..." class="flex-1" @keyup.enter="addBlockword" />
-        <Button variant="secondary" class="text-amber-600 dark:text-amber-400" @click="addBlockword">
+        <Input
+          v-model="tempBlockword"
+          placeholder="输入屏蔽词..."
+          class="flex-1"
+          @keyup.enter="addBlockword"
+        />
+        <Button
+          variant="secondary"
+          class="text-amber-600 dark:text-amber-400"
+          @click="addBlockword"
+        >
           添加
         </Button>
       </div>
@@ -168,7 +192,11 @@ function removeBlockword(index: number) {
           <button
             type="button"
             class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="action.triggerConfig.blockwordMatchType === KeywordMatchType.Full ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            :class="
+              action.triggerConfig.blockwordMatchType === KeywordMatchType.Full
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:text-foreground'
+            "
             @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Full"
           >
             完全
@@ -176,7 +204,11 @@ function removeBlockword(index: number) {
           <button
             type="button"
             class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="action.triggerConfig.blockwordMatchType === KeywordMatchType.Contains ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            :class="
+              action.triggerConfig.blockwordMatchType === KeywordMatchType.Contains
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:text-foreground'
+            "
             @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Contains"
           >
             包含
@@ -184,7 +216,11 @@ function removeBlockword(index: number) {
           <button
             type="button"
             class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="action.triggerConfig.blockwordMatchType === KeywordMatchType.Regex ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+            :class="
+              action.triggerConfig.blockwordMatchType === KeywordMatchType.Regex
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'hover:text-foreground'
+            "
             @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Regex"
           >
             正则

@@ -124,7 +124,9 @@ const SEARCH_HELP = [
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground cursor-help" />
+              <Search16Regular
+                class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground cursor-help"
+              />
             </TooltipTrigger>
             <TooltipContent class="text-xs space-y-0.5">
               <div
@@ -137,7 +139,13 @@ const SEARCH_HELP = [
           </Tooltip>
         </TooltipProvider>
 
-        <Input size="xs" ref="searchInputRef" v-model="dashboard.search" placeholder="搜索（Ctrl+F）" class="toolbar__search-input pl-8 pr-6" />
+        <Input
+          size="xs"
+          ref="searchInputRef"
+          v-model="dashboard.search"
+          placeholder="搜索（Ctrl+F）"
+          class="toolbar__search-input pl-8 pr-6"
+        />
 
         <button
           v-if="dashboard.search"
@@ -152,7 +160,11 @@ const SEARCH_HELP = [
       <!-- 历史筛选：Popover 按钮 -->
       <Popover>
         <PopoverTrigger as-child>
-          <Button size="xs" :variant="range ? 'default' : 'ghost'" class="toolbar__history-btn gap-1">
+          <Button
+            size="xs"
+            :variant="range ? 'default' : 'ghost'"
+            class="toolbar__history-btn gap-1"
+          >
             <History24Regular class="size-3.5" />
             <span>{{ range ? '已选历史' : '历史回溯' }}</span>
             <Dismiss16Regular
@@ -163,16 +175,34 @@ const SEARCH_HELP = [
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent align="start" class="w-80 p-3 space-y-3">
+        <PopoverContent
+          align="start"
+          class="w-80 p-3 space-y-3"
+        >
           <div class="font-semibold text-xs text-foreground">历史事件回溯筛选</div>
           <div class="grid grid-cols-3 gap-1.5">
-            <Button size="xs" variant="outline" class="h-6 text-[11px]" @click="applyQuickRange(3600_000)">
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px]"
+              @click="applyQuickRange(3600_000)"
+            >
               最近 1 小时
             </Button>
-            <Button size="xs" variant="outline" class="h-6 text-[11px]" @click="applyTodayRange">
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px]"
+              @click="applyTodayRange"
+            >
               今天
             </Button>
-            <Button size="xs" variant="outline" class="h-6 text-[11px]" @click="applyQuickRange(7 * 86400_000)">
+            <Button
+              size="xs"
+              variant="outline"
+              class="h-6 text-[11px]"
+              @click="applyQuickRange(7 * 86400_000)"
+            >
               最近 7 天
             </Button>
           </div>
@@ -192,10 +222,20 @@ const SEARCH_HELP = [
               />
             </div>
             <div class="flex items-center justify-between pt-1">
-              <Button size="xs" variant="ghost" class="h-6 text-[11px] text-muted-foreground" :disabled="!range" @click="range = null">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 text-[11px] text-muted-foreground"
+                :disabled="!range"
+                @click="range = null"
+              >
                 清除时间筛选
               </Button>
-              <Button size="xs" class="h-6 text-[11px]" @click="applyCustomRange">
+              <Button
+                size="xs"
+                class="h-6 text-[11px]"
+                @click="applyCustomRange"
+              >
                 应用
               </Button>
             </div>
@@ -400,7 +440,9 @@ const SEARCH_HELP = [
           </TooltipTrigger>
           <TooltipContent class="text-xs">
             {{
-              client.hasRemoteSource && client.phase !== 'connected' ? '已通过其他标签页接收弹幕' : client.connectionStatus
+              client.hasRemoteSource && client.phase !== 'connected'
+                ? '已通过其他标签页接收弹幕'
+                : client.connectionStatus
             }}
             <template v-if="client.reconnectCount"> · 已重连 {{ client.reconnectCount }} 次 </template>
           </TooltipContent>
@@ -421,11 +463,19 @@ const SEARCH_HELP = [
 
       <Popover>
         <PopoverTrigger as-child>
-          <Button variant="ghost" size="xs" class="w-7 p-0" aria-label="布局">
+          <Button
+            variant="ghost"
+            size="xs"
+            class="w-7 p-0"
+            aria-label="布局"
+          >
             <Board16Regular class="size-4 text-muted-foreground" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" class="p-2 w-auto">
+        <PopoverContent
+          align="end"
+          class="p-2 w-auto"
+        >
           <LayoutMenu />
         </PopoverContent>
       </Popover>

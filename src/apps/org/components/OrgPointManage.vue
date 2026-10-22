@@ -10,11 +10,7 @@ import {
 } from '@vicons/ionicons5'
 import { computed, onMounted, ref } from 'vue'
 
-import {
-  getApiOrgOrgIdAudit,
-  getApiOrgOrgIdPointsGoods,
-  getApiOrgOrgIdPointsStats,
-} from '@/api/generated/org/org'
+import { getApiOrgOrgIdAudit, getApiOrgOrgIdPointsGoods, getApiOrgOrgIdPointsStats } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
@@ -73,10 +69,7 @@ async function loadData() {
       (await getApiOrgOrgIdPointsGoods(orgId.value, streamerParam)) as any,
       '加载积分商品失败',
     )
-    auditLogs.value = unwrapOk(
-      (await getApiOrgOrgIdAudit(orgId.value, { take: 100 })) as any,
-      '加载操作审计失败',
-    )
+    auditLogs.value = unwrapOk((await getApiOrgOrgIdAudit(orgId.value, { take: 100 })) as any, '加载操作审计失败')
   } catch (err) {
     toast.error(err instanceof Error ? err.message : '加载失败')
   } finally {
@@ -99,13 +92,20 @@ onMounted(async () => {
       <CardContent class="p-3">
         <Select
           :model-value="selectedStreamerId ? String(selectedStreamerId) : 'all'"
-          @update:model-value="selectedStreamerId = $event === 'all' ? null : Number($event); loadData()"
+          @update:model-value="
+            selectedStreamerId = $event === 'all' ? null : Number($event)
+            loadData()
+          "
         >
           <SelectTrigger class="w-full sm:w-80">
             <SelectValue placeholder="选择主播后，可单独查看/修改积分规则与筛选统计" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
-            <SelectItem value="all" class="text-xs">全部主播</SelectItem>
+            <SelectItem
+              value="all"
+              class="text-xs"
+              >全部主播</SelectItem
+            >
             <SelectItem
               v-for="opt in streamerOptions"
               :key="opt.value"
@@ -131,7 +131,10 @@ onMounted(async () => {
             <span class="text-[11px] text-muted-foreground block">{{ item.label }}</span>
             <span class="text-base font-semibold font-mono text-foreground">{{ item.value }}</span>
           </div>
-          <component :is="item.icon" class="size-5 text-muted-foreground/60 shrink-0" />
+          <component
+            :is="item.icon"
+            class="size-5 text-muted-foreground/60 shrink-0"
+          />
         </CardContent>
       </Card>
     </div>
@@ -146,30 +149,54 @@ onMounted(async () => {
         <CardContent class="p-3 flex items-center justify-between gap-2">
           <div class="space-y-0.5">
             <span class="text-[11px] text-muted-foreground block">{{ item.label }}</span>
-            <span class="text-base font-semibold font-mono" :class="item.color">{{ item.value }}</span>
+            <span
+              class="text-base font-semibold font-mono"
+              :class="item.color"
+              >{{ item.value }}</span
+            >
           </div>
-          <component :is="item.icon" class="size-5 text-muted-foreground/60 shrink-0" />
+          <component
+            :is="item.icon"
+            class="size-5 text-muted-foreground/60 shrink-0"
+          />
         </CardContent>
       </Card>
     </div>
 
     <!-- 刷新按钮 -->
     <div class="flex items-center">
-      <Button variant="outline" class="gap-1" :disabled="isLoading" @click="loadData">
-        <component :is="RefreshOutline" class="size-3.5" />
+      <Button
+        variant="outline"
+        class="gap-1"
+        :disabled="isLoading"
+        @click="loadData"
+      >
+        <component
+          :is="RefreshOutline"
+          class="size-3.5"
+        />
         刷新
       </Button>
     </div>
 
-    <div v-if="isLoading" class="py-12 flex justify-center">
+    <div
+      v-if="isLoading"
+      class="py-12 flex justify-center"
+    >
       <Spin />
     </div>
-    <div v-else-if="!pointStats && !pointGoods.length" class="py-8">
+    <div
+      v-else-if="!pointStats && !pointGoods.length"
+      class="py-8"
+    >
       <Empty description="暂无积分数据" />
     </div>
 
     <!-- 积分商品列表摘要 -->
-    <Card v-if="pointGoods.length > 0" class="border border-border/80">
+    <Card
+      v-if="pointGoods.length > 0"
+      class="border border-border/80"
+    >
       <CardHeader class="p-3 pb-2 border-b border-border/60">
         <CardTitle class="text-xs font-semibold">积分商品</CardTitle>
       </CardHeader>
@@ -185,13 +212,18 @@ onMounted(async () => {
               <p class="text-[11px] text-muted-foreground truncate m-0">{{ goods.description }}</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-              <Badge variant="secondary" class="text-[10px] h-4.5 px-1.5 font-normal">
+              <Badge
+                variant="secondary"
+                class="text-[10px] h-4.5 px-1.5 font-normal"
+              >
                 {{ goods.price }} 积分
               </Badge>
               <Badge
                 variant="outline"
                 class="text-[10px] h-4.5 px-1.5 font-normal"
-                :class="goods.stock > 0 ? 'text-emerald-600 border-emerald-500/30' : 'text-destructive border-destructive/30'"
+                :class="
+                  goods.stock > 0 ? 'text-emerald-600 border-emerald-500/30' : 'text-destructive border-destructive/30'
+                "
               >
                 {{ goods.stock > 0 ? `库存: ${goods.stock}` : '缺货' }}
               </Badge>
@@ -222,7 +254,10 @@ onMounted(async () => {
     </Card>
 
     <!-- 操作审计 -->
-    <Card v-if="auditLogs.length" class="border border-border/80">
+    <Card
+      v-if="auditLogs.length"
+      class="border border-border/80"
+    >
       <CardHeader class="p-3 pb-2 border-b border-border/60">
         <CardTitle class="text-xs font-semibold">操作审计</CardTitle>
       </CardHeader>

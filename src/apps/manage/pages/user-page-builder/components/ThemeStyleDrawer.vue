@@ -21,26 +21,9 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
-import {
-  Sheet,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from '@/shared/ui/sheet'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/shared/ui/tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useMessage } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
@@ -132,17 +115,13 @@ const appearanceTarget = computed<ThemeAppearanceTarget>(() => ({
 function getThemeField(key: 'primaryColor' | 'backgroundColor') {
   return computed<string | undefined>({
     get: () => {
-      const theme = isPageScope.value
-        ? editor.currentProject.value?.theme
-        : (editor.settings.value as any).theme
+      const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
       return typeof theme?.[key] === 'string' ? theme[key] : undefined
     },
     set: (value) => {
       if (value?.trim()) ensureCurrentTheme()[key] = value
       else {
-        const theme = isPageScope.value
-          ? editor.currentProject.value?.theme
-          : (editor.settings.value as any).theme
+        const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
         if (theme) delete theme[key]
         cleanupCurrentTheme()
       }
@@ -155,17 +134,13 @@ const backgroundColor = getThemeField('backgroundColor')
 
 const themeMode = computed<'auto' | 'light' | 'dark'>({
   get: () => {
-    const theme = isPageScope.value
-      ? editor.currentProject.value?.theme
-      : (editor.settings.value as any).theme
+    const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
     const mode = theme?.pageThemeMode
     return mode === 'light' || mode === 'dark' ? mode : 'auto'
   },
   set: (value) => {
     if (value === 'auto') {
-      const theme = isPageScope.value
-        ? editor.currentProject.value?.theme
-        : (editor.settings.value as any).theme
+      const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
       if (theme) delete theme.pageThemeMode
       cleanupCurrentTheme()
     } else {
@@ -327,10 +302,16 @@ function clearCurrentTheme() {
 
 <template>
   <Sheet v-model:open="show">
-    <SheetContent side="right" class="w-full sm:max-w-md p-0 flex flex-col">
+    <SheetContent
+      side="right"
+      class="w-full sm:max-w-md p-0 flex flex-col"
+    >
       <SheetHeader class="p-4 border-b border-border">
         <SheetTitle class="flex items-center gap-2 text-base font-semibold">
-          <component :is="ColorPaletteOutline" class="size-5 text-primary" />
+          <component
+            :is="ColorPaletteOutline"
+            class="size-5 text-primary"
+          />
           <span>主页外观与主题</span>
         </SheetTitle>
       </SheetHeader>
@@ -340,7 +321,10 @@ function clearCurrentTheme() {
         <div class="scope-control-box">
           <template v-if="isCurrentHome">
             <div class="scope-tip">
-              <Badge variant="default" class="text-xs">
+              <Badge
+                variant="default"
+                class="text-xs"
+              >
                 全局主页
               </Badge>
               <span class="scope-desc">配置将直接应用到主页，并作为全站各页面的默认底色。</span>
@@ -350,10 +334,18 @@ function clearCurrentTheme() {
             <div class="flex items-center justify-between">
               <span class="scope-title">配置作用范围：</span>
               <div class="grid grid-cols-2 gap-1 bg-muted p-0.5 rounded-lg">
-                <Button :variant="currentScope === 'global' ? 'default' : 'ghost'" class="px-2.5" @click="currentScope = 'global'">
+                <Button
+                  :variant="currentScope === 'global' ? 'default' : 'ghost'"
+                  class="px-2.5"
+                  @click="currentScope = 'global'"
+                >
                   全局通用
                 </Button>
-                <Button :variant="currentScope === 'page' ? 'default' : 'ghost'" class="px-2.5" @click="currentScope = 'page'">
+                <Button
+                  :variant="currentScope === 'page' ? 'default' : 'ghost'"
+                  class="px-2.5"
+                  @click="currentScope = 'page'"
+                >
                   本页专属
                 </Button>
               </div>
@@ -372,14 +364,28 @@ function clearCurrentTheme() {
         <div class="smart-extract-card">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
-              <component :is="SparklesOutline" class="size-4 text-primary" />
+              <component
+                :is="SparklesOutline"
+                class="size-4 text-primary"
+              />
               <span>智能提取配色</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <Button variant="outline" class="h-6 px-2" :disabled="isExtracting || !avatarUrl" @click="runExtractFromUrl(avatarUrl, '头像')">
+              <Button
+                variant="outline"
+                class="h-6 px-2"
+                :disabled="isExtracting || !avatarUrl"
+                @click="runExtractFromUrl(avatarUrl, '头像')"
+              >
                 从头像提取
               </Button>
-              <Button v-if="currentBackgroundImageUrl" variant="outline" class="h-6 px-2" :disabled="isExtracting" @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')">
+              <Button
+                v-if="currentBackgroundImageUrl"
+                variant="outline"
+                class="h-6 px-2"
+                :disabled="isExtracting"
+                @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')"
+              >
                 从壁纸提取
               </Button>
             </div>
@@ -399,10 +405,17 @@ function clearCurrentTheme() {
                 <span>主色：{{ extractedResult.primaryColor }}</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <Button variant="outline" class="h-6 px-2" @click="applyExtracted('light')">
+                <Button
+                  variant="outline"
+                  class="h-6 px-2"
+                  @click="applyExtracted('light')"
+                >
                   套用浅色
                 </Button>
-                <Button class="h-6 px-2" @click="applyExtracted('dark')">
+                <Button
+                  class="h-6 px-2"
+                  @click="applyExtracted('dark')"
+                >
                   套用深色
                 </Button>
               </div>
@@ -460,14 +473,32 @@ function clearCurrentTheme() {
         <div class="h-px bg-border my-1" />
 
         <!-- 三大选项卡配置 -->
-        <Tabs v-model="activeTab" class="w-full">
+        <Tabs
+          v-model="activeTab"
+          class="w-full"
+        >
           <TabsList class="grid grid-cols-3 w-full">
-            <TabsTrigger value="colors" class="text-xs">色彩与模式</TabsTrigger>
-            <TabsTrigger value="background" class="text-xs">壁纸与背景</TabsTrigger>
-            <TabsTrigger value="advanced" class="text-xs">排版与质感</TabsTrigger>
+            <TabsTrigger
+              value="colors"
+              class="text-xs"
+              >色彩与模式</TabsTrigger
+            >
+            <TabsTrigger
+              value="background"
+              class="text-xs"
+              >壁纸与背景</TabsTrigger
+            >
+            <TabsTrigger
+              value="advanced"
+              class="text-xs"
+              >排版与质感</TabsTrigger
+            >
           </TabsList>
 
-          <TabsContent value="colors" class="pt-3 flex flex-col gap-3">
+          <TabsContent
+            value="colors"
+            class="pt-3 flex flex-col gap-3"
+          >
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div class="flex flex-col gap-1">
                 <label class="text-xs text-muted-foreground">主题主色</label>
@@ -499,14 +530,20 @@ function clearCurrentTheme() {
             </div>
           </TabsContent>
 
-          <TabsContent value="background" class="pt-3">
+          <TabsContent
+            value="background"
+            class="pt-3"
+          >
             <BackgroundSettingsEditor
               :target="backgroundTarget"
               :none-hint="isPageScope ? '未设置时继承全局默认壁纸背景。' : '未设置时使用站点默认背景。'"
             />
           </TabsContent>
 
-          <TabsContent value="advanced" class="pt-3 flex flex-col gap-3">
+          <TabsContent
+            value="advanced"
+            class="pt-3 flex flex-col gap-3"
+          >
             <ThemeAdvancedOptions :target="appearanceTarget" />
 
             <div class="pt-2 border-t border-border flex flex-col gap-2">
@@ -515,8 +552,14 @@ function clearCurrentTheme() {
                 <span class="text-muted-foreground">
                   {{ editor.settings.value.customCss ? '已配置全局 CSS' : '未配置全局 CSS' }}
                 </span>
-                <Button variant="outline" @click="cssEditorVisible = true">
-                  <component :is="CodeSlashOutline" class="size-3.5 mr-1" />
+                <Button
+                  variant="outline"
+                  @click="cssEditorVisible = true"
+                >
+                  <component
+                    :is="CodeSlashOutline"
+                    class="size-3.5 mr-1"
+                  />
                   编辑 CSS
                 </Button>
               </div>
@@ -533,13 +576,19 @@ function clearCurrentTheme() {
           @confirm="clearCurrentTheme"
         >
           <Button variant="destructive">
-            <component :is="TrashOutline" class="size-3.5 mr-1" />
+            <component
+              :is="TrashOutline"
+              class="size-3.5 mr-1"
+            />
             {{ isPageScope ? '重置为继承全局' : '清空当前主题' }}
           </Button>
         </Popconfirm>
 
         <Button @click="show = false">
-          <component :is="CheckmarkOutline" class="size-3.5 mr-1" />
+          <component
+            :is="CheckmarkOutline"
+            class="size-3.5 mr-1"
+          />
           完成
         </Button>
       </SheetFooter>

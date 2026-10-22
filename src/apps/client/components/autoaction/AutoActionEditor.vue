@@ -162,7 +162,9 @@ function getAdvancedSummary() {
               class="relative my-2 text-center"
             >
               <Separator />
-              <span class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground">
+              <span
+                class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-xs text-muted-foreground"
+              >
                 通用高级设置
               </span>
             </div>

@@ -7,5 +7,5 @@
  */
 
 export type GetApiFollowingStatesParams = {
-ids?: number[];
-};
+  ids?: number[]
+}

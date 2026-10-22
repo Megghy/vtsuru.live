@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountChangeBiliParams = {
-code?: string;
-};
+  code?: string
+}

@@ -64,10 +64,21 @@ function getMetaText(song: SongsInfo) {
     <div class="song-list-card-template">
       <div class="search-row flex gap-2 mb-3">
         <div class="relative search-field flex-1">
-          <component :is="Search24Regular" class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input v-model="inputKeyword" class="pl-8 w-full" placeholder="搜索歌曲或歌手…" @keyup.enter="commitSearch" />
+          <component
+            :is="Search24Regular"
+            class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            v-model="inputKeyword"
+            class="pl-8 w-full"
+            placeholder="搜索歌曲或歌手…"
+            @keyup.enter="commitSearch"
+          />
         </div>
-        <Button class="px-4" @click="commitSearch">
+        <Button
+          class="px-4"
+          @click="commitSearch"
+        >
           搜索
         </Button>
       </div>
@@ -102,8 +113,13 @@ function getMetaText(song: SongsInfo) {
         >
           <div class="card-top flex items-start justify-between gap-2">
             <div class="title-left flex items-start gap-2.5 min-w-0 flex-1">
-              <div class="left-icon size-8 rounded-md bg-muted/60 flex items-center justify-center shrink-0 text-muted-foreground">
-                <component :is="MusicalNote" class="size-4" />
+              <div
+                class="left-icon size-8 rounded-md bg-muted/60 flex items-center justify-center shrink-0 text-muted-foreground"
+              >
+                <component
+                  :is="MusicalNote"
+                  class="size-4"
+                />
               </div>
               <div class="title-block min-w-0 flex-1">
                 <Tooltip :disabled="isSelf">
@@ -190,7 +206,10 @@ function getMetaText(song: SongsInfo) {
           ref="loadMoreTrigger"
           class="load-more col-span-full flex justify-center py-4"
         >
-          <Button variant="outline" @click="loadMore">
+          <Button
+            variant="outline"
+            @click="loadMore"
+          >
             加载更多
           </Button>
         </div>

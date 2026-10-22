@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  ArrowRight24Regular,
-  CheckmarkCircle24Regular,
-  DismissCircle24Regular,
-  Mail24Regular,
-} from '@vicons/fluent'
+import { ArrowRight24Regular, CheckmarkCircle24Regular, DismissCircle24Regular, Mail24Regular } from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -50,7 +45,11 @@ const copy = computed(() => {
     case 'need-login':
       return { kicker: '验证完成', title: '邮箱已验证', summary: '请登录后进入主播后台。' }
     default:
-      return { kicker: '无法验证', title: '验证没有完成', summary: detail.value || '链接无效或已过期，请回到后台重新发送验证邮件。' }
+      return {
+        kicker: '无法验证',
+        title: '验证没有完成',
+        summary: detail.value || '链接无效或已过期，请回到后台重新发送验证邮件。',
+      }
   }
 })
 
@@ -137,18 +136,36 @@ onUnmounted(() => {
         {{ copy.summary }}
       </p>
       <div class="verify-actions">
-        <Button v-if="phase === 'success'" class="w-full flex items-center justify-center gap-2" @click="goManage">
+        <Button
+          v-if="phase === 'success'"
+          class="w-full flex items-center justify-center gap-2"
+          @click="goManage"
+        >
           进入主播后台
-          <component :is="ArrowRight24Regular" class="size-4" />
+          <component
+            :is="ArrowRight24Regular"
+            class="size-4"
+          />
         </Button>
-        <Button v-else-if="phase === 'need-login'" class="w-full" @click="goHome">
+        <Button
+          v-else-if="phase === 'need-login'"
+          class="w-full"
+          @click="goHome"
+        >
           去登录
         </Button>
         <template v-else-if="phase === 'error'">
-          <Button class="w-full" @click="goHome">
+          <Button
+            class="w-full"
+            @click="goHome"
+          >
             返回首页
           </Button>
-          <Button variant="outline" class="w-full" @click="goManage">
+          <Button
+            variant="outline"
+            class="w-full"
+            @click="goManage"
+          >
             打开主播后台
           </Button>
         </template>
@@ -157,7 +174,10 @@ onUnmounted(() => {
         v-if="phase === 'checking'"
         class="verify-hint"
       >
-        <component :is="Mail24Regular" class="size-4" />
+        <component
+          :is="Mail24Regular"
+          class="size-4"
+        />
         来自验证邮件的一次性链接
       </p>
     </section>

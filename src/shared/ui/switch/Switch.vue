@@ -1,17 +1,14 @@
 <script setup lang="ts">
-import type { SwitchRootEmits, SwitchRootProps } from "reka-ui"
-import type { HTMLAttributes } from "vue"
-import { computed } from "vue"
-import { reactiveOmit } from "@vueuse/core"
-import {
-  SwitchRoot,
-  SwitchThumb,
-  useForwardPropsEmits,
-} from "reka-ui"
+import { reactiveOmit } from '@vueuse/core'
+import type { SwitchRootEmits, SwitchRootProps } from 'reka-ui'
+import { SwitchRoot, SwitchThumb, useForwardPropsEmits } from 'reka-ui'
+import type { HTMLAttributes } from 'vue'
+import { computed } from 'vue'
+
 import { cn } from '@/shared/utils/cn'
 
 export interface SwitchProps extends SwitchRootProps {
-  class?: HTMLAttributes["class"]
+  class?: HTMLAttributes['class']
   checked?: boolean
   size?: 'default' | 'sm'
 }
@@ -25,7 +22,7 @@ const props = withDefaults(defineProps<SwitchProps>(), {
 })
 const emits = defineEmits<SwitchEmits>()
 
-const delegatedProps = reactiveOmit(props, "class", "checked", "size")
+const delegatedProps = reactiveOmit(props, 'class', 'checked', 'size')
 
 const resolvedModelValue = computed(() => {
   if (props.modelValue !== undefined) return props.modelValue
@@ -60,17 +57,21 @@ const thumbSizes: Record<string, string> = {
   <SwitchRoot
     v-bind="forwarded"
     @update:model-value="handleUpdateModelValue"
-    :class="cn(
-      'peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input',
-      rootSizes[props.size] || rootSizes.default,
-      props.class,
-    )"
+    :class="
+      cn(
+        'peer inline-flex shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=unchecked]:bg-input',
+        rootSizes[props.size] || rootSizes.default,
+        props.class,
+      )
+    "
   >
     <SwitchThumb
-      :class="cn(
-        'pointer-events-none block rounded-full bg-background shadow-lg ring-0 transition-transform',
-        thumbSizes[props.size] || thumbSizes.default,
-      )"
+      :class="
+        cn(
+          'pointer-events-none block rounded-full bg-background shadow-lg ring-0 transition-transform',
+          thumbSizes[props.size] || thumbSizes.default,
+        )
+      "
     >
       <slot name="thumb" />
     </SwitchThumb>

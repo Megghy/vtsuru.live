@@ -5,13 +5,7 @@ import { computed, ref } from 'vue'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -100,14 +94,24 @@ function cancelImport() {
     </CardHeader>
     <CardContent class="px-4 pb-4 pt-0">
       <div class="flex items-center gap-2 flex-wrap text-xs">
-        <Button variant="outline" @click="exportMinimal">
+        <Button
+          variant="outline"
+          @click="exportMinimal"
+        >
           导出连接信息
         </Button>
-        <Button variant="outline" @click="exportFull">
+        <Button
+          variant="outline"
+          @click="exportFull"
+        >
           导出全量配置
         </Button>
         <label class="cursor-pointer">
-          <Button variant="outline" :disabled="importing" as-child>
+          <Button
+            variant="outline"
+            :disabled="importing"
+            as-child
+          >
             <span>导入</span>
           </Button>
           <input
@@ -125,7 +129,11 @@ function cancelImport() {
 
   <Dialog
     :open="showPreview"
-    @update:open="(val) => { if (!val) cancelImport() }"
+    @update:open="
+      (val) => {
+        if (!val) cancelImport()
+      }
+    "
   >
     <DialogContent class="max-w-md">
       <DialogHeader>
@@ -141,10 +149,17 @@ function cancelImport() {
         </span>
       </div>
       <DialogFooter class="flex justify-end gap-2">
-        <Button variant="outline" :disabled="importing" @click="cancelImport">
+        <Button
+          variant="outline"
+          :disabled="importing"
+          @click="cancelImport"
+        >
           取消
         </Button>
-        <Button :disabled="importing" @click="confirmImport">
+        <Button
+          :disabled="importing"
+          @click="confirmImport"
+        >
           确认导入
         </Button>
       </DialogFooter>

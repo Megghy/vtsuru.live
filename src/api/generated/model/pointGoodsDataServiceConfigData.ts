@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataServiceField } from './pointGoodsDataServiceField';
+import type { PointGoodsDataServiceField } from './pointGoodsDataServiceField'
 
 export interface PointGoodsDataServiceConfigData {
-  fields: PointGoodsDataServiceField[];
+  fields: PointGoodsDataServiceField[]
   /** @nullable */
-  rules?: string | null;
+  rules?: string | null
   /** @nullable */
-  estimatedDays?: number | null;
-  paused: boolean;
+  estimatedDays?: number | null
+  paused: boolean
   /** @nullable */
-  maxActiveOrders?: number | null;
+  maxActiveOrders?: number | null
 }

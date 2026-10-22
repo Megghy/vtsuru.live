@@ -153,8 +153,7 @@ function updateFolderSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
     label: `${s.name} - ${s.author?.join('/') || '未知'}`,
     value: `${s.name}_${(s as any)._filePath}`,
     disabled:
-      props.existingSongs.some((exist) => exist.name === s.name) ||
-      newlyAddedSongs.some((add) => add.name === s.name),
+      props.existingSongs.some((exist) => exist.name === s.name) || newlyAddedSongs.some((add) => add.name === s.name),
   }))
 }
 
@@ -260,7 +259,10 @@ async function selectFolder() {
 
 <template>
   <div class="space-y-4">
-    <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5">
+    <Alert
+      variant="default"
+      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5"
+    >
       <AlertTitle class="text-xs font-semibold">功能说明</AlertTitle>
       <AlertDescription class="text-xs space-y-1 mt-1">
         <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
@@ -271,7 +273,11 @@ async function selectFolder() {
     </Alert>
 
     <div class="flex items-center gap-2">
-      <Button :disabled="isScanningFolder" class="gap-1.5" @click="selectFolder">
+      <Button
+        :disabled="isScanningFolder"
+        class="gap-1.5"
+        @click="selectFolder"
+      >
         <ArchiveOutline class="size-4" />
         {{ isScanningFolder ? '正在扫描...' : '选择本地文件夹' }}
       </Button>
@@ -282,28 +288,71 @@ async function selectFolder() {
 
       <!-- 批量工具 -->
       <div class="space-y-2">
-        <Button variant="outline" size="xs" @click="showBatchEdit = !showBatchEdit">
+        <Button
+          variant="outline"
+          size="xs"
+          @click="showBatchEdit = !showBatchEdit"
+        >
           {{ showBatchEdit ? '收起批量设置工具' : '展开批量设置工具' }}
         </Button>
 
-        <div v-if="showBatchEdit" class="p-3 rounded-lg border border-border bg-muted/20 space-y-2 text-xs">
+        <div
+          v-if="showBatchEdit"
+          class="p-3 rounded-lg border border-border bg-muted/20 space-y-2 text-xs"
+        >
           <p class="text-muted-foreground text-[11px]">选中歌曲后，可以批量设置作者、语言或标签信息</p>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <div class="flex items-center gap-1.5">
-              <Input size="xs" v-model="batchAuthorInput" placeholder="输入作者" class="flex-1" />
-              <Button size="xs" variant="outline" @click="batchEditFolderSongs('author', [batchAuthorInput]); batchAuthorInput = ''">
+              <Input
+                size="xs"
+                v-model="batchAuthorInput"
+                placeholder="输入作者"
+                class="flex-1"
+              />
+              <Button
+                size="xs"
+                variant="outline"
+                @click="
+                  batchEditFolderSongs('author', [batchAuthorInput]);
+                  batchAuthorInput = ''
+                "
+              >
                 设置作者
               </Button>
             </div>
             <div class="flex items-center gap-1.5">
-              <Input size="xs" v-model="batchLanguageInput" placeholder="输入语言" class="flex-1" />
-              <Button size="xs" variant="outline" @click="batchEditFolderSongs('language', [batchLanguageInput]); batchLanguageInput = ''">
+              <Input
+                size="xs"
+                v-model="batchLanguageInput"
+                placeholder="输入语言"
+                class="flex-1"
+              />
+              <Button
+                size="xs"
+                variant="outline"
+                @click="
+                  batchEditFolderSongs('language', [batchLanguageInput]);
+                  batchLanguageInput = ''
+                "
+              >
                 设置语言
               </Button>
             </div>
             <div class="flex items-center gap-1.5">
-              <Input size="xs" v-model="batchTagInput" placeholder="输入标签" class="flex-1" />
-              <Button size="xs" variant="outline" @click="batchEditFolderSongs('tags', [batchTagInput]); batchTagInput = ''">
+              <Input
+                size="xs"
+                v-model="batchTagInput"
+                placeholder="输入标签"
+                class="flex-1"
+              />
+              <Button
+                size="xs"
+                variant="outline"
+                @click="
+                  batchEditFolderSongs('tags', [batchTagInput]);
+                  batchTagInput = ''
+                "
+              >
                 设置标签
               </Button>
             </div>

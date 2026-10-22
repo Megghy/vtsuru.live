@@ -6,11 +6,11 @@
  * OpenAPI spec version: v1
  */
 
-export type PointGoodsDataVirtualKeySelectionMode = typeof PointGoodsDataVirtualKeySelectionMode[keyof typeof PointGoodsDataVirtualKeySelectionMode];
-
+export type PointGoodsDataVirtualKeySelectionMode =
+  (typeof PointGoodsDataVirtualKeySelectionMode)[keyof typeof PointGoodsDataVirtualKeySelectionMode]
 
 export const PointGoodsDataVirtualKeySelectionMode = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

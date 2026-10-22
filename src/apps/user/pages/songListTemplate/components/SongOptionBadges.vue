@@ -38,7 +38,11 @@ const badges = computed(() => getSongOptionBadges(props.options))
         variant="secondary"
         class="font-normal rounded-full"
         :class="size === 'tiny' ? 'text-[10px] h-4 px-1.5' : 'text-[11px] h-5 px-2'"
-        :style="variant === 'guard' && badge.color ? { backgroundColor: `${badge.color}20`, color: badge.color, borderColor: `${badge.color}40` } : undefined"
+        :style="
+          variant === 'guard' && badge.color
+            ? { backgroundColor: `${badge.color}20`, color: badge.color, borderColor: `${badge.color}40` }
+            : undefined
+        "
       >
         {{ badge.label }}
       </Badge>

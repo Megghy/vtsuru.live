@@ -23,8 +23,6 @@ import QueueList from '@/apps/open-live/components/read-danmaku/QueueList.vue'
 import SpokenHistoryPanel from '@/apps/open-live/components/read-danmaku/SpokenHistoryPanel.vue'
 import TemplateSettingsPanel from '@/apps/open-live/components/read-danmaku/TemplateSettingsPanel.vue'
 import VoiceSettingsPanel from '@/apps/open-live/components/read-danmaku/VoiceSettingsPanel.vue'
-import { useDanmakuClient } from '@/store/useDanmakuClient'
-import { useSpeechService } from '@/store/useSpeechService'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import {
   AlertDialog,
@@ -41,6 +39,8 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { useDanmakuClient } from '@/store/useDanmakuClient'
+import { useSpeechService } from '@/store/useSpeechService'
 
 const props = withDefaults(
   defineProps<{
@@ -159,7 +159,11 @@ onDeactivated(unbindKeydown)
     >
       <template #action>
         <div class="flex items-center gap-1.5 flex-wrap">
-          <Button :variant="speechState.canSpeech ? 'destructive' : 'default'" :loading="speechState.isApiAudioLoading" @click="speechState.canSpeech ? speechService.stopSpeech() : speechService.startSpeech()">
+          <Button
+            :variant="speechState.canSpeech ? 'destructive' : 'default'"
+            :loading="speechState.isApiAudioLoading"
+            @click="speechState.canSpeech ? speechService.stopSpeech() : speechService.startSpeech()"
+          >
             <component
               :is="speechState.canSpeech ? MicOff24Filled : Mic24Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -167,7 +171,12 @@ onDeactivated(unbindKeydown)
             {{ speechState.canSpeech ? '停止朗读' : '开启朗读' }}
           </Button>
 
-          <Button v-if="speechState.canSpeech" :variant="isPaused ? 'outline' : 'secondary'" :class="{ 'border-amber-500/40 text-amber-500': isPaused }" @click="speechService.togglePause()">
+          <Button
+            v-if="speechState.canSpeech"
+            :variant="isPaused ? 'outline' : 'secondary'"
+            :class="{ 'border-amber-500/40 text-amber-500': isPaused }"
+            @click="speechService.togglePause()"
+          >
             <component
               :is="isPaused ? Play20Filled : Pause20Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -175,7 +184,11 @@ onDeactivated(unbindKeydown)
             {{ isPaused ? '恢复播报' : '暂停' }}
           </Button>
 
-          <Button v-if="speechState.isSpeaking" variant="outline" @click="speechService.skipCurrent()">
+          <Button
+            v-if="speechState.isSpeaking"
+            variant="outline"
+            @click="speechService.skipCurrent()"
+          >
             <component
               :is="Next20Filled"
               class="h-3.5 w-3.5 mr-1"
@@ -185,7 +198,10 @@ onDeactivated(unbindKeydown)
 
           <AlertDialog>
             <AlertDialogTrigger as-child>
-              <Button variant="outline" :disabled="!accountInfo?.id">
+              <Button
+                variant="outline"
+                :disabled="!accountInfo?.id"
+              >
                 <component
                   :is="CloudArrowDown20Filled"
                   class="h-3.5 w-3.5 mr-1"
@@ -202,9 +218,7 @@ onDeactivated(unbindKeydown)
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>取消</AlertDialogCancel>
-                <AlertDialogAction @click="speechService.downloadConfig()">
-                  确定拉取
-                </AlertDialogAction>
+                <AlertDialogAction @click="speechService.downloadConfig()"> 确定拉取 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

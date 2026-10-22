@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 import { getHeadingAnchorId } from '../sectionNavigation'
 import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
+
 import '../textAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; blockId?: string; userInfo?: unknown; biliInfo?: unknown }>()

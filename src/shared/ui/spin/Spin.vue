@@ -15,7 +15,10 @@ withDefaults(
 </script>
 
 <template>
-  <div v-if="$slots.default" class="relative">
+  <div
+    v-if="$slots.default"
+    class="relative"
+  >
     <slot />
     <div
       v-if="show"
@@ -25,14 +28,25 @@ withDefaults(
         class="animate-spin text-primary"
         :class="size === 'small' ? 'size-4' : size === 'large' ? 'size-8' : 'size-6'"
       />
-      <span v-if="description" class="mt-2 text-xs text-muted-foreground">{{ description }}</span>
+      <span
+        v-if="description"
+        class="mt-2 text-xs text-muted-foreground"
+        >{{ description }}</span
+      >
     </div>
   </div>
-  <div v-else-if="show" class="flex flex-col items-center justify-center p-4">
+  <div
+    v-else-if="show"
+    class="flex flex-col items-center justify-center p-4"
+  >
     <Loader2
       class="animate-spin text-primary"
       :class="size === 'small' ? 'size-4' : size === 'large' ? 'size-8' : 'size-6'"
     />
-    <span v-if="description" class="mt-2 text-xs text-muted-foreground">{{ description }}</span>
+    <span
+      v-if="description"
+      class="mt-2 text-xs text-muted-foreground"
+      >{{ description }}</span
+    >
   </div>
 </template>

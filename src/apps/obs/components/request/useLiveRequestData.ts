@@ -71,9 +71,7 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
       const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
       const params = idStr ? { id: Number(idStr) } : {}
 
-      const data = (await getApiLiveRequestGetActiveAndSettings(
-        params,
-      )) as unknown as {
+      const data = (await getApiLiveRequestGetActiveAndSettings(params)) as unknown as {
         code: number
         data: { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
       }
@@ -103,9 +101,12 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
     }
   }
 
-  watch(() => toValue(currentId), () => {
-    void update()
-  })
+  watch(
+    () => toValue(currentId),
+    () => {
+      void update()
+    },
+  )
 
   // RTC初始化
   async function initRTC() {

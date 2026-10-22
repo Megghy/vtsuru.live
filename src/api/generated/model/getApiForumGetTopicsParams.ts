@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumTopicSortTypes } from './forumTopicSortTypes';
+import type { ForumTopicSortTypes } from './forumTopicSortTypes'
 
 export type GetApiForumGetTopicsParams = {
-owner?: string;
-sort?: ForumTopicSortTypes;
-pageSize?: number;
-page?: number;
-section?: number;
-};
+  owner?: string
+  sort?: ForumTopicSortTypes
+  pageSize?: number
+  page?: number
+  section?: number
+}

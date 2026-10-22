@@ -8,23 +8,17 @@ import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 
 import { formatDuration, formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { useMessage } from '@/shared/utils'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Progress } from '@/shared/ui/progress'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
+import { useMessage } from '@/shared/utils'
 
 import { buildCommands, defaultSettings, formatMap, formats, positive, presets, type Rotate } from './mediaConvert'
 import MediaTrimmer from './MediaTrimmer.vue'
@@ -444,17 +438,21 @@ onBeforeUnmount(() => {
         <div class="flex flex-col gap-4">
           <Alert>
             <AlertDescription class="text-xs">
-              支持视频压缩、转 GIF、提取音频、格式互转与片段截取。全程在浏览器本地完成，不上传文件；大文件会占用较多内存和
-              CPU。
+              支持视频压缩、转
+              GIF、提取音频、格式互转与片段截取。全程在浏览器本地完成，不上传文件；大文件会占用较多内存和 CPU。
             </AlertDescription>
           </Alert>
 
           <div class="preset-bar">
-            <span class="preset-label text-xs text-muted-foreground">
-              快捷预设
-            </span>
+            <span class="preset-label text-xs text-muted-foreground"> 快捷预设 </span>
             <div class="flex flex-wrap gap-2">
-              <Button v-for="preset in presets" :key="preset.key" :variant="activePreset === preset.key ? 'default' : 'outline'" :title="preset.desc" @click="applyPreset(preset.key)">
+              <Button
+                v-for="preset in presets"
+                :key="preset.key"
+                :variant="activePreset === preset.key ? 'default' : 'outline'"
+                :title="preset.desc"
+                @click="applyPreset(preset.key)"
+              >
                 {{ preset.label }}
               </Button>
             </div>
@@ -476,7 +474,12 @@ onBeforeUnmount(() => {
               <span class="text-xs text-muted-foreground"> 输出格式 </span>
               <Select
                 :model-value="settings.format"
-                @update:model-value="(v) => { settings.format = v as any; activePreset = null }"
+                @update:model-value="
+                  (v) => {
+                    settings.format = v as any
+                    activePreset = null
+                  }
+                "
               >
                 <SelectTrigger class="w-full">
                   <SelectValue />
@@ -625,7 +628,11 @@ onBeforeUnmount(() => {
                     <button
                       type="button"
                       class="px-3 py-1 text-xs rounded transition-colors cursor-pointer"
-                      :class="settings.rateMode === 'crf' ? 'bg-background shadow-xs font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
+                      :class="
+                        settings.rateMode === 'crf'
+                          ? 'bg-background shadow-xs font-medium text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      "
                       @click="settings.rateMode = 'crf'"
                     >
                       画质优先 (CRF)
@@ -633,7 +640,11 @@ onBeforeUnmount(() => {
                     <button
                       type="button"
                       class="px-3 py-1 text-xs rounded transition-colors cursor-pointer"
-                      :class="settings.rateMode === 'targetSize' ? 'bg-background shadow-xs font-medium text-foreground' : 'text-muted-foreground hover:text-foreground'"
+                      :class="
+                        settings.rateMode === 'targetSize'
+                          ? 'bg-background shadow-xs font-medium text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      "
                       @click="settings.rateMode = 'targetSize'"
                     >
                       目标体积
@@ -645,13 +656,19 @@ onBeforeUnmount(() => {
                   v-if="settings.rateMode === 'crf'"
                   class="slider-field"
                 >
-                  <span class="text-xs text-muted-foreground"> 视频质量 CRF：{{ settings.videoCrf }}（越小画质越高、体积越大） </span>
+                  <span class="text-xs text-muted-foreground">
+                    视频质量 CRF：{{ settings.videoCrf }}（越小画质越高、体积越大）
+                  </span>
                   <Slider
                     :model-value="[settings.videoCrf]"
                     :min="18"
                     :max="36"
                     :step="1"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.videoCrf = val[0] }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.videoCrf = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div
@@ -720,7 +737,9 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 循环播放 </span>
-                    <Switch :checked="settings.gifLoop" @update:checked="(v) => (settings.gifLoop = v)"
+                    <Switch
+                      :checked="settings.gifLoop"
+                      @update:checked="(v) => (settings.gifLoop = v)"
                     />
                   </div>
                 </div>
@@ -755,22 +774,30 @@ onBeforeUnmount(() => {
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 水平翻转 </span>
-                    <Switch :checked="settings.flipH" @update:checked="(v) => (settings.flipH = v)"
+                    <Switch
+                      :checked="settings.flipH"
+                      @update:checked="(v) => (settings.flipH = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 垂直翻转 </span>
-                    <Switch :checked="settings.flipV" @update:checked="(v) => (settings.flipV = v)"
+                    <Switch
+                      :checked="settings.flipV"
+                      @update:checked="(v) => (settings.flipV = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 锐化 </span>
-                    <Switch :checked="settings.sharpen" @update:checked="(v) => (settings.sharpen = v)"
+                    <Switch
+                      :checked="settings.sharpen"
+                      @update:checked="(v) => (settings.sharpen = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 去隔行（老录像） </span>
-                    <Switch :checked="settings.deinterlace" @update:checked="(v) => (settings.deinterlace = v)"
+                    <Switch
+                      :checked="settings.deinterlace"
+                      @update:checked="(v) => (settings.deinterlace = v)"
                     />
                   </div>
                 </div>
@@ -781,7 +808,11 @@ onBeforeUnmount(() => {
                     :min="-0.5"
                     :max="0.5"
                     :step="0.05"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.brightness = Number(val[0].toFixed(2)) }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.brightness = Number(val[0].toFixed(2))
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
@@ -791,7 +822,11 @@ onBeforeUnmount(() => {
                     :min="0.5"
                     :max="2"
                     :step="0.05"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.contrast = Number(val[0].toFixed(2)) }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.contrast = Number(val[0].toFixed(2))
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
@@ -801,7 +836,11 @@ onBeforeUnmount(() => {
                     :min="0"
                     :max="3"
                     :step="0.1"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.saturation = Number(val[0].toFixed(1)) }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.saturation = Number(val[0].toFixed(1))
+                      }
+                    "
                   />
                 </div>
               </TabsContent>
@@ -839,7 +878,11 @@ onBeforeUnmount(() => {
                     :min="0"
                     :max="5"
                     :step="0.5"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.videoFadeIn = val[0] }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.videoFadeIn = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
@@ -849,7 +892,11 @@ onBeforeUnmount(() => {
                     :min="0"
                     :max="5"
                     :step="0.5"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.videoFadeOut = val[0] }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.videoFadeOut = val[0]
+                      }
+                    "
                   />
                 </div>
               </TabsContent>
@@ -963,12 +1010,16 @@ onBeforeUnmount(() => {
                     class="field switch-field"
                   >
                     <span class="text-xs text-muted-foreground"> 保留元数据/封面 </span>
-                    <Switch :checked="settings.keepMetadata" @update:checked="(v) => (settings.keepMetadata = v)"
+                    <Switch
+                      :checked="settings.keepMetadata"
+                      @update:checked="(v) => (settings.keepMetadata = v)"
                     />
                   </div>
                   <div class="field switch-field">
                     <span class="text-xs text-muted-foreground"> 响度标准化 </span>
-                    <Switch :checked="settings.loudnorm" @update:checked="(v) => (settings.loudnorm = v)"
+                    <Switch
+                      :checked="settings.loudnorm"
+                      @update:checked="(v) => (settings.loudnorm = v)"
                     />
                   </div>
                 </div>
@@ -982,7 +1033,11 @@ onBeforeUnmount(() => {
                     :min="0"
                     :max="300"
                     :step="10"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.volume = val[0] }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.volume = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
@@ -992,7 +1047,11 @@ onBeforeUnmount(() => {
                     :min="0"
                     :max="5"
                     :step="0.5"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.audioFadeIn = val[0] }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.audioFadeIn = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
@@ -1002,7 +1061,11 @@ onBeforeUnmount(() => {
                     :min="0"
                     :max="5"
                     :step="0.5"
-                    @update:model-value="(val) => { if (val?.[0] !== undefined) settings.audioFadeOut = val[0] }"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.audioFadeOut = val[0]
+                      }
+                    "
                   />
                 </div>
               </TabsContent>
@@ -1025,9 +1088,7 @@ onBeforeUnmount(() => {
             @click="openFilePicker()"
           >
             <span class="text-sm font-medium"> 拖拽音视频到此处，或点击选择 </span>
-            <span class="text-xs text-muted-foreground">
-              支持批量处理，转换期间请保持页面打开
-            </span>
+            <span class="text-xs text-muted-foreground"> 支持批量处理，转换期间请保持页面打开 </span>
           </div>
 
           <div class="flex justify-between items-center flex-wrap gap-2">
@@ -1035,16 +1096,33 @@ onBeforeUnmount(() => {
               {{ statusText }}
             </span>
             <div class="flex items-center gap-2">
-              <Button v-if="processing" variant="destructive" @click="cancelAll">
+              <Button
+                v-if="processing"
+                variant="destructive"
+                @click="cancelAll"
+              >
                 取消处理
               </Button>
-              <Button v-else :loading="loadingCore" :disabled="!canProcess" @click="processAll">
+              <Button
+                v-else
+                :loading="loadingCore"
+                :disabled="!canProcess"
+                @click="processAll"
+              >
                 开始处理{{ pendingItems.length ? `（${pendingItems.length}）` : '' }}
               </Button>
-              <Button variant="outline" :disabled="!doneItems.length || processing" @click="downloadAll">
+              <Button
+                variant="outline"
+                :disabled="!doneItems.length || processing"
+                @click="downloadAll"
+              >
                 打包下载 ZIP
               </Button>
-              <Button variant="ghost" :disabled="!items.length || processing" @click="clearAll">
+              <Button
+                variant="ghost"
+                :disabled="!items.length || processing"
+                @click="clearAll"
+              >
                 清空
               </Button>
             </div>
@@ -1069,7 +1147,9 @@ onBeforeUnmount(() => {
             v-if="items.length"
             class="summary"
           >
-            <span class="text-xs text-muted-foreground"> 已添加 {{ items.length }} 个文件，原始 {{ formatFileSize(totalOriginalSize) }} </span>
+            <span class="text-xs text-muted-foreground">
+              已添加 {{ items.length }} 个文件，原始 {{ formatFileSize(totalOriginalSize) }}
+            </span>
             <span
               v-if="doneItems.length"
               class="text-xs text-muted-foreground"
@@ -1133,7 +1213,11 @@ onBeforeUnmount(() => {
                   </span>
                   <span
                     v-if="item.outputBlob"
-                    :class="savingVariant(item) === 'secondary' ? 'text-emerald-600 font-medium' : 'text-amber-500 font-medium'"
+                    :class="
+                      savingVariant(item) === 'secondary'
+                        ? 'text-emerald-600 font-medium'
+                        : 'text-amber-500 font-medium'
+                    "
                   >
                     → {{ formatFileSize(item.outputSize) }} ({{ savingText(item) }})
                   </span>
@@ -1150,7 +1234,11 @@ onBeforeUnmount(() => {
                   {{ item.error }}
                 </span>
 
-                <Button variant="ghost" class="trim-toggle h-6 px-1.5 text-muted-foreground hover:text-foreground" @click="item.expanded = !item.expanded">
+                <Button
+                  variant="ghost"
+                  class="trim-toggle h-6 px-1.5 text-muted-foreground hover:text-foreground"
+                  @click="item.expanded = !item.expanded"
+                >
                   {{ item.expanded ? '收起预览/截取' : '预览 / 截取片段' }}
                 </Button>
 
@@ -1165,9 +1253,7 @@ onBeforeUnmount(() => {
                 </div>
 
                 <template v-if="item.outputUrl">
-                  <span class="output-label text-xs text-muted-foreground">
-                    输出预览
-                  </span>
+                  <span class="output-label text-xs text-muted-foreground"> 输出预览 </span>
                   <img
                     v-if="item.outputKind === 'gif'"
                     :src="item.outputUrl"
@@ -1190,10 +1276,19 @@ onBeforeUnmount(() => {
               </div>
 
               <div class="item-actions flex flex-col gap-1.5">
-                <Button variant="outline" :disabled="!item.outputBlob" @click="downloadOne(item)">
+                <Button
+                  variant="outline"
+                  :disabled="!item.outputBlob"
+                  @click="downloadOne(item)"
+                >
                   下载
                 </Button>
-                <Button variant="ghost" class="text-muted-foreground hover:text-destructive" :disabled="processing" @click="removeItem(index)">
+                <Button
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-destructive"
+                  :disabled="processing"
+                  @click="removeItem(index)"
+                >
                   移除
                 </Button>
               </div>

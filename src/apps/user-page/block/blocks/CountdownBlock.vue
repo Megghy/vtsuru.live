@@ -88,7 +88,10 @@ const breakdown = computed(() => {
     >
       <!-- 集成式标题区 -->
       <div class="cd-header-integrated">
-        <component :is="TimerOutline" class="cd-icon size-3.5" />
+        <component
+          :is="TimerOutline"
+          class="cd-icon size-3.5"
+        />
         <span class="cd-title">{{ cfg.title || '倒计时' }}</span>
       </div>
 

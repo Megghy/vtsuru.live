@@ -1,18 +1,18 @@
 <script setup lang="ts">
+import { AlertCircle, CheckCircle2, Copy, ShieldAlert } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterView, useRoute, useRouter } from 'vue-router'
-import { AlertCircle, CheckCircle2, Copy, ShieldAlert } from 'lucide-vue-next'
 
 import { useAccount } from '@/api/account'
 import { createBiliAuthUrl, hasBiliAuthInUrl, readBiliAuthFromUrl } from '@/apps/account/components/biliAuthCredential'
 import { CURRENT_HOST } from '@/shared/config'
-import { useBiliAuth } from '@/store/useBiliAuth'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Spin } from '@/shared/ui/spin'
 import { useMessage } from '@/shared/utils'
+import { useBiliAuth } from '@/store/useBiliAuth'
 
 const auth = useBiliAuth()
 const accountInfo = useAccount()
@@ -106,7 +106,10 @@ onMounted(async () => {
       class="manage-page"
       :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
     >
-      <Transition name="page-fade" mode="out-in">
+      <Transition
+        name="page-fade"
+        mode="out-in"
+      >
         <component
           :is="Component"
           :key="`${String(viewRoute.name)}-${auth.biliAuth.id}`"
@@ -125,15 +128,19 @@ onMounted(async () => {
           class="size-12 rounded-full flex items-center justify-center"
           :class="auth.isInvalid ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'"
         >
-          <ShieldAlert v-if="auth.isInvalid" class="size-6" />
-          <AlertCircle v-else class="size-6" />
+          <ShieldAlert
+            v-if="auth.isInvalid"
+            class="size-6"
+          />
+          <AlertCircle
+            v-else
+            class="size-6"
+          />
         </div>
         <CardTitle class="text-base font-semibold">
           {{ auth.isInvalid ? 'Bilibili 认证已失效' : '先完成 Bilibili 认证' }}
         </CardTitle>
-        <CardDescription class="text-xs text-muted-foreground">
-          认证后即可查看积分、订单和积分记录。
-        </CardDescription>
+        <CardDescription class="text-xs text-muted-foreground"> 认证后即可查看积分、订单和积分记录。 </CardDescription>
       </CardHeader>
       <CardFooter class="flex justify-center p-0 pt-6">
         <Button @click="router.push({ name: 'bili-auth' })">
@@ -153,16 +160,23 @@ onMounted(async () => {
           </DialogDescription>
         </DialogHeader>
         <div class="py-2">
-          <Input :model-value="migrationLink" readonly type="text" class="font-mono" />
+          <Input
+            :model-value="migrationLink"
+            readonly
+            type="text"
+            class="font-mono"
+          />
         </div>
         <DialogFooter class="flex items-center justify-end gap-2">
-          <Button variant="outline" class="gap-1.5" @click="copyMigrationLink">
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            @click="copyMigrationLink"
+          >
             <Copy class="size-3.5" />
             复制链接
           </Button>
-          <Button @click="auth.finishLegacyMigration()">
-            我已保存
-          </Button>
+          <Button @click="auth.finishLegacyMigration()"> 我已保存 </Button>
         </DialogFooter>
       </template>
       <template v-else>
@@ -175,10 +189,16 @@ onMounted(async () => {
           </DialogDescription>
         </DialogHeader>
         <div class="flex items-center justify-center py-6">
-          <Button v-if="migrationError" @click="migrateLegacyAuth">
+          <Button
+            v-if="migrationError"
+            @click="migrateLegacyAuth"
+          >
             重试
           </Button>
-          <Spin v-else size="medium" />
+          <Spin
+            v-else
+            size="medium"
+          />
         </div>
       </template>
     </DialogContent>

@@ -5,34 +5,34 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes';
-import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus';
-import type { PointOrderDataServiceOrderData } from './pointOrderDataServiceOrderData';
-import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel';
-import type { ResponsePointGoodsModel } from './responsePointGoodsModel';
-import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo';
-import type { ShippingAddressInfo } from './shippingAddressInfo';
+import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
+import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus'
+import type { PointOrderDataServiceOrderData } from './pointOrderDataServiceOrderData'
+import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel'
+import type { ResponsePointGoodsModel } from './responsePointGoodsModel'
+import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo'
+import type { ShippingAddressInfo } from './shippingAddressInfo'
 
 export interface ResponsePointOrder2OwnerModel {
-  id: number;
-  point: number;
-  vTsuruId: number;
-  type: PointGoodsDataGoodsTypes;
-  customer: ResponseBiliAuthBasicModel;
-  address?: ShippingAddressInfo;
-  goods: ResponsePointGoodsModel;
-  count: number;
-  createAt: number;
+  id: number
+  point: number
+  vTsuruId: number
+  type: PointGoodsDataGoodsTypes
+  customer: ResponseBiliAuthBasicModel
+  address?: ShippingAddressInfo
+  goods: ResponsePointGoodsModel
+  count: number
+  createAt: number
   /** @nullable */
-  updateAt?: number | null;
-  status: PointOrderDataPointOrderStatus;
+  updateAt?: number | null
+  status: PointOrderDataPointOrderStatus
   /** @nullable */
-  remark?: string | null;
+  remark?: string | null
   /** @nullable */
-  trackingNumber?: string | null;
+  trackingNumber?: string | null
   /** @nullable */
-  expressCompany?: string | null;
+  expressCompany?: string | null
   /** @nullable */
-  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null;
-  serviceData?: PointOrderDataServiceOrderData;
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null
+  serviceData?: PointOrderDataServiceOrderData
 }

@@ -17,24 +17,12 @@ import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import ServiceOrderPanel from '@/shared/components/points/ServiceOrderPanel.vue'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Pagination } from '@/shared/ui/pagination'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/shared/ui/table'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -61,9 +49,7 @@ const statusMeta: Record<
   [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', icon: DismissCircle24Regular },
 }
 
-const pagedOrders = computed(() =>
-  props.orders.slice((page.value - 1) * pageSize.value, page.value * pageSize.value),
-)
+const pagedOrders = computed(() => props.orders.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 
 watch(
   () => props.orders,
@@ -135,7 +121,9 @@ function formatDateTime(ts: number) {
             <TableCell class="font-mono text-xs text-muted-foreground">#{{ row.id }}</TableCell>
             <TableCell>
               <div class="flex flex-col gap-0.5">
-                <strong class="text-xs">{{ row.type === GoodsTypes.Service ? '服务 · ' : '' }}{{ row.goods.name }}</strong>
+                <strong class="text-xs"
+                  >{{ row.type === GoodsTypes.Service ? '服务 · ' : '' }}{{ row.goods.name }}</strong
+                >
                 <span
                   v-if="row.selectedSubItems?.length"
                   class="text-[11px] text-muted-foreground truncate"
@@ -165,7 +153,11 @@ function formatDateTime(ts: number) {
               </Tag>
             </TableCell>
             <TableCell class="text-right">
-              <Button size="xs" variant="outline" @click="openDetail(row)">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="openDetail(row)"
+              >
                 详情
               </Button>
             </TableCell>
@@ -217,7 +209,9 @@ function formatDateTime(ts: number) {
         >
           {{ order.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / ') }}
         </span>
-        <span class="flex items-center justify-between mt-2 pt-1.5 border-t border-border/50 text-xs text-muted-foreground">
+        <span
+          class="flex items-center justify-between mt-2 pt-1.5 border-t border-border/50 text-xs text-muted-foreground"
+        >
           <span>{{ formatRelativeTime(order.createAt) }}</span>
           <b class="text-foreground font-semibold">{{ Number(order.point.toFixed(1)) }} 积分</b>
         </span>

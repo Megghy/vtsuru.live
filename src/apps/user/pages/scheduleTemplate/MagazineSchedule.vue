@@ -116,173 +116,173 @@ defineExpose({ Config, DefaultConfig })
         :style="posterStyle"
         aria-labelledby="magazine-poster-title"
       >
-      <div
-        class="paper-grain"
-        aria-hidden="true"
-      />
+        <div
+          class="paper-grain"
+          aria-hidden="true"
+        />
 
-      <header class="poster-head">
-        <div class="publication-mark">
-          <span>VTB WEEKLY JOURNAL</span>
-          <strong>{{ issueYear }}</strong>
-        </div>
-
-        <div class="masthead">
-          <p>{{ streamerName }} · 编辑部发行</p>
-          <h2 id="magazine-poster-title">{{ effectiveConfig.heading }}</h2>
-          <div class="masthead-meta">
-            <span>{{ weekLabel }}</span>
-            <span>本期 {{ eventCount }} 场</span>
+        <header class="poster-head">
+          <div class="publication-mark">
+            <span>VTB WEEKLY JOURNAL</span>
+            <strong>{{ issueYear }}</strong>
           </div>
+
+          <div class="masthead">
+            <p>{{ streamerName }} · 编辑部发行</p>
+            <h2 id="magazine-poster-title">{{ effectiveConfig.heading }}</h2>
+            <div class="masthead-meta">
+              <span>{{ weekLabel }}</span>
+              <span>本期 {{ eventCount }} 场</span>
+            </div>
+          </div>
+
+          <div class="issue-block">
+            <span>ISSUE</span>
+            <strong>{{ issueNumber }}</strong>
+          </div>
+
+          <figure
+            v-if="portraitUrl"
+            class="cover-photo"
+          >
+            <img
+              :src="portraitUrl"
+              :alt="`${streamerName}的本期封面`"
+              referrerpolicy="no-referrer"
+            />
+            <figcaption>THIS WEEK'S COVER</figcaption>
+          </figure>
+        </header>
+
+        <div class="edition-rule">
+          <ul
+            v-if="categoryLegend.length"
+            class="edition-legend"
+          >
+            <li
+              v-for="category in categoryLegend"
+              :key="category.name"
+            >
+              <i :style="{ backgroundColor: category.color }" />
+              <span>{{ category.name }}</span>
+            </li>
+          </ul>
+          <span v-else>本期节目索引</span>
+          <strong>节目索引 / MON–SUN</strong>
         </div>
 
-        <div class="issue-block">
-          <span>ISSUE</span>
-          <strong>{{ issueNumber }}</strong>
+        <div
+          v-if="days.length"
+          class="editorial-columns"
+        >
+          <ol class="program-column lead-column">
+            <li
+              v-for="(day, dayIndex) in leadDays"
+              :key="day.english"
+              class="program-day"
+              :class="{ 'is-today': day.isToday, 'is-lead': dayIndex === 0 }"
+            >
+              <header class="day-identity">
+                <span class="day-index">0{{ dayIndex + 1 }}</span>
+                <div>
+                  <span>{{ day.english }} / {{ day.date }}</span>
+                  <h3>{{ day.label }}</h3>
+                </div>
+                <span
+                  v-if="day.isToday"
+                  class="today-stamp"
+                  >今日</span
+                >
+              </header>
+
+              <div
+                v-if="day.items.length"
+                class="day-events"
+              >
+                <div
+                  v-for="(item, itemIndex) in day.items"
+                  :key="item.id || itemIndex"
+                  class="event-line"
+                  :style="{ '--event-accent': resolveEventColor(item.tag) }"
+                >
+                  <time>{{ item.time || '待定' }}</time>
+                  <div class="event-copy">
+                    <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
+                    <span v-if="item.tag">{{ item.tag }}</span>
+                  </div>
+                </div>
+              </div>
+              <p
+                v-else
+                class="schedule-empty-copy rest-copy"
+              >
+                本日休刊 / OFF AIR
+              </p>
+            </li>
+          </ol>
+
+          <ol
+            class="program-column side-column"
+            start="4"
+          >
+            <li
+              v-for="(day, dayIndex) in remainingDays"
+              :key="day.english"
+              class="program-day"
+              :class="{ 'is-today': day.isToday }"
+            >
+              <header class="day-identity">
+                <span class="day-index">0{{ dayIndex + 4 }}</span>
+                <div>
+                  <span>{{ day.english }} / {{ day.date }}</span>
+                  <h3>{{ day.label }}</h3>
+                </div>
+                <span
+                  v-if="day.isToday"
+                  class="today-stamp"
+                  >今日</span
+                >
+              </header>
+
+              <div
+                v-if="day.items.length"
+                class="day-events"
+              >
+                <div
+                  v-for="(item, itemIndex) in day.items"
+                  :key="item.id || itemIndex"
+                  class="event-line"
+                  :style="{ '--event-accent': resolveEventColor(item.tag) }"
+                >
+                  <time>{{ item.time || '待定' }}</time>
+                  <div class="event-copy">
+                    <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
+                    <span v-if="item.tag">{{ item.tag }}</span>
+                  </div>
+                </div>
+              </div>
+              <p
+                v-else
+                class="schedule-empty-copy rest-copy"
+              >
+                本日休刊 / OFF AIR
+              </p>
+            </li>
+          </ol>
         </div>
 
-        <figure
-          v-if="portraitUrl"
-          class="cover-photo"
+        <div
+          v-else
+          class="poster-empty"
         >
-          <img
-            :src="portraitUrl"
-            :alt="`${streamerName}的本期封面`"
-            referrerpolicy="no-referrer"
-          />
-          <figcaption>THIS WEEK'S COVER</figcaption>
-        </figure>
-      </header>
+          <span>休刊</span>
+          <p class="schedule-empty-copy">本周暂未排入节目</p>
+        </div>
 
-      <div class="edition-rule">
-        <ul
-          v-if="categoryLegend.length"
-          class="edition-legend"
-        >
-          <li
-            v-for="category in categoryLegend"
-            :key="category.name"
-          >
-            <i :style="{ backgroundColor: category.color }" />
-            <span>{{ category.name }}</span>
-          </li>
-        </ul>
-        <span v-else>本期节目索引</span>
-        <strong>节目索引 / MON–SUN</strong>
-      </div>
-
-      <div
-        v-if="days.length"
-        class="editorial-columns"
-      >
-        <ol class="program-column lead-column">
-          <li
-            v-for="(day, dayIndex) in leadDays"
-            :key="day.english"
-            class="program-day"
-            :class="{ 'is-today': day.isToday, 'is-lead': dayIndex === 0 }"
-          >
-            <header class="day-identity">
-              <span class="day-index">0{{ dayIndex + 1 }}</span>
-              <div>
-                <span>{{ day.english }} / {{ day.date }}</span>
-                <h3>{{ day.label }}</h3>
-              </div>
-              <span
-                v-if="day.isToday"
-                class="today-stamp"
-                >今日</span
-              >
-            </header>
-
-            <div
-              v-if="day.items.length"
-              class="day-events"
-            >
-              <div
-                v-for="(item, itemIndex) in day.items"
-                :key="item.id || itemIndex"
-                class="event-line"
-                :style="{ '--event-accent': resolveEventColor(item.tag) }"
-              >
-                <time>{{ item.time || '待定' }}</time>
-                <div class="event-copy">
-                  <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
-                  <span v-if="item.tag">{{ item.tag }}</span>
-                </div>
-              </div>
-            </div>
-            <p
-              v-else
-              class="schedule-empty-copy rest-copy"
-            >
-              本日休刊 / OFF AIR
-            </p>
-          </li>
-        </ol>
-
-        <ol
-          class="program-column side-column"
-          start="4"
-        >
-          <li
-            v-for="(day, dayIndex) in remainingDays"
-            :key="day.english"
-            class="program-day"
-            :class="{ 'is-today': day.isToday }"
-          >
-            <header class="day-identity">
-              <span class="day-index">0{{ dayIndex + 4 }}</span>
-              <div>
-                <span>{{ day.english }} / {{ day.date }}</span>
-                <h3>{{ day.label }}</h3>
-              </div>
-              <span
-                v-if="day.isToday"
-                class="today-stamp"
-                >今日</span
-              >
-            </header>
-
-            <div
-              v-if="day.items.length"
-              class="day-events"
-            >
-              <div
-                v-for="(item, itemIndex) in day.items"
-                :key="item.id || itemIndex"
-                class="event-line"
-                :style="{ '--event-accent': resolveEventColor(item.tag) }"
-              >
-                <time>{{ item.time || '待定' }}</time>
-                <div class="event-copy">
-                  <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
-                  <span v-if="item.tag">{{ item.tag }}</span>
-                </div>
-              </div>
-            </div>
-            <p
-              v-else
-              class="schedule-empty-copy rest-copy"
-            >
-              本日休刊 / OFF AIR
-            </p>
-          </li>
-        </ol>
-      </div>
-
-      <div
-        v-else
-        class="poster-empty"
-      >
-        <span>休刊</span>
-        <p class="schedule-empty-copy">本周暂未排入节目</p>
-      </div>
-
-      <footer class="poster-foot">
-        <strong>@{{ streamerName }}</strong>
-        <span>每周发行 · 请以实际开播时间为准</span>
-      </footer>
+        <footer class="poster-foot">
+          <strong>@{{ streamerName }}</strong>
+          <span>每周发行 · 请以实际开播时间为准</span>
+        </footer>
       </article>
     </Transition>
   </section>

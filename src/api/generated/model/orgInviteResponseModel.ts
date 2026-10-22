@@ -7,7 +7,7 @@
  */
 
 export interface OrgInviteResponseModel {
-  token: string;
-  expiresAt: number;
-  joinUrl: string;
+  token: string
+  expiresAt: number
+  joinUrl: string
 }

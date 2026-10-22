@@ -9,11 +9,11 @@
 /**
  * 存储位置类型。Local 为本站磁盘，其余为可配置的远端。
  */
-export type VTsuruDataFileStorageStorageProviderKind = typeof VTsuruDataFileStorageStorageProviderKind[keyof typeof VTsuruDataFileStorageStorageProviderKind];
-
+export type VTsuruDataFileStorageStorageProviderKind =
+  (typeof VTsuruDataFileStorageStorageProviderKind)[keyof typeof VTsuruDataFileStorageStorageProviderKind]
 
 export const VTsuruDataFileStorageStorageProviderKind = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

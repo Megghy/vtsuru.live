@@ -1,4 +1,4 @@
-import { converter, formatHex, parse, wcagLuminance } from 'culori'
+import { converter, formatHex, parse } from 'culori'
 
 const toHsl = converter('hsl')
 const toRgb = converter('rgb')
@@ -44,7 +44,7 @@ export async function extractThemeFromImage(imageUrl: string): Promise<Extracted
   let imageData: ImageData
   try {
     imageData = ctx.getImageData(0, 0, size, size)
-  } catch (error) {
+  } catch {
     throw new Error('图片受跨域安全限制，无法读取像素。请尝试直接上传图片文件')
   }
 
@@ -100,7 +100,7 @@ export async function extractThemeFromImage(imageUrl: string): Promise<Extracted
   }
 
   // 排序挑选权重最高的色相桶
-  const validBuckets = buckets.filter((b) => b.weight > 0).sort((a, b) => b.weight - a.weight)
+  const validBuckets = buckets.filter((b) => b.weight > 0).toSorted((a, b) => b.weight - a.weight)
 
   let primaryColorHex: string
   const swatches: string[] = []

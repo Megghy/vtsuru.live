@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Bot24Regular, Copy24Regular, Delete24Regular } from '@vicons/fluent'
-import {  useMessage  } from '@/shared/utils'
 import { onMounted, ref } from 'vue'
 
 import {
@@ -15,7 +14,6 @@ import {
 } from '@/api/qq-bot'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
-import { copyToClipboard } from '@/shared/utils'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import {
   AlertDialog,
@@ -31,6 +29,8 @@ import {
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Switch } from '@/shared/ui/switch'
+import { useMessage } from '@/shared/utils'
+import { copyToClipboard } from '@/shared/utils'
 
 const message = useMessage()
 const { loading, run } = useApiAction()
@@ -68,8 +68,7 @@ async function toggleLiveStart(group: QqBotGroup, liveStart: boolean) {
 
 async function unbind(group: QqBotGroup) {
   const ok = await run(() => unbindQqBotGroup(group.groupOpenId), { success: '已解除绑定' })
-  if (ok !== undefined)
-    groups.value = groups.value.filter((item) => item.groupOpenId !== group.groupOpenId)
+  if (ok !== undefined) groups.value = groups.value.filter((item) => item.groupOpenId !== group.groupOpenId)
 }
 
 onMounted(() => {
@@ -87,9 +86,7 @@ onMounted(() => {
     <div class="space-y-4">
       <Alert variant="destructive">
         <AlertTitle>开发中，暂不可用</AlertTitle>
-        <AlertDescription class="text-xs">
-          QQ 群机器人还在开发中，所有功能暂不可用
-        </AlertDescription>
+        <AlertDescription class="text-xs"> QQ 群机器人还在开发中，所有功能暂不可用 </AlertDescription>
       </Alert>
 
       <Alert
@@ -97,9 +94,7 @@ onMounted(() => {
         variant="destructive"
       >
         <AlertTitle>机器人未配置</AlertTitle>
-        <AlertDescription class="text-xs">
-          后端尚未填写 QQ 机器人 AppId / Secret，Webhook 不会启动。
-        </AlertDescription>
+        <AlertDescription class="text-xs"> 后端尚未填写 QQ 机器人 AppId / Secret，Webhook 不会启动。 </AlertDescription>
       </Alert>
 
       <Alert
@@ -107,29 +102,30 @@ onMounted(() => {
         variant="default"
       >
         <AlertTitle>Webhook 尚未握手</AlertTitle>
-        <AlertDescription class="text-xs">
-          配置已就绪。QQ 开放平台完成首次回调后才会显示已连接。
-        </AlertDescription>
+        <AlertDescription class="text-xs"> 配置已就绪。QQ 开放平台完成首次回调后才会显示已连接。 </AlertDescription>
       </Alert>
 
       <!-- 绑定群卡片 -->
       <Card>
         <CardHeader class="p-4 pb-2">
-          <CardTitle class="text-sm font-semibold">
-            绑定群
-          </CardTitle>
+          <CardTitle class="text-sm font-semibold"> 绑定群 </CardTitle>
         </CardHeader>
         <CardContent class="p-4 pt-0 space-y-3">
           <div class="text-xs text-muted-foreground leading-relaxed">
             1. 把机器人拉进粉丝群
-            <br>
+            <br />
             2. 生成绑定码
-            <br>
+            <br />
             3. 群主或管理员输入 / 打开菜单，或直接发送「/绑定 验证码」
           </div>
 
           <div class="flex items-center gap-2 flex-wrap">
-            <Button size="xs" variant="brand" disabled @click="createCode">
+            <Button
+              size="xs"
+              variant="brand"
+              disabled
+              @click="createCode"
+            >
               <component
                 :is="Bot24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -137,7 +133,12 @@ onMounted(() => {
               生成绑定码
             </Button>
 
-            <Button v-if="bindCode" size="xs" variant="outline" @click="copy(bindCode.code, '绑定码')">
+            <Button
+              v-if="bindCode"
+              size="xs"
+              variant="outline"
+              @click="copy(bindCode.code, '绑定码')"
+            >
               <component
                 :is="Copy24Regular"
                 class="h-3.5 w-3.5 mr-1"
@@ -145,7 +146,12 @@ onMounted(() => {
               复制绑定码
             </Button>
 
-            <Button v-if="bindCode" size="xs" variant="outline" @click="copy(bindCode.instruction, '指令')">
+            <Button
+              v-if="bindCode"
+              size="xs"
+              variant="outline"
+              @click="copy(bindCode.instruction, '指令')"
+            >
               复制指令
             </Button>
           </div>
@@ -155,7 +161,9 @@ onMounted(() => {
             class="p-2.5 rounded-lg bg-muted/40 border border-border flex items-baseline gap-2"
           >
             <span class="font-mono text-xl tracking-wider font-bold text-foreground">{{ bindCode.code }}</span>
-            <span class="text-xs text-muted-foreground">有效至 {{ new Date(bindCode.expiresAt).toLocaleString() }}</span>
+            <span class="text-xs text-muted-foreground"
+              >有效至 {{ new Date(bindCode.expiresAt).toLocaleString() }}</span
+            >
           </div>
         </CardContent>
       </Card>
@@ -163,9 +171,7 @@ onMounted(() => {
       <!-- 已绑定的群卡片 -->
       <Card>
         <CardHeader class="p-4 pb-2">
-          <CardTitle class="text-sm font-semibold">
-            已绑定的群
-          </CardTitle>
+          <CardTitle class="text-sm font-semibold"> 已绑定的群 </CardTitle>
         </CardHeader>
         <CardContent class="p-4 pt-0">
           <div
@@ -194,13 +200,21 @@ onMounted(() => {
               <div class="flex items-center gap-3">
                 <div class="flex items-center gap-1.5 text-muted-foreground">
                   <span>开播推送</span>
-                  <Switch disabled :checked="group.notify.liveStart" @update:checked="(value: boolean) => toggleLiveStart(group, value)"
+                  <Switch
+                    disabled
+                    :checked="group.notify.liveStart"
+                    @update:checked="(value: boolean) => toggleLiveStart(group, value)"
                   />
                 </div>
 
                 <AlertDialog>
                   <AlertDialogTrigger as-child>
-                    <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" disabled>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="text-destructive hover:bg-destructive/10"
+                      disabled
+                    >
                       <component
                         :is="Delete24Regular"
                         class="h-3.5 w-3.5 mr-1"
@@ -211,15 +225,11 @@ onMounted(() => {
                   <AlertDialogContent class="sm:max-w-md">
                     <AlertDialogHeader>
                       <AlertDialogTitle>解绑确认</AlertDialogTitle>
-                      <AlertDialogDescription class="text-xs">
-                        确定解除这个群的绑定？
-                      </AlertDialogDescription>
+                      <AlertDialogDescription class="text-xs"> 确定解除这个群的绑定？ </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>取消</AlertDialogCancel>
-                      <AlertDialogAction @click="unbind(group)">
-                        确定解绑
-                      </AlertDialogAction>
+                      <AlertDialogAction @click="unbind(group)"> 确定解绑 </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

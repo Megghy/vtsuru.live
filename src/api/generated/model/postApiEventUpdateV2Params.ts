@@ -7,14 +7,14 @@
  */
 
 export type PostApiEventUpdateV2Params = {
-/**
- * 状态
- * @minLength 0
- * @maxLength 20
- */
-status?: string;
-/**
- * 是否是临时事件
- */
-temp?: boolean;
-};
+  /**
+   * 状态
+   * @minLength 0
+   * @maxLength 20
+   */
+  status?: string
+  /**
+   * 是否是临时事件
+   */
+  temp?: boolean
+}

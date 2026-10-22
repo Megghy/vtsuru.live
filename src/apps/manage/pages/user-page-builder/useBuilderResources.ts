@@ -2,10 +2,7 @@ import type { ComputedRef } from 'vue'
 import { computed, ref } from 'vue'
 
 import type { APIFileModel } from '@/api/api-models'
-import {
-  deleteApiFilesDeleteId,
-  getApiFilesList,
-} from '@/api/generated/file/file'
+import { deleteApiFilesDeleteId, getApiFilesList } from '@/api/generated/file/file'
 import { unwrapOk } from '@/api/query'
 
 import type { FileRefEntry } from './editorResources'

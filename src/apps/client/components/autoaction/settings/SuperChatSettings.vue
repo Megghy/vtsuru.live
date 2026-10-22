@@ -4,13 +4,7 @@ import { Info16Regular } from '@vicons/fluent'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -106,9 +100,7 @@ const scFilterModeOptions = [
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            同一用户在单次直播中多次发送 SC 仅触发一次感谢
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 同一用户在单次直播中多次发送 SC 仅触发一次感谢 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <Switch v-model:checked="action.triggerConfig.preventRepeat" />
@@ -123,9 +115,7 @@ const scFilterModeOptions = [
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
-            单条感谢弹幕中最多合并展示的用户数量
-          </TooltipContent>
+          <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <NInputNumber

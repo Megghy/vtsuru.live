@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import {  useMessage  } from '@/shared/utils'
 import { ref } from 'vue'
 
 import { AddBiliBlackList, DelBiliBlackList, DelBlackList, useAccount } from '@/api/account'
-import { GuidUtils } from '@/shared/utils'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { useMessage } from '@/shared/utils'
+import { GuidUtils } from '@/shared/utils'
 
 const accountInfo = useAccount()
 const message = useMessage()
@@ -81,15 +81,26 @@ function unblockUser(id: number) {
     <!-- B 站黑名单 -->
     <Card>
       <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-          B 站黑名单
-        </CardTitle>
+        <CardTitle class="text-xs font-semibold uppercase tracking-wide"> B 站黑名单 </CardTitle>
       </CardHeader>
       <CardContent class="p-3.5 space-y-3">
         <div class="flex items-center gap-2 flex-wrap">
-          <Input v-model="biliId" type="number" placeholder="B 站 UID" class="w-40 font-mono" />
-          <Input v-model="biliName" placeholder="备注名（可选）" class="w-48" />
-          <Button variant="brand" :loading="isAdding" @click="addBiliUser">
+          <Input
+            v-model="biliId"
+            type="number"
+            placeholder="B 站 UID"
+            class="w-40 font-mono"
+          />
+          <Input
+            v-model="biliName"
+            placeholder="备注名（可选）"
+            class="w-48"
+          />
+          <Button
+            variant="brand"
+            :loading="isAdding"
+            @click="addBiliUser"
+          >
             添加
           </Button>
         </div>
@@ -109,7 +120,12 @@ function unblockUser(id: number) {
                 {{ displayOuid(item[0]) }}
               </code>
             </div>
-            <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="unblockBiliUser(item[0])">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="text-destructive hover:bg-destructive/10"
+              @click="unblockBiliUser(item[0])"
+            >
               移除
             </Button>
           </li>
@@ -126,14 +142,10 @@ function unblockUser(id: number) {
     <!-- 站内黑名单 -->
     <Card>
       <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold uppercase tracking-wide">
-          站内黑名单
-        </CardTitle>
+        <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 站内黑名单 </CardTitle>
       </CardHeader>
       <CardContent class="p-3.5 space-y-3">
-        <div class="text-xs text-muted-foreground">
-          站内用户通常在提问箱等场景操作时加入；此处支持移除。
-        </div>
+        <div class="text-xs text-muted-foreground">站内用户通常在提问箱等场景操作时加入；此处支持移除。</div>
 
         <ul
           v-if="accountInfo.blackList && accountInfo.blackList.length > 0"
@@ -150,7 +162,12 @@ function unblockUser(id: number) {
                 #{{ item.id }}
               </code>
             </div>
-            <Button size="xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="unblockUser(item.id)">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="text-destructive hover:bg-destructive/10"
+              @click="unblockUser(item.id)"
+            >
               移除
             </Button>
           </li>

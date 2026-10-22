@@ -38,7 +38,10 @@ const backgrounded = computed(() =>
       :variant="variant"
       class="vtsuru-alert rounded-none border-0"
     >
-      <AlertTitle v-if="title" class="font-bold text-sm">
+      <AlertTitle
+        v-if="title"
+        class="font-bold text-sm"
+      >
         {{ title }}
       </AlertTitle>
       <AlertDescription class="alert-content text-xs">

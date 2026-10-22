@@ -42,9 +42,7 @@ const children = [
   'PngtuberInputSettings',
 ]
 const stubs = Object.fromEntries(
-  [...children, 'Alert', 'AlertDescription', 'Button', 'Input', 'Select', 'Badge'].map(
-    (name) => [name, true],
-  ),
+  [...children, 'Alert', 'AlertDescription', 'Button', 'Input', 'Select', 'Badge'].map((name) => [name, true]),
 )
 Object.assign(stubs, {
   Card: { template: '<div><slot/></div>' },

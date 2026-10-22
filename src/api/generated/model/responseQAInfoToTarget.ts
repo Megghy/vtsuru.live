@@ -5,39 +5,39 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
-import type { QAMessage } from './qAMessage';
-import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel';
-import type { ResponseQAInfoResponseQATextReviewInfo } from './responseQAInfoResponseQATextReviewInfo';
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
+import type { APIFileModel } from './aPIFileModel'
+import type { QAMessage } from './qAMessage'
+import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel'
+import type { ResponseQAInfoResponseQATextReviewInfo } from './responseQAInfoResponseQATextReviewInfo'
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 export interface ResponseQAInfoToTarget {
-  isPublic: boolean;
+  isPublic: boolean
   /** @nullable */
-  senderAllowsPublic?: boolean | null;
-  isSenderRegisted: boolean;
-  isFavorite: boolean;
+  senderAllowsPublic?: boolean | null
+  isSenderRegisted: boolean
+  isFavorite: boolean
   /** @nullable */
-  isReaded?: boolean | null;
-  id: number;
-  sender: ResponseUserBasicInfo;
-  senderBiliAuthInfo?: ResponseBiliAuthBasicModel;
-  target: ResponseUserBasicInfo;
-  question: QAMessage;
-  answer?: QAMessage;
-  isEdited: boolean;
-  sendAt: number;
-  isAnonymous: boolean;
-  isSenderBiliAuthed: boolean;
+  isReaded?: boolean | null
+  id: number
+  sender: ResponseUserBasicInfo
+  senderBiliAuthInfo?: ResponseBiliAuthBasicModel
+  target: ResponseUserBasicInfo
+  question: QAMessage
+  answer?: QAMessage
+  isEdited: boolean
+  sendAt: number
+  isAnonymous: boolean
+  isSenderBiliAuthed: boolean
   /** @nullable */
-  tag?: string | null;
-  reviewResult?: ResponseQAInfoResponseQATextReviewInfo;
+  tag?: string | null
+  reviewResult?: ResponseQAInfoResponseQATextReviewInfo
   /** @nullable */
-  questionImages?: APIFileModel[] | null;
+  questionImages?: APIFileModel[] | null
   /** @nullable */
-  answerImages?: APIFileModel[] | null;
+  answerImages?: APIFileModel[] | null
   /** @nullable */
-  anonymousName?: string | null;
+  anonymousName?: string | null
   /** @nullable */
-  anonymousEmail?: string | null;
+  anonymousEmail?: string | null
 }

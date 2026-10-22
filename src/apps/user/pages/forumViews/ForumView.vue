@@ -108,7 +108,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div v-if="forumLoading" class="py-24 flex justify-center">
+  <div
+    v-if="forumLoading"
+    class="py-24 flex justify-center"
+  >
     <Spin />
   </div>
 
@@ -118,9 +121,7 @@ onUnmounted(() => {
   >
     <CardContent class="p-6">
       <Alert variant="destructive">
-        <AlertDescription class="text-xs">
-          用户未创建粉丝讨论区
-        </AlertDescription>
+        <AlertDescription class="text-xs"> 用户未创建粉丝讨论区 </AlertDescription>
       </Alert>
     </CardContent>
   </Card>
@@ -134,18 +135,14 @@ onUnmounted(() => {
   >
     <CardContent class="p-6 space-y-4">
       <Alert>
-        <AlertDescription class="text-xs">
-          你需要成为成员才能访问 {{ forumInfo.name }}
-        </AlertDescription>
+        <AlertDescription class="text-xs"> 你需要成为成员才能访问 {{ forumInfo.name }} </AlertDescription>
       </Alert>
 
       <Alert
         v-if="forumInfo.isApplied"
         class="bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
       >
-        <AlertDescription class="text-xs">
-          已申请, 正在等待管理员审核
-        </AlertDescription>
+        <AlertDescription class="text-xs"> 已申请, 正在等待管理员审核 </AlertDescription>
       </Alert>
 
       <Card
@@ -160,27 +157,22 @@ onUnmounted(() => {
             v-if="!accountInfo.id"
             variant="destructive"
           >
-            <AlertDescription class="text-xs">
-              需要登录后才能够加入
-            </AlertDescription>
+            <AlertDescription class="text-xs"> 需要登录后才能够加入 </AlertDescription>
           </Alert>
-          <Alert
-            v-else-if="forumInfo.settings.requireApply"
-          >
-            <AlertDescription class="text-xs">
-              申请需要审核
-            </AlertDescription>
+          <Alert v-else-if="forumInfo.settings.requireApply">
+            <AlertDescription class="text-xs"> 申请需要审核 </AlertDescription>
           </Alert>
           <Alert
             v-else
             class="bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
           >
-            <AlertDescription class="text-xs">
-              该讨论区可直接加入
-            </AlertDescription>
+            <AlertDescription class="text-xs"> 该讨论区可直接加入 </AlertDescription>
           </Alert>
           <Separator />
-          <Button :disabled="!accountInfo.id || useForum.isLoading" @click="ApplyToForum">
+          <Button
+            :disabled="!accountInfo.id || useForum.isLoading"
+            @click="ApplyToForum"
+          >
             {{ forumInfo.settings.requireApply ? '申请' : '' }}加入
           </Button>
         </CardContent>
@@ -199,7 +191,10 @@ onUnmounted(() => {
       <div class="forum-grid grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
         <Card class="forum-sidebar shadow-xs">
           <CardContent class="p-4 space-y-3">
-            <Button class="w-full" @click="showPostTopicModal = true">
+            <Button
+              class="w-full"
+              @click="showPostTopicModal = true"
+            >
               发布话题
             </Button>
             <Badge
@@ -251,7 +246,10 @@ onUnmounted(() => {
         <DialogHeader class="pb-2 border-b border-border/60">
           <div class="flex items-center gap-2">
             <DialogTitle class="text-sm font-semibold">发布话题</DialogTitle>
-            <Separator orientation="vertical" class="h-3.5" />
+            <Separator
+              orientation="vertical"
+              class="h-3.5"
+            />
             <span class="text-[11px] text-muted-foreground font-mono">
               保存于 {{ format(lastBackupTopic, 'HH:mm:ss') }}
             </span>
@@ -259,7 +257,10 @@ onUnmounted(() => {
         </DialogHeader>
 
         <div class="flex-1 min-h-0 overflow-y-auto space-y-3">
-          <Input v-model="currentPostTopicModel.title" placeholder="话题标题" />
+          <Input
+            v-model="currentPostTopicModel.title"
+            placeholder="话题标题"
+          />
           <VEditor
             ref="editor"
             v-model:value="currentPostTopicModel.content"
@@ -272,7 +273,10 @@ onUnmounted(() => {
               v-model="token"
               class="forum-captcha"
             />
-            <Button :disabled="!token || useForum.isLoading" @click="postTopic">
+            <Button
+              :disabled="!token || useForum.isLoading"
+              @click="postTopic"
+            >
               发布
             </Button>
           </div>

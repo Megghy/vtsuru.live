@@ -164,9 +164,7 @@ const contentClass = computed(() => ({
           <div class="text-3xl font-bold mb-2">404</div>
           <div class="text-lg font-medium mb-1">页面不存在</div>
           <div class="text-sm text-muted-foreground mb-4">该主播未配置此页面</div>
-          <Button @click="$router.push({ name: 'user-index', params: { id: route.params.id } })">
-            返回主页
-          </Button>
+          <Button @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"> 返回主页 </Button>
         </div>
       </main>
     </div>

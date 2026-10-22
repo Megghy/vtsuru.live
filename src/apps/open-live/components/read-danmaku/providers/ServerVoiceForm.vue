@@ -3,15 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
-import { useSpeechService } from '@/store/useSpeechService'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
+import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
@@ -88,7 +82,11 @@ onMounted(loadVoices)
         :min="rateLimits[0]"
         :max="rateLimits[1]"
         :step="0.01"
-        @update:model-value="(val) => { if (val?.[0] !== undefined) settings.speechInfo.rate = val[0] }"
+        @update:model-value="
+          (val) => {
+            if (val?.[0] !== undefined) settings.speechInfo.rate = val[0]
+          }
+        "
       />
     </SectionField>
   </div>

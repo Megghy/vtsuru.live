@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type SettingIndexLinks = {[key: string]: string};
+export type SettingIndexLinks = { [key: string]: string }

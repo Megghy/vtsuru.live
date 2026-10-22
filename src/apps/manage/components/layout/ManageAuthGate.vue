@@ -64,9 +64,7 @@ async function switchToBackupAPI() {
         <h1 id="auth-title">{{ isUserWorkspace ? '查看积分和订单' : '登录或创建账号' }}</h1>
         <p class="auth-lead">
           {{
-            isUserWorkspace
-              ? '用 Bilibili 发一条弹幕完成认证。不用注册本站账号。'
-              : '主播使用本站账号管理直播工具。'
+            isUserWorkspace ? '用 Bilibili 发一条弹幕完成认证。不用注册本站账号。' : '主播使用本站账号管理直播工具。'
           }}
         </p>
       </header>
@@ -75,10 +73,20 @@ async function switchToBackupAPI() {
         v-if="isUserWorkspace"
         class="auth-actions"
       >
-        <Button variant="brand" size="default" class="font-semibold" @click="router.push({ name: 'bili-auth' })">
+        <Button
+          variant="brand"
+          size="default"
+          class="font-semibold"
+          @click="router.push({ name: 'bili-auth' })"
+        >
           开始认证
         </Button>
-        <Button v-if="!showSiteLogin" variant="ghost" size="default" @click="showSiteLogin = true">
+        <Button
+          v-if="!showSiteLogin"
+          variant="ghost"
+          size="default"
+          @click="showSiteLogin = true"
+        >
           已有本站账号，登录
         </Button>
       </div>
@@ -98,14 +106,22 @@ async function switchToBackupAPI() {
         <AlertDescription class="text-xs text-muted-foreground mt-1 space-y-2">
           <p>看积分和订单不用注册。用 Bilibili 发一条弹幕完成认证即可。</p>
           <div>
-            <Button size="xs" variant="outline" @click="router.push({ name: 'bili-auth' })">
+            <Button
+              size="xs"
+              variant="outline"
+              @click="router.push({ name: 'bili-auth' })"
+            >
               前往观众认证
             </Button>
           </div>
         </AlertDescription>
       </Alert>
 
-      <Button variant="outline" as-child class="home-action mx-auto">
+      <Button
+        variant="outline"
+        as-child
+        class="home-action mx-auto"
+      >
         <a href="/">回到主页</a>
       </Button>
     </section>
@@ -128,10 +144,18 @@ async function switchToBackupAPI() {
         <AlertDescription class="text-xs text-muted-foreground mt-1 space-y-2.5">
           <p>当前 API 响应较慢，是否切换到备用 API？</p>
           <div class="flex justify-end gap-2">
-            <Button size="xs" variant="ghost" @click="showAPISwitchDialog = false">
+            <Button
+              size="xs"
+              variant="ghost"
+              @click="showAPISwitchDialog = false"
+            >
               继续等待
             </Button>
-            <Button size="xs" variant="brand" @click="switchToBackupAPI">
+            <Button
+              size="xs"
+              variant="brand"
+              @click="switchToBackupAPI"
+            >
               切换到备用 API
             </Button>
           </div>

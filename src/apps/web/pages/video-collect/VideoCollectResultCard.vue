@@ -94,7 +94,10 @@ function handleCardClick() {
 
           <!-- 时长 -->
           <span class="media-badge duration-badge">
-            <component :is="Clock24Regular" class="size-3" />
+            <component
+              :is="Clock24Regular"
+              class="size-3"
+            />
             {{ formatDuration(item.video.length) }}
           </span>
 
@@ -107,7 +110,10 @@ function handleCardClick() {
             :aria-label="watched ? '标记为未看' : '标记为已看'"
             @click.stop.prevent="emit('toggleWatched')"
           >
-            <component :is="watched ? CheckmarkCircle24Regular : Checkmark24Regular" class="size-3.5" />
+            <component
+              :is="watched ? CheckmarkCircle24Regular : Checkmark24Regular"
+              class="size-3.5"
+            />
             <span>{{ watched ? '已看' : '未看' }}</span>
           </button>
         </div>
@@ -128,7 +134,10 @@ function handleCardClick() {
               aria-label="在哔哩哔哩打开"
               @click.stop.prevent="emit('select')"
             >
-              <component :is="Open24Regular" class="size-4" />
+              <component
+                :is="Open24Regular"
+                class="size-4"
+              />
             </button>
           </div>
 
@@ -138,7 +147,10 @@ function handleCardClick() {
               class="owner"
               :title="`UP 主: ${item.video.ownerName}`"
             >
-              <component :is="Person24Regular" class="size-3.5" />
+              <component
+                :is="Person24Regular"
+                class="size-3.5"
+              />
               <span class="owner-name">{{ item.video.ownerName }}</span>
             </span>
             <code class="bvid-code">{{ item.info.bvid }}</code>
@@ -151,7 +163,10 @@ function handleCardClick() {
           >
             <div class="recommend-author">
               <span class="sender-tag">
-                <component :is="Heart24Regular" class="size-3.5" />
+                <component
+                  :is="Heart24Regular"
+                  class="size-3.5"
+                />
                 <span class="sender-name">{{ primarySender.sender || '匿名粉丝' }}</span>
               </span>
               <Badge
@@ -211,7 +226,10 @@ function handleCardClick() {
             title="重新盖上"
             @click.stop="emit('toggleReveal')"
           >
-            <component :is="ArrowSwap24Regular" class="size-3.5" />
+            <component
+              :is="ArrowSwap24Regular"
+              class="size-3.5"
+            />
             盖上
           </button>
         </div>
@@ -228,7 +246,10 @@ function handleCardClick() {
         <span class="mystery-number">{{ String(index + 1).padStart(2, '0') }}</span>
         <div class="mystery-center">
           <div class="mystery-icon-circle">
-            <component :is="Question24Regular" class="size-6" />
+            <component
+              :is="Question24Regular"
+              class="size-6"
+            />
           </div>
           <strong class="mystery-text">点击揭晓</strong>
           <span class="mystery-hint">TAP TO REVEAL</span>

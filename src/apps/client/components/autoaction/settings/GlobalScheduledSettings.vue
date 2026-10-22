@@ -47,9 +47,7 @@ watch(
                 <Info16Regular class="size-3.5 text-muted-foreground" />
               </div>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
-              每隔多少秒触发一次全局定时任务
-            </TooltipContent>
+            <TooltipContent class="text-xs"> 每隔多少秒触发一次全局定时任务 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         <NInputNumber

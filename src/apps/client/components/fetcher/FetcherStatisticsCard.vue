@@ -16,10 +16,10 @@ import { CanvasRenderer } from 'echarts/renderers'
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import VChart from 'vue-echarts'
 
-import { useWebFetcher } from '@/store/useWebFetcher'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Spin } from '@/shared/ui/spin'
+import { useWebFetcher } from '@/store/useWebFetcher'
 
 // 复用此组件树内多个图表所需的 ECharts 模块, 统一注册一次
 use([
@@ -239,7 +239,10 @@ onUnmounted(stopSession)
         v-else
         class="flex flex-col items-center justify-center py-6 gap-2 text-xs text-muted-foreground"
       >
-        <Spin :show="true" size="small" />
+        <Spin
+          :show="true"
+          size="small"
+        />
         <span>正在加载实时统计...</span>
       </div>
     </CardContent>

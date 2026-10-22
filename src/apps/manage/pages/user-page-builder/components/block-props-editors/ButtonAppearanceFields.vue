@@ -67,21 +67,31 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
 </script>
 
 <template>
-  <div v-if="propertyAvailable('align')" class="space-y-1">
+  <div
+    v-if="propertyAvailable('align')"
+    class="space-y-1"
+  >
     <label class="text-xs text-muted-foreground">对齐方式</label>
     <Select v-model="blockProps.align">
       <SelectTrigger>
         <SelectValue placeholder="对齐方式" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in alignOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in alignOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>
     </Select>
   </div>
 
-  <div v-if="propertyAvailable('fullWidth')" class="flex items-center justify-between py-1">
+  <div
+    v-if="propertyAvailable('fullWidth')"
+    class="flex items-center justify-between py-1"
+  >
     <label class="text-xs text-muted-foreground">按钮铺满宽度</label>
     <Switch v-model:checked="blockProps.fullWidth" />
   </div>
@@ -93,7 +103,11 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         <SelectValue placeholder="按钮类型" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in typeOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in typeOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>
@@ -107,7 +121,11 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         <SelectValue placeholder="样式变体" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in variantOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in variantOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>
@@ -121,7 +139,11 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         <SelectValue placeholder="尺寸" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in sizeOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in sizeOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>
@@ -135,14 +157,21 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         <SelectValue placeholder="形态" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in radiusOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in radiusOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>
     </Select>
   </div>
 
-  <div v-if="propertyAvailable('radiusPx')" class="space-y-1">
+  <div
+    v-if="propertyAvailable('radiusPx')"
+    class="space-y-1"
+  >
     <label class="text-xs text-muted-foreground">圆角 px</label>
     <NInputNumber
       v-model:value="blockProps.radiusPx"
@@ -207,21 +236,32 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
         <SelectValue placeholder="选择特效" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in effectOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in effectOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>
     </Select>
   </div>
 
-  <div v-if="blockProps.effect && blockProps.effect !== 'none'" class="space-y-1">
+  <div
+    v-if="blockProps.effect && blockProps.effect !== 'none'"
+    class="space-y-1"
+  >
     <label class="text-xs text-muted-foreground">特效强度</label>
     <Select v-model="blockProps.effectIntensity">
       <SelectTrigger>
         <SelectValue placeholder="特效强度" />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem v-for="opt in intensityOptions" :key="opt.value" :value="opt.value">
+        <SelectItem
+          v-for="opt in intensityOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
           {{ opt.label }}
         </SelectItem>
       </SelectContent>

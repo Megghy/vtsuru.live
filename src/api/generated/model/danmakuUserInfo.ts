@@ -5,17 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GuardLevel } from './guardLevel';
+import type { GuardLevel } from './guardLevel'
 
 export interface DanmakuUserInfo {
-  name: string;
+  name: string
   /** @nullable */
-  uid?: number | null;
+  uid?: number | null
   /** @nullable */
-  oid?: string | null;
-  guard_level: GuardLevel;
-  fans_medal_level: number;
-  fans_medal_name: string;
-  fans_medal_wearing_status: boolean;
-  face: string;
+  oid?: string | null
+  guard_level: GuardLevel
+  fans_medal_level: number
+  fans_medal_name: string
+  fans_medal_wearing_status: boolean
+  face: string
 }

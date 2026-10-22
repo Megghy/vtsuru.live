@@ -157,25 +157,47 @@ onMounted(() => void loadHistories())
       subtitle="追溯在所有主播频道的积分获取、消耗明细与时间流水。"
     >
       <template #actions>
-        <Button variant="outline" :disabled="filteredHistories.length === 0" class="flex items-center gap-1.5" @click="exportHistories">
-          <component :is="ArrowDownload24Regular" class="size-4" />
+        <Button
+          variant="outline"
+          :disabled="filteredHistories.length === 0"
+          class="flex items-center gap-1.5"
+          @click="exportHistories"
+        >
+          <component
+            :is="ArrowDownload24Regular"
+            class="size-4"
+          />
           导出
         </Button>
-        <Button variant="outline" :disabled="loading" class="flex items-center gap-1.5" @click="refresh">
-          <component :is="ArrowSync24Regular" class="size-4" :class="{ 'animate-spin': loading }" />
+        <Button
+          variant="outline"
+          :disabled="loading"
+          class="flex items-center gap-1.5"
+          @click="refresh"
+        >
+          <component
+            :is="ArrowSync24Regular"
+            class="size-4"
+            :class="{ 'animate-spin': loading }"
+          />
           刷新
         </Button>
       </template>
     </AccountPageHeader>
 
-    <div v-if="loading" class="py-16 flex justify-center">
+    <div
+      v-if="loading"
+      class="py-16 flex justify-center"
+    >
       <Spin />
     </div>
 
     <template v-else>
       <AccountDataPanel :stats="stats">
         <template #toolbar>
-          <div class="history-toolbar flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/20 border-b border-border/60 text-xs">
+          <div
+            class="history-toolbar flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/20 border-b border-border/60 text-xs"
+          >
             <div class="history-filters flex flex-wrap items-center gap-2">
               <Select
                 :model-value="streamer || 'all'"
@@ -185,7 +207,11 @@ onMounted(() => void loadHistories())
                   <SelectValue placeholder="全部主播" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all" class="text-xs">全部主播</SelectItem>
+                  <SelectItem
+                    value="all"
+                    class="text-xs"
+                    >全部主播</SelectItem
+                  >
                   <SelectItem
                     v-for="opt in streamerOptions"
                     :key="opt.value"
@@ -197,16 +223,13 @@ onMounted(() => void loadHistories())
                 </SelectContent>
               </Select>
 
-              <ToggleGroup v-model="direction" type="single">
-                <ToggleGroupItem value="all">
-                  全部
-                </ToggleGroupItem>
-                <ToggleGroupItem value="increase">
-                  增加
-                </ToggleGroupItem>
-                <ToggleGroupItem value="decrease">
-                  减少
-                </ToggleGroupItem>
+              <ToggleGroup
+                v-model="direction"
+                type="single"
+              >
+                <ToggleGroupItem value="all"> 全部 </ToggleGroupItem>
+                <ToggleGroupItem value="increase"> 增加 </ToggleGroupItem>
+                <ToggleGroupItem value="decrease"> 减少 </ToggleGroupItem>
               </ToggleGroup>
 
               <DateRangePicker

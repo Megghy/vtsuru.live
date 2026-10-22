@@ -9,13 +9,7 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -159,10 +153,11 @@ function removeOption(field: ServiceField, optIndex: number) {
 
 <template>
   <div class="space-y-4 pb-2">
-    <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-      <AlertDescription class="text-xs">
-        服务兑换会先收集需求，再由你在订单中安排和交付
-      </AlertDescription>
+    <Alert
+      variant="default"
+      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+    >
+      <AlertDescription class="text-xs"> 服务兑换会先收集需求，再由你在订单中安排和交付 </AlertDescription>
     </Alert>
 
     <!-- 接单状态卡片 -->
@@ -175,10 +170,16 @@ function removeOption(field: ServiceField, optIndex: number) {
           </span>
         </div>
         <div class="flex items-center gap-2">
-          <span class="text-xs font-medium" :class="!draft.paused ? 'text-primary' : 'text-muted-foreground'">
+          <span
+            class="text-xs font-medium"
+            :class="!draft.paused ? 'text-primary' : 'text-muted-foreground'"
+          >
             {{ !draft.paused ? '接单中' : '已暂停' }}
           </span>
-          <Switch :checked="!draft.paused" @update:checked="draft.paused = !$event" />
+          <Switch
+            :checked="!draft.paused"
+            @update:checked="draft.paused = !$event"
+          />
         </div>
       </CardContent>
     </Card>
@@ -190,13 +191,28 @@ function removeOption(field: ServiceField, optIndex: number) {
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">预计完成周期</label>
           <div class="relative">
-            <Input v-model="estimatedDaysInput" type="number" min="1" step="1" placeholder="可选，例如 7" class="pr-7" @update:model-value="updateNumber('estimatedDays', String($event))" />
+            <Input
+              v-model="estimatedDaysInput"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="可选，例如 7"
+              class="pr-7"
+              @update:model-value="updateNumber('estimatedDays', String($event))"
+            />
             <span class="absolute right-2.5 top-2 text-[11px] text-muted-foreground">天</span>
           </div>
         </div>
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">最大未完成订单数</label>
-          <Input v-model="maxActiveOrdersInput" type="number" min="1" step="1" placeholder="不限制" @update:model-value="updateNumber('maxActiveOrders', String($event))" />
+          <Input
+            v-model="maxActiveOrdersInput"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="不限制"
+            @update:model-value="updateNumber('maxActiveOrders', String($event))"
+          />
         </div>
       </div>
     </div>
@@ -237,14 +253,23 @@ function removeOption(field: ServiceField, optIndex: number) {
                 <SelectValue placeholder="套用轻量模板" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in presetOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in presetOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <Button size="xs" variant="outline" class="gap-1" @click="addField">
+          <Button
+            size="xs"
+            variant="outline"
+            class="gap-1"
+            @click="addField"
+          >
             <Add24Filled class="size-3.5" />
             添加字段
           </Button>
@@ -265,8 +290,15 @@ function removeOption(field: ServiceField, optIndex: number) {
         >
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground">字段名称 <span class="text-destructive">*</span></label>
-              <Input v-model="field.label" placeholder="例如：需求描述" maxlength="100" @blur="normalizeField(field)" />
+              <label class="text-xs font-medium text-foreground"
+                >字段名称 <span class="text-destructive">*</span></label
+              >
+              <Input
+                v-model="field.label"
+                placeholder="例如：需求描述"
+                maxlength="100"
+                @blur="normalizeField(field)"
+              />
             </div>
 
             <div class="space-y-1">
@@ -275,20 +307,34 @@ function removeOption(field: ServiceField, optIndex: number) {
                 <div class="flex-1">
                   <Select
                     :model-value="field.type"
-                    @update:model-value="(val) => { field.type = val as ServiceFieldType; normalizeField(field) }"
+                    @update:model-value="
+                      (val) => {
+                        field.type = val as ServiceFieldType
+                        normalizeField(field)
+                      }
+                    "
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem v-for="ft in fieldTypes" :key="ft.value" :value="ft.value">
+                      <SelectItem
+                        v-for="ft in fieldTypes"
+                        :key="ft.value"
+                        :value="ft.value"
+                      >
                         {{ ft.label }}
                       </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <Button variant="ghost" size="icon-sm" class="text-destructive/80 hover:text-destructive hover:bg-destructive/10" @click="removeField(index)">
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  class="text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                  @click="removeField(index)"
+                >
                   <Delete24Filled class="size-3.5" />
                 </Button>
               </div>
@@ -301,12 +347,25 @@ function removeOption(field: ServiceField, optIndex: number) {
             >
               <label class="text-xs font-medium text-foreground">可选项配置</label>
               <div class="flex items-center gap-2">
-                <Input size="xs" v-model="optionInputs[field.id]" placeholder="输入选项名称后按回车或点击添加" class="flex-1" @keyup.enter="addOption(field)" />
-                <Button size="xs" variant="outline" @click="addOption(field)">
+                <Input
+                  size="xs"
+                  v-model="optionInputs[field.id]"
+                  placeholder="输入选项名称后按回车或点击添加"
+                  class="flex-1"
+                  @keyup.enter="addOption(field)"
+                />
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="addOption(field)"
+                >
                   添加选项
                 </Button>
               </div>
-              <div v-if="field.options && field.options.length > 0" class="flex flex-wrap gap-1.5 pt-1">
+              <div
+                v-if="field.options && field.options.length > 0"
+                class="flex flex-wrap gap-1.5 pt-1"
+              >
                 <span
                   v-for="(opt, optIdx) in field.options"
                   :key="optIdx"
@@ -329,7 +388,10 @@ function removeOption(field: ServiceField, optIndex: number) {
                 :checked="field.required"
                 @update:checked="field.required = $event"
               />
-              <span class="text-xs text-foreground cursor-pointer" @click="field.required = !field.required">
+              <span
+                class="text-xs text-foreground cursor-pointer"
+                @click="field.required = !field.required"
+              >
                 兑换时必须填写
               </span>
             </div>

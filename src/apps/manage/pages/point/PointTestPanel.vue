@@ -18,13 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
@@ -319,13 +313,20 @@ async function checkEligibility() {
   <Card class="border border-border">
     <CardHeader class="p-4 flex flex-row items-center justify-between space-y-0 border-b">
       <CardTitle class="text-sm font-semibold">积分测试系统</CardTitle>
-      <Tag type="info" size="small" :bordered="false">
+      <Tag
+        type="info"
+        size="small"
+        :bordered="false"
+      >
         测试账户 OUId: 00000000-0000-0000-0000-000000000000
       </Tag>
     </CardHeader>
 
     <CardContent class="p-4 space-y-6">
-      <Alert variant="default" class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+      <Alert
+        variant="default"
+        class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
+      >
         <AlertDescription class="text-xs">
           此功能用于测试积分系统的配置，所有测试事件将记录到一个专用的 mock
           账户（OUId=0）。你可以在这里测试不同类型事件的积分获取情况。
@@ -348,7 +349,10 @@ async function checkEligibility() {
           @positive-click="resetTestAccount"
         >
           <template #trigger>
-            <Button variant="destructive" :disabled="isLoading">
+            <Button
+              variant="destructive"
+              :disabled="isLoading"
+            >
               重置积分
             </Button>
           </template>
@@ -383,12 +387,19 @@ async function checkEligibility() {
           <!-- 礼物相关字段 -->
           <template v-if="showGiftFields">
             <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground">礼物名称 <span class="text-destructive">*</span></label>
-              <Input v-model="testForm.giftName" placeholder="例如: 小心心、辣条" />
+              <label class="text-xs font-medium text-foreground"
+                >礼物名称 <span class="text-destructive">*</span></label
+              >
+              <Input
+                v-model="testForm.giftName"
+                placeholder="例如: 小心心、辣条"
+              />
             </div>
 
             <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground">礼物价格（元） <span class="text-destructive">*</span></label>
+              <label class="text-xs font-medium text-foreground"
+                >礼物价格（元） <span class="text-destructive">*</span></label
+              >
               <NInputNumber
                 v-model="testForm.giftPrice"
                 :min="0"
@@ -407,7 +418,10 @@ async function checkEligibility() {
           </template>
 
           <!-- 上舰相关字段 -->
-          <div v-if="showGuardFields" class="space-y-1">
+          <div
+            v-if="showGuardFields"
+            class="space-y-1"
+          >
             <label class="text-xs font-medium text-foreground">舰长等级 <span class="text-destructive">*</span></label>
             <Select v-model="testForm.guardLevel">
               <SelectTrigger>
@@ -426,8 +440,13 @@ async function checkEligibility() {
           </div>
 
           <!-- SC 价格字段 -->
-          <div v-if="testForm.type === EventDataTypes.SC" class="space-y-1">
-            <label class="text-xs font-medium text-foreground">SC价格（元） <span class="text-destructive">*</span></label>
+          <div
+            v-if="testForm.type === EventDataTypes.SC"
+            class="space-y-1"
+          >
+            <label class="text-xs font-medium text-foreground"
+              >SC价格（元） <span class="text-destructive">*</span></label
+            >
             <NInputNumber
               v-model="testForm.giftPrice"
               :min="0.01"
@@ -436,7 +455,10 @@ async function checkEligibility() {
           </div>
 
           <div class="flex justify-end pt-2">
-            <Button :disabled="isTesting" @click="runTest">
+            <Button
+              :disabled="isTesting"
+              @click="runTest"
+            >
               {{ isTesting ? '执行中...' : '执行测试' }}
             </Button>
           </div>
@@ -500,12 +522,18 @@ async function checkEligibility() {
             />
           </div>
 
-          <div v-if="selectedGoods" class="text-xs text-muted-foreground bg-muted/40 p-2 rounded">
+          <div
+            v-if="selectedGoods"
+            class="text-xs text-muted-foreground bg-muted/40 p-2 rounded"
+          >
             当前选择: <strong class="text-foreground">{{ selectedGoods.name }}</strong> (ID: {{ selectedGoods.id }})
           </div>
 
           <div class="flex justify-end pt-2">
-            <Button :disabled="!selectedUserKey || !selectedGoodsId || isCheckingEligibility" @click="checkEligibility">
+            <Button
+              :disabled="!selectedUserKey || !selectedGoodsId || isCheckingEligibility"
+              @click="checkEligibility"
+            >
               {{ isCheckingEligibility ? '查询中...' : '查询' }}
             </Button>
           </div>
@@ -519,9 +547,7 @@ async function checkEligibility() {
               {{ eligibilityResult.eligible ? '可兑换' : '不可兑换' }}
             </AlertTitle>
             <AlertDescription class="text-xs space-y-2">
-              <div v-if="!eligibilityResult.eligible">
-                原因: {{ eligibilityResult.reason || '未知原因' }}
-              </div>
+              <div v-if="!eligibilityResult.eligible">原因: {{ eligibilityResult.reason || '未知原因' }}</div>
               <div class="flex flex-wrap gap-1.5 pt-1">
                 <Tag :type="eligibilityResult.canFreeBuy ? 'success' : 'default'">
                   {{ eligibilityResult.canFreeBuy ? '可免费兑换' : '非免费兑换' }}

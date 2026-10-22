@@ -7,6 +7,6 @@
  */
 
 export type GetApiAssistantConversationsParams = {
-pn?: number;
-ps?: number;
-};
+  pn?: number
+  ps?: number
+}

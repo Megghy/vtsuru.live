@@ -90,16 +90,23 @@ async function updateSettings() {
               <Checkmark12Regular class="size-3.5" />
               今日已点: {{ todayFinishedCount }}
             </Badge>
-            <span class="text-xs text-muted-foreground ml-1">
-              共 {{ songRequest.activeSongs.length }} 首
-            </span>
+            <span class="text-xs text-muted-foreground ml-1"> 共 {{ songRequest.activeSongs.length }} 首 </span>
           </div>
 
           <!-- 右侧操作与过滤 -->
           <div class="flex items-center gap-2 flex-wrap">
             <div class="flex items-center gap-1.5 w-[220px]">
-              <Input :value="songRequest.newSongName" placeholder="手动输入歌曲名" class="flex-1" @input="songRequest.newSongName = ($event.target as HTMLInputElement).value" @keyup.enter="songRequest.addSongManual()" />
-              <Button class="shrink-0" @click="songRequest.addSongManual()">
+              <Input
+                :value="songRequest.newSongName"
+                placeholder="手动输入歌曲名"
+                class="flex-1"
+                @input="songRequest.newSongName = ($event.target as HTMLInputElement).value"
+                @keyup.enter="songRequest.addSongManual()"
+              />
+              <Button
+                class="shrink-0"
+                @click="songRequest.addSongManual()"
+              >
                 添加
               </Button>
             </div>
@@ -112,8 +119,13 @@ async function updateSettings() {
                 type="button"
                 :disabled="!songRequest.configCanEdit"
                 class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                :class="sortType === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
-                @click="sortType = opt.value; updateSettings()"
+                :class="
+                  sortType === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
+                "
+                @click="
+                  sortType = opt.value
+                  updateSettings()
+                "
               >
                 {{ opt.label }}
               </button>
@@ -143,7 +155,10 @@ async function updateSettings() {
               @positive-click="songRequest.deactiveAllSongs()"
             >
               <template #trigger>
-                <Button variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Button
+                  variant="outline"
+                  class="border-destructive/40 text-destructive hover:bg-destructive/10"
+                >
                   全部取消
                 </Button>
               </template>

@@ -13,11 +13,7 @@ import type {
   PageBackgroundType,
 } from './block/schema'
 import { getGoogleFontFamilyCss } from './googleFonts'
-import {
-  isUserPageColorDark,
-  resolveUserPageReadableAccent,
-  resolveUserPageTextPalette,
-} from './theme'
+import { isUserPageColorDark, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
 import { normalizeUserPageColor, parseUserPageColor } from './themeColor'
 import { resolveUserPageAppearance } from './themeConfig'
 

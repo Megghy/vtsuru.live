@@ -53,23 +53,22 @@ const isFunctionEnabled = computed(() => {
             v-if="functionType != null && accountInfo"
             class="flex items-center gap-2 pl-2 border-l border-border"
           >
-            <span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              功能
-            </span>
+            <span class="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground"> 功能 </span>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
                   <div class="flex items-center gap-1.5 cursor-pointer">
-                    <Switch :model-value="isFunctionEnabled" :disabled="loading || switchLoading" @update:model-value="(val) => toggle?.setEnable(Boolean(val))"
+                    <Switch
+                      :model-value="isFunctionEnabled"
+                      :disabled="loading || switchLoading"
+                      @update:model-value="(val) => toggle?.setEnable(Boolean(val))"
                     />
                     <span class="text-xs text-muted-foreground select-none">
                       {{ isFunctionEnabled ? '已启用' : '已禁用' }}
                     </span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent class="text-xs">
-                  关闭后不会显示在个人主页
-                </TooltipContent>
+                <TooltipContent class="text-xs"> 关闭后不会显示在个人主页 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -126,8 +125,15 @@ const isFunctionEnabled = computed(() => {
             </div>
 
             <div class="flex items-center gap-1.5">
-              <Input :model-value="link.value" readonly class="flex-1 font-mono bg-muted/40" />
-              <Button variant="outline" @click="copyToClipboard(link.copyValue ?? link.value)">
+              <Input
+                :model-value="link.value"
+                readonly
+                class="flex-1 font-mono bg-muted/40"
+              />
+              <Button
+                variant="outline"
+                @click="copyToClipboard(link.copyValue ?? link.value)"
+              >
                 <component
                   :is="Copy24Regular"
                   class="h-3.5 w-3.5 mr-1"

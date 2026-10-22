@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
-
 import { EventDataTypes } from '@/api/api-models'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { queryUserHistory } from '../core/archive'
 import { formatPrice, paidSummary } from '../core/format'
@@ -87,26 +86,31 @@ function describe(e: DashboardEvent) {
         v-for="[name, m] in summary.medals"
         :key="name"
         class="history__medal"
-      >{{ name }} {{ m.first === m.current ? m.current : `${m.first}→${m.current}` }}<template v-if="m.max > m.current">（最高 {{ m.max }}）</template></span>
+        >{{ name }} {{ m.first === m.current ? m.current : `${m.first}→${m.current}`
+        }}<template v-if="m.max > m.current">（最高 {{ m.max }}）</template></span
+      >
     </div>
     <Tabs
       v-model="tab"
       class="w-full"
     >
-      <TabsList size="xs" class="grid w-full grid-cols-5">
-        <TabsTrigger value="all">
-          全部
-        </TabsTrigger>
-        <TabsTrigger value="message">
-          弹幕
-        </TabsTrigger>
-        <TabsTrigger value="sc">
-          SC
-        </TabsTrigger>
-        <TabsTrigger value="gift" class="text-xs py-1">
+      <TabsList
+        size="xs"
+        class="grid w-full grid-cols-5"
+      >
+        <TabsTrigger value="all"> 全部 </TabsTrigger>
+        <TabsTrigger value="message"> 弹幕 </TabsTrigger>
+        <TabsTrigger value="sc"> SC </TabsTrigger>
+        <TabsTrigger
+          value="gift"
+          class="text-xs py-1"
+        >
           礼物
         </TabsTrigger>
-        <TabsTrigger value="interaction" class="text-xs py-1">
+        <TabsTrigger
+          value="interaction"
+          class="text-xs py-1"
+        >
           互动
         </TabsTrigger>
       </TabsList>
@@ -117,13 +121,22 @@ function describe(e: DashboardEvent) {
         :key="e.key"
         class="history__row"
       >
-        <span class="history__time">{{ new Date(e.time).toLocaleString('zh-CN', { hour12: false, month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}</span>
+        <span class="history__time">{{
+          new Date(e.time).toLocaleString('zh-CN', {
+            hour12: false,
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        }}</span>
         <span class="history__type">{{ EVENT_TYPE_LABELS[e.type] }}</span>
         <span class="history__text">{{ describe(e) }}</span>
         <span
           v-if="PAID_TYPES.has(e.type) && e.price > 0"
           class="history__price"
-        >{{ formatPrice(e.price) }}</span>
+          >{{ formatPrice(e.price) }}</span
+        >
       </div>
       <div
         v-if="history && !list.length"

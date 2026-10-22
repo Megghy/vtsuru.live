@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataServiceFieldType } from './pointGoodsDataServiceFieldType';
+import type { PointGoodsDataServiceFieldType } from './pointGoodsDataServiceFieldType'
 
 export interface PointOrderDataServiceAnswer {
-  fieldId: string;
-  label: string;
-  type: PointGoodsDataServiceFieldType;
-  value: string[];
+  fieldId: string
+  label: string
+  type: PointGoodsDataServiceFieldType
+  value: string[]
 }

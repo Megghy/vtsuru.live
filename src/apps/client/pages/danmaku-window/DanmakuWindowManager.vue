@@ -25,13 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import NInputNumber from '@/shared/ui/NInputNumber.vue'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -138,21 +132,43 @@ function toggleFilterType(val: string, checked: boolean) {
         <Badge
           variant="outline"
           class="text-xs h-6 px-2.5"
-          :class="danmakuWindow.isDanmakuWindowOpen ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
+          :class="
+            danmakuWindow.isDanmakuWindowOpen
+              ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+              : 'text-muted-foreground'
+          "
         >
           {{ danmakuWindow.isDanmakuWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
         </Badge>
 
-        <Button variant="secondary" :class="danmakuWindow.isDanmakuWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary'" @click="danmakuWindow.isDanmakuWindowOpen ? danmakuWindow.closeWindow() : danmakuWindow.openWindow()">
+        <Button
+          variant="secondary"
+          :class="
+            danmakuWindow.isDanmakuWindowOpen
+              ? 'text-destructive hover:text-destructive'
+              : 'text-primary hover:text-primary'
+          "
+          @click="danmakuWindow.isDanmakuWindowOpen ? danmakuWindow.closeWindow() : danmakuWindow.openWindow()"
+        >
           {{ danmakuWindow.isDanmakuWindowOpen ? '关闭浮窗' : '打开浮窗' }}
         </Button>
 
         <div class="inline-flex rounded-md shadow-sm">
-          <Button variant="secondary" class="gap-1 rounded-r-none border-r border-border" :disabled="!danmakuWindow.isDanmakuWindowOpen" @click="danmakuWindow.sendTestDanmaku()">
+          <Button
+            variant="secondary"
+            class="gap-1 rounded-r-none border-r border-border"
+            :disabled="!danmakuWindow.isDanmakuWindowOpen"
+            @click="danmakuWindow.sendTestDanmaku()"
+          >
             <Send24Filled class="size-3.5 text-sky-500" />
             测试弹幕
           </Button>
-          <Button variant="secondary" class="gap-1 rounded-l-none" :disabled="!danmakuWindow.isDanmakuWindowOpen" @click="danmakuWindow.clearAllDanmaku()">
+          <Button
+            variant="secondary"
+            class="gap-1 rounded-l-none"
+            :disabled="!danmakuWindow.isDanmakuWindowOpen"
+            @click="danmakuWindow.clearAllDanmaku()"
+          >
             <Delete24Regular class="size-3.5 text-amber-500" />
             清空
           </Button>
@@ -166,22 +182,34 @@ function toggleFilterType(val: string, checked: boolean) {
       class="w-full danmaku-tabs"
     >
       <TabsList class="grid w-full max-w-sm grid-cols-3">
-        <TabsTrigger value="appearance" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="appearance"
+          class="text-xs gap-1.5"
+        >
           <Color24Filled class="size-3.5" />
           外观与预设
         </TabsTrigger>
-        <TabsTrigger value="window" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="window"
+          class="text-xs gap-1.5"
+        >
           <Desktop24Filled class="size-3.5" />
           窗口与行为
         </TabsTrigger>
-        <TabsTrigger value="filter" class="text-xs gap-1.5">
+        <TabsTrigger
+          value="filter"
+          class="text-xs gap-1.5"
+        >
           <Filter24Filled class="size-3.5" />
           过滤与元素
         </TabsTrigger>
       </TabsList>
 
       <!-- 外观与预设 -->
-      <TabsContent value="appearance" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="appearance"
+        class="pt-3 space-y-3 client-readable"
+      >
         <!-- 快速主题预设 -->
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b">
@@ -226,7 +254,11 @@ function toggleFilterType(val: string, checked: boolean) {
                 :key="opt.value"
                 type="button"
                 class="px-3 py-1 text-xs font-medium rounded-sm transition-all"
-                :class="danmakuWindow.danmakuWindowSetting.displayStyle === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
+                :class="
+                  danmakuWindow.danmakuWindowSetting.displayStyle === opt.value
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'hover:text-foreground'
+                "
                 @click="danmakuWindow.danmakuWindowSetting.displayStyle = opt.value as any"
               >
                 {{ opt.label }}
@@ -328,9 +360,19 @@ function toggleFilterType(val: string, checked: boolean) {
 
                 <div class="flex items-center justify-between gap-3 pt-2 mt-1 border-t border-dashed text-xs">
                   <span class="text-muted-foreground">
-                    当前统计：观看 {{ danmakuWindow.liveStats.watchedText || danmakuWindow.liveStats.watchedCount }} ｜ 点赞 {{ danmakuWindow.liveStats.likeCount }} ｜ 收益 ¥{{ danmakuWindow.liveStats.totalIncome }} ｜ 在线 {{ danmakuWindow.liveStats.onlineCount }} 人
+                    当前统计：观看 {{ danmakuWindow.liveStats.watchedText || danmakuWindow.liveStats.watchedCount }} ｜
+                    点赞 {{ danmakuWindow.liveStats.likeCount }} ｜ 收益 ¥{{ danmakuWindow.liveStats.totalIncome }} ｜
+                    在线 {{ danmakuWindow.liveStats.onlineCount }} 人
                   </span>
-                  <Button size="xs" variant="secondary" class="h-6 text-[11px] gap-1 shrink-0" @click="danmakuWindow.resetLiveStats(); toast.success('实时统计数据已重置')">
+                  <Button
+                    size="xs"
+                    variant="secondary"
+                    class="h-6 text-[11px] gap-1 shrink-0"
+                    @click="
+                      danmakuWindow.resetLiveStats()
+                      toast.success('实时统计数据已重置')
+                    "
+                  >
                     <ArrowReset24Regular class="size-3" />
                     重置统计
                   </Button>
@@ -465,7 +507,10 @@ function toggleFilterType(val: string, checked: boolean) {
       </TabsContent>
 
       <!-- 窗口与行为 -->
-      <TabsContent value="window" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="window"
+        class="pt-3 space-y-3 client-readable"
+      >
         <!-- 尺寸与坐标 -->
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b">
@@ -481,7 +526,9 @@ function toggleFilterType(val: string, checked: boolean) {
                   :max="3840"
                   size="small"
                   class="w-full"
-                  @update:value="danmakuWindow.setDanmakuWindowSize($event || 300, danmakuWindow.danmakuWindowSetting.height)"
+                  @update:value="
+                    danmakuWindow.setDanmakuWindowSize($event || 300, danmakuWindow.danmakuWindowSetting.height)
+                  "
                 />
               </div>
               <div class="space-y-1">
@@ -492,7 +539,9 @@ function toggleFilterType(val: string, checked: boolean) {
                   :max="2160"
                   size="small"
                   class="w-full"
-                  @update:value="danmakuWindow.setDanmakuWindowSize(danmakuWindow.danmakuWindowSetting.width, $event || 400)"
+                  @update:value="
+                    danmakuWindow.setDanmakuWindowSize(danmakuWindow.danmakuWindowSetting.width, $event || 400)
+                  "
                 />
               </div>
               <div class="space-y-1">
@@ -502,7 +551,10 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   size="small"
                   class="w-full"
-                  @update:value="danmakuWindow.danmakuWindowSetting.x = $event || 0; danmakuWindow.updateWindowPosition()"
+                  @update:value="
+                    danmakuWindow.danmakuWindowSetting.x = $event || 0
+                    danmakuWindow.updateWindowPosition()
+                  "
                 />
               </div>
               <div class="space-y-1">
@@ -512,13 +564,20 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   size="small"
                   class="w-full"
-                  @update:value="danmakuWindow.danmakuWindowSetting.y = $event || 0; danmakuWindow.updateWindowPosition()"
+                  @update:value="
+                    danmakuWindow.danmakuWindowSetting.y = $event || 0
+                    danmakuWindow.updateWindowPosition()
+                  "
                 />
               </div>
             </div>
 
             <div class="flex justify-end pt-1">
-              <Button variant="secondary" class="gap-1.5" @click="resetWindowPosition">
+              <Button
+                variant="secondary"
+                class="gap-1.5"
+                @click="resetWindowPosition"
+              >
                 <ArrowReset24Regular class="size-3.5" />
                 重置至默认坐标
               </Button>
@@ -636,7 +695,10 @@ function toggleFilterType(val: string, checked: boolean) {
       </TabsContent>
 
       <!-- 过滤与高级 -->
-      <TabsContent value="filter" class="pt-3 space-y-3 client-readable">
+      <TabsContent
+        value="filter"
+        class="pt-3 space-y-3 client-readable"
+      >
         <!-- 事件类型过滤 -->
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b">
@@ -686,7 +748,11 @@ function toggleFilterType(val: string, checked: boolean) {
         <Card class="border bg-card">
           <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
             <CardTitle class="text-sm font-semibold">Bilibili 官方表情包数据</CardTitle>
-            <Button variant="secondary" :disabled="emojiLoading" @click="reloadEmoji">
+            <Button
+              variant="secondary"
+              :disabled="emojiLoading"
+              @click="reloadEmoji"
+            >
               {{ emojiLoading ? '同步中...' : '重新同步表情' }}
             </Button>
           </CardHeader>

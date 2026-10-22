@@ -22,7 +22,8 @@ defineProps<{ event: DashboardEvent; showMedal: boolean }>()
     v-if="event.guardLevel > 0"
     class="guard"
     :style="{ background: getGuardColor(event.guardLevel) }"
-  >{{ GUARD_NAMES[event.guardLevel] }}</span>
+    >{{ GUARD_NAMES[event.guardLevel] }}</span
+  >
 </template>
 
 <style scoped>

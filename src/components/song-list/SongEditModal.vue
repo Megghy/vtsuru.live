@@ -83,32 +83,51 @@ defineExpose({ open, close, loading })
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">
               <label class="font-medium text-foreground">歌曲名称 *</label>
-              <Input v-model="model.name" placeholder="请输入歌曲名称" />
+              <Input
+                v-model="model.name"
+                placeholder="请输入歌曲名称"
+              />
             </div>
 
             <div class="space-y-1">
               <label class="font-medium text-foreground">翻译 / 别名</label>
-              <Input v-model="model.translateName" placeholder="可选翻译或别名" />
+              <Input
+                v-model="model.translateName"
+                placeholder="可选翻译或别名"
+              />
             </div>
 
             <div class="space-y-1">
               <label class="font-medium text-foreground">作者 (多个用逗号隔开)</label>
-              <Input v-model="authorText" placeholder="例如: 周杰伦, 方文山" />
+              <Input
+                v-model="authorText"
+                placeholder="例如: 周杰伦, 方文山"
+              />
             </div>
 
             <div class="space-y-1">
               <label class="font-medium text-foreground">语言 (多个用逗号隔开)</label>
-              <Input v-model="languageText" placeholder="例如: 中文, 日语" />
+              <Input
+                v-model="languageText"
+                placeholder="例如: 中文, 日语"
+              />
             </div>
 
             <div class="space-y-1">
               <label class="font-medium text-foreground">标签 (多个用逗号隔开)</label>
-              <Input v-model="tagText" placeholder="例如: 流行, 治愈" />
+              <Input
+                v-model="tagText"
+                placeholder="例如: 流行, 治愈"
+              />
             </div>
 
             <div class="space-y-1">
               <label class="font-medium text-foreground">试听 / 伴奏链接</label>
-              <Input v-model="model.url" placeholder="音频直链" :disabled="model.from !== SongFrom.Custom" />
+              <Input
+                v-model="model.url"
+                placeholder="音频直链"
+                :disabled="model.from !== SongFrom.Custom"
+              />
             </div>
           </div>
 
@@ -140,7 +159,10 @@ defineExpose({ open, close, loading })
               </label>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <component :is="Info24Filled" class="size-3.5 text-muted-foreground cursor-help" />
+                  <component
+                    :is="Info24Filled"
+                    class="size-3.5 text-muted-foreground cursor-help"
+                  />
                 </TooltipTrigger>
                 <TooltipContent>启用后将覆盖全局点歌设置，用于单独设置歌曲要求</TooltipContent>
               </Tooltip>
@@ -207,10 +229,16 @@ defineExpose({ open, close, loading })
         </div>
 
         <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
-          <Button variant="outline" @click="show = false">
+          <Button
+            variant="outline"
+            @click="show = false"
+          >
             取消
           </Button>
-          <Button :disabled="loading" @click="handleSave">
+          <Button
+            :disabled="loading"
+            @click="handleSave"
+          >
             确认保存
           </Button>
         </DialogFooter>

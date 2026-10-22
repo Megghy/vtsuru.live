@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { provideThemeScope } from '@/shared/config/theme/scope'
 import { useMediaQuery, useNow } from '@vueuse/core'
 import { computed, provide } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
 import { getUserPageThemeCssVars } from '@/apps/user-page/background'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'

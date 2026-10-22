@@ -105,7 +105,7 @@ onUnmounted(() => {
           class="user-menu__avatar"
           :src="avatarUrl(event.uface, 96)"
           referrerpolicy="no-referrer"
-        >
+        />
         <div class="user-menu__who">
           <div class="user-menu__name">
             {{ event.uname || '匿名用户' }}
@@ -124,38 +124,74 @@ onUnmounted(() => {
       </div>
 
       <div class="user-menu__actions flex flex-wrap gap-1">
-        <Button variant="secondary" class="px-2" @click="toggleFilter">
-          <component :is="filtering ? ArrowHookUpLeft16Regular : Filter16Regular" class="h-3.5 w-3.5 mr-1" />
+        <Button
+          variant="secondary"
+          class="px-2"
+          @click="toggleFilter"
+        >
+          <component
+            :is="filtering ? ArrowHookUpLeft16Regular : Filter16Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           {{ filtering ? '转至上下文' : '筛选该用户' }}
         </Button>
-        <Button variant="secondary" class="px-2" @click="run(() => dashboard.toggleRead(event!))"
+        <Button
+          variant="secondary"
+          class="px-2"
+          @click="run(() => dashboard.toggleRead(event!))"
         >
-          <component :is="Checkmark16Regular" class="h-3.5 w-3.5 mr-1" />
+          <component
+            :is="Checkmark16Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           {{ dashboard.isRead(event) ? '标为未读' : '标为已读' }}
         </Button>
-        <Button variant="secondary" class="px-2" @click="run(() => (ui.imageTarget = event!))"
+        <Button
+          variant="secondary"
+          class="px-2"
+          @click="run(() => (ui.imageTarget = event!))"
         >
-          <component :is="Image16Regular" class="h-3.5 w-3.5 mr-1" />
+          <component
+            :is="Image16Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           保存为图片
         </Button>
-        <Button variant="secondary" class="px-2" @click="run(() => copyToClipboard(event!.uname))"
+        <Button
+          variant="secondary"
+          class="px-2"
+          @click="run(() => copyToClipboard(event!.uname))"
         >
-          <component :is="Copy16Regular" class="h-3.5 w-3.5 mr-1" />
+          <component
+            :is="Copy16Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           复制用户名
         </Button>
-        <Button v-if="event.uid> 0"
+        <Button
+          v-if="event.uid > 0"
           variant="secondary"
           as="a"
           :href="`https://space.bilibili.com/${event.uid}`"
           target="_blank"
           class="px-2"
         >
-          <component :is="Open16Regular" class="h-3.5 w-3.5 mr-1" />
+          <component
+            :is="Open16Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           个人空间
         </Button>
-        <Button v-if="event.ouid" :variant="actions.isBlocked(event) ? 'secondary' : 'destructive'" class="px-2" @click="run(() => actions.toggleBlock(event!))"
+        <Button
+          v-if="event.ouid"
+          :variant="actions.isBlocked(event) ? 'secondary' : 'destructive'"
+          class="px-2"
+          @click="run(() => actions.toggleBlock(event!))"
         >
-          <component :is="PersonProhibited16Regular" class="h-3.5 w-3.5 mr-1" />
+          <component
+            :is="PersonProhibited16Regular"
+            class="h-3.5 w-3.5 mr-1"
+          />
           {{ actions.isBlocked(event) ? '移出黑名单' : '拉黑' }}
         </Button>
       </div>

@@ -103,15 +103,18 @@ onMounted(() => {
         <span
           v-if="props.state.showDate"
           class="pixel-badge"
-        >{{ props.clockData.dateShort }}</span>
+          >{{ props.clockData.dateShort }}</span
+        >
         <span
           v-if="props.state.showDayOfWeek"
           class="pixel-badge"
-        >{{ props.clockData.dayOfWeekEn }}</span>
+          >{{ props.clockData.dayOfWeekEn }}</span
+        >
         <span
           v-if="!props.state.is24Hour && props.clockData.ampm"
           class="pixel-badge ampm"
-        >{{ props.clockData.ampm }}</span>
+          >{{ props.clockData.ampm }}</span
+        >
       </div>
     </div>
   </div>
@@ -168,8 +171,13 @@ onMounted(() => {
 }
 
 @keyframes heartPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .pixel-time-display {
@@ -200,8 +208,14 @@ onMounted(() => {
 }
 
 @keyframes pixelBlink {
-  0%, 49% { opacity: 1; }
-  50%, 100% { opacity: 0; }
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .pixel-timer-digits {

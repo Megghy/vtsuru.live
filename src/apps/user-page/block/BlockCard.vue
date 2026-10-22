@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { CSSProperties } from 'vue'
-import { provideThemeScope, type ThemeStyle } from '@/shared/config/theme/scope'
 import { computed } from 'vue'
+
+import { provideThemeScope, type ThemeStyle } from '@/shared/config/theme/scope'
 
 const props = withDefaults(
   defineProps<{
@@ -53,10 +54,18 @@ const cardStyle = computed<ThemeStyle>(() => ({
   '--border': 'var(--user-page-border-color)',
 }))
 
-provideThemeScope(computed(() => ({
-  ...cardStyle.value,
-  ...(isUnbackgrounded.value ? { '--foreground': 'var(--vtsuru-page-text)', '--card-foreground': 'var(--vtsuru-page-text)', '--muted-foreground': 'var(--vtsuru-page-text-muted)' } : {}),
-})))
+provideThemeScope(
+  computed(() => ({
+    ...cardStyle.value,
+    ...(isUnbackgrounded.value
+      ? {
+          '--foreground': 'var(--vtsuru-page-text)',
+          '--card-foreground': 'var(--vtsuru-page-text)',
+          '--muted-foreground': 'var(--vtsuru-page-text-muted)',
+        }
+      : {}),
+  })),
+)
 
 const borderTitleText = computed(() => (typeof props.borderTitle === 'string' ? props.borderTitle.trim() : ''))
 const showBorderTitle = computed(() => !isUnframed.value && borderTitleText.value.length > 0)

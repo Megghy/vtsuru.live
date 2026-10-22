@@ -7,6 +7,6 @@
  */
 
 export interface ResponseHistoryModel {
-  time: number;
-  count: number;
+  time: number
+  count: number
 }

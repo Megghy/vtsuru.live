@@ -3,10 +3,7 @@ import { Add24Regular, Delete24Regular, Edit24Regular, Location24Regular } from 
 import { computed, ref } from 'vue'
 
 import type { AddressInfo } from '@/api/api-models'
-import {
-  postApiPointUserDeleteAddress,
-  postApiPointUserUpdateAddress,
-} from '@/api/generated/point/point'
+import { postApiPointUserDeleteAddress, postApiPointUserUpdateAddress } from '@/api/generated/point/point'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
@@ -197,21 +194,36 @@ defineExpose({ reset })
   <section class="point-settings__panel rounded-lg border border-border bg-card p-4 space-y-4">
     <div class="point-settings__panel-header flex items-center justify-between pb-3 border-b border-border/60">
       <div class="point-settings__panel-title flex items-center gap-2.5">
-        <span class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-          <component :is="Location24Regular" class="size-4" />
+        <span
+          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"
+        >
+          <component
+            :is="Location24Regular"
+            class="size-4"
+          />
         </span>
         <div>
           <h2 class="text-sm font-semibold text-foreground">收货地址</h2>
           <span class="text-xs text-muted-foreground">{{ addresses.length }} 个地址</span>
         </div>
       </div>
-      <Button variant="outline" class="flex items-center gap-1" @click="openEditor()">
-        <component :is="Add24Regular" class="size-3.5" />
+      <Button
+        variant="outline"
+        class="flex items-center gap-1"
+        @click="openEditor()"
+      >
+        <component
+          :is="Add24Regular"
+          class="size-3.5"
+        />
         添加地址
       </Button>
     </div>
 
-    <div v-if="saving" class="py-10 flex justify-center">
+    <div
+      v-if="saving"
+      class="py-10 flex justify-center"
+    >
       <Spin />
     </div>
 
@@ -221,7 +233,10 @@ defineExpose({ reset })
       class="py-8"
     >
       <template #extra>
-        <Button class="mt-2" @click="openEditor()">
+        <Button
+          class="mt-2"
+          @click="openEditor()"
+        >
           添加第一个地址
         </Button>
       </template>
@@ -238,8 +253,16 @@ defineExpose({ reset })
       >
         <AddressDisplay :address="address" />
         <div class="point-settings__row-actions flex items-center justify-end gap-1 pt-2 border-t border-border/50">
-          <Button size="xs" variant="ghost" class="px-2 text-muted-foreground hover:text-foreground flex items-center gap-1" @click="openEditor(address)">
-            <component :is="Edit24Regular" class="size-3.5" />
+          <Button
+            size="xs"
+            variant="ghost"
+            class="px-2 text-muted-foreground hover:text-foreground flex items-center gap-1"
+            @click="openEditor(address)"
+          >
+            <component
+              :is="Edit24Regular"
+              class="size-3.5"
+            />
             编辑
           </Button>
           <Popconfirm
@@ -249,8 +272,15 @@ defineExpose({ reset })
             @positive-click="deleteAddress(address)"
           >
             <template #trigger>
-              <Button size="xs" variant="ghost" class="px-2 text-destructive hover:bg-destructive/10 flex items-center gap-1">
-                <component :is="Delete24Regular" class="size-3.5" />
+              <Button
+                size="xs"
+                variant="ghost"
+                class="px-2 text-destructive hover:bg-destructive/10 flex items-center gap-1"
+              >
+                <component
+                  :is="Delete24Regular"
+                  class="size-3.5"
+                />
                 删除
               </Button>
             </template>
@@ -269,11 +299,17 @@ defineExpose({ reset })
         </DialogTitle>
       </DialogHeader>
 
-      <div v-if="loadingArea" class="py-12 flex justify-center">
+      <div
+        v-if="loadingArea"
+        class="py-12 flex justify-center"
+      >
         <Spin />
       </div>
 
-      <div v-else class="space-y-3.5 py-2 text-xs">
+      <div
+        v-else
+        class="space-y-3.5 py-2 text-xs"
+      >
         <div class="grid grid-cols-2 gap-2.5">
           <div class="space-y-1">
             <label class="font-medium text-foreground">省份</label>
@@ -380,11 +416,20 @@ defineExpose({ reset })
         <div class="grid grid-cols-2 gap-2.5">
           <div class="space-y-1">
             <label class="font-medium text-foreground">收件人</label>
-            <Input v-model="draft.name" placeholder="收件人姓名" />
+            <Input
+              v-model="draft.name"
+              placeholder="收件人姓名"
+            />
           </div>
           <div class="space-y-1">
             <label class="font-medium text-foreground">联系电话</label>
-            <Input :model-value="draft.phone ? String(draft.phone) : ''" type="tel" placeholder="联系电话" class="font-mono" @update:model-value="draft.phone = Number($event) || null" />
+            <Input
+              :model-value="draft.phone ? String(draft.phone) : ''"
+              type="tel"
+              placeholder="联系电话"
+              class="font-mono"
+              @update:model-value="draft.phone = Number($event) || null"
+            />
           </div>
         </div>
 
@@ -404,10 +449,16 @@ defineExpose({ reset })
       </div>
 
       <DialogFooter class="pt-2">
-        <Button variant="outline" @click="editing = false">
+        <Button
+          variant="outline"
+          @click="editing = false"
+        >
           取消
         </Button>
-        <Button :disabled="saving" @click="saveAddress">
+        <Button
+          :disabled="saving"
+          @click="saveAddress"
+        >
           保存地址
         </Button>
       </DialogFooter>

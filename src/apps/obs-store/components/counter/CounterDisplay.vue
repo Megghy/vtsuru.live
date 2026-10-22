@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  ref,
-  watch,
-} from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
@@ -71,10 +66,7 @@ const progressPercent = computed(() => {
 <template>
   <div
     class="counter-obs-root"
-    :class="[
-      `theme-${state.theme}`,
-      { 'is-inline': props.inlineMode },
-    ]"
+    :class="[`theme-${state.theme}`, { 'is-inline': props.inlineMode }]"
     :style="{ '--counter-accent': state.accentColor }"
   >
     <div class="counter-container">
@@ -86,11 +78,13 @@ const progressPercent = computed(() => {
         <span
           v-if="state.prefix"
           class="counter-prefix"
-        >{{ state.prefix }}</span>
+          >{{ state.prefix }}</span
+        >
         <span
           v-if="state.title"
           class="counter-title"
-        >{{ state.title }}</span>
+          >{{ state.title }}</span
+        >
       </div>
 
       <!-- 主数值展示区 -->
@@ -106,11 +100,13 @@ const progressPercent = computed(() => {
           <span
             v-if="state.target > 0"
             class="counter-target"
-          >/ {{ state.target }}</span>
+            >/ {{ state.target }}</span
+          >
           <span
             v-if="state.suffix"
             class="counter-suffix"
-          >{{ state.suffix }}</span>
+            >{{ state.suffix }}</span
+          >
         </div>
       </div>
 
@@ -207,7 +203,9 @@ const progressPercent = computed(() => {
   font-weight: 800;
   color: #ffffff;
   font-variant-numeric: tabular-nums;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9), 0 0 2px rgba(0, 0, 0, 1);
+  text-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.9),
+    0 0 2px rgba(0, 0, 0, 1);
   line-height: 1.1;
 }
 
@@ -217,7 +215,9 @@ const progressPercent = computed(() => {
   border: 1px solid var(--counter-accent);
   padding: 14px 28px;
   border-radius: 8px;
-  box-shadow: 0 0 16px var(--counter-accent), inset 0 0 8px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 0 16px var(--counter-accent),
+    inset 0 0 8px rgba(0, 0, 0, 0.5);
 }
 
 .theme-neon .counter-prefix {

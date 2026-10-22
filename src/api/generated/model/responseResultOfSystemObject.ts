@@ -10,7 +10,7 @@
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfSystemObject {
-  message: string;
-  code: number;
-  data: unknown;
+  message: string
+  code: number
+  data: unknown
 }

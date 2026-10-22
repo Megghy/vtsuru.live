@@ -7,24 +7,11 @@ import type { VideoCollectCreateModel } from '@/api/api-models'
 import { DuplicateVideoPolicy } from '@/api/api-models'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { useMessage } from '@/shared/utils'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   show: boolean
@@ -149,16 +136,18 @@ function submit() {
     <DialogContent class="sm:max-w-xl max-h-[85vh] overflow-y-auto">
       <DialogHeader>
         <DialogTitle>{{ title }}</DialogTitle>
-        <DialogDescription class="text-xs">
-          配置视频征集的主题、开放时间、名额与投稿过滤规则
-        </DialogDescription>
+        <DialogDescription class="text-xs"> 配置视频征集的主题、开放时间、名额与投稿过滤规则 </DialogDescription>
       </DialogHeader>
 
       <div class="space-y-4 py-2 text-xs">
         <!-- 基础配置 -->
         <div class="space-y-1.5">
           <label class="font-semibold text-foreground">征集名称 <span class="text-destructive">*</span></label>
-          <Input v-model="model.name" placeholder="例如：三周年回顾视频征集" maxlength="30" />
+          <Input
+            v-model="model.name"
+            placeholder="例如：三周年回顾视频征集"
+            maxlength="30"
+          />
         </div>
 
         <div class="space-y-1.5">
@@ -175,30 +164,39 @@ function submit() {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="space-y-1.5">
             <label class="font-semibold text-foreground">开放时间</label>
-            <Input v-model="startDateStr" type="datetime-local" />
+            <Input
+              v-model="startDateStr"
+              type="datetime-local"
+            />
           </div>
           <div class="space-y-1.5">
             <label class="font-semibold text-foreground">截止时间</label>
-            <Input v-model="endDateStr" type="datetime-local" />
+            <Input
+              v-model="endDateStr"
+              type="datetime-local"
+            />
           </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="space-y-1.5">
             <label class="font-semibold text-foreground">最大征集视频数</label>
-            <Input v-model.number="model.maxVideoCount" type="number" min="1" max="10000" />
+            <Input
+              v-model.number="model.maxVideoCount"
+              type="number"
+              min="1"
+              max="10000"
+            />
           </div>
 
           <div class="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20">
             <div>
-              <div class="font-semibold text-foreground">
-                允许游客投稿
-              </div>
-              <div class="text-[10px] text-muted-foreground">
-                未绑定 B 站也可提交
-              </div>
+              <div class="font-semibold text-foreground">允许游客投稿</div>
+              <div class="text-[10px] text-muted-foreground">未绑定 B 站也可提交</div>
             </div>
-            <Switch :checked="model.allowUnregisteredUser" @update:checked="(val) => (model.allowUnregisteredUser = val)"
+            <Switch
+              :checked="model.allowUnregisteredUser"
+              @update:checked="(val) => (model.allowUnregisteredUser = val)"
             />
           </div>
         </div>
@@ -231,11 +229,21 @@ function submit() {
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-1">
                 <label class="text-[11px] text-muted-foreground">最短时长 (秒，0为不限)</label>
-                <Input size="xs" v-model.number="model.minVideoDuration" type="number" min="0" />
+                <Input
+                  size="xs"
+                  v-model.number="model.minVideoDuration"
+                  type="number"
+                  min="0"
+                />
               </div>
               <div class="space-y-1">
                 <label class="text-[11px] text-muted-foreground">最长时长 (秒，0为不限)</label>
-                <Input v-model.number="model.maxVideoDuration" type="number" min="0" size="xs" />
+                <Input
+                  v-model.number="model.maxVideoDuration"
+                  type="number"
+                  min="0"
+                  size="xs"
+                />
               </div>
             </div>
 
@@ -243,8 +251,19 @@ function submit() {
             <div class="space-y-1.5">
               <label class="text-[11px] text-muted-foreground">允许分区白名单 (留空表示不限制)</label>
               <div class="flex items-center gap-1.5">
-                <Input size="xs" v-model="partitionInput" placeholder="例如：单机游戏，回车添加" class="flex-1" @keyup.enter="addPartition" />
-                <Button size="xs" variant="outline" class="px-2" @click="addPartition">
+                <Input
+                  size="xs"
+                  v-model="partitionInput"
+                  placeholder="例如：单机游戏，回车添加"
+                  class="flex-1"
+                  @keyup.enter="addPartition"
+                />
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="px-2"
+                  @click="addPartition"
+                >
                   添加
                 </Button>
               </div>
@@ -277,33 +296,32 @@ function submit() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem :value="String(DuplicateVideoPolicy.MergeRecommendations)">
-                      合并推荐人
-                    </SelectItem>
-                    <SelectItem :value="String(DuplicateVideoPolicy.Reject)">
-                      直接拒绝
-                    </SelectItem>
+                    <SelectItem :value="String(DuplicateVideoPolicy.MergeRecommendations)"> 合并推荐人 </SelectItem>
+                    <SelectItem :value="String(DuplicateVideoPolicy.Reject)"> 直接拒绝 </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div class="space-y-1">
                 <label class="text-[11px] text-muted-foreground">每人最多推荐 (0为不限)</label>
-                <Input size="xs" v-model.number="model.maxVideoPerUser" type="number" min="0" />
+                <Input
+                  size="xs"
+                  v-model.number="model.maxVideoPerUser"
+                  type="number"
+                  min="0"
+                />
               </div>
             </div>
 
             <!-- 推荐理由必填 -->
             <div class="flex items-center justify-between p-2 rounded-md border border-border bg-muted/10">
               <div>
-                <div class="font-semibold text-foreground">
-                  推荐理由必填
-                </div>
-                <div class="text-[10px] text-muted-foreground">
-                  投稿时必须附带推荐看点说明
-                </div>
+                <div class="font-semibold text-foreground">推荐理由必填</div>
+                <div class="text-[10px] text-muted-foreground">投稿时必须附带推荐看点说明</div>
               </div>
-              <Switch :checked="model.requireDescription" @update:checked="(val) => (model.requireDescription = val)"
+              <Switch
+                :checked="model.requireDescription"
+                @update:checked="(val) => (model.requireDescription = val)"
               />
             </div>
           </div>
@@ -311,10 +329,19 @@ function submit() {
       </div>
 
       <DialogFooter>
-        <Button size="xs" variant="ghost" @click="close">
+        <Button
+          size="xs"
+          variant="ghost"
+          @click="close"
+        >
           取消
         </Button>
-        <Button size="xs" variant="brand" :loading="loading" @click="submit">
+        <Button
+          size="xs"
+          variant="brand"
+          :loading="loading"
+          @click="submit"
+        >
           保存
         </Button>
       </DialogFooter>

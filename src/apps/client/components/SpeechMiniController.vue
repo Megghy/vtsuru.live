@@ -3,9 +3,9 @@ import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled 
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { useSpeechService } from '@/store/useSpeechService'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useSpeechService } from '@/store/useSpeechService'
 
 const router = useRouter()
 const route = useRoute()
@@ -30,16 +30,19 @@ function goToPage() {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button size="icon" variant="ghost" class="h-6 w-6 p-0" @click="goToPage">
+              <Button
+                size="icon"
+                variant="ghost"
+                class="h-6 w-6 p-0"
+                @click="goToPage"
+              >
                 <component
                   :is="Mic24Filled"
                   class="w-4 h-4 text-emerald-500"
                 />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
-              前往读弹幕页面
-            </TooltipContent>
+            <TooltipContent> 前往读弹幕页面 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
@@ -48,7 +51,7 @@ function goToPage() {
           :class="{
             'text-emerald-500': speechState.isSpeaking,
             'text-amber-500': isPaused,
-            'text-[var(--foreground)]': !speechState.isSpeaking && !isPaused
+            'text-[var(--foreground)]': !speechState.isSpeaking && !isPaused,
           }"
         >
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
@@ -62,19 +65,35 @@ function goToPage() {
         </span>
       </div>
       <div class="flex items-center gap-1 shrink-0">
-        <Button size="icon" :variant="isPaused ? 'default' : 'outline'" class="h-6 w-6 p-0" @click="speechService.togglePause()">
+        <Button
+          size="icon"
+          :variant="isPaused ? 'default' : 'outline'"
+          class="h-6 w-6 p-0"
+          @click="speechService.togglePause()"
+        >
           <component
             :is="isPaused ? Play20Filled : Pause20Filled"
             class="w-3.5 h-3.5"
           />
         </Button>
-        <Button size="icon" variant="outline" class="h-6 w-6 p-0" :disabled="!speechState.isSpeaking" @click="speechService.skipCurrent()">
+        <Button
+          size="icon"
+          variant="outline"
+          class="h-6 w-6 p-0"
+          :disabled="!speechState.isSpeaking"
+          @click="speechService.skipCurrent()"
+        >
           <component
             :is="Next20Filled"
             class="w-3.5 h-3.5"
           />
         </Button>
-        <Button size="icon" variant="destructive" class="h-6 w-6 p-0" @click="speechService.stopSpeech()">
+        <Button
+          size="icon"
+          variant="destructive"
+          class="h-6 w-6 p-0"
+          @click="speechService.stopSpeech()"
+        >
           <component
             :is="MicOff24Filled"
             class="w-3.5 h-3.5"

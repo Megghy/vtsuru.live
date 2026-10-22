@@ -35,10 +35,25 @@ const router = useRouter()
 </script>
 
 <template>
-  <Button v-if="label && internalPath" :variant="secondary ? 'outline' : 'default'" size="xs" class="font-medium" @click="router.push(internalPath)">
+  <Button
+    v-if="label && internalPath"
+    :variant="secondary ? 'outline' : 'default'"
+    size="xs"
+    class="font-medium"
+    @click="router.push(internalPath)"
+  >
     {{ label }}
   </Button>
-  <Button v-else-if="label && url" as="a" :variant="secondary ? 'outline' : 'default'" size="xs" class="font-medium inline-flex items-center justify-center text-inherit no-underline" :href="url" target="_blank" rel="noopener noreferrer">
+  <Button
+    v-else-if="label && url"
+    as="a"
+    :variant="secondary ? 'outline' : 'default'"
+    size="xs"
+    class="font-medium inline-flex items-center justify-center text-inherit no-underline"
+    :href="url"
+    target="_blank"
+    rel="noopener noreferrer"
+  >
     {{ label }}
   </Button>
 </template>

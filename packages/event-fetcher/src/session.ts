@@ -215,4 +215,3 @@ function bindHub(connection: EventHub, runtime: FetcherRuntime) {
     }),
   )
 }
-

@@ -115,17 +115,13 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
       variant="destructive"
       class="text-xs py-2 m-2"
     >
-      <AlertDescription>
-        B站信息加载失败，请稍后刷新页面重试
-      </AlertDescription>
+      <AlertDescription> B站信息加载失败，请稍后刷新页面重试 </AlertDescription>
     </Alert>
     <Alert
       v-else-if="displayStatus === 'empty' || !hasContent"
       class="text-xs py-2 m-2"
     >
-      <AlertDescription>
-        B站信息暂不可用
-      </AlertDescription>
+      <AlertDescription> B站信息暂不可用 </AlertDescription>
     </Alert>
     <div
       v-else
@@ -166,12 +162,38 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
               v-if="cfg.showButtons"
               class="flex items-center gap-2 shrink-0 compact-actions"
             >
-              <Button v-if="model.spaceUrl" as="a" variant="outline" size="xs" class="font-medium" target="_blank" rel="noopener noreferrer" :href="model.spaceUrl" aria-label="打开B站主页（新窗口打开）">
-                <component :is="HomeOutline" class="size-3.5 mr-1" />
+              <Button
+                v-if="model.spaceUrl"
+                as="a"
+                variant="outline"
+                size="xs"
+                class="font-medium"
+                target="_blank"
+                rel="noopener noreferrer"
+                :href="model.spaceUrl"
+                aria-label="打开B站主页（新窗口打开）"
+              >
+                <component
+                  :is="HomeOutline"
+                  class="size-3.5 mr-1"
+                />
                 主页
               </Button>
-              <Button v-if="cfg.showLiveRoom && model.liveRoomUrl" as="a" variant="outline" size="xs" class="font-medium" target="_blank" rel="noopener noreferrer" :href="model.liveRoomUrl" aria-label="打开直播间（新窗口打开）">
-                <component :is="PlayCircleOutline" class="size-3.5 mr-1" />
+              <Button
+                v-if="cfg.showLiveRoom && model.liveRoomUrl"
+                as="a"
+                variant="outline"
+                size="xs"
+                class="font-medium"
+                target="_blank"
+                rel="noopener noreferrer"
+                :href="model.liveRoomUrl"
+                aria-label="打开直播间（新窗口打开）"
+              >
+                <component
+                  :is="PlayCircleOutline"
+                  class="size-3.5 mr-1"
+                />
                 直播间
               </Button>
             </div>
@@ -189,21 +211,30 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
             class="bili-stats compact mt-3 pt-3 border-t border-border flex items-center justify-around"
           >
             <div class="stat compact flex items-center gap-2">
-              <component :is="PeopleOutline" class="size-3.5 text-muted-foreground" />
+              <component
+                :is="PeopleOutline"
+                class="size-3.5 text-muted-foreground"
+              />
               <div class="stat-meta flex flex-col">
                 <div class="stat-v text-xs font-bold">{{ model.fans ?? '--' }}</div>
                 <div class="stat-k text-[11px] text-muted-foreground">粉丝</div>
               </div>
             </div>
             <div class="stat compact flex items-center gap-2">
-              <component :is="HomeOutline" class="size-3.5 text-muted-foreground" />
+              <component
+                :is="HomeOutline"
+                class="size-3.5 text-muted-foreground"
+              />
               <div class="stat-meta flex flex-col">
                 <div class="stat-v text-xs font-bold">{{ model.following ?? '--' }}</div>
                 <div class="stat-k text-[11px] text-muted-foreground">关注</div>
               </div>
             </div>
             <div class="stat compact flex items-center gap-2">
-              <component :is="VideocamOutline" class="size-3.5 text-muted-foreground" />
+              <component
+                :is="VideocamOutline"
+                class="size-3.5 text-muted-foreground"
+              />
               <div class="stat-meta flex flex-col">
                 <div class="stat-v text-xs font-bold">{{ model.videoCount ?? '--' }}</div>
                 <div class="stat-k text-[11px] text-muted-foreground">视频</div>
@@ -256,21 +287,30 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
           class="bili-stats grid grid-cols-3 py-2 border-y border-border"
         >
           <div class="stat flex flex-col items-center gap-1 p-2 text-center">
-            <component :is="PeopleOutline" class="size-4 text-muted-foreground" />
+            <component
+              :is="PeopleOutline"
+              class="size-4 text-muted-foreground"
+            />
             <div class="stat-meta flex flex-col-reverse items-center">
               <div class="stat-k text-[11px] text-muted-foreground">粉丝</div>
               <div class="stat-v text-sm font-bold">{{ model.fans ?? '--' }}</div>
             </div>
           </div>
           <div class="stat flex flex-col items-center gap-1 p-2 text-center">
-            <component :is="HomeOutline" class="size-4 text-muted-foreground" />
+            <component
+              :is="HomeOutline"
+              class="size-4 text-muted-foreground"
+            />
             <div class="stat-meta flex flex-col-reverse items-center">
               <div class="stat-k text-[11px] text-muted-foreground">关注</div>
               <div class="stat-v text-sm font-bold">{{ model.following ?? '--' }}</div>
             </div>
           </div>
           <div class="stat flex flex-col items-center gap-1 p-2 text-center">
-            <component :is="VideocamOutline" class="size-4 text-muted-foreground" />
+            <component
+              :is="VideocamOutline"
+              class="size-4 text-muted-foreground"
+            />
             <div class="stat-meta flex flex-col-reverse items-center">
               <div class="stat-k text-[11px] text-muted-foreground">视频</div>
               <div class="stat-v text-sm font-bold">{{ model.videoCount ?? '--' }}</div>
@@ -282,12 +322,36 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
           v-if="cfg.showButtons"
           class="bili-actions p-4 grid grid-cols-2 gap-3"
         >
-          <Button v-if="model.spaceUrl" as="a" variant="outline" class="font-semibold" target="_blank" rel="noopener noreferrer" :href="model.spaceUrl" aria-label="打开B站主页（新窗口打开）">
-            <component :is="HomeOutline" class="size-3.5 mr-1.5" />
+          <Button
+            v-if="model.spaceUrl"
+            as="a"
+            variant="outline"
+            class="font-semibold"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.spaceUrl"
+            aria-label="打开B站主页（新窗口打开）"
+          >
+            <component
+              :is="HomeOutline"
+              class="size-3.5 mr-1.5"
+            />
             主页
           </Button>
-          <Button v-if="cfg.showLiveRoom && model.liveRoomUrl" as="a" variant="outline" class="font-semibold" target="_blank" rel="noopener noreferrer" :href="model.liveRoomUrl" aria-label="打开直播间（新窗口打开）">
-            <component :is="PlayCircleOutline" class="size-3.5 mr-1.5" />
+          <Button
+            v-if="cfg.showLiveRoom && model.liveRoomUrl"
+            as="a"
+            variant="outline"
+            class="font-semibold"
+            target="_blank"
+            rel="noopener noreferrer"
+            :href="model.liveRoomUrl"
+            aria-label="打开直播间（新窗口打开）"
+          >
+            <component
+              :is="PlayCircleOutline"
+              class="size-3.5 mr-1.5"
+            />
             直播间
           </Button>
         </div>

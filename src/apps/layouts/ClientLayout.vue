@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { provideThemeScope } from '@/shared/config/theme/scope'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import {
   Board24Filled,
@@ -32,6 +31,7 @@ import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { BASE_URL } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -229,10 +229,20 @@ onMounted(() => {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Input v-model="token" type="password" placeholder="请输入Token" class="h-9" @keyup.enter="login" />
+            <Input
+              v-model="token"
+              type="password"
+              placeholder="请输入Token"
+              class="h-9"
+              @keyup.enter="login"
+            />
           </div>
 
-          <Button class="w-full h-9 font-medium" :disabled="isLoadingAccount" @click="login">
+          <Button
+            class="w-full h-9 font-medium"
+            :disabled="isLoadingAccount"
+            @click="login"
+          >
             登陆
           </Button>
         </CardContent>
@@ -334,11 +344,15 @@ onMounted(() => {
                   :class="{ 'justify-center !px-0': siderCollapsed }"
                   @click="liveWindowsOpen = !liveWindowsOpen"
                 >
-                  <component :is="item.icon" class="size-4 shrink-0" />
+                  <component
+                    :is="item.icon"
+                    class="size-4 shrink-0"
+                  />
                   <span
                     v-if="!siderCollapsed"
                     class="flex-1 text-left"
-                  >{{ item.label }}</span>
+                    >{{ item.label }}</span
+                  >
                   <ChevronDown16Regular
                     v-if="!siderCollapsed"
                     class="size-3 transition-transform"
@@ -355,7 +369,11 @@ onMounted(() => {
                     :key="sub.key"
                     :to="{ name: sub.name }"
                     class="flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition"
-                    :class="activeMenuKey === sub.key ? 'bg-primary/10 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'"
+                    :class="
+                      activeMenuKey === sub.key
+                        ? 'bg-primary/10 text-primary font-semibold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/40'
+                    "
                   >
                     <span>{{ sub.label }}</span>
                     <span
@@ -372,12 +390,17 @@ onMounted(() => {
                 :to="{ name: item.name }"
                 class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition"
                 :class="[
-                  activeMenuKey === item.key ? 'bg-primary/10 text-primary font-semibold' : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+                  activeMenuKey === item.key
+                    ? 'bg-primary/10 text-primary font-semibold'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
                   siderCollapsed && 'justify-center !px-0',
                 ]"
                 :title="siderCollapsed ? item.label : undefined"
               >
-                <component :is="item.icon" class="size-4 shrink-0" />
+                <component
+                  :is="item.icon"
+                  class="size-4 shrink-0"
+                />
                 <span v-if="!siderCollapsed">{{ item.label }}</span>
               </RouterLink>
             </template>
@@ -390,7 +413,9 @@ onMounted(() => {
           >
             <Popover>
               <PopoverTrigger as-child>
-                <div class="status-row status-row--hoverable flex items-center justify-between text-xs cursor-pointer select-none">
+                <div
+                  class="status-row status-row--hoverable flex items-center justify-between text-xs cursor-pointer select-none"
+                >
                   <div class="status-row-label flex items-center gap-1.5 min-w-0">
                     <PlugConnected24Filled
                       class="size-3.5 shrink-0"
@@ -401,13 +426,18 @@ onMounted(() => {
                   <Badge
                     variant="outline"
                     class="text-[10px] h-4 px-1.5"
-                    :class="rpcServer.connectionCount > 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''"
+                    :class="
+                      rpcServer.connectionCount > 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''
+                    "
                   >
                     {{ rpcServer.connectionCount }} 连接
                   </Badge>
                 </div>
               </PopoverTrigger>
-              <PopoverContent side="right" class="w-64 p-3 text-xs space-y-2">
+              <PopoverContent
+                side="right"
+                class="w-64 p-3 text-xs space-y-2"
+              >
                 <div class="font-semibold text-foreground text-xs">外部接入连接</div>
                 <Empty
                   v-if="rpcServer.connectionCount === 0"
@@ -430,9 +460,7 @@ onMounted(() => {
                       {{ conn.subscribed ? '已订阅' : '未订阅' }}
                     </Badge>
                   </div>
-                  <div class="text-[10px] text-muted-foreground">
-                    接入于 {{ formatSince(conn.connectedAt) }}
-                  </div>
+                  <div class="text-[10px] text-muted-foreground">接入于 {{ formatSince(conn.connectedAt) }}</div>
                 </div>
               </PopoverContent>
             </Popover>
@@ -447,19 +475,37 @@ onMounted(() => {
               <div class="status-row-label flex items-center gap-1.5 min-w-0">
                 <Cookies24Filled
                   class="size-3.5 shrink-0"
-                  :class="cookieStatusType === 'success' ? 'text-emerald-500' : cookieStatusType === 'error' ? 'text-destructive' : 'text-amber-500'"
+                  :class="
+                    cookieStatusType === 'success'
+                      ? 'text-emerald-500'
+                      : cookieStatusType === 'error'
+                        ? 'text-destructive'
+                        : 'text-amber-500'
+                  "
                 />
                 <span class="font-medium text-foreground text-[11px]">B站 Cookie</span>
               </div>
               <Badge
                 variant="outline"
                 class="text-[10px] h-4 px-1.5"
-                :class="cookieStatusType === 'success' ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : cookieStatusType === 'error' ? 'border-destructive/40 text-destructive bg-destructive/10' : 'border-amber-500/40 text-amber-600 bg-amber-500/10'"
+                :class="
+                  cookieStatusType === 'success'
+                    ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                    : cookieStatusType === 'error'
+                      ? 'border-destructive/40 text-destructive bg-destructive/10'
+                      : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
+                "
               >
                 {{ cookieStatusText }}
               </Badge>
             </div>
-            <Button v-if="cookieStatusType !== 'success'" size="xs" variant="outline" class="w-full h-6 text-[10px]" @click="goCookieManagement">
+            <Button
+              v-if="cookieStatusType !== 'success'"
+              size="xs"
+              variant="outline"
+              class="w-full h-6 text-[10px]"
+              @click="goCookieManagement"
+            >
               前往处理
             </Button>
           </div>
@@ -472,12 +518,16 @@ onMounted(() => {
           <RouterView v-slot="{ Component, route: viewRoute }">
             <KeepAlive>
               <div
-                :class="viewRoute.meta.pageContainer !== 'none' ? [
-                  'client-page-inner',
-                  viewRoute.meta.pageWidth === 'md' && 'client-page-inner--md',
-                  viewRoute.meta.pageWidth === 'xl' && 'client-page-inner--xl',
-                  viewRoute.meta.pageWidth === 'full' && 'client-page-inner--full',
-                ] : undefined"
+                :class="
+                  viewRoute.meta.pageContainer !== 'none'
+                    ? [
+                        'client-page-inner',
+                        viewRoute.meta.pageWidth === 'md' && 'client-page-inner--md',
+                        viewRoute.meta.pageWidth === 'xl' && 'client-page-inner--xl',
+                        viewRoute.meta.pageWidth === 'full' && 'client-page-inner--full',
+                      ]
+                    : undefined
+                "
               >
                 <component
                   :is="Component"

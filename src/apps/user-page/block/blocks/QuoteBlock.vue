@@ -47,7 +47,10 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
     :content-style="{ padding: 0 }"
   >
     <div class="quote-bg-icon">
-      <component :is="ChatbubbleEllipsesOutline" class="size-20" />
+      <component
+        :is="ChatbubbleEllipsesOutline"
+        class="size-20"
+      />
     </div>
     <div
       class="quote"

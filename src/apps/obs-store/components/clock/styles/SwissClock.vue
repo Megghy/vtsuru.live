@@ -65,17 +65,20 @@ onMounted(() => {
           <span
             v-if="props.state.showSeconds"
             class="swiss-sec"
-          >{{ props.clockData.seconds }}</span>
+            >{{ props.clockData.seconds }}</span
+          >
         </template>
         <template v-else-if="props.state.mode === 'countdown'">
           <span
             v-if="props.countdownData.isFinished"
             class="swiss-digits finished"
-          >{{ props.state.timerEndText || 'LIVE NOW' }}</span>
+            >{{ props.state.timerEndText || 'LIVE NOW' }}</span
+          >
           <span
             v-else
             class="swiss-digits"
-          >{{ props.countdownData.displayTime }}</span>
+            >{{ props.countdownData.displayTime }}</span
+          >
         </template>
         <template v-else-if="props.state.mode === 'stopwatch'">
           <span class="swiss-digits">{{ props.stopwatchData.displayTime }}</span>
@@ -106,7 +109,12 @@ onMounted(() => {
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 4px;
   padding: 10px 16px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   user-select: none;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
