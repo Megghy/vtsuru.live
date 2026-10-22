@@ -7,12 +7,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 
-export interface TransferOption {
-  label: string
-  value: string
-  disabled?: boolean
-  [key: string]: any
-}
+import type { TransferOption } from './types'
 
 const props = withDefaults(
   defineProps<{
