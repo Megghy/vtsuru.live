@@ -1,125 +1,182 @@
 <script setup lang="ts">
-import { FlashCheckmark16Filled, Info24Filled } from '@vicons/fluent'
-import { NAlert, NButton, NDivider, NIcon, NTag, NText, NTooltip } from 'naive-ui'
+import {
+  CheckmarkCircle24Filled,
+  FlashCheckmark16Filled,
+  Info24Filled,
+  PlugDisconnected24Regular,
+  Warning24Filled,
+} from '@vicons/fluent'
+import { AlertCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { EventFetcherType } from '@/api/api-models'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const accountInfo = useAccount()
-const state = accountInfo.value?.eventFetcherState
+const router = useRouter()
+const state = computed(() => accountInfo.value?.eventFetcherState)
 
 const eventFetcherVersionName = computed(() => {
-  if (state?.type == EventFetcherType.OBS) {
+  const current = state.value
+  if (current?.type === EventFetcherType.OBS) {
     return 'OBS/网页端'
-  } else if (state?.type == EventFetcherType.Application) {
+  } else if (current?.type === EventFetcherType.Application) {
     return '控制台应用'
-  } else if (state?.type == EventFetcherType.Server) {
+  } else if (current?.type === EventFetcherType.Server) {
     return '本站监听 (已删除)'
-  } else if (state?.type == EventFetcherType.Tauri) {
+  } else if (current?.type === EventFetcherType.Tauri) {
     return 'Tauri 应用'
   } else {
-    return state?.version ?? '未知'
+    return current?.version ?? '未知'
   }
 })
 
-const status = computed(() => {
-  if (state.online == true) {
-    if (state.status == undefined || state.status == null) {
-      return 'warning'
-    } else if (Object.keys(state.status ?? {}).length > 0) {
-      return 'warning'
-    } else {
+const status = computed<'success' | 'warning' | 'offline' | 'not-bound'>(() => {
+  if (!accountInfo.value?.isBiliVerified) {
+    return 'not-bound'
+  }
+  const current = state.value
+  if (current?.online === true) {
+    if (!current.status || Object.keys(current.status).length === 0) {
       return 'success'
     }
-  } else {
-    return 'info'
+    return 'warning'
+  }
+  return 'offline'
+})
+
+const statusIcon = computed(() => {
+  switch (status.value) {
+    case 'success':
+      return CheckmarkCircle24Filled
+    case 'warning':
+      return Warning24Filled
+    case 'not-bound':
+      return AlertCircle
+    default:
+      return PlugDisconnected24Regular
   }
 })
+
+const statusText = computed(() => {
+  if (status.value === 'not-bound') {
+    return '需要先绑定 Bilibili 账号'
+  }
+  if (status.value === 'success') {
+    return accountInfo.value?.isServerFetcherOnline ? '本站托管监听服务' : '运行中'
+  }
+  if (status.value === 'warning') {
+    return state.value?.status ? `异常: ${Object.values(state.value.status).join('; ')}` : '版本过期'
+  }
+  return '未连接'
+})
+
+const todayReceive = computed(() => state.value?.todayReceive ?? 0)
+
+function goBindBili() {
+  void router.push({ name: 'manage-index', query: { tab: 'info' } })
+}
 </script>
 
 <template>
-  <NAlert
-    v-if="status"
-    :type="status"
+  <div
+    class="relative rounded-[10px] border border-border bg-card p-3 sm:px-3.5 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 transition-all duration-200"
+    :class="{
+      'border-amber-500/30 bg-amber-500/5': status === 'not-bound' || status === 'offline',
+    }"
   >
-    <template #header>
-      EVENT-FETCHER 状态
-      <NTooltip>
-        <template #trigger>
-          <NIcon :component="Info24Filled" />
-        </template>
-        这是一个可以持续监听直播间内的 Superchat 和上舰事件并上传到本站进行记录的 .Net 程序
-        <br />
-        事件上传到本站后允许按照自定义范围进行查询, 并导出为 CSV 之类的表格
-        <br />
-        <NButton
-          type="info"
-          size="small"
-          tag="a"
-          href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-          target="_blank"
-        >
-          关于 EVENT-FETCHER
-        </NButton>
-      </NTooltip>
-    </template>
-    <template v-if="status !== 'info' && !accountInfo?.isServerFetcherOnline">
-      <NTooltip>
-        <template #trigger>
-          <NTag size="small">
-            <NIcon :component="FlashCheckmark16Filled" />
-            {{ eventFetcherVersionName }}
-          </NTag>
-        </template>
-        你所使用的版本
-      </NTooltip>
-      <NDivider vertical />
-    </template>
-    <NTag :type="status">
-      <template v-if="state?.online === true && (state?.status === null || state?.status === undefined)">
-        此版本已过期, 请更新
-        <NTooltip trigger="click">
-          <template #trigger>
-            <NButton
-              type="warning"
-              size="tiny"
-            >
-              关于
-            </NButton>
-          </template>
-          Node.js 版已不再更新, 如果是 Docker 的话请切换至 ghcr.io/megghy/vtsurueventfetcher.net, 其他环境请下载
-          https://github.com/Megghy/VtsuruEventFetcher.Net/releases/latest
-        </NTooltip>
-      </template>
-      <template v-else>
-        <template v-if="status === 'success'">
-          <NText>
-            {{ accountInfo?.isServerFetcherOnline ? '正在由本站提供监听服务' : '运行中' }}
-          </NText>
-          | 今日已接收
-          <NText strong>
-            {{ state.todayReceive }}
-          </NText>
-          条
-        </template>
-        <template v-else-if="status === 'warning'">
-          <template v-if="state.status"> 异常: {{ Object.values(state.status).join('; ') }} </template>
-        </template>
-        <template v-else-if="status === 'info'"> 未连接 </template>
-      </template>
-    </NTag>
-    <template v-if="!state.online">
-      <NDivider vertical />
-      <NButton
-        type="info"
-        size="tiny"
-        tag="a"
+    <div class="flex-1 min-w-0 flex items-center gap-2.5">
+      <component
+        :is="statusIcon"
+        class="size-6 shrink-0 transition-all duration-200"
+        :class="{
+          'text-emerald-500': status === 'success',
+          'text-amber-500': status === 'warning' || status === 'not-bound',
+          'text-muted-foreground': status === 'offline',
+        }"
+      />
+      <div class="flex-1 min-w-0 flex flex-col gap-0.75">
+        <div class="flex items-center gap-1.25 text-xs font-semibold text-foreground leading-tight">
+          <span>Event Fetcher</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center bg-transparent border-0 p-0 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <component
+                    :is="Info24Filled"
+                    class="size-3.5"
+                  />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent class="max-w-xs text-xs leading-relaxed space-y-1.5 p-3">
+                <p>持续监听直播间内的 Superchat 和上舰事件并上传到本站记录。</p>
+                <p>支持按自定义范围查询并导出表格。</p>
+                <a
+                  href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+                  target="_blank"
+                  class="text-primary underline font-medium inline-block mt-1"
+                >
+                  关于 Event Fetcher &rarr;
+                </a>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground leading-snug">
+          {{ statusText }}
+          <TooltipProvider v-if="status === 'success' && !accountInfo?.isServerFetcherOnline">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span class="inline-flex items-center gap-0.75 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] font-medium cursor-help hover:bg-accent transition-all">
+                  <component
+                    :is="FlashCheckmark16Filled"
+                    class="size-3"
+                  />
+                  {{ eventFetcherVersionName }}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">
+                当前连接版本
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="status === 'success'"
+      class="flex flex-col items-start sm:items-end gap-0.5 shrink-0 pl-8.5 sm:px-2"
+    >
+      <div class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">今日接收</div>
+      <div class="text-lg font-bold text-emerald-500 leading-none tabular-nums">{{ todayReceive }}</div>
+    </div>
+
+    <div class="flex gap-2 shrink-0 pl-8.5 sm:pl-0">
+      <Button
+        v-if="status === 'not-bound'"
+        variant="outline"
+        size="xs"
+        @click="goBindBili"
+      >
+        前往绑定
+      </Button>
+      <Button
+        v-else-if="status === 'offline'"
+        as="a"
         href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
         target="_blank"
+        variant="outline"
+        size="xs"
       >
-        关于 EVENT-FETCHER
-      </NButton>
-    </template>
-  </NAlert>
+        查看文档
+      </Button>
+    </div>
+  </div>
 </template>

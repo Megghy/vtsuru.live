@@ -10,7 +10,7 @@
   --schedule-toolbar-action-bg: #d85f88;
   --schedule-toolbar-action-fg: #fff;
   --schedule-toolbar-label: 'WEEKLY PLANNER';
-  --schedule-toolbar-radius: calc(var(--vtsuru-page-radius, 8px) + 8px);
+  --schedule-toolbar-radius: calc(var(--radius) + 8px);
   --schedule-toolbar-shadow: 0 12px 28px -20px rgb(90 49 64 / 48%);
 
   container: kawaii / inline-size;
@@ -62,9 +62,9 @@
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cfilter id='paper'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.66 .82' numOctaves='3' seed='19' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='table' tableValues='0 .18'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paper)' opacity='.42'/%3E%3C/svg%3E");
   background-position: center;
   background-size: cover;
-  border: var(--vtsuru-page-border);
-  border-radius: min(var(--vtsuru-page-radius, 8px), 10px);
-  box-shadow: var(--vtsuru-page-shadow);
+  border: var(--ui-border-width) var(--ui-border-style) var(--border);
+  border-radius: min(var(--radius), 10px);
+  box-shadow: var(--ui-shadow);
 }
 
 .kawaii-board.has-background::before {

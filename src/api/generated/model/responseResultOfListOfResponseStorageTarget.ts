@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseStorageTarget } from './responseStorageTarget';
+import type { ResponseStorageTarget } from './responseStorageTarget'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseStorageTarget {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseStorageTarget[] | null;
+  data: ResponseStorageTarget[] | null
 }

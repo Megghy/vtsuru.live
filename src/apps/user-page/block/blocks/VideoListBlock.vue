@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { PlayCircleOutline, RefreshOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NFlex, NSpin, NIcon } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ResponseUserIndexModel, UserInfo, VideoCollectVideo } from '@/api/api-models'
 import { getApiUserIndexGet } from '@/api/generated/user-index/user-index'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -62,10 +64,7 @@ const userIndexQuery = useUserPageRuntimeQuery<ResponseUserIndexModel>({
   loader: async (signal) => {
     const userName = props.userInfo?.name
     if (!userName) throw new Error('missing user name')
-    const response = (await getApiUserIndexGet(
-      { id: userName },
-      { signal },
-    )) as unknown as {
+    const response = (await getApiUserIndexGet({ id: userName }, { signal })) as unknown as {
       code: number
       message?: string
       data: ResponseUserIndexModel
@@ -144,190 +143,101 @@ const containerStyle = computed(() => {
       {{ cfg.title || '视频' }}
     </template>
 
-    <div class="video-content">
-      <NSpin
-        :show="isLoading"
-        size="small"
+    <div class="@container">
+      <div
+        v-if="isLoading"
+        class="py-6 flex justify-center"
       >
-        <NAlert
-          v-if="error"
-          type="error"
-          :show-icon="true"
-          class="remote-error"
-        >
-          <div class="remote-error-content">
-            <span>{{ error }}</span>
-            <NButton
-              size="small"
-              secondary
-              @click="loadUserIndex(true)"
-            >
-              <template #icon>
-                <NIcon><RefreshOutline /></NIcon>
-              </template>
-              重试
-            </NButton>
-          </div>
-        </NAlert>
+        <Spin />
+      </div>
 
-        <template v-else-if="cfg.source === 'userIndex'">
-          <NAlert
-            v-if="videos.length === 0 && !isLoading"
-            type="info"
-            :show-icon="false"
+      <Alert
+        v-else-if="error"
+        variant="destructive"
+        class="text-xs py-2 mb-2.5"
+      >
+        <AlertDescription class="flex items-center justify-between w-full">
+          <span>{{ error }}</span>
+          <Button
+            variant="outline"
+            size="xs"
+            class="gap-1"
+            @click="loadUserIndex(true)"
           >
-            暂无视频
-          </NAlert>
-          <div
-            v-else
-            class="video-list"
-            :class="cfg.layout"
-            :style="containerStyle"
-          >
-            <SimpleVideoCard
-              v-for="video in videos"
-              :key="video.id"
-              :video="video"
-              :width="cfg.layout === 'row' ? 260 : undefined"
+            <component
+              :is="RefreshOutline"
+              class="size-3"
             />
-          </div>
-        </template>
+            重试
+          </Button>
+        </AlertDescription>
+      </Alert>
 
-        <template v-else>
-          <NAlert
-            v-if="manualItems.length === 0"
-            type="info"
-            :show-icon="false"
+      <template v-else-if="cfg.source === 'userIndex'">
+        <Alert
+          v-if="videos.length === 0"
+          class="text-xs py-2"
+        >
+          <AlertDescription> 暂无视频 </AlertDescription>
+        </Alert>
+        <div
+          v-else
+          class="gap-3"
+          :class="
+            cfg.layout === 'row'
+              ? 'flex pb-1 overflow-x-auto'
+              : 'grid grid-cols-[repeat(var(--video-cols),minmax(0,1fr))] @max-[520px]:grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))]'
+          "
+          :style="containerStyle"
+        >
+          <SimpleVideoCard
+            v-for="video in videos"
+            :key="video.id"
+            :video="video"
+            :width="cfg.layout === 'row' ? 260 : undefined"
+          />
+        </div>
+      </template>
+
+      <template v-else>
+        <Alert
+          v-if="manualItems.length === 0"
+          class="text-xs py-2"
+        >
+          <AlertDescription> 未配置视频链接 </AlertDescription>
+        </Alert>
+        <div
+          v-else
+          class="flex flex-col gap-2"
+        >
+          <a
+            v-for="(it, idx) in manualItems"
+            :key="idx"
+            :href="it.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex gap-3 items-center px-3.5 py-3 border border-border rounded-[var(--radius)] no-underline bg-transparent transition-all duration-200 hover:bg-muted hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-x-0"
+            :aria-label="`${it.title || '打开视频'}（新窗口打开）`"
           >
-            未配置视频链接
-          </NAlert>
-          <NFlex
-            v-else
-            vertical
-            style="gap: 8px"
-          >
-            <a
-              v-for="(it, idx) in manualItems"
-              :key="idx"
-              :href="it.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="manual-item"
-              :aria-label="`${it.title || '打开视频'}（新窗口打开）`"
-            >
-              <div class="manual-icon">
-                <NIcon><PlayCircleOutline /></NIcon>
-              </div>
-              <div class="manual-content">
-                <strong class="manual-title">
-                  {{ it.title || it.url }}
-                </strong>
-                <span class="manual-url">
-                  {{ it.url }}
-                </span>
-              </div>
-            </a>
-          </NFlex>
-        </template>
-      </NSpin>
+            <div class="size-9 flex-center rounded-[var(--radius)] bg-muted text-muted-foreground shrink-0">
+              <component
+                :is="PlayCircleOutline"
+                class="size-5"
+              />
+            </div>
+            <div class="flex-1 min-w-0">
+              <strong class="block text-sm leading-snug text-foreground">
+                {{ it.title || it.url }}
+              </strong>
+              <span class="block text-xs mt-0.5 truncate text-muted-foreground">
+                {{ it.url }}
+              </span>
+            </div>
+          </a>
+        </div>
+      </template>
     </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.video-content {
-  container-type: inline-size;
-}
-.video-list {
-  gap: 12px;
-}
-.video-list.grid {
-  display: grid;
-  grid-template-columns: repeat(var(--video-cols), minmax(0, 1fr));
-}
-.video-list.row {
-  display: flex;
-  padding-bottom: 4px;
-  overflow-x: auto;
-}
-.remote-error {
-  margin-bottom: 10px;
-}
-.remote-error-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.manual-item {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px 14px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
-  border-radius: var(--vtsuru-page-radius);
-  text-decoration: none;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-  background: transparent;
-}
-.manual-item:hover {
-  background: var(--vtsuru-bg-muted);
-  border-color: var(--vtsuru-border);
-  transform: translateX(4px);
-}
-.manual-icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg-muted);
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.manual-content {
-  flex: 1;
-  min-width: 0;
-}
-.manual-title {
-  display: block;
-  font-size: 14px;
-  line-height: 1.4;
-  color: var(--vtsuru-fg);
-}
-.manual-url {
-  display: block;
-  font-size: 12px;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--vtsuru-fg-muted);
-}
-.manual-item:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
-  outline-offset: 2px;
-}
-@container (max-width: 520px) {
-  .video-list.grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  }
-  .remote-error-content {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .manual-item {
-    transition: none;
-  }
-  .manual-item:hover {
-    transform: none;
-  }
-}
-</style>
+

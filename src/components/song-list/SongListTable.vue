@@ -1,28 +1,7 @@
 <script setup lang="ts">
-import {
-  ArrowDown24Filled,
-  ArrowUp24Filled,
-  Delete24Filled,
-  NotepadEdit20Filled,
-  Play24Filled,
-} from '@vicons/fluent'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NButton,
-  NCard,
-  NDataTable,
-  NFlex,
-  NIcon,
-  NInput,
-  NPopconfirm,
-  NSelect,
-  NSwitch,
-  NTag,
-  NText,
-  NTooltip,
-} from 'naive-ui'
+import { ArrowDown24Filled, ArrowUp24Filled, Delete24Filled, NotepadEdit20Filled, Play24Filled } from '@vicons/fluent'
 import type { VNodeChild } from 'vue'
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type { SongRequestInfo, SongsInfo } from '@/api/api-models'
 import { SongFrom, SongRequestStatus } from '@/api/api-models'
@@ -31,6 +10,16 @@ import SongEditModal from '@/components/song-list/SongEditModal.vue'
 import { useSongList } from '@/components/song-list/useSongList'
 import SongPlayer from '@/components/SongPlayer.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { GetPlayButton } from '@/shared/utils'
 
 const props = defineProps<{
@@ -110,236 +99,45 @@ function getGuardColor(level: number): string {
   return level === 1 ? 'rgb(122, 4, 35)' : level === 2 ? 'rgb(157, 155, 255)' : 'rgb(104, 136, 241)'
 }
 
-function actionWidth() {
-  let w = props.isSelf ? 160 : 40 // 自管理含上移/下移/编辑/删除
-  if (showListenButton.value && hasAudio.value) w += 40
-  if (showLinkButton.value && hasLinks.value) w += 50
-  if (props.extraButton) w += 40
-  return w
+function hasSongOptions(options?: SongsInfo['options']): boolean {
+  if (!options) return false
+  return !!(
+    options.needJianzhang ||
+    options.needTidu ||
+    options.needZongdu ||
+    options.scMinPrice ||
+    options.fanMedalMinLevel
+  )
 }
 
-const columns = computed(() => {
-  const cols: DataTableColumns<SongsInfo> = [
-    { type: 'selection', disabled: () => !props.isSelf },
-    {
-      key: 'name',
-      title: '曲名',
-      resizable: true,
-      minWidth: 150,
-      width: 300,
-      sorter: true,
-      render: (row) => {
-        const items: VNodeChild[] = []
-        if (singingKeySet.value.has(row.key))
-          items.push(h(NTag, { type: 'warning', size: 'small', style: { marginRight: '6px' } }, () => '演唱中'))
-        else if (queuedKeySet.value.has(row.key))
-          items.push(h(NTag, { type: 'success', size: 'small', style: { marginRight: '6px' } }, () => '排队中'))
-        items.push(
-          h(NFlex, { vertical: true, size: 0, wrap: false }, () => [
-            h(NText, { style: { color: row.options?.scMinPrice ? '#c36767' : '' } }, () => row.name),
-            row.translateName ? h(NText, { depth: '3', style: { fontSize: '12px' } }, () => row.translateName) : null,
-          ]),
-        )
-        return h(NFlex, { align: 'center', size: 0 }, () => items)
-      },
-    },
-    {
-      key: 'author',
-      title: '作者',
-      width: 200,
-      resizable: true,
-      filter: (value, row) => row.author?.includes(value.toString()) ?? false,
-      filterOptions: authorOptions.value,
-      filterOptionValue: selectedAuthorFilter.value,
-      render: (row) =>
-        h(NFlex, { size: 5 }, () =>
-          row.author?.map((a) =>
-            h(
-              NButton,
-              {
-                size: 'tiny',
-                type: 'info',
-                secondary: true,
-                onClick: () => {
-                  selectedAuthorFilter.value = selectedAuthorFilter.value === a ? null : a
-                },
-              },
-              () => a,
-            ),
-          ),
-        ),
-    },
-    {
-      key: 'language',
-      title: '语言',
-      width: 150,
-      resizable: true,
-      filterOptions: languageOptions.value,
-      filter: (value, row) => row.language?.includes(value.toString()) ?? false,
-      render: (row) =>
-        row.language?.length
-          ? h(NFlex, { size: 5 }, () => row.language.map((l) => h(NTag, { bordered: false, size: 'small' }, () => l)))
-          : null,
-    },
-    { key: 'description', title: '描述', minWidth: 100, resizable: true, ellipsis: { tooltip: true } },
-    {
-      key: 'options',
-      title: '点歌要求',
-      width: 180,
-      resizable: true,
-      render: (row) => {
-        if (!row.options) return null
-        const t: VNodeChild[] = []
-        if (row.options.needJianzhang)
-          t.push(
-            h(
-              NTag,
-              { color: { textColor: 'white', color: getGuardColor(3), borderColor: 'white' }, size: 'small' },
-              () => '舰长',
-            ),
-          )
-        if (row.options.needTidu)
-          t.push(
-            h(
-              NTag,
-              { color: { textColor: 'white', color: getGuardColor(2), borderColor: 'white' }, size: 'small' },
-              () => '提督',
-            ),
-          )
-        if (row.options.needZongdu)
-          t.push(
-            h(
-              NTag,
-              { color: { textColor: 'white', color: getGuardColor(1), borderColor: 'white' }, size: 'small' },
-              () => '总督',
-            ),
-          )
-        if (row.options.scMinPrice)
-          t.push(
-            h(
-              NTag,
-              {
-                color: { textColor: 'white', color: getSCColor(row.options.scMinPrice), borderColor: 'white' },
-                size: 'small',
-              },
-              () => `SC ≥ ${row.options!.scMinPrice}`,
-            ),
-          )
-        if (row.options.fanMedalMinLevel)
-          t.push(h(NTag, { type: 'info', size: 'small' }, () => `牌 ≥ ${row.options!.fanMedalMinLevel}`))
-        return t.length ? h(NFlex, { size: 5 }, () => t) : null
-      },
-    },
-    {
-      key: 'tags',
-      title: '标签',
-      minWidth: 100,
-      resizable: true,
-      filterOptions: tagOptions.value,
-      filter: (value, row) => row.tags?.includes(value.toString()) ?? false,
-      render: (row) =>
-        row.tags?.length
-          ? h(NFlex, { size: 5 }, () => row.tags!.map((t) => h(NTag, { bordered: false, size: 'small' }, () => t)))
-          : null,
-    },
-    {
-      key: 'manage',
-      title: '操作',
-      fixed: 'right',
-      width: actionWidth(),
-      render: (row) => {
-        const b: VNodeChild[] = []
-        if (showLinkButton.value) {
-          const p = GetPlayButton(row)
-          if (p) b.push(p)
-        }
-        if (showListenButton.value && /\.(?:mp3|flac|ogg|wav|m4a)$/i.test(row.url ?? ''))
-          b.push(
-            h(NTooltip, null, {
-              trigger: () =>
-                h(
-                  NButton,
-                  {
-                    type: 'primary',
-                    size: 'small',
-                    circle: true,
-                    loading: isLrcLoading.value === row.key,
-                    onClick: () => {
-                      playingSong.value = row
-                    },
-                  },
-                  { icon: () => h(NIcon, { component: Play24Filled }) },
-                ),
-              default: () => '试听',
-            }),
-          )
-        if (props.isSelf) {
-          b.push(
-            h(NTooltip, null, {
-              trigger: () =>
-                h(
-                  NButton,
-                  {
-                    size: 'small',
-                    circle: true,
-                    secondary: true,
-                    onClick: () => moveSong(row.key, -1),
-                  },
-                  { icon: () => h(NIcon, { component: ArrowUp24Filled }) },
-                ),
-              default: () => '上移',
-            }),
-          )
-          b.push(
-            h(NTooltip, null, {
-              trigger: () =>
-                h(
-                  NButton,
-                  {
-                    size: 'small',
-                    circle: true,
-                    secondary: true,
-                    onClick: () => moveSong(row.key, 1),
-                  },
-                  { icon: () => h(NIcon, { component: ArrowDown24Filled }) },
-                ),
-              default: () => '下移',
-            }),
-          )
-          b.push(
-            h(NTooltip, null, {
-              trigger: () =>
-                h(
-                  NButton,
-                  { size: 'small', circle: true, secondary: true, onClick: () => editModalRef.value?.open(row) },
-                  { icon: () => h(NIcon, { component: NotepadEdit20Filled }) },
-                ),
-              default: () => '修改',
-            }),
-          )
-          b.push(
-            h(
-              NPopconfirm,
-              { onPositiveClick: () => deleteSong(row) },
-              {
-                trigger: () =>
-                  h(
-                    NButton,
-                    { type: 'error', size: 'small', circle: true },
-                    { icon: () => h(NIcon, { component: Delete24Filled }) },
-                  ),
-                default: () => `确认删除《${row.name}》？`,
-              },
-            ),
-          )
-        }
-        if (props.extraButton) b.push(...props.extraButton(row))
-        return h(NFlex, { justify: 'end', size: 8, wrap: false }, () => b)
-      },
-    },
-  ]
-  return cols
+const totalPages = computed(() => Math.max(1, Math.ceil(filteredSongs.value.length / pageSize.value)))
+const pagedSongs = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value
+  return filteredSongs.value.slice(start, start + pageSize.value)
 })
+
+const allCurrentPageSelected = computed(() => {
+  if (!pagedSongs.value.length) return false
+  return pagedSongs.value.every((s) => selectedKeys.value.includes(s.key))
+})
+
+function toggleSelectAll(checked: boolean) {
+  if (checked) {
+    const keysToAdd = pagedSongs.value.map((s) => s.key).filter((k) => !selectedKeys.value.includes(k))
+    selectedKeys.value = [...selectedKeys.value, ...keysToAdd]
+  } else {
+    const pageKeys = new Set(pagedSongs.value.map((s) => s.key))
+    selectedKeys.value = selectedKeys.value.filter((k) => !pageKeys.has(k))
+  }
+}
+
+function toggleSelectRow(key: string, checked: boolean) {
+  if (checked) {
+    if (!selectedKeys.value.includes(key)) selectedKeys.value = [...selectedKeys.value, key]
+  } else {
+    selectedKeys.value = selectedKeys.value.filter((k) => k !== key)
+  }
+}
 
 async function handleEditSave(song: SongsInfo) {
   const ok = await updateSong(song)
@@ -358,7 +156,7 @@ async function handleBatchField(
     const ids = new Set(selectedKeys.value)
     const updates = songsInternal.value
       .filter((s) => ids.has(s.key))
-      .map((song) => ({ ...song, [field]: [...new Set([...(song[field] as string[]), ...value])] }))
+      .map((song) => ({ ...song, [field]: [...new Set([...((song[field] as string[]) || []), ...value])] }))
     await updateSongs(updates, label)
     return
   }
@@ -384,169 +182,422 @@ async function handleBatchDelete() {
 </script>
 
 <template>
-  <NCard
-    embedded
-    size="small"
-    :bordered="false"
-    style="margin-bottom: 10px"
-  >
-    <NFlex
-      align="center"
-      wrap
-      item-style="margin-bottom: 5px;"
-    >
-      <NInput
-        v-model:value="searchKeyword"
-        placeholder="搜索曲名/译名"
-        size="medium"
-        clearable
-        style="min-width: 150px; flex: 1"
-      />
-      <NSelect
-        v-model:value="selectedAuthorFilter"
-        placeholder="筛选歌手"
-        :options="authorOptions"
-        clearable
-        filterable
-        size="medium"
-        style="min-width: 150px; flex: 1"
-      />
-      <NSelect
-        v-model:value="selectedLanguageFilter"
-        placeholder="筛选语言"
-        :options="languageOptions"
-        multiple
-        clearable
-        filterable
-        size="medium"
-        style="min-width: 150px; flex: 1"
-        max-tag-count="responsive"
-      />
-      <NSelect
-        v-model:value="selectedTagFilter"
-        placeholder="筛选标签"
-        :options="tagOptions"
-        multiple
-        clearable
-        filterable
-        size="medium"
-        style="min-width: 150px; flex: 1"
-        max-tag-count="responsive"
-      />
-      <NFlex
-        :size="8"
-        align="center"
+  <TooltipProvider>
+    <Card class="border border-border/80 mb-2.5">
+      <CardContent class="p-3 flex flex-wrap items-center gap-2 text-xs">
+        <Input
+          v-model="searchKeyword"
+          placeholder="搜索曲名/译名"
+          class="min-w-[150px] flex-1"
+        />
+
+        <Select
+          :model-value="selectedAuthorFilter || 'all'"
+          @update:model-value="selectedAuthorFilter = $event === 'all' ? null : String($event)"
+        >
+          <SelectTrigger class="min-w-[140px] flex-1">
+            <SelectValue placeholder="筛选歌手" />
+          </SelectTrigger>
+          <SelectContent class="max-h-56">
+            <SelectItem
+              value="all"
+              class="text-xs"
+              >全部歌手</SelectItem
+            >
+            <SelectItem
+              v-for="a in authorOptions"
+              :key="a.value"
+              :value="a.value"
+              class="text-xs"
+            >
+              {{ a.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <div class="flex items-center gap-3 ml-auto">
+          <template v-if="hasAudio">
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground select-none">
+              <Switch v-model:checked="showListenButton" />
+              <span>试听</span>
+            </label>
+          </template>
+          <template v-if="hasLinks">
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs text-muted-foreground select-none">
+              <Switch v-model:checked="showLinkButton" />
+              <span>链接</span>
+            </label>
+          </template>
+        </div>
+      </CardContent>
+    </Card>
+
+    <div class="flex items-center justify-between mb-2 text-xs">
+      <span class="text-muted-foreground">共 {{ filteredSongs.length }} / {{ songsInternal.length }} 首</span>
+      <Button
+        v-if="isSelf"
+        variant="outline"
+        size="xs"
+        class="border-primary text-primary"
+        :disabled="selectedKeys.length === 0"
+        @click="batchModalRef?.open()"
       >
-        <template v-if="hasAudio">
-          <NSwitch
-            v-model:value="showListenButton"
-            size="small"
-          />
-          <NText style="font-size: 12px"> 试听 </NText>
-        </template>
-        <template v-if="hasLinks">
-          <NSwitch
-            v-model:value="showLinkButton"
-            size="small"
-          />
-          <NText style="font-size: 12px"> 链接 </NText>
-        </template>
-      </NFlex>
-    </NFlex>
-  </NCard>
+        批量操作 ({{ selectedKeys.length }})
+      </Button>
+    </div>
 
-  <NFlex
-    justify="space-between"
-    align="center"
-    style="margin-bottom: 6px"
-  >
-    <NText depth="3"> 共 {{ filteredSongs.length }} / {{ songsInternal.length }} 首 </NText>
-    <NButton
-      v-if="isSelf"
-      :disabled="selectedKeys.length === 0"
-      type="primary"
-      size="small"
-      ghost
-      @click="batchModalRef?.open()"
-    >
-      批量操作 ({{ selectedKeys.length }})
-    </NButton>
-  </NFlex>
-
-  <Transition name="fade">
+    <!-- 播放器区域 -->
     <div
       v-if="playingSong"
-      style="margin-bottom: 12px"
+      class="mb-3"
     >
       <SongPlayer
         v-model:is-lrc-loading="isLrcLoading"
         :song="playingSong"
-        :volume="volume"
-        @update:volume="(v) => (volume = v)"
         @close="playingSong = undefined"
       />
     </div>
-  </Transition>
 
-  <NDataTable
-    v-model:checked-row-keys="selectedKeys"
-    :columns="columns"
-    :data="filteredSongs"
-    size="small"
-    :scroll-x="800"
-    striped
-    :row-key="(r: SongsInfo) => r.key"
-    :loading="isLoading && filteredSongs.length === 0"
-    :pagination="{
-      defaultPageSize: pageSize,
-      pageSizes: [10, 25, 50, 100, 200],
-      showSizePicker: true,
-      showQuickJumper: true,
-      page: currentPage,
-      onUpdatePage: (p: number) => (currentPage = p),
-    }"
-  />
+    <!-- 歌曲表格 -->
+    <div class="border border-border/80 rounded-lg overflow-hidden bg-card">
+      <Table class="table-fixed">
+        <TableHeader>
+          <TableRow class="hover:bg-transparent border-b border-border/80 bg-muted/40">
+            <TableHead
+              v-if="isSelf"
+              class="w-10 px-3"
+            >
+              <Checkbox
+                :checked="allCurrentPageSelected"
+                @update:checked="toggleSelectAll"
+              />
+            </TableHead>
+            <TableHead class="min-w-[200px]">曲名</TableHead>
+            <TableHead class="w-44">作者</TableHead>
+            <TableHead class="w-24">语言</TableHead>
+            <TableHead class="w-36">点歌要求</TableHead>
+            <TableHead class="w-36">标签</TableHead>
+            <TableHead class="w-32 text-right pr-4">操作</TableHead>
+          </TableRow>
+        </TableHeader>
 
-  <SongEditModal
-    ref="editModalRef"
-    :language-options="languageOptions"
-    :tag-options="tagOptions"
-    :author-options="authorOptions"
-    @save="handleEditSave"
-  />
-  <SongBatchModal
-    ref="batchModalRef"
-    :selected-count="selectedKeys.length"
-    :language-options="languageOptions"
-    :tag-options="tagOptions"
-    :author-options="authorOptions"
-    @delete="handleBatchDelete"
-    @update-author="handleBatchAuthor"
-    @update-tag="handleBatchTag"
-    @update-language="handleBatchLanguage"
-    @update-option="handleBatchOption"
-  />
+        <TableBody>
+          <TableRow
+            v-for="row in pagedSongs"
+            :key="row.key"
+            class="border-b border-border/60 hover:bg-muted/40 transition-colors even:bg-muted/[0.14]"
+          >
+            <TableCell
+              v-if="isSelf"
+              class="px-3"
+            >
+              <Checkbox
+                :checked="selectedKeys.includes(row.key)"
+                @update:checked="toggleSelectRow(row.key, $event)"
+              />
+            </TableCell>
+
+            <!-- 曲名 -->
+            <TableCell>
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <Badge
+                  v-if="singingKeySet.has(row.key)"
+                  variant="default"
+                  class="text-[10px] h-4.5 px-1 font-normal bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+                >
+                  演唱中
+                </Badge>
+                <Badge
+                  v-else-if="queuedKeySet.has(row.key)"
+                  variant="default"
+                  class="text-[10px] h-4.5 px-1 font-normal bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+                >
+                  排队中
+                </Badge>
+
+                <div class="flex flex-col">
+                  <span
+                    class="font-medium text-xs text-foreground"
+                    :class="{ 'text-[#c36767]': row.options?.scMinPrice }"
+                  >
+                    {{ row.name }}
+                  </span>
+                  <span
+                    v-if="row.translateName"
+                    class="text-[11px] text-muted-foreground"
+                  >
+                    {{ row.translateName }}
+                  </span>
+                </div>
+              </div>
+            </TableCell>
+
+            <!-- 作者 -->
+            <TableCell>
+              <div
+                v-if="row.author?.length"
+                class="flex items-center gap-1 flex-wrap"
+              >
+                <button
+                  v-for="a in row.author"
+                  :key="a"
+                  type="button"
+                  class="px-1.5 py-0.5 rounded text-[10px] bg-muted/60 hover:bg-primary/10 hover:text-primary transition"
+                  @click="selectedAuthorFilter = selectedAuthorFilter === a ? null : a"
+                >
+                  {{ a }}
+                </button>
+              </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
+            </TableCell>
+
+            <!-- 语言 -->
+            <TableCell>
+              <div
+                v-if="row.language?.length"
+                class="flex items-center gap-1 flex-wrap"
+              >
+                <span
+                  v-for="l in row.language"
+                  :key="l"
+                  class="text-[11px] text-muted-foreground"
+                >
+                  {{ l }}
+                </span>
+              </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
+            </TableCell>
+
+            <!-- 要求 -->
+            <TableCell>
+              <div
+                v-if="hasSongOptions(row.options)"
+                class="flex items-center gap-1 flex-wrap"
+              >
+                <Badge
+                  v-if="row.options!.needJianzhang"
+                  class="text-[10px] h-4 px-1 font-normal text-white"
+                  :style="{ backgroundColor: getGuardColor(3) }"
+                >
+                  舰长
+                </Badge>
+                <Badge
+                  v-if="row.options!.needTidu"
+                  class="text-[10px] h-4 px-1 font-normal text-white"
+                  :style="{ backgroundColor: getGuardColor(2) }"
+                >
+                  提督
+                </Badge>
+                <Badge
+                  v-if="row.options!.needZongdu"
+                  class="text-[10px] h-4 px-1 font-normal text-white"
+                  :style="{ backgroundColor: getGuardColor(1) }"
+                >
+                  总督
+                </Badge>
+                <Badge
+                  v-if="row.options!.scMinPrice"
+                  class="text-[10px] h-4 px-1 font-normal text-white"
+                  :style="{ backgroundColor: getSCColor(row.options!.scMinPrice) }"
+                >
+                  SC ≥ {{ row.options!.scMinPrice }}
+                </Badge>
+                <Badge
+                  v-if="row.options!.fanMedalMinLevel"
+                  variant="secondary"
+                  class="text-[10px] h-4 px-1 font-normal text-sky-600 bg-sky-500/10"
+                >
+                  牌 ≥ {{ row.options!.fanMedalMinLevel }}
+                </Badge>
+              </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
+            </TableCell>
+
+            <!-- 标签 -->
+            <TableCell>
+              <div
+                v-if="row.tags?.length"
+                class="flex items-center gap-1 flex-wrap"
+              >
+                <Badge
+                  v-for="t in row.tags"
+                  :key="t"
+                  variant="secondary"
+                  class="text-[10px] h-4 px-1 font-normal"
+                >
+                  {{ t }}
+                </Badge>
+              </div>
+              <span
+                v-else
+                class="text-[11px] text-muted-foreground/35 select-none"
+                >-</span
+              >
+            </TableCell>
+
+            <!-- 操作 -->
+            <TableCell class="text-right pr-4">
+              <div class="flex items-center justify-end gap-1">
+                <template v-if="showListenButton && /\.(?:mp3|flac|ogg|wav|m4a)$/i.test(row.url ?? '')">
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-primary hover:bg-primary/10"
+                        :disabled="isLrcLoading === row.key"
+                        @click="playingSong = row"
+                      >
+                        <component
+                          :is="Play24Filled"
+                          class="size-3.5"
+                        />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>试听</TooltipContent>
+                  </Tooltip>
+                </template>
+
+                <template v-if="isSelf">
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                        @click="moveSong(row.key, -1)"
+                      >
+                        <component
+                          :is="ArrowUp24Filled"
+                          class="size-3.5"
+                        />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>上移</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                        @click="moveSong(row.key, 1)"
+                      >
+                        <component
+                          :is="ArrowDown24Filled"
+                          class="size-3.5"
+                        />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>下移</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                        @click="editModalRef?.open(row)"
+                      >
+                        <component
+                          :is="NotepadEdit20Filled"
+                          class="size-3.5"
+                        />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>修改</TooltipContent>
+                  </Tooltip>
+
+                  <Popconfirm
+                    :title="`确认删除《${row.name}》？`"
+                    positive-text="删除"
+                    negative-text="取消"
+                    @positive-click="deleteSong(row)"
+                  >
+                    <template #trigger>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                      >
+                        <component
+                          :is="Delete24Filled"
+                          class="size-3.5"
+                        />
+                      </Button>
+                    </template>
+                    确认删除《{{ row.name }}》？
+                  </Popconfirm>
+                </template>
+              </div>
+            </TableCell>
+          </TableRow>
+
+          <TableEmpty
+            v-if="!pagedSongs.length"
+            :colspan="isSelf ? 7 : 6"
+            description="暂无歌曲"
+          />
+        </TableBody>
+      </Table>
+    </div>
+
+    <!-- 紧凑分页导航 -->
+    <div
+      v-if="totalPages > 1"
+      class="flex items-center justify-between gap-2 mt-3 text-xs"
+    >
+      <span class="text-muted-foreground text-[11px]"> 第 {{ currentPage }} / {{ totalPages }} 页 </span>
+      <div class="flex items-center gap-1.5">
+        <Button
+          variant="outline"
+          :disabled="currentPage <= 1"
+          @click="prevPage"
+        >
+          上一页
+        </Button>
+        <Button
+          variant="outline"
+          :disabled="currentPage >= totalPages"
+          @click="nextPage"
+        >
+          下一页
+        </Button>
+      </div>
+    </div>
+
+    <SongEditModal
+      ref="editModalRef"
+      :language-options="languageOptions"
+      :tag-options="tagOptions"
+      :author-options="authorOptions"
+      @save="handleEditSave"
+    />
+    <SongBatchModal
+      ref="batchModalRef"
+      :selected-count="selectedKeys.length"
+      :language-options="languageOptions"
+      :tag-options="tagOptions"
+      :author-options="authorOptions"
+      @delete="handleBatchDelete"
+      @update-author="handleBatchAuthor"
+      @update-tag="handleBatchTag"
+      @update-language="handleBatchLanguage"
+      @update-option="handleBatchOption"
+    />
+  </TooltipProvider>
 </template>
-
-<style scoped>
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>
-
-<style>
-.netease path:nth-child(2) {
-  fill: #c20c0c;
-}
-.fivesing path:first-child {
-  fill: #00bbb3;
-}
-.bilibili path {
-  fill: #00a1d6;
-}
-</style>

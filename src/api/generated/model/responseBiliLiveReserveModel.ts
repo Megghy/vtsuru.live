@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseBiliLiveReserveItem } from './responseBiliLiveReserveItem';
+import type { ResponseBiliLiveReserveItem } from './responseBiliLiveReserveItem'
 
 export interface ResponseBiliLiveReserveModel {
-  items: ResponseBiliLiveReserveItem[];
-  fetchedAt: number;
-  intervalMinutes: number;
-  syncEnabled: boolean;
+  items: ResponseBiliLiveReserveItem[]
+  fetchedAt: number
+  intervalMinutes: number
+  syncEnabled: boolean
 }

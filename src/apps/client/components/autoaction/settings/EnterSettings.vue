@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import { NInputNumber, NSelect, NFlex, NSwitch, NForm, NFormItem, NTooltip, NIcon, NDivider } from 'naive-ui'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 defineProps({
   action: {
@@ -25,107 +28,88 @@ const enterFilterModeOptions = [
 <template>
   <div
     v-if="action.triggerType === TriggerType.ENTER"
-    class="enter-trigger-settings"
+    class="enter-trigger-settings space-y-3"
   >
-    <NForm
-      label-placement="left"
-      :label-width="140"
-      size="small"
-      :show-feedback="false"
+    <div class="space-y-1">
+      <span class="text-xs text-muted-foreground">入场过滤模式</span>
+      <Select v-model="action.triggerConfig.filterMode">
+        <SelectTrigger class="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="opt in enterFilterModeOptions"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
+          >
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div
+      v-if="action.triggerConfig.filterMode === 'medal'"
+      class="flex items-center justify-between p-2.5 rounded border bg-muted/20"
     >
-      <NFlex
-        vertical
-        :size="16"
-      >
-        <NFormItem label="入场过滤模式">
-          <NSelect
-            v-model:value="action.triggerConfig.filterMode"
-            style="width: 240px"
-            :options="enterFilterModeOptions"
-          />
-        </NFormItem>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">最低牌子等级</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <NumberField
+        :model-value="action.triggerConfig.enterMedalMinLevel"
+        :min="0"
+        :max="40"
+        placeholder="0"
+        class="w-28"
+        @update:model-value="action.triggerConfig.enterMedalMinLevel = $event || 0"
+      />
+    </div>
 
-        <NFormItem
-          v-if="action.triggerConfig.filterMode === 'medal'"
-          label="最低牌子等级"
-        >
-          <template #label>
-            <NTooltip trigger="hover">
-              <template #trigger>
-                <span
-                  >最低牌子等级
-                  <NIcon
-                    :component="Info16Regular"
-                    style="vertical-align: -2px"
-                /></span>
-              </template>
-              仅欢迎佩戴本房勋章且等级达到此值的用户，0 表示不限制等级
-            </NTooltip>
-          </template>
-          <NInputNumber
-            v-model:value="action.triggerConfig.enterMedalMinLevel"
-            :min="0"
-            :max="40"
-            style="width: 140px"
-            placeholder="0"
-          />
-        </NFormItem>
+    <div class="h-px bg-border my-1" />
 
-        <NDivider style="margin: 0" />
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">防止重复发送</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 同一用户在单次直播中多次进入仅触发一次欢迎 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <Switch v-model:checked="action.triggerConfig.preventRepeat" />
+    </div>
 
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NFormItem label="防止重复发送">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >防止重复
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                同一用户在单次直播中多次进入仅触发一次欢迎
-              </NTooltip>
-            </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.preventRepeat"
-              size="small"
-            />
-          </NFormItem>
-
-          <NFormItem label="单次合并上限">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单次合并上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单条欢迎弹幕中最多合并展示的用户数量
-              </NTooltip>
-            </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxUsersPerMsg"
-              :min="1"
-              :max="50"
-              style="width: 140px"
-            />
-          </NFormItem>
-        </NFlex>
-      </NFlex>
-    </NForm>
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">单次合并上限</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 单条欢迎弹幕中最多合并展示的用户数量 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <NumberField
+        :model-value="action.actionConfig.maxUsersPerMsg"
+        :min="1"
+        :max="50"
+        class="w-32"
+        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
+      />
+    </div>
   </div>
 </template>
-
-<style scoped>
-.enter-trigger-settings {
-  width: 100%;
-}
-</style>

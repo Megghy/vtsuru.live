@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInput, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -67,92 +69,104 @@ const verticalOptions = computed(() =>
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <NText
-      strong
-      style="display: block; margin-bottom: 8px; font-size: 13px"
-    >
-      布局设置
-    </NText>
+  <div class="space-y-3">
+    <div class="text-xs font-semibold">布局设置</div>
     <PropsGrid
       :col-gap="8"
       :row-gap="0"
     >
-      <NFormItem label="布局类型">
-        <NSelect
-          v-model:value="layout.layout"
-          :options="[
-            { label: 'Row - 横向', value: 'row' },
-            { label: 'Column - 纵向', value: 'column' },
-            { label: 'Grid - 网格', value: 'grid' },
-          ]"
-        />
-      </NFormItem>
-      <NFormItem
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">布局类型</label>
+        <Select v-model="layout.layout">
+          <SelectTrigger>
+            <SelectValue placeholder="布局类型" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="row">Row - 横向</SelectItem>
+            <SelectItem value="column">Column - 纵向</SelectItem>
+            <SelectItem value="grid">Grid - 网格</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div
         v-if="layout.layout === 'row'"
-        label="允许换行"
+        class="flex items-center justify-between py-1"
       >
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="layout.wrap"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
+        <label class="text-xs text-muted-foreground">允许换行</label>
+        <Switch v-model:checked="layout.wrap" />
+      </div>
+
+      <div
         v-if="layout.layout === 'grid'"
-        label="列数"
+        class="space-y-1"
       >
-        <NInputNumber
-          v-model:value="layout.columns"
+        <label class="text-xs text-muted-foreground">列数</label>
+        <NumberField
+          v-model="layout.columns"
           :min="1"
           :max="12"
-          style="width: 100%"
+          class="w-full"
         />
-      </NFormItem>
-      <NFormItem label="间距">
-        <NInputNumber
-          v-model:value="layout.gap"
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">间距</label>
+        <NumberField
+          v-model="layout.gap"
           :min="0"
           :max="80"
-          style="width: 100%"
+          class="w-full"
         />
-      </NFormItem>
-      <NFormItem label="最大宽度">
-        <NInput
-          v-model:value="layout.maxWidth"
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">最大宽度</label>
+        <input
+          v-model="layout.maxWidth"
           placeholder="如 100% / 480px"
+          class="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
-      </NFormItem>
-      <NFormItem label="横向对齐">
-        <NSelect
-          v-model:value="horizontalModel"
-          :options="horizontalOptions"
-        />
-      </NFormItem>
-      <NFormItem label="纵向对齐">
-        <NSelect
-          v-model:value="verticalModel"
-          :options="verticalOptions"
-        />
-      </NFormItem>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">横向对齐</label>
+        <Select v-model="horizontalModel">
+          <SelectTrigger>
+            <SelectValue placeholder="横向对齐" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in horizontalOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">纵向对齐</label>
+        <Select v-model="verticalModel">
+          <SelectTrigger>
+            <SelectValue placeholder="纵向对齐" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in verticalOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
     </PropsGrid>
-    <NText
-      depth="3"
-      style="
-        display: block;
-        margin-top: 12px;
-        padding: 6px 8px;
-        background: var(--vtsuru-bg-muted);
-        border-radius: 4px;
-        font-size: 12px;
-        line-height: 1.5;
-      "
-    >
+    <div class="mt-3 rounded p-2 text-xs text-muted-foreground bg-muted/50 leading-relaxed">
       子区块请在「区块管理」中管理：选中多个区块点击「成组」按钮，或拖入已展开的组。
-    </NText>
-  </NForm>
+    </div>
+  </div>
 </template>

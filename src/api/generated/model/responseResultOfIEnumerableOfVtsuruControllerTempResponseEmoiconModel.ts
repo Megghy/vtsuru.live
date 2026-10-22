@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VtsuruControllerTempResponseEmoiconModel } from './vtsuruControllerTempResponseEmoiconModel';
+import type { VtsuruControllerTempResponseEmoiconModel } from './vtsuruControllerTempResponseEmoiconModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfIEnumerableOfVtsuruControllerTempResponseEmoiconModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: VtsuruControllerTempResponseEmoiconModel[] | null;
+  data: VtsuruControllerTempResponseEmoiconModel[] | null
 }

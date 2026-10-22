@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as analyzeApi from '@/api/generated/analyze/analyze'
+
 import { useAnalyzeStore } from '../useAnalyzeStore'
 
 vi.mock('@/api/generated/analyze/analyze', () => ({

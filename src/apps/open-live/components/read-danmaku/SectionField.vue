@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Info24Filled } from '@vicons/fluent'
-import { NIcon, NPopover } from 'naive-ui'
+
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 defineProps<{
   label: string
@@ -10,68 +11,32 @@ defineProps<{
 </script>
 
 <template>
-  <div class="section-field">
-    <div class="head">
-      <span class="label">{{ label }}</span>
-      <NPopover
-        v-if="hint || $slots.hint"
-        trigger="hover"
-        placement="top"
-        style="max-width: 360px"
-      >
-        <template #trigger>
-          <NIcon
-            :component="Info24Filled"
-            :size="14"
-            class="icon"
-          />
-        </template>
-        <slot name="hint">
-          <span style="font-size: 12px; line-height: 1.6; white-space: pre-wrap">{{ hint }}</span>
-        </slot>
-      </NPopover>
+  <div class="flex flex-col gap-1.5">
+    <div class="flex items-center gap-1 min-h-[18px]">
+      <span class="text-xs font-medium text-foreground">{{ label }}</span>
+      <Popover v-if="hint || $slots.hint">
+        <PopoverTrigger as-child>
+          <button
+            type="button"
+            class="text-muted-foreground hover:text-foreground cursor-help inline-flex items-center"
+          >
+            <Info24Filled class="size-3.5" />
+          </button>
+        </PopoverTrigger>
+        <PopoverContent class="max-w-[360px] text-xs p-3">
+          <slot name="hint">
+            <span class="leading-relaxed whitespace-pre-wrap">{{ hint }}</span>
+          </slot>
+        </PopoverContent>
+      </Popover>
       <span
         v-if="value !== undefined"
-        class="value"
+        class="ml-auto text-[11px] text-muted-foreground tabular-nums"
         >{{ value }}</span
       >
     </div>
-    <div class="body">
+    <div class="flex flex-col gap-1.5">
       <slot />
     </div>
   </div>
 </template>
-
-<style scoped>
-.section-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.head {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 18px;
-}
-.label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--vtsuru-fg);
-}
-.icon {
-  color: var(--vtsuru-fg-muted);
-  cursor: help;
-}
-.value {
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-</style>

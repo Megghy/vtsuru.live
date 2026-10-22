@@ -1,21 +1,17 @@
 <script setup lang="ts">
 import { ReorderThreeOutline } from '@vicons/ionicons5'
 import { saveAs } from 'file-saver'
-import {
-  NButton,
-  NDivider,
-  NDrawer,
-  NDrawerContent,
-  NIcon,
-  NInputNumber,
-  NPopconfirm,
-  NSlider,
-  NSwitch,
-  NUpload,
-  type UploadCustomRequestOptions,
-} from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
+
+import { Button } from '@/shared/ui/button'
+import { NumberField } from '@/shared/ui/number-field'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
+import { useMessage } from '@/shared/utils'
 
 import type { ExportFormat } from '../core/archive'
 import { clearArchive, countByType, exportArchive, importArchive } from '../core/archive'
@@ -23,6 +19,8 @@ import type { ToolbarStatOption } from '../store/settings'
 import { DEFAULT_TOOLBAR_ORDER, TOOLBAR_STAT_OPTIONS } from '../store/settings'
 import { useDashboardUi } from '../store/ui'
 import { useLiveDashboard } from '../store/useLiveDashboard'
+
+const message = useMessage()
 
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
@@ -44,32 +42,39 @@ async function doExport(format: ExportFormat) {
   try {
     await dashboard.flushWrites()
     const count = await exportArchive(format, dashboard.historyRange ?? undefined)
-    window.$message.success(`已导出 ${count} 条事件`)
+    message.success(`已导出 ${count} 条事件`)
   } finally {
     exporting.value = undefined
   }
 }
 
-/** NUpload 只用来选文件，读取在本地完成 */
-function fileHandler(action: (file: File) => Promise<string>) {
-  return async ({ file, onFinish, onError }: UploadCustomRequestOptions) => {
-    try {
-      window.$message.success(await action(file.file!))
-      onFinish()
-    } catch (error) {
-      window.$message.error(error instanceof Error ? error.message : '导入失败')
-      onError()
-    }
+async function handleFileChoose(e: Event, action: (file: File) => Promise<string>) {
+  const input = e.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  try {
+    const res = await action(file)
+    message.success(res)
+  } catch (error) {
+    message.error(error instanceof Error ? error.message : '导入失败')
+  } finally {
+    input.value = ''
   }
 }
 
-const importEvents = fileHandler(async (file) => {
-  const count = await importArchive(file)
-  await refreshCounts()
-  return `已导入 ${count} 条事件，刷新页面后载入列表`
-})
+async function onImportEvents(e: Event) {
+  await handleFileChoose(e, async (file) => {
+    const count = await importArchive(file)
+    await refreshCounts()
+    return `已导入 ${count} 条事件，刷新页面后载入列表`
+  })
+}
 
-const importNotes = fileHandler(async (file) => `已导入 ${await dashboard.notes.importFile(file)} 条备注`)
+async function onImportNotes(e: Event) {
+  await handleFileChoose(e, async (file) => {
+    return `已导入 ${await dashboard.notes.importFile(file)} 条备注`
+  })
+}
 
 function exportNotes() {
   saveAs(dashboard.notes.exportFile(), `vtsuru-dashboard-notes-${Date.now()}.json`)
@@ -78,7 +83,7 @@ function exportNotes() {
 async function clearAll() {
   await clearArchive()
   await refreshCounts()
-  window.$message.success('本地事件已清空，刷新页面后生效')
+  message.success('本地事件已清空，刷新页面后生效')
 }
 
 const orderedStatOptions = computed({
@@ -106,140 +111,142 @@ function resetToolbarOrder() {
 </script>
 
 <template>
-  <NDrawer
-    v-model:show="ui.settingsOpen"
-    :width="340"
-    placement="right"
-  >
-    <NDrawerContent
-      title="中控台设置"
-      closable
-      :native-scrollbar="false"
+  <Sheet v-model:open="ui.settingsOpen">
+    <SheetContent
+      side="right"
+      class="w-[340px] sm:max-w-[340px] overflow-y-auto"
     >
-      <div class="settings">
-        <div class="settings__group">显示</div>
-        <label class="settings__row">显示头像<NSwitch v-model:value="dashboard.settings.showAvatar" /></label>
-        <label class="settings__row">显示粉丝勋章<NSwitch v-model:value="dashboard.settings.showMedal" /></label>
-        <label class="settings__row">显示绝对时间<NSwitch v-model:value="dashboard.settings.absoluteTime" /></label>
-        <div class="settings__row">字号 {{ dashboard.settings.fontSize }}px</div>
-        <NSlider
-          v-model:value="dashboard.settings.fontSize"
+      <SheetHeader>
+        <SheetTitle>中控台设置</SheetTitle>
+      </SheetHeader>
+      <div class="grid gap-2.5 text-[13px] mt-4">
+        <div class="font-semibold">显示</div>
+        <label class="flex-between gap-2">显示头像<Switch v-model="dashboard.settings.showAvatar" /></label>
+        <label class="flex-between gap-2">显示粉丝勋章<Switch v-model="dashboard.settings.showMedal" /></label>
+        <label class="flex-between gap-2">显示绝对时间<Switch v-model="dashboard.settings.absoluteTime" /></label>
+        <div class="flex-between gap-2">字号 {{ dashboard.settings.fontSize }}px</div>
+        <Slider
+          :model-value="[dashboard.settings.fontSize]"
           :min="12"
           :max="28"
+          :step="1"
+          @update:model-value="(val) => val && (dashboard.settings.fontSize = val[0])"
         />
-        <label class="settings__row">
+        <label class="flex-between gap-2">
           启动时载入最近（小时）
-          <NInputNumber
-            v-model:value="dashboard.settings.historyHours"
-            size="small"
+          <NumberField
+            v-model="dashboard.settings.historyHours"
             :min="0"
             :max="168"
-            style="width: 100px"
+            class="w-24"
           />
         </label>
 
-        <NDivider />
-        <div class="settings__stat-header">
-          <div class="settings__group">顶栏指标项 (支持拖拽排序)</div>
-          <NButton
-            size="tiny"
-            quaternary
+        <Separator />
+        <div class="settings__stat-header flex justify-between items-center">
+          <div class="font-semibold">顶栏指标项 (支持拖拽排序)</div>
+          <Button
+            variant="ghost"
+            class="h-6 px-2 text-muted-foreground"
             @click="resetToolbarOrder"
           >
             重置排序
-          </NButton>
+          </Button>
         </div>
         <VueDraggable
           v-model="orderedStatOptions"
           handle=".drag-handle"
           :animation="150"
-          class="settings__stat-list"
+          class="grid gap-1.5"
           ghost-class="settings__stat-ghost"
         >
           <div
             v-for="opt in orderedStatOptions"
             :key="opt.key"
-            class="settings__row settings__stat-item"
+            class="flex-between gap-2 py-1 px-1.5 rounded-[var(--radius)] bg-popover transition-colors hover:bg-muted/80"
             :title="opt.description"
           >
-            <div class="settings__stat-label">
+            <div class="settings__stat-label flex items-center gap-1.5">
               <span
-                class="drag-handle"
+                class="drag-handle cursor-grab text-muted-foreground"
                 title="按住拖拽排序"
               >
-                <NIcon><ReorderThreeOutline /></NIcon>
+                <component
+                  :is="ReorderThreeOutline"
+                  class="h-4 w-4"
+                />
               </span>
               <span>{{ opt.label }}</span>
             </div>
-            <NSwitch
-              v-model:value="dashboard.settings.toolbarStats[opt.key]"
-              size="small"
-            />
+            <Switch v-model="dashboard.settings.toolbarStats[opt.key]" />
           </div>
         </VueDraggable>
 
-        <NDivider />
-        <div class="settings__group">卡片模式</div>
-        <label class="settings__row">
+        <Separator />
+        <div class="font-semibold">卡片模式</div>
+        <label class="flex-between gap-2">
           卡片数量
-          <NInputNumber
-            v-model:value="dashboard.settings.card.size"
-            size="small"
+          <NumberField
+            v-model="dashboard.settings.card.size"
             :min="4"
             :max="80"
-            style="width: 100px"
+            class="w-24"
           />
         </label>
-        <label class="settings__row"
-          >自动隐藏刷屏弹幕<NSwitch v-model:value="dashboard.settings.card.autoHide"
-        /></label>
+        <label class="flex-between gap-2">自动隐藏刷屏弹幕<Switch v-model="dashboard.settings.card.autoHide" /></label>
         <template v-if="dashboard.settings.card.autoHide">
-          <label class="settings__row">
+          <label class="flex-between gap-2">
             重复次数达到
-            <NInputNumber
-              v-model:value="dashboard.settings.card.autoHideThreshold"
-              size="small"
+            <NumberField
+              v-model="dashboard.settings.card.autoHideThreshold"
               :min="2"
-              style="width: 100px"
+              class="w-24"
             />
           </label>
-          <label class="settings__row">
+          <label class="flex-between gap-2">
             隐藏时长（秒）
-            <NInputNumber
-              v-model:value="dashboard.settings.card.autoHideSeconds"
-              size="small"
+            <NumberField
+              v-model="dashboard.settings.card.autoHideSeconds"
               :min="5"
-              style="width: 100px"
+              class="w-24"
             />
           </label>
         </template>
 
-        <NDivider />
-        <div class="settings__group">用户备注</div>
-        <div class="settings__buttons">
-          <NButton
-            size="small"
+        <Separator />
+        <div class="font-semibold">用户备注</div>
+        <div class="flex flex-wrap gap-1.5">
+          <Button
+            variant="outline"
             @click="exportNotes"
           >
             导出备注
-          </NButton>
-          <NUpload
-            accept=".json"
-            :show-file-list="false"
-            :custom-request="importNotes"
-          >
-            <NButton size="small"> 导入备注 </NButton>
-          </NUpload>
+          </Button>
+          <label>
+            <input
+              type="file"
+              accept=".json"
+              class="hidden"
+              @change="onImportNotes"
+            />
+            <Button
+              variant="outline"
+              as="span"
+              class="cursor-pointer"
+            >
+              导入备注
+            </Button>
+          </label>
         </div>
 
-        <NDivider />
-        <div class="settings__group">本地事件库</div>
-        <div class="settings__hint">
+        <Separator />
+        <div class="font-semibold">本地事件库</div>
+        <div class="text-xs text-muted-foreground">
           事件保存在当前浏览器，清除浏览器数据会一并删除。{{
             dashboard.historyRange ? '导出范围为当前选择的时间段。' : ''
           }}
         </div>
-        <div class="settings__counts">
+        <div class="settings__counts flex flex-wrap gap-2 text-xs text-muted-foreground">
           <span
             v-for="c in counts"
             :key="c.label"
@@ -247,132 +254,53 @@ function resetToolbarOrder() {
           >
           <span v-if="!counts.length">暂无数据</span>
         </div>
-        <div class="settings__buttons">
-          <NButton
+        <div class="flex flex-wrap gap-1.5">
+          <Button
             v-for="f in ['json', 'csv', 'xlsx'] as const"
             :key="f"
-            size="small"
-            :loading="exporting === f"
+            variant="outline"
+            :disabled="exporting === f"
             @click="doExport(f)"
           >
             导出 {{ f.toUpperCase() }}
-          </NButton>
+          </Button>
         </div>
-        <div class="settings__buttons">
-          <NUpload
-            accept=".json"
-            :show-file-list="false"
-            :custom-request="importEvents"
-          >
-            <NButton size="small"> 导入 JSON 归档 </NButton>
-          </NUpload>
-          <NPopconfirm @positive-click="clearAll">
+        <div class="settings__buttons items-center">
+          <label>
+            <input
+              type="file"
+              accept=".json"
+              class="hidden"
+              @change="onImportEvents"
+            />
+            <Button
+              variant="outline"
+              as="span"
+              class="cursor-pointer"
+            >
+              导入 JSON 归档
+            </Button>
+          </label>
+          <Popconfirm @positive-click="clearAll">
             <template #trigger>
-              <NButton
-                size="small"
-                type="error"
-                secondary
-              >
-                清空本地事件
-              </NButton>
+              <Button variant="destructive"> 清空本地事件 </Button>
             </template>
             确定清空全部本地事件？此操作不可撤销。
-          </NPopconfirm>
+          </Popconfirm>
         </div>
 
-        <NDivider />
-        <div class="settings__hint">
+        <Separator />
+        <div class="text-xs text-muted-foreground">
           直播间房主发送弹幕 <code>/vt reload</code> 可远程刷新已打开的中控台（仅直连模式可识别房主）。
         </div>
       </div>
-    </NDrawerContent>
-  </NDrawer>
+    </SheetContent>
+  </Sheet>
 </template>
 
 <style scoped>
-.settings {
-  display: grid;
-  gap: 10px;
-  font-size: 13px;
-}
-
-.settings__group {
-  font-weight: 600;
-}
-
-.settings__row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.settings__buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.settings__hint {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.settings__counts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 10px;
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-}
-
-.settings__stat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.settings__stat-list {
-  display: grid;
-  gap: 6px;
-}
-
-.settings__stat-item {
-  padding: 4px 6px;
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-elevated);
-  transition: background 0.15s ease;
-}
-
-.settings__stat-item:hover {
-  background: var(--vtsuru-bg-hover, rgba(255, 255, 255, 0.06));
-}
-
-.settings__stat-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  user-select: none;
-}
-
-.drag-handle {
-  display: inline-flex;
-  align-items: center;
-  cursor: grab;
-  color: var(--vtsuru-fg-muted);
-  font-size: 14px;
-}
-
-.drag-handle:active {
-  cursor: grabbing;
-}
-
 .settings__stat-ghost {
   opacity: 0.4;
-  background: var(--vtsuru-brand-soft, rgba(59, 130, 246, 0.15));
-}
-
-.settings :deep(.n-divider) {
-  margin: 4px 0;
+  background: var(--brand-soft, rgba(59, 130, 246, 0.15));
 }
 </style>

@@ -13,7 +13,9 @@ import PanelShell from './PanelShell.vue'
 defineProps<{ blurred?: boolean }>()
 const dashboard = useLiveDashboard()
 const layout = computed(() => dashboard.settings.layout)
-const parts = computed<('main' | 'interaction')[]>(() => (layout.value.interactionOnTop ? ['interaction', 'main'] : ['main', 'interaction']))
+const parts = computed<('main' | 'interaction')[]>(() =>
+  layout.value.interactionOnTop ? ['interaction', 'main'] : ['main', 'interaction'],
+)
 
 function onResized({ panes }: { panes: { size: number }[] }) {
   const index = parts.value.indexOf('interaction')

@@ -7,7 +7,7 @@
  */
 
 export interface QqBotControllerQqBotBindCodeModel {
-  code: string;
-  expiresAt: string;
-  instruction: string;
+  code: string
+  expiresAt: string
+  instruction: string
 }

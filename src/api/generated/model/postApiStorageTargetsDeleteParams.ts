@@ -7,5 +7,5 @@
  */
 
 export type PostApiStorageTargetsDeleteParams = {
-id?: number;
-};
+  id?: number
+}

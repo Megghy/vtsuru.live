@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsAssistantHistoryMessageDto } from './vTsuruCoreAIContractsAssistantHistoryMessageDto';
+import type { VTsuruCoreAIContractsAssistantHistoryMessageDto } from './vTsuruCoreAIContractsAssistantHistoryMessageDto'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfVTsuruCoreAIContractsAssistantHistoryMessageDto {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: VTsuruCoreAIContractsAssistantHistoryMessageDto[] | null;
+  data: VTsuruCoreAIContractsAssistantHistoryMessageDto[] | null
 }

@@ -1,10 +1,8 @@
 import { formatRgb } from 'culori'
-import type { GlobalThemeOverrides } from 'naive-ui'
 
 import { resolveFileUrl } from '@/shared/config/api'
-import { getAdaptiveButtonColors } from '@/shared/config/theme/buttons'
 import { resolveReadableForeground } from '@/shared/config/theme/contrast'
-import { getThemeOverrides } from '@/shared/config/theme/overrides'
+import { getShadcnCssVars } from '@/shared/config/theme/shadcn'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { hexToRgba } from '@/shared/utils'
 
@@ -15,12 +13,7 @@ import type {
   PageBackgroundType,
 } from './block/schema'
 import { getGoogleFontFamilyCss } from './googleFonts'
-import {
-  isUserPageColorDark,
-  resolveUserPageControlOverlay,
-  resolveUserPageReadableAccent,
-  resolveUserPageTextPalette,
-} from './theme'
+import { isUserPageColorDark, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
 import { normalizeUserPageColor, parseUserPageColor } from './themeColor'
 import { resolveUserPageAppearance } from './themeConfig'
 
@@ -99,7 +92,7 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
   }
 }
 
-export function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unknown) {
+function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unknown) {
   const appearance = resolveUserPageAppearance(theme)
   const surfaceAlpha =
     appearance.surfaceOpacity === undefined ? (effectiveIsDark ? 0.7 : 0.62) : appearance.surfaceOpacity / 100
@@ -119,18 +112,14 @@ export function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unkn
             : 0.26
 
   return {
-    '--user-page-ui-surface-bg': effectiveIsDark
+    surfaceBg: effectiveIsDark
       ? `rgba(24, 24, 27, ${surfaceAlpha})`
       : `rgba(255, 255, 255, ${surfaceAlpha})`,
-    '--user-page-ui-surface-bg-hover': effectiveIsDark
+    surfaceBgHover: effectiveIsDark
       ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.16)})`
       : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.1)})`,
-    '--user-page-ui-surface-bg-pressed': effectiveIsDark
-      ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.22)})`
-      : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.18)})`,
-    '--user-page-border-color': `rgba(148, 163, 184, ${borderAlpha})`,
-    '--vtsuru-card-border-color': `rgba(148, 163, 184, ${borderAlpha})`,
-  } as Record<string, string>
+    borderColor: `rgba(148, 163, 184, ${borderAlpha})`,
+  }
 }
 
 function readThemeString(theme: unknown, key: 'primaryColor' | 'backgroundColor' | 'fontFamily') {
@@ -166,26 +155,28 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
       ? applyColorOpacity(backgroundColor, appearance.surfaceOpacity)
       : ''
   const contrastSurface =
-    customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars['--user-page-ui-surface-bg'] : undefined)
+    customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars.surfaceBg : undefined)
   const textPalette = resolveUserPageTextPalette(asObject(theme) ?? undefined, effectiveIsDark, contrastSurface)
-  // 直接铺在背景图上的文字按画布亮度选色，卡片仍用表面色板
   const canvasIsDark = canvasColor ? isUserPageColorDark(canvasColor) : effectiveIsDark
   const canvasPalette = canvasColor
     ? resolveUserPageTextPalette(asObject(theme) ?? undefined, canvasIsDark, canvasColor)
     : textPalette
-  const pageText = canvasPalette.color
   const surfaceText = textPalette.color
   // 主色按当前明暗模式修正为可读色后再派生全部主色 token（如 #000 在暗色下会提亮），
   // 否则文字、描边、浅色底都会与暗色表面糊在一起
   const pagePrimary = resolveUserPageReadableAccent(rawPrimary, backgroundColor, effectiveIsDark, contrastSurface)
-  const canvasAccent = resolveUserPageReadableAccent(
-    rawPrimary,
-    canvasColor || backgroundColor,
-    canvasIsDark,
-    canvasColor || contrastSurface,
-  )
 
-  const contentColor = customSurface || backgroundColor || surfaceVars['--user-page-ui-surface-bg']
+  // 在用户展示页中，控件（Input、Select等）多承载于半透明磨砂卡片内。
+  // 若用户配置了 backgroundColor，但未指定透明度，不可直接把 100% 实色纯背景赋给控件底色 --background，
+  // 否则在半透明卡片内会呈现突兀的实心重色块。此处采用与当前表面亮暗协调的半透明磨砂底。
+  const controlBg =
+    customSurface ||
+    (backgroundColor
+      ? effectiveIsDark
+        ? `color-mix(in srgb, ${backgroundColor} 28%, rgba(24, 24, 27, 0.75))`
+        : `color-mix(in srgb, ${backgroundColor} 20%, rgba(255, 255, 255, 0.7))`
+      : surfaceVars.surfaceBg)
+
   const defaultCardSurface = applyColorOpacity(
     siteTokens.surfaceHover,
     appearance.surfaceOpacity ?? (effectiveIsDark ? 70 : 62),
@@ -194,253 +185,51 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     customSurface || (backgroundColor ? mixWithTransparent(backgroundColor, 0.32) : defaultCardSurface)
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
-    : surfaceVars['--user-page-ui-surface-bg-hover']
-  const themeCanvasBg = backgroundColor || siteTokens.surfaceHover
-  const borderColor = surfaceVars['--vtsuru-card-border-color']
+    : surfaceVars.surfaceBgHover
+  const borderColor = surfaceVars.borderColor
   const radius = `${appearance.radius}px`
 
   return {
-    ...surfaceVars,
-    '--vtsuru-primary': pagePrimary,
-    '--vtsuru-primary-hover': pagePrimary,
-    '--vtsuru-primary-pressed': pagePrimary,
-    '--vtsuru-primary-fg': resolveReadableForeground(pagePrimary, contentColor, effectiveIsDark),
-    '--vtsuru-brand': pagePrimary,
-    '--vtsuru-brand-soft': `color-mix(in srgb, ${pagePrimary} 12%, transparent)`,
-    '--vtsuru-brand-tint': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
-    '--vtsuru-page-primary': pagePrimary,
-    '--vtsuru-page-primary-soft': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
-    '--vtsuru-page-primary-active': `color-mix(in srgb, ${pagePrimary} 26%, transparent)`,
-    '--vtsuru-page-primary-border': `color-mix(in srgb, ${pagePrimary} 28%, transparent)`,
-    '--vtsuru-page-primary-focus': `color-mix(in srgb, ${pagePrimary} 42%, transparent)`,
-    '--vtsuru-page-primary-readable': pagePrimary,
-    '--vtsuru-page-canvas-accent': canvasAccent,
+    ...getShadcnCssVars(siteTokens),
+    '--background': controlBg,
+    '--foreground': surfaceText,
+    '--card': surfaceColor,
+    '--card-foreground': surfaceText,
+    '--popover': surfaceColor,
+    '--popover-foreground': surfaceText,
+    '--primary': pagePrimary,
+    '--primary-foreground': resolveReadableForeground(pagePrimary, controlBg, effectiveIsDark),
+    '--brand': pagePrimary,
+    '--brand-foreground': resolveReadableForeground(pagePrimary, controlBg, effectiveIsDark),
+    '--brand-soft': `color-mix(in srgb, ${pagePrimary} 12%, transparent)`,
+    '--brand-tint': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
+    '--secondary': surfaceHover,
+    '--secondary-foreground': surfaceText,
+    '--muted': surfaceHover,
+    '--muted-foreground': textPalette.muted,
+    '--accent': surfaceHover,
+    '--accent-foreground': surfaceText,
+    '--border': borderColor,
+    '--input': borderColor,
+    '--ring': pagePrimary,
+    '--radius': radius,
+    '--radius-control': radius,
+    '--radius-small': radius,
+    '--ui-border-width': appearance.borderWidth,
+    '--ui-border-style': appearance.borderStyle,
+    '--ui-shadow': appearance.shadow,
+    '--ui-height-sm': appearance.controlHeights.small,
+    '--ui-height': appearance.controlHeights.medium,
+    '--ui-height-lg': appearance.controlHeights.large,
+    '--border-width': appearance.borderWidth,
+    '--border-style': appearance.borderStyle,
     '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
-    '--vtsuru-page-content-color': contentColor,
-    '--vtsuru-page-card-bg': surfaceColor,
-    '--vtsuru-page-card-bg-embedded': surfaceHover,
-    '--vtsuru-page-text': pageText,
-    '--vtsuru-page-text-muted': canvasPalette.muted,
-    '--vtsuru-page-text-subtle': canvasPalette.subtle,
-    '--vtsuru-fg': surfaceText,
-    '--vtsuru-surface-fg': surfaceText,
-    '--vtsuru-fg-muted': textPalette.muted,
-    '--vtsuru-surface-fg-muted': textPalette.muted,
-    '--vtsuru-surface-fg-subtle': textPalette.subtle,
-    '--vtsuru-fg-disabled': siteTokens.disabledForeground,
-    '--vtsuru-page-fg-disabled': siteTokens.disabledForeground,
-    '--vtsuru-page-placeholder-disabled': siteTokens.placeholderDisabled,
-    '--vtsuru-bg': contentColor,
-    '--vtsuru-bg-surface': surfaceColor,
-    '--vtsuru-bg-muted': surfaceHover,
-    '--vtsuru-bg-inset': surfaceHover,
-    '--vtsuru-bg-elevated': surfaceColor,
-    '--vtsuru-border': borderColor,
-    '--vtsuru-page-bg': backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : 'transparent',
-    '--user-page-theme-content-bg': 'transparent',
-    '--text-color-base': surfaceText,
-    '--text-color-1': surfaceText,
-    '--text-color-2': textPalette.muted,
-    '--text-color-3': textPalette.subtle,
-    '--primary-color': pagePrimary,
-    '--user-page-theme-surface-bg': surfaceColor,
-    '--user-page-theme-surface-bg-hover': surfaceHover,
-    '--user-page-theme-canvas-bg': themeCanvasBg,
-    '--vtsuru-page-radius': radius,
-    '--vtsuru-radius': radius,
-    '--vtsuru-radius-control': radius,
-    '--vtsuru-radius-small': radius,
     '--vtsuru-page-spacing': `${appearance.spacing}px`,
     '--vtsuru-page-max-width': appearance.pageMaxWidth,
-    '--vtsuru-page-border-width': appearance.borderWidth,
-    '--vtsuru-page-border-style': appearance.borderStyle,
-    '--vtsuru-page-border': `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`,
-    '--vtsuru-page-shadow': appearance.shadow,
-    '--vtsuru-border-width': appearance.borderWidth,
-    '--vtsuru-border-style': appearance.borderStyle,
-    '--vtsuru-shadow': appearance.shadow,
-    '--vtsuru-page-control-height-small': appearance.controlHeights.small,
-    '--vtsuru-page-control-height-medium': appearance.controlHeights.medium,
-    '--vtsuru-page-control-height-large': appearance.controlHeights.large,
+    '--vtsuru-page-text': canvasPalette.color,
+    '--vtsuru-page-text-muted': canvasPalette.muted,
+    '--vtsuru-page-text-subtle': canvasPalette.subtle,
   } as Record<string, string>
-}
-
-export function getUserPageNaiveThemeOverrides(
-  theme: unknown,
-  vars: Record<string, string>,
-  effectiveIsDark: boolean,
-): GlobalThemeOverrides {
-  const base = getThemeOverrides(buildSiteTokens(effectiveIsDark))
-  // 用户自定义主色时使用已按明暗模式修正过的页面主色，未自定义则沿用站点默认
-  const primaryColor = readThemeColor(theme, 'primaryColor') ? vars['--vtsuru-page-primary'] : ''
-  const appearance = resolveUserPageAppearance(theme)
-  const contentColor = vars['--vtsuru-page-content-color'] || vars['--user-page-ui-surface-bg']
-  const cardColor = vars['--vtsuru-page-card-bg']
-  const cardEmbeddedColor = vars['--vtsuru-page-card-bg-embedded']
-  const borderColor = vars['--vtsuru-card-border-color'] || vars['--user-page-border-color']
-  const textColor = vars['--vtsuru-surface-fg'] || vars['--vtsuru-page-text']
-  const mutedTextColor = vars['--vtsuru-surface-fg-muted']
-  const subtleTextColor = vars['--vtsuru-surface-fg-subtle']
-  const disabledTextColor = vars['--vtsuru-page-fg-disabled']
-  const disabledPlaceholderColor = vars['--vtsuru-page-placeholder-disabled']
-  const pagePrimary = vars['--vtsuru-page-primary']
-  const pagePrimaryFocus = vars['--vtsuru-page-primary-focus']
-  const pagePrimaryForeground = resolveReadableForeground(pagePrimary, contentColor, effectiveIsDark)
-  const controlOverlay = resolveUserPageControlOverlay(contentColor)
-  const radius = `${appearance.radius}px`
-  const border = `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`
-  const primaryBorder = `${appearance.borderWidth} ${appearance.borderStyle} ${primaryColor || borderColor}`
-
-  return {
-    ...base,
-    common: {
-      ...base.common,
-      fontFamily: vars['--vtsuru-page-font-family'],
-      borderColor,
-      dividerColor: borderColor,
-      textColorBase: textColor,
-      textColor1: textColor,
-      textColor2: mutedTextColor,
-      textColor3: subtleTextColor,
-      textColorDisabled: disabledTextColor,
-      cardColor,
-      modalColor: contentColor,
-      popoverColor: contentColor,
-      borderRadius: radius,
-      borderRadiusSmall: radius,
-      heightSmall: appearance.controlHeights.small,
-      heightMedium: appearance.controlHeights.medium,
-      heightLarge: appearance.controlHeights.large,
-      boxShadow1: appearance.shadow,
-      boxShadow2: appearance.shadow,
-      boxShadow3: appearance.shadow,
-      ...(primaryColor ? { primaryColor, primaryColorHover: primaryColor, primaryColorPressed: primaryColor } : {}),
-    },
-    Card: {
-      ...base.Card,
-      color: cardColor,
-      colorEmbedded: cardEmbeddedColor,
-      borderColor,
-      borderRadius: radius,
-      boxShadow: appearance.shadow,
-    },
-    Input: {
-      ...base.Input,
-      heightSmall: appearance.controlHeights.small,
-      heightMedium: appearance.controlHeights.medium,
-      heightLarge: appearance.controlHeights.large,
-      borderRadius: radius,
-      color: controlOverlay.color,
-      colorFocus: controlOverlay.focus,
-      colorDisabled: controlOverlay.disabled,
-      textColor,
-      textColorDisabled: disabledTextColor,
-      placeholderColor: subtleTextColor,
-      placeholderColorDisabled: disabledPlaceholderColor,
-      border,
-      borderHover: primaryBorder,
-      borderFocus: primaryBorder,
-    },
-    Select: {
-      ...base.Select,
-      peers: {
-        ...base.Select?.peers,
-        InternalSelection: {
-          ...base.Select?.peers?.InternalSelection,
-          heightSmall: appearance.controlHeights.small,
-          heightMedium: appearance.controlHeights.medium,
-          heightLarge: appearance.controlHeights.large,
-          borderRadius: radius,
-          border,
-          borderHover: primaryBorder,
-          borderFocus: primaryBorder,
-          colorDisabled: controlOverlay.disabled,
-          textColorDisabled: disabledTextColor,
-          placeholderColorDisabled: disabledPlaceholderColor,
-          arrowColorDisabled: disabledPlaceholderColor,
-        },
-        InternalSelectMenu: {
-          ...base.Select?.peers?.InternalSelectMenu,
-          borderRadius: radius,
-        },
-      },
-    },
-    Button: {
-      ...base.Button,
-      ...getAdaptiveButtonColors({
-        isDark: effectiveIsDark,
-        surface: contentColor,
-        color: controlOverlay.color,
-        colorHover: controlOverlay.focus,
-        colorPressed: controlOverlay.disabled,
-        secondary: {
-          color: controlOverlay.focus,
-          hover: controlOverlay.disabled,
-          pressed: controlOverlay.disabled,
-        },
-        textColor,
-        borderColor,
-        borderWidth: appearance.borderWidth,
-        borderStyle: appearance.borderStyle,
-        ...(primaryColor ? { primary: { color: primaryColor } } : {}),
-      }),
-      heightSmall: appearance.controlHeights.small,
-      heightMedium: appearance.controlHeights.medium,
-      heightLarge: appearance.controlHeights.large,
-      borderRadiusTiny: radius,
-      borderRadiusSmall: radius,
-      borderRadiusMedium: radius,
-      borderRadiusLarge: radius,
-    },
-    Popover: {
-      ...base.Popover,
-      borderRadius: radius,
-      boxShadow: appearance.shadow,
-    },
-    Dialog: {
-      ...base.Dialog,
-      borderRadius: radius,
-    },
-    Checkbox: {
-      ...base.Checkbox,
-      borderRadius: radius,
-      border,
-      borderChecked: primaryBorder,
-    },
-    Radio: {
-      ...base.Radio,
-      buttonBorderColor: borderColor,
-      buttonBorderColorActive: pagePrimary,
-      buttonBorderColorHover: pagePrimary,
-      buttonBoxShadowFocus: `inset 0 0 0 1px ${pagePrimary}, 0 0 0 2px ${pagePrimaryFocus}`,
-      buttonBoxShadowHover: `inset 0 0 0 1px ${pagePrimary}`,
-      buttonColor: controlOverlay.color,
-      buttonColorActive: pagePrimary,
-      buttonTextColor: textColor,
-      buttonTextColorActive: pagePrimaryForeground,
-      buttonTextColorHover: pagePrimary,
-      buttonBorderRadius: radius,
-      dotColorActive: pagePrimary,
-    },
-    Empty: {
-      ...base.Empty,
-      textColor: mutedTextColor,
-      iconColor: pagePrimary,
-      extraTextColor: mutedTextColor,
-    },
-    Tooltip: { ...base.Tooltip, borderRadius: radius, boxShadow: appearance.shadow },
-    Menu: { ...base.Menu, borderRadius: radius },
-    Dropdown: { ...base.Dropdown, borderRadius: radius },
-    Message: { ...base.Message, borderRadius: radius, border, boxShadow: appearance.shadow },
-    Notification: { ...base.Notification, borderRadius: radius, boxShadow: appearance.shadow },
-    Tag: { ...base.Tag, borderRadius: radius },
-    Alert: { ...base.Alert, borderRadius: radius },
-    List: { ...base.List, borderRadius: radius },
-    Pagination: {
-      ...base.Pagination,
-      itemBorderRadius: radius,
-    },
-  }
 }
 
 export function getPageBackgroundCssVars(bg: ResolvedPageBackground, effectiveIsDark: boolean) {

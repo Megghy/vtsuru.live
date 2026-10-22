@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QueueControllerResponseQueueResponseAndSettings } from './queueControllerResponseQueueResponseAndSettings';
+import type { QueueControllerResponseQueueResponseAndSettings } from './queueControllerResponseQueueResponseAndSettings'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfQueueControllerResponseQueueResponseAndSettings {
-  message: string;
-  code: number;
-  data: QueueControllerResponseQueueResponseAndSettings;
+  message: string
+  code: number
+  data: QueueControllerResponseQueueResponseAndSettings
 }

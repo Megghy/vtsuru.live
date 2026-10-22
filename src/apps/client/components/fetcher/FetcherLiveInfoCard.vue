@@ -1,11 +1,18 @@
 <script setup lang="ts">
-import { PeopleOutline, PersonCircleOutline, TimeOutline, TvOutline } from '@vicons/ionicons5'
+import {
+  Clock,
+  Flame,
+  Tv,
+  User,
+} from 'lucide-vue-next'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { streamingInfo } from '@/apps/client/data/info'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Spin } from '@/shared/ui/spin'
 
 const accountInfo = useAccount()
 
@@ -19,62 +26,81 @@ const streamingDuration = computed(() => {
 </script>
 
 <template>
-  <NCard
-    title="直播间信息"
-    size="small"
-    bordered
-    style="width: 100%"
-  >
-    <template #header-extra>
-      <NTag
-        v-if="isStreaming"
-        type="success"
-        size="small"
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex-row items-center justify-between space-y-0">
+      <CardTitle class="text-sm font-semibold">直播间信息</CardTitle>
+
+      <div
+        class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border"
+        :class="
+          isStreaming
+            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+            : 'bg-muted text-muted-foreground border-border'
+        "
       >
-        <template #icon>
-          <NIcon :component="TvOutline" />
-        </template>
-        直播中
-      </NTag>
-      <NTag
-        v-else
-        type="default"
-        size="small"
-      >
-        未开播
-      </NTag>
-    </template>
-    <NSpin
-      :show="!streamingInfo"
-      description="正在获取直播间信息..."
-    >
-      <NDescriptions
-        v-if="streamingInfo"
-        label-placement="top"
-        bordered
-        :columns="2"
-        size="small"
-      >
-        <NDescriptionsItem label="直播间标题">
-          <NEllipsis :line-clamp="2">
-            {{ streamingInfo.title ?? 'N/A' }}
-          </NEllipsis>
-        </NDescriptionsItem>
-        <NDescriptionsItem label="主播">
-          <NIcon :component="PersonCircleOutline" /> {{ accountInfo.streamerInfo?.name ?? 'N/A' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="人气">
-          <NIcon :component="PeopleOutline" /> {{ streamingInfo.online?.toLocaleString() ?? 'N/A' }}
-        </NDescriptionsItem>
-        <NDescriptionsItem label="开播时间">
-          <NIcon :component="TimeOutline" /> {{ streamingDuration }}
-        </NDescriptionsItem>
-      </NDescriptions>
-      <NEmpty
-        v-else
-        description="暂无直播间信息"
-        style="padding: 16px 0"
+        <span
+          class="size-1.5 rounded-full"
+          :class="isStreaming ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/60'"
+        />
+        {{ isStreaming ? '直播中' : '未开播' }}
+      </div>
+    </CardHeader>
+
+    <CardContent class="p-3">
+      <Spin
+        v-if="!streamingInfo"
+        class="py-8"
+        description="正在获取直播间信息..."
       />
-    </NSpin>
-  </NCard>
+
+      <div
+        v-else
+        class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"
+      >
+        <!-- 直播间标题 -->
+        <div class="p-2.5 rounded-md border border-border bg-muted/20 space-y-1 sm:col-span-2">
+          <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Tv class="size-3.5" />
+            <span>直播间标题</span>
+          </div>
+          <span class="text-xs font-semibold text-foreground block">
+            {{ streamingInfo.title || '—' }}
+          </span>
+        </div>
+
+        <!-- 主播 -->
+        <div class="p-2.5 rounded-md border border-border bg-muted/20 space-y-1">
+          <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <User class="size-3.5" />
+            <span>主播昵称</span>
+          </div>
+          <span class="text-xs font-medium text-foreground block">
+            {{ accountInfo.streamerInfo?.name || '—' }}
+          </span>
+        </div>
+
+        <!-- 人气 -->
+        <div class="p-2.5 rounded-md border border-border bg-muted/20 space-y-1">
+          <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Flame class="size-3.5" />
+            <span>当前人气</span>
+          </div>
+          <span class="text-xs font-medium text-foreground block font-mono">
+            {{ streamingInfo.online != null ? streamingInfo.online.toLocaleString() : '—' }}
+          </span>
+        </div>
+
+        <!-- 开播时间 / 持续时长 -->
+        <div class="p-2.5 rounded-md border border-border bg-muted/20 space-y-1 sm:col-span-2">
+          <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Clock class="size-3.5" />
+            <span>开播时长</span>
+          </div>
+          <span class="text-xs font-medium text-foreground block">
+            {{ streamingDuration }}
+          </span>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 </template>

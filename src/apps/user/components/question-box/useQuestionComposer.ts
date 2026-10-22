@@ -2,7 +2,7 @@ import { useNow } from '@vueuse/core'
 import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { QAInfo, UserInfo } from '@/api/api-models'
+import type { UserInfo } from '@/api/api-models'
 import { postApiQaSend } from '@/api/generated/qa/qa'
 import { refreshCaptcha, requestWithCaptchaRetry, type CaptchaHandle } from '@/shared/captcha'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -195,10 +195,7 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
               headers[k] = v
             }
           }
-          return postApiQaSend(
-            { data: dataStr, files: selectedFiles.value },
-            { headers },
-          ) as any
+          return postApiQaSend({ data: dataStr, files: selectedFiles.value }, { headers }) as any
         },
       })
       if (response.code !== 200) throw new Error(response.message)

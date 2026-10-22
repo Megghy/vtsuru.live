@@ -7,9 +7,9 @@
  */
 
 export type PostApiLiveRequestAddParams = {
-/**
- * @minLength 0
- * @maxLength 30
- */
-name?: string;
-};
+  /**
+   * @minLength 0
+   * @maxLength 30
+   */
+  name?: string
+}

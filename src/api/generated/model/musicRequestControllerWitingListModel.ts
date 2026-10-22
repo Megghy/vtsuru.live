@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { MusicRequestControllerWaitingMusicModel } from './musicRequestControllerWaitingMusicModel';
+import type { MusicRequestControllerWaitingMusicModel } from './musicRequestControllerWaitingMusicModel'
 
 export interface MusicRequestControllerWitingListModel {
-  playing?: MusicRequestControllerWaitingMusicModel;
-  waiting: MusicRequestControllerWaitingMusicModel[];
+  playing?: MusicRequestControllerWaitingMusicModel
+  waiting: MusicRequestControllerWaitingMusicModel[]
 }

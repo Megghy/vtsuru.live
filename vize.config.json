@@ -1,0 +1,10 @@
+{
+  "$schema": "https://vizejs.dev/schema.json",
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "esnext",
+    "moduleResolution": "bundler"
+  },
+  "include": ["src/**/*.vue", "src/**/*.ts", "src/**/*.tsx"],
+  "exclude": ["node_modules", "dist", "src/api/generated"]
+}

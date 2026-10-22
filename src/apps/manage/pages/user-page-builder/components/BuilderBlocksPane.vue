@@ -1,19 +1,14 @@
 <script setup lang="ts">
 import { AddCircleOutline, BookmarkOutline, LayersOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NDropdown,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NMenu,
-  NPopover,
-  NScrollbar,
-  NTooltip,
-} from 'naive-ui'
 import { computed, inject } from 'vue'
+
+import { Button } from '@/shared/ui/button'
+import { Card, CardHeader, CardTitle } from '@/shared/ui/card'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { UserPageEditorKey } from '../context'
 import BlockManager from './BlockManager.vue'
@@ -38,135 +33,131 @@ const {
 </script>
 
 <template>
-  <NCard
-    class="pane-card blocks-pane"
-    title="区块"
-    content-style="padding: 0; height: 100%; min-height: 0; display: flex; flex-direction: column; overflow: hidden"
-  >
-    <template #header-extra>
-      <NFlex
-        class="blocks-pane__actions"
-        :wrap="false"
-        size="small"
-      >
-        <NTooltip v-if="selectionCount">
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
-              aria-label="保存所选区块为模板"
-              @click="saveSelectionAsTemplate"
-            >
-              <template #icon>
-                <NIcon><BookmarkOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          保存所选区块为模板
-        </NTooltip>
+  <Card class="pane-card min-w-0 h-full flex flex-col overflow-hidden">
+    <CardHeader class="p-2 border-b border-border flex flex-row items-center justify-between space-y-0">
+      <CardTitle class="text-xs font-semibold">区块</CardTitle>
 
-        <NTooltip
-          :delay="0"
-          placement="bottom"
-        >
-          <template #trigger>
-            <NDropdown
-              :options="templateOptions"
-              trigger="click"
-              @select="(key) => insertTemplate(String(key))"
-            >
-              <NButton
-                quaternary
-                circle
-                size="small"
-                aria-label="应用起始模板"
-                title="起始模板"
+      <div class="blocks-pane__actions flex items-center gap-1">
+        <TooltipProvider v-if="selectionCount">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                class="size-7 p-0"
+                aria-label="保存所选区块为模板"
+                @click="saveSelectionAsTemplate"
               >
-                <template #icon>
-                  <NIcon><LayersOutline /></NIcon>
-                </template>
-              </NButton>
-            </NDropdown>
-          </template>
-          起始模板
-        </NTooltip>
+                <component
+                  :is="BookmarkOutline"
+                  class="size-3.5"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>保存所选区块为模板</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
-        <NPopover
-          v-model:show="showAddMenu"
-          trigger="click"
-          placement="bottom-end"
-        >
-          <template #trigger>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  type="primary"
-                  secondary
-                  circle
-                  size="small"
-                  aria-label="添加区块"
+        <DropdownMenu>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <DropdownMenuTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    class="size-7 p-0"
+                    aria-label="应用起始模板"
+                    title="起始模板"
+                  >
+                    <component
+                      :is="LayersOutline"
+                      class="size-3.5"
+                    />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>起始模板</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <DropdownMenuContent
+            align="end"
+            class="w-40 text-xs"
+          >
+            <DropdownMenuItem
+              v-for="opt in templateOptions"
+              :key="opt.key"
+              @click="insertTemplate(String(opt.key))"
+            >
+              {{ opt.label }}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <Popover v-model:open="showAddMenu">
+          <PopoverTrigger as-child>
+            <Button
+              class="size-7 p-0"
+              aria-label="添加区块"
+            >
+              <component
+                :is="AddCircleOutline"
+                class="size-4"
+              />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent
+            align="end"
+            class="w-72 p-2 text-xs flex flex-col gap-2"
+          >
+            <Input
+              v-model="blockSearch"
+              placeholder="搜索区块名称或关键词..."
+              size="xs"
+            />
+            <div class="max-h-72 overflow-y-auto flex flex-col gap-0.5">
+              <template v-if="addBlockOptions.length">
+                <template
+                  v-for="opt in addBlockOptions"
+                  :key="opt.key"
                 >
-                  <template #icon>
-                    <NIcon><AddCircleOutline /></NIcon>
-                  </template>
-                </NButton>
+                  <div
+                    v-if="String(opt.key).startsWith('divider:')"
+                    class="pt-2 pb-1 px-1.5 text-[11px] font-bold text-muted-foreground border-b border-border mb-1"
+                  >
+                    <component
+                      :is="opt.label"
+                      v-if="typeof opt.label === 'function'"
+                    />
+                    <span v-else>{{ opt.label }}</span>
+                  </div>
+                  <button
+                    v-else
+                    type="button"
+                    class="flex items-center gap-2 w-full p-1.5 rounded hover:bg-muted text-left text-xs transition-colors cursor-pointer select-none"
+                    @click="handleAddBlockMenuSelect(String(opt.key))"
+                  >
+                    <component
+                      :is="opt.icon"
+                      v-if="opt.icon"
+                      class="size-4 text-muted-foreground shrink-0"
+                    />
+                    <span>{{ typeof opt.label === 'function' ? opt.key : opt.label }}</span>
+                  </button>
+                </template>
               </template>
-              添加区块
-            </NTooltip>
-          </template>
-          <div class="blocks-pane__search">
-            <NInput
-              v-model:value="blockSearch"
-              clearable
-              placeholder="搜索区块名称或关键词"
-            />
-          </div>
-          <NScrollbar style="width: min(310px, calc(100vw - 32px)); max-height: min(360px, calc(100dvh - 160px))">
-            <NMenu
-              v-if="addBlockOptions.length"
-              :options="addBlockOptions"
-              :indent="18"
-              :root-indent="18"
-              :node-props="
-                (option: any) =>
-                  String(option?.key || '').startsWith('divider:')
-                    ? { style: 'margin-top: 8px; padding: 8px 12px 4px; cursor: default;' }
-                    : {}
-              "
-              @update:value="(key) => handleAddBlockMenuSelect(String(key))"
-            />
-            <NEmpty
-              v-else
-              size="small"
-              description="没有匹配的区块"
-              style="padding: 24px"
-            />
-          </NScrollbar>
-        </NPopover>
-      </NFlex>
-    </template>
+              <div
+                v-else
+                class="py-6 flex justify-center"
+              >
+                <Empty description="没有匹配的区块" />
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
+    </CardHeader>
 
-    <BlockManager :block-action-options="blockActionOptions" />
-  </NCard>
+    <div class="flex-1 min-h-0 overflow-hidden flex flex-col">
+      <BlockManager :block-action-options="blockActionOptions" />
+    </div>
+  </Card>
 </template>
-
-<style scoped>
-.blocks-pane :deep(.n-card-header) {
-  padding: 10px 12px;
-}
-
-.blocks-pane :deep(.n-card-header__main) {
-  min-width: max-content;
-}
-
-.blocks-pane__actions {
-  gap: 2px !important;
-}
-
-.blocks-pane__search {
-  width: min(310px, calc(100vw - 32px));
-  padding: 10px 10px 4px;
-  box-sizing: border-box;
-}
-</style>

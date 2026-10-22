@@ -6,14 +6,26 @@ import {
   Info24Filled,
   PresenceBlocked16Regular,
 } from '@vicons/fluent'
-import { NButton, NCard, NFlex, NIcon, NPopconfirm, NTag, NText, NTime, NTooltip } from 'naive-ui'
-import type { CSSProperties } from 'vue'
 import { computed } from 'vue'
 
 import type { ResponseQueueModel } from '@/api/api-models'
 import { QueueFrom, QueueStatus } from '@/api/api-models'
 import UserBadges from '@/apps/open-live/components/UserBadges.vue'
 import { getQueuePaymentMeta, useQueue } from '@/composables/useQueue'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
   queueData: ResponseQueueModel
@@ -32,267 +44,211 @@ const canBlock = computed(
   () =>
     store.configCanEdit &&
     (props.queueData.from === QueueFrom.Danmaku || props.queueData.from === QueueFrom.Gift) &&
-    !!props.queueData.user?.uid,
+    Boolean(props.queueData.user?.uid),
 )
-const cardThemeOverrides = { color: 'var(--vtsuru-bg-muted)' }
 
 function manage(status: QueueStatus) {
   store.queueDataBeingManaged = props.queueData.id
   store.updateStatus(props.queueData, status)
 }
 
-const indexStyle = computed<CSSProperties>(() => {
-  const base: CSSProperties = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontWeight: 'bold',
-    width: '24px',
-    height: '24px',
-    borderRadius: '50%',
-    color: '#fff',
-    fontSize: '13px',
-    transition: 'opacity 0.2s',
-  }
-  switch (props.queueData.status) {
-    case QueueStatus.Progressing:
-      return { ...base, backgroundColor: 'var(--vtsuru-success)' }
-    case QueueStatus.Finish:
-      return {
-        ...base,
-        backgroundColor: 'var(--vtsuru-bg-inset)',
-        color: 'var(--vtsuru-fg)',
-        border: '1px solid var(--vtsuru-border)',
-      }
-    case QueueStatus.Cancel:
-      return { ...base, backgroundColor: 'var(--vtsuru-error)' }
-    default:
-      return { ...base, backgroundColor: 'var(--vtsuru-info)' }
-  }
-})
+function formatRelativeTime(timestamp: number) {
+  const ts = typeof timestamp === 'number' && timestamp < 1e12 ? timestamp * 1000 : timestamp
+  const diffSec = Math.floor((Date.now() - ts) / 1000)
+  if (diffSec < 60) return '刚刚'
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}分钟前`
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}小时前`
+  return `${Math.floor(diffSec / 86400)}天前`
+}
 </script>
 
 <template>
-  <NCard
-    size="small"
-    :theme-overrides="cardThemeOverrides"
-    content-style="padding: 8px 12px;"
-    bordered
-    :style="isProcessing ? 'border-left: 4px solid var(--vtsuru-success);' : undefined"
+  <div
+    class="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card transition-all"
+    :class="{
+      'border-l-4 border-l-emerald-500 bg-emerald-500/5': isProcessing,
+      'hover:border-brand/40': !isProcessing,
+    }"
   >
-    <NFlex
-      justify="space-between"
-      align="center"
-      :wrap="false"
-    >
-      <!-- 左侧信息 -->
-      <NFlex
-        align="center"
-        :size="8"
-        :wrap="false"
+    <!-- 左侧信息 -->
+    <div class="flex items-center gap-2.5 min-w-0">
+      <span
+        class="inline-flex items-center justify-center font-bold w-6 h-6 rounded-full text-xs shrink-0 font-mono"
+        :class="{
+          'bg-emerald-500 text-white animate-pulse': isProcessing,
+          'bg-muted text-muted-foreground': queueData.status === QueueStatus.Finish,
+          'bg-destructive text-destructive-foreground': queueData.status === QueueStatus.Cancel,
+          'bg-brand/10 text-brand': queueData.status === QueueStatus.Waiting,
+        }"
       >
-        <span
-          :style="indexStyle"
-          class="queue-index"
-          :class="{ 'queue-index-processing': isProcessing }"
-        >
-          {{ index }}
-        </span>
-        <NText
-          strong
-          style="font-size: 16px"
-        >
-          <NTooltip>
-            <template #trigger>
-              {{ queueData.user?.name }}
-            </template>
+        {{ index }}
+      </span>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="font-medium text-sm text-foreground truncate max-w-[140px] sm:max-w-[220px] cursor-pointer">
+              {{ queueData.user?.name || '未知用户' }}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
             {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
-          </NTooltip>
-        </NText>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
-        <UserBadges
-          :user="queueData.user"
-          :show-fan-medal="store.settings.showFanMadelInfo"
-          size="tiny"
-        />
+      <UserBadges
+        :user="queueData.user"
+        :show-fan-medal="store.settings.showFanMadelInfo"
+        size="tiny"
+      />
 
-        <!-- 付费信息 -->
-        <NTooltip
-          v-if="store.settings.showPayment && paymentMeta.hasMysteryBoxPayment"
-          placement="top"
-        >
-          <template #trigger>
-            <NTag
-              size="small"
-              :bordered="false"
-              type="warning"
+      <!-- 付费信息 -->
+      <TooltipProvider v-if="store.settings.showPayment && paymentMeta.hasMysteryBoxPayment">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Badge
+              variant="warning"
+              class="text-[10px] px-1.5 py-0 h-4"
             >
               {{ paymentMeta.shortText }}
-            </NTag>
-          </template>
-          {{ paymentMeta.detailText }}
-        </NTooltip>
-        <NTag
-          v-if="store.settings.showPayment && paymentMeta.giftPriceText"
-          size="small"
-          :bordered="false"
-          type="error"
-        >
-          ￥ {{ paymentMeta.giftPriceText }}
-        </NTag>
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            {{ paymentMeta.detailText }}
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
-        <!-- 附加内容 -->
-        <NTooltip
-          v-if="queueData.content"
-          placement="right"
-        >
-          <template #trigger>
-            <NIcon
-              :component="Info24Filled"
-              size="16"
-              style="cursor: help; color: var(--vtsuru-fg-muted)"
-            />
-          </template>
-          <NCard
-            size="small"
-            :bordered="false"
-            style="max-width: 300px"
-          >
-            <template #header>
-              <span style="font-size: small; color: gray">
-                {{ `来自${queueData?.from === QueueFrom.Gift ? '礼物' : '弹幕'}: ` }}
-              </span>
-            </template>
-            {{ queueData?.content }}
-          </NCard>
-        </NTooltip>
-
-        <!-- 时间 -->
-        <NTooltip placement="bottom">
-          <template #trigger>
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              <NTime
-                :key="store.updateKey"
-                :time="queueData.createAt"
-                type="relative"
-              />
-            </NText>
-          </template>
-          <NTime
-            :time="queueData.createAt"
-            format="yyyy-MM-dd HH:mm:ss"
-          />
-        </NTooltip>
-      </NFlex>
-
-      <!-- 右侧操作 -->
-      <NFlex
-        justify="end"
-        align="center"
-        :size="6"
-        :wrap="false"
-        style="flex-shrink: 0"
+      <Badge
+        v-if="store.settings.showPayment && paymentMeta.giftPriceText"
+        variant="destructive"
+        class="text-[10px] px-1.5 py-0 h-4"
       >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              :type="isProcessing ? 'warning' : 'primary'"
-              :ghost="isProcessing"
+        ￥ {{ paymentMeta.giftPriceText }}
+      </Badge>
+
+      <!-- 附加弹幕/留言内容 -->
+      <TooltipProvider v-if="queueData.content">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <component
+              :is="Info24Filled"
+              class="h-3.5 w-3.5 text-muted-foreground cursor-help"
+            />
+          </TooltipTrigger>
+          <TooltipContent class="text-xs max-w-xs">
+            <div class="text-[10px] text-muted-foreground mb-0.5">
+              {{ `来自${queueData?.from === QueueFrom.Gift ? '礼物' : '弹幕'}:` }}
+            </div>
+            <div>{{ queueData?.content }}</div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+
+      <span class="text-xs text-muted-foreground hidden sm:inline font-mono">
+        {{ formatRelativeTime(queueData.createAt) }}
+      </span>
+    </div>
+
+    <!-- 右侧操作 -->
+    <div class="flex items-center gap-1 shrink-0">
+      <TooltipProvider>
+        <!-- 开始/暂停处理 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              :variant="isProcessing ? 'outline' : 'brand'"
+              :class="{ 'border-amber-500 text-amber-500 hover:bg-amber-500/10': isProcessing }"
               :disabled="hasOtherProcessing"
               :loading="store.isLoading && isManaging"
               @click="manage(isProcessing ? QueueStatus.Waiting : QueueStatus.Progressing)"
             >
-              <template #icon>
-                <NIcon :component="ClipboardTextLtr24Filled" />
-              </template>
-            </NButton>
-          </template>
-          {{ hasOtherProcessing ? '已有其他用户正在处理中' : isProcessing ? '暂停处理 (返回等待)' : '开始处理' }}
-        </NTooltip>
+              <component
+                :is="ClipboardTextLtr24Filled"
+                class="h-3.5 w-3.5"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            {{ hasOtherProcessing ? '已有其他用户正在处理中' : isProcessing ? '暂停处理 (返回等待)' : '开始处理' }}
+          </TooltipContent>
+        </Tooltip>
 
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="success"
+        <!-- 标记完成 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-emerald-500 hover:text-emerald-600 hover:bg-emerald-500/10"
               :loading="store.isLoading && isManaging"
               @click="manage(QueueStatus.Finish)"
             >
-              <template #icon>
-                <NIcon :component="Checkmark12Regular" />
-              </template>
-            </NButton>
-          </template>
-          标记为已完成
-        </NTooltip>
+              <component
+                :is="Checkmark12Regular"
+                class="h-4 w-4"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 标记为已完成 </TooltipContent>
+        </Tooltip>
 
-        <NTooltip v-if="canBlock">
-          <template #trigger>
-            <NPopconfirm @positive-click="store.blockUser(queueData)">
-              <template #trigger>
-                <NButton
-                  circle
-                  size="small"
-                  type="warning"
-                  :loading="store.isLoading && isManaging"
-                  @click="store.queueDataBeingManaged = queueData.id"
-                >
-                  <template #icon>
-                    <NIcon :component="PresenceBlocked16Regular" />
-                  </template>
-                </NButton>
-              </template>
-              确定要将 {{ queueData.user?.name }} 加入 黑名单并取消排队吗？
-            </NPopconfirm>
-          </template>
-          拉黑用户 (B站)
-        </NTooltip>
+        <!-- 拉黑用户 -->
+        <AlertDialog v-if="canBlock">
+          <AlertDialogTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-amber-500 hover:text-amber-600 hover:bg-amber-500/10"
+              :loading="store.isLoading && isManaging"
+              @click="store.queueDataBeingManaged = queueData.id"
+            >
+              <component
+                :is="PresenceBlocked16Regular"
+                class="h-3.5 w-3.5"
+              />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent class="sm:max-w-md">
+            <AlertDialogHeader>
+              <AlertDialogTitle>拉黑用户？</AlertDialogTitle>
+              <AlertDialogDescription class="text-xs">
+                确定要将 {{ queueData.user?.name }} 加入黑名单并取消当前排队吗？
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>取消</AlertDialogCancel>
+              <AlertDialogAction
+                class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                @click="store.blockUser(queueData)"
+              >
+                确认拉黑
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              circle
-              size="small"
-              type="error"
+        <!-- 取消排队 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               :loading="store.isLoading && isManaging"
               @click="manage(QueueStatus.Cancel)"
             >
-              <template #icon>
-                <NIcon :component="Dismiss16Filled" />
-              </template>
-            </NButton>
-          </template>
-          取消排队
-        </NTooltip>
-      </NFlex>
-    </NFlex>
-  </NCard>
+              <component
+                :is="Dismiss16Filled"
+                class="h-3.5 w-3.5"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 取消此排队 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  </div>
 </template>
-
-<style scoped>
-.queue-index:hover {
-  opacity: 0.85;
-}
-
-.queue-index-processing {
-  position: relative;
-}
-
-.queue-index-processing::after {
-  content: '';
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  border-radius: 50%;
-  border: 2px solid var(--vtsuru-success);
-  opacity: 0.35;
-}
-</style>

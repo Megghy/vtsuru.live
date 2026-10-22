@@ -1,22 +1,6 @@
 <script setup lang="ts">
 import { Info24Filled, Mail24Filled, PersonFeedback24Filled } from '@vicons/fluent'
-import {
-  NAlert,
-  NBackTop,
-  NButton,
-  NCard,
-  NCountdown,
-  NDivider,
-  NElement,
-  NFlex,
-  NIcon,
-  NPopconfirm,
-  NTag,
-  NText,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, onUnmounted, ref, watchEffect } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 
 import { logoutAccount } from '@/api/account'
@@ -25,15 +9,24 @@ import { postApiAccountSendVerifyEmail } from '@/api/generated/account/account'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import ManageDanmakuStatusBanner from '@/apps/manage/components/event-fetcher/ManageDanmakuStatusBanner.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
+import { Tag } from '@/shared/ui/tag'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   accountInfo: AccountInfo
 }>()
 
 const message = useMessage()
-const themeVars = useThemeVars()
 const route = useRoute()
 const canResendEmail = ref(false)
+const countdownSeconds = ref(0)
+let timer: ReturnType<typeof setInterval> | null = null
+
 const { workspace } = useManageWorkspace()
 const isEmailWaitPreview = computed(() => {
   if (!('preview' in route.query)) return false
@@ -50,16 +43,29 @@ const showBindEmail = computed(
 )
 const showEmailWait = computed(() => workspace.value === 'streamer' && !showDashboard.value && !showBindEmail.value)
 
+function updateCountdown() {
+  const remain = Math.max(0, Math.ceil(((props.accountInfo?.nextSendEmailTime ?? 0) - Date.now()) / 1000))
+  countdownSeconds.value = remain
+  canResendEmail.value = remain <= 0
+}
+
 watchEffect(() => {
   if (isEmailWaitPreview.value) {
     canResendEmail.value = true
     return
   }
   if (props.accountInfo?.isEmailVerified === false) {
-    canResendEmail.value = (props.accountInfo?.nextSendEmailTime ?? -1) <= 0
+    updateCountdown()
+    if (!timer) {
+      timer = setInterval(updateCountdown, 1000)
+    }
     return
   }
   canResendEmail.value = false
+})
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
 })
 
 async function resendEmail() {
@@ -75,21 +81,17 @@ async function resendEmail() {
     }
     canResendEmail.value = false
     message.success('发送成功, 请检查你的邮箱. 如果没有收到, 请检查垃圾邮件')
-    if (typeof props.accountInfo?.nextSendEmailTime === 'number') {
-      props.accountInfo.nextSendEmailTime += 1000 * 60
-    } else {
-      props.accountInfo.nextSendEmailTime = Date.now() + 1000 * 60
-    }
+    props.accountInfo.nextSendEmailTime = Date.now() + 1000 * 60
+    updateCountdown()
   } catch (err) {
     console.error(err)
     message.error(`发送失败: ${String(err)}`)
   }
 }
-
 </script>
 
 <template>
-  <NElement class="content-gate">
+  <div class="content-gate flex flex-1 flex-col min-h-full">
     <RouterView
       v-if="showDashboard"
       v-slot="{ Component, route: viewRoute }"
@@ -99,140 +101,124 @@ async function resendEmail() {
         :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
       >
         <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
-        <KeepAlive>
+        <Transition
+          name="page-fade"
+          mode="out-in"
+        >
+          <KeepAlive v-if="viewRoute.meta.keepAlive">
+            <component
+              :is="Component"
+              :key="String(viewRoute.name ?? viewRoute.path)"
+            />
+          </KeepAlive>
           <component
             :is="Component"
-            v-if="viewRoute.meta.keepAlive"
-            :key="String(viewRoute.name ?? viewRoute.path)"
+            v-else
+            :key="viewRoute.fullPath.split('#')[0]"
           />
-        </KeepAlive>
-        <component
-          :is="Component"
-          v-if="!viewRoute.meta.keepAlive"
-          :key="viewRoute.fullPath.split('#')[0]"
-        />
+        </Transition>
       </div>
     </RouterView>
 
     <template v-else-if="showBindEmail">
       <div class="manage-page manage-page--md">
-        <NAlert
-          type="info"
-          title="绑定邮箱后使用主播后台"
-          style="margin-bottom: 12px"
+        <Alert
+          variant="default"
+          class="mb-3 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
         >
-          主播功能需要已验证的邮箱。绑定后我们会发送验证邮件，完成验证即可进入后台。
-        </NAlert>
+          <AlertTitle class="text-xs font-semibold">绑定邮箱后使用主播后台</AlertTitle>
+          <AlertDescription class="text-xs">
+            主播功能需要已验证的邮箱。绑定后我们会发送验证邮件，完成验证即可进入后台。
+          </AlertDescription>
+        </Alert>
         <AccountSecurityPanel />
       </div>
     </template>
 
     <template v-else-if="showEmailWait">
-      <div class="manage-page manage-page--md manage-page--center">
-        <NCard
-          size="small"
-          :bordered="true"
-        >
-          <NFlex
-            vertical
-            size="large"
-            align="center"
-          >
-            <NFlex
-              justify="center"
-              align="center"
-              vertical
-            >
-              <NIcon
-                size="48"
-                :color="themeVars.primaryColor"
-              >
-                <Mail24Filled />
-              </NIcon>
-              <NText style="font-size: 20px; margin-top: 16px; font-weight: 500"> 请查收验证邮件 </NText>
-              <NText
-                depth="3"
-                style="text-align: center; margin-top: 8px"
-              >
+      <div class="manage-page manage-page--md manage-page--center flex items-center justify-center p-6">
+        <Card class="w-full max-w-lg p-6">
+          <CardContent class="flex flex-col items-center text-center p-0 space-y-4">
+            <div class="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+              <Mail24Filled class="size-7" />
+            </div>
+            <div>
+              <h2 class="text-lg font-semibold text-foreground">请查收验证邮件</h2>
+              <p class="text-xs text-muted-foreground mt-1 max-w-sm">
                 注册时已向
-                <NText
-                  type="primary"
-                  strong
-                >
-                  {{ displayEmail }}
-                </NText>
+                <strong class="text-primary font-medium">{{ displayEmail }}</strong>
                 发送验证链接，打开邮件中的链接即可进入后台
-              </NText>
-            </NFlex>
+              </p>
+            </div>
 
-            <NAlert
-              type="warning"
-              style="max-width: 450px"
+            <Alert
+              variant="default"
+              class="text-left border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
             >
-              <template #icon>
-                <NIcon>
-                  <Info24Filled />
-                </NIcon>
-              </template>
-              如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
-            </NAlert>
+              <Info24Filled class="size-4 shrink-0" />
+              <AlertDescription class="text-xs ml-2">
+                如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
+              </AlertDescription>
+            </Alert>
 
-            <NFlex>
-              <NButton
-                type="primary"
+            <div class="flex items-center gap-2 pt-2">
+              <Button
                 :disabled="!canResendEmail"
-                style="min-width: 140px"
+                class="gap-1.5"
                 @click="resendEmail"
               >
-                <template #icon>
-                  <NIcon>
-                    <Mail24Filled />
-                  </NIcon>
-                </template>
+                <Mail24Filled class="size-4" />
                 重新发送验证邮件
-              </NButton>
-              <NTag
+              </Button>
+              <Tag
                 v-if="!canResendEmail"
                 type="warning"
                 round
               >
-                <NCountdown
-                  :duration="(accountInfo?.nextSendEmailTime ?? 0) - Date.now()"
-                  @finish="canResendEmail = true"
-                />
-                后可重新发送
-              </NTag>
-            </NFlex>
+                {{ countdownSeconds }}s 后可重新发送
+              </Tag>
+            </div>
 
-            <NDivider style="width: 80%; min-width: 250px" />
+            <Separator class="my-4 w-4/5" />
 
-            <NPopconfirm @positive-click="logoutAccount">
+            <Popconfirm
+              positive-text="退出登录"
+              negative-text="取消"
+              @positive-click="logoutAccount"
+            >
               <template #trigger>
-                <NButton secondary>
-                  <template #icon>
-                    <NIcon>
-                      <PersonFeedback24Filled />
-                    </NIcon>
-                  </template>
+                <Button
+                  variant="outline"
+                  class="gap-1.5"
+                >
+                  <PersonFeedback24Filled class="size-4" />
                   切换账号
-                </NButton>
+                </Button>
               </template>
               确定要登出当前账号吗？
-            </NPopconfirm>
-          </NFlex>
-        </NCard>
+            </Popconfirm>
+          </CardContent>
+        </Card>
       </div>
     </template>
-
-    <NBackTop />
-  </NElement>
+  </div>
 </template>
 
 <style scoped>
-.content-gate {
-  display: flex;
-  flex: 1;
-  min-height: 100%;
-  flex-direction: column;
+:deep(.page-fade-enter-active),
+:deep(.page-fade-leave-active) {
+  transition:
+    opacity 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.page-fade-enter-from) {
+  opacity: 0;
+  transform: translateY(3px);
+}
+
+:deep(.page-fade-leave-to) {
+  opacity: 0;
+  transform: translateY(-3px);
 }
 </style>

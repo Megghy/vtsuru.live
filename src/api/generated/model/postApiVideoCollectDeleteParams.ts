@@ -7,5 +7,5 @@
  */
 
 export type PostApiVideoCollectDeleteParams = {
-id?: string;
-};
+  id?: string
+}

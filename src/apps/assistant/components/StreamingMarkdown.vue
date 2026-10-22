@@ -184,20 +184,20 @@ onBeforeUnmount(endParser)
   height: 14px;
   margin: 0 0.45em 0 -1.35em;
   vertical-align: -2px;
-  accent-color: var(--vtsuru-brand, #23ade5);
+  accent-color: var(--brand, #23ade5);
 }
 
 .streaming-markdown :deep(blockquote) {
   margin: 0.55em 0;
   padding: 6px 10px;
-  border-left: 3px solid var(--vtsuru-brand-tint, rgba(35, 173, 229, 0.24));
+  border-left: 3px solid var(--brand-tint, rgba(35, 173, 229, 0.24));
   border-radius: 0 6px 6px 0;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
-  color: var(--vtsuru-fg-muted, inherit);
+  background: var(--muted, rgba(128, 128, 128, 0.08));
+  color: var(--muted-foreground, inherit);
 }
 
 .streaming-markdown :deep(a) {
-  color: var(--vtsuru-brand, #23ade5);
+  color: var(--brand, #23ade5);
   text-decoration: none;
 }
 
@@ -206,9 +206,9 @@ onBeforeUnmount(endParser)
 }
 
 .streaming-markdown :deep(code) {
-  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.18));
   border-radius: 4px;
-  background: var(--vtsuru-bg-elevated, rgba(128, 128, 128, 0.08));
+  background: var(--popover, rgba(128, 128, 128, 0.08));
   color: inherit;
   font-family: ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace;
   font-size: 0.92em;
@@ -223,9 +223,9 @@ onBeforeUnmount(endParser)
   margin: 0.65em 0;
   overflow: auto;
   padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.18));
   border-radius: 8px;
-  background: var(--vtsuru-bg-elevated, rgba(128, 128, 128, 0.08));
+  background: var(--popover, rgba(128, 128, 128, 0.08));
   color: inherit;
   font-size: 13px;
   line-height: 1.55;
@@ -251,12 +251,12 @@ onBeforeUnmount(endParser)
 .streaming-markdown :deep(th),
 .streaming-markdown :deep(td) {
   padding: 6px 8px;
-  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.18));
   text-align: left;
 }
 
 .streaming-markdown :deep(th) {
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
+  background: var(--muted, rgba(128, 128, 128, 0.08));
   font-weight: 650;
 }
 
@@ -265,7 +265,7 @@ onBeforeUnmount(endParser)
   max-width: 100%;
   max-height: 260px;
   margin: 0.5em 0;
-  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.18));
   border-radius: 8px;
   object-fit: contain;
 }
@@ -274,7 +274,7 @@ onBeforeUnmount(endParser)
   width: 100%;
   margin: 0.8em 0;
   border: 0;
-  border-top: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.18));
 }
 
 .streaming-markdown :deep(strong) {
@@ -294,7 +294,7 @@ onBeforeUnmount(endParser)
   height: 1em;
   margin-left: 1px;
   border-radius: 1px;
-  background: var(--vtsuru-brand, #23ade5);
+  background: var(--brand, #23ade5);
   vertical-align: -0.16em;
   animation: smd-caret 1.05s steps(1) infinite;
 }

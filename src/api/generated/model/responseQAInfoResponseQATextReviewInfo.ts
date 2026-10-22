@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAICenterAITextReviewResultViolationTypes } from './vTsuruCoreAICenterAITextReviewResultViolationTypes';
+import type { VTsuruCoreAICenterAITextReviewResultViolationTypes } from './vTsuruCoreAICenterAITextReviewResultViolationTypes'
 
 export interface ResponseQAInfoResponseQATextReviewInfo {
   /** @nullable */
-  isApproved?: boolean | null;
+  isApproved?: boolean | null
   /** @nullable */
-  saftyScore?: number | null;
-  violationType: VTsuruCoreAICenterAITextReviewResultViolationTypes[];
+  saftyScore?: number | null
+  violationType: VTsuruCoreAICenterAITextReviewResultViolationTypes[]
 }

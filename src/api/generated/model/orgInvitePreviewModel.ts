@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgMemberDataOrgMemberRoles } from './orgMemberDataOrgMemberRoles';
+import type { OrgMemberDataOrgMemberRoles } from './orgMemberDataOrgMemberRoles'
 
 export interface OrgInvitePreviewModel {
-  type: string;
-  orgId: number;
-  orgName: string;
-  expiresAt: number;
-  role?: OrgMemberDataOrgMemberRoles;
-  createdByUserId: number;
+  type: string
+  orgId: number
+  orgName: string
+  expiresAt: number
+  role?: OrgMemberDataOrgMemberRoles
+  createdByUserId: number
   /** @nullable */
-  createdByUserName?: string | null;
+  createdByUserName?: string | null
   /** @nullable */
-  targetUserId?: number | null;
+  targetUserId?: number | null
   /** @nullable */
-  targetStreamerUserId?: number | null;
+  targetStreamerUserId?: number | null
 }

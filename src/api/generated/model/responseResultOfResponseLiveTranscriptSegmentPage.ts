@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseLiveTranscriptSegmentPage } from './responseLiveTranscriptSegmentPage';
+import type { ResponseLiveTranscriptSegmentPage } from './responseLiveTranscriptSegmentPage'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseLiveTranscriptSegmentPage {
-  message: string;
-  code: number;
-  data: ResponseLiveTranscriptSegmentPage;
+  message: string
+  code: number
+  data: ResponseLiveTranscriptSegmentPage
 }

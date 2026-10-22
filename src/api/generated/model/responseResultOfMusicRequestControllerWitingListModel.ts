@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { MusicRequestControllerWitingListModel } from './musicRequestControllerWitingListModel';
+import type { MusicRequestControllerWitingListModel } from './musicRequestControllerWitingListModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfMusicRequestControllerWitingListModel {
-  message: string;
-  code: number;
-  data: MusicRequestControllerWitingListModel;
+  message: string
+  code: number
+  data: MusicRequestControllerWitingListModel
 }

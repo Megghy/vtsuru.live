@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsProposalEditItemValues } from './vTsuruCoreAIContractsProposalEditItemValues';
+import type { VTsuruCoreAIContractsProposalEditItemValues } from './vTsuruCoreAIContractsProposalEditItemValues'
 
 /**
  * 单个预览项的编辑: Index 对齐 BuildPreview 下标, Values 为 字段Key -> 新值。
  */
 export interface VTsuruCoreAIContractsProposalEditItem {
-  index: number;
-  values: VTsuruCoreAIContractsProposalEditItemValues;
+  index: number
+  values: VTsuruCoreAIContractsProposalEditItemValues
 }

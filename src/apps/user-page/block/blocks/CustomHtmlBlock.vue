@@ -38,21 +38,19 @@ const iframeHeight = computed(() =>
 
 function readTheme() {
   if (!host.value) return
-  const style = getComputedStyle(host.value)
-  const read = (primary: string, fallback: string) =>
-    style.getPropertyValue(primary).trim() || style.getPropertyValue(fallback).trim()
-  const nextTheme: CustomHtmlTheme = {
-    fg: read('--vtsuru-block-fg', '--vtsuru-fg') || '#18181b',
-    fgMuted: read('--vtsuru-block-fg-muted', '--vtsuru-fg-muted') || '#71717a',
-    bg: read('--vtsuru-block-bg', '--vtsuru-bg') || '#ffffff',
-    bgElevated: read('--vtsuru-block-bg-elevated', '--vtsuru-bg-elevated') || '#ffffff',
-    border: read('--vtsuru-block-border', '--vtsuru-border') || '#e4e4e7',
-    primary: read('--vtsuru-page-primary', '--vtsuru-brand') || '#18a058',
-    primaryReadable: read('--vtsuru-page-primary-readable', '--vtsuru-brand') || '#166534',
-    radius: read('--vtsuru-page-radius', '--vtsuru-radius') || '8px',
-    borderWidth: read('--vtsuru-page-border-width', '--vtsuru-border-width') || '1px',
-    borderStyle: read('--vtsuru-page-border-style', '--vtsuru-border-style') || 'solid',
-    shadow: read('--vtsuru-page-shadow', '--vtsuru-shadow') || 'none',
+    const style = getComputedStyle(host.value)
+    const nextTheme: CustomHtmlTheme = {
+    fg: style.getPropertyValue('--foreground').trim() || '#18181b',
+    fgMuted: style.getPropertyValue('--muted-foreground').trim() || '#71717a',
+    bg: style.getPropertyValue('--background').trim() || '#ffffff',
+    bgElevated: style.getPropertyValue('--popover').trim() || '#ffffff',
+    border: style.getPropertyValue('--border').trim() || '#e4e4e7',
+    primary: style.getPropertyValue('--primary').trim() || '#18a058',
+    primaryReadable: style.getPropertyValue('--primary').trim() || '#166534',
+    radius: style.getPropertyValue('--radius').trim() || '8px',
+    borderWidth: style.getPropertyValue('--border-width').trim() || '1px',
+    borderStyle: style.getPropertyValue('--border-style').trim() || 'solid',
+    shadow: style.getPropertyValue('--ui-shadow').trim() || 'none',
     colorScheme: style.colorScheme || 'light',
   }
   if (
@@ -99,7 +97,7 @@ onBeforeUnmount(() => {
   >
     <div
       ref="host"
-      class="custom-html-host"
+      class="@container w-full min-w-0 [&_iframe]:block [&_iframe]:w-full [&_iframe]:min-h-20 [&_iframe]:border-0 [&_iframe]:bg-transparent"
     >
       <iframe
         v-if="themeReady"
@@ -115,18 +113,4 @@ onBeforeUnmount(() => {
   </BlockCard>
 </template>
 
-<style scoped>
-.custom-html-host {
-  container-type: inline-size;
-  width: 100%;
-  min-width: 0;
-}
 
-iframe {
-  display: block;
-  width: 100%;
-  min-height: 80px;
-  border: 0;
-  background: transparent;
-}
-</style>

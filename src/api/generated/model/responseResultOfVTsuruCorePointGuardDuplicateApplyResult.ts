@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCorePointGuardDuplicateApplyResult } from './vTsuruCorePointGuardDuplicateApplyResult';
+import type { VTsuruCorePointGuardDuplicateApplyResult } from './vTsuruCorePointGuardDuplicateApplyResult'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfVTsuruCorePointGuardDuplicateApplyResult {
-  message: string;
-  code: number;
-  data: VTsuruCorePointGuardDuplicateApplyResult;
+  message: string
+  code: number
+  data: VTsuruCorePointGuardDuplicateApplyResult
 }

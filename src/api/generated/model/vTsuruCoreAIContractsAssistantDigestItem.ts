@@ -11,9 +11,9 @@
  */
 export interface VTsuruCoreAIContractsAssistantDigestItem {
   /** 分类标识 (qa/point/video...), 前端据此选图标 */
-  kind: string;
+  kind: string
   /** 展示文案, 如 "提问箱有 3 条未回复" */
-  text: string;
+  text: string
   /** 点击后填入输入框的引导语 */
-  prompt: string;
+  prompt: string
 }

@@ -7,9 +7,9 @@
  */
 
 export type GetApiOrgOrgIdStreamersStreamerUserIdDetailParams = {
-from?: number;
-to?: number;
-days?: number;
-page?: number;
-pageSize?: number;
-};
+  from?: number
+  to?: number
+  days?: number
+  page?: number
+  pageSize?: number
+}

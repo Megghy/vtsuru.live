@@ -7,8 +7,8 @@
  */
 
 export interface UpdateOrgOrderExpressModel {
-  orderId: number;
-  trackingNumber: string;
+  orderId: number
+  trackingNumber: string
   /** @nullable */
-  expressCompany?: string | null;
+  expressCompany?: string | null
 }

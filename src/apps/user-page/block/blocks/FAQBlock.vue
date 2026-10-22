@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { HelpCircleOutline, ChevronDownOutline } from '@vicons/ionicons5'
-import { NCollapse, NCollapseItem, NIcon } from 'naive-ui'
+import { HelpCircleOutline } from '@vicons/ionicons5'
 import { computed } from 'vue'
+
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -52,98 +53,44 @@ const items = computed(() => {
     :backgrounded="cfg.backgrounded"
   >
     <template #header>
-      <NFlex
-        align="center"
-        style="gap: 8px"
-      >
-        <NIcon
-          size="18"
-          depth="2"
-        >
-          <HelpCircleOutline />
-        </NIcon>
-        <span>{{ cfg.title }}</span>
-      </NFlex>
+      <div class="flex items-center gap-2">
+        <component
+          :is="HelpCircleOutline"
+          class="size-4.5 text-muted-foreground"
+        />
+        <span class="font-medium text-sm">{{ cfg.title }}</span>
+      </div>
     </template>
 
     <div
       v-if="items.length === 0"
-      class="placeholder"
+      class="placeholder text-xs text-muted-foreground py-3 px-1"
     >
       暂无内容
     </div>
 
-    <NCollapse
+    <Accordion
       v-else
-      :accordion="cfg.accordion"
-      class="faq-collapse"
-      arrow-placement="right"
+      :type="cfg.accordion ? 'single' : 'multiple'"
+      class="faq-collapse w-full flex flex-col gap-2 mt-1"
     >
-      <template #arrow>
-        <NIcon><ChevronDownOutline /></NIcon>
-      </template>
-      <NCollapseItem
+      <AccordionItem
         v-for="(it, idx) in items"
         :key="idx"
-        :name="String(idx)"
-        class="faq-item"
+        :value="String(idx)"
+        class="faq-item border border-border rounded-lg bg-card/50 overflow-hidden"
       >
-        <template #header>
-          <span class="faq-q">
+        <AccordionTrigger class="px-3 py-2.5 text-xs font-medium hover:no-underline">
+          <span class="text-left text-[13px] text-foreground">
             {{ it.q || `问题 ${idx + 1}` }}
           </span>
-        </template>
-        <div class="faq-a">
+        </AccordionTrigger>
+        <AccordionContent class="px-3 pb-3 pt-0 text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
           {{ it.a }}
-        </div>
-      </NCollapseItem>
-    </NCollapse>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   </BlockCard>
 </template>
 
-<style scoped>
-.placeholder {
-  display: block;
-  padding: 12px 4px;
-  color: var(--vtsuru-fg-muted);
-}
 
-.faq-collapse {
-  margin-top: -8px;
-}
-
-:deep(.faq-item) {
-  margin-top: 8px !important;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border) !important;
-  border-radius: var(--vtsuru-page-radius) !important;
-  transition: background-color 0.2s ease;
-  overflow: hidden;
-}
-
-:deep(.faq-item.n-collapse-item--active) {
-  background: var(--vtsuru-bg-muted);
-}
-
-:deep(.faq-item .n-collapse-item__header) {
-  padding: 12px 16px !important;
-}
-
-.faq-q {
-  font-size: 14px;
-  color: var(--vtsuru-block-fg);
-}
-
-.faq-a {
-  padding: 0 16px 16px 16px;
-  white-space: pre-wrap;
-  color: var(--vtsuru-fg-muted);
-  line-height: 1.6;
-  font-size: 14px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  :deep(.faq-item) {
-    transition: none;
-  }
-}
-</style>

@@ -7,14 +7,14 @@
  */
 
 export interface StreamerLiveSummary {
-  totalIncome: number;
-  totalIncomeWithGuard: number;
-  danmakuCount: number;
-  interactionCount: number;
-  likeCount: number;
-  payCount: number;
-  liveDurationMinutes: number;
-  uniqueInteractionUsers: number;
-  uniquePayingUsers: number;
-  liveCount: number;
+  totalIncome: number
+  totalIncomeWithGuard: number
+  danmakuCount: number
+  interactionCount: number
+  likeCount: number
+  payCount: number
+  liveDurationMinutes: number
+  uniqueInteractionUsers: number
+  uniquePayingUsers: number
+  liveCount: number
 }

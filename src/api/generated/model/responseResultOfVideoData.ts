@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VideoData } from './videoData';
+import type { VideoData } from './videoData'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfVideoData {
-  message: string;
-  code: number;
-  data: VideoData;
+  message: string
+  code: number
+  data: VideoData
 }

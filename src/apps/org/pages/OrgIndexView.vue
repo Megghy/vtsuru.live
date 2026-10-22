@@ -1,37 +1,26 @@
 <script setup lang="ts">
 import { AddOutline, ArrowForward, BusinessOutline, RefreshOutline } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NModal,
-  NPageHeader,
-  NFlex,
-  NSkeleton,
-  NTag,
-  useMessage,
-} from 'naive-ui'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { isLoggedIn } from '@/api/account'
 import { getApiOrgMy, postApiOrgCreate } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Skeleton } from '@/shared/ui/skeleton'
 
 import '@/apps/org/styles/org-page.css'
 import type { OrgInfoModel } from '../types'
-import { roleLabel, roleTagType } from '../utils'
+import { roleLabel } from '../utils'
 
 const router = useRouter()
-const message = useMessage()
 
 const isLoading = ref(false)
 const orgs = ref<OrgInfoModel[]>([])
@@ -46,7 +35,7 @@ async function loadMyOrgs() {
   try {
     orgs.value = unwrapOk(await getApiOrgMy(), '加载失败')
   } catch (err) {
-    message.error(err instanceof Error ? err.message : '加载失败')
+    toast.error(err instanceof Error ? err.message : '加载失败')
   } finally {
     isLoading.value = false
   }
@@ -56,18 +45,18 @@ async function createOrg() {
   if (creating.value) return
   const name = orgName.value.trim()
   if (!name) {
-    message.warning('请输入组织名称')
+    toast.warning('请输入组织名称')
     return
   }
   creating.value = true
   try {
     unwrapOk(await postApiOrgCreate({ name }), '创建失败')
-    message.success('创建成功')
+    toast.success('创建成功')
     orgName.value = ''
     showCreateModal.value = false
     await loadMyOrgs()
   } catch (err) {
-    message.error(err instanceof Error ? err.message : '创建失败')
+    toast.error(err instanceof Error ? err.message : '创建失败')
   } finally {
     creating.value = false
   }
@@ -97,232 +86,168 @@ watch(
 </script>
 
 <template>
-  <div class="org-page org-page--index">
+  <div class="org-page p-6">
     <template v-if="!isLoggedIn">
-      <NCard title="组织管理">
-        <NAlert
-          type="warning"
-          :bordered="false"
-          style="margin-bottom: 12px"
-        >
-          需要先登录才能查看/创建组织。
-        </NAlert>
-        <RegisterAndLogin />
-      </NCard>
+      <Card class="border bg-card">
+        <CardHeader class="p-4 border-b">
+          <CardTitle class="text-base font-semibold">组织管理</CardTitle>
+          <CardDescription class="text-xs">需要先登录才能查看/创建组织。</CardDescription>
+        </CardHeader>
+        <CardContent class="p-4">
+          <RegisterAndLogin />
+        </CardContent>
+      </Card>
     </template>
 
     <template v-else>
-      <NPageHeader @back="handleGoConsole">
-        <template #title> 组织管理 </template>
-        <template #extra>
-          <NFlex>
-            <NButton
-              secondary
-              @click="handleGoConsole"
-            >
-              返回控制台
-            </NButton>
-            <NButton
-              :loading="isLoading"
-              @click="loadMyOrgs"
-            >
-              <template #icon>
-                <NIcon :component="RefreshOutline" />
-              </template>
-              刷新
-            </NButton>
-            <NButton
-              type="primary"
-              @click="showCreateModal = true"
-            >
-              <template #icon>
-                <NIcon :component="AddOutline" />
-              </template>
-              创建组织
-            </NButton>
-          </NFlex>
-        </template>
-      </NPageHeader>
+      <div class="flex items-center justify-between gap-3 pb-4 border-b flex-wrap">
+        <div>
+          <h2 class="text-lg font-bold text-foreground">组织管理</h2>
+          <p class="text-xs text-muted-foreground mt-0.5">管理我参与或创建的公会与组织</p>
+        </div>
 
-      <div style="margin-top: 24px">
-        <div v-if="isLoading && orgs.length === 0">
-          <NGrid
-            :x-gap="16"
-            :y-gap="16"
-            cols="1 600:2 900:3 1200:4"
-            item-responsive
+        <div class="flex items-center gap-2">
+          <Button
+            variant="outline"
+            @click="handleGoConsole"
           >
-            <NGridItem
-              v-for="i in 4"
-              :key="i"
-            >
-              <NCard
-                class="org-card"
-                content-style="padding: 16px;"
-              >
-                <NFlex
-                  justify="space-between"
-                  align="start"
-                >
-                  <NSkeleton
-                    :width="32"
-                    :height="32"
-                    :sharp="false"
-                  />
-                  <NSkeleton
-                    :width="60"
-                    :height="22"
-                    :sharp="false"
-                  />
-                </NFlex>
-                <div style="margin-top: 12px">
-                  <NSkeleton
-                    text
-                    style="width: 60%; margin-bottom: 4px"
-                  />
-                  <NSkeleton
-                    text
-                    style="width: 40%; font-size: 12px"
-                  />
-                </div>
-                <div style="margin-top: 16px; text-align: right">
-                  <NSkeleton
-                    width="100%"
-                    :height="28"
-                    :sharp="false"
-                  />
-                </div>
-              </NCard>
-            </NGridItem>
-          </NGrid>
+            返回控制台
+          </Button>
+          <Button
+            variant="outline"
+            class="gap-1.5"
+            :disabled="isLoading"
+            @click="loadMyOrgs"
+          >
+            <RefreshOutline
+              class="size-3.5"
+              :class="{ 'animate-spin': isLoading }"
+            />
+            刷新
+          </Button>
+          <Button
+            class="gap-1.5"
+            @click="showCreateModal = true"
+          >
+            <AddOutline class="size-3.5" />
+            创建组织
+          </Button>
+        </div>
+      </div>
+
+      <div class="mt-6">
+        <div
+          v-if="isLoading && orgs.length === 0"
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+        >
+          <Card
+            v-for="i in 4"
+            :key="i"
+            class="border bg-card p-4 space-y-3"
+          >
+            <div class="flex justify-between items-start">
+              <Skeleton class="size-8 rounded" />
+              <Skeleton class="w-14 h-5 rounded" />
+            </div>
+            <div class="space-y-1.5">
+              <Skeleton class="w-3/5 h-4 rounded" />
+              <Skeleton class="w-2/5 h-3 rounded" />
+            </div>
+            <Skeleton class="w-full h-7 rounded" />
+          </Card>
         </div>
 
         <template v-else-if="orgs.length === 0">
-          <NEmpty
+          <Empty
             description="暂无组织，创建一个吧！"
-            style="margin-top: 40px"
+            class="py-12"
           >
-            <template #extra>
-              <NButton
-                type="primary"
-                @click="showCreateModal = true"
-              >
-                创建组织
-              </NButton>
-            </template>
-          </NEmpty>
+            <div class="mt-3">
+              <Button @click="showCreateModal = true"> 创建组织 </Button>
+            </div>
+          </Empty>
         </template>
 
-        <NGrid
+        <div
           v-else
-          :x-gap="16"
-          :y-gap="16"
-          cols="1 600:2 900:3 1200:4"
-          item-responsive
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
         >
-          <NGridItem
+          <Card
             v-for="org in orgs"
             :key="org.id"
+            class="border bg-card p-4 hover:border-primary transition-all cursor-pointer flex flex-col justify-between"
+            @click="openOrg(org.id)"
           >
-            <NCard
-              hoverable
-              content-style="padding: 16px;"
-              class="org-card"
-              @click="openOrg(org.id)"
-            >
-              <NFlex
-                justify="space-between"
-                align="start"
-              >
-                <NIcon
-                  size="32"
-                  color="var(--vtsuru-primary)"
-                  :component="BusinessOutline"
-                />
-                <NTag
-                  :bordered="false"
-                  :type="roleTagType(org.role)"
-                  size="small"
+            <div>
+              <div class="flex justify-between items-start">
+                <BusinessOutline class="size-8 text-primary" />
+                <Badge
+                  variant="secondary"
+                  class="text-xs"
                 >
                   {{ roleLabel(org.role) }}
-                </NTag>
-              </NFlex>
+                </Badge>
+              </div>
 
-              <div style="margin-top: 12px">
-                <div
-                  style="font-weight: 600; font-size: 16px; margin-bottom: 4px"
-                  class="text-ellipsis"
-                >
+              <div class="mt-3">
+                <div class="font-semibold text-base text-foreground truncate">
                   {{ org.name }}
                 </div>
-                <div style="font-size: 12px; opacity: 0.6">ID: {{ org.id }}</div>
+                <div class="text-xs text-muted-foreground mt-0.5">ID: {{ org.id }}</div>
               </div>
+            </div>
 
-              <div style="margin-top: 16px; text-align: right">
-                <NButton
-                  size="small"
-                  secondary
-                  type="primary"
-                  style="width: 100%"
-                >
-                  进入管理
-                  <template #icon>
-                    <NIcon :component="ArrowForward" />
-                  </template>
-                </NButton>
-              </div>
-            </NCard>
-          </NGridItem>
-        </NGrid>
+            <div class="mt-4 pt-2 border-t">
+              <Button
+                variant="secondary"
+                class="w-full gap-1 text-primary"
+              >
+                进入管理
+                <ArrowForward class="size-3.5" />
+              </Button>
+            </div>
+          </Card>
+        </div>
       </div>
 
       <!-- 创建组织模态框 -->
-      <NModal
-        v-model:show="showCreateModal"
-        preset="card"
-        title="创建新组织"
-        style="width: 400px; max-width: 90vw"
-      >
-        <NForm @submit.prevent="createOrg">
-          <NFormItem
-            label="组织名称"
-            :show-feedback="false"
+      <Dialog v-model:open="showCreateModal">
+        <DialogContent class="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle class="text-base font-semibold">创建新组织</DialogTitle>
+          </DialogHeader>
+
+          <form
+            @submit.prevent="createOrg"
+            class="space-y-4 pt-2"
           >
-            <NInput
-              v-model:value="orgName"
-              placeholder="请输入组织名称"
-              autofocus
-            />
-          </NFormItem>
-          <div style="margin-top: 24px; display: flex; justify-content: flex-end; gap: 12px">
-            <NButton @click="showCreateModal = false"> 取消 </NButton>
-            <NButton
-              type="primary"
-              :loading="creating"
-              attr-type="submit"
-            >
-              创建
-            </NButton>
-          </div>
-        </NForm>
-      </NModal>
+            <div class="space-y-1.5">
+              <label class="text-xs font-medium text-foreground">组织名称</label>
+              <Input
+                v-model="orgName"
+                placeholder="请输入组织名称"
+                autofocus
+              />
+            </div>
+
+            <DialogFooter class="gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                @click="showCreateModal = false"
+              >
+                取消
+              </Button>
+              <Button
+                type="submit"
+                :disabled="creating"
+              >
+                {{ creating ? '创建中...' : '创建' }}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </template>
   </div>
 </template>
-
-<style scoped>
-.org-card {
-  cursor: pointer;
-  height: 100%;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-}
-.org-card:hover {
-  border-color: var(--vtsuru-primary);
-}
-.text-ellipsis {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-</style>

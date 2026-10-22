@@ -60,18 +60,9 @@ export const useOBSNotification = defineStore('obs-notification', () => {
     const description = payload.Message || '未知通知'
     const finalContent = prefix ? `${prefix}\n${description}` : description
 
-    if (typeof message[method] === 'function') {
-      message[method](finalContent, {
-        duration: method === 'error' ? 6000 : 4000,
-        closable: true,
-      })
-    } else {
-      message.create(finalContent, {
-        type: method,
-        duration: method === 'error' ? 6000 : 4000,
-        closable: true,
-      })
-    }
+    message[method](finalContent, {
+      duration: method === 'error' ? 6000 : 4000,
+    })
   }
 
   /**

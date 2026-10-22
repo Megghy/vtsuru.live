@@ -1,5 +1,4 @@
 import { refDebounced } from '@vueuse/core'
-import { useMessage } from 'naive-ui'
 import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 
@@ -16,9 +15,9 @@ import {
 } from '@/api/generated/song-list/song-list'
 import { applySongOrder, moveSongInOrder } from '@/apps/manage/composables/songListCsv'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { toast } from '@/shared/utils'
 
 export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
-  const message = useMessage()
   const songsInternal = ref<SongsInfo[]>([...props.songs])
   const isLoading = ref(false)
   const playingSong = ref<SongsInfo>()
@@ -112,14 +111,14 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     if (nextOrder === order || nextOrder.join('|') === order.join('|')) return false
     songOrderKeys.value = nextOrder
     songsInternal.value = applySongOrder(songsInternal.value, nextOrder)
-    message.success('已调整顺序（本机保存；服务端暂无排序字段）')
+    toast.success('已调整顺序（本机保存；服务端暂无排序字段）')
     return true
   }
 
   // CRUD 操作
   async function updateSong(song: SongsInfo) {
     if (songsInternal.value.some((s) => s.name === song.name && s.key !== song.key)) {
-      message.error('已存在相同名称的歌曲')
+      toast.error('已存在相同名称的歌曲')
       return false
     }
     isLoading.value = true
@@ -139,10 +138,10 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       if (code === 200 && data) {
         const idx = songsInternal.value.findIndex((s) => s.key === data.key)
         if (idx !== -1) songsInternal.value.splice(idx, 1, data)
-        message.success('已更新歌曲信息')
+        toast.success('已更新歌曲信息')
         return true
       }
-      message.error(`未能更新: ${err}`)
+      toast.error(`未能更新: ${err}`)
       return false
     } finally {
       isLoading.value = false
@@ -151,13 +150,17 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
 
   async function updateSongs(songs: SongsInfo[], label: string) {
     if (songs.length === 0) {
-      message.warning('请先选择歌曲')
+      toast.warning('请先选择歌曲')
       return false
     }
     isLoading.value = true
     try {
       const payload = songs.map((song) => ({ key: song.key, song }))
-      const { code, data, message: err } = (await postApiSongListUpdateBatch(payload as any)) as unknown as {
+      const {
+        code,
+        data,
+        message: err,
+      } = (await postApiSongListUpdateBatch(payload as any)) as unknown as {
         code: number
         data: SongsInfo[]
         message: string
@@ -165,10 +168,10 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       if (code === 200 && data) {
         const updated = new Map(data.map((song) => [song.key, song]))
         songsInternal.value = songsInternal.value.map((song) => updated.get(song.key) ?? song)
-        message.success(`已为 ${data.length} 首歌曲更新${label}`)
+        toast.success(`已为 ${data.length} 首歌曲更新${label}`)
         return true
       }
-      message.error(`批量更新失败: ${err}`)
+      toast.error(`批量更新失败: ${err}`)
       return false
     } finally {
       isLoading.value = false
@@ -181,12 +184,12 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       const { code, message: err } = await postApiSongListDelete({ key: song.key })
       if (code === 200) {
         songsInternal.value = songsInternal.value.filter((s) => s.key !== song.key)
-        message.success(`已删除《${song.name}》`)
+        toast.success(`已删除《${song.name}》`)
         if (playingSong.value?.key === song.key) playingSong.value = undefined
         selectedKeys.value = selectedKeys.value.filter((k) => k !== song.key)
         return true
       }
-      message.error(`未能删除: ${err}`)
+      toast.error(`未能删除: ${err}`)
       return false
     } finally {
       isLoading.value = false
@@ -195,7 +198,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
 
   async function deleteBatch() {
     if (selectedKeys.value.length === 0) {
-      message.warning('请先选择歌曲')
+      toast.warning('请先选择歌曲')
       return false
     }
     isLoading.value = true
@@ -204,12 +207,12 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
       if (code === 200) {
         const ids = new Set(selectedKeys.value)
         songsInternal.value = songsInternal.value.filter((s) => !ids.has(s.key))
-        message.success(`已删除 ${ids.size} 首歌曲`)
+        toast.success(`已删除 ${ids.size} 首歌曲`)
         if (playingSong.value && ids.has(playingSong.value.key)) playingSong.value = undefined
         selectedKeys.value = []
         return true
       }
-      message.error(`批量删除失败: ${err}`)
+      toast.error(`批量删除失败: ${err}`)
       return false
     } finally {
       isLoading.value = false
@@ -218,7 +221,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
 
   async function batchUpdate(endpoint: string, field: keyof SongsInfo, data: unknown, label: string) {
     if (selectedKeys.value.length === 0) {
-      message.warning('请先选择歌曲')
+      toast.warning('请先选择歌曲')
       return false
     }
     isLoading.value = true
@@ -236,13 +239,13 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
                 : postApiSongListUpdateBatch
       const { code, message: err } = await fn(payload as any)
       if (code === 200) {
-        message.success(`已为 ${selectedKeys.value.length} 首歌曲更新${label}`)
+        toast.success(`已为 ${selectedKeys.value.length} 首歌曲更新${label}`)
         songsInternal.value = songsInternal.value.map((song) =>
           selectedKeys.value.includes(song.key) ? { ...song, [field]: data } : song,
         )
         return true
       }
-      message.error(`更新失败: ${err}`)
+      toast.error(`更新失败: ${err}`)
       return false
     } finally {
       isLoading.value = false
@@ -279,8 +282,8 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     deleteSong,
     deleteBatch,
     batchUpdate,
-    moveSong,
     nextPage,
     prevPage,
+    moveSong,
   }
 }

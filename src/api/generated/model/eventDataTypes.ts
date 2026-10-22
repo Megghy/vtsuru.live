@@ -6,8 +6,7 @@
  * OpenAPI spec version: v1
  */
 
-export type EventDataTypes = typeof EventDataTypes[keyof typeof EventDataTypes];
-
+export type EventDataTypes = (typeof EventDataTypes)[keyof typeof EventDataTypes]
 
 export const EventDataTypes = {
   NUMBER_0: 0,
@@ -18,4 +17,4 @@ export const EventDataTypes = {
   NUMBER_5: 5,
   NUMBER_6: 6,
   NUMBER_7: 7,
-} as const;
+} as const

@@ -14,12 +14,12 @@ import {
   ScanOutline as OcrIcon,
   VideocamOutline as CoverIcon,
 } from '@vicons/ionicons5'
-import { NGrid, NGridItem, NIcon, NText, NTooltip } from 'naive-ui'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getToolRouteName } from '@/app/router/toolRoutes'
 import type { ToolKey } from '@/app/router/toolRoutes'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { Card } from '@/shared/ui/card'
 
 const route = useRoute()
 const router = useRouter()
@@ -149,7 +149,7 @@ function navigateToTool(key: ToolKey) {
 </script>
 
 <template>
-  <div class="tools-dashboard">
+  <div class="space-y-6 w-full">
     <ManagePageHeader
       title="直播工具箱"
       subtitle="常用工具快捷入口"
@@ -158,153 +158,64 @@ function navigateToTool(key: ToolKey) {
     <div
       v-for="cat in categories"
       :key="cat.label"
-      class="tool-category"
+      class="space-y-3"
     >
-      <NText
-        strong
-        class="category-label"
-      >
+      <h3 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
         {{ cat.label }}
-      </NText>
-      <NGrid
-        cols="1 s:2 m:3 l:3 xl:4"
-        responsive="screen"
-        :x-gap="14"
-        :y-gap="14"
-      >
-        <NGridItem
+      </h3>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+        <Card
           v-for="tool in cat.tools"
           :key="tool.name"
+          class="p-3.5 hover:border-brand/40 hover:bg-muted/30 cursor-pointer transition-all flex flex-col justify-between space-y-2 group"
+          @click="navigateToTool(tool.name)"
         >
-          <div
-            class="tool-card"
-            @click="navigateToTool(tool.name)"
-          >
-            <div class="tool-card__icon">
-              <NIcon
-                :component="tool.icon"
-                size="24"
+          <div class="flex items-start gap-3">
+            <div
+              class="p-2 rounded-lg bg-muted text-foreground group-hover:text-brand group-hover:bg-brand-soft/20 transition-colors shrink-0"
+            >
+              <component
+                :is="tool.icon"
+                class="h-5 w-5"
               />
             </div>
-            <div class="tool-card__body">
-              <NText
-                strong
-                style="font-size: 14px"
-              >
+            <div class="min-w-0 flex-1 space-y-1">
+              <div class="text-sm font-semibold text-foreground group-hover:text-brand transition-colors">
                 {{ tool.displayName }}
-              </NText>
-              <NText
-                depth="3"
-                style="font-size: 12px; line-height: 1.4"
-              >
+              </div>
+              <div class="text-xs text-muted-foreground leading-relaxed line-clamp-2">
                 {{ tool.description }}
-              </NText>
-            </div>
-            <div class="tool-card__badges">
-              <NTooltip v-if="tool.mode === 'local' || tool.mode === 'both'">
-                <template #trigger>
-                  <NIcon
-                    :component="DesktopOutline"
-                    size="13"
-                    class="badge badge-local"
-                  />
-                </template>
-                本地运行
-              </NTooltip>
-              <NTooltip v-if="tool.mode === 'cloud' || tool.mode === 'both'">
-                <template #trigger>
-                  <NIcon
-                    :component="Cloud"
-                    size="13"
-                    class="badge badge-cloud"
-                  />
-                </template>
-                云端支持
-              </NTooltip>
+              </div>
             </div>
           </div>
-        </NGridItem>
-      </NGrid>
+
+          <div class="flex items-center gap-1.5 pt-1 text-muted-foreground justify-end text-[11px]">
+            <span
+              v-if="tool.mode === 'local' || tool.mode === 'both'"
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/60"
+              title="本地运行"
+            >
+              <component
+                :is="DesktopOutline"
+                class="h-3 w-3"
+              />
+              本地
+            </span>
+            <span
+              v-if="tool.mode === 'cloud' || tool.mode === 'both'"
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/60"
+              title="云端支持"
+            >
+              <component
+                :is="Cloud"
+                class="h-3 w-3"
+              />
+              云端
+            </span>
+          </div>
+        </Card>
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.tools-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.tool-category {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.category-label {
-  font-size: 15px;
-  padding-left: 2px;
-}
-
-.tool-card {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s,
-    border-color 0.2s;
-}
-.tool-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-  border-color: var(--primary-color, #18a058);
-}
-
-.tool-card__badges {
-  position: absolute;
-  top: 6px;
-  right: 8px;
-  display: flex;
-  gap: 3px;
-}
-.badge {
-  opacity: 0.5;
-  transition: opacity 0.2s;
-}
-.tool-card:hover .badge {
-  opacity: 0.8;
-}
-.badge-local {
-  color: var(--primary-color, #18a058);
-}
-.badge-cloud {
-  color: #2080f0;
-}
-
-.tool-card__icon {
-  flex: none;
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  display: grid;
-  place-items: center;
-  background: var(--vtsuru-bg-inset);
-  border: 1px solid var(--vtsuru-border);
-  color: var(--primary-color, #18a058);
-}
-
-.tool-card__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-</style>

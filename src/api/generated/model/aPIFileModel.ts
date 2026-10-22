@@ -7,15 +7,15 @@
  */
 
 export interface APIFileModel {
-  id: number;
+  id: number
   /** @nullable */
-  path?: string | null;
+  path?: string | null
   /**
-     * @maxLength 100
-     * @nullable
-     */
-  name?: string | null;
+   * @maxLength 100
+   * @nullable
+   */
+  name?: string | null
   /** @nullable */
-  hash?: string | null;
-  size: number;
+  hash?: string | null
+  size: number
 }

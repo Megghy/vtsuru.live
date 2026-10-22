@@ -5,7 +5,6 @@ import {
   getApiFollowingStates,
   postApiFollowingId,
 } from '@/api/generated/following/following'
-
 import type { FollowingControllerDirectoryEntry } from '@/api/generated/model/followingControllerDirectoryEntry'
 import type { FollowingControllerFollowState } from '@/api/generated/model/followingControllerFollowState'
 
@@ -17,10 +16,7 @@ export async function setFollowing(id: number, following: boolean) {
   unwrapOk(await postApiFollowingId(id, { following }), '关注操作失败')
 }
 export async function getDirectory(followingOnly: boolean, liveOnly: boolean, signal?: AbortSignal) {
-  return unwrapOk(
-    await getApiFollowingDirectory({ followingOnly, liveOnly }, { signal }),
-    '加载直播列表失败',
-  )
+  return unwrapOk(await getApiFollowingDirectory({ followingOnly, liveOnly }, { signal }), '加载直播列表失败')
 }
 export function useFollowingStates(ids: MaybeRefOrGetter<number[]>) {
   const states = ref<Record<number, FollowState>>({})

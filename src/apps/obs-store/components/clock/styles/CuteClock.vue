@@ -113,15 +113,18 @@ onMounted(() => {
         <span
           v-if="props.state.showDate"
           class="cute-tag"
-        >🐾 {{ props.clockData.dateShort }}</span>
+          >🐾 {{ props.clockData.dateShort }}</span
+        >
         <span
           v-if="props.state.showDayOfWeek"
           class="cute-tag"
-        >{{ props.clockData.dayOfWeekZh }}</span>
+          >{{ props.clockData.dayOfWeekZh }}</span
+        >
         <span
           v-if="!props.state.is24Hour && props.clockData.ampm"
           class="cute-tag ampm"
-        >{{ props.clockData.ampm }}</span>
+          >{{ props.clockData.ampm }}</span
+        >
       </div>
     </div>
   </div>
@@ -134,7 +137,11 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   user-select: none;
-  font-family: 'Gaegu', cursive, -apple-system, sans-serif;
+  font-family:
+    'Gaegu',
+    cursive,
+    -apple-system,
+    sans-serif;
   box-sizing: border-box;
 }
 
@@ -218,9 +225,16 @@ onMounted(() => {
 }
 
 @keyframes heartBeat {
-  0%, 100% { transform: scale(1); }
-  30% { transform: scale(1.3); }
-  60% { transform: scale(1.1); }
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+  }
+  60% {
+    transform: scale(1.1);
+  }
 }
 
 .live-pill {
@@ -265,8 +279,13 @@ onMounted(() => {
 }
 
 @keyframes cuteBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .cute-timer-digits {

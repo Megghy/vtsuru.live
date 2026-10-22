@@ -1,18 +1,21 @@
 <script setup lang="ts">
-import { NButton, NModal } from 'naive-ui'
 import { ref, watch } from 'vue'
 
 import { ACCOUNT, isLoggedIn } from '@/api/account'
 import { setFollowing } from '@/api/following'
 import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
 const props = defineProps<{ userId: number; following: boolean | undefined; followers?: number }>()
 const emit = defineEmits<{ changed: [following: boolean] }>()
 const busy = ref(false)
 const showLogin = ref(false)
+
 watch(isLoggedIn, (loggedIn) => {
   if (loggedIn) showLogin.value = false
 })
+
 async function toggle() {
   if (!isLoggedIn.value) {
     showLogin.value = true
@@ -30,23 +33,22 @@ async function toggle() {
 </script>
 
 <template>
-  <NButton
+  <Button
     v-if="ACCOUNT.id !== userId"
-    size="small"
-    :type="following ? 'default' : 'primary'"
-    secondary
-    :loading="busy"
-    :disabled="following === undefined"
+    :variant="following ? 'outline' : 'default'"
+    class="px-2.5"
+    :disabled="following === undefined || busy"
     @click.stop="toggle"
   >
     {{ following ? '已关注 · 取消' : '关注' }}<template v-if="followers !== undefined"> · {{ followers }}</template>
-  </NButton>
-  <NModal
-    v-model:show="showLogin"
-    preset="card"
-    title="登录后关注"
-    style="width: min(420px, 92vw)"
-  >
-    <RegisterAndLogin />
-  </NModal>
+  </Button>
+
+  <Dialog v-model:open="showLogin">
+    <DialogContent class="sm:max-w-md p-4 space-y-3">
+      <DialogHeader class="pb-2 border-b border-border/60">
+        <DialogTitle class="text-sm font-semibold">登录后关注</DialogTitle>
+      </DialogHeader>
+      <RegisterAndLogin />
+    </DialogContent>
+  </Dialog>
 </template>

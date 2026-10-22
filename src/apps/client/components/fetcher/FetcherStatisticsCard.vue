@@ -13,10 +13,12 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import { useThemeVars } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import VChart from 'vue-echarts'
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Spin } from '@/shared/ui/spin'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
 // 复用此组件树内多个图表所需的 ECharts 模块, 统一注册一次
@@ -37,7 +39,6 @@ use([
 ])
 
 const webfetcher = useWebFetcher()
-const themeVars = useThemeVars()
 
 const isConnected = computed(() => webfetcher.state === 'connected')
 const showCharts = ref(false)
@@ -70,8 +71,8 @@ function updateGaugeChart() {
         progress: { show: true, width: 12 },
         axisLine: { lineStyle: { width: 12 } },
         axisTick: { show: false },
-        splitLine: { length: 8, lineStyle: { width: 2, color: themeVars.value.textColor3 } },
-        axisLabel: { distance: 15, color: themeVars.value.textColor3, fontSize: 12 },
+        splitLine: { length: 8, lineStyle: { width: 2, color: '#94a3b8' } },
+        axisLabel: { distance: 15, color: '#64748b', fontSize: 12 },
         anchor: { show: true, showAbove: true, size: 15, itemStyle: { borderWidth: 8 } },
         title: { show: false },
         detail: { valueAnimation: true, fontSize: 24, offsetCenter: [0, '60%'], formatter: '{value}/s' },
@@ -99,7 +100,7 @@ function updateTypeDistributionChart() {
         radius: ['40%', '70%'],
         center: ['40%', '50%'],
         avoidLabelOverlap: true,
-        itemStyle: { borderRadius: 5, borderColor: themeVars.value.cardColor, borderWidth: 1 },
+        itemStyle: { borderRadius: 5, borderColor: '#ffffff', borderWidth: 1 },
         label: { show: false, position: 'center' },
         emphasis: { label: { show: true, fontSize: '16', fontWeight: 'bold' } },
         labelLine: { show: false },
@@ -165,90 +166,85 @@ onUnmounted(stopSession)
 </script>
 
 <template>
-  <NCard
-    title="会话实时统计"
-    size="small"
-    bordered
-    style="width: 100%"
-  >
-    <div v-if="isConnected && showCharts">
-      <NGrid
-        :x-gap="16"
-        :y-gap="16"
-        cols="1 s:2 l:3"
-        responsive="screen"
-      >
-        <NGi>
-          <NCard
-            title="实时速率"
-            size="small"
-            bordered
-            :segmented="{ content: true }"
-          >
-            <div style="height: 180px">
-              <VChart
-                ref="gaugeChart"
-                :option="gaugeOption"
-                :manual-update="true"
-                autoresize
-              />
-            </div>
-          </NCard>
-        </NGi>
-        <NGi>
-          <NCard
-            title="事件类型分布"
-            size="small"
-            bordered
-            :segmented="{ content: true }"
-          >
-            <div style="height: 180px">
-              <VChart
-                ref="typeDistributionChart"
-                :option="typeDistributionOption"
-                :manual-update="true"
-                autoresize
-              />
-            </div>
-          </NCard>
-        </NGi>
-        <NGi span="1 s:2 l:1">
-          <NCard
-            title="会话摘要"
-            size="small"
-            bordered
-            :segmented="{ content: true }"
-            style="height: 100%"
-          >
-            <NFlex
-              vertical
-              justify="space-around"
-              style="height: 100%"
-            >
-              <NStatistic label="会话事件总数">
-                <NIcon :component="BarChartOutline" /> {{ webfetcher.sessionEventCount?.toLocaleString() ?? 0 }}
-              </NStatistic>
-              <NStatistic label="已发送">
-                {{ ((webfetcher.bytesSentSession ?? 0) / 1024 / 1024).toFixed(2) }} Mb
-              </NStatistic>
-            </NFlex>
-          </NCard>
-        </NGi>
-      </NGrid>
-    </div>
-    <NEmpty
-      v-else-if="!isConnected"
-      description="EventFetcher 未连接"
-    />
-    <NFlex
-      v-else
-      justify="center"
-      style="padding: 16px 0"
-    >
-      <NSpin
-        size="small"
-        description="正在加载实时统计..."
+  <Card class="border bg-card w-full">
+    <CardHeader class="p-3 pb-2 border-b">
+      <CardTitle class="text-sm font-semibold">会话实时统计</CardTitle>
+    </CardHeader>
+    <CardContent class="p-3">
+      <div v-if="isConnected && showCharts">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <!-- 实时速率 -->
+          <Card class="border bg-muted/20">
+            <CardHeader class="p-2.5 pb-1 border-b">
+              <CardTitle class="text-xs font-semibold">实时速率</CardTitle>
+            </CardHeader>
+            <CardContent class="p-2">
+              <div class="h-[180px]">
+                <VChart
+                  ref="gaugeChart"
+                  :option="gaugeOption"
+                  :manual-update="true"
+                  autoresize
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <!-- 事件类型分布 -->
+          <Card class="border bg-muted/20">
+            <CardHeader class="p-2.5 pb-1 border-b">
+              <CardTitle class="text-xs font-semibold">事件类型分布</CardTitle>
+            </CardHeader>
+            <CardContent class="p-2">
+              <div class="h-[180px]">
+                <VChart
+                  ref="typeDistributionChart"
+                  :option="typeDistributionOption"
+                  :manual-update="true"
+                  autoresize
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <!-- 会话摘要 -->
+          <Card class="border bg-muted/20 col-span-1 sm:col-span-2 lg:col-span-1">
+            <CardHeader class="p-2.5 pb-1 border-b">
+              <CardTitle class="text-xs font-semibold">会话摘要</CardTitle>
+            </CardHeader>
+            <CardContent class="p-3 flex flex-col justify-around h-[180px]">
+              <div>
+                <span class="text-xs text-muted-foreground block">会话事件总数</span>
+                <div class="flex items-center gap-1.5 text-xl font-bold text-foreground mt-1">
+                  <BarChartOutline class="size-5 text-primary" />
+                  <span>{{ webfetcher.sessionEventCount?.toLocaleString() ?? 0 }}</span>
+                </div>
+              </div>
+              <div>
+                <span class="text-xs text-muted-foreground block">已发送</span>
+                <span class="text-xl font-bold text-foreground mt-1 block">
+                  {{ ((webfetcher.bytesSentSession ?? 0) / 1024 / 1024).toFixed(2) }} Mb
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+      <Empty
+        v-else-if="!isConnected"
+        description="EventFetcher 未连接"
+        class="py-6"
       />
-    </NFlex>
-  </NCard>
+      <div
+        v-else
+        class="flex flex-col items-center justify-center py-6 gap-2 text-xs text-muted-foreground"
+      >
+        <Spin
+          :show="true"
+          size="small"
+        />
+        <span>正在加载实时统计...</span>
+      </div>
+    </CardContent>
+  </Card>
 </template>

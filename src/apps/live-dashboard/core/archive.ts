@@ -31,7 +31,9 @@ function toRow(event: DashboardEvent) {
 }
 
 export async function exportArchive(format: ExportFormat, range?: [number, number]) {
-  const query = range ? dashboardDB.events.where('time').between(range[0], range[1], true, true) : dashboardDB.events.orderBy('time')
+  const query = range
+    ? dashboardDB.events.where('time').between(range[0], range[1], true, true)
+    : dashboardDB.events.orderBy('time')
   const events = await query.toArray()
   const stamp = new Date().toISOString().slice(0, 19).replaceAll(':', '-')
   const name = `vtsuru-dashboard-${stamp}`
@@ -53,7 +55,8 @@ export async function exportArchive(format: ExportFormat, range?: [number, numbe
 
 export async function importArchive(file: File) {
   const data = JSON.parse(await file.text()) as ArchiveFile
-  if (data.format !== 'vtsuru-live-dashboard' || !Array.isArray(data.events)) throw new Error('不是有效的中控台归档文件')
+  if (data.format !== 'vtsuru-live-dashboard' || !Array.isArray(data.events))
+    throw new Error('不是有效的中控台归档文件')
   await dashboardDB.events.bulkPut(data.events)
   return data.events.length
 }
@@ -69,7 +72,10 @@ export async function clearArchive() {
 }
 
 export async function queryUserHistory(event: Pick<DashboardEvent, 'uid' | 'ouid'>, limit = 500) {
-  const collection = event.uid > 0 ? dashboardDB.events.where('uid').equals(event.uid) : dashboardDB.events.where('ouid').equals(event.ouid)
+  const collection =
+    event.uid > 0
+      ? dashboardDB.events.where('uid').equals(event.uid)
+      : dashboardDB.events.where('ouid').equals(event.ouid)
   const list = await collection.toArray()
   return list.toSorted((a, b) => b.time - a.time).slice(0, limit)
 }

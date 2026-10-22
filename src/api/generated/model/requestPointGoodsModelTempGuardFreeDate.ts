@@ -7,6 +7,6 @@
  */
 
 export interface RequestPointGoodsModelTempGuardFreeDate {
-  year: number;
-  month: number;
+  year: number
+  month: number
 }

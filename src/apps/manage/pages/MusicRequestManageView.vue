@@ -3,60 +3,22 @@ import {
   Add24Regular,
   ArrowDownload24Regular,
   ArrowUpload24Regular,
-  CheckmarkCircle24Regular,
-  Clock24Regular,
-  Color24Regular,
   Copy24Regular,
   Delete24Regular,
   Desktop24Regular,
-  DismissCircle24Regular,
-  Eye24Regular,
   History24Regular,
   MusicNote224Filled,
   MusicNote224Regular,
   Play24Regular,
   Search24Regular,
   Settings24Regular,
-  ShieldCheckmark24Regular,
   ShieldDismiss24Regular,
-  Timer24Regular,
 } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NGi,
-  NGrid,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NList,
-  NListItem,
-  NModal,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 
-import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
+import { useAccount } from '@/api/account'
 import type { OpenLiveInfo, SongsInfo } from '@/api/api-models'
 import {
   getApiMusicRequestGet,
@@ -68,28 +30,49 @@ import { getApiSongListGet, getApiSongListGetNeteaseList } from '@/api/generated
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
 import MusicRequestItem from '@/apps/open-live/components/request/MusicRequestItem.vue'
-import { CURRENT_HOST, MUSIC_REQUEST_API_URL } from '@/shared/config'
+import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { useMessage } from '@/shared/utils'
 import { copyToClipboard } from '@/shared/utils'
 import { formatListForCopy } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
-import type { WaitMusicInfo } from '@/store/useMusicRequest'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
-const props = defineProps<{
+defineProps<{
   roomInfo?: OpenLiveInfo
   code?: string | undefined
   isOpenLive?: boolean
 }>()
 
-const route = useRoute()
 const message = useMessage()
 const accountInfo = useAccount()
 await useDanmakuClient().initOpenlive()
 
-const musicRquestStore = useMusicRequestProvider()
-const settings = computed(() => musicRquestStore.settings)
+const musicRequestStore = useMusicRequestProvider()
+const settings = computed(() => musicRequestStore.settings)
 const cooldown = usePersistedStorage<{ [id: number]: number }>('Setting.MusicRequest.Cooldown', {})
 
 // 主 Tab
@@ -117,7 +100,7 @@ const obsUrl = computed(() => {
   })
 })
 
-const originMusics = computed(() => musicRquestStore.originMusics)
+const originMusics = computed(() => musicRequestStore.originMusics)
 const isLoadingSongs = ref(false)
 
 // 歌曲搜索过滤
@@ -134,8 +117,8 @@ const filteredOriginMusics = computed(() => {
 
 const filteredWaitingMusics = computed(() => {
   const kw = waitingFilter.value.trim().toLowerCase()
-  if (!kw) return musicRquestStore.waitingMusics
-  return musicRquestStore.waitingMusics.filter(
+  if (!kw) return musicRequestStore.waitingMusics
+  return musicRequestStore.waitingMusics.filter(
     (item) => item.music.name.toLowerCase().includes(kw) || item.from.name.toLowerCase().includes(kw),
   )
 })
@@ -160,7 +143,7 @@ const activeCooldowns = computed(() => {
       }
     })
     .filter((i) => i.remain > 0)
-    .sort((a, b) => b.remain - a.remain)
+    .toSorted((a, b) => b.remain - a.remain)
 })
 
 function cleanCooldown(uid: number) {
@@ -176,7 +159,7 @@ function cleanAllCooldowns() {
 }
 
 function copyWaitingList() {
-  const text = formatListForCopy(musicRquestStore.waitingMusics, (item) => `${item.music.name} - ${item.from?.name}`)
+  const text = formatListForCopy(musicRequestStore.waitingMusics, (item) => `${item.music.name} - ${item.from?.name}`)
   if (!text) {
     message.warning('当前待播点歌清单为空')
     return
@@ -213,7 +196,7 @@ async function fetchOriginMusics() {
       data?: SongsInfo[]
     }
     if (res.code === 200 && res.data) {
-      musicRquestStore.originMusics = res.data
+      musicRequestStore.originMusics = res.data
     }
   } catch (err: any) {
     message.error(`拉取曲库失败: ${err.message || '网络错误'}`)
@@ -244,7 +227,7 @@ async function clearOriginMusics() {
     const res = await postApiMusicRequestClear()
     if (res.code === 200) {
       message.success('已清空闲置歌单')
-      musicRquestStore.originMusics = []
+      musicRequestStore.originMusics = []
     } else {
       message.error(res.message || '清空失败')
     }
@@ -253,7 +236,7 @@ async function clearOriginMusics() {
   }
 }
 
-// 从主播自己网站上的【我的歌单】一键导入
+// 从我的歌单同步
 const isSyncingMySongList = ref(false)
 async function syncFromMySongList() {
   isSyncingMySongList.value = true
@@ -371,7 +354,6 @@ function removeBlacklist(item: string) {
   message.success(`已移除黑名单关键词: ${item}`)
 }
 
-// 格式化历史时间
 function formatHistoryTime(timestamp: number) {
   const d = new Date(timestamp)
   return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
@@ -392,7 +374,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="music-request-manage-view">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
       title="点歌机系统"
       subtitle="观众通过发送点歌弹幕指令点播歌单曲目，支持闲置曲库管理、多平台导入、点歌冷却与 1080P OBS 动态呈现"
@@ -405,610 +387,789 @@ onUnmounted(() => {
       ]"
     >
       <template #action>
-        <NFlex align="center" :size="8">
-          <NButton size="small" secondary @click="copyWaitingList">
-            <template #icon><NIcon :component="Copy24Regular" /></template>
+        <div class="flex items-center gap-2">
+          <Button
+            variant="outline"
+            @click="copyWaitingList"
+          >
+            <component
+              :is="Copy24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
             复制点歌单
-          </NButton>
-          <NButton size="small" secondary @click="copySongList">
-            <template #icon><NIcon :component="MusicNote224Regular" /></template>
+          </Button>
+          <Button
+            variant="outline"
+            @click="copySongList"
+          >
+            <component
+              :is="MusicNote224Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
             复制曲库
-          </NButton>
-        </NFlex>
+          </Button>
+        </div>
       </template>
     </ManagePageHeader>
 
-    <NTabs
-      v-model:value="activeMainTab"
-      type="segment"
-      animated
-      class="main-nav-tabs"
-      style="margin-top: 14px"
+    <Tabs
+      v-model="activeMainTab"
+      class="w-full"
     >
-      <!-- ================= Tab 1: 待播点歌清单 ================= -->
-      <NTabPane name="queue">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="MusicNote224Filled" />
-            <span>待播点歌</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <NCard size="small">
-            <NFlex justify="space-between" align="center" :wrap="true" :size="10">
-              <NFlex align="center" :size="8">
-                <NTag type="info" :bordered="false" round>
-                  待播歌曲: {{ musicRquestStore.waitingMusics.length }} 首
-                </NTag>
-                <NTag v-if="activeCooldowns.length > 0" type="warning" :bordered="false" round>
-                  冷却中观众: {{ activeCooldowns.length }} 人
-                </NTag>
-              </NFlex>
+      <TabsList class="grid w-full grid-cols-6 max-w-2xl">
+        <TabsTrigger
+          value="queue"
+          class="gap-1.5"
+        >
+          <component
+            :is="MusicNote224Filled"
+            class="h-3.5 w-3.5"
+          />
+          待播点歌
+        </TabsTrigger>
+        <TabsTrigger
+          value="songlist"
+          class="gap-1.5"
+        >
+          <component
+            :is="MusicNote224Regular"
+            class="h-3.5 w-3.5"
+          />
+          闲置曲库
+        </TabsTrigger>
+        <TabsTrigger
+          value="history"
+          class="gap-1.5"
+        >
+          <component
+            :is="History24Regular"
+            class="h-3.5 w-3.5"
+          />
+          点歌历史
+        </TabsTrigger>
+        <TabsTrigger
+          value="blacklist"
+          class="gap-1.5"
+        >
+          <component
+            :is="ShieldDismiss24Regular"
+            class="h-3.5 w-3.5"
+          />
+          黑名单
+        </TabsTrigger>
+        <TabsTrigger
+          value="preview"
+          class="gap-1.5"
+        >
+          <component
+            :is="Desktop24Regular"
+            class="h-3.5 w-3.5"
+          />
+          OBS 预览
+        </TabsTrigger>
+        <TabsTrigger
+          value="settings"
+          class="gap-1.5"
+        >
+          <component
+            :is="Settings24Regular"
+            class="h-3.5 w-3.5"
+          />
+          点歌规则
+        </TabsTrigger>
+      </TabsList>
 
-              <NFlex align="center" :size="8">
-                <NInputGroup style="width: 240px">
-                  <NInput
-                    v-model:value="waitingFilter"
-                    size="small"
-                    placeholder="搜索歌名或点歌人"
-                    clearable
+      <!-- Tab 1: 待播点歌清单 -->
+      <TabsContent
+        value="queue"
+        class="mt-3 space-y-3"
+      >
+        <Card>
+          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+              <Badge
+                variant="brand"
+                size="sm"
+              >
+                待播歌曲: {{ musicRequestStore.waitingMusics.length }} 首
+              </Badge>
+              <Badge
+                v-if="activeCooldowns.length > 0"
+                variant="warning"
+                size="sm"
+              >
+                冷却中观众: {{ activeCooldowns.length }} 人
+              </Badge>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <div class="relative w-56">
+                <component
+                  :is="Search24Regular"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
+                />
+                <Input
+                  v-model="waitingFilter"
+                  placeholder="搜索歌名或点歌人"
+                  class="pl-8"
+                />
+              </div>
+
+              <AlertDialog>
+                <AlertDialogTrigger as-child>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    :disabled="musicRequestStore.waitingMusics.length === 0"
                   >
-                    <template #prefix><NIcon :component="Search24Regular" /></template>
-                  </NInput>
-                </NInputGroup>
-                <NPopconfirm @positive-click="musicRquestStore.waitingMusics = []">
-                  <template #trigger>
-                    <NButton size="small" type="error" ghost> 清空待播 </NButton>
-                  </template>
-                  确定要清空全部当前待播歌曲吗？
-                </NPopconfirm>
-              </NFlex>
-            </NFlex>
-          </NCard>
+                    清空待播
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent class="sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>清空当前待播点歌？</AlertDialogTitle>
+                    <AlertDialogDescription class="text-xs">
+                      此操作将清空当前全部已排队点歌歌曲。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      @click="musicRequestStore.waitingMusics = []"
+                    >
+                      确认清空
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
 
-          <!-- 列表卡片 -->
-          <NCard size="small" :bordered="false">
-            <div v-if="filteredWaitingMusics.length > 0" class="music-list-container">
-              <div
+        <Card>
+          <CardContent class="p-3">
+            <div
+              v-if="filteredWaitingMusics.length > 0"
+              class="space-y-2"
+            >
+              <MusicRequestItem
                 v-for="(info, index) in filteredWaitingMusics"
                 :key="`${info.music.id}-${index}`"
-                class="music-item-wrapper"
-              >
-                <MusicRequestItem
-                  :music="info.music"
-                  :from-name="info.from.name"
-                  :index="index + 1"
-                  @play="musicRquestStore.playMusic(info.music)"
-                  @cancel="musicRquestStore.cancelWaiting(info)"
-                  @block="musicRquestStore.cancelWaiting(info)"
-                />
-              </div>
-            </div>
-            <NEmpty
-              v-else
-              :description="waitingFilter ? '没有匹配的待播歌曲' : '当前暂无观众点歌，等待弹幕发送中...'"
-              style="padding: 48px 0"
-            />
-          </NCard>
-        </NFlex>
-      </NTabPane>
-
-      <!-- ================= Tab 2: 闲置曲库与导入 ================= -->
-      <NTabPane name="songlist">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="MusicNote224Regular" />
-            <span>歌曲列表 (曲库)</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <NCard size="small">
-            <NFlex justify="space-between" align="center" :wrap="true" :size="10">
-              <NFlex align="center" :size="8">
-                <NTag type="primary" :bordered="false" round>
-                  闲置曲库: {{ originMusics.length }} 首
-                </NTag>
-                <NText depth="3" style="font-size: 12px">
-                  观众点歌可命中此曲库，空闲时亦可轮播
-                </NText>
-              </NFlex>
-
-              <NFlex align="center" :size="8">
-                <NInputGroup style="width: 220px">
-                  <NInput
-                    v-model:value="songListFilter"
-                    size="small"
-                    placeholder="搜索曲库歌名或歌手"
-                    clearable
-                  >
-                    <template #prefix><NIcon :component="Search24Regular" /></template>
-                  </NInput>
-                </NInputGroup>
-
-                <NButton size="small" type="primary" secondary @click="showNeteaseModal = true">
-                  <template #icon><NIcon :component="ArrowDownload24Regular" /></template>
-                  从网易云导入
-                </NButton>
-
-                <NButton
-                  size="small"
-                  secondary
-                  :loading="isSyncingMySongList"
-                  @click="syncFromMySongList"
-                >
-                  <template #icon><NIcon :component="ArrowUpload24Regular" /></template>
-                  从我的歌单同步
-                </NButton>
-
-                <NPopconfirm @positive-click="clearOriginMusics">
-                  <template #trigger>
-                    <NButton size="small" type="error" ghost> 清空曲库 </NButton>
-                  </template>
-                  确定要清空闲置曲库中的全部歌曲吗？
-                </NPopconfirm>
-              </NFlex>
-            </NFlex>
-          </NCard>
-
-          <NCard size="small">
-            <NSpin :show="isLoadingSongs">
-              <div v-if="filteredOriginMusics.length > 0" class="song-table-container">
-                <NScrollbar style="max-height: 520px">
-                  <NList size="small" hoverable>
-                    <NListItem v-for="(song, idx) in filteredOriginMusics" :key="song.key || song.id">
-                      <NFlex align="center" justify="space-between" :wrap="false" style="width: 100%">
-                        <NFlex align="center" :size="12" style="min-width: 0">
-                          <NTag size="small" round :bordered="false" style="font-family: monospace">
-                            {{ idx + 1 }}
-                          </NTag>
-                          <NText strong style="font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                            {{ song.name }}
-                          </NText>
-                          <NText depth="3" style="font-size: 12px; white-space: nowrap">
-                            {{ song.author.join('/') }}
-                          </NText>
-                        </NFlex>
-
-                        <NFlex align="center" :size="8" style="flex-shrink: 0">
-                          <NButton
-                            size="tiny"
-                            quaternary
-                            type="primary"
-                            @click="musicRquestStore.playMusic(song)"
-                          >
-                            <template #icon><NIcon :component="Play24Regular" /></template>
-                            试听/播放
-                          </NButton>
-                          <NPopconfirm @positive-click="delMusic(song)">
-                            <template #trigger>
-                              <NButton size="tiny" quaternary type="error">
-                                <template #icon><NIcon :component="Delete24Regular" /></template>
-                                删除
-                              </NButton>
-                            </template>
-                            确认从曲库删除这首歌吗？
-                          </NPopconfirm>
-                        </NFlex>
-                      </NFlex>
-                    </NListItem>
-                  </NList>
-                </NScrollbar>
-              </div>
-              <NEmpty
-                v-else
-                :description="songListFilter ? '没有匹配的曲目' : '闲置曲库暂无歌曲，点击上方「从网易云导入」或「从我的歌单同步」'"
-                style="padding: 48px 0"
+                :music="info.music"
+                :from-name="info.from.name"
+                :index="index + 1"
+                @play="musicRequestStore.playMusic(info.music)"
+                @cancel="musicRequestStore.cancelWaiting(info)"
+                @block="musicRequestStore.cancelWaiting(info)"
               />
-            </NSpin>
-          </NCard>
-        </NFlex>
-      </NTabPane>
-
-      <!-- ================= Tab 3: 点歌历史 ================= -->
-      <NTabPane name="history">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="History24Regular" />
-            <span>点歌历史</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <NCard size="small">
-            <NFlex justify="space-between" align="center">
-              <NText depth="3" style="font-size: 12px">
-                本地最近记录 {{ musicRquestStore.history.length }} 条点歌流水 (最多保留 200 条)
-              </NText>
-              <NPopconfirm @positive-click="musicRquestStore.clearHistory">
-                <template #trigger>
-                  <NButton size="small" type="error" ghost> 清空历史 </NButton>
-                </template>
-                确定清空所有点歌历史吗？
-              </NPopconfirm>
-            </NFlex>
-          </NCard>
-
-          <NCard size="small">
-            <NScrollbar v-if="musicRquestStore.history.length > 0" style="max-height: 520px">
-              <NList size="small">
-                <NListItem v-for="(entry, index) in musicRquestStore.history" :key="`${entry.time}-${index}`">
-                  <NFlex align="center" justify="space-between" :wrap="false" style="padding: 4px 0">
-                    <NFlex align="center" :size="10" style="min-width: 0">
-                      <NTag
-                        size="tiny"
-                        :type="entry.status === 'played' ? 'success' : 'error'"
-                        :bordered="false"
-                      >
-                        {{ entry.status === 'played' ? '已播放' : '已取消' }}
-                      </NTag>
-                      <NText strong style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
-                        {{ entry.music.name }}
-                      </NText>
-                      <NText depth="3" style="font-size: 12px; white-space: nowrap">
-                        {{ entry.music.author?.join('/') }}
-                      </NText>
-                      <NText depth="2" style="font-size: 12px; white-space: nowrap">
-                        点歌人: {{ entry.from?.name ?? '主播' }}
-                      </NText>
-                    </NFlex>
-                    <NText depth="3" style="font-size: 12px; white-space: nowrap; flex-shrink: 0">
-                      {{ formatHistoryTime(entry.time) }}
-                    </NText>
-                  </NFlex>
-                </NListItem>
-              </NList>
-            </NScrollbar>
-            <NEmpty v-else description="暂无点歌历史记录" style="padding: 48px 0" />
-          </NCard>
-        </NFlex>
-      </NTabPane>
-
-      <!-- ================= Tab 4: 黑名单 ================= -->
-      <NTabPane name="blacklist">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="ShieldDismiss24Regular" />
-            <span>点歌黑名单</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <NCard size="small">
-            <NFlex justify="space-between" align="center" :wrap="true" :size="10">
-              <NText depth="3" style="font-size: 12px">
-                观众点歌时若匹配到黑名单关键词或歌名，系统将自动拦截并提示
-              </NText>
-              <NInputGroup style="width: 280px">
-                <NInput
-                  v-model:value="newBlacklistKeyword"
-                  size="small"
-                  placeholder="输入违规词或禁点歌名"
-                  @keyup.enter="addBlacklist"
-                />
-                <NButton size="small" type="primary" @click="addBlacklist">
-                  <template #icon><NIcon :component="Add24Regular" /></template>
-                  添加
-                </NButton>
-              </NInputGroup>
-            </NFlex>
-          </NCard>
-
-          <NCard size="small">
-            <div v-if="settings.blacklist && settings.blacklist.length > 0">
-              <NFlex :size="8" wrap>
-                <NTag
-                  v-for="kw in settings.blacklist"
-                  :key="kw"
-                  closable
-                  type="error"
-                  @close="removeBlacklist(kw)"
-                >
-                  {{ kw }}
-                </NTag>
-              </NFlex>
             </div>
-            <NEmpty v-else description="黑名单当前为空，尚未添加任何拦截词" style="padding: 48px 0" />
-          </NCard>
-        </NFlex>
-      </NTabPane>
+            <div
+              v-else
+              class="text-center py-12 text-xs text-muted-foreground"
+            >
+              {{ waitingFilter ? '没有匹配的待播歌曲' : '当前暂无观众点歌，等待弹幕发送中...' }}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
 
-      <!-- ================= Tab 5: OBS 预览 ================= -->
-      <NTabPane name="preview">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="Desktop24Regular" />
-            <span>OBS 舞台预览</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <NCard size="small">
-            <NFlex justify="space-between" align="center" :wrap="true" :size="10">
-              <NFlex align="center" :size="12">
-                <NText depth="3" style="font-size: 12px">OBS 样式:</NText>
-                <NRadioGroup v-model:value="obsStyleType" size="small">
-                  <NRadioButton value="glass">毛玻璃</NRadioButton>
-                  <NRadioButton value="transparent">纯透明</NRadioButton>
-                  <NRadioButton value="classic">经典质感</NRadioButton>
-                  <NRadioButton value="fresh">清新粉蓝</NRadioButton>
-                  <NRadioButton value="minimal">极简透字</NRadioButton>
-                </NRadioGroup>
-              </NFlex>
+      <!-- Tab 2: 闲置曲库 -->
+      <TabsContent
+        value="songlist"
+        class="mt-3 space-y-3"
+      >
+        <Card>
+          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2">
+              <Badge
+                variant="brand"
+                size="sm"
+              >
+                闲置曲库: {{ originMusics.length }} 首
+              </Badge>
+              <span class="text-xs text-muted-foreground hidden sm:inline">观众点歌可命中此曲库，空闲时亦可轮播</span>
+            </div>
 
-              <NFlex align="center" :size="8">
-                <NText depth="3" style="font-size: 12px">背景底色:</NText>
-                <NRadioGroup v-model:value="previewBg" size="small">
-                  <NRadioButton value="checker">棋盘格</NRadioButton>
-                  <NRadioButton value="dark">纯暗黑</NRadioButton>
-                  <NRadioButton value="light">浅色</NRadioButton>
-                  <NRadioButton value="game">模拟游戏</NRadioButton>
-                </NRadioGroup>
-                <NButton size="small" type="primary" secondary @click="copyObsLink">
-                  <template #icon><NIcon :component="Copy24Regular" /></template>
-                  复制 OBS 源链接
-                </NButton>
-              </NFlex>
-            </NFlex>
-          </NCard>
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="relative w-48">
+                <component
+                  :is="Search24Regular"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
+                />
+                <Input
+                  v-model="songListFilter"
+                  placeholder="搜索曲库歌名或歌手"
+                  class="pl-8"
+                />
+              </div>
 
-          <NCard size="small" :bordered="false" class="preview-stage-wrapper">
-            <div class="preview-stage-container" :class="`preview-stage-container--${previewBg}`">
-              <div class="preview-canvas-box">
-                <MusicRequestOBS />
+              <Button
+                size="xs"
+                variant="outline"
+                @click="showNeteaseModal = true"
+              >
+                <component
+                  :is="ArrowDownload24Regular"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                网易云导入
+              </Button>
+
+              <Button
+                size="xs"
+                variant="outline"
+                :loading="isSyncingMySongList"
+                @click="syncFromMySongList"
+              >
+                <component
+                  :is="ArrowUpload24Regular"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                我的歌单同步
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger as-child>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    :disabled="originMusics.length === 0"
+                  >
+                    清空曲库
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent class="sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>清空全部闲置曲库？</AlertDialogTitle>
+                    <AlertDialogDescription class="text-xs">
+                      此操作将从闲置曲库中删除全部已导入歌曲。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      @click="clearOriginMusics"
+                    >
+                      确认清空
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent class="p-3">
+            <ScrollArea
+              v-if="filteredOriginMusics.length > 0"
+              class="h-[520px]"
+            >
+              <div class="divide-y divide-border">
+                <div
+                  v-for="(song, idx) in filteredOriginMusics"
+                  :key="song.key || song.id"
+                  class="flex items-center justify-between py-2 px-2.5 hover:bg-muted/40 rounded transition-colors text-xs"
+                >
+                  <div class="flex items-center gap-2.5 min-w-0">
+                    <span class="font-mono text-muted-foreground w-6 text-right shrink-0">{{ idx + 1 }}</span>
+                    <span class="font-medium text-foreground truncate max-w-[240px] sm:max-w-md">{{ song.name }}</span>
+                    <span class="text-muted-foreground truncate">{{ song.author.join('/') }}</span>
+                  </div>
+
+                  <div class="flex items-center gap-1.5 shrink-0">
+                    <Button
+                      size="icon-xs"
+                      variant="ghost"
+                      class="text-primary hover:bg-primary/10"
+                      title="试听/播放"
+                      @click="musicRequestStore.playMusic(song)"
+                    >
+                      <component
+                        :is="Play24Regular"
+                        class="h-3.5 w-3.5"
+                      />
+                    </Button>
+
+                    <AlertDialog>
+                      <AlertDialogTrigger as-child>
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                          title="删除"
+                        >
+                          <component
+                            :is="Delete24Regular"
+                            class="h-3.5 w-3.5"
+                          />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent class="sm:max-w-md">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>删除歌曲？</AlertDialogTitle>
+                          <AlertDialogDescription class="text-xs">
+                            确定从曲库中删除《{{ song.name }}》吗？
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>取消</AlertDialogCancel>
+                          <AlertDialogAction
+                            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            @click="delMusic(song)"
+                          >
+                            确认删除
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </div>
+            </ScrollArea>
+            <div
+              v-else
+              class="text-center py-12 text-xs text-muted-foreground"
+            >
+              {{ songListFilter ? '没有匹配的曲目' : '闲置曲库暂无歌曲，点击上方「网易云导入」或「我的歌单同步」' }}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <!-- Tab 3: 点歌历史 -->
+      <TabsContent
+        value="history"
+        class="mt-3 space-y-3"
+      >
+        <Card>
+          <CardContent class="p-3 flex items-center justify-between">
+            <span class="text-xs text-muted-foreground"
+              >本地记录最近 {{ musicRequestStore.history.length }} 条点歌流水 (最多保留 200 条)</span
+            >
+            <AlertDialog>
+              <AlertDialogTrigger as-child>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="text-destructive hover:bg-destructive/10"
+                  :disabled="musicRequestStore.history.length === 0"
+                >
+                  清空历史
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent class="sm:max-w-md">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>清空点歌历史？</AlertDialogTitle>
+                  <AlertDialogDescription class="text-xs"> 此操作将抹去本地点歌历史流水。 </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>取消</AlertDialogCancel>
+                  <AlertDialogAction
+                    class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    @click="musicRequestStore.clearHistory"
+                  >
+                    确认清空
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent class="p-3">
+            <ScrollArea
+              v-if="musicRequestStore.history.length > 0"
+              class="h-[520px]"
+            >
+              <div class="divide-y divide-border">
+                <div
+                  v-for="(entry, index) in musicRequestStore.history"
+                  :key="`${entry.time}-${index}`"
+                  class="flex items-center justify-between py-2 px-2 text-xs"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <Badge
+                      :variant="entry.status === 'played' ? 'success' : 'destructive'"
+                      class="text-[10px] px-1.5 py-0 h-4"
+                    >
+                      {{ entry.status === 'played' ? '已播' : '已取消' }}
+                    </Badge>
+                    <span class="font-medium text-foreground truncate max-w-[200px]">{{ entry.music.name }}</span>
+                    <span class="text-muted-foreground truncate">{{ entry.music.author?.join('/') }}</span>
+                    <span class="text-muted-foreground/80 shrink-0"
+                      >点歌人: <span class="text-foreground">{{ entry.from?.name ?? '主播' }}</span></span
+                    >
+                  </div>
+
+                  <span class="font-mono text-muted-foreground text-[11px] shrink-0">{{
+                    formatHistoryTime(entry.time)
+                  }}</span>
+                </div>
+              </div>
+            </ScrollArea>
+            <div
+              v-else
+              class="text-center py-12 text-xs text-muted-foreground"
+            >
+              暂无点歌历史记录
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <!-- Tab 4: 黑名单 -->
+      <TabsContent
+        value="blacklist"
+        class="mt-3 space-y-3"
+      >
+        <Card>
+          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+            <span class="text-xs text-muted-foreground"
+              >观众点歌时若匹配到黑名单关键词或歌名，系统将自动拦截并提示</span
+            >
+            <div class="flex items-center gap-2 w-72">
+              <Input
+                v-model="newBlacklistKeyword"
+                placeholder="输入违规词或禁点歌名"
+                @keyup.enter="addBlacklist"
+              />
+              <Button
+                size="xs"
+                variant="brand"
+                @click="addBlacklist"
+              >
+                <component
+                  :is="Add24Regular"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                添加
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent class="p-4">
+            <div
+              v-if="settings.blacklist && settings.blacklist.length > 0"
+              class="flex flex-wrap gap-2"
+            >
+              <Badge
+                v-for="kw in settings.blacklist"
+                :key="kw"
+                variant="destructive"
+                class="text-xs gap-1 py-1 px-2.5"
+              >
+                {{ kw }}
+                <button
+                  type="button"
+                  class="hover:opacity-75 cursor-pointer ml-1 font-bold"
+                  @click="removeBlacklist(kw)"
+                >
+                  &times;
+                </button>
+              </Badge>
+            </div>
+            <div
+              v-else
+              class="text-center py-12 text-xs text-muted-foreground"
+            >
+              黑名单当前为空，尚未添加任何拦截词
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <!-- Tab 5: OBS 预览 -->
+      <TabsContent
+        value="preview"
+        class="mt-3 space-y-3"
+      >
+        <Card>
+          <CardContent class="p-3 flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-muted-foreground">OBS 样式:</span>
+              <ToggleGroup
+                v-model="obsStyleType"
+                type="single"
+                size="xs"
+              >
+                <ToggleGroupItem value="glass">毛玻璃</ToggleGroupItem>
+                <ToggleGroupItem value="transparent">纯透明</ToggleGroupItem>
+                <ToggleGroupItem value="classic">经典质感</ToggleGroupItem>
+                <ToggleGroupItem value="fresh">清新粉蓝</ToggleGroupItem>
+                <ToggleGroupItem value="minimal">极简透字</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-muted-foreground">背景底色:</span>
+              <ToggleGroup
+                v-model="previewBg"
+                type="single"
+                size="xs"
+              >
+                <ToggleGroupItem value="checker">棋盘格</ToggleGroupItem>
+                <ToggleGroupItem value="dark">纯暗黑</ToggleGroupItem>
+                <ToggleGroupItem value="light">浅色</ToggleGroupItem>
+                <ToggleGroupItem value="game">模拟游戏</ToggleGroupItem>
+              </ToggleGroup>
+
+              <Button
+                size="xs"
+                variant="brand"
+                @click="copyObsLink"
+              >
+                <component
+                  :is="Copy24Regular"
+                  class="h-3.5 w-3.5 mr-1"
+                />
+                复制 OBS 源链接
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card class="overflow-hidden">
+          <div
+            class="p-6 flex items-center justify-center min-h-[460px] transition-colors"
+            :class="{
+              'bg-[#121214]': previewBg === 'dark',
+              'bg-[#f4f4f5]': previewBg === 'light',
+              'bg-[#0b132b]': previewBg === 'game',
+              'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]':
+                previewBg === 'checker',
+            }"
+          >
+            <div class="w-[380px] max-w-full">
+              <MusicRequestOBS />
+            </div>
+          </div>
+        </Card>
+      </TabsContent>
+
+      <!-- Tab 6: 点歌规则配置 -->
+      <TabsContent
+        value="settings"
+        class="mt-3"
+      >
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- 点歌弹幕规则 -->
+          <Card>
+            <CardHeader class="p-3.5 pb-2">
+              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 点歌弹幕规则 </CardTitle>
+            </CardHeader>
+            <CardContent class="p-3.5 space-y-3.5">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-xs font-medium text-foreground">点歌弹幕前缀</span>
+                <div class="flex items-center gap-2">
+                  <Input
+                    v-model="settings.orderPrefix"
+                    placeholder="如: 点歌"
+                    class="w-32 font-mono"
+                  />
+                  <span class="text-xs text-muted-foreground">如: 点歌 晴天</span>
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-xs font-medium text-foreground">音乐搜索平台</span>
+                <ToggleGroup
+                  v-model="settings.platform"
+                  type="single"
+                  size="xs"
+                >
+                  <ToggleGroupItem value="netease">网易云音乐</ToggleGroupItem>
+                  <ToggleGroupItem value="kugou">酷狗音乐</ToggleGroupItem>
+                </ToggleGroup>
+              </div>
+
+              <Separator />
+
+              <div class="space-y-2.5">
+                <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground select-none">
+                  <Checkbox v-model="settings.orderMusicFirst" />
+                  <span>优先播放点歌（新点歌立即插队或优先播完）</span>
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground select-none">
+                  <Checkbox v-model="settings.playMusicWhenFree" />
+                  <span>空闲时自动播放闲置歌单</span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
+
+          <!-- 冷却时间与防刷限制 -->
+          <Card>
+            <CardHeader class="p-3.5 pb-2">
+              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 冷却时间与防刷限制 </CardTitle>
+            </CardHeader>
+            <CardContent class="p-3.5 space-y-3.5">
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-xs font-medium text-foreground">个人点歌冷却</span>
+                <div class="flex items-center gap-2">
+                  <Input
+                    v-model.number="settings.orderCooldown"
+                    type="number"
+                    min="0"
+                    max="3600"
+                    class="w-24 font-mono"
+                  />
+                  <span class="text-xs text-muted-foreground">秒 (设为 0 不限频)</span>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-muted-foreground">当前冷却中观众 ({{ activeCooldowns.length }} 人)</span>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="text-amber-500 hover:bg-amber-500/10"
+                  :disabled="activeCooldowns.length === 0"
+                  @click="cleanAllCooldowns"
+                >
+                  解除全部冷却
+                </Button>
+              </div>
+
+              <div
+                v-if="activeCooldowns.length > 0"
+                class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto"
+              >
+                <Badge
+                  v-for="cd in activeCooldowns"
+                  :key="cd.uid"
+                  variant="warning"
+                  class="text-[11px] gap-1"
+                >
+                  {{ cd.name }} (剩 {{ cd.remain }}s)
+                  <button
+                    type="button"
+                    class="hover:opacity-75 cursor-pointer ml-1 font-bold"
+                    @click="cleanCooldown(cd.uid)"
+                  >
+                    &times;
+                  </button>
+                </Badge>
+              </div>
+              <div
+                v-else
+                class="text-xs text-muted-foreground py-2"
+              >
+                暂无处于冷却中的观众
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+    </Tabs>
+
+    <!-- 网易云歌单导入弹窗 -->
+    <Dialog v-model:open="showNeteaseModal">
+      <DialogContent class="sm:max-w-xl">
+        <DialogHeader>
+          <DialogTitle class="text-base"> 从网易云歌单导入曲目到闲置歌单 </DialogTitle>
+          <DialogDescription class="text-xs">
+            粘贴网易云音乐歌单链接（例如 <code>https://music.163.com/playlist?id=123456</code>）或纯歌单
+            ID，点击解析后批量导入。
+          </DialogDescription>
+        </DialogHeader>
+
+        <div class="space-y-3 py-2">
+          <div class="flex gap-2">
+            <Input
+              v-model="neteaseIdInput"
+              placeholder="粘贴网易云歌单链接或歌单 ID"
+              class="flex-1"
+              @keyup.enter="loadNeteasePlaylist"
+            />
+            <Button
+              variant="brand"
+              :loading="isNeteaseLoading"
+              @click="loadNeteasePlaylist"
+            >
+              解析歌单
+            </Button>
+          </div>
+
+          <div
+            v-if="neteaseSongs.length > 0"
+            class="space-y-2 border border-border rounded-lg p-3 bg-muted/20"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted-foreground"
+                >共解析出 {{ neteaseSongs.length }} 首，已勾选 {{ selectedNeteaseKeys.length }} 首</span
+              >
+              <div class="flex items-center gap-2">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  @click="selectAllNetease"
+                >
+                  全选
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  @click="deselectAllNetease"
+                >
+                  取消全选
+                </Button>
               </div>
             </div>
-          </NCard>
-        </NFlex>
-      </NTabPane>
 
-      <!-- ================= Tab 6: 点歌规则与高级设置 ================= -->
-      <NTabPane name="settings">
-        <template #tab>
-          <NFlex align="center" :size="6" :wrap="false">
-            <NIcon :component="Settings24Regular" />
-            <span>点歌规则与配置</span>
-          </NFlex>
-        </template>
-        <NFlex vertical :size="14" style="margin-top: 14px">
-          <NGrid :cols="2" :x-gap="14" :y-gap="14">
-            <NGi>
-              <NCard size="small" title="点歌弹幕规则">
-                <NFlex vertical :size="12">
-                  <NFlex align="center" :size="8">
-                    <NText style="width: 90px; flex-shrink: 0">点歌弹幕前缀:</NText>
-                    <NInput v-model:value="settings.orderPrefix" size="small" style="max-width: 180px" />
-                    <NText depth="3" style="font-size: 12px">如: 点歌 晴天</NText>
-                  </NFlex>
-
-                  <NFlex align="center" :size="8">
-                    <NText style="width: 90px; flex-shrink: 0">音乐搜索平台:</NText>
-                    <NRadioGroup v-model:value="settings.platform" size="small">
-                      <NRadioButton value="netease">网易云音乐</NRadioButton>
-                      <NRadioButton value="kugou">酷狗音乐</NRadioButton>
-                    </NRadioGroup>
-                  </NFlex>
-
-                  <NDivider style="margin: 6px 0" />
-
-                  <NFlex vertical :size="6">
-                    <NCheckbox v-model:checked="settings.orderMusicFirst">
-                      优先播放点歌（新点歌立即插队或优先播完）
-                    </NCheckbox>
-                    <NCheckbox v-model:checked="settings.playMusicWhenFree">
-                      空闲时自动播放闲置歌单
-                    </NCheckbox>
-                  </NFlex>
-                </NFlex>
-              </NCard>
-            </NGi>
-
-            <NGi>
-              <NCard size="small" title="冷却时间与防刷限制">
-                <NFlex vertical :size="12">
-                  <NFlex align="center" :size="8">
-                    <NText style="width: 90px; flex-shrink: 0">个人点歌冷却:</NText>
-                    <NInputNumber
-                      v-model:value="settings.orderCooldown"
-                      size="small"
-                      :min="0"
-                      :max="3600"
-                      style="max-width: 140px"
-                    >
-                      <template #suffix>秒</template>
-                    </NInputNumber>
-                    <NText depth="3" style="font-size: 12px">设为 0 则不限频</NText>
-                  </NFlex>
-
-                  <NDivider style="margin: 6px 0" />
-
-                  <NFlex justify="space-between" align="center">
-                    <NText depth="3" style="font-size: 12px">
-                      当前冷却中观众 ({{ activeCooldowns.length }} 人)
-                    </NText>
-                    <NButton
-                      size="tiny"
-                      type="warning"
-                      ghost
-                      :disabled="activeCooldowns.length === 0"
-                      @click="cleanAllCooldowns"
-                    >
-                      解除全部冷却
-                    </NButton>
-                  </NFlex>
-
-                  <div v-if="activeCooldowns.length > 0" class="cooldown-tags-wrap">
-                    <NTag
-                      v-for="cd in activeCooldowns"
-                      :key="cd.uid"
-                      size="small"
-                      closable
-                      type="warning"
-                      @close="cleanCooldown(cd.uid)"
-                    >
-                      {{ cd.name }} (剩 {{ cd.remain }}s)
-                    </NTag>
-                  </div>
-                  <NText v-else depth="3" style="font-size: 12px">暂无处于冷却中的观众</NText>
-                </NFlex>
-              </NCard>
-            </NGi>
-          </NGrid>
-        </NFlex>
-      </NTabPane>
-    </NTabs>
-
-    <!-- ================= 网易云歌单导入弹窗 ================= -->
-    <NModal
-      v-model:show="showNeteaseModal"
-      preset="card"
-      title="从网易云歌单导入曲目到闲置歌单"
-      style="width: 640px; max-width: 95vw"
-    >
-      <NFlex vertical :size="14">
-        <NAlert type="info" :bordered="false">
-          输入网易云音乐歌单链接（例如
-          <code>https://music.163.com/playlist?id=123456</code>）或纯歌单 ID，点击解析后批量导入。
-        </NAlert>
-
-        <NInputGroup>
-          <NInput
-            v-model:value="neteaseIdInput"
-            placeholder="粘贴网易云歌单链接或歌单 ID"
-            clearable
-            @keyup.enter="loadNeteasePlaylist"
-          />
-          <NButton type="primary" :loading="isNeteaseLoading" @click="loadNeteasePlaylist">
-            解析歌单
-          </NButton>
-        </NInputGroup>
-
-        <div v-if="neteaseSongs.length > 0" class="netease-result-list">
-          <NFlex justify="space-between" align="center" style="margin-bottom: 8px">
-            <NText depth="3" style="font-size: 12px">
-              共解析出 {{ neteaseSongs.length }} 首，已勾选 {{ selectedNeteaseKeys.length }} 首
-            </NText>
-            <NFlex :size="8">
-              <NButton size="tiny" quaternary @click="selectAllNetease"> 全选 </NButton>
-              <NButton size="tiny" quaternary @click="deselectAllNetease"> 取消全选 </NButton>
-            </NFlex>
-          </NFlex>
-
-          <NScrollbar style="max-height: 320px; border: 1px solid var(--vtsuru-border); border-radius: 6px; padding: 6px">
-            <NFlex vertical :size="4">
-              <NCheckbox
-                v-for="song in neteaseSongs"
-                :key="song.key"
-                :value="song.key"
-                :checked="selectedNeteaseKeys.includes(song.key)"
-                @update:checked="(val: boolean) => {
-                  if (val) {
-                    selectedNeteaseKeys.push(song.key)
-                  } else {
-                    selectedNeteaseKeys = selectedNeteaseKeys.filter((k) => k !== song.key)
-                  }
-                }"
-              >
-                <NText strong style="font-size: 13px">{{ song.name }}</NText>
-                <NText depth="3" style="font-size: 12px; margin-left: 6px">
-                  - {{ song.author.join('/') }}
-                </NText>
-              </NCheckbox>
-            </NFlex>
-          </NScrollbar>
+            <ScrollArea class="h-64 rounded border border-border p-2 bg-background">
+              <div class="space-y-1.5">
+                <label
+                  v-for="song in neteaseSongs"
+                  :key="song.key"
+                  class="flex items-center gap-2 p-1.5 hover:bg-muted/40 rounded cursor-pointer text-xs select-none"
+                >
+                  <Checkbox
+                    :model-value="selectedNeteaseKeys.includes(song.key)"
+                    @update:model-value="
+                      (val) => {
+                        if (val) {
+                          selectedNeteaseKeys.push(song.key)
+                        } else {
+                          selectedNeteaseKeys = selectedNeteaseKeys.filter((k) => k !== song.key)
+                        }
+                      }
+                    "
+                  />
+                  <span class="font-medium text-foreground truncate">{{ song.name }}</span>
+                  <span class="text-muted-foreground truncate">- {{ song.author.join('/') }}</span>
+                </label>
+              </div>
+            </ScrollArea>
+          </div>
         </div>
-      </NFlex>
 
-      <template #footer>
-        <NFlex justify="end" :size="10">
-          <NButton @click="showNeteaseModal = false">取消</NButton>
-          <NButton
-            type="primary"
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showNeteaseModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            variant="brand"
             :loading="isNeteaseLoading"
             :disabled="selectedNeteaseKeys.length === 0"
             @click="confirmImportNetease"
           >
             确认导入 ({{ selectedNeteaseKeys.length }} 首)
-          </NButton>
-        </NFlex>
-      </template>
-    </NModal>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
-
-<style scoped>
-.music-request-manage-view {
-  width: 100%;
-}
-
-.main-nav-tabs :deep(.n-tabs-rail) {
-  width: fit-content;
-  max-width: 100%;
-  padding: 4px;
-  border-radius: 8px;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-muted);
-}
-
-.main-nav-tabs :deep(.n-tabs-tab) {
-  --n-tab-padding: 6px 16px !important;
-  white-space: nowrap;
-  font-weight: 500;
-}
-
-.music-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.music-item-wrapper {
-  transition: transform 0.15s ease;
-}
-
-.cooldown-tags-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  max-height: 120px;
-  overflow-y: auto;
-}
-
-.preview-stage-wrapper {
-  background: var(--vtsuru-bg-muted);
-  border-radius: 8px;
-  padding: 16px;
-}
-
-.preview-stage-container {
-  min-height: 480px;
-  border-radius: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 24px;
-}
-
-.preview-stage-container--checker {
-  background-image: linear-gradient(45deg, #1f232b 25%, transparent 25%),
-    linear-gradient(-45deg, #1f232b 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #1f232b 75%),
-    linear-gradient(-45deg, transparent 75%, #1f232b 75%);
-  background-size: 20px 20px;
-  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-  background-color: #14171d;
-}
-
-.preview-stage-container--dark {
-  background: #090a0f;
-}
-
-.preview-stage-container--light {
-  background: #f4f4f5;
-}
-
-.preview-stage-container--game {
-  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
-}
-
-.preview-canvas-box {
-  width: 400px;
-  max-width: 100%;
-}
-</style>

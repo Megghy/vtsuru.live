@@ -1,17 +1,13 @@
 <script setup lang="ts">
-import {
-  ArrowRight24Regular,
-  CheckmarkCircle24Regular,
-  DismissCircle24Regular,
-  Mail24Regular,
-} from '@vicons/fluent'
-import { NButton, NIcon, NSpin } from 'naive-ui'
+import { ArrowRight24Regular, CheckmarkCircle24Regular, DismissCircle24Regular, Mail24Regular } from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { ACCOUNT, GetSelfAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { getApiAccountVerify } from '@/api/generated/account/account'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 
 type Phase = 'checking' | 'success' | 'need-login' | 'error'
 const PHASES: readonly Phase[] = ['checking', 'success', 'need-login', 'error']
@@ -49,7 +45,11 @@ const copy = computed(() => {
     case 'need-login':
       return { kicker: '验证完成', title: '邮箱已验证', summary: '请登录后进入主播后台。' }
     default:
-      return { kicker: '无法验证', title: '验证没有完成', summary: detail.value || '链接无效或已过期，请回到后台重新发送验证邮件。' }
+      return {
+        kicker: '无法验证',
+        title: '验证没有完成',
+        summary: detail.value || '链接无效或已过期，请回到后台重新发送验证邮件。',
+      }
   }
 })
 
@@ -112,155 +112,78 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <main class="verify-page">
-    <section class="verify-card">
+  <main class="grid min-h-svh py-8 px-4 bg-muted place-items-center">
+    <section class="grid w-full max-w-[420px] pt-8 px-7 pb-7 border border-border rounded-[var(--radius)] bg-popover justify-items-center text-center gap-2">
       <div
-        class="verify-icon"
-        :class="`verify-icon--${phase}`"
+        class="grid size-[52px] mb-2 rounded-xl place-items-center"
+        :class="{
+          'text-[var(--brand)] bg-[var(--brand-soft)]': phase === 'checking',
+          'text-[var(--vtsuru-success)] bg-[var(--vtsuru-success-soft)]': phase === 'success' || phase === 'need-login',
+          'text-[var(--vtsuru-error)] bg-[var(--vtsuru-error-soft)]': phase === 'error',
+        }"
       >
-        <NSpin
+        <Spin
           v-if="phase === 'checking'"
-          size="small"
+          class="size-6"
         />
-        <NIcon
+        <component
+          :is="phase === 'error' ? DismissCircle24Regular : CheckmarkCircle24Regular"
           v-else
-          :component="phase === 'error' ? DismissCircle24Regular : CheckmarkCircle24Regular"
-          :size="28"
+          class="size-7"
         />
       </div>
-      <p class="verify-kicker">
+      <p class="m-0 text-muted-foreground text-xs">
         {{ copy.kicker }}
       </p>
-      <h1>{{ copy.title }}</h1>
-      <p class="verify-summary">
+      <h1 class="m-0 text-foreground text-[22px] font-semibold leading-tight">{{ copy.title }}</h1>
+      <p class="m-0 mb-3 text-muted-foreground text-sm leading-relaxed">
         {{ copy.summary }}
       </p>
-      <div class="verify-actions">
-        <NButton
+      <div class="grid w-full gap-2">
+        <Button
           v-if="phase === 'success'"
-          type="primary"
-          block
+          class="w-full flex items-center justify-center gap-2"
           @click="goManage"
         >
           进入主播后台
-          <template #icon>
-            <NIcon :component="ArrowRight24Regular" />
-          </template>
-        </NButton>
-        <NButton
+          <component
+            :is="ArrowRight24Regular"
+            class="size-4"
+          />
+        </Button>
+        <Button
           v-else-if="phase === 'need-login'"
-          type="primary"
-          block
+          class="w-full"
           @click="goHome"
         >
           去登录
-        </NButton>
+        </Button>
         <template v-else-if="phase === 'error'">
-          <NButton
-            type="primary"
-            block
+          <Button
+            class="w-full"
             @click="goHome"
           >
             返回首页
-          </NButton>
-          <NButton
-            block
+          </Button>
+          <Button
+            variant="outline"
+            class="w-full"
             @click="goManage"
           >
             打开主播后台
-          </NButton>
+          </Button>
         </template>
       </div>
       <p
         v-if="phase === 'checking'"
-        class="verify-hint"
+        class="inline-flex gap-1.5 items-center mt-2 text-muted-foreground text-xs"
       >
-        <NIcon :component="Mail24Regular" />
+        <component
+          :is="Mail24Regular"
+          class="size-4"
+        />
         来自验证邮件的一次性链接
       </p>
     </section>
   </main>
 </template>
-
-<style scoped>
-.verify-page {
-  display: grid;
-  min-height: 100svh;
-  padding: 32px 16px;
-  background: var(--vtsuru-bg-muted);
-  place-items: center;
-}
-
-.verify-card {
-  display: grid;
-  width: min(100%, 420px);
-  padding: 32px 28px 28px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-elevated);
-  justify-items: center;
-  text-align: center;
-  gap: 8px;
-}
-
-.verify-icon {
-  display: grid;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 8px;
-  border-radius: 12px;
-  place-items: center;
-}
-
-.verify-icon--checking {
-  color: var(--vtsuru-brand);
-  background: var(--vtsuru-brand-soft);
-}
-
-.verify-icon--success,
-.verify-icon--need-login {
-  color: var(--vtsuru-success);
-  background: var(--vtsuru-success-soft);
-}
-
-.verify-icon--error {
-  color: var(--vtsuru-error);
-  background: var(--vtsuru-error-soft);
-}
-
-.verify-kicker {
-  margin: 0;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-h1 {
-  margin: 0;
-  color: var(--vtsuru-fg);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.3;
-}
-
-.verify-summary {
-  margin: 0 0 12px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.verify-actions {
-  display: grid;
-  width: 100%;
-  gap: 8px;
-}
-
-.verify-hint {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  margin: 8px 0 0;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-</style>

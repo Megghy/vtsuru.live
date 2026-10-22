@@ -7,5 +7,5 @@
  */
 
 export type GetApiQaGetCurrentAndSettingsParams = {
-id?: number;
-};
+  id?: number
+}

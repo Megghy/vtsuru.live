@@ -23,14 +23,15 @@ import {
   OpenOutline,
 } from '@vicons/ionicons5'
 import { useResizeObserver } from '@vueuse/core'
-import { NButton, NIcon, NNumberAnimation, NTooltip } from 'naive-ui'
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getApiVtsuruGetIndexData } from '@/api/generated/vtsuru/vtsuru'
 import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
-import { useBiliAuth } from '@/store/useBiliAuth'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
+import { useBiliAuth } from '@/store/useBiliAuth'
 import vtb from '@/svgs/ic_vtuber.svg'
 
 const $router = useRouter()
@@ -274,74 +275,74 @@ onMounted(() => {
             <p class="hero-tagline">一个给主播提供便利功能的网站 😊</p>
 
             <div class="entry-grid">
-              <NTooltip placement="bottom">
-                <template #trigger>
-                  <button
-                    type="button"
-                    class="entry-card tone-cyan"
-                    @click="$router.push({ name: 'manage-index' })"
-                  >
-                    <NIcon
-                      :component="PersonFeedback24Filled"
-                      size="36"
-                    />
-                    <strong>我是主播</strong>
-                    <span>开始使用</span>
-                  </button>
-                </template>
-                进入主播后台，管理直播相关工具与设置
-              </NTooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <button
+                      type="button"
+                      class="entry-card tone-cyan"
+                      @click="$router.push({ name: 'manage-index' })"
+                    >
+                      <component
+                        :is="PersonFeedback24Filled"
+                        class="size-9"
+                      />
+                      <strong>我是主播</strong>
+                      <span>开始使用</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"> 进入主播后台，管理直播相关工具与设置 </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
 
-              <NTooltip placement="bottom">
-                <template #trigger>
-                  <button
-                    type="button"
-                    class="entry-card tone-yellow"
-                    @click="openAudience"
-                  >
-                    <NIcon
-                      :component="Chat24Filled"
-                      size="36"
-                    />
-                    <strong>我是观众</strong>
-                    <span>查看积分</span>
-                  </button>
-                </template>
-                用 Bilibili 认证查看积分和订单，不用注册
-              </NTooltip>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <button
+                      type="button"
+                      class="entry-card tone-yellow"
+                      @click="openAudience"
+                    >
+                      <component
+                        :is="Chat24Filled"
+                        class="size-9"
+                      />
+                      <strong>我是观众</strong>
+                      <span>查看积分</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom"> 用 Bilibili 认证查看积分和订单，不用注册 </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             <div class="hero-actions">
-              <NButton
-                secondary
+              <Button
+                variant="secondary"
                 @click="$router.push('/@Megghy')"
               >
                 展示
-              </NButton>
-              <NButton
-                type="primary"
-                tag="a"
-                href="https://play-live.bilibili.com/details/1698742711771"
-                target="_blank"
-              >
-                幻星平台
-              </NButton>
-              <NButton
-                type="info"
+              </Button>
+              <Button as-child>
+                <a
+                  href="https://play-live.bilibili.com/details/1698742711771"
+                  target="_blank"
+                >
+                  幻星平台
+                </a>
+              </Button>
+              <Button
+                variant="outline"
                 @click="$router.push({ name: 'about' })"
               >
                 关于
-              </NButton>
+              </Button>
             </div>
 
             <div class="hero-stat">
               <span>注册用户</span>
               <strong>
-                <NNumberAnimation
-                  :from="0"
-                  :to="indexData?.userCount ?? 0"
-                  show-separator
-                />
+                {{ (indexData?.userCount ?? 0).toLocaleString() }}
               </strong>
             </div>
           </div>
@@ -364,9 +365,9 @@ onMounted(() => {
           >
             <span class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="item.icon"
-                  size="24"
+                <component
+                  :is="item.icon"
+                  class="size-6"
                 />
               </span>
               <span class="feature-card-title">{{ item.name }}</span>
@@ -398,18 +399,13 @@ onMounted(() => {
               <li>支持区块组合、拖拽排序、组件级样式与预览</li>
             </ul>
             <div class="section-actions">
-              <NButton
-                type="primary"
-                @click="$router.push({ name: 'manage-userPageBuilder' })"
-              >
-                打开编辑器
-              </NButton>
-              <NButton
-                secondary
+              <Button @click="$router.push({ name: 'manage-userPageBuilder' })"> 打开编辑器 </Button>
+              <Button
+                variant="secondary"
                 @click="$router.push('/@Megghy')"
               >
                 查看示例
-              </NButton>
+              </Button>
             </div>
           </div>
           <div class="userpage-intro-media">
@@ -433,9 +429,9 @@ onMounted(() => {
           <article class="feature-card tone-coral">
             <div class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="PersonFeedback24Filled"
-                  size="24"
+                <component
+                  :is="PersonFeedback24Filled"
+                  class="size-6"
                 />
               </span>
               <span class="feature-card-title">自动操作</span>
@@ -449,9 +445,9 @@ onMounted(() => {
           <article class="feature-card tone-cyan">
             <div class="feature-card-header">
               <span class="icon-wrapper">
-                <NIcon
-                  :component="Chat24Filled"
-                  size="24"
+                <component
+                  :is="Chat24Filled"
+                  class="size-6"
                 />
               </span>
               <span class="feature-card-title">弹幕机（客户端）</span>
@@ -460,33 +456,41 @@ onMounted(() => {
           </article>
         </div>
         <div class="section-actions centered-actions">
-          <NButton
-            type="primary"
-            tag="a"
-            href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
-            target="_blank"
+          <Button as-child>
+            <a
+              href="https://www.wolai.com/carN6qvUm3FErze9Xo53ii"
+              target="_blank"
+              class="flex items-center gap-1.5"
+            >
+              <component
+                :is="Info24Filled"
+                class="size-4"
+              />
+              客户端安装说明
+            </a>
+          </Button>
+          <Button
+            variant="outline"
+            as-child
           >
-            <template #icon>
-              <NIcon :component="Info24Filled" />
-            </template>
-            客户端安装说明
-          </NButton>
-          <NButton
-            ghost
-            tag="a"
-            href="https://github.com/Megghy/vtsuru-fetvher-client"
-            target="_blank"
+            <a
+              href="https://github.com/Megghy/vtsuru-fetvher-client"
+              target="_blank"
+            >
+              客户端代码
+            </a>
+          </Button>
+          <Button
+            variant="outline"
+            as-child
           >
-            客户端代码
-          </NButton>
-          <NButton
-            ghost
-            tag="a"
-            href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
-            target="_blank"
-          >
-            逻辑代码
-          </NButton>
+            <a
+              href="https://github.com/Megghy/vtsuru.live/tree/master/src/client"
+              target="_blank"
+            >
+              逻辑代码
+            </a>
+          </Button>
         </div>
       </section>
 
@@ -494,72 +498,65 @@ onMounted(() => {
       <section class="home-section streamers-home-section">
         <header class="section-header streamers-section-header">
           <div class="streamers-heading">
-            <h2 class="section-title">
+            <h2 class="section-title flex items-center gap-1.5">
               正在使用本站的主播们
-              <NTooltip>
-                <template #trigger>
-                  <NIcon
-                    :component="Info24Filled"
-                    size="16"
-                    class="section-info-icon"
-                  />
-                </template>
-                随机展示不分先后，仅粉丝数大于 500 的主播；展示其直播间信息与开播状态
-              </NTooltip>
+              <span
+                class="inline-flex cursor-help text-muted-foreground hover:text-foreground"
+                title="随机展示不分先后，仅粉丝数大于 500 的主播；展示其直播间信息与开播状态"
+              >
+                <component
+                  :is="Info24Filled"
+                  class="size-4"
+                />
+              </span>
             </h2>
             <p class="section-subtitle">感谢支持</p>
           </div>
 
-          <div class="streamers-controls">
-            <RouterLink to="/live"><NButton size="small">直播与关注</NButton></RouterLink>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
-                  aria-label="向左滚动"
-                  :disabled="!canScrollRoomsLeft"
-                  @click="scrollRooms(-1)"
-                >
-                  <template #icon>
-                    <NIcon :component="ChevronLeft24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              向左滚动
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
-                  aria-label="向右滚动"
-                  :disabled="!canScrollRoomsRight"
-                  @click="scrollRooms(1)"
-                >
-                  <template #icon>
-                    <NIcon :component="ChevronRight24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              向右滚动
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  circle
-                  quaternary
-                  aria-label="刷新主播列表"
-                  :loading="isRefreshingRooms"
-                  @click="loadIndexData"
-                >
-                  <template #icon>
-                    <NIcon :component="ArrowClockwise24Regular" />
-                  </template>
-                </NButton>
-              </template>
-              刷新主播列表
-            </NTooltip>
+          <div class="streamers-controls flex items-center gap-1.5">
+            <RouterLink to="/live">
+              <Button variant="outline">直播与关注</Button>
+            </RouterLink>
+            <button
+              type="button"
+              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="向左滚动"
+              title="向左滚动"
+              :disabled="!canScrollRoomsLeft"
+              @click="scrollRooms(-1)"
+            >
+              <component
+                :is="ChevronLeft24Regular"
+                class="size-4"
+              />
+            </button>
+            <button
+              type="button"
+              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40 disabled:cursor-not-allowed"
+              aria-label="向右滚动"
+              title="向右滚动"
+              :disabled="!canScrollRoomsRight"
+              @click="scrollRooms(1)"
+            >
+              <component
+                :is="ChevronRight24Regular"
+                class="size-4"
+              />
+            </button>
+            <button
+              type="button"
+              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40"
+              aria-label="刷新主播列表"
+              title="刷新主播列表"
+              :disabled="isRefreshingRooms"
+              @click="loadIndexData"
+            >
+              <component
+                :is="ArrowClockwise24Regular"
+                class="size-4"
+                :class="{ 'animate-spin': isRefreshingRooms }"
+              />
+            </button>
           </div>
         </header>
 
@@ -627,9 +624,9 @@ onMounted(() => {
                         :title="hasReserve(room) ? '打开直播间预告' : '打开直播间'"
                         @click.stop
                       >
-                        <NIcon
-                          :component="OpenOutline"
-                          size="16"
+                        <component
+                          :is="OpenOutline"
+                          class="size-4"
                         />
                       </a>
                     </div>
@@ -658,20 +655,20 @@ onMounted(() => {
 
           <!-- 底部信息 -->
           <div class="streamers-footer">
-            <div class="streamers-note">
-              <NIcon
-                :component="Info24Filled"
-                size="14"
+            <div class="streamers-note flex items-center gap-1.5 text-xs text-muted-foreground">
+              <component
+                :is="Info24Filled"
+                class="size-3.5"
               />
               <span>
                 不想被展示？前往
-                <NButton
-                  text
-                  size="tiny"
+                <button
+                  type="button"
+                  class="text-primary hover:underline cursor-pointer"
                   @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
                 >
                   设置页面（渲染模式-传统-允许展示在主页）
-                </NButton>
+                </button>
                 关闭展示
               </span>
             </div>
@@ -680,16 +677,16 @@ onMounted(() => {
       </section>
     </main>
     <footer class="footer">
-      <span>
+      <span class="flex items-center gap-1 text-sm text-muted-foreground">
         BY
-        <NButton
-          tag="a"
+        <a
           href="https://space.bilibili.com/10021741"
           target="_blank"
-          text
+          rel="noreferrer"
+          class="font-semibold text-foreground hover:text-primary transition"
         >
           Megghy
-        </NButton>
+        </a>
       </span>
     </footer>
   </div>
@@ -700,8 +697,8 @@ onMounted(() => {
     position: relative;
     min-height: 100vh;
     box-sizing: border-box;
-    background-color: var(--vtsuru-bg);
-    color: var(--vtsuru-fg);
+    background-color: var(--background);
+    color: var(--foreground);
     isolation: isolate;
     overflow-x: hidden;
 
@@ -720,7 +717,7 @@ onMounted(() => {
 
 .hero-section
     padding: 24px 0 36px;
-    border-bottom: 1px solid var(--vtsuru-border);
+    border-bottom: 1px solid var(--border);
 
 .hero-layout
     display: flex;
@@ -738,7 +735,7 @@ onMounted(() => {
 .brand-title
     position: relative;
     margin: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: clamp(2.5rem, 5vw, 4rem);
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -751,11 +748,11 @@ onMounted(() => {
     height: 5px;
     margin-top: 14px;
     border-radius: 999px;
-    background: #27abd9;
+    background: var(--primary);
 
 .hero-tagline
     margin: 18px 0 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: clamp(1.1rem, 2vw, 1.35rem);
     font-weight: 500;
 
@@ -780,21 +777,21 @@ onMounted(() => {
     gap: 9px;
     min-height: 152px;
     padding: 22px 16px;
-    border: 1px solid var(--vtsuru-border);
-    border-bottom: 3px solid var(--card-accent);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--vtsuru-bg-elevated);
-    color: var(--vtsuru-fg);
+    backdrop-filter: blur(12px);
+    background-color: unquote('rgba(var(--popover-rgb), 0.85)');
+    color: var(--foreground);
     cursor: pointer;
     font: inherit;
-    transition: transform 160ms var(--vtsuru-bezier), border-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
+    transition: transform 160ms var(--vtsuru-bezier), background-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
 
 .entry-card:hover
     transform: translateY(-3px);
-    border-color: var(--card-accent);
+    background: var(--card-soft);
     box-shadow: 0 10px 26px var(--card-shadow);
 
-.entry-card .n-icon
+.entry-card svg
     color: var(--card-accent);
 
 .entry-card strong
@@ -838,11 +835,11 @@ onMounted(() => {
     align-items: baseline;
     gap: 10px;
     margin-top: 22px;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.85rem;
 
 .hero-stat strong
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.2rem;
 
 .section-header
@@ -854,17 +851,17 @@ onMounted(() => {
     align-items: center;
     gap: 8px;
     margin: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.35rem;
     font-weight: 650;
 
 .section-subtitle
     margin: 8px 0 0;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.92rem;
 
 .section-info-icon
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
 
 .feature-grid,
 .client-grid
@@ -884,15 +881,15 @@ onMounted(() => {
     gap: 16px;
     min-width: 0;
     padding: 18px;
-    border: 1px solid var(--vtsuru-border);
-    border-bottom: 3px solid var(--card-accent);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--vtsuru-bg-elevated);
-    color: var(--vtsuru-fg);
+    backdrop-filter: blur(12px);
+    background-color: unquote('rgba(var(--popover-rgb), 0.85)');
+    color: var(--foreground);
     cursor: pointer;
     font: inherit;
     text-align: left;
-    transition: transform 160ms var(--vtsuru-bezier), border-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
+    transition: transform 160ms var(--vtsuru-bezier), background-color 160ms var(--vtsuru-bezier), box-shadow 160ms var(--vtsuru-bezier);
 
 article.feature-card
     cursor: default;
@@ -900,7 +897,7 @@ article.feature-card
 .feature-card:hover,
 .feature-card:focus-visible
     transform: translateY(-2px);
-    border-color: var(--card-accent);
+    background: var(--card-soft);
     box-shadow: 0 8px 20px var(--card-shadow);
     outline: none;
 
@@ -917,7 +914,7 @@ article.feature-card
     justify-content: center;
     width: 36px;
     height: 36px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--card-soft);
     color: var(--card-accent);
@@ -925,7 +922,7 @@ article.feature-card
 .feature-card-title
     min-width: 0;
     overflow: hidden;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.06rem;
     font-weight: 600;
     text-overflow: ellipsis;
@@ -933,7 +930,7 @@ article.feature-card
 
 .feature-card-desc
     margin: 0;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.9rem;
     line-height: 1.6;
 
@@ -942,7 +939,7 @@ article.feature-card
     align-items: center;
     height: 18px;
     padding: 0 7px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-radius: 999px;
     background: var(--card-soft);
     color: var(--card-accent);
@@ -960,12 +957,12 @@ article.feature-card
 
 .userpage-intro-copy h3
     margin: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 1.18rem;
 
 .userpage-intro-copy p
     margin: 12px 0 0;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     line-height: 1.7;
 
 .userpage-intro-list
@@ -973,7 +970,7 @@ article.feature-card
     gap: 7px;
     margin: 16px 0 20px;
     padding: 0;
-    color: var(--vtsuru-fg);
+    color: var(--foreground);
     font-size: 0.92rem;
     line-height: 1.5;
     list-style: none;
@@ -981,7 +978,7 @@ article.feature-card
 .userpage-intro-list li::before
     content: '•';
     margin-right: 8px;
-    color: #22a8d6;
+    color: var(--primary);
 
 .userpage-intro-media
     min-width: 0;
@@ -990,9 +987,9 @@ article.feature-card
     width: 100%;
     aspect-ratio: 16 / 9;
     overflow: hidden;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     border-radius: 8px;
-    background: var(--vtsuru-bg-muted);
+    background: var(--muted);
 
 .userpage-intro-image img
     display: block;
@@ -1035,11 +1032,11 @@ article.feature-card
     justify-content: center;
     gap: 8px;
     margin-top: 16px;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
     font-size: 0.8rem;
     text-align: center;
 
-.streamers-note .n-button
+.streamers-note button
     padding: 0 4px;
     font-size: 0.8rem;
     text-decoration: underline;
@@ -1050,7 +1047,7 @@ article.feature-card
     display: flex;
     justify-content: center;
     padding: 0 0 24px;
-    color: var(--vtsuru-fg-muted);
+    color: var(--muted-foreground);
 
 @media (prefers-reduced-motion: reduce)
     .hero-icon
@@ -1070,14 +1067,20 @@ article.feature-card
     .feature-grid
         grid-template-columns: repeat(2, minmax(0, 1fr));
 
+@media (max-width: 720px)
+    .client-grid
+        grid-template-columns: 1fr;
+
 @media (max-width: 700px)
     .main-container
         gap: 42px;
         width: min(92vw, 560px);
         padding-top: 24px;
+        padding-bottom: 48px;
 
     .hero-section
         padding-top: 8px;
+        padding-bottom: 24px;
 
     .hero-layout
         flex-direction: column;
@@ -1098,6 +1101,50 @@ article.feature-card
         grid-template-columns: 1fr;
         width: 100%;
         max-width: 340px;
+        margin-left: auto;
+        margin-right: auto;
+
+    .feature-grid
+        grid-template-columns: 1fr;
+
+    .userpage-intro-layout
+        grid-template-columns: 1fr;
+        gap: 24px;
+
+    .userpage-intro-media
+        max-width: 100%;
+
+    .streamers-section-header
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+
+    .streamers-controls
+        width: 100%;
+        justify-content: space-between;
+
+    .section-actions
+        justify-content: center;
+
+@media (max-width: 480px)
+    .main-container
+        width: min(95vw, 100%);
+        gap: 32px;
+        padding-left: 8px;
+        padding-right: 8px;
+
+    .feature-card
+        padding: 14px;
+        gap: 12px;
+
+    .entry-card
+        padding: 16px 12px;
+
+    .section-title
+        font-size: 1.15rem;
+
+    .section-subtitle
+        font-size: 0.85rem;
 
     .entry-card
         min-height: 142px;
@@ -1143,7 +1190,7 @@ article.feature-card
     scroll-snap-type: x proximity;
     scroll-padding-inline: 28px;
     scrollbar-width: thin;
-    scrollbar-color: var(--vtsuru-border) transparent;
+    scrollbar-color: var(--border) transparent;
     -webkit-overflow-scrolling: touch;
     -webkit-mask-repeat: no-repeat;
     mask-repeat: no-repeat;
@@ -1173,7 +1220,7 @@ article.feature-card
     flex: 0 0 auto;
     scroll-snap-align: start;
     border-radius: 8px;
-    border: 1px solid var(--vtsuru-border);
+    border: 1px solid var(--border);
     overflow: hidden;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.28);
@@ -1416,4 +1463,12 @@ article.feature-card
         scroll-padding-inline: 18px;
     .room-mini-card
         width: 180px;
+</style>
+
+<style scoped>
+/* 使用纯 CSS 避免 Stylus 解析问题 */
+.entry-card,
+.feature-card {
+  background-color: rgb(var(--popover-rgb) / 0.85);
+}
 </style>

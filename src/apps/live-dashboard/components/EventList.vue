@@ -1,6 +1,7 @@
 <script setup lang="ts" generic="T extends { key: string }">
-import { NButton, NVirtualList } from 'naive-ui'
 import { nextTick, ref, watch } from 'vue'
+
+import { Button } from '@/shared/ui/button'
 
 import { useLiveDashboard } from '../store/useLiveDashboard'
 
@@ -13,15 +14,19 @@ const props = defineProps<{ items: T[]; itemSize: number; anchor: 'top' | 'botto
 defineSlots<{ default: (props: { item: T }) => unknown }>()
 
 const dashboard = useLiveDashboard()
-const listRef = ref<InstanceType<typeof NVirtualList>>()
+const listRef = ref<HTMLElement>()
 const following = ref(true)
 const pending = ref(0)
 
 function edge() {
-  const position = props.anchor === 'bottom' ? 'bottom' : 'top'
-  listRef.value?.scrollTo({ position })
-  // 可变行高在渲染后才测量，下一帧再贴一次边
-  requestAnimationFrame(() => following.value && listRef.value?.scrollTo({ position }))
+  if (!listRef.value) return
+  const target = props.anchor === 'bottom' ? listRef.value.scrollHeight : 0
+  listRef.value.scrollTop = target
+  requestAnimationFrame(() => {
+    if (following.value && listRef.value) {
+      listRef.value.scrollTop = props.anchor === 'bottom' ? listRef.value.scrollHeight : 0
+    }
+  })
 }
 
 // 只有用户主动滚动才会脱离跟随；虚拟列表测量行高引起的程序滚动不应打断
@@ -62,76 +67,45 @@ watch(
     if (!key || !props.items.some((item) => item.key === key)) return
     following.value = false
     await nextTick()
-    listRef.value?.scrollTo({ key })
+    const el = listRef.value?.querySelector(`[data-event-key="${key}"]`)
+    el?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     dashboard.scrollTarget = undefined
   },
 )
 </script>
 
 <template>
-  <div class="event-list">
-    <NVirtualList
+  <div class="relative h-full min-h-0">
+    <div
       ref="listRef"
-      class="event-list__scroll"
-      :items="items"
-      :item-size="itemSize"
-      item-resizable
-      key-field="key"
+      class="h-full overflow-y-auto"
       @scroll="onScroll"
       @wheel.passive="markUserScroll"
       @touchmove.passive="markUserScroll"
       @keydown="markUserScroll"
       @pointerdown="markUserScroll"
     >
-      <template #default="{ item }">
+      <div
+        v-for="item in items"
+        :key="item.key"
+        :data-event-key="item.key"
+      >
         <slot :item="item as T" />
-      </template>
-    </NVirtualList>
+      </div>
+    </div>
     <div
       v-if="!items.length"
-      class="event-list__empty"
+      class="absolute inset-0 grid place-items-center text-muted-foreground text-[13px] pointer-events-none"
     >
       暂无事件
     </div>
-    <NButton
+    <Button
       v-if="!following"
-      class="event-list__resume"
-      size="tiny"
-      round
-      secondary
+      class="absolute left-1/2 bottom-2 -translate-x-1/2 z-2 rounded-full shadow-md"
+      variant="secondary"
       @click="resume"
     >
       {{ pending ? `${pending} 条新事件` : anchor === 'bottom' ? '回到底部' : '回到顶部' }}
-    </NButton>
+    </Button>
   </div>
 </template>
-
-<style scoped>
-.event-list {
-  position: relative;
-  height: 100%;
-  min-height: 0;
-}
-
-.event-list__scroll {
-  height: 100%;
-}
-
-.event-list__empty {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  color: var(--vtsuru-fg-disabled);
-  font-size: 13px;
-  pointer-events: none;
-}
-
-.event-list__resume {
-  position: absolute;
-  left: 50%;
-  bottom: 8px;
-  transform: translateX(-50%);
-  z-index: 2;
-}
-</style>

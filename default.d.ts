@@ -1,49 +1,50 @@
-import type {
-  DialogProviderInst,
-  LoadingBarProviderInst,
-  MessageProviderInst,
-  ModalProviderInst,
-  NotificationProviderInst,
-} from 'naive-ui'
+import type { Emitter } from 'mitt'
 import type { useRoute } from 'vue-router'
 
-declare module 'vue3-aplayer' {
-  const content: any
-  export = content
-}
-declare module 'file-saver' {
-  export function saveAs(blob: Blob | null | undefined, fileName: string): void
+import type { MittType } from './src/types/mitt'
+
+type ToastHandle = { destroy: () => void }
+
+interface AppMessageApi {
+  success: (msg: unknown, options?: Record<string, unknown>) => unknown
+  error: (msg: unknown, options?: Record<string, unknown>) => unknown
+  warning: (msg: unknown, options?: Record<string, unknown>) => unknown
+  info: (msg: unknown, options?: Record<string, unknown>) => unknown
+  loading: (msg: unknown, options?: Record<string, unknown>) => unknown
+  destroy: () => void
 }
 
-declare module '*.js' {
-  const content: any
-  export = content
+interface AppNotificationApi {
+  create: (opts: unknown) => ToastHandle
+  info: (opts: unknown) => ToastHandle
+  success: (opts: unknown) => ToastHandle
+  warning: (opts: unknown) => ToastHandle
+  error: (opts: unknown) => ToastHandle
 }
 
-declare module 'naive-ui' {
-  interface TabPaneSlots {
-    tab?: () => VNode[]
-  }
+interface AppDialogApi {
+  create: (opts: unknown) => void
+  warning: (opts: unknown) => void
+  error: (opts: unknown) => void
+  info: (opts: unknown) => void
+  success: (opts: unknown) => void
+}
+
+interface AppLoadingBarApi {
+  start: () => void
+  finish: () => void
+  error: () => void
 }
 
 declare global {
   interface Window {
-    $message: MessageProviderInst
-    $loadingBar: LoadingBarProviderInst
+    $message: AppMessageApi
+    $loadingBar: AppLoadingBarApi
     $route: ReturnType<typeof useRoute>
-    $modal: ModalProviderInst
+    $notification: AppNotificationApi
+    $dialog: AppDialogApi
     $mitt: Emitter<MittType>
-    $notification: NotificationProviderInst
-    $dialog: DialogProviderInst
   }
 }
 
-// Vite worker 与样式类型声明
-declare module '*?worker' {
-  const workerConstructor: { new (): Worker }
-  export default workerConstructor
-}
-declare module '*.css' {
-  const content: string
-  export default content
-}
+export {}

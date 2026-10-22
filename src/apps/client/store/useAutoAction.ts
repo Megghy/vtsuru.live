@@ -1,4 +1,3 @@
-import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
@@ -6,6 +5,7 @@ import { useAccount } from '@/api/account.js'
 import type { EventModel } from '@/api/api-models.js'
 import { EventDataTypes } from '@/api/api-models.js'
 import { isDev } from '@/shared/config'
+import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { useDanmakuClient } from '@/store/useDanmakuClient.js'
 import { useVTsuruHub } from '@/store/useVTsuruHub'
 
@@ -41,32 +41,23 @@ export const useAutoAction = defineStore('autoAction', () => {
   const isTianXuanActive = ref(false)
   const liveStartTime = ref<number | null>(null)
 
-  // 存储自动操作项
-  const { data: autoActions, isFinished: isActionsLoaded } = useIDBKeyval<AutoActionItem[]>('autoAction.items', [], {
-    onError: (err) => {
-      console.error('[AutoAction] IDB 错误 (项目):', err)
-    },
-  })
+  const autoActions = usePersistedStorage<AutoActionItem[]>('autoAction.items', [])
+  const isActionsLoaded = persistLoaded(autoActions)
 
   // 运行时状态
   const runtimeState = ref<RuntimeState>(createDefaultRuntimeState())
 
   // 触发类型启用状态
-  const { data: enabledTriggerTypes, isFinished: isTriggersLoaded } = useIDBKeyval<Record<TriggerType, boolean>>(
-    'autoAction.enabledTriggers',
-    {
-      [TriggerType.DANMAKU]: true,
-      [TriggerType.GIFT]: true,
-      [TriggerType.GUARD]: true,
-      [TriggerType.FOLLOW]: true,
-      [TriggerType.ENTER]: true,
-      [TriggerType.SCHEDULED]: true,
-      [TriggerType.SUPER_CHAT]: true,
-    },
-    {
-      onError: (err) => console.error('[AutoAction] IDB 错误 (触发类型):', err),
-    },
-  )
+  const enabledTriggerTypes = usePersistedStorage<Record<TriggerType, boolean>>('autoAction.enabledTriggers', {
+    [TriggerType.DANMAKU]: true,
+    [TriggerType.GIFT]: true,
+    [TriggerType.GUARD]: true,
+    [TriggerType.FOLLOW]: true,
+    [TriggerType.ENTER]: true,
+    [TriggerType.SCHEDULED]: true,
+    [TriggerType.SUPER_CHAT]: true,
+  })
+  const isTriggersLoaded = persistLoaded(enabledTriggerTypes)
 
   /**
    * 设置触发类型启用状态
@@ -87,27 +78,12 @@ export const useAutoAction = defineStore('autoAction', () => {
   }
 
   // 全局定时器设置
-  const { data: globalIntervalSeconds, isFinished: isIntervalLoaded } = useIDBKeyval<number>(
-    'autoAction.globalInterval',
-    300,
-    {
-      onError: (err) => console.error('[AutoAction] IDB 错误 (间隔):', err),
-    },
-  )
-  const { data: globalSchedulingMode, isFinished: isModeLoaded } = useIDBKeyval<'random' | 'sequential'>(
-    'autoAction.globalMode',
-    'random',
-    {
-      onError: (err) => console.error('[AutoAction] IDB 错误 (模式):', err),
-    },
-  )
-  const { data: lastGlobalActionIndex, isFinished: isIndexLoaded } = useIDBKeyval<number>(
-    'autoAction.lastGlobalIndex',
-    -1,
-    {
-      onError: (err) => console.error('[AutoAction] IDB 错误 (上次索引):', err),
-    },
-  )
+  const globalIntervalSeconds = usePersistedStorage<number>('autoAction.globalInterval', 300)
+  const isIntervalLoaded = persistLoaded(globalIntervalSeconds)
+  const globalSchedulingMode = usePersistedStorage<'random' | 'sequential'>('autoAction.globalMode', 'random')
+  const isModeLoaded = persistLoaded(globalSchedulingMode)
+  const lastGlobalActionIndex = usePersistedStorage<number>('autoAction.lastGlobalIndex', -1)
+  const isIndexLoaded = persistLoaded(lastGlobalActionIndex)
 
   const globalTimer = ref<any | null>(null)
 
@@ -338,7 +314,7 @@ export const useAutoAction = defineStore('autoAction', () => {
       allLoaded,
       (loaded) => {
         if (loaded) {
-          console.log('[AutoAction] 所有设置已从 IDB 加载.')
+          console.log('[AutoAction] 所有设置已加载.')
           autoActions.value.forEach((action) => {
             if (!action.triggerConfig) action.triggerConfig = {}
             if (action.triggerType === TriggerType.SCHEDULED) {

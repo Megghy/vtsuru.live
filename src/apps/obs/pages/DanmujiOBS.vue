@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 import { isInBiliBlackList } from '@/api/account'
@@ -8,17 +7,17 @@ import { EventDataTypes } from '@/api/api-models'
 import { getApiVtsuruBlivechatEmoticon } from '@/api/generated/vtsuru/vtsuru'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
-import { getRichContent } from '@/apps/obs/components/blivechat/richContent'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
+import { getRichContent } from '@/apps/obs/components/blivechat/richContent'
 // @ts-ignore
 import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciation'
 // @ts-ignore
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
-
-import { buildDanmujiCss } from '@/shared/danmujiStyle'
 import { useDanmujiConfig } from '@/apps/obs/composables/useDanmujiConfig'
 import { type DanmujiConfig } from '@/shared/danmujiConfig'
+import { buildDanmujiCss } from '@/shared/danmujiStyle'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { GuidUtils } from '@/shared/utils'
 import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -43,7 +42,6 @@ const emit = defineEmits<{
   (e: 'ready'): void
 }>()
 
-
 const isOBS = computed(() => {
   // @ts-ignore
   return typeof window !== 'undefined' && window.obsstudio !== undefined
@@ -58,7 +56,6 @@ let disposed = false
 const pronunciationConverter = new pronunciation.PronunciationConverter()
 
 let textEmoticons: { keyword: string; url: string }[] = []
-
 
 // 表情词典树计算
 const emoticonsTrie = computed(() => {
@@ -420,7 +417,6 @@ onMounted(async () => {
     emit('ready')
   })
 
-
   // 加载通用静态表情包
   try {
     const result = (await getApiVtsuruBlivechatEmoticon()) as unknown as {
@@ -448,8 +444,6 @@ onMounted(async () => {
   client.onEvent('guard', onAddMember)
   client.onEvent('scDel', onDelSuperChat)
   addSystemNotice('加载完成')
-
-
 })
 
 onUnmounted(() => {
@@ -461,18 +455,16 @@ onUnmounted(() => {
     client.offEvent('guard', onAddMember)
     client.offEvent('scDel', onDelSuperChat)
   }
-
-
 })
 </script>
 
 <template>
-  <NAlert
+  <Alert
     v-if="!preview && isOBS && !$route?.query?.token"
-    type="error"
+    variant="destructive"
   >
-    未携带token参数
-  </NAlert>
+    <AlertDescription>未携带token参数</AlertDescription>
+  </Alert>
   <MessageRender
     v-else
     ref="messageRender"

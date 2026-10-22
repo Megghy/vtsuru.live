@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OpenBLiveClientDataAppStartData } from './openBLiveClientDataAppStartData';
+import type { OpenBLiveClientDataAppStartData } from './openBLiveClientDataAppStartData'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfOpenBLiveClientDataAppStartData {
-  message: string;
-  code: number;
-  data: OpenBLiveClientDataAppStartData;
+  message: string
+  code: number
+  data: OpenBLiveClientDataAppStartData
 }

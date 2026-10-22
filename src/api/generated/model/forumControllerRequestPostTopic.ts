@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumForumTopicDataForumTopicTypes } from './forumForumTopicDataForumTopicTypes';
+import type { ForumForumTopicDataForumTopicTypes } from './forumForumTopicDataForumTopicTypes'
 
 export interface ForumControllerRequestPostTopic {
-  owner: number;
-  title: string;
-  content: string;
+  owner: number
+  title: string
+  content: string
   /** @nullable */
-  section?: number | null;
-  type: ForumForumTopicDataForumTopicTypes;
+  section?: number | null
+  type: ForumForumTopicDataForumTopicTypes
 }

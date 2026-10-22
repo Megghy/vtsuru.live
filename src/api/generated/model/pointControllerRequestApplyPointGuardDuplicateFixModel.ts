@@ -5,27 +5,27 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { RequestPointGuardDuplicatePointValues } from './requestPointGuardDuplicatePointValues';
+import type { RequestPointGuardDuplicatePointValues } from './requestPointGuardDuplicatePointValues'
 
 export interface PointControllerRequestApplyPointGuardDuplicateFixModel {
   /**
-     * @minimum 1
-     * @maximum 90
-     */
-  dayCount: number;
+   * @minimum 1
+   * @maximum 90
+   */
+  dayCount: number
   /**
-     * @minimum 1
-     * @maximum 30
-     */
-  windowSeconds: number;
-  includeLiving: boolean;
-  includeFinished: boolean;
-  excludeFixed: boolean;
-  deductPoints: boolean;
-  deleteEvents: boolean;
-  cleanLiveData: boolean;
-  useManualPointValues: boolean;
-  manualPointValues?: RequestPointGuardDuplicatePointValues;
+   * @minimum 1
+   * @maximum 30
+   */
+  windowSeconds: number
+  includeLiving: boolean
+  includeFinished: boolean
+  excludeFixed: boolean
+  deductPoints: boolean
+  deleteEvents: boolean
+  cleanLiveData: boolean
+  useManualPointValues: boolean
+  manualPointValues?: RequestPointGuardDuplicatePointValues
   /** @nullable */
-  guardOuIds?: string[] | null;
+  guardOuIds?: string[] | null
 }

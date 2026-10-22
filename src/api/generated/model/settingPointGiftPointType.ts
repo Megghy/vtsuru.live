@@ -6,10 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type SettingPointGiftPointType = typeof SettingPointGiftPointType[keyof typeof SettingPointGiftPointType];
-
+export type SettingPointGiftPointType = (typeof SettingPointGiftPointType)[keyof typeof SettingPointGiftPointType]
 
 export const SettingPointGiftPointType = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

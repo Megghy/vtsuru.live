@@ -6,7 +6,7 @@ export function useBlockPropertyFocus() {
   const editor = inject(UserPageEditorKey)
   if (!editor) throw new Error('UserPageEditor context is missing')
 
-  const expandedPageSections = ref<Array<string | number>>([])
+  const expandedPageSections = ref<string[]>([])
 
   watch(
     () => editor.validationFocusRequest.value?.requestId,

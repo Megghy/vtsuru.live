@@ -1,25 +1,16 @@
 <script setup lang="ts">
+import { Checkmark24Regular, Copy24Regular, Open24Regular, Settings24Regular } from '@vicons/fluent'
 import { useClipboard } from '@vueuse/core'
-import {
-  Checkmark24Regular,
-  Copy24Regular,
-  Open24Regular,
-  Settings24Regular,
-} from '@vicons/fluent'
-import {
-  NButton,
-  NFlex,
-  NIcon,
-  NTag,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
+import { useAccount } from '@/api/account'
 import { getCategoryMeta } from '@/apps/obs-store/registry'
 import type { ObsComponentDefinition } from '@/apps/obs-store/registry'
-import { useAccount } from '@/api/account'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
   item: ObsComponentDefinition
@@ -29,13 +20,12 @@ const emit = defineEmits<{
   configure: [item: ObsComponentDefinition]
 }>()
 
-const message = useMessage()
 const account = useAccount()
 const { copy, isSupported: isCopySupported } = useClipboard()
 const copied = ref(false)
 
 const isReady = computed(() => props.item.status === 'ready' || props.item.status === 'beta')
-const statusLabel = computed(() => props.item.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中')
+const statusLabel = computed(() => (props.item.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中'))
 const categoryMeta = computed(() => getCategoryMeta(props.item.category))
 
 const absoluteObsUrl = computed(() => {
@@ -51,63 +41,68 @@ const absoluteObsUrl = computed(() => {
 
 async function handleCopy() {
   if (!absoluteObsUrl.value) {
-    message.warning(props.item.requiresAccount ? '请登录后生成 OBS 浏览器源链接' : '当前组件暂不可用')
+    toast.warning(props.item.requiresAccount ? '请登录后生成 OBS 浏览器源链接' : '当前组件暂不可用')
     return
   }
 
-  if (!isCopySupported) {
-    message.warning('当前环境不支持直接写入剪贴板，请手动复制')
+  if (!isCopySupported.value) {
+    toast.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }
 
   try {
     await copy(absoluteObsUrl.value)
     copied.value = true
-    message.success(`已复制 ${props.item.name} 的 OBS 浏览器源链接`)
+    toast.success(`已复制 ${props.item.name} 的 OBS 浏览器源链接`)
     setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch {
-    message.error('复制失败，请手动复制')
+    toast.error('复制失败，请手动复制')
   }
 }
 </script>
 
 <template>
   <div
-    class="obs-card"
-    :class="{ 'is-ready': isReady, 'is-planned': !isReady }"
+    class="flex flex-col justify-between bg-popover border border-border rounded-[var(--radius)] p-4 box-border transition-all duration-200 h-full hover:-translate-y-0.5 hover:border-brand hover:shadow-sm"
+    :class="{ 'opacity-78 hover:translate-y-0 hover:border-border hover:shadow-none': !isReady }"
   >
     <!-- 卡片头部 -->
-    <div class="card-header">
-      <div class="icon-box">
-        <NIcon
-          :component="item.icon"
-          class="comp-icon"
+    <div class="flex gap-3 items-start mb-3">
+      <div class="size-9.5 rounded-lg bg-brand-soft text-brand flex-center shrink-0">
+        <component
+          :is="item.icon"
+          class="size-5"
         />
       </div>
-      <div class="header-main">
-        <div class="title-row">
-          <span class="card-title">{{ item.name }}</span>
-          <NTag
-            size="tiny"
-            :type="props.item.status === 'beta' ? 'warning' : isReady ? 'success' : 'default'"
-            :bordered="false"
-            class="status-tag"
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-1.5">
+          <span class="text-sm font-semibold text-foreground truncate">{{ item.name }}</span>
+          <Badge
+            variant="outline"
+            :class="[
+              'text-[10px] h-4.5 px-1.5',
+              props.item.status === 'beta'
+                ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                : isReady
+                  ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                  : 'text-muted-foreground',
+            ]"
           >
             {{ statusLabel }}
-          </NTag>
+          </Badge>
         </div>
-        <div class="meta-row">
+        <div class="flex items-center gap-2 mt-0.5">
           <span
             v-if="categoryMeta"
-            class="cat-label"
+            class="text-xs text-muted-foreground"
           >
             {{ categoryMeta.name }}
           </span>
           <span
             v-if="item.version"
-            class="ver-label"
+            class="text-[11px] text-muted-foreground/80"
           >
             v{{ item.version }}
           </span>
@@ -116,358 +111,122 @@ async function handleCopy() {
     </div>
 
     <!-- 卡片内容 -->
-      <div class="card-body">
-      <p class="card-desc">
+    <div class="flex-1 flex flex-col gap-2.5">
+      <p class="text-[13px] text-muted-foreground leading-relaxed m-0 line-clamp-2">
         {{ item.shortDescription }}
       </p>
 
       <!-- 特性列表 -->
       <div
         v-if="item.features.length > 0"
-        class="feature-list"
+        class="flex flex-col gap-1"
       >
         <div
           v-for="(feat, idx) in item.features.slice(0, 2)"
           :key="idx"
-          class="feature-item"
+          class="flex items-center gap-1.5 text-xs text-foreground"
         >
-          <span class="feature-dot" />
-          <span class="feature-text">{{ feat }}</span>
+          <span class="size-1 rounded-full bg-brand shrink-0" />
+          <span class="truncate">{{ feat }}</span>
         </div>
       </div>
 
       <!-- 标签 -->
-      <div class="tags-wrap">
+      <div class="flex flex-wrap gap-1 mt-0.5">
         <span
           v-for="tag in item.tags.slice(0, 4)"
           :key="tag"
-          class="tag-pill"
+          class="text-[11px] text-muted-foreground bg-muted px-1.5 py-px rounded"
         >
           {{ tag }}
         </span>
         <span
           v-if="item.tags.length > 4"
-          class="tag-more"
+          class="text-[11px] text-muted-foreground px-1 py-px"
         >
           +{{ item.tags.length - 4 }}
         </span>
       </div>
 
       <!-- 推荐尺寸规格 -->
-        <div
-          v-if="item.defaultResolution"
-        class="resolution-info"
+      <div
+        v-if="item.defaultResolution"
+        class="flex items-center gap-1.5 text-[11px] bg-muted px-2 py-1 rounded text-muted-foreground mt-auto"
       >
-        <span class="res-label">推荐尺寸:</span>
-        <span class="res-val">{{ item.defaultResolution.width }} × {{ item.defaultResolution.height }} px</span>
+        <span class="opacity-80">推荐尺寸:</span>
+        <span class="font-medium text-foreground">{{ item.defaultResolution.width }} × {{ item.defaultResolution.height }} px</span>
       </div>
     </div>
 
     <!-- 卡片底部操作栏 -->
-    <div class="card-footer">
+    <div class="flex items-center justify-between gap-2 mt-3.5 pt-3 border-t border-border">
       <template v-if="isReady">
-            <NButton
-          type="primary"
-          size="small"
-          class="action-btn config-btn"
+        <Button
+          class="flex-1 gap-1.5"
           @click="emit('configure', item)"
         >
-          <template #icon>
-            <NIcon :component="Settings24Regular" />
-          </template>
+          <Settings24Regular class="size-4" />
           配置与调试
-        </NButton>
+        </Button>
 
-        <NFlex
-          :size="6"
-          align="center"
-        >
-          <NTooltip trigger="hover">
-            <template #trigger>
-              <NButton
-                size="small"
-                secondary
-                class="action-icon-btn"
-                @click="handleCopy"
-              >
-                <template #icon>
-                  <NIcon :component="copied ? Checkmark24Regular : Copy24Regular" />
-                </template>
-              </NButton>
-            </template>
-            复制默认 OBS 浏览器源链接
-          </NTooltip>
+        <div class="flex items-center gap-1.5">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="secondary"
+                  class="w-8 p-0"
+                  @click="handleCopy"
+                >
+                  <Checkmark24Regular
+                    v-if="copied"
+                    class="size-4"
+                  />
+                  <Copy24Regular
+                    v-else
+                    class="size-4"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent> 复制默认 OBS 浏览器源链接 </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
-          <NTooltip
-            v-if="item.obsPath"
-            trigger="hover"
-          >
-            <template #trigger>
-              <NButton
-                size="small"
-                secondary
-                tag="a"
-                :href="absoluteObsUrl || undefined"
-                :disabled="!absoluteObsUrl"
-                target="_blank"
-                class="action-icon-btn"
-              >
-                <template #icon>
-                  <NIcon :component="Open24Regular" />
-                </template>
-              </NButton>
-            </template>
-            在新标签页预览 OBS 源
-          </NTooltip>
-        </NFlex>
+          <TooltipProvider v-if="item.obsPath">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="secondary"
+                  class="w-8 p-0"
+                  as-child
+                  :disabled="!absoluteObsUrl"
+                >
+                  <a
+                    :href="absoluteObsUrl || undefined"
+                    target="_blank"
+                  >
+                    <Open24Regular class="size-4" />
+                  </a>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent> 在新标签页预览 OBS 源 </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </template>
 
       <template v-else>
-        <div class="planned-footer">
-          <span class="planned-text">开发规划中，敬请期待</span>
+        <div class="w-full text-center py-1">
+          <span class="text-xs text-muted-foreground">开发规划中，敬请期待</span>
         </div>
-        <div class="requirements-row">
-          <span class="requirement-dot" :class="{ local: !item.requiresAccount }" />
+        <div class="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <span
+            class="size-1.5 rounded-full"
+            :class="item.requiresAccount ? 'bg-brand' : 'bg-emerald-500'"
+          />
           {{ item.requiresAccount ? '需要账号同步' : '纯本地运行' }}
         </div>
       </template>
     </div>
   </div>
 </template>
-
-<style scoped>
-.obs-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  padding: 16px;
-  box-sizing: border-box;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  height: 100%;
-}
-
-.obs-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--vtsuru-brand);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.obs-card.is-planned {
-  opacity: 0.78;
-}
-
-.obs-card.is-planned:hover {
-  transform: none;
-  border-color: var(--vtsuru-border);
-  box-shadow: none;
-}
-
-/* 头部 */
-.card-header {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  margin-bottom: 12px;
-}
-
-.icon-box {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.comp-icon {
-  font-size: 20px;
-}
-
-.header-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-
-.card-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.status-tag {
-  font-size: 11px;
-  flex-shrink: 0;
-}
-
-.meta-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 2px;
-}
-
-.cat-label {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.ver-label {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  opacity: 0.8;
-}
-
-/* 内容 */
-.card-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.card-desc {
-  font-size: 13px;
-  color: var(--vtsuru-fg-muted);
-  line-height: 1.5;
-  margin: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.feature-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--vtsuru-fg);
-}
-
-.feature-dot {
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--vtsuru-brand);
-  flex-shrink: 0;
-}
-
-.feature-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.tags-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.tag-pill {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
-  padding: 1px 6px;
-  border-radius: 4px;
-}
-
-.tag-more {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  padding: 1px 4px;
-}
-
-.resolution-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  background: var(--vtsuru-bg-muted);
-  padding: 4px 8px;
-  border-radius: 4px;
-  color: var(--vtsuru-fg-muted);
-  margin-top: auto;
-}
-
-.requirements-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.requirement-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--vtsuru-brand);
-}
-
-.requirement-dot.local {
-  background: #10b981;
-}
-
-.res-label {
-  opacity: 0.8;
-}
-
-.res-val {
-  font-weight: 500;
-  color: var(--vtsuru-fg);
-}
-
-/* 底部操作 */
-.card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.action-btn {
-  flex: 1;
-}
-
-.action-icon-btn {
-  padding: 0 8px;
-}
-
-.planned-footer {
-  width: 100%;
-  text-align: center;
-  padding: 4px 0;
-}
-
-.planned-text {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-</style>

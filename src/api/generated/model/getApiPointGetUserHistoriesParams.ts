@@ -7,6 +7,6 @@
  */
 
 export type GetApiPointGetUserHistoriesParams = {
-id?: string;
-authId?: number;
-};
+  id?: string
+  authId?: number
+}

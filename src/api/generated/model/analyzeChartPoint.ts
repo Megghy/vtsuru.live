@@ -7,20 +7,20 @@
  */
 
 export interface AnalyzeChartPoint {
-  income: number;
-  giftIncome: number;
-  scIncome: number;
-  guardIncome: number;
-  offlineIncome: number;
-  offlineGuardIncome: number;
-  offlineScIncome: number;
-  grandTotalIncome: number;
-  totalIncomeWithGuard: number;
-  interactionCount: number;
-  danmakuCount: number;
-  payingUsers: number;
-  interactionUsers: number;
-  liveMinutes: number;
-  likeCount: number;
-  sessionCount: number;
+  income: number
+  giftIncome: number
+  scIncome: number
+  guardIncome: number
+  offlineIncome: number
+  offlineGuardIncome: number
+  offlineScIncome: number
+  grandTotalIncome: number
+  totalIncomeWithGuard: number
+  interactionCount: number
+  danmakuCount: number
+  payingUsers: number
+  interactionUsers: number
+  liveMinutes: number
+  likeCount: number
+  sessionCount: number
 }

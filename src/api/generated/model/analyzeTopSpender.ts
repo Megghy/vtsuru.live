@@ -7,8 +7,8 @@
  */
 
 export interface AnalyzeTopSpender {
-  name: string;
-  totalPaid: number;
-  payCount: number;
-  lastTime: number;
+  name: string
+  totalPaid: number
+  payCount: number
+  lastTime: number
 }

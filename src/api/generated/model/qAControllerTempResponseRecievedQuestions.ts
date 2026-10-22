@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseQAInfoToTarget } from './responseQAInfoToTarget';
+import type { ResponseQAInfoToTarget } from './responseQAInfoToTarget'
 
 export interface QAControllerTempResponseRecievedQuestions {
-  questions: ResponseQAInfoToTarget[];
-  reviewCount: number;
+  questions: ResponseQAInfoToTarget[]
+  reviewCount: number
 }

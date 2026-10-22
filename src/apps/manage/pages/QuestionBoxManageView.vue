@@ -1,26 +1,6 @@
 <script setup lang="ts">
 import { ArrowSync24Filled, Delete24Filled, Link24Filled, Share24Filled } from '@vicons/fluent'
 import { TrashBin } from '@vicons/ionicons5'
-import {
-  NBadge,
-  NButton,
-  NCard,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NList,
-  NListItem,
-  NPopconfirm,
-  NSelect,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -36,6 +16,24 @@ import QuestionBoxSettings from '@/apps/manage/components/question-box/QuestionB
 import QuestionBoxShareModal from '@/apps/manage/components/question-box/QuestionBoxShareModal.vue'
 import QuestionItem from '@/components/QuestionItem.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const accountInfo = useAccount()
@@ -65,10 +63,19 @@ async function refresh() {
   message.success('已刷新')
 }
 
-// 按需加载发送数据
 watch(selectedTabItem, (tab) => {
   if (tab === '1' && useQB.sendQuestions.length === 0) useQB.GetSendQAInfo()
 })
+
+function formatRelativeTime(timestamp?: number) {
+  if (!timestamp) return '-'
+  const ts = typeof timestamp === 'number' && timestamp < 1e12 ? timestamp * 1000 : timestamp
+  const diffSec = Math.floor((Date.now() - ts) / 1000)
+  if (diffSec < 60) return '刚刚'
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}分钟前`
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}小时前`
+  return `${Math.floor(diffSec / 86400)}天前`
+}
 
 onMounted(async () => {
   await useQB.GetTags()
@@ -77,299 +84,301 @@ onMounted(async () => {
 </script>
 
 <template>
-  <NSpin :show="!accountInfo">
-    <template v-if="accountInfo">
-      <ManagePageHeader
-        title="提问箱管理"
-        :function-type="FunctionTypes.QuestionBox"
-        :loading="useQB.isLoading"
-        :links="[{ label: '我的提问链接', value: directShareUrl }]"
-      >
-        <template #action>
-          <NButton
-            secondary
-            circle
-            type="primary"
+  <div
+    v-if="accountInfo"
+    class="space-y-4 w-full"
+  >
+    <ManagePageHeader
+      title="提问箱管理"
+      subtitle="收集观众的匿名提问并互动回复，支持话题标签分类、公开展示与 OBS 弹幕投屏"
+      :function-type="FunctionTypes.QuestionBox"
+      :loading="useQB.isLoading"
+      :links="[{ label: '我的提问链接', value: directShareUrl }]"
+    >
+      <template #action>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <Button
+            size="icon-sm"
+            variant="outline"
             :loading="useQB.isLoading"
+            title="刷新"
             @click="refresh"
           >
-            <template #icon>
-              <NIcon :component="ArrowSync24Filled" />
-            </template>
-          </NButton>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                secondary
-                circle
-                @click="shareModalVisible = true"
-              >
-                <template #icon>
-                  <NIcon :component="Share24Filled" />
-                </template>
-              </NButton>
-            </template>
-            分享提问箱
-          </NTooltip>
-          <NButton
-            secondary
+            <component
+              :is="ArrowSync24Filled"
+              class="h-3.5 w-3.5"
+            />
+          </Button>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  size="icon-sm"
+                  variant="outline"
+                  @click="shareModalVisible = true"
+                >
+                  <component
+                    :is="Share24Filled"
+                    class="h-3.5 w-3.5"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs"> 分享提问箱 </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <Button
+            variant="outline"
             @click="showOBSModal = true"
           >
             OBS 组件
-          </NButton>
-          <NButton
-            primary
-            @click="$router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
+          </Button>
+
+          <Button
+            variant="default"
+            @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
           >
-            <template #icon>
-              <NIcon :component="Link24Filled" />
-            </template>
+            <component
+              :is="Link24Filled"
+              class="h-3.5 w-3.5 mr-1"
+            />
             前往提问页
-          </NButton>
-        </template>
-        <template #links-extra>
-          <NSelect
-            v-model:value="selectedDirectShareTag"
-            placeholder="附加话题 (可选)"
-            filterable
-            clearable
-            size="small"
-            :options="useQB.tags.filter((t) => t.visiable).map((s) => ({ label: s.name, value: s.name }))"
-            style="width: 160px"
+          </Button>
+        </div>
+      </template>
+
+      <template #links-extra>
+        <Select v-model="selectedDirectShareTag">
+          <SelectTrigger class="w-40">
+            <SelectValue placeholder="附加话题 (可选)" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="tag in useQB.tags.filter((t) => t.visiable)"
+              :key="tag.name"
+              :value="tag.name"
+            >
+              {{ tag.name }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </template>
+    </ManagePageHeader>
+
+    <!-- 主要内容 Tabs -->
+    <Tabs
+      v-model="selectedTabItem"
+      class="w-full"
+    >
+      <TabsList class="grid w-full grid-cols-4 max-w-lg">
+        <TabsTrigger value="0">
+          我收到的
+          <Badge
+            variant="secondary"
+            size="xs"
+          >
+            {{ useQB.recieveQuestionsFiltered.length }}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger value="1">
+          我发送的
+          <Badge
+            variant="secondary"
+            size="xs"
+          >
+            {{ useQB.sendQuestions.length }}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger value="2">
+          <component
+            :is="TrashBin"
+            class="h-3.5 w-3.5"
           />
-        </template>
-      </ManagePageHeader>
+          垃圾站
+          <Badge
+            v-if="useQB.trashQuestions.length > 0"
+            variant="warning"
+            size="xs"
+          >
+            {{ useQB.trashQuestions.length }}
+          </Badge>
+        </TabsTrigger>
+        <TabsTrigger value="3"> 设置 </TabsTrigger>
+      </TabsList>
 
-      <!-- 主要内容 -->
-      <NSpin :show="useQB.isLoading">
-        <NTabs
-          v-model:value="selectedTabItem"
-          animated
-          type="line"
-          size="large"
+      <!-- 我收到的 Tab -->
+      <TabsContent
+        value="0"
+        class="mt-3"
+      >
+        <QuestionBoxReceivedTab @reply="onOpenReply" />
+      </TabsContent>
+
+      <!-- 我发送的 Tab -->
+      <TabsContent
+        value="1"
+        class="mt-3 space-y-3"
+      >
+        <div
+          v-if="useQB.sendQuestions.length === 0"
+          class="text-center py-16 text-xs text-muted-foreground border border-dashed rounded-lg"
         >
-          <!-- 我收到的 -->
-          <NTabPane
-            name="0"
-            display-directive="show:lazy"
-          >
-            <template #tab>
-              <NBadge
-                :value="useQB.recieveQuestionsFiltered.length"
-                :max="999"
-                type="info"
-                :offset="[8, -2]"
-              >
-                我收到的
-              </NBadge>
-            </template>
-            <QuestionBoxReceivedTab @reply="onOpenReply" />
-          </NTabPane>
+          暂无发送的提问
+        </div>
 
-          <!-- 我发送的 -->
-          <NTabPane
-            name="1"
-            display-directive="show:lazy"
+        <div
+          v-else
+          class="space-y-3"
+        >
+          <Card
+            v-for="item in useQB.sendQuestions"
+            :key="item.id"
+            class="hover:border-brand/30 transition-colors"
           >
-            <template #tab>
-              <NBadge
-                :value="useQB.sendQuestions.length"
-                :max="999"
-                :offset="[8, -2]"
-              >
-                我发送的
-              </NBadge>
-            </template>
-            <NEmpty
-              v-if="useQB.sendQuestions.length === 0"
-              description="暂无发送的提问"
-              style="margin-top: 40px"
-            />
-            <NList
-              v-else
-              :show-divider="false"
-            >
-              <NListItem
-                v-for="item in useQB.sendQuestions"
-                :key="item.id"
-                style="padding: 0 0 12px 0"
-              >
-                <NCard
-                  size="small"
-                  hoverable
-                  content-style="padding: 12px 16px;"
-                >
-                  <template #header>
-                    <NFlex
-                      align="center"
-                      justify="space-between"
-                    >
-                      <NFlex
-                        :size="8"
-                        align="center"
-                      >
-                        <NTag
-                          size="small"
-                          :bordered="false"
-                          type="info"
-                        >
-                          发给
-                        </NTag>
-                        <NButton
-                          text
-                          type="primary"
-                          @click="router.push(`/user/${item.target.id}`)"
-                        >
-                          {{ item.target.name }}
-                        </NButton>
-                      </NFlex>
-                      <NText
-                        depth="3"
-                        style="font-size: 12px"
-                      >
-                        <NTooltip placement="top-end">
-                          <template #trigger>
-                            <NTime
-                              :time="item.sendAt"
-                              :to="Date.now()"
-                              type="relative"
-                            />
-                          </template>
-                          <NTime
-                            :time="item.sendAt"
-                            format="yyyy-MM-dd HH:mm:ss"
-                          />
-                        </NTooltip>
-                      </NText>
-                    </NFlex>
-                  </template>
-                  <NText style="font-size: 15px; line-height: 1.6; display: block; margin-bottom: 8px">
-                    {{ item.question?.message }}
-                  </NText>
-                  <template
-                    v-if="item.answer"
-                    #footer
+            <CardHeader class="p-3.5 pb-2">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    class="text-[10px] px-1 py-0 h-4"
                   >
-                    <NCard
-                      size="small"
-                      :bordered="false"
-                      embedded
-                    >
-                      <template #header>
-                        <NFlex
-                          justify="space-between"
-                          align="center"
-                        >
-                          <NText
-                            depth="3"
-                            style="font-size: 13px"
-                          >
-                            对方的回复
-                          </NText>
-                          <NText
-                            v-if="item.answer.createdAt"
-                            depth="3"
-                            style="font-size: 12px"
-                          >
-                            <NTime
-                              :time="item.answer.createdAt"
-                              :to="Date.now()"
-                              type="relative"
-                            />
-                          </NText>
-                        </NFlex>
-                      </template>
-                      <NText style="line-height: 1.5">
-                        {{ item.answer.message }}
-                      </NText>
-                    </NCard>
-                  </template>
-                </NCard>
-              </NListItem>
-            </NList>
-          </NTabPane>
+                    发给
+                  </Badge>
+                  <Button
+                    variant="link"
+                    class="h-auto p-0 font-semibold text-primary"
+                    @click="router.push(`/user/${item.target.id}`)"
+                  >
+                    {{ item.target.name }}
+                  </Button>
+                </div>
 
-          <!-- 垃圾站 -->
-          <NTabPane
-            name="2"
-            display-directive="show:lazy"
-          >
-            <template #tab>
-              <NBadge
-                :value="useQB.trashQuestions.length"
-                :max="99"
-                type="warning"
-                :offset="[8, -2]"
+                <span class="text-muted-foreground font-mono">
+                  {{ formatRelativeTime(item.sendAt) }}
+                </span>
+              </div>
+            </CardHeader>
+
+            <CardContent class="p-3.5 pt-0 space-y-3">
+              <p class="text-sm text-foreground leading-relaxed m-0">
+                {{ item.question?.message }}
+              </p>
+
+              <!-- 对方回复 -->
+              <div
+                v-if="item.answer"
+                class="p-3 rounded-md bg-muted/40 border border-border/60 space-y-1.5"
               >
-                <NFlex align="center"> <NIcon :component="TrashBin" />垃圾站 </NFlex>
-              </NBadge>
+                <div class="flex items-center justify-between text-xs text-muted-foreground">
+                  <span class="font-medium">对方的回复</span>
+                  <span
+                    v-if="item.answer.createdAt"
+                    class="font-mono text-[11px]"
+                  >
+                    {{ formatRelativeTime(item.answer.createdAt) }}
+                  </span>
+                </div>
+                <p class="text-xs text-foreground leading-relaxed m-0">
+                  {{ item.answer.message }}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </TabsContent>
+
+      <!-- 垃圾站 Tab -->
+      <TabsContent
+        value="2"
+        class="mt-3 space-y-3"
+      >
+        <div
+          v-if="useQB.trashQuestions.length === 0"
+          class="text-center py-16 text-xs text-muted-foreground border border-dashed rounded-lg"
+        >
+          暂无被过滤的提问
+        </div>
+
+        <div
+          v-else
+          class="space-y-2.5"
+        >
+          <QuestionItem
+            v-for="question in useQB.trashQuestions"
+            :key="question.id"
+            :item="question"
+          >
+            <template #footer="{ item }">
+              <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="text-primary"
+                  @click="useQB.markAsNormal(item)"
+                >
+                  标记为正常
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
+                  @click="useQB.blacklist(item)"
+                >
+                  拉黑提问者
+                </Button>
+
+                <AlertDialog>
+                  <AlertDialogTrigger as-child>
+                    <Button
+                      size="xs"
+                      variant="destructive"
+                    >
+                      <component
+                        :is="Delete24Filled"
+                        class="h-3.5 w-3.5 mr-1"
+                      />
+                      彻底删除
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent class="sm:max-w-md">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>彻底删除此提问？</AlertDialogTitle>
+                      <AlertDialogDescription class="text-xs"> 删除后将无法恢复该提问内容。 </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>取消</AlertDialogCancel>
+                      <AlertDialogAction
+                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        @click="useQB.DelQA(item.id)"
+                      >
+                        确认彻底删除
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </template>
-            <NEmpty
-              v-if="useQB.trashQuestions.length === 0"
-              description="暂无被过滤的提问"
-            />
-            <div
-              v-else
-              style="display: flex; flex-direction: column; gap: 8px"
-            >
-              <QuestionItem
-                v-for="question in useQB.trashQuestions"
-                :key="question.id"
-                :item="question"
-              >
-                <template #footer="{ item }">
-                  <NFlex justify="end">
-                    <NButton
-                      size="small"
-                      type="primary"
-                      ghost
-                      @click="useQB.markAsNormal(item)"
-                    >
-                      标记为正常
-                    </NButton>
-                    <NButton
-                      size="small"
-                      type="warning"
-                      ghost
-                      @click="useQB.blacklist(item)"
-                    >
-                      拉黑提问者
-                    </NButton>
-                    <NPopconfirm @positive-click="useQB.DelQA(item.id)">
-                      <template #trigger>
-                        <NButton
-                          size="small"
-                          type="error"
-                          ghost
-                        >
-                          <template #icon>
-                            <NIcon :component="Delete24Filled" />
-                          </template>
-                          彻底删除
-                        </NButton>
-                      </template>
-                      确认彻底删除？
-                    </NPopconfirm>
-                  </NFlex>
-                </template>
-                <template #header-extra />
-              </QuestionItem>
-            </div>
-          </NTabPane>
+            <template #header-extra />
+          </QuestionItem>
+        </div>
+      </TabsContent>
 
-          <!-- 设置 -->
-          <NTabPane
-            tab="设置"
-            name="3"
-            display-directive="show:lazy"
-          >
-            <QuestionBoxSettings />
-          </NTabPane>
-        </NTabs>
-      </NSpin>
-    </template>
-    <template #description> 正在加载账户信息... </template>
-  </NSpin>
+      <!-- 设置 Tab -->
+      <TabsContent
+        value="3"
+        class="mt-3"
+      >
+        <QuestionBoxSettings />
+      </TabsContent>
+    </Tabs>
+  </div>
+  <div
+    v-else
+    class="text-center py-20 text-xs text-muted-foreground"
+  >
+    正在加载账户信息...
+  </div>
 
   <!-- 模态框 -->
   <QuestionBoxReplyModal v-model:show="replyModalVisible" />

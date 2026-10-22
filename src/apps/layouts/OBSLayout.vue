@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NSpin } from 'naive-ui'
 import { onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -16,38 +15,6 @@ const _obsNotification = useOBSNotification()
 
 const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$route.query.code?.toString()
 const openLiveAuth = accountInfo.value.id ? undefined : (window.$route.query as unknown as AuthInfo)
-
-const transparentTargets = [
-  () => document.documentElement,
-  () => document.body,
-  () => document.getElementById('app'),
-  () => document.querySelector('.n-layout-content'),
-  () => document.querySelector('.n-element'),
-  () => document.querySelector('.obs-container'),
-] as const
-
-const originalBackgroundStyles = new Map<HTMLElement, { color: string; image: string }>()
-
-function applyTransparentBackgrounds() {
-  for (const getElement of transparentTargets) {
-    const element = getElement()
-    if (!(element instanceof HTMLElement)) continue
-    originalBackgroundStyles.set(element, {
-      color: element.style.backgroundColor,
-      image: element.style.backgroundImage,
-    })
-    element.style.setProperty('background-color', 'transparent', 'important')
-    element.style.setProperty('background-image', 'none', 'important')
-  }
-}
-
-function restoreTransparentBackgrounds() {
-  for (const [element, style] of originalBackgroundStyles) {
-    element.style.setProperty('background-color', style.color)
-    element.style.setProperty('background-image', style.image)
-  }
-  originalBackgroundStyles.clear()
-}
 
 onMounted(async () => {
   timer.value = setInterval(() => {
@@ -70,13 +37,10 @@ onMounted(async () => {
       active.value = a
     }
   }
-
-  applyTransparentBackgrounds()
 })
 
 onUnmounted(() => {
   clearInterval(timer.value)
-  restoreTransparentBackgrounds()
 })
 </script>
 
@@ -93,7 +57,9 @@ onUnmounted(() => {
             :open-live-auth="openLiveAuth"
           />
           <template #fallback>
-            <NSpin show />
+            <div class="flex items-center justify-center w-full h-full min-h-[100px]">
+              <div class="size-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+            </div>
           </template>
         </Suspense>
       </KeepAlive>

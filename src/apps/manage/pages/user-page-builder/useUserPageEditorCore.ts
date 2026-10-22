@@ -73,8 +73,7 @@ function watchCurrentPageSelection(
         return
       }
       const selectedIds = state.selectedBlockIds.value
-      const selectionStillValid =
-        selectedIds.length > 0 && selectedIds.every((id) => blocks.getBlockById(id) !== null)
+      const selectionStillValid = selectedIds.length > 0 && selectedIds.every((id) => blocks.getBlockById(id) !== null)
       if (!selectionStillValid) blocks.clearSelection()
       state.hoveredBlockId.value = null
     },

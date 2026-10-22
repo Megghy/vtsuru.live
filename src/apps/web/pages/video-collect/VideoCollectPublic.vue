@@ -1,32 +1,21 @@
 <script setup lang="ts">
 import { CheckmarkCircle24Regular, Clock24Regular, Person24Regular, Video24Regular } from '@vicons/fluent'
 import { useNow } from '@vueuse/core'
-import type { FormInst, FormRules } from 'naive-ui'
-import {
-  NButton,
-  NCard,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NProgress,
-  NResult,
-  NTag,
-  NTime,
-  useMessage,
-} from 'naive-ui'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
 import { DuplicateVideoPolicy } from '@/api/api-models'
-import {
-  getApiVideoCollectGet,
-  postApiVideoCollectAdd,
-} from '@/api/generated/video-collect/video-collect'
+import { getApiVideoCollectGet, postApiVideoCollectAdd } from '@/api/generated/video-collect/video-collect'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Progress } from '@/shared/ui/progress'
+import { Textarea } from '@/shared/ui/textarea'
+import { toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
@@ -41,12 +30,10 @@ interface AddVideoModel {
 
 const route = useRoute()
 const router = useRouter()
-const message = useMessage()
 const biliAuth = useBiliAuth()
 const now = useNow({ interval: 1000 })
 
 const table = ref<VideoCollectTable | null>()
-const formRef = ref<FormInst>()
 const turnstile = ref<InstanceType<typeof CaptchaWidget>>()
 const token = ref('')
 const isLoading = ref(false)
@@ -104,26 +91,20 @@ const submissionRequirements = computed(() => {
 
   return requirements
 })
-const rules: FormRules = {
-  video: [
-    { required: true, message: '请输入视频链接或 BV 号', trigger: ['input', 'blur'] },
-    {
-      message: '请输入有效的哔哩哔哩视频链接或 BV 号',
-      validator: (_rule, value: string) => /BV[0-9A-Za-z]{10}/.test(value.trim()),
-      trigger: ['input', 'blur'],
-    },
-  ],
-  uid: {
-    type: 'number',
-    min: 1,
-    message: 'UID 必须是正整数',
-    trigger: ['input', 'blur'],
-  },
-  description: {
-    message: '请填写推荐理由',
-    validator: (_rule, value: string) => !table.value?.requireDescription || Boolean(value?.trim()),
-    trigger: ['input', 'blur'],
-  },
+
+function formatDateTime(ts: number) {
+  try {
+    const d = new Date(ts > 1e11 ? ts : ts * 1000)
+    return d.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return String(ts)
+  }
 }
 
 await loadTable()
@@ -162,16 +143,23 @@ async function loadTable() {
   } catch (error) {
     console.error('获取视频征集失败', error)
     table.value = null
-    message.error(error instanceof Error ? error.message : '获取失败')
+    toast.error(error instanceof Error ? error.message : '获取失败')
   } finally {
     isPageLoading.value = false
   }
 }
 
 async function addVideo() {
-  await formRef.value?.validate()
+  if (!addModel.value.video || !/BV[0-9A-Za-z]{10}/.test(addModel.value.video.trim())) {
+    toast.error('请输入有效的哔哩哔哩视频链接或 BV 号')
+    return
+  }
+  if (table.value?.requireDescription && !addModel.value.description?.trim()) {
+    toast.error('请填写推荐理由')
+    return
+  }
   if (!token.value) {
-    message.warning('请完成人机验证')
+    toast.warning('请完成人机验证')
     return
   }
 
@@ -203,7 +191,7 @@ async function addVideo() {
     await loadTable()
   } catch (error) {
     console.error('推荐视频失败', error)
-    message.error(error instanceof Error ? error.message : '推荐失败')
+    toast.error(error instanceof Error ? error.message : '推荐失败')
   } finally {
     isLoading.value = false
     turnstile.value?.reset()
@@ -212,7 +200,6 @@ async function addVideo() {
 
 function submitAnother() {
   submitted.value = false
-  formRef.value?.restoreValidation()
 }
 
 onUnmounted(() => turnstile.value?.remove())
@@ -221,533 +208,272 @@ onUnmounted(() => turnstile.value?.remove())
 <template>
   <VideoCollectPageShell :table="table">
     <template #default>
-      <main class="collect-submit-page">
-        <NResult
+      <main class="grid min-h-screen min-h-[100svh] py-10 px-4 box-border place-items-center">
+        <div
           v-if="table === null && !isPageLoading"
-          status="404"
-          title="视频征集不存在"
-          description="链接可能有误，或该征集已被删除。"
-        />
+          class="text-center py-20 space-y-3"
+        >
+          <h2 class="text-2xl font-bold">视频征集不存在</h2>
+          <p class="text-sm text-muted-foreground">链接可能有误，或该征集已被删除。</p>
+        </div>
 
         <div
           v-else-if="table"
-          class="collect-submit-layout"
+          class="grid grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] max-[768px]:grid-cols-1 max-[768px]:gap-8 gap-[clamp(28px,6vw,72px)] items-center w-[min(100%,1040px)] max-w-[var(--vtsuru-page-max-width,1040px)] min-w-0"
         >
-          <section class="collect-intro">
-            <button
-              type="button"
-              class="owner-link"
-              @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
+          <section class="min-w-0">
+            <div
+              class="min-w-0"
+              :style="{
+                color: 'var(--vtsuru-page-text)',
+                '--foreground': 'var(--vtsuru-page-text)',
+                '--muted-foreground': 'var(--vtsuru-page-text-muted)',
+              }"
             >
-              <NIcon :component="Person24Regular" />
-              {{ table.owner.name }} 的视频征集
-            </button>
-            <div class="collect-title-row">
-              <h1>{{ table.name }}</h1>
-              <NTag
-                :type="collectionStatus === '进行中' ? 'success' : collectionStatus === '未开始' ? 'info' : 'default'"
-                :bordered="false"
+              <button
+                type="button"
+                class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
+                @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
               >
-                {{ collectionStatus }}
-              </NTag>
+                <component
+                  :is="Person24Regular"
+                  class="size-4"
+                />
+                {{ table.owner.name }} 的视频征集
+              </button>
+              <div class="collect-title-row flex items-center gap-3 mt-2">
+                <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
+                <Badge
+                  :variant="collectionStatus === '进行中' ? 'default' : 'secondary'"
+                  class="text-xs"
+                >
+                  {{ collectionStatus }}
+                </Badge>
+              </div>
+              <p class="collect-description text-sm text-muted-foreground mt-3 leading-relaxed">
+                {{ table.description || '未填写征集说明' }}
+              </p>
             </div>
-            <p class="collect-description">
-              {{ table.description || '未填写征集说明' }}
-            </p>
 
-            <div class="collect-meta">
-              <div>
-                <NIcon :component="Clock24Regular" />
-                <span>开放时间</span>
-                <strong
-                  ><NTime
-                    :time="table.startAt"
-                    format="yyyy-MM-dd HH:mm"
-                /></strong>
-                <small
+            <div
+              class="collect-meta grid grid-cols-1 sm:grid-cols-3 gap-3 my-6 p-4 rounded-xl border border-border bg-card text-xs"
+            >
+              <div class="space-y-1">
+                <div class="flex items-center gap-1.5 text-muted-foreground">
+                  <component
+                    :is="Clock24Regular"
+                    class="size-3.5"
+                  />
+                  <span>开放时间</span>
+                </div>
+                <div class="font-medium font-mono text-foreground">
+                  {{ formatDateTime(table.startAt) }}
+                </div>
+                <div
                   v-if="isNotStarted && countdownLabel"
-                  class="collect-countdown"
+                  class="collect-countdown text-[11px] text-primary"
                 >
                   {{ countdownLabel }}
-                </small>
+                </div>
               </div>
-              <div>
-                <NIcon :component="Clock24Regular" />
-                <span>截止时间</span>
-                <strong
-                  ><NTime
-                    :time="table.endAt"
-                    format="yyyy-MM-dd HH:mm"
-                /></strong>
-                <small
+              <div class="space-y-1">
+                <div class="flex items-center gap-1.5 text-muted-foreground">
+                  <component
+                    :is="Clock24Regular"
+                    class="size-3.5"
+                  />
+                  <span>截止时间</span>
+                </div>
+                <div class="font-medium font-mono text-foreground">
+                  {{ formatDateTime(table.endAt) }}
+                </div>
+                <div
                   v-if="!isNotStarted && countdownLabel"
-                  class="collect-countdown"
+                  class="collect-countdown text-[11px] text-primary"
                 >
                   {{ countdownLabel }}
-                </small>
+                </div>
               </div>
-              <div>
-                <NIcon :component="Video24Regular" />
-                <span>已收集</span>
-                <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
+              <div class="space-y-1">
+                <div class="flex items-center gap-1.5 text-muted-foreground">
+                  <component
+                    :is="Video24Regular"
+                    class="size-3.5"
+                  />
+                  <span>已收集</span>
+                </div>
+                <div class="font-medium font-mono text-foreground">
+                  {{ table.videoCount }} / {{ table.maxVideoCount }}
+                </div>
               </div>
             </div>
-            <NProgress
-              type="line"
-              :percentage="capacityPercentage"
-              :height="7"
-              :show-indicator="false"
-              color="var(--collect-accent)"
-              rail-color="var(--collect-border)"
+            <Progress
+              :model-value="capacityPercentage"
+              class="h-2"
             />
           </section>
 
-          <NCard
-            class="submit-panel collect-on-surface"
-            :bordered="true"
-          >
-            <NResult
-              v-if="submitted"
-              status="success"
-              title="推荐成功"
-              description="你的视频推荐已经提交。"
-            >
-              <template #footer>
-                <NButton
-                  type="primary"
+          <Card class="min-w-0 collect-on-surface shadow-sm">
+            <CardContent class="p-6">
+              <div
+                v-if="submitted"
+                class="py-8 flex flex-col items-center text-center gap-3"
+              >
+                <div class="size-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                  <component
+                    :is="CheckmarkCircle24Regular"
+                    class="size-7"
+                  />
+                </div>
+                <h3 class="text-lg font-semibold">推荐成功</h3>
+                <p class="text-xs text-muted-foreground">你的视频推荐已经提交。</p>
+                <Button
+                  class="mt-2"
                   @click="submitAnother"
                 >
                   再推荐一个
-                </NButton>
-              </template>
-            </NResult>
-
-            <template v-else-if="isClosed">
-              <NResult
-                status="info"
-                title="征集已结束"
-                description="当前不再接收新的视频推荐。"
-              />
-            </template>
-
-            <template v-else-if="isNotStarted">
-              <NResult
-                status="info"
-                title="征集尚未开始"
-                :description="`开放时间：${new Date(table.startAt).toLocaleString('zh-CN', { hour12: false })}`"
-              />
-            </template>
-
-            <template v-else-if="isFull">
-              <NResult
-                status="info"
-                title="投稿名额已满"
-                description="当前暂时无法提交新的视频。"
-              />
-            </template>
-
-            <template v-else-if="!table.allowUnregisteredUser && !isBiliAuthed">
-              <NResult
-                status="info"
-                title="需要绑定 B 站账号"
-                description="完成身份绑定后即可参与本次视频征集。"
-              >
-                <template #footer>
-                  <NButton
-                    type="primary"
-                    @click="router.push({ name: 'bili-auth' })"
-                  >
-                    前往绑定
-                  </NButton>
-                </template>
-              </NResult>
-            </template>
-
-            <template v-else>
-              <div class="submit-panel__heading">
-                <NIcon :component="CheckmarkCircle24Regular" />
-                <div>
-                  <h2>推荐视频</h2>
-                  <p>
-                    {{ !isBiliAuthed && table.allowUnregisteredUser ? '无需登录也可投稿' : '填写哔哩哔哩视频信息' }}
-                  </p>
-                </div>
+                </Button>
               </div>
 
-              <ul
-                class="submit-requirements"
-                aria-label="投稿要求"
+              <div
+                v-else-if="isClosed"
+                class="py-8 flex flex-col items-center text-center gap-2"
               >
-                <li
-                  v-for="requirement in submissionRequirements"
-                  :key="requirement"
-                >
-                  {{ requirement }}
-                </li>
-              </ul>
+                <h3 class="text-base font-semibold">征集已结束</h3>
+                <p class="text-xs text-muted-foreground">当前不再接收新的视频推荐。</p>
+              </div>
 
-              <NForm
-                ref="formRef"
-                :model="addModel"
-                :rules="rules"
-                label-placement="top"
+              <div
+                v-else-if="isNotStarted"
+                class="py-8 flex flex-col items-center text-center gap-2"
+              >
+                <h3 class="text-base font-semibold">征集尚未开始</h3>
+                <p class="text-xs text-muted-foreground">开放时间：{{ formatDateTime(table.startAt) }}</p>
+              </div>
+
+              <div
+                v-else-if="isFull"
+                class="py-8 flex flex-col items-center text-center gap-2"
+              >
+                <h3 class="text-base font-semibold">投稿名额已满</h3>
+                <p class="text-xs text-muted-foreground">当前暂时无法提交新的视频。</p>
+              </div>
+
+              <div
+                v-else-if="!table.allowUnregisteredUser && !isBiliAuthed"
+                class="py-8 flex flex-col items-center text-center gap-3"
+              >
+                <h3 class="text-base font-semibold">需要绑定 B 站账号</h3>
+                <p class="text-xs text-muted-foreground">完成身份绑定后即可参与本次视频征集。</p>
+                <Button @click="router.push({ name: 'bili-auth' })"> 前往绑定 </Button>
+              </div>
+
+              <form
+                v-else
+                class="space-y-4"
                 @submit.prevent="addVideo"
               >
-                <NFormItem
-                  label="视频链接或 BV 号"
-                  path="video"
-                >
-                  <NInput
-                    v-model:value="addModel.video"
-                    placeholder="https://www.bilibili.com/video/BV..."
-                    clearable
+                <div class="submit-panel__heading flex items-start gap-2.5 pb-2 border-b border-border/60">
+                  <component
+                    :is="CheckmarkCircle24Regular"
+                    class="size-5 text-primary shrink-0 mt-0.5"
                   />
-                </NFormItem>
+                  <div>
+                    <h2 class="text-sm font-semibold">推荐视频</h2>
+                    <p class="text-xs text-muted-foreground">
+                      {{ !isBiliAuthed && table.allowUnregisteredUser ? '无需登录也可投稿' : '填写哔哩哔哩视频信息' }}
+                    </p>
+                  </div>
+                </div>
+
+                <ul
+                  class="submit-requirements text-xs space-y-1 text-muted-foreground list-disc list-inside p-2.5 rounded bg-muted/40"
+                  aria-label="投稿要求"
+                >
+                  <li
+                    v-for="requirement in submissionRequirements"
+                    :key="requirement"
+                  >
+                    {{ requirement }}
+                  </li>
+                </ul>
+
+                <div class="space-y-1.5">
+                  <label class="text-xs font-medium text-foreground">视频链接或 BV 号</label>
+                  <Input
+                    v-model="addModel.video"
+                    placeholder="https://www.bilibili.com/video/BV..."
+                    class="h-9"
+                  />
+                </div>
 
                 <div
                   v-if="isBiliAuthed"
-                  class="authenticated-user"
+                  class="authenticated-user flex items-center gap-1.5 text-xs text-primary font-medium p-2 rounded bg-primary/5 border border-primary/20"
                 >
-                  <NIcon :component="CheckmarkCircle24Regular" />
+                  <component
+                    :is="CheckmarkCircle24Regular"
+                    class="size-4"
+                  />
                   <span>以 {{ addModel.name }}（UID {{ addModel.uid }}）推荐</span>
                 </div>
                 <div
                   v-else
-                  class="identity-fields"
+                  class="identity-fields grid grid-cols-2 gap-3"
                 >
-                  <NFormItem label="推荐人">
-                    <NInput
-                      v-model:value="addModel.name"
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-foreground">推荐人</label>
+                    <Input
+                      v-model="addModel.name"
                       placeholder="选填"
                       maxlength="50"
+                      class="h-9"
                     />
-                  </NFormItem>
-                  <NFormItem
-                    label="哔哩哔哩 UID"
-                    path="uid"
-                  >
-                    <NInputNumber
-                      v-model:value="addModel.uid"
+                  </div>
+                  <div class="space-y-1.5">
+                    <label class="text-xs font-medium text-foreground">哔哩哔哩 UID</label>
+                    <Input
+                      :model-value="addModel.uid != null ? String(addModel.uid) : ''"
+                      type="number"
                       placeholder="选填"
-                      :show-button="false"
-                      :precision="0"
-                      style="width: 100%"
+                      class="h-9"
+                      @update:model-value="addModel.uid = $event ? Number($event) : undefined"
                     />
-                  </NFormItem>
+                  </div>
                 </div>
 
-                <NFormItem
-                  :label="table.requireDescription ? '推荐理由' : '推荐理由（选填）'"
-                  path="description"
-                >
-                  <NInput
-                    v-model:value="addModel.description"
-                    type="textarea"
+                <div class="space-y-1.5">
+                  <label class="text-xs font-medium text-foreground">
+                    {{ table.requireDescription ? '推荐理由' : '推荐理由（选填）' }}
+                  </label>
+                  <Textarea
+                    v-model="addModel.description"
                     :placeholder="table.requireDescription ? '请说明推荐这个视频的原因' : '可补充推荐原因或看点'"
                     maxlength="200"
-                    show-count
-                    :autosize="{ minRows: 3, maxRows: 5 }"
+                    rows="3"
+                    class="text-xs"
                   />
-                </NFormItem>
+                </div>
 
                 <CaptchaWidget
                   ref="turnstile"
                   v-model="token"
-                  class="turnstile"
+                  class="turnstile flex justify-center py-1"
                 />
-                <NButton
-                  type="primary"
-                  attr-type="submit"
-                  block
-                  :loading="isLoading"
-                  :disabled="!token"
+
+                <Button
+                  type="submit"
+                  class="w-full"
+                  :disabled="isLoading || !token"
                 >
-                  提交推荐
-                </NButton>
-              </NForm>
-            </template>
-          </NCard>
+                  {{ isLoading ? '提交中...' : '提交推荐' }}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </template>
   </VideoCollectPageShell>
 </template>
 
-<style scoped>
-.collect-submit-page {
-  display: grid;
-  min-height: 100vh;
-  min-height: 100svh;
-  padding: 40px 16px;
-  box-sizing: border-box;
-  place-items: center;
-}
-
-.collect-submit-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
-  gap: clamp(28px, 6vw, 72px);
-  align-items: center;
-  width: min(100%, 1040px);
-  max-width: var(--vtsuru-page-max-width, 1040px);
-  min-width: 0;
-}
-
-.collect-intro,
-.submit-panel {
-  min-width: 0;
-}
-
-.collect-intro {
-  animation: submit-enter 0.52s cubic-bezier(0.2, 0.75, 0.25, 1) both;
-}
-
-.submit-panel {
-  animation: submit-enter 0.52s 90ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
-}
-
-.owner-link {
-  display: inline-flex;
-  gap: 7px;
-  align-items: center;
-  padding: 0;
-  color: var(--collect-muted);
-  font: inherit;
-  font-size: 13px;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-}
-
-.owner-link:hover {
-  color: var(--collect-accent);
-}
-
-.collect-title-row {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-top: 14px;
-}
-
-.collect-title-row h1 {
-  min-width: 0;
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: 34px;
-  line-height: 1.22;
-  letter-spacing: 0;
-}
-
-.collect-description {
-  margin: 18px 0 28px;
-  color: var(--collect-muted);
-  font-size: 15px;
-  line-height: 1.75;
-  white-space: pre-wrap;
-}
-
-.collect-meta {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  margin-bottom: 14px;
-  border-block: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
-}
-
-.collect-meta > div {
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: 3px 8px;
-  padding: 14px 0;
-}
-
-.collect-meta > div + div {
-  padding-left: 20px;
-  border-left: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
-}
-
-.collect-meta > div:nth-child(3) {
-  grid-column: 1 / -1;
-  padding-left: 0;
-  border-top: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
-  border-left: 0;
-}
-
-.collect-meta .n-icon {
-  grid-row: 1 / 4;
-  align-self: center;
-  color: var(--collect-accent);
-}
-
-.collect-meta span {
-  color: var(--collect-muted);
-  font-size: 12px;
-}
-
-.collect-meta strong {
-  overflow: hidden;
-  font-size: 14px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.collect-countdown {
-  color: var(--collect-accent);
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1.4;
-}
-
-.submit-panel {
-  background: var(--collect-card);
-  border: var(--vtsuru-page-border);
-  border-color: var(--collect-border);
-  border-radius: var(--vtsuru-page-radius, 8px);
-  box-shadow: var(--vtsuru-page-shadow);
-}
-
-.submit-panel__heading {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 22px;
-}
-
-.submit-panel__heading > .n-icon {
-  color: var(--collect-accent);
-  font-size: 28px;
-}
-
-.submit-panel__heading h2,
-.submit-panel__heading p {
-  margin: 0;
-}
-
-.submit-panel__heading h2 {
-  font-size: 18px;
-}
-
-.submit-panel__heading p {
-  margin-top: 2px;
-  color: var(--collect-muted);
-  font-size: 12px;
-}
-
-.submit-requirements {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 16px;
-  margin: -8px 0 20px;
-  padding: 0;
-  color: var(--collect-muted);
-  font-size: 12px;
-  line-height: 1.5;
-  list-style: none;
-}
-
-.submit-requirements li {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-}
-
-.submit-requirements li::before {
-  width: 4px;
-  height: 4px;
-  background: var(--collect-accent);
-  border-radius: 50%;
-  content: '';
-}
-
-.identity-fields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.authenticated-user {
-  display: flex;
-  gap: 7px;
-  align-items: center;
-  margin-bottom: 18px;
-  padding: 10px 12px;
-  color: var(--collect-muted);
-  font-size: 13px;
-  background: var(--vtsuru-page-primary-soft);
-  border-radius: var(--vtsuru-page-radius, 6px);
-}
-
-.authenticated-user .n-icon {
-  flex: 0 0 auto;
-  color: var(--collect-accent);
-}
-
-.turnstile {
-  max-width: 100%;
-  margin: 2px 0 8px;
-}
-
-.turnstile :deep(iframe) {
-  max-width: 100%;
-}
-
-@keyframes submit-enter {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 760px) {
-  .collect-submit-page {
-    align-items: start;
-    padding-block: 28px;
-  }
-
-  .collect-submit-layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
-  }
-
-  .collect-title-row h1 {
-    font-size: 28px;
-  }
-}
-
-@media (max-width: 420px) {
-  .collect-submit-page {
-    padding: 20px 12px;
-  }
-
-  .collect-title-row {
-    align-items: flex-start;
-  }
-
-  .collect-title-row h1 {
-    font-size: 25px;
-  }
-
-  .collect-meta,
-  .identity-fields {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .collect-meta > div + div {
-    padding-left: 0;
-    border-top: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--collect-border);
-    border-left: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .collect-intro,
-  .submit-panel {
-    animation: none;
-  }
-}
-</style>

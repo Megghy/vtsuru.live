@@ -1,9 +1,14 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import { NCard, NFlex, NForm, NFormItem, NGi, NGrid, NInput, NSelect, NSwitch, NText, NTooltip, NIcon } from 'naive-ui'
+import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
   action: {
@@ -66,150 +71,135 @@ const priorityOptions = [
 </script>
 
 <template>
-  <NCard
-    title="常规设置"
-    size="small"
-    bordered
-    embedded
-    class="basic-settings-card"
-  >
-    <NForm
-      label-placement="left"
-      label-width="100"
-      size="small"
-      :show-feedback="false"
-    >
-      <NGrid
-        cols="1 m:2"
-        responsive="screen"
-        :x-gap="16"
-        :y-gap="12"
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b">
+      <CardTitle class="text-sm font-semibold">常规设置</CardTitle>
+    </CardHeader>
+
+    <CardContent class="p-3 space-y-3">
+      <div
+        v-if="!hideName"
+        class="space-y-1"
       >
-        <NGi
-          v-if="!hideName"
-          span="1 m:2"
+        <span class="text-xs text-muted-foreground">操作名称</span>
+        <Input
+          v-model="action.name"
+          placeholder="例如：给礼物老板点赞"
+          :class="nameInvalid ? 'border-destructive focus-visible:ring-destructive' : ''"
+        />
+        <div
+          v-if="nameInvalid"
+          class="text-[11px] text-destructive"
         >
-          <NFormItem label="操作名称">
-            <NFlex
-              vertical
-              :size="2"
-              style="width: 100%"
-            >
-              <NInput
-                v-model:value="action.name"
-                placeholder="例如：给礼物老板点赞"
-                :status="nameInvalid ? 'error' : undefined"
-                clearable
-              />
-              <NText
-                v-if="nameInvalid"
-                type="error"
-                style="font-size: 12px"
+          操作名称不能为空
+        </div>
+        <div
+          v-else-if="templateInvalid"
+          class="text-[11px] text-amber-500"
+        >
+          当前动作需要设置模板内容，否则不会生效
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div
+          v-if="!hideEnabled"
+          class="flex items-center justify-between p-2 rounded border bg-muted/20"
+        >
+          <span class="text-xs text-foreground font-medium">是否启用</span>
+          <Switch v-model:checked="action.enabled" />
+        </div>
+
+        <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <div class="flex items-center gap-1 cursor-help">
+                  <span class="text-xs text-foreground font-medium">仅直播时</span>
+                  <Info16Regular class="size-3.5 text-muted-foreground" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs"> 关闭直播后将不会触发此操作 </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Switch v-model:checked="action.triggerConfig.onlyDuringLive" />
+        </div>
+
+        <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <div class="flex items-center gap-1 cursor-help">
+                  <span class="text-xs text-foreground font-medium">忽略天选</span>
+                  <Info16Regular class="size-3.5 text-muted-foreground" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs"> 开启天选时刻期间暂停触发（防止被风控） </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <Switch v-model:checked="action.triggerConfig.ignoreTianXuan" />
+        </div>
+
+        <div class="space-y-1">
+          <span class="text-xs text-muted-foreground">触发类型</span>
+          <Select
+            v-model="action.triggerType"
+            disabled
+          >
+            <SelectTrigger class="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in triggerTypeOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
               >
-                操作名称不能为空
-              </NText>
-              <NText
-                v-else-if="templateInvalid"
-                type="warning"
-                style="font-size: 12px"
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="space-y-1">
+          <span class="text-xs text-muted-foreground">执行动作</span>
+          <Select v-model="action.actionType">
+            <SelectTrigger class="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in actionTypeOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
               >
-                当前动作需要设置模板内容，否则不会生效
-              </NText>
-            </NFlex>
-          </NFormItem>
-        </NGi>
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
 
-        <NGi v-if="!hideEnabled">
-          <NFormItem label="是否启用">
-            <NSwitch
-              v-model:value="action.enabled"
-              size="small"
-            />
-          </NFormItem>
-        </NGi>
-
-        <NGi>
-          <NFormItem>
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >仅直播时
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                关闭直播后将不会触发此操作
-              </NTooltip>
-            </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.onlyDuringLive"
-              size="small"
-            />
-          </NFormItem>
-        </NGi>
-
-        <NGi>
-          <NFormItem>
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >忽略天选
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                开启天选时刻期间暂停触发（防止被风控）
-              </NTooltip>
-            </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.ignoreTianXuan"
-              size="small"
-            />
-          </NFormItem>
-        </NGi>
-
-        <NGi>
-          <NFormItem label="触发类型">
-            <NSelect
-              v-model:value="action.triggerType"
-              :options="triggerTypeOptions"
-              disabled
-            />
-          </NFormItem>
-        </NGi>
-
-        <NGi>
-          <NFormItem label="执行动作">
-            <NSelect
-              v-model:value="action.actionType"
-              :options="actionTypeOptions"
-            />
-          </NFormItem>
-        </NGi>
-
-        <NGi>
-          <NFormItem label="执行优先级">
-            <NSelect
-              v-model:value="action.priority"
-              :options="priorityOptions"
-            />
-          </NFormItem>
-        </NGi>
-      </NGrid>
-    </NForm>
-  </NCard>
+        <div class="space-y-1">
+          <span class="text-xs text-muted-foreground">执行优先级</span>
+          <Select v-model="action.priority">
+            <SelectTrigger class="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in priorityOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 </template>
-
-<style scoped>
-.basic-settings-card {
-  border-radius: var(--vtsuru-radius);
-}
-
-:deep(.n-form-item-label) {
-  font-weight: 500;
-}
-</style>

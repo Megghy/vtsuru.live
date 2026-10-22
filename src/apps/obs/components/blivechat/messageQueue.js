@@ -1,5 +1,10 @@
 import * as constants from './constants'
-const ADD_MESSAGE_TYPES = new Set([constants.MESSAGE_TYPE_TEXT, constants.MESSAGE_TYPE_GIFT, constants.MESSAGE_TYPE_MEMBER, constants.MESSAGE_TYPE_SUPER_CHAT])
+const ADD_MESSAGE_TYPES = new Set([
+  constants.MESSAGE_TYPE_TEXT,
+  constants.MESSAGE_TYPE_GIFT,
+  constants.MESSAGE_TYPE_MEMBER,
+  constants.MESSAGE_TYPE_SUPER_CHAT,
+])
 const MESSAGE_MIN_INTERVAL = 80
 const MESSAGE_MAX_INTERVAL = 1000
 
@@ -106,6 +111,5 @@ export default {
       }
       this.emitSmoothedMessageTimerId = window.setTimeout(this.emitSmoothedMessages, sleepTime)
     },
-
   },
 }

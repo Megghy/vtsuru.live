@@ -5,23 +5,23 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventDataTypes } from './eventDataTypes';
+import type { EventDataTypes } from './eventDataTypes'
 
 export interface DanmakuModel {
   /** @nullable */
-  uId?: number | null;
-  ouId?: string;
-  uName: string;
-  type: EventDataTypes;
-  time: number;
+  uId?: number | null
+  ouId?: string
+  uName: string
+  type: EventDataTypes
+  time: number
   /** @nullable */
-  msg?: string | null;
+  msg?: string | null
   /** @nullable */
-  price?: number | null;
+  price?: number | null
   /** @nullable */
-  mysteryBoxName?: string | null;
+  mysteryBoxName?: string | null
   /** @nullable */
-  mysteryBoxPrice?: number | null;
-  isEmoji: boolean;
-  num: number;
+  mysteryBoxPrice?: number | null
+  isEmoji: boolean
+  num: number
 }

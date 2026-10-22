@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { Setting_QuestionDisplay } from '@/api/api-models'
-import {
-  QuestionDisplayAlign,
-  QuestionDisplayImageLayout,
-  QuestionDisplayShadow,
-  QuestionDisplayTransition,
-  QuestionDisplayVerticalAlign,
-} from '@/api/api-models'
+import { QuestionDisplayAlign, QuestionDisplayShadow } from '@/api/api-models'
 import {
   formatColor,
   formatColorWithOpacity,
@@ -137,10 +130,7 @@ describe('questionDisplay utils', () => {
     })
 
     it('全部已读时返回 undefined', () => {
-      const list = [
-        createMockQuestion({ id: 1, isReaded: true }),
-        createMockQuestion({ id: 2, isReaded: true }),
-      ]
+      const list = [createMockQuestion({ id: 1, isReaded: true }), createMockQuestion({ id: 2, isReaded: true })]
       expect(getNextUnreadQuestion(list, 1)).toBeUndefined()
     })
   })

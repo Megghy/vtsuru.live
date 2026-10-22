@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountResetEmailCodeParams = {
-email?: string;
-};
+  email?: string
+}

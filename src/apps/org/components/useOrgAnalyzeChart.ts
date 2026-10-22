@@ -45,7 +45,7 @@ export function useOrgAnalyzeChart(options: {
   chartRef: Ref<HTMLElement | null>
   analyzeData: Ref<{ chartData?: Record<string, any> } | null>
   formatDate: (timestamp: number) => string
-  themeVars: Ref<{ textColor2: string; borderColor: string; dividerColor: string }>
+  themeVars?: Ref<{ textColor2: string; borderColor: string; dividerColor: string }>
   selectedMetrics: Ref<string[]>
   chartMetrics: OrgAnalyzeChartMetric[]
 }) {
@@ -64,9 +64,9 @@ export function useOrgAnalyzeChart(options: {
 
   function getThemeColors() {
     return {
-      textColor: options.themeVars.value.textColor2,
-      axisLineColor: options.themeVars.value.borderColor,
-      splitLineColor: options.themeVars.value.dividerColor,
+      textColor: options.themeVars?.value?.textColor2 || 'var(--muted-foreground, #71717a)',
+      axisLineColor: options.themeVars?.value?.borderColor || 'var(--border, #e4e4e7)',
+      splitLineColor: options.themeVars?.value?.dividerColor || 'var(--border, rgba(228, 228, 231, 0.4))',
     }
   }
 

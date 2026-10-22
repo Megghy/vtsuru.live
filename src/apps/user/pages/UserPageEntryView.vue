@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NButton, NResult } from 'naive-ui'
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -15,6 +14,7 @@ import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { BiliProfile, BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
 import { IndexTemplateMap } from '@/shared/config/templates'
+import { Button } from '@/shared/ui/button'
 import { isDarkMode } from '@/shared/utils'
 
 const props = defineProps<{
@@ -112,80 +112,57 @@ const contentClass = computed(() => ({
 </script>
 
 <template>
-  <div
-    class="root"
-    :style="contentThemeVars"
+  <main
+    class="min-h-screen font-[family-name:var(--vtsuru-page-font-family,inherit)]"
+    :class="[contentBackgroundClass, contentClass]"
+    :style="[contentThemeVars, contentBackgroundVars]"
   >
-    <div
-      :class="contentBackgroundClass"
-      :style="contentBackgroundVars"
-    >
-      <main
-        class="content"
-        :class="contentClass"
+    <component
+      :is="indexTemplateComponent"
+      v-if="renderMode === 'legacy'"
+      :user-info="userInfo"
+      :bili-info="biliInfo"
+    />
+
+    <template v-else-if="renderMode === 'block'">
+      <div
+        v-if="blockValidation && !blockValidation.ok"
+        class="flex flex-col items-center justify-center p-12 text-center"
       >
-        <component
-          :is="indexTemplateComponent"
-          v-if="renderMode === 'legacy'"
-          :user-info="userInfo"
-          :bili-info="biliInfo"
-        />
+        <div class="text-destructive font-semibold text-lg mb-2">页面配置错误</div>
+        <div class="text-sm text-muted-foreground">该页面的发布配置无效，请联系页面所有者处理</div>
+      </div>
+      <BlockPageRenderer
+        v-else-if="blockValidation?.ok && mergedBlockProject"
+        :project="mergedBlockProject"
+        :user-info="userInfo"
+        :bili-info="biliInfo"
+        :bili-status="biliStatus"
+        :is-dark="effectiveIsDark"
+        :canvas-color="canvasColor"
+      />
+    </template>
 
-        <template v-else-if="renderMode === 'block'">
-          <NResult
-            v-if="blockValidation && !blockValidation.ok"
-            status="error"
-            title="页面配置错误"
-            description="该页面的发布配置无效，请联系页面所有者处理"
-          />
-          <BlockPageRenderer
-            v-else-if="blockValidation?.ok && mergedBlockProject"
-            :project="mergedBlockProject"
-            :user-info="userInfo"
-            :bili-info="biliInfo"
-            :bili-status="biliStatus"
-            :is-dark="effectiveIsDark"
-            :canvas-color="canvasColor"
-          />
-        </template>
+    <ContribPageRenderer
+      v-else-if="renderMode === 'contrib' && pageConfig?.contrib"
+      :page="pageConfig.contrib"
+      :user-info="userInfo"
+      :bili-info="biliInfo"
+    />
 
-        <ContribPageRenderer
-          v-else-if="renderMode === 'contrib' && pageConfig?.contrib"
-          :page="pageConfig.contrib"
-          :user-info="userInfo"
-          :bili-info="biliInfo"
-        />
-
-        <NResult
-          v-else-if="pageSlug"
-          status="404"
-          title="页面不存在"
-          description="该主播未配置此页面"
-        >
-          <template #footer>
-            <NButton
-              type="primary"
-              @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"
-            >
-              返回主页
-            </NButton>
-          </template>
-        </NResult>
-      </main>
+    <div
+      v-else-if="pageSlug"
+      class="flex flex-col items-center justify-center p-12 text-center"
+    >
+      <div class="text-3xl font-bold mb-2">404</div>
+      <div class="text-lg font-medium mb-1">页面不存在</div>
+      <div class="text-sm text-muted-foreground mb-4">该主播未配置此页面</div>
+      <Button @click="$router.push({ name: 'user-index', params: { id: route.params.id } })"> 返回主页 </Button>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
-.root {
-  min-height: 100vh;
-  font-family: var(--vtsuru-page-font-family);
-}
-
-.content {
-  min-height: 100vh;
-}
-
 .bg-host {
   position: relative;
   overflow: hidden;
@@ -193,8 +170,8 @@ const contentClass = computed(() => ({
 
 .bg-host::before {
   content: '';
-  position: absolute;
-  inset: calc(-24px - var(--user-page-bg-blur, 0px));
+  position: fixed;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   background-color: var(--user-page-bg-color, transparent);
@@ -202,6 +179,7 @@ const contentClass = computed(() => ({
   background-repeat: no-repeat;
   background-position: center;
   background-size: var(--user-page-bg-size, cover);
+  background-attachment: fixed;
 }
 
 .bg-host::after {
@@ -224,14 +202,14 @@ const contentClass = computed(() => ({
 
 .glass-surface {
   padding: 12px 0;
-  background: var(--glass-surface-bg, color-mix(in srgb, var(--vtsuru-bg-elevated) 70%, transparent));
+  background: var(--glass-surface-bg, color-mix(in srgb, var(--popover) 70%, transparent));
   backdrop-filter: blur(var(--user-page-bg-blur, 0px));
   -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 0px));
 }
 
 @media (prefers-reduced-transparency: reduce) {
   .glass-surface {
-    background: var(--vtsuru-bg-elevated);
+    background: var(--popover);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }

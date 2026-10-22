@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type ResponseUserInfoResponseUserInfoExtraTemplateTypes = {[key: string]: string};
+export type ResponseUserInfoResponseUserInfoExtraTemplateTypes = { [key: string]: string }

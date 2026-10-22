@@ -14,6 +14,7 @@
       "@vue/*": ["./node_modules/@vue/*"]
     },
     "incremental": true,
+    "tsBuildInfoFile": "./node_modules/.cache/tsbuildinfo.json",
     "resolveJsonModule": true,
     "types": ["node", "jszip"],
     "allowJs": false,
@@ -29,8 +30,13 @@
     "forceConsistentCasingInFileNames": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "sourceMap": true
-  }, 
+    "skipDefaultLibCheck": true,
+    "sourceMap": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true,
+    "assumeChangesOnlyAffectDirectDependencies": true
+  },
   "references": [{ "path": "./tsconfig.node.json" }],
   "include": [
     "src/**/*.ts",
@@ -43,5 +49,5 @@
     "src/data/chat/models.js",
     "src/store/useDanmakuClient.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
 }

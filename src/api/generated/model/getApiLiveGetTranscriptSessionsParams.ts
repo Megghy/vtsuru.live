@@ -7,5 +7,5 @@
  */
 
 export type GetApiLiveGetTranscriptSessionsParams = {
-liveId?: string;
-};
+  liveId?: string
+}

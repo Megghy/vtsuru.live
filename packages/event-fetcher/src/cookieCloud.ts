@@ -7,12 +7,7 @@ export function cookieHeader(cookies: CookieCloudCookie[]) {
   return cookies.map((cookie) => `${cookie.name}=${cookie.value}`).join('; ')
 }
 
-export async function fetchCookieCloud(input: {
-  host: string
-  key: string
-  password: string
-  fetch?: typeof fetch
-}) {
+export async function fetchCookieCloud(input: { host: string; key: string; password: string; fetch?: typeof fetch }) {
   const fetchImpl = input.fetch ?? fetch
   const response = await fetchImpl(new URL(`/get/${input.key}`, input.host), {
     method: 'POST',

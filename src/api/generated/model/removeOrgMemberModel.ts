@@ -7,5 +7,5 @@
  */
 
 export interface RemoveOrgMemberModel {
-  targetUserId: number;
+  targetUserId: number
 }

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { ReorderThreeOutline } from '@vicons/ionicons5'
-import { NForm, NFormItem, NIcon, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import type { UserFeatureKey } from '@/apps/user-page/featureNavigation'
 import { USER_FEATURE_DEFINITION_MAP } from '@/apps/user-page/featureNavigation'
+import { Switch } from '@/shared/ui/switch'
 
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
@@ -25,72 +25,37 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <NFormItem label="功能顺序">
-      <VueDraggable
-        v-model="itemsModel"
-        handle=".feature-drag-handle"
-        :animation="160"
-        class="feature-list"
+  <div class="space-y-1.5">
+    <label class="text-xs font-medium text-foreground">功能顺序</label>
+    <VueDraggable
+      v-model="itemsModel"
+      handle=".feature-drag-handle"
+      :animation="160"
+      class="grid gap-1.5 w-full"
+    >
+      <div
+        v-for="item in itemsModel"
+        :key="item.key"
+        class="flex items-center gap-2 min-h-10 py-[5px] px-2 border border-border rounded-md bg-popover"
       >
-        <div
-          v-for="item in itemsModel"
-          :key="item.key"
-          class="feature-item"
+        <span
+          class="feature-drag-handle cursor-grab text-muted-foreground hover:text-foreground"
+          title="拖拽排序"
         >
-          <NIcon
-            class="feature-drag-handle"
-            size="19"
-            title="拖拽排序"
-          >
-            <ReorderThreeOutline />
-          </NIcon>
-          <NIcon size="18">
-            <component :is="USER_FEATURE_DEFINITION_MAP[item.key].icon" />
-          </NIcon>
-          <NText class="feature-label">
-            {{ USER_FEATURE_DEFINITION_MAP[item.key].label }}
-          </NText>
-          <NSwitch
-            :value="item.hidden !== true"
-            size="small"
-            @update:value="(value) => setVisible(item, value)"
-          />
-        </div>
-      </VueDraggable>
-    </NFormItem>
-  </NForm>
+          <ReorderThreeOutline class="size-5" />
+        </span>
+        <component
+          :is="USER_FEATURE_DEFINITION_MAP[item.key].icon"
+          class="size-4 shrink-0 text-foreground"
+        />
+        <span class="feature-label text-xs text-foreground truncate flex-1">
+          {{ USER_FEATURE_DEFINITION_MAP[item.key].label }}
+        </span>
+        <Switch
+          :checked="item.hidden !== true"
+          @update:checked="(value) => setVisible(item, value)"
+        />
+      </div>
+    </VueDraggable>
+  </div>
 </template>
-
-<style scoped>
-.feature-list {
-  display: grid;
-  gap: 6px;
-  width: 100%;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 5px 8px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-elevated);
-}
-
-.feature-drag-handle {
-  flex: none;
-  color: var(--vtsuru-fg-muted);
-  cursor: grab;
-}
-
-.feature-label {
-  flex: 1;
-  min-width: 0;
-}
-</style>

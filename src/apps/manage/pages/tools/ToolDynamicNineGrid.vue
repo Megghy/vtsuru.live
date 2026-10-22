@@ -2,12 +2,16 @@
 import { useDropZone, useFileDialog, useObjectUrl } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import { NButton, NCard, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { canvasToBlob } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { canvasToBlob, useMessage } from '@/shared/utils'
 
 type FitMode = 'stretch-width' | 'contain' | 'cover' | 'stretch'
 
@@ -103,7 +107,6 @@ async function handleCutDown(result: any) {
 async function calcItemHeight(item: AdditionalItem, tileSize: number): Promise<{ height: number; bmp: ImageBitmap }> {
   const bmp = await createImageBitmap(item.file)
   if (item.height > 0) return { height: item.height, bmp }
-  // stretch-width: scale to tile width, auto height
   return { height: Math.round((tileSize / bmp.width) * bmp.height), bmp }
 }
 
@@ -130,6 +133,7 @@ function drawItem(
     ctx.drawImage(bmp, 0, 0, bmp.width, bmp.height, (tileSize - dw) / 2, y + (h - dh) / 2, dw, dh)
   }
 }
+
 async function renderTile(src: ImageBitmap, index: number, cellSize: number): Promise<Blob> {
   const row = Math.floor(index / 3)
   const col = index % 3
@@ -139,7 +143,6 @@ async function renderTile(src: ImageBitmap, index: number, cellSize: number): Pr
   const items = cellImages.value[index]
   const gap = exportSettings.gap
 
-  // Pre-calculate all heights
   const resolved: { bmp: ImageBitmap; height: number; item: AdditionalItem }[] = []
   for (const item of items) {
     const { bmp, height } = await calcItemHeight(item, tileSize)
@@ -189,7 +192,6 @@ async function generateTiles() {
   }
 }
 
-// --- Downloads ---
 function getFileName(i: number) {
   return `grid_${i + 1}.${exportSettings.format === 'jpeg' ? 'jpg' : 'png'}`
 }
@@ -203,7 +205,6 @@ async function downloadZip() {
   message.success('ZIP 已开始下载')
 }
 
-// --- Cell image management ---
 const hasAnyAdditional = computed(() => cellImages.value.some((arr) => arr.length > 0))
 const expandedCell = ref<number | null>(null)
 
@@ -236,7 +237,6 @@ function backToEdit() {
   finalBlobs.value = []
 }
 
-// --- Cell preview ---
 const cellPreviewUrl = ref<string | null>(null)
 const previewVersion = ref(0)
 
@@ -255,7 +255,6 @@ watchEffect(async () => {
   }
 
   const previewSize = 200
-  // Read all reactive deps so watchEffect re-triggers on changes
   const _deps = items.map((it) => `${it.fit}-${it.height}`)
   void _deps
   const gap = Math.round((exportSettings.gap * previewSize) / exportSettings.tileSize)
@@ -266,7 +265,6 @@ watchEffect(async () => {
     const col = idx % 3
     const row = Math.floor(idx / 3)
 
-    // Calculate total height
     const resolved: { bmp: ImageBitmap; h: number; item: AdditionalItem }[] = []
     for (const item of items) {
       const bmp = await createImageBitmap(item.file)
@@ -303,27 +301,27 @@ watchEffect(async () => {
 </script>
 
 <template>
-  <div class="nine-grid-page">
-    <NCard title="动态九图生成器">
-      <template #header-extra>
-        <NText depth="3"> 将图片分割为 3×3 九宫格，适用于B站动态 </NText>
-      </template>
-
-      <!-- Upload -->
-      <Transition
-        name="fade"
-        mode="out-in"
-      >
-        <div
-          v-if="!sourceFile"
-          ref="dropZoneRef"
-          class="drop-zone"
-          :class="{ active: isOverDropZone }"
-          @click="() => openFilePicker()"
+  <div class="max-w-4xl mx-auto space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>动态九图生成器</CardTitle>
+        <CardDescription>将图片分割为 3×3 九宫格，适用于B站动态</CardDescription>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <!-- Upload -->
+        <Transition
+          name="fade"
+          mode="out-in"
         >
-          <div class="drop-zone-content">
+          <div
+            v-if="!sourceFile"
+            ref="dropZoneRef"
+            class="flex flex-col items-center justify-center gap-2 p-12 rounded-xl border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors"
+            :class="{ 'border-primary bg-primary/5': isOverDropZone }"
+            @click="() => openFilePicker()"
+          >
             <svg
-              class="drop-icon"
+              class="w-12 h-12 text-muted-foreground"
               viewBox="0 0 48 48"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -353,379 +351,319 @@ watchEffect(async () => {
                 stroke-width="2.5"
               />
             </svg>
-            <NText style="font-size: 15px"> 拖拽图片到此处，或点击选择 </NText>
-            <NText
-              depth="3"
-              style="font-size: 13px"
-            >
-              支持 PNG / JPEG / WebP 格式
-            </NText>
+            <span class="text-sm font-medium text-foreground">拖拽图片到此处，或点击选择</span>
+            <span class="text-xs text-muted-foreground">支持 PNG / JPEG / WebP 格式</span>
           </div>
-        </div>
-      </Transition>
+        </Transition>
 
-      <!-- Edit mode -->
-      <Transition
-        name="fade"
-        mode="out-in"
-      >
-        <div
-          v-if="sourceFile && finalBlobs.length === 0"
-          class="edit-section"
+        <!-- Edit mode -->
+        <Transition
+          name="fade"
+          mode="out-in"
         >
-          <div class="crop-settings-row">
-            <div class="crop-section">
-              <div class="crop-preview">
-                <img
-                  v-if="croppedUrl"
-                  :src="croppedUrl"
-                  alt="裁剪预览"
-                  class="crop-img"
-                />
-                <div class="grid-overlay">
-                  <div
-                    v-for="i in 9"
-                    :key="i"
-                    class="grid-overlay-cell"
+          <div
+            v-if="sourceFile && finalBlobs.length === 0"
+            class="space-y-6"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div class="flex flex-col items-center">
+                <div class="relative w-64 h-64 border border-border rounded-lg overflow-hidden bg-muted/40">
+                  <img
+                    v-if="croppedUrl"
+                    :src="croppedUrl"
+                    alt="裁剪预览"
+                    class="w-full h-full object-cover"
+                  />
+                  <div class="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none">
+                    <div
+                      v-for="i in 9"
+                      :key="i"
+                      class="border border-white/40 flex items-center justify-center"
+                    >
+                      <span class="text-xs font-bold text-white/80 drop-shadow">{{ i }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    @click="onFilePicked(sourceFile!)"
+                    >居中裁剪</Button
                   >
-                    <span class="cell-num">{{ i }}</span>
+                  <Button @click="openManualCrop">手动裁剪</Button>
+                  <Button
+                    variant="ghost"
+                    @click="() => openFilePicker()"
+                    >重新选择</Button
+                  >
+                </div>
+              </div>
+
+              <!-- Export settings -->
+              <div class="space-y-3 p-4 rounded-lg border border-border bg-card text-xs">
+                <h4 class="font-semibold text-sm text-foreground">导出设置</h4>
+                <div class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-muted-foreground">单张尺寸</span>
+                    <div class="flex items-center gap-1.5 w-32">
+                      <NumberField
+                        v-model="exportSettings.tileSize"
+                        :min="128"
+                        :max="currentMaxTileSize"
+                        :step="128"
+                      />
+                      <span class="text-muted-foreground">px</span>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-muted-foreground">允许放大</span>
+                    <Switch v-model:checked="allowUpscale" />
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-muted-foreground">格式</span>
+                    <div class="w-32">
+                      <Select v-model="exportSettings.format">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem
+                            v-for="opt in formatOptions"
+                            :key="opt.value"
+                            :value="opt.value"
+                          >
+                            {{ opt.label }}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div
+                    v-if="exportSettings.format === 'jpeg'"
+                    class="flex items-center justify-between"
+                  >
+                    <span class="text-muted-foreground">质量</span>
+                    <div class="w-32">
+                      <NumberField
+                        v-model="exportSettings.jpegQuality"
+                        :min="0.1"
+                        :max="1"
+                        :step="0.05"
+                      />
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <span class="text-muted-foreground">图片间距</span>
+                    <div class="flex items-center gap-1.5 w-32">
+                      <NumberField
+                        v-model="exportSettings.gap"
+                        :min="0"
+                        :max="200"
+                        :step="4"
+                      />
+                      <span class="text-muted-foreground">px</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="block text-[11px] text-muted-foreground pt-1">
+                  建议最大: {{ maxTileSize }}px（基于源图）
+                </span>
+              </div>
+            </div>
+
+            <!-- Nine grid editor -->
+            <div class="space-y-3">
+              <div class="flex justify-between items-center">
+                <h4 class="font-semibold text-sm text-foreground">九宫格编辑</h4>
+                <Button
+                  v-if="hasAnyAdditional"
+                  size="xs"
+                  variant="ghost"
+                  @click="clearAllCellImages"
+                >
+                  清空所有附加
+                </Button>
+              </div>
+              <span class="text-xs text-muted-foreground block">
+                点击格子添加附加图片，每格可添加多张，将按顺序拼接在主图下方
+              </span>
+
+              <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+                <div
+                  v-for="i in 9"
+                  :key="i"
+                  class="aspect-square rounded border border-border cursor-pointer relative overflow-hidden transition-all"
+                  :class="{ 'ring-2 ring-primary border-transparent': expandedCell === i - 1 }"
+                  @click="expandedCell = expandedCell === i - 1 ? null : i - 1"
+                >
+                  <div
+                    class="w-full h-full bg-cover"
+                    :style="{ backgroundImage: `url(${croppedUrl})`, backgroundPosition: bgPosition(i - 1) }"
+                  >
+                    <span class="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1 rounded">{{ i }}</span>
+                    <span
+                      v-if="cellImages[i - 1].length"
+                      class="absolute bottom-1 right-1 bg-primary text-primary-foreground text-[10px] px-1 rounded font-bold"
+                    >
+                      {{ cellImages[i - 1].length }}
+                    </span>
                   </div>
                 </div>
               </div>
-              <NFlex
-                justify="center"
-                :size="8"
-                style="margin-top: 12px"
-              >
-                <NButton
-                  size="small"
-                  @click="onFilePicked(sourceFile!)"
-                >
-                  居中裁剪
-                </NButton>
-                <NButton
-                  size="small"
-                  type="primary"
-                  @click="openManualCrop"
-                >
-                  手动裁剪
-                </NButton>
-                <NButton
-                  size="small"
-                  tertiary
-                  @click="() => openFilePicker()"
-                >
-                  重新选择
-                </NButton>
-              </NFlex>
-            </div>
-            <div class="settings-panel">
-              <NText
-                tag="h4"
-                class="section-title"
-              >
-                导出设置
-              </NText>
-              <div class="settings-list">
-                <div class="setting-row">
-                  <NText depth="3"> 单张尺寸 </NText>
-                  <NFlex
-                    align="center"
-                    :size="6"
-                  >
-                    <NInputNumber
-                      v-model:value="exportSettings.tileSize"
-                      :min="128"
-                      :max="currentMaxTileSize"
-                      :step="128"
-                      style="width: 120px"
-                    />
-                    <NText
-                      depth="3"
-                      style="font-size: 12px"
-                    >
-                      px
-                    </NText>
-                  </NFlex>
-                </div>
-                <div class="setting-row">
-                  <NText depth="3"> 允许放大 </NText><NSwitch v-model:value="allowUpscale" />
-                </div>
-                <div class="setting-row">
-                  <NText depth="3"> 格式 </NText
-                  ><NSelect
-                    v-model:value="exportSettings.format"
-                    :options="formatOptions"
-                    style="width: 130px"
-                  />
-                </div>
-                <div
-                  v-if="exportSettings.format === 'jpeg'"
-                  class="setting-row"
-                >
-                  <NText depth="3"> 质量 </NText
-                  ><NInputNumber
-                    v-model:value="exportSettings.jpegQuality"
-                    :min="0.1"
-                    :max="1"
-                    :step="0.05"
-                    style="width: 100px"
-                  />
-                </div>
-                <div class="setting-row">
-                  <NText depth="3"> 图片间距 </NText>
-                  <NFlex
-                    align="center"
-                    :size="6"
-                  >
-                    <NInputNumber
-                      v-model:value="exportSettings.gap"
-                      :min="0"
-                      :max="200"
-                      :step="4"
-                      style="width: 100px"
-                    />
-                    <NText
-                      depth="3"
-                      style="font-size: 12px"
-                    >
-                      px
-                    </NText>
-                  </NFlex>
-                </div>
-              </div>
-              <NText
-                depth="3"
-                style="font-size: 12px; margin-top: 12px; display: block"
-              >
-                建议最大: {{ maxTileSize }}px（基于源图）
-              </NText>
-            </div>
-          </div>
-          <!-- TEMPLATE_GRID_EDITOR -->
-          <!-- Nine Grid Editor -->
-          <div class="grid-editor-header">
-            <NText
-              tag="h4"
-              class="section-title"
-            >
-              九宫格编辑
-            </NText>
-            <NButton
-              v-if="hasAnyAdditional"
-              size="tiny"
-              quaternary
-              @click="clearAllCellImages"
-            >
-              清空所有附加
-            </NButton>
-          </div>
-          <NText
-            depth="3"
-            style="font-size: 13px; margin-bottom: 12px; display: block"
-          >
-            点击格子添加附加图片，每格可添加多张，将按顺序拼接在主图下方
-          </NText>
-          <div class="nine-grid">
-            <div
-              v-for="i in 9"
-              :key="i"
-              class="tile-card"
-              :class="{ selected: expandedCell === i - 1 }"
-              @click="expandedCell = expandedCell === i - 1 ? null : i - 1"
-            >
-              <div
-                class="tile-main"
-                :style="{ backgroundImage: `url(${croppedUrl})`, backgroundPosition: bgPosition(i - 1) }"
-              >
-                <span class="tile-badge">{{ i }}</span>
-                <span
-                  v-if="cellImages[i - 1].length"
-                  class="tile-count"
-                  >{{ cellImages[i - 1].length }}</span
-                >
-              </div>
-            </div>
-          </div>
 
-          <!-- Cell editor (below grid) -->
-          <div
-            v-if="expandedCell !== null"
-            class="cell-editor-panel"
-          >
-            <NFlex
-              justify="space-between"
-              align="center"
-              style="margin-bottom: 10px"
-            >
-              <NText strong> 第 {{ expandedCell + 1 }} 格 · 附加图片 </NText>
-              <NButton
-                size="tiny"
-                quaternary
-                @click="expandedCell = null"
-              >
-                收起
-              </NButton>
-            </NFlex>
-            <div class="cell-editor-body">
-              <div class="cell-editor-list">
-                <div
-                  v-if="cellImages[expandedCell].length === 0"
-                  class="cell-editor-empty"
-                >
-                  <NText
-                    depth="3"
-                    style="font-size: 13px"
-                  >
-                    暂无附加图片，点击下方按钮添加
-                  </NText>
-                </div>
-                <div
-                  v-for="(item, j) in cellImages[expandedCell]"
-                  :key="j"
-                  class="cell-img-row"
-                >
-                  <img
-                    :src="item.url"
-                    class="cell-img-thumb"
-                    alt=""
-                  />
-                  <NSelect
-                    v-model:value="item.fit"
-                    :options="fitOptions"
-                    size="tiny"
-                    style="width: 110px"
-                  />
-                  <NFlex
-                    align="center"
-                    :size="4"
-                  >
-                    <NInputNumber
-                      v-model:value="item.height"
-                      :min="0"
-                      :max="4096"
-                      :step="32"
-                      size="tiny"
-                      style="width: 80px"
-                    />
-                    <NText
-                      v-if="item.height === 0"
-                      depth="3"
-                      style="font-size: 11px"
-                    >
-                      自适应
-                    </NText>
-                  </NFlex>
-                  <NButton
-                    size="tiny"
-                    quaternary
-                    type="error"
-                    @click="removeImageFromCell(expandedCell!, j)"
-                  >
-                    ×
-                  </NButton>
-                </div>
-                <NButton
-                  size="small"
-                  dashed
-                  style="width: 100%; margin-top: 8px"
-                  @click="addImageToCell(expandedCell!)"
-                >
-                  + 添加图片
-                </NButton>
-              </div>
+              <!-- Cell editor panel -->
               <div
-                v-if="cellPreviewUrl"
-                class="cell-preview"
+                v-if="expandedCell !== null"
+                class="p-4 rounded-lg border border-border bg-card space-y-3"
               >
-                <NText
-                  depth="3"
-                  style="font-size: 12px; margin-bottom: 6px; display: block"
-                >
-                  效果预览
-                </NText>
-                <img
-                  :src="cellPreviewUrl"
-                  alt="预览"
-                  class="cell-preview-img"
-                />
+                <div class="flex justify-between items-center">
+                  <span class="text-xs font-semibold">第 {{ expandedCell + 1 }} 格 · 附加图片</span>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    @click="expandedCell = null"
+                    >收起</Button
+                  >
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div class="space-y-2">
+                    <div
+                      v-if="cellImages[expandedCell].length === 0"
+                      class="text-xs text-muted-foreground py-4 text-center"
+                    >
+                      暂无附加图片，点击下方按钮添加
+                    </div>
+                    <div
+                      v-for="(item, j) in cellImages[expandedCell]"
+                      :key="j"
+                      class="flex items-center gap-2 p-1.5 rounded border border-border bg-background text-xs"
+                    >
+                      <img
+                        :src="item.url"
+                        class="w-10 h-10 object-cover rounded shrink-0"
+                        alt=""
+                      />
+                      <div class="w-24">
+                        <Select v-model="item.fit">
+                          <SelectTrigger size="xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem
+                              v-for="opt in fitOptions"
+                              :key="opt.value"
+                              :value="opt.value"
+                            >
+                              {{ opt.label }}
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div class="flex items-center gap-1 w-20">
+                        <NumberField
+                          v-model="item.height"
+                          :min="0"
+                          :max="4096"
+                          :step="32"
+                        />
+                      </div>
+                      <span
+                        v-if="item.height === 0"
+                        class="text-[11px] text-muted-foreground"
+                        >自适应</span
+                      >
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="text-destructive ml-auto"
+                        @click="removeImageFromCell(expandedCell!, j)"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                    <Button
+                      variant="outline"
+                      class="w-full border-dashed"
+                      @click="addImageToCell(expandedCell!)"
+                    >
+                      + 添加图片
+                    </Button>
+                  </div>
+
+                  <div
+                    v-if="cellPreviewUrl"
+                    class="flex flex-col items-center"
+                  >
+                    <span class="text-xs text-muted-foreground mb-2">效果预览</span>
+                    <img
+                      :src="cellPreviewUrl"
+                      alt="预览"
+                      class="max-w-[200px] border border-border rounded shadow-sm"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Action bar -->
-          <div class="action-bar">
-            <NButton
-              type="primary"
-              size="large"
-              :loading="isGenerating"
-              @click="generateTiles"
-            >
-              生成九宫格
-            </NButton>
+            <!-- Action bar -->
+            <div class="flex justify-center pt-2">
+              <Button
+                size="lg"
+                class="px-8"
+                :disabled="isGenerating"
+                @click="generateTiles"
+              >
+                {{ isGenerating ? '生成中...' : '生成九宫格' }}
+              </Button>
+            </div>
           </div>
-        </div>
-      </Transition>
-      <!-- TEMPLATE_RESULTS -->
-      <!-- Results -->
-      <Transition
-        name="fade"
-        mode="out-in"
-      >
-        <div
-          v-if="finalBlobs.length > 0"
-          class="results-section"
+        </Transition>
+
+        <!-- Results -->
+        <Transition
+          name="fade"
+          mode="out-in"
         >
-          <NFlex
-            justify="space-between"
-            align="center"
-            style="margin-bottom: 16px"
+          <div
+            v-if="finalBlobs.length > 0"
+            class="space-y-4"
           >
-            <NText
-              tag="h4"
-              class="section-title"
-            >
-              生成结果
-            </NText>
-            <NFlex :size="8">
-              <NButton
-                size="small"
-                tertiary
-                @click="backToEdit"
-              >
-                返回编辑
-              </NButton>
-              <NButton
-                type="primary"
-                size="small"
-                @click="downloadZip"
-              >
-                打包下载 ZIP
-              </NButton>
-            </NFlex>
-          </NFlex>
-          <div class="result-grid">
-            <div
-              v-for="(url, i) in finalUrls"
-              :key="i"
-              class="result-item"
-            >
-              <img
-                :src="url"
-                :alt="`图片 ${i + 1}`"
-              />
-              <span class="tile-badge">{{ i + 1 }}</span>
+            <div class="flex justify-between items-center">
+              <h4 class="font-semibold text-sm text-foreground">生成结果</h4>
+              <div class="flex gap-2">
+                <Button
+                  variant="outline"
+                  @click="backToEdit"
+                  >返回编辑</Button
+                >
+                <Button @click="downloadZip">打包下载 ZIP</Button>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-3 max-w-md mx-auto">
               <div
-                class="result-hover-overlay"
+                v-for="(url, i) in finalUrls"
+                :key="i"
+                class="relative rounded border border-border overflow-hidden group cursor-pointer"
                 @click="downloadSingle(i)"
               >
-                <span>下载</span>
+                <img
+                  :src="url"
+                  :alt="`图片 ${i + 1}`"
+                  class="w-full h-full object-contain"
+                />
+                <span class="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-1 rounded">{{ i + 1 }}</span>
+                <div
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                >
+                  <span class="text-white text-xs font-medium">下载</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </Transition>
-    </NCard>
+        </Transition>
+      </CardContent>
+    </Card>
+
     <ImgCutter
       ref="imgCutterRef"
       :is-modal="true"
@@ -738,321 +676,3 @@ watchEffect(async () => {
     />
   </div>
 </template>
-<style scoped>
-.section-title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.drop-zone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 220px;
-  border: 2px dashed var(--vtsuru-border);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.25s ease;
-}
-.drop-zone:hover,
-.drop-zone.active {
-  border-color: var(--primary-color, #18a058);
-  background: color-mix(in srgb, var(--primary-color, #18a058) 4%, transparent);
-}
-.drop-zone.active {
-  border-style: solid;
-}
-.drop-zone-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-}
-.drop-icon {
-  width: 48px;
-  height: 48px;
-  color: var(--vtsuru-fg-muted);
-  transition: color 0.2s;
-}
-.drop-zone:hover .drop-icon {
-  color: var(--primary-color, #18a058);
-}
-
-.edit-section,
-.results-section {
-  animation: slideUp 0.3s ease;
-}
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.crop-settings-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(240px, auto);
-  gap: 24px;
-  align-items: start;
-}
-@media (max-width: 768px) {
-  .crop-settings-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-.crop-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.crop-preview {
-  position: relative;
-  width: 100%;
-  max-width: 380px;
-  aspect-ratio: 1;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-.crop-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.grid-overlay {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-template-rows: repeat(3, 1fr);
-  pointer-events: none;
-}
-.grid-overlay-cell {
-  border: 1px dashed rgba(255, 255, 255, 0.6);
-  position: relative;
-}
-.cell-num {
-  position: absolute;
-  top: 4px;
-  left: 4px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: 600;
-}
-
-.settings-panel {
-  padding: 20px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 10px;
-  background: var(--vtsuru-bg-inset);
-  align-self: start;
-}
-.settings-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-/* --- Nine Grid --- */
-.grid-editor-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: 28px 0 4px;
-}
-.nine-grid,
-.result-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  max-width: 540px;
-  margin: 0 auto;
-}
-.tile-card {
-  position: relative;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  overflow: hidden;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
-  cursor: pointer;
-}
-.tile-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
-}
-.tile-card.selected {
-  outline: 2px solid var(--primary-color, #18a058);
-  outline-offset: -2px;
-}
-.tile-main {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  background-size: 300% 300%;
-  background-repeat: no-repeat;
-}
-.tile-badge {
-  position: absolute;
-  top: 5px;
-  left: 5px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #fff;
-  font-size: 11px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  z-index: 2;
-}
-.tile-count {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: var(--primary-color, #18a058);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 600;
-  padding: 2px 6px;
-  border-radius: 4px;
-  z-index: 2;
-}
-.tile-hover-overlay,
-.result-hover-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.45);
-  color: #fff;
-  font-size: 13px;
-  font-weight: 500;
-  opacity: 0;
-  transition: opacity 0.2s;
-  cursor: pointer;
-}
-.result-item:hover .result-hover-overlay {
-  opacity: 1;
-}
-
-/* --- Cell Editor Panel --- */
-.cell-editor-panel {
-  max-width: 540px;
-  margin: 12px auto 0;
-  padding: 14px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  background: var(--vtsuru-bg-inset);
-}
-.cell-editor-body {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-.cell-editor-list {
-  flex: 1;
-  min-width: 0;
-}
-.cell-editor-empty {
-  padding: 12px 0;
-  text-align: center;
-}
-.cell-img-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0;
-}
-.cell-img-row + .cell-img-row {
-  border-top: 1px solid var(--vtsuru-border);
-}
-.cell-img-thumb {
-  width: 40px;
-  height: 40px;
-  object-fit: cover;
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-.cell-preview {
-  flex-shrink: 0;
-  width: 120px;
-}
-.cell-preview-img {
-  width: 100%;
-  border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-}
-
-/* --- Action Bar --- */
-.action-bar {
-  position: sticky;
-  bottom: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  margin-top: 28px;
-  padding: 16px 0;
-  background: color-mix(in srgb, var(--vtsuru-bg-surface) 85%, transparent);
-  backdrop-filter: blur(8px);
-  border-top: 1px solid var(--vtsuru-border);
-  z-index: 10;
-}
-
-/* --- Results --- */
-.result-item {
-  position: relative;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  overflow: hidden;
-  transition:
-    box-shadow 0.2s,
-    transform 0.2s;
-}
-.result-item:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  transform: translateY(-1px);
-}
-.result-item img {
-  width: 100%;
-  display: block;
-}
-
-/* --- Transitions --- */
-.fade-enter-active,
-.fade-leave-active {
-  transition:
-    opacity 0.25s ease,
-    transform 0.25s ease;
-}
-.fade-enter-from {
-  opacity: 0;
-  transform: translateY(6px);
-}
-.fade-leave-to {
-  opacity: 0;
-  transform: translateY(-6px);
-}
-</style>

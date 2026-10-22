@@ -3,10 +3,7 @@ import { join } from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  findElementByAliases,
-  TYPE_BUTTON_ALIASES,
-} from '@/composables/useSvgGamepadRenderer'
+import { findElementByAliases, TYPE_BUTTON_ALIASES } from '@/composables/useSvgGamepadRenderer'
 import type { GamepadType, LogicalButton } from '@/types/gamepad'
 import { LogicalButtonsList } from '@/types/gamepad'
 

@@ -3,11 +3,7 @@ import { counterComponent } from './items/counter'
 import { gamepadComponent } from './items/gamepad'
 import { plannedComponents } from './items/planned'
 import { pngtuberComponent } from './items/pngtuber'
-import type {
-  ObsCategory,
-  ObsComponentDefinition,
-  ObsComponentStatus,
-} from './types'
+import type { ObsCategory, ObsComponentDefinition, ObsComponentStatus } from './types'
 
 export * from './categories'
 export * from './types'

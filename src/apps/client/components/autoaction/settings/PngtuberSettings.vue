@@ -1,20 +1,31 @@
 <script setup lang="ts">
-import { NAlert, NButton, NFlex, NFormItem, NInput, NInputNumber, NSelect } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
-
-import { usePngtuberDriver } from '@/apps/client/store/usePngtuberDriver'
+import { toast } from 'vue-sonner'
 
 import { executeActions } from '@/apps/client/store/autoAction/actionUtils'
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { createDefaultRuntimeState } from '@/apps/client/store/autoAction/utils'
+import { usePngtuberDriver } from '@/apps/client/store/usePngtuberDriver'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+
 const props = defineProps<{ action: AutoActionItem }>()
 const driver = usePngtuberDriver()
 const targetChannel = computed(() => props.action.actionConfig.pngtuberChannel?.trim() || 'default')
-const expressionOptions = computed(() => driver.channel === targetChannel.value
-  ? driver.config.expressions.map(expression => ({ label: `${expression.name} · ${expression.id}`, value: expression.id }))
-  : [])
+const expressionOptions = computed(() =>
+  driver.channel === targetChannel.value
+    ? driver.config.expressions.map((expression) => ({
+        label: `${expression.name} · ${expression.id}`,
+        value: expression.id,
+      }))
+    : [],
+)
 const testing = ref(false)
+
 function test() {
   testing.value = true
   executeActions(
@@ -28,7 +39,7 @@ function test() {
       isTest: true,
       onSuccess: () => {
         testing.value = false
-        window.$message?.success('表情已切换')
+        toast.success('表情已切换')
       },
       onError: () => {
         testing.value = false
@@ -39,36 +50,81 @@ function test() {
 </script>
 
 <template>
-  <NFlex vertical>
-    <NAlert :show-icon="false">驱动需已启动且频道一致。持续时间为 0 时保持表情，其他值到期后恢复。</NAlert>
-    <NFormItem label="频道"
-      ><NInput
-        v-model:value="action.actionConfig.pngtuberChannel"
+  <div class="space-y-3">
+    <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
+      <AlertDescription class="text-xs m-0">
+        驱动需已启动且频道一致。持续时间为 0 时保持表情，其他值到期后恢复。
+      </AlertDescription>
+    </Alert>
+
+    <div class="space-y-1">
+      <span class="text-xs text-muted-foreground">频道</span>
+      <Input
+        v-model="action.actionConfig.pngtuberChannel"
         placeholder="default"
-    /></NFormItem>
-    <NFormItem label="表情 ID"
-      ><NSelect
-        v-model:value="action.actionConfig.pngtuberExpressionId"
-        :options="expressionOptions"
-        filterable
-        tag
-        placeholder="选择已加载表情或填写表情 ID"
-    /></NFormItem>
-    <NFormItem label="持续时间（毫秒）"
-      ><NInputNumber
-        v-model:value="action.actionConfig.pngtuberDurationMs"
+      />
+    </div>
+
+    <div class="space-y-1">
+      <span class="text-xs text-muted-foreground">表情 ID</span>
+      <div v-if="expressionOptions.length > 0">
+        <Select v-model="action.actionConfig.pngtuberExpressionId">
+          <SelectTrigger class="w-full">
+            <SelectValue placeholder="选择已加载表情或填写表情 ID" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in expressionOptions"
+              :key="opt.value"
+              :value="opt.value"
+              class="text-xs"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div v-else>
+        <Input
+          v-model="action.actionConfig.pngtuberExpressionId"
+          placeholder="填写表情 ID"
+        />
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <span class="text-xs font-medium text-foreground">持续时间（毫秒）</span>
+      <NumberField
+        :model-value="action.actionConfig.pngtuberDurationMs"
         :min="0"
-        :precision="0"
         :step="100"
         placeholder="5000"
-    /></NFormItem>
-    <RouterLink :to="{ name: 'client-pngtuber' }">前往启动驱动</RouterLink>
-    <RouterLink :to="{ name: 'client-pngtuber-model', query: { channel: targetChannel } }">编辑目标频道表情</RouterLink>
-    <NButton
+        class="w-32"
+        @update:model-value="action.actionConfig.pngtuberDurationMs = $event"
+      />
+    </div>
+
+    <div class="flex items-center gap-4 text-xs pt-1">
+      <RouterLink
+        :to="{ name: 'client-pngtuber' }"
+        class="text-primary hover:underline"
+      >
+        前往启动驱动 →
+      </RouterLink>
+      <RouterLink
+        :to="{ name: 'client-pngtuber-model', query: { channel: targetChannel } }"
+        class="text-primary hover:underline"
+      >
+        编辑目标频道表情 →
+      </RouterLink>
+    </div>
+
+    <Button
+      class="w-full"
       :disabled="testing || !action.actionConfig.pngtuberExpressionId?.trim()"
-      :loading="testing"
       @click="test"
-      >测试切换表情</NButton
     >
-  </NFlex>
+      {{ testing ? '切换中...' : '测试切换表情' }}
+    </Button>
+  </div>
 </template>

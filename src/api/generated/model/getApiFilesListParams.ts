@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruDataFileStorageFileKind } from './vTsuruDataFileStorageFileKind';
+import type { VTsuruDataFileStorageFileKind } from './vTsuruDataFileStorageFileKind'
 
 export type GetApiFilesListParams = {
-/**
- * 允许上传的内容大类，与具体扩展名解耦。
- */
-kind?: VTsuruDataFileStorageFileKind;
-page?: number;
-pageSize?: number;
-};
+  /**
+   * 允许上传的内容大类，与具体扩展名解耦。
+   */
+  kind?: VTsuruDataFileStorageFileKind
+  page?: number
+  pageSize?: number
+}

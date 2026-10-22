@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { shallowRef } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/api-models'

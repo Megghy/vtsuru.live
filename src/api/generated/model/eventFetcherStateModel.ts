@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventFetcherStateModelEventFetcherType } from './eventFetcherStateModelEventFetcherType';
-import type { EventFetcherStateModelStatus } from './eventFetcherStateModelStatus';
+import type { EventFetcherStateModelEventFetcherType } from './eventFetcherStateModelEventFetcherType'
+import type { EventFetcherStateModelStatus } from './eventFetcherStateModelStatus'
 
 export interface EventFetcherStateModel {
-  online: boolean;
-  status: EventFetcherStateModelStatus;
+  online: boolean
+  status: EventFetcherStateModelStatus
   /** @nullable */
-  version?: string | null;
-  todayReceive: number;
-  useCookie: boolean;
-  type?: EventFetcherStateModelEventFetcherType;
+  version?: string | null
+  todayReceive: number
+  useCookie: boolean
+  type?: EventFetcherStateModelEventFetcherType
 }

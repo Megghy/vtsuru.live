@@ -50,9 +50,7 @@ onMounted(() => {
     <div class="fresh-card">
       <!-- 顶部清新叶片与微标 -->
       <div class="fresh-header">
-        <div class="leaf-icon">
-          🍃
-        </div>
+        <div class="leaf-icon">🍃</div>
         <span class="fresh-title">{{ props.state.title || 'NATURAL BREEZE' }}</span>
       </div>
 
@@ -101,15 +99,18 @@ onMounted(() => {
         <span
           v-if="props.state.showDate"
           class="fresh-pill"
-        >{{ props.clockData.dateStr }}</span>
+          >{{ props.clockData.dateStr }}</span
+        >
         <span
           v-if="props.state.showDayOfWeek"
           class="fresh-pill"
-        >{{ props.clockData.dayOfWeekZh }}</span>
+          >{{ props.clockData.dayOfWeekZh }}</span
+        >
         <span
           v-if="!props.state.is24Hour && props.clockData.ampm"
           class="fresh-pill ampm"
-        >{{ props.clockData.ampm }}</span>
+          >{{ props.clockData.ampm }}</span
+        >
       </div>
     </div>
   </div>
@@ -121,7 +122,10 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   user-select: none;
-  font-family: 'Quicksand', -apple-system, sans-serif;
+  font-family:
+    'Quicksand',
+    -apple-system,
+    sans-serif;
   box-sizing: border-box;
 }
 
@@ -153,8 +157,13 @@ onMounted(() => {
 }
 
 @keyframes leafSway {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(15deg); }
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
 }
 
 .fresh-title {

@@ -6,12 +6,12 @@
  * OpenAPI spec version: v1
  */
 
-export type VTsuruEnumsBiliAuthCodeStatusType = typeof VTsuruEnumsBiliAuthCodeStatusType[keyof typeof VTsuruEnumsBiliAuthCodeStatusType];
-
+export type VTsuruEnumsBiliAuthCodeStatusType =
+  (typeof VTsuruEnumsBiliAuthCodeStatusType)[keyof typeof VTsuruEnumsBiliAuthCodeStatusType]
 
 export const VTsuruEnumsBiliAuthCodeStatusType = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
   NUMBER_3: 3,
-} as const;
+} as const

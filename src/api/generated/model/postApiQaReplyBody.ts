@@ -7,11 +7,11 @@
  */
 
 export type PostApiQaReplyBody = {
-  id?: number;
+  id?: number
   /**
-     * @minLength 1
-     * @maxLength 10000
-     */
-  message?: string;
-  files?: (Blob | File)[];
-};
+   * @minLength 1
+   * @maxLength 10000
+   */
+  message?: string
+  files?: (Blob | File)[]
+}

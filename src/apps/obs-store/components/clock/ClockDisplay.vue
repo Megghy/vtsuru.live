@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  computed,
-  onMounted,
-  onUnmounted,
-  ref,
-} from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
@@ -23,10 +18,7 @@ import SwissClock from './styles/SwissClock.vue'
 import TacticalClock from './styles/TacticalClock.vue'
 import VintageClock from './styles/VintageClock.vue'
 import { DEFAULT_CLOCK_STATE } from './types'
-import type {
-  ClockAction,
-  ClockState,
-} from './types'
+import type { ClockAction, ClockState } from './types'
 
 const props = defineProps<{
   channelId?: string
@@ -69,7 +61,9 @@ const clockData = computed(() => {
   const rawHours = d.getHours()
   const minutes = d.getMinutes().toString().padStart(2, '0')
   const seconds = d.getSeconds().toString().padStart(2, '0')
-  const milliseconds = Math.floor(d.getMilliseconds() / 10).toString().padStart(2, '0')
+  const milliseconds = Math.floor(d.getMilliseconds() / 10)
+    .toString()
+    .padStart(2, '0')
 
   let hoursStr = ''
   let ampm = ''
@@ -118,9 +112,13 @@ const countdownData = computed(() => {
 
   const totalSec = Math.floor(remainMs / 1000)
   const hours = Math.floor(totalSec / 3600)
-  const minutes = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0')
+  const minutes = Math.floor((totalSec % 3600) / 60)
+    .toString()
+    .padStart(2, '0')
   const seconds = (totalSec % 60).toString().padStart(2, '0')
-  const ms = Math.floor((remainMs % 1000) / 10).toString().padStart(2, '0')
+  const ms = Math.floor((remainMs % 1000) / 10)
+    .toString()
+    .padStart(2, '0')
 
   const hoursStr = hours > 0 ? `${hours.toString().padStart(2, '0')}:` : ''
   const percent = totalMs > 0 ? Math.min(100, Math.max(0, ((totalMs - remainMs) / totalMs) * 100)) : 100
@@ -143,9 +141,13 @@ const stopwatchData = computed(() => {
 
   const totalSec = Math.floor(elapsed / 1000)
   const hours = Math.floor(totalSec / 3600)
-  const minutes = Math.floor((totalSec % 3600) / 60).toString().padStart(2, '0')
+  const minutes = Math.floor((totalSec % 3600) / 60)
+    .toString()
+    .padStart(2, '0')
   const seconds = (totalSec % 60).toString().padStart(2, '0')
-  const ms = Math.floor((elapsed % 1000) / 10).toString().padStart(2, '0')
+  const ms = Math.floor((elapsed % 1000) / 10)
+    .toString()
+    .padStart(2, '0')
 
   const hoursStr = hours > 0 ? `${hours.toString().padStart(2, '0')}:` : ''
 

@@ -4,32 +4,23 @@ import { fetchFile } from '@ffmpeg/util'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCollapseTransition,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NInputNumber,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSlider,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-} from 'naive-ui'
 import { computed, onBeforeUnmount, reactive, ref } from 'vue'
 
 import { formatDuration, formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { NumberField } from '@/shared/ui/number-field'
+import { Progress } from '@/shared/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tag } from '@/shared/ui/tag'
+import { useMessage } from '@/shared/utils'
 
-import { buildCommands, defaultSettings, formatMap, formats, positive, presets } from './mediaConvert'
+import { buildCommands, defaultSettings, formatMap, formats, positive, presets, type Rotate } from './mediaConvert'
 import MediaTrimmer from './MediaTrimmer.vue'
 
 const message = useMessage()
@@ -302,7 +293,6 @@ async function processAll() {
   }
 }
 
-// 单线程核心下 exec 会阻塞 worker，只能靠 terminate() 强制中断，之后重新 load 续用。
 async function cancelAll() {
   canceled = true
   if (currentItem.value) {
@@ -417,14 +407,14 @@ function savingText(item: MediaItem) {
   const percent = Math.round((1 - item.outputSize / item.file.size) * 100)
   return `${percent >= 0 ? '-' : '+'}${Math.abs(percent)}%`
 }
-function savingType(item: MediaItem) {
-  return item.outputSize <= item.file.size ? 'success' : 'warning'
+function savingVariant(item: MediaItem): 'secondary' | 'destructive' {
+  return item.outputSize <= item.file.size ? 'secondary' : 'destructive'
 }
-function statusType(item: MediaItem) {
-  if (item.status === 'done') return 'success'
-  if (item.status === 'error') return 'error'
-  if (item.status === 'processing') return 'info'
-  return 'default'
+function statusVariant(item: MediaItem): 'secondary' | 'destructive' | 'default' | 'outline' {
+  if (item.status === 'done') return 'secondary'
+  if (item.status === 'error') return 'destructive'
+  if (item.status === 'processing') return 'default'
+  return 'outline'
 }
 function statusLabel(item: MediaItem) {
   return { done: '完成', error: '失败', processing: '处理中', pending: '待处理' }[item.status]
@@ -438,684 +428,875 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="media-page">
-    <NCard title="音视频转换与压缩">
-      <template #header-extra>
-        <NText depth="3"> 浏览器本地处理 </NText>
-      </template>
+    <Card>
+      <CardHeader class="flex flex-row items-center justify-between pb-4">
+        <CardTitle class="text-base font-semibold">音视频转换与压缩</CardTitle>
+        <span class="text-xs text-muted-foreground"> 浏览器本地处理 </span>
+      </CardHeader>
 
-      <NFlex
-        vertical
-        :size="16"
-      >
-        <NAlert
-          type="info"
-          :show-icon="false"
-        >
-          支持视频压缩、转 GIF、提取音频、格式互转与片段截取。全程在浏览器本地完成，不上传文件；大文件会占用较多内存和
-          CPU。
-        </NAlert>
+      <CardContent class="pt-0">
+        <div class="flex flex-col gap-4">
+          <Alert>
+            <AlertDescription class="text-xs">
+              支持视频压缩、转
+              GIF、提取音频、格式互转与片段截取。全程在浏览器本地完成，不上传文件；大文件会占用较多内存和 CPU。
+            </AlertDescription>
+          </Alert>
 
-        <div class="preset-bar">
-          <NText
-            depth="3"
-            class="preset-label"
+          <div class="preset-bar">
+            <span class="preset-label text-xs text-muted-foreground"> 快捷预设 </span>
+            <div class="flex flex-wrap gap-2">
+              <Button
+                v-for="preset in presets"
+                :key="preset.key"
+                :variant="activePreset === preset.key ? 'default' : 'outline'"
+                :title="preset.desc"
+                @click="applyPreset(preset.key)"
+              >
+                {{ preset.label }}
+              </Button>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="advanced-toggle text-xs text-foreground/80 hover:text-foreground text-left"
+            @click="showAdvanced = !showAdvanced"
           >
-            快捷预设
-          </NText>
-          <NFlex
-            :size="8"
-            wrap
+            {{ showAdvanced ? '▾' : '▸' }} 高级设置（编码 / 画面 / 速度 / 音频）
+          </button>
+
+          <div
+            v-if="showAdvanced"
+            class="advanced-panel"
           >
-            <NButton
-              v-for="preset in presets"
-              :key="preset.key"
-              size="small"
-              :type="activePreset === preset.key ? 'primary' : 'default'"
-              :title="preset.desc"
-              @click="applyPreset(preset.key)"
-            >
-              {{ preset.label }}
-            </NButton>
-          </NFlex>
-        </div>
-
-        <div
-          class="advanced-toggle"
-          @click="showAdvanced = !showAdvanced"
-        >
-          <NText depth="2"> {{ showAdvanced ? '▾' : '▸' }} 高级设置（编码 / 画面 / 速度 / 音频） </NText>
-        </div>
-
-        <NCollapseTransition :show="showAdvanced">
-          <div class="advanced-panel">
             <div class="field">
-              <NText depth="3"> 输出格式 </NText>
-              <NSelect
-                v-model:value="settings.format"
-                :options="formatOptions"
-                @update:value="activePreset = null"
-              />
+              <span class="text-xs text-muted-foreground"> 输出格式 </span>
+              <Select
+                :model-value="settings.format"
+                @update:model-value="
+                  (v) => {
+                    settings.format = v as any
+                    activePreset = null
+                  }
+                "
+              >
+                <SelectTrigger class="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in formatOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <NTabs
-              type="segment"
-              size="small"
-              animated
-            >
-              <!-- 视频编码 -->
-              <NTabPane
-                v-if="selectedFormat.kind === 'video'"
-                name="video"
-                tab="编码"
-              >
-                <NGrid
-                  cols="1 s:2 m:3"
-                  responsive="screen"
-                  :x-gap="12"
-                  :y-gap="12"
+            <Tabs default-value="audio">
+              <TabsList class="w-full grid grid-cols-5">
+                <TabsTrigger
+                  v-if="selectedFormat.kind === 'video'"
+                  value="video"
+                  class="text-xs"
                 >
-                  <NGridItem v-if="settings.format === 'mp4'">
-                    <div class="field">
-                      <NText depth="3"> 编码器 </NText>
-                      <NSelect
-                        v-model:value="settings.videoCodec"
-                        :options="videoCodecOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 最大宽度 </NText>
-                      <NSelect
-                        v-model:value="settings.videoMaxWidth"
-                        :options="videoMaxWidthOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 帧率 </NText>
-                      <NSelect
-                        v-model:value="settings.videoFps"
-                        :options="videoFpsOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem v-if="settings.format === 'mp4'">
-                    <div class="field">
-                      <NText depth="3"> 编码速度（越慢压缩越好） </NText>
-                      <NSelect
-                        v-model:value="settings.videoPreset"
-                        :options="videoPresetOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                </NGrid>
+                  编码
+                </TabsTrigger>
+                <TabsTrigger
+                  v-if="selectedFormat.kind === 'gif'"
+                  value="gif"
+                  class="text-xs"
+                >
+                  GIF
+                </TabsTrigger>
+                <TabsTrigger
+                  v-if="selectedFormat.kind !== 'audio'"
+                  value="picture"
+                  class="text-xs"
+                >
+                  画面
+                </TabsTrigger>
+                <TabsTrigger
+                  v-if="selectedFormat.kind !== 'audio'"
+                  value="speed"
+                  class="text-xs"
+                >
+                  速度
+                </TabsTrigger>
+                <TabsTrigger
+                  value="audio"
+                  class="text-xs"
+                >
+                  音频
+                </TabsTrigger>
+              </TabsList>
 
-                <div class="rate-mode">
-                  <NRadioGroup
-                    v-model:value="settings.rateMode"
-                    size="small"
+              <!-- 视频编码 -->
+              <TabsContent
+                v-if="selectedFormat.kind === 'video'"
+                value="video"
+                class="space-y-3 pt-2"
+              >
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div
+                    v-if="settings.format === 'mp4'"
+                    class="field"
                   >
-                    <NRadioButton value="crf"> 画质优先 (CRF) </NRadioButton>
-                    <NRadioButton value="targetSize"> 目标体积 </NRadioButton>
-                  </NRadioGroup>
+                    <span class="text-xs text-muted-foreground"> 编码器 </span>
+                    <Select v-model="settings.videoCodec">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in videoCodecOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 最大宽度 </span>
+                    <Select
+                      :model-value="settings.videoMaxWidth === null ? 'null' : String(settings.videoMaxWidth)"
+                      @update:model-value="(v) => (settings.videoMaxWidth = v === 'null' ? null : Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in videoMaxWidthOptions"
+                          :key="String(opt.value)"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 帧率 </span>
+                    <Select
+                      :model-value="settings.videoFps === null ? 'null' : String(settings.videoFps)"
+                      @update:model-value="(v) => (settings.videoFps = v === 'null' ? null : Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in videoFpsOptions"
+                          :key="String(opt.value)"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div
+                    v-if="settings.format === 'mp4'"
+                    class="field"
+                  >
+                    <span class="text-xs text-muted-foreground"> 编码速度（越慢压缩越好） </span>
+                    <Select v-model="settings.videoPreset">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in videoPresetOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div class="flex justify-center mt-2">
+                  <div class="inline-flex rounded-md border border-input p-0.5 bg-muted">
+                    <button
+                      type="button"
+                      class="px-3 py-1 text-xs rounded transition-colors cursor-pointer"
+                      :class="
+                        settings.rateMode === 'crf'
+                          ? 'bg-background shadow-xs font-medium text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      "
+                      @click="settings.rateMode = 'crf'"
+                    >
+                      画质优先 (CRF)
+                    </button>
+                    <button
+                      type="button"
+                      class="px-3 py-1 text-xs rounded transition-colors cursor-pointer"
+                      :class="
+                        settings.rateMode === 'targetSize'
+                          ? 'bg-background shadow-xs font-medium text-foreground'
+                          : 'text-muted-foreground hover:text-foreground'
+                      "
+                      @click="settings.rateMode = 'targetSize'"
+                    >
+                      目标体积
+                    </button>
+                  </div>
                 </div>
 
                 <div
                   v-if="settings.rateMode === 'crf'"
                   class="slider-field"
                 >
-                  <NText depth="3"> 视频质量 CRF：{{ settings.videoCrf }}（越小画质越高、体积越大） </NText>
-                  <NSlider
-                    v-model:value="settings.videoCrf"
+                  <span class="text-xs text-muted-foreground">
+                    视频质量 CRF：{{ settings.videoCrf }}（越小画质越高、体积越大）
+                  </span>
+                  <Slider
+                    :model-value="[settings.videoCrf]"
                     :min="18"
                     :max="36"
                     :step="1"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.videoCrf = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div
                   v-else
                   class="field target-size"
                 >
-                  <NText depth="3"> 目标体积（每个文件，MB） </NText>
-                  <NInputNumber
-                    v-model:value="settings.targetSizeMb"
+                  <span class="text-xs text-muted-foreground"> 目标体积（每个文件，MB） </span>
+                  <NumberField
+                    v-model="settings.targetSizeMb"
                     :min="1"
                     :max="2000"
                     :step="1"
                   />
-                  <NText
-                    depth="3"
-                    style="font-size: 12px"
-                  >
+                  <span class="text-xs text-muted-foreground">
                     按文件时长自动计算码率，适配 B 站群文件 / 动态大小限制
-                  </NText>
+                  </span>
                 </div>
-              </NTabPane>
+              </TabsContent>
 
               <!-- GIF -->
-              <NTabPane
+              <TabsContent
                 v-if="selectedFormat.kind === 'gif'"
-                name="gif"
-                tab="GIF"
+                value="gif"
+                class="space-y-3 pt-2"
               >
-                <NGrid
-                  cols="1 s:2 m:3"
-                  responsive="screen"
-                  :x-gap="12"
-                  :y-gap="12"
-                >
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> GIF 宽度 </NText>
-                      <NSelect
-                        v-model:value="settings.gifWidth"
-                        :options="gifWidthOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> GIF 帧率 </NText>
-                      <NSelect
-                        v-model:value="settings.gifFps"
-                        :options="gifFpsOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field switch-field">
-                      <NText depth="3"> 循环播放 </NText>
-                      <NSwitch v-model:value="settings.gifLoop" />
-                    </div>
-                  </NGridItem>
-                </NGrid>
-              </NTabPane>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> GIF 宽度 </span>
+                    <Select
+                      :model-value="String(settings.gifWidth)"
+                      @update:model-value="(v) => (settings.gifWidth = Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in gifWidthOptions"
+                          :key="opt.value"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> GIF 帧率 </span>
+                    <Select
+                      :model-value="String(settings.gifFps)"
+                      @update:model-value="(v) => (settings.gifFps = Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in gifFpsOptions"
+                          :key="opt.value"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field switch-field">
+                    <span class="text-xs text-muted-foreground"> 循环播放 </span>
+                    <Switch
+                      :checked="settings.gifLoop"
+                      @update:checked="(v) => (settings.gifLoop = v)"
+                    />
+                  </div>
+                </div>
+              </TabsContent>
 
               <!-- 画面处理 -->
-              <NTabPane
+              <TabsContent
                 v-if="selectedFormat.kind !== 'audio'"
-                name="picture"
-                tab="画面"
+                value="picture"
+                class="space-y-3 pt-2"
               >
-                <NGrid
-                  cols="1 s:2 m:3"
-                  responsive="screen"
-                  :x-gap="12"
-                  :y-gap="12"
-                >
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 旋转 </NText>
-                      <NSelect
-                        v-model:value="settings.rotate"
-                        :options="rotateOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field switch-field">
-                      <NText depth="3"> 水平翻转 </NText>
-                      <NSwitch v-model:value="settings.flipH" />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field switch-field">
-                      <NText depth="3"> 垂直翻转 </NText>
-                      <NSwitch v-model:value="settings.flipV" />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field switch-field">
-                      <NText depth="3"> 锐化 </NText>
-                      <NSwitch v-model:value="settings.sharpen" />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field switch-field">
-                      <NText depth="3"> 去隔行（老录像） </NText>
-                      <NSwitch v-model:value="settings.deinterlace" />
-                    </div>
-                  </NGridItem>
-                </NGrid>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 旋转 </span>
+                    <Select
+                      :model-value="String(settings.rotate)"
+                      @update:model-value="(v) => (settings.rotate = Number(v) as Rotate)"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in rotateOptions"
+                          :key="opt.value"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field switch-field">
+                    <span class="text-xs text-muted-foreground"> 水平翻转 </span>
+                    <Switch
+                      :checked="settings.flipH"
+                      @update:checked="(v) => (settings.flipH = v)"
+                    />
+                  </div>
+                  <div class="field switch-field">
+                    <span class="text-xs text-muted-foreground"> 垂直翻转 </span>
+                    <Switch
+                      :checked="settings.flipV"
+                      @update:checked="(v) => (settings.flipV = v)"
+                    />
+                  </div>
+                  <div class="field switch-field">
+                    <span class="text-xs text-muted-foreground"> 锐化 </span>
+                    <Switch
+                      :checked="settings.sharpen"
+                      @update:checked="(v) => (settings.sharpen = v)"
+                    />
+                  </div>
+                  <div class="field switch-field">
+                    <span class="text-xs text-muted-foreground"> 去隔行（老录像） </span>
+                    <Switch
+                      :checked="settings.deinterlace"
+                      @update:checked="(v) => (settings.deinterlace = v)"
+                    />
+                  </div>
+                </div>
                 <div class="slider-field">
-                  <NText depth="3"> 亮度：{{ settings.brightness.toFixed(2) }} </NText>
-                  <NSlider
-                    v-model:value="settings.brightness"
+                  <span class="text-xs text-muted-foreground"> 亮度：{{ settings.brightness.toFixed(2) }} </span>
+                  <Slider
+                    :model-value="[settings.brightness]"
                     :min="-0.5"
                     :max="0.5"
                     :step="0.05"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.brightness = Number(val[0].toFixed(2))
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
-                  <NText depth="3"> 对比度：{{ settings.contrast.toFixed(2) }} </NText>
-                  <NSlider
-                    v-model:value="settings.contrast"
+                  <span class="text-xs text-muted-foreground"> 对比度：{{ settings.contrast.toFixed(2) }} </span>
+                  <Slider
+                    :model-value="[settings.contrast]"
                     :min="0.5"
                     :max="2"
                     :step="0.05"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.contrast = Number(val[0].toFixed(2))
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
-                  <NText depth="3"> 饱和度：{{ settings.saturation.toFixed(2) }} </NText>
-                  <NSlider
-                    v-model:value="settings.saturation"
+                  <span class="text-xs text-muted-foreground"> 饱和度：{{ settings.saturation.toFixed(2) }} </span>
+                  <Slider
+                    :model-value="[settings.saturation]"
                     :min="0"
                     :max="3"
                     :step="0.1"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.saturation = Number(val[0].toFixed(1))
+                      }
+                    "
                   />
                 </div>
-              </NTabPane>
+              </TabsContent>
 
               <!-- 速度 -->
-              <NTabPane
+              <TabsContent
                 v-if="selectedFormat.kind !== 'audio'"
-                name="speed"
-                tab="速度"
+                value="speed"
+                class="space-y-3 pt-2"
               >
                 <div class="field">
-                  <NText depth="3"> 播放速度（音画同步） </NText>
-                  <NSelect
-                    v-model:value="settings.speed"
-                    :options="speedOptions"
-                  />
+                  <span class="text-xs text-muted-foreground"> 播放速度（音画同步） </span>
+                  <Select
+                    :model-value="String(settings.speed)"
+                    @update:model-value="(v) => (settings.speed = Number(v))"
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="opt in speedOptions"
+                        :key="opt.value"
+                        :value="String(opt.value)"
+                      >
+                        {{ opt.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div class="slider-field">
-                  <NText depth="3"> 画面淡入：{{ settings.videoFadeIn }} 秒 </NText>
-                  <NSlider
-                    v-model:value="settings.videoFadeIn"
+                  <span class="text-xs text-muted-foreground"> 画面淡入：{{ settings.videoFadeIn }} 秒 </span>
+                  <Slider
+                    :model-value="[settings.videoFadeIn]"
                     :min="0"
                     :max="5"
                     :step="0.5"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.videoFadeIn = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
-                  <NText depth="3"> 画面淡出：{{ settings.videoFadeOut }} 秒 </NText>
-                  <NSlider
-                    v-model:value="settings.videoFadeOut"
+                  <span class="text-xs text-muted-foreground"> 画面淡出：{{ settings.videoFadeOut }} 秒 </span>
+                  <Slider
+                    :model-value="[settings.videoFadeOut]"
                     :min="0"
                     :max="5"
                     :step="0.5"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.videoFadeOut = val[0]
+                      }
+                    "
                   />
                 </div>
-              </NTabPane>
+              </TabsContent>
 
               <!-- 音频 -->
-              <NTabPane
-                name="audio"
-                tab="音频"
+              <TabsContent
+                value="audio"
+                class="space-y-3 pt-2"
               >
-                <NGrid
-                  cols="1 s:2 m:3"
-                  responsive="screen"
-                  :x-gap="12"
-                  :y-gap="12"
-                >
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 音频码率 </NText>
-                      <NSelect
-                        v-model:value="settings.audioBitrate"
-                        :options="audioBitrateOptions"
-                        :disabled="settings.format === 'wav'"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 采样率 </NText>
-                      <NSelect
-                        v-model:value="settings.sampleRate"
-                        :options="sampleRateOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 声道 </NText>
-                      <NSelect
-                        v-model:value="settings.channelMode"
-                        :options="channelOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 高通滤波 </NText>
-                      <NSelect
-                        v-model:value="settings.highpass"
-                        :options="highpassOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field">
-                      <NText depth="3"> 低通滤波 </NText>
-                      <NSelect
-                        v-model:value="settings.lowpass"
-                        :options="lowpassOptions"
-                      />
-                    </div>
-                  </NGridItem>
-                  <NGridItem v-if="selectedFormat.kind === 'audio'">
-                    <div class="field switch-field">
-                      <NText depth="3"> 保留元数据/封面 </NText>
-                      <NSwitch v-model:value="settings.keepMetadata" />
-                    </div>
-                  </NGridItem>
-                  <NGridItem>
-                    <div class="field switch-field">
-                      <NText depth="3"> 响度标准化 </NText>
-                      <NSwitch v-model:value="settings.loudnorm" />
-                    </div>
-                  </NGridItem>
-                </NGrid>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 音频码率 </span>
+                    <Select
+                      :model-value="String(settings.audioBitrate)"
+                      :disabled="settings.format === 'wav'"
+                      @update:model-value="(v) => (settings.audioBitrate = Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in audioBitrateOptions"
+                          :key="opt.value"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 采样率 </span>
+                    <Select
+                      :model-value="settings.sampleRate === null ? 'null' : String(settings.sampleRate)"
+                      @update:model-value="(v) => (settings.sampleRate = v === 'null' ? null : Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in sampleRateOptions"
+                          :key="String(opt.value)"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 声道 </span>
+                    <Select v-model="settings.channelMode">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in channelOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 高通滤波 </span>
+                    <Select
+                      :model-value="settings.highpass === null ? 'null' : String(settings.highpass)"
+                      @update:model-value="(v) => (settings.highpass = v === 'null' ? null : Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in highpassOptions"
+                          :key="String(opt.value)"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div class="field">
+                    <span class="text-xs text-muted-foreground"> 低通滤波 </span>
+                    <Select
+                      :model-value="settings.lowpass === null ? 'null' : String(settings.lowpass)"
+                      @update:model-value="(v) => (settings.lowpass = v === 'null' ? null : Number(v))"
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          v-for="opt in lowpassOptions"
+                          :key="String(opt.value)"
+                          :value="String(opt.value)"
+                        >
+                          {{ opt.label }}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div
+                    v-if="selectedFormat.kind === 'audio'"
+                    class="field switch-field"
+                  >
+                    <span class="text-xs text-muted-foreground"> 保留元数据/封面 </span>
+                    <Switch
+                      :checked="settings.keepMetadata"
+                      @update:checked="(v) => (settings.keepMetadata = v)"
+                    />
+                  </div>
+                  <div class="field switch-field">
+                    <span class="text-xs text-muted-foreground"> 响度标准化 </span>
+                    <Switch
+                      :checked="settings.loudnorm"
+                      @update:checked="(v) => (settings.loudnorm = v)"
+                    />
+                  </div>
+                </div>
                 <div
                   v-if="!settings.loudnorm"
                   class="slider-field"
                 >
-                  <NText depth="3"> 音量：{{ settings.volume }}% </NText>
-                  <NSlider
-                    v-model:value="settings.volume"
+                  <span class="text-xs text-muted-foreground"> 音量：{{ settings.volume }}% </span>
+                  <Slider
+                    :model-value="[settings.volume]"
                     :min="0"
                     :max="300"
                     :step="10"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.volume = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
-                  <NText depth="3"> 音频淡入：{{ settings.audioFadeIn }} 秒 </NText>
-                  <NSlider
-                    v-model:value="settings.audioFadeIn"
+                  <span class="text-xs text-muted-foreground"> 音频淡入：{{ settings.audioFadeIn }} 秒 </span>
+                  <Slider
+                    :model-value="[settings.audioFadeIn]"
                     :min="0"
                     :max="5"
                     :step="0.5"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.audioFadeIn = val[0]
+                      }
+                    "
                   />
                 </div>
                 <div class="slider-field">
-                  <NText depth="3"> 音频淡出：{{ settings.audioFadeOut }} 秒 </NText>
-                  <NSlider
-                    v-model:value="settings.audioFadeOut"
+                  <span class="text-xs text-muted-foreground"> 音频淡出：{{ settings.audioFadeOut }} 秒 </span>
+                  <Slider
+                    :model-value="[settings.audioFadeOut]"
                     :min="0"
                     :max="5"
                     :step="0.5"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) settings.audioFadeOut = val[0]
+                      }
+                    "
                   />
                 </div>
-              </NTabPane>
-            </NTabs>
+              </TabsContent>
+            </Tabs>
           </div>
-        </NCollapseTransition>
 
-        <NAlert
-          v-if="invalidItems.length"
-          type="warning"
-          :show-icon="false"
-        >
-          当前输出为视频/GIF，{{ invalidItems.length }} 个音频源文件无法处理；请改选音频输出格式。
-        </NAlert>
-
-        <div
-          ref="dropZoneRef"
-          class="drop-zone"
-          :class="{ active: isOverDropZone }"
-          @click="openFilePicker()"
-        >
-          <NText style="font-size: 15px"> 拖拽音视频到此处，或点击选择 </NText>
-          <NText
-            depth="3"
-            style="font-size: 13px"
+          <Alert
+            v-if="invalidItems.length"
+            variant="destructive"
           >
-            支持批量处理，转换期间请保持页面打开
-          </NText>
-        </div>
+            <AlertDescription class="text-xs">
+              当前输出为视频/GIF，{{ invalidItems.length }} 个音频源文件无法处理；请改选音频输出格式。
+            </AlertDescription>
+          </Alert>
 
-        <NFlex
-          justify="space-between"
-          align="center"
-          wrap
-        >
-          <NText depth="3">
-            {{ statusText }}
-          </NText>
-          <NFlex :size="8">
-            <NButton
-              v-if="processing"
-              type="error"
-              @click="cancelAll"
-            >
-              取消处理
-            </NButton>
-            <NButton
-              v-else
-              type="primary"
-              :loading="loadingCore"
-              :disabled="!canProcess"
-              @click="processAll"
-            >
-              开始处理{{ pendingItems.length ? `（${pendingItems.length}）` : '' }}
-            </NButton>
-            <NButton
-              :disabled="!doneItems.length || processing"
-              @click="downloadAll"
-            >
-              打包下载 ZIP
-            </NButton>
-            <NButton
-              tertiary
-              :disabled="!items.length || processing"
-              @click="clearAll"
-            >
-              清空
-            </NButton>
-          </NFlex>
-        </NFlex>
-
-        <div
-          v-if="processing"
-          class="overall"
-        >
-          <NFlex
-            justify="space-between"
-            align="center"
-          >
-            <NText depth="3"> 整体进度 {{ processedCount }} / {{ pendingItems.length + processedCount }} </NText>
-            <NText
-              depth="3"
-              class="last-log"
-            >
-              {{ lastLog }}
-            </NText>
-          </NFlex>
-          <NProgress
-            type="line"
-            :percentage="Math.round((processedCount / Math.max(1, pendingItems.length + processedCount)) * 100)"
-            :show-indicator="false"
-          />
-        </div>
-
-        <div
-          v-if="items.length"
-          class="summary"
-        >
-          <NText depth="3"> 已添加 {{ items.length }} 个文件，原始 {{ formatFileSize(totalOriginalSize) }} </NText>
-          <NText
-            v-if="doneItems.length"
-            depth="3"
-          >
-            已输出 {{ doneItems.length }} 个，结果 {{ formatFileSize(totalOutputSize) }}
-          </NText>
-        </div>
-
-        <div
-          v-if="items.length"
-          class="item-list"
-        >
           <div
-            v-for="(item, index) in items"
-            :key="item.id"
-            class="media-item"
+            ref="dropZoneRef"
+            class="drop-zone"
+            :class="{ active: isOverDropZone }"
+            @click="openFilePicker()"
+          >
+            <span class="text-sm font-medium"> 拖拽音视频到此处，或点击选择 </span>
+            <span class="text-xs text-muted-foreground"> 支持批量处理，转换期间请保持页面打开 </span>
+          </div>
+
+          <div class="flex justify-between items-center flex-wrap gap-2">
+            <span class="text-xs text-muted-foreground">
+              {{ statusText }}
+            </span>
+            <div class="flex items-center gap-2">
+              <Button
+                v-if="processing"
+                variant="destructive"
+                @click="cancelAll"
+              >
+                取消处理
+              </Button>
+              <Button
+                v-else
+                :loading="loadingCore"
+                :disabled="!canProcess"
+                @click="processAll"
+              >
+                开始处理{{ pendingItems.length ? `（${pendingItems.length}）` : '' }}
+              </Button>
+              <Button
+                variant="outline"
+                :disabled="!doneItems.length || processing"
+                @click="downloadAll"
+              >
+                打包下载 ZIP
+              </Button>
+              <Button
+                variant="ghost"
+                :disabled="!items.length || processing"
+                @click="clearAll"
+              >
+                清空
+              </Button>
+            </div>
+          </div>
+
+          <div
+            v-if="processing"
+            class="overall"
+          >
+            <div class="flex justify-between items-center text-xs text-muted-foreground">
+              <span> 整体进度 {{ processedCount }} / {{ pendingItems.length + processedCount }} </span>
+              <span class="last-log">
+                {{ lastLog }}
+              </span>
+            </div>
+            <Progress
+              :model-value="Math.round((processedCount / Math.max(1, pendingItems.length + processedCount)) * 100)"
+            />
+          </div>
+
+          <div
+            v-if="items.length"
+            class="summary"
+          >
+            <span class="text-xs text-muted-foreground">
+              已添加 {{ items.length }} 个文件，原始 {{ formatFileSize(totalOriginalSize) }}
+            </span>
+            <span
+              v-if="doneItems.length"
+              class="text-xs text-muted-foreground"
+            >
+              已输出 {{ doneItems.length }} 个，结果 {{ formatFileSize(totalOutputSize) }}
+            </span>
+          </div>
+
+          <div
+            v-if="items.length"
+            class="item-list"
           >
             <div
-              class="item-thumb"
-              :class="{ audio: !item.isVideo }"
+              v-for="(item, index) in items"
+              :key="item.id"
+              class="media-item"
             >
-              <img
-                v-if="item.poster"
-                :src="item.poster"
-                alt=""
-              />
-              <NText
-                v-else
-                depth="3"
-                class="thumb-icon"
+              <div
+                class="item-thumb"
+                :class="{ audio: !item.isVideo }"
               >
-                {{ item.isVideo ? '🎬' : '🎵' }}
-              </NText>
-            </div>
-
-            <div class="item-main">
-              <NFlex
-                align="center"
-                :size="8"
-                wrap
-              >
-                <NText
-                  strong
-                  class="filename"
-                  :title="item.file.name"
-                >
-                  {{ item.file.name }}
-                </NText>
-                <NTag
-                  size="small"
-                  :type="statusType(item)"
-                  :bordered="false"
-                >
-                  {{ statusLabel(item) }}
-                </NTag>
-              </NFlex>
-
-              <NFlex
-                :size="12"
-                wrap
-                class="meta"
-              >
-                <NText depth="3">
-                  {{ item.isVideo ? '视频' : '音频' }}
-                </NText>
-                <NText
-                  v-if="item.width"
-                  depth="3"
-                >
-                  {{ item.width }}×{{ item.height }}
-                </NText>
-                <NText depth="3">
-                  {{ formatFileSize(item.file.size) }}
-                </NText>
-                <NText depth="3">
-                  {{ formattedDuration(item.duration) }}
-                </NText>
-                <NText
-                  v-if="trimmedHint(item)"
-                  depth="3"
-                  type="info"
-                >
-                  {{ trimmedHint(item) }}
-                </NText>
-                <NText
-                  v-if="item.outputBlob"
-                  :type="savingType(item)"
-                >
-                  → {{ formatFileSize(item.outputSize) }} ({{ savingText(item) }})
-                </NText>
-              </NFlex>
-
-              <NProgress
-                v-if="item.status === 'processing'"
-                type="line"
-                :percentage="item.progress"
-                :show-indicator="false"
-              />
-              <NText
-                v-if="item.error"
-                type="error"
-                class="error-text"
-              >
-                {{ item.error }}
-              </NText>
-
-              <NButton
-                size="tiny"
-                quaternary
-                class="trim-toggle"
-                @click="item.expanded = !item.expanded"
-              >
-                {{ item.expanded ? '收起预览/截取' : '预览 / 截取片段' }}
-              </NButton>
-
-              <NCollapseTransition :show="item.expanded">
-                <MediaTrimmer
-                  v-model:start="item.trimStart"
-                  v-model:end="item.trimEnd"
-                  :src="item.srcUrl"
-                  :is-video="item.isVideo"
-                  :duration="item.duration"
-                />
-              </NCollapseTransition>
-
-              <template v-if="item.outputUrl">
-                <NText
-                  depth="3"
-                  class="output-label"
-                >
-                  输出预览
-                </NText>
                 <img
-                  v-if="item.outputKind === 'gif'"
-                  :src="item.outputUrl"
-                  class="preview"
+                  v-if="item.poster"
+                  :src="item.poster"
                   alt=""
                 />
-                <video
-                  v-else-if="item.outputKind === 'video'"
-                  :src="item.outputUrl"
-                  controls
-                  class="preview"
-                />
-                <audio
+                <span
                   v-else
-                  :src="item.outputUrl"
-                  controls
-                  class="preview"
-                />
-              </template>
-            </div>
+                  class="thumb-icon"
+                >
+                  {{ item.isVideo ? '🎬' : '🎵' }}
+                </span>
+              </div>
 
-            <NFlex
-              vertical
-              class="item-actions"
-              :size="6"
-            >
-              <NButton
-                size="small"
-                :disabled="!item.outputBlob"
-                @click="downloadOne(item)"
-              >
-                下载
-              </NButton>
-              <NButton
-                size="small"
-                tertiary
-                :disabled="processing"
-                @click="removeItem(index)"
-              >
-                移除
-              </NButton>
-            </NFlex>
+              <div class="item-main">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span
+                    class="filename font-medium text-sm"
+                    :title="item.file.name"
+                  >
+                    {{ item.file.name }}
+                  </span>
+                  <Tag
+                    size="small"
+                    :variant="statusVariant(item)"
+                  >
+                    {{ statusLabel(item) }}
+                  </Tag>
+                </div>
+
+                <div class="flex items-center gap-3 flex-wrap meta text-xs text-muted-foreground">
+                  <span>{{ item.isVideo ? '视频' : '音频' }}</span>
+                  <span v-if="item.width">{{ item.width }}×{{ item.height }}</span>
+                  <span>{{ formatFileSize(item.file.size) }}</span>
+                  <span>{{ formattedDuration(item.duration) }}</span>
+                  <span
+                    v-if="trimmedHint(item)"
+                    class="text-primary font-medium"
+                  >
+                    {{ trimmedHint(item) }}
+                  </span>
+                  <span
+                    v-if="item.outputBlob"
+                    :class="
+                      savingVariant(item) === 'secondary'
+                        ? 'text-emerald-600 font-medium'
+                        : 'text-amber-500 font-medium'
+                    "
+                  >
+                    → {{ formatFileSize(item.outputSize) }} ({{ savingText(item) }})
+                  </span>
+                </div>
+
+                <Progress
+                  v-if="item.status === 'processing'"
+                  :model-value="item.progress"
+                />
+                <span
+                  v-if="item.error"
+                  class="error-text text-destructive text-xs"
+                >
+                  {{ item.error }}
+                </span>
+
+                <Button
+                  variant="ghost"
+                  class="trim-toggle h-6 px-1.5 text-muted-foreground hover:text-foreground"
+                  @click="item.expanded = !item.expanded"
+                >
+                  {{ item.expanded ? '收起预览/截取' : '预览 / 截取片段' }}
+                </Button>
+
+                <div v-if="item.expanded">
+                  <MediaTrimmer
+                    v-model:start="item.trimStart"
+                    v-model:end="item.trimEnd"
+                    :src="item.srcUrl"
+                    :is-video="item.isVideo"
+                    :duration="item.duration"
+                  />
+                </div>
+
+                <template v-if="item.outputUrl">
+                  <span class="output-label text-xs text-muted-foreground"> 输出预览 </span>
+                  <img
+                    v-if="item.outputKind === 'gif'"
+                    :src="item.outputUrl"
+                    class="preview"
+                    alt=""
+                  />
+                  <video
+                    v-else-if="item.outputKind === 'video'"
+                    :src="item.outputUrl"
+                    controls
+                    class="preview"
+                  />
+                  <audio
+                    v-else
+                    :src="item.outputUrl"
+                    controls
+                    class="preview"
+                  />
+                </template>
+              </div>
+
+              <div class="item-actions flex flex-col gap-1.5">
+                <Button
+                  variant="outline"
+                  :disabled="!item.outputBlob"
+                  @click="downloadOne(item)"
+                >
+                  下载
+                </Button>
+                <Button
+                  variant="ghost"
+                  class="text-muted-foreground hover:text-destructive"
+                  :disabled="processing"
+                  @click="removeItem(index)"
+                >
+                  移除
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      </NFlex>
-    </NCard>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
@@ -1159,11 +1340,6 @@ onBeforeUnmount(() => {
   padding: 4px 2px 2px;
 }
 
-.rate-mode {
-  display: flex;
-  justify-content: center;
-}
-
 .target-size {
   max-width: 280px;
 }
@@ -1182,7 +1358,7 @@ onBeforeUnmount(() => {
   justify-content: center;
   gap: 4px;
   padding: 28px;
-  border: 2px dashed var(--vtsuru-border, #e0e0e0);
+  border: 2px dashed var(--border, #e0e0e0);
   border-radius: 10px;
   cursor: pointer;
   transition:
@@ -1215,7 +1391,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .item-list {
@@ -1228,7 +1404,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 10px;
 }
 
@@ -1244,7 +1420,7 @@ onBeforeUnmount(() => {
 }
 
 .item-thumb.audio {
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 
 .item-thumb img {

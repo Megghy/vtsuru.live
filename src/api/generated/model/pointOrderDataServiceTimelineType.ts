@@ -6,8 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type PointOrderDataServiceTimelineType = typeof PointOrderDataServiceTimelineType[keyof typeof PointOrderDataServiceTimelineType];
-
+export type PointOrderDataServiceTimelineType =
+  (typeof PointOrderDataServiceTimelineType)[keyof typeof PointOrderDataServiceTimelineType]
 
 export const PointOrderDataServiceTimelineType = {
   NUMBER_0: 0,
@@ -15,4 +15,4 @@ export const PointOrderDataServiceTimelineType = {
   NUMBER_2: 2,
   NUMBER_3: 3,
   NUMBER_4: 4,
-} as const;
+} as const

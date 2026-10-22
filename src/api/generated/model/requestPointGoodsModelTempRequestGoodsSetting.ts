@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GuardLevel } from './guardLevel';
-import type { RequestPointGoodsModelTempGuardFreeDate } from './requestPointGoodsModelTempGuardFreeDate';
+import type { GuardLevel } from './guardLevel'
+import type { RequestPointGoodsModelTempGuardFreeDate } from './requestPointGoodsModelTempGuardFreeDate'
 
 export interface RequestPointGoodsModelTempRequestGoodsSetting {
-  guardFree?: RequestPointGoodsModelTempGuardFreeDate;
+  guardFree?: RequestPointGoodsModelTempGuardFreeDate
   /** @nullable */
-  guardFreeMonths?: RequestPointGoodsModelTempGuardFreeDate[] | null;
-  allowGuardFreeMinLevel?: GuardLevel;
+  guardFreeMonths?: RequestPointGoodsModelTempGuardFreeDate[] | null
+  allowGuardFreeMinLevel?: GuardLevel
   /** @nullable */
-  guardLevelMonths?: RequestPointGoodsModelTempGuardFreeDate[] | null;
-  allowGuardLevel?: GuardLevel;
+  guardLevelMonths?: RequestPointGoodsModelTempGuardFreeDate[] | null
+  allowGuardLevel?: GuardLevel
 }

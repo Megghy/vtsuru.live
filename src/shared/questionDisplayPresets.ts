@@ -51,7 +51,11 @@ export const MARSHMALLOW_QUESTION_DISPLAY_PRESET: QuestionDisplayVisualPreset = 
   verticalAlign: QuestionDisplayVerticalAlign.Top,
 }
 
-export const QUESTION_DISPLAY_PRESETS: Array<{ name: string; description: string; value: QuestionDisplayVisualPreset }> = [
+export const QUESTION_DISPLAY_PRESETS: Array<{
+  name: string
+  description: string
+  value: QuestionDisplayVisualPreset
+}> = [
   {
     name: '棉花糖',
     description: '粉白温和卡片，适合日常杂谈与棉花糖回信',

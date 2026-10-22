@@ -10,13 +10,16 @@ import {
 } from 'echarts/components'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import type { DataTableColumns } from 'naive-ui'
-import { NTag } from 'naive-ui'
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import VChart from 'vue-echarts'
 
 import { currentStatistic, getHistoricalStatistics } from '@/apps/client/data/info'
 import type { FetcherStatisticData } from '@/apps/client/data/models'
+import { Badge } from '@/shared/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Spin } from '@/shared/ui/spin'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 
 use([
   CanvasRenderer,
@@ -45,28 +48,9 @@ interface TodayTypeRow {
   count: number
 }
 
-const todayTypeColumns: DataTableColumns<TodayTypeRow> = [
-  { title: '排名', key: 'rank', align: 'center', width: 72 },
-  {
-    title: '类型',
-    key: 'type',
-    minWidth: 160,
-    ellipsis: { tooltip: true },
-    render: (row) =>
-      h(
-        NTag,
-        { size: 'small', type: 'info', bordered: false, style: 'max-width: 100%; justify-content: flex-start;' },
-        { default: () => row.type },
-      ),
-  },
-  { title: '事件数', key: 'count', align: 'right', width: 120, render: (row) => row.count.toLocaleString() },
-]
-
 const todayTypeTableData = computed<TodayTypeRow[]>(() =>
   sortedTodayTypes.value.map(([type, count], index) => ({ key: type, rank: index + 1, type, count })),
 )
-
-const todayTypeRowKey = (row: TodayTypeRow) => row.key
 
 function updateHistoryChart() {
   const option = {
@@ -145,79 +129,101 @@ onMounted(loadHistoricalData)
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="12"
-  >
+  <div class="flex flex-col gap-3">
     <!-- 今日统计 -->
-    <NCard
-      title="今日统计"
-      size="small"
-      bordered
-      style="width: 100%"
-    >
-      <template #header-extra>
-        <NText depth="3">
+    <Card class="border bg-card w-full">
+      <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+        <CardTitle class="text-sm font-semibold">今日统计</CardTitle>
+        <span class="text-xs text-muted-foreground">
           {{ currentStatistic?.date ?? 'N/A' }}
-        </NText>
-      </template>
-      <div v-if="currentStatistic">
-        <NGrid
-          :x-gap="16"
-          :y-gap="16"
-          cols="1 s:2"
-          responsive="screen"
-        >
-          <NGi>
-            <NStatistic label="今日接收总数">
-              <template #prefix>
-                <NIcon :component="TrendingUpOutline" />
-              </template>
-              <span style="font-size: 1.8em; font-weight: 500">{{
-                currentStatistic.count?.toLocaleString() ?? 0
-              }}</span>
-            </NStatistic>
-          </NGi>
-          <NGi>
-            <NText strong> 类型明细: </NText>
-            <div style="margin-top: 8px">
-              <NDataTable
+        </span>
+      </CardHeader>
+      <CardContent class="p-3">
+        <div v-if="currentStatistic">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- 今日接收总数 -->
+            <div class="flex flex-col justify-center p-3 bg-muted/20 rounded-md border">
+              <span class="text-xs text-muted-foreground">今日接收总数</span>
+              <div class="flex items-center gap-2 mt-1">
+                <TrendingUpOutline class="size-6 text-primary" />
+                <span class="text-2xl font-bold text-foreground">
+                  {{ currentStatistic.count?.toLocaleString() ?? 0 }}
+                </span>
+              </div>
+            </div>
+
+            <!-- 类型明细 -->
+            <div class="space-y-2">
+              <span class="text-xs font-semibold text-foreground block">类型明细</span>
+              <div
                 v-if="todayTypeTableData.length > 0"
-                :columns="todayTypeColumns"
-                :data="todayTypeTableData"
-                :row-key="todayTypeRowKey"
-                size="small"
-                :bordered="false"
-                striped
-                :pagination="false"
-                :max-height="220"
-                single-line
-                :scrollbar-props="{ size: 6 }"
-              />
-              <NEmpty
+                class="border rounded-md overflow-hidden max-h-[220px] overflow-y-auto"
+              >
+                <Table>
+                  <TableHeader>
+                    <TableRow class="hover:bg-transparent">
+                      <TableHead class="text-[11px] h-7 w-12 text-center">排名</TableHead>
+                      <TableHead class="text-[11px] h-7">类型</TableHead>
+                      <TableHead class="text-[11px] h-7 text-right w-24">事件数</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow
+                      v-for="row in todayTypeTableData"
+                      :key="row.key"
+                      class="h-7"
+                    >
+                      <TableCell class="text-[11px] py-1 text-center font-mono">
+                        {{ row.rank }}
+                      </TableCell>
+                      <TableCell class="text-[11px] py-1">
+                        <Badge
+                          variant="outline"
+                          class="text-[10px] h-4.5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10 truncate max-w-full"
+                        >
+                          {{ row.type }}
+                        </Badge>
+                      </TableCell>
+                      <TableCell class="text-[11px] py-1 text-right font-mono">
+                        {{ row.count.toLocaleString() }}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              <Empty
                 v-else
                 description="今日暂无数据"
-                size="small"
+                class="py-4"
               />
             </div>
-          </NGi>
-        </NGrid>
-      </div>
-      <NEmpty
-        v-else
-        description="正在加载今日统计..."
-      />
-    </NCard>
+          </div>
+        </div>
+        <Empty
+          v-else
+          description="正在加载今日统计..."
+          class="py-6"
+        />
+      </CardContent>
+    </Card>
 
     <!-- 历史统计 -->
-    <NCard
-      title="历史事件量 (近30日)"
-      size="small"
-      bordered
-      style="width: 100%"
-    >
-      <NSpin :show="isLoadingHistory">
-        <div style="height: 280px">
+    <Card class="border bg-card w-full">
+      <CardHeader class="p-3 pb-2 border-b">
+        <CardTitle class="text-sm font-semibold">历史事件量 (近30日)</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3">
+        <div class="h-[280px] relative">
+          <div
+            v-if="isLoadingHistory"
+            class="absolute inset-0 bg-background/50 backdrop-blur-xs flex items-center justify-center z-10"
+          >
+            <Spin
+              :show="true"
+              size="small"
+            />
+          </div>
+
           <VChart
             v-if="historicalData.length > 0"
             ref="historyChart"
@@ -225,13 +231,13 @@ onMounted(loadHistoricalData)
             :manual-update="true"
             autoresize
           />
-          <NEmpty
+          <Empty
             v-else
             description="无历史数据"
-            style="height: 100%; display: flex; align-items: center; justify-content: center"
+            class="h-full flex items-center justify-center"
           />
         </div>
-      </NSpin>
-    </NCard>
-  </NFlex>
+      </CardContent>
+    </Card>
+  </div>
 </template>

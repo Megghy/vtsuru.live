@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VtsuruControllerLiveEmojiResponseInline } from './vtsuruControllerLiveEmojiResponseInline';
-import type { VtsuruControllerLiveEmojiResponsePlain } from './vtsuruControllerLiveEmojiResponsePlain';
+import type { VtsuruControllerLiveEmojiResponseInline } from './vtsuruControllerLiveEmojiResponseInline'
+import type { VtsuruControllerLiveEmojiResponsePlain } from './vtsuruControllerLiveEmojiResponsePlain'
 
 export interface VtsuruControllerLiveEmojiResponse {
-  inline: VtsuruControllerLiveEmojiResponseInline;
-  plain: VtsuruControllerLiveEmojiResponsePlain;
+  inline: VtsuruControllerLiveEmojiResponseInline
+  plain: VtsuruControllerLiveEmojiResponsePlain
 }

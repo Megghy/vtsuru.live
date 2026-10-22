@@ -9,4 +9,4 @@
 /**
  * @nullable
  */
-export type PointControllerRequestBuyPointGoodsModelServiceAnswers = {[key: string]: string} | null;
+export type PointControllerRequestBuyPointGoodsModelServiceAnswers = { [key: string]: string } | null

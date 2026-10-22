@@ -28,33 +28,35 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
 
 <template>
   <div
-    class="dm-row"
-    :class="{ 'dm-row--read': read, 'dm-row--compact': compact }"
+    class="flex gap-2 py-1 px-2.5 items-start select-text"
+    :class="{ 'opacity-40': read, 'items-center py-0.5 px-2.5': compact }"
     :data-key="event.key"
     @dblclick="dashboard.toggleRead(event)"
     @contextmenu="ui.openContextMenu(event, $event)"
   >
     <img
       v-if="settings.showAvatar && event.uface"
-      class="dm-avatar"
+      class="dm-avatar rounded-full shrink-0 object-cover"
+      :class="compact ? 'size-[1.5em]' : 'size-[1.9em]'"
       :src="avatarUrl(event.uface)"
       referrerpolicy="no-referrer"
       loading="lazy"
-    >
+    />
     <div
       v-else-if="settings.showAvatar"
-      class="dm-avatar dm-avatar--empty"
+      class="dm-avatar rounded-full shrink-0 bg-muted"
+      :class="compact ? 'size-[1.5em]' : 'size-[1.9em]'"
     />
-    <div class="dm-main">
-      <div class="dm-head">
+    <div class="min-w-0 flex-1">
+      <div class="flex items-center gap-1 flex-wrap leading-[1.9em]">
         <EventBadges
           :event="event"
           :show-medal="settings.showMedal"
         />
         <button
-          class="dm-name"
+          class="dm-name appearance-none bg-transparent border-0 p-0 font-semibold cursor-pointer wrap-anywhere hover:underline"
           data-user-trigger
-          :class="{ 'dm-name--note': hasNote }"
+          :class="{ 'text-[var(--brand)]': hasNote }"
           type="button"
           @click.stop="ui.openUserMenu(event, $event)"
         >
@@ -62,16 +64,18 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
         </button>
         <span
           v-if="compact"
-          class="dm-action"
-        >{{ INTERACTION_TEXT[event.type] }}</span>
+          class="text-muted-foreground"
+          >{{ INTERACTION_TEXT[event.type] }}</span
+        >
         <span
           v-if="settings.absoluteTime"
-          class="dm-time"
-        >{{ formatClock(event.time) }}</span>
+          class="ml-auto text-[0.8em] text-muted-foreground tabular-nums"
+          >{{ formatClock(event.time) }}</span
+        >
       </div>
       <div
         v-if="!compact"
-        class="dm-bubble"
+        class="inline-block mt-0.5 py-1 px-3 rounded-[4px_14px_14px_14px] bg-popover border border-border font-medium wrap-anywhere max-w-full box-border"
       >
         <EventMessage
           :msg="event.msg"
@@ -79,7 +83,7 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
         />
         <div
           v-if="ui.translations.has(event.key)"
-          class="dm-translation"
+          class="mt-0.5 pt-0.5 border-t border-dashed border-border text-[0.9em] font-normal text-muted-foreground"
         >
           {{ ui.translations.get(event.key) }}
         </div>
@@ -88,99 +92,3 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
   </div>
 </template>
 
-<style scoped>
-.dm-row {
-  display: flex;
-  gap: 8px;
-  padding: 4px 10px;
-  align-items: flex-start;
-  user-select: text;
-}
-
-.dm-row--compact {
-  align-items: center;
-  padding: 2px 10px;
-}
-
-.dm-row--read {
-  opacity: 0.4;
-}
-
-.dm-avatar {
-  width: 1.9em;
-  height: 1.9em;
-  border-radius: 50%;
-  flex-shrink: 0;
-  object-fit: cover;
-}
-
-.dm-row--compact .dm-avatar {
-  width: 1.5em;
-  height: 1.5em;
-}
-
-.dm-avatar--empty {
-  background: var(--vtsuru-bg-muted);
-}
-
-.dm-main {
-  min-width: 0;
-  flex: 1;
-}
-
-.dm-head {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-  line-height: 1.9em;
-}
-
-.dm-name {
-  all: unset;
-  font-weight: 600;
-  cursor: pointer;
-  overflow-wrap: anywhere;
-}
-
-.dm-name:hover {
-  text-decoration: underline;
-}
-
-.dm-name--note {
-  color: var(--vtsuru-brand);
-}
-
-.dm-action {
-  color: var(--vtsuru-fg-muted);
-}
-
-.dm-time {
-  margin-left: auto;
-  font-size: 0.8em;
-  color: var(--vtsuru-fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.dm-bubble {
-  display: inline-block;
-  margin-top: 2px;
-  padding: 4px 12px;
-  border-radius: 4px 14px 14px 14px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  font-weight: 500;
-  overflow-wrap: anywhere;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-.dm-translation {
-  margin-top: 2px;
-  padding-top: 2px;
-  border-top: 1px dashed var(--vtsuru-border);
-  font-size: 0.9em;
-  font-weight: 400;
-  color: var(--vtsuru-fg-muted);
-}
-</style>

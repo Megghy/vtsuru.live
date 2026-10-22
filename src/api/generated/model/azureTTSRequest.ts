@@ -7,11 +7,11 @@
  */
 
 export interface AzureTTSRequest {
-  text: string;
+  text: string
   /** @nullable */
-  voice?: string | null;
+  voice?: string | null
   /** @nullable */
-  language?: string | null;
-  rate: number;
-  pitch: number;
+  language?: string | null
+  rate: number
+  pitch: number
 }

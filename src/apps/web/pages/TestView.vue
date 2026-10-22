@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { NButton, NInput, NSpin } from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Spin } from '@/shared/ui/spin'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useWebRTC } from '@/store/useRTC'
 
@@ -28,25 +30,32 @@ async function mount() {
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="!accountInfo.id"
-    show
-  />
+    class="p-8 flex justify-center"
+  >
+    <Spin />
+  </div>
   <div
     v-else
+    class="p-6 space-y-4"
     @vue:mounted="mount"
   >
-    master: {{ isMaster }}
+    <div class="text-sm text-muted-foreground">master: {{ isMaster }}</div>
     <template v-if="isMaster">
-      <NInput v-model:value="inputMsg" />
-      <NButton @click="rtc.send('test', inputMsg)"> 发送 </NButton>
+      <div class="flex gap-2 max-w-md">
+        <Input v-model="inputMsg" />
+        <Button @click="rtc.send('test', inputMsg)"> 发送 </Button>
+      </div>
     </template>
 
-    <NInput
-      v-model:value="customCss"
-      placeholder="css"
-      @update:value="(s) => danmujiRef?.setCss(s.toString())"
-    />
+    <div class="max-w-md">
+      <Input
+        v-model="customCss"
+        placeholder="css"
+        @update:model-value="(s) => danmujiRef?.setCss(String(s))"
+      />
+    </div>
     <DanmujiOBS
       ref="danmujiRef"
       :custom-css="customCss"

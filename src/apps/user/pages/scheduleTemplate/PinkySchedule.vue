@@ -7,6 +7,7 @@ import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
 
 import { ensureGoogleFont } from './scheduleFonts'
+
 import './scheduleTemplateTheme.css'
 import { useScheduleWeek } from './scheduleTemplateUtils'
 import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
@@ -92,86 +93,86 @@ defineExpose({ Config, DefaultConfig })
         :class="{ 'has-background': backgroundUrl, 'has-artwork': portraitUrl }"
         :style="boardStyle"
       >
-      <header class="pinky-head">
-        <h2 class="pinky-head__title">{{ effectiveConfig.heading }}</h2>
-        <p class="pinky-head__meta">{{ weekLabel }} · {{ eventCount }} 场直播</p>
-      </header>
+        <header class="pinky-head">
+          <h2 class="pinky-head__title">{{ effectiveConfig.heading }}</h2>
+          <p class="pinky-head__meta">{{ weekLabel }} · {{ eventCount }} 场直播</p>
+        </header>
 
-      <div
-        class="pinky-charms"
-        aria-hidden="true"
-      >
-        <span class="pinky-charm pinky-charm--ticket">WEEKLY ♡</span>
-        <span class="pinky-charm pinky-charm--bow">୨୧</span>
-        <span class="pinky-charm pinky-charm--sparkle">✦</span>
-        <span class="pinky-charm pinky-charm--dots">● ● ●</span>
-        <span class="pinky-charm pinky-charm--note">sweet days!</span>
-      </div>
-
-      <figure
-        v-if="portraitUrl"
-        class="pinky-art"
-      >
-        <img
-          :src="portraitUrl"
-          :alt="`${props.userInfo?.name || '主播'}的形象`"
-          referrerpolicy="no-referrer"
-        />
-      </figure>
-
-      <ol class="pinky-days schedule-day-stagger">
-        <li
-          v-for="(day, dayIndex) in days"
-          :key="day.english"
-          class="pinky-day"
-          :class="{ 'is-today': day.isToday }"
-          :style="{ '--day-index': dayIndex }"
+        <div
+          class="pinky-charms"
+          aria-hidden="true"
         >
-          <header class="pinky-day__head">
-            <span class="pinky-day__identity">
-              <span class="pinky-day__week">{{ day.label }}</span>
-              <span class="pinky-day__date">{{ day.english }} · {{ day.date }}</span>
-            </span>
-            <span
-              v-if="day.isToday"
-              class="pinky-day__today"
-            >
-              ♥ 今日
-            </span>
-          </header>
+          <span class="pinky-charm pinky-charm--ticket">WEEKLY ♡</span>
+          <span class="pinky-charm pinky-charm--bow">୨୧</span>
+          <span class="pinky-charm pinky-charm--sparkle">✦</span>
+          <span class="pinky-charm pinky-charm--dots">● ● ●</span>
+          <span class="pinky-charm pinky-charm--note">sweet days!</span>
+        </div>
 
-          <div class="pinky-day__content">
-            <div
-              v-if="day.items.length"
-              class="pinky-day__events"
-            >
-              <div
-                v-for="(item, itemIndex) in day.items"
-                :key="item.id || itemIndex"
-                class="pinky-event"
-                :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
+        <figure
+          v-if="portraitUrl"
+          class="pinky-art"
+        >
+          <img
+            :src="portraitUrl"
+            :alt="`${props.userInfo?.name || '主播'}的形象`"
+            referrerpolicy="no-referrer"
+          />
+        </figure>
+
+        <ol class="pinky-days schedule-day-stagger">
+          <li
+            v-for="(day, dayIndex) in days"
+            :key="day.english"
+            class="pinky-day"
+            :class="{ 'is-today': day.isToday }"
+            :style="{ '--day-index': dayIndex }"
+          >
+            <header class="pinky-day__head">
+              <span class="pinky-day__identity">
+                <span class="pinky-day__week">{{ day.label }}</span>
+                <span class="pinky-day__date">{{ day.english }} · {{ day.date }}</span>
+              </span>
+              <span
+                v-if="day.isToday"
+                class="pinky-day__today"
               >
-                <time>{{ item.time || '待定' }}</time>
-                <strong>{{ item.title || '未命名直播' }}</strong>
-                <span
-                  v-if="item.tag"
-                  class="pinky-event__tag"
+                ♥ 今日
+              </span>
+            </header>
+
+            <div class="pinky-day__content">
+              <div
+                v-if="day.items.length"
+                class="pinky-day__events"
+              >
+                <div
+                  v-for="(item, itemIndex) in day.items"
+                  :key="item.id || itemIndex"
+                  class="pinky-event"
+                  :style="item.tagColor ? { '--event-tag-color': item.tagColor } : undefined"
                 >
-                  {{ item.tag }}
-                </span>
+                  <time>{{ item.time || '待定' }}</time>
+                  <strong>{{ item.title || '未命名直播' }}</strong>
+                  <span
+                    v-if="item.tag"
+                    class="pinky-event__tag"
+                  >
+                    {{ item.tag }}
+                  </span>
+                </div>
               </div>
+              <span
+                v-else
+                class="pinky-day__rest"
+              >
+                <span class="pinky-day__sleep">( ˘ω˘ )</span>
+                <span>本日休息</span>
+                <small>Zzz...</small>
+              </span>
             </div>
-            <span
-              v-else
-              class="pinky-day__rest"
-            >
-              <span class="pinky-day__sleep">( ˘ω˘ )</span>
-              <span>本日休息</span>
-              <small>Zzz...</small>
-            </span>
-          </div>
-        </li>
-      </ol>
+          </li>
+        </ol>
       </div>
     </Transition>
   </section>

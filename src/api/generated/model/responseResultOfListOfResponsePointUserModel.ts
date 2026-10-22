@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointUserModel } from './responsePointUserModel';
+import type { ResponsePointUserModel } from './responsePointUserModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponsePointUserModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponsePointUserModel[] | null;
+  data: ResponsePointUserModel[] | null
 }

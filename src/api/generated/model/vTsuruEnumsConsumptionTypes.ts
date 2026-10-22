@@ -6,11 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type VTsuruEnumsConsumptionTypes = typeof VTsuruEnumsConsumptionTypes[keyof typeof VTsuruEnumsConsumptionTypes];
-
+export type VTsuruEnumsConsumptionTypes = (typeof VTsuruEnumsConsumptionTypes)[keyof typeof VTsuruEnumsConsumptionTypes]
 
 export const VTsuruEnumsConsumptionTypes = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

@@ -1,4 +1,4 @@
-import { del, get, update } from 'idb-keyval'
+import { persistedGetJson, persistedRemoveItem, persistedSetJson } from '@/shared/storage/persist'
 
 import { ActionType } from '../types'
 
@@ -34,16 +34,12 @@ const HISTORY_KEYS = {
 
 // 环形队列添加记录
 async function addToCircularQueue(key: string, item: HistoryItem, capacity: number): Promise<void> {
-  await update<HistoryItem[]>(key, (history = []) => {
-    // 添加到队列末尾
-    history.push(item)
-
-    // 如果超出容量，移除最旧的记录
-    if (history.length > capacity) {
-      history.splice(0, history.length - capacity)
-    }
-    return history
-  })
+  const history = (await persistedGetJson<HistoryItem[]>(key)) ?? []
+  history.push(item)
+  if (history.length > capacity) {
+    history.splice(0, history.length - capacity)
+  }
+  await persistedSetJson(key, history)
 }
 
 /**
@@ -127,14 +123,14 @@ export async function logCommandHistory(
  * 获取历史记录
  */
 export async function getHistoryByType(type: HistoryType): Promise<HistoryItem[]> {
-  return (await get<HistoryItem[]>(HISTORY_KEYS[type])) || []
+  return (await persistedGetJson<HistoryItem[]>(HISTORY_KEYS[type])) || []
 }
 
 /**
  * 清除历史记录
  */
 export async function clearHistory(type: HistoryType): Promise<void> {
-  await del(HISTORY_KEYS[type])
+  await persistedRemoveItem(HISTORY_KEYS[type])
 }
 
 /**

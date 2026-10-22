@@ -24,20 +24,12 @@ const backgrounded = computed(() =>
     :framed="framed"
     :backgrounded="backgrounded"
   >
-    <div class="footer">
-      <span class="footer-text">
+    <div class="text-center">
+      <span class="text-muted-foreground">
         {{ text || 'Powered by vtsuru.live' }}
       </span>
     </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.footer {
-  text-align: center;
-}
 
-.footer-text {
-  color: var(--vtsuru-fg-muted);
-}
-</style>

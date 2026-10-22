@@ -7,5 +7,5 @@
  */
 
 export interface OpenBLiveClientDataAppStartGameInfo {
-  game_id?: string;
+  game_id?: string
 }

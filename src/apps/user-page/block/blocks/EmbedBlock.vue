@@ -40,10 +40,10 @@ const model = computed(() => {
     :backgrounded="model.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <div class="embed-wrapper">
+    <div class="relative w-full pt-[56.25%] bg-muted">
       <iframe
         v-if="model.ok"
-        class="embed-frame"
+        class="absolute inset-0 size-full border-0"
         :src="model.src"
         :title="model.title"
         loading="lazy"
@@ -53,51 +53,13 @@ const model = computed(() => {
       />
       <div
         v-else
-        class="embed-placeholder"
+        class="absolute inset-0 flex flex-col justify-center gap-1.5 px-3.5 py-3 text-foreground bg-muted"
       >
-        <div class="embed-placeholder__title">嵌入链接无效</div>
-        <div class="embed-placeholder__desc">请使用支持的哔哩哔哩或 YouTube 视频链接</div>
+        <div class="font-semibold text-[13px]">嵌入链接无效</div>
+        <div class="text-xs leading-normal opacity-90 break-words">请使用支持的哔哩哔哩或 YouTube 视频链接</div>
       </div>
     </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.embed-wrapper {
-  position: relative;
-  width: 100%;
-  padding-top: 56.25%;
-  background: var(--vtsuru-bg-muted);
-}
-.embed-frame {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
 
-.embed-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 6px;
-  padding: 12px 14px;
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg-muted);
-}
-
-.embed-placeholder__title {
-  font-weight: 650;
-  font-size: 13px;
-}
-
-.embed-placeholder__desc {
-  font-size: 12px;
-  line-height: 1.5;
-  opacity: 0.9;
-  word-break: break-word;
-}
-</style>

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { Desktop24Filled, Live24Filled } from '@vicons/fluent'
-import { NFlex, NIcon, NTabPane, NTabs, NTag } from 'naive-ui'
 import { nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -14,6 +13,8 @@ import ObsControlPanel from '@/apps/client/components/live-manage/ObsControlPane
 import type { CheckTarget } from '@/apps/client/components/live-manage/preflight'
 import { useLiveControl } from '@/apps/client/composables/useLiveControl'
 import { useLivePreflight } from '@/apps/client/composables/useLivePreflight'
+import { Badge } from '@/shared/ui/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const control = useLiveControl()
 const preflight = useLivePreflight(control)
@@ -37,117 +38,80 @@ async function navigateCheck(target: CheckTarget) {
 </script>
 
 <template>
-  <div class="live-manage-page">
-    <NFlex
-      vertical
-      :size="14"
+  <div class="w-full flex flex-col gap-3.5">
+    <!-- 标准页面标头 -->
+    <ClientPageHeader
+      title="直播管理"
+      description="管理 B 站直播间标题、分区、封面与推流码，联动控制 OBS 本地推流"
     >
-      <!-- 标准页面标头 -->
-      <ClientPageHeader
-        title="直播管理"
-        description="管理 B 站直播间标题、分区、封面与推流码，联动控制 OBS 本地推流"
-      >
-        <template #actions>
-          <NTag
-            :type="control.isLiving.value ? 'success' : 'default'"
-            round
-            :bordered="false"
-          >
-            <template #icon>
-              <div
-                class="status-dot"
-                :class="{ 'status-dot--live': control.isLiving.value }"
-              />
-            </template>
-            {{ control.isLiving.value ? '直播进行中' : '未开播' }}
-          </NTag>
-        </template>
-      </ClientPageHeader>
-
-      <LivePreflightPanel
-        :checks="preflight.checks.value"
-        :refreshing="preflight.refreshing.value"
-        :error="preflight.error.value"
-        :checked-at="preflight.checkedAt.value"
-        @refresh="preflight.refresh"
-        @navigate="navigateCheck"
-      />
-      <div ref="settingsPanel">
-        <NTabs
-          v-model:value="activeTab"
-          type="segment"
-          animated
-          class="live-manage-tabs"
+      <template #actions>
+        <Badge
+          variant="outline"
+          class="text-xs h-6 px-2.5 gap-1.5"
+          :class="
+            control.isLiving.value
+              ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+              : 'text-muted-foreground'
+          "
         >
-          <NTabPane
-            name="control"
-            tab="直播控制"
+          <div
+            class="size-1.5 rounded-full"
+            :class="control.isLiving.value ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-muted-foreground/40'"
+          />
+          {{ control.isLiving.value ? '直播进行中' : '未开播' }}
+        </Badge>
+      </template>
+    </ClientPageHeader>
+
+    <LivePreflightPanel
+      :checks="preflight.checks.value"
+      :refreshing="preflight.refreshing.value"
+      :error="preflight.error.value"
+      :checked-at="preflight.checkedAt.value"
+      @refresh="preflight.refresh"
+      @navigate="navigateCheck"
+    />
+
+    <div ref="settingsPanel">
+      <Tabs
+        v-model="activeTab"
+        class="w-full"
+      >
+        <TabsList class="grid w-full max-w-xs grid-cols-2">
+          <TabsTrigger
+            value="control"
+            class="text-xs gap-1.5"
           >
-            <template #tab>
-              <NFlex
-                align="center"
-                :size="6"
-              >
-                <NIcon :component="Live24Filled" />
-                <span>直播控制</span>
-              </NFlex>
-            </template>
-
-            <NFlex
-              vertical
-              :size="12"
-              class="client-readable"
-            >
-              <LiveControlPanel :control="control" />
-              <LiveStreamInfo :control="control" />
-            </NFlex>
-          </NTabPane>
-
-          <NTabPane
-            name="obs"
-            tab="OBS 与统计"
+            <Live24Filled class="size-3.5" />
+            直播控制
+          </TabsTrigger>
+          <TabsTrigger
+            value="obs"
+            class="text-xs gap-1.5"
           >
-            <template #tab>
-              <NFlex
-                align="center"
-                :size="6"
-              >
-                <NIcon :component="Desktop24Filled" />
-                <span>OBS 与统计</span>
-              </NFlex>
-            </template>
+            <Desktop24Filled class="size-3.5" />
+            OBS 与统计
+          </TabsTrigger>
+        </TabsList>
 
-            <div class="client-readable">
-              <ObsControlPanel :control="control" />
-            </div>
-          </NTabPane>
-        </NTabs>
-      </div>
-    </NFlex>
+        <TabsContent
+          value="control"
+          class="pt-3 space-y-3 client-readable"
+        >
+          <LiveControlPanel :control="control" />
+          <LiveStreamInfo :control="control" />
+        </TabsContent>
+
+        <TabsContent
+          value="obs"
+          class="pt-3 client-readable"
+        >
+          <ObsControlPanel :control="control" />
+        </TabsContent>
+      </Tabs>
+    </div>
 
     <!-- 人脸认证弹窗 -->
     <FaceAuthModal :control="control" />
   </div>
 </template>
-
-<style scoped>
-.live-manage-page {
-  width: 100%;
-}
-
-.live-manage-tabs :deep(.n-tabs-rail) {
-  max-width: 320px;
-}
-
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: currentColor;
-}
-
-.status-dot--live {
-  background-color: var(--vtsuru-success, #10b981);
-  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
-}
-</style>

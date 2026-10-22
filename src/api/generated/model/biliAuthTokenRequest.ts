@@ -7,5 +7,5 @@
  */
 
 export interface BiliAuthTokenRequest {
-  token: string;
+  token: string
 }

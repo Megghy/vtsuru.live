@@ -1,11 +1,12 @@
 import type { Options } from '@tauri-apps/plugin-notification'
 import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notification'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { NButton, NFlex } from 'naive-ui'
+import { h } from 'vue'
 
 import type { QAInfo, ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
 import QuestionItem from '@/components/QuestionItem.vue'
 import { CN_HOST } from '@/shared/config'
+import { dialog } from '@/shared/utils'
 
 import { useSettings } from '../store/useSettings'
 
@@ -38,36 +39,23 @@ export async function onReceivedQuestion(question: QAInfo) {
       title: '提问箱',
       description: `收到来自 [${question.sender?.name || question.anonymousName || '匿名用户'}] 的提问`,
       duration: 0,
-      action: () =>
-        h(NFlex, {}, () => [
-          h(
-            NButton,
-            {
-              text: true,
-              type: 'info',
-              onClick: () => {
-                window.$modal.create({
-                  title: '快速查看',
-                  preset: 'card',
-                  style: { maxWidth: '80vw' },
-                  content: () => h(QuestionItem, { item: question }),
-                })
-              },
-            },
-            () => '快速查看',
-          ),
-          h(
-            NButton,
-            {
-              text: true,
-              type: 'primary',
-              onClick: () => {
-                openUrl(`${CN_HOST}manage/question-box`)
-              },
-            },
-            () => '查看详情',
-          ),
-        ]),
+      action: {
+        label: '快速查看',
+        onClick: () => {
+          dialog.create({
+            title: '快速查看',
+            content: () => h(QuestionItem, { item: question }),
+            class: 'sm:max-w-lg',
+            positiveText: '关闭',
+          })
+        },
+      },
+      cancel: {
+        label: '查看详情',
+        onClick: () => {
+          void openUrl(`${CN_HOST}manage/question-box`)
+        },
+      },
     })
     trySendNotification({
       title: '提问箱',
@@ -86,18 +74,12 @@ export function onGoodsBuy(info: { data: ResponsePointOrder2OwnerModel; goods: R
       title: '礼物兑换',
       description: `${order.customer.name} 兑换了你的 [${goods.name}]，数量: ${order.count}，总价: ${order.point} 元`,
       duration: 0,
-      action: () =>
-        h(
-          NButton,
-          {
-            text: true,
-            type: 'primary',
-            onClick: () => {
-              openUrl(`${CN_HOST}manage/goods-buy`)
-            },
-          },
-          () => '查看详情',
-        ),
+      action: {
+        label: '查看详情',
+        onClick: () => {
+          void openUrl(`${CN_HOST}manage/goods-buy`)
+        },
+      },
     })
     trySendNotification({
       title: '礼物兑换',
@@ -107,8 +89,7 @@ export function onGoodsBuy(info: { data: ResponsePointOrder2OwnerModel; goods: R
   }
 }
 
-// 私信发送失败通知
-export function onSendPrivateMessageFailed(receiverId: number, message: string, error: any) {
+export function onSendPrivateMessageFailed(receiverId: number, message: string, error: unknown) {
   const setting = useSettings()
   if (setting.settings.notificationSettings.enableTypes.includes('message-failed')) {
     const errorMsg = error instanceof Error ? error.message : String(error)

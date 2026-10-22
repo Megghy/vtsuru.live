@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { NAlert, NButton } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
 
 import { useBiliCookie } from '../store/useBiliCookie'
 
@@ -38,55 +40,24 @@ const goToSettings = () => {
 </script>
 
 <template>
-  <NAlert
+  <Alert
     v-if="biliCookie.hasBiliCookie && !biliCookie.isCookieValid"
-    class="cookie-invalid-alert"
-    type="error"
-    :title="alertConfig.title"
-    :show-icon="true"
-    :bordered="false"
+    variant="destructive"
+    class="w-full box-border"
   >
-    <div class="cookie-invalid-alert__content">
-      <p>
-        {{ alertConfig.message }}
-      </p>
+    <AlertTitle class="font-semibold">{{ alertConfig.title }}</AlertTitle>
+    <AlertDescription class="text-[13px] leading-relaxed text-foreground mt-1">
+      <p>{{ alertConfig.message }}</p>
       <p>如果已经部署 CookieCloud，请尝试重新同步；否则请重新扫码登录。</p>
-      <div class="cookie-invalid-alert__actions">
-        <NButton
-          size="small"
-          type="primary"
-          @click="goToFetcher"
-        >
-          前往 EventFetcher
-        </NButton>
-        <NButton
-          size="small"
-          tertiary
+      <div class="mt-2 flex flex-wrap gap-2">
+        <Button @click="goToFetcher"> 前往 EventFetcher </Button>
+        <Button
+          variant="outline"
           @click="goToSettings"
         >
           Cookie 设置
-        </NButton>
+        </Button>
       </div>
-    </div>
-  </NAlert>
+    </AlertDescription>
+  </Alert>
 </template>
-
-<style scoped>
-.cookie-invalid-alert {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.cookie-invalid-alert__content {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--vtsuru-fg);
-}
-
-.cookie-invalid-alert__actions {
-  margin-top: 8px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-</style>

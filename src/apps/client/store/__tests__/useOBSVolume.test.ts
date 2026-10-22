@@ -40,7 +40,8 @@ describe('shared OBS volume subscription', () => {
     await store.handleObsConnect()
     mocks.call.mockClear()
     mocks.call.mockImplementation(async (method: string) => {
-      if (method === 'GetStreamServiceSettings') return { streamServiceSettings: { server: 'rtmp://test', key: 'secret-fixture' } }
+      if (method === 'GetStreamServiceSettings')
+        return { streamServiceSettings: { server: 'rtmp://test', key: 'secret-fixture' } }
       if (method === 'GetSceneList') return { scenes: [{ sceneName: '直播' }] }
       throw new Error(`Unexpected request ${method}`)
     })
@@ -97,7 +98,8 @@ describe('shared OBS volume subscription', () => {
 })
 
 it('keeps mute fail-closed and propagates unexpected mute-query failures', async () => {
-  const store = useOBSStore(), listener = vi.fn()
+  const store = useOBSStore(),
+    listener = vi.fn()
   store.subscribeInputVolume(listener)
   await store.handleObsConnect()
   await store.fetchObsInputs()
@@ -112,7 +114,8 @@ it('keeps mute fail-closed and propagates unexpected mute-query failures', async
 })
 
 it('excludes non-audio inputs and rejects non-finite meter samples', async () => {
-  const store = useOBSStore(), listener = vi.fn()
+  const store = useOBSStore(),
+    listener = vi.fn()
   store.subscribeInputVolume(listener)
   await store.handleObsConnect()
   await store.fetchObsInputs()
@@ -122,7 +125,17 @@ it('excludes non-audio inputs and rejects non-finite meter samples', async () =>
   })
   await store.fetchObsInputs()
   expect(store.obsInputs).toEqual(['mic'])
-  mocks.handlers.get('InputVolumeMeters')?.({ inputs: [{ inputName: 'mic', inputLevelsMul: [[Infinity, 1, 1], [NaN, 1, 1]] }] })
+  mocks.handlers.get('InputVolumeMeters')?.({
+    inputs: [
+      {
+        inputName: 'mic',
+        inputLevelsMul: [
+          [Infinity, 1, 1],
+          [NaN, 1, 1],
+        ],
+      },
+    ],
+  })
   expect(listener).toHaveBeenLastCalledWith({ inputName: 'mic', volume: 0, muted: false })
   store.cleanup()
 })

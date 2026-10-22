@@ -5,43 +5,16 @@ import {
   ChatbubbleEllipsesOutline,
   CheckmarkCircleOutline,
   CloseCircleOutline,
-  CloudDownloadOutline,
   CreateOutline,
-  EyeOffOutline,
-  EyeOutline,
-  LogOutOutline,
   PersonOutline,
   QrCodeOutline,
   RefreshOutline,
   StarOutline,
   TrashOutline,
 } from '@vicons/ionicons5'
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NDivider,
-  NDropdown,
-  NEllipsis,
-  NEmpty,
-  NFlex,
-  NFormItem,
-  NIcon,
-  NInput,
-  NModal,
-  NPopconfirm,
-  NQrCode,
-  NSelect,
-  NSpin,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useCooldown } from '@/apps/client/composables/useCooldown'
 import { getLoginInfoAsync, getLoginUrlDataAsync } from '@/apps/client/data/biliLogin'
@@ -49,9 +22,20 @@ import type { BiliAccountItem } from '@/apps/client/store/useBiliAccountManager'
 import { useBiliAccountManager } from '@/apps/client/store/useBiliAccountManager'
 import type { CookieCloudConfig } from '@/apps/client/store/useBiliCookie'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const accountManager = useBiliAccountManager()
-const message = useMessage()
 
 // 弹窗状态
 const showAddModal = ref(false)
@@ -175,13 +159,13 @@ async function startQRCodeLogin() {
         if (login.status === 'confirmed') {
           await accountManager.addOrUpdateAccount(login.cookie, login.refresh_token, newAccountAlias.value || undefined)
           logInfo('多账号池扫码登录成功')
-          message.success('新账号已成功添加至账号池！')
+          toast.success('新账号已成功添加至账号池！')
           finishQRCodeLogin()
           showAddModal.value = false
           newAccountAlias.value = ''
         } else if (login.status === 'expired') {
           finishQRCodeLogin()
-          message.error('登录二维码已过期')
+          toast.error('登录二维码已过期')
         }
       } catch (err) {
         logError(`轮询登录状态异常: ${String(err)}`)
@@ -189,14 +173,14 @@ async function startQRCodeLogin() {
     }, 2000)
   } catch (err: any) {
     logError(`获取二维码失败: ${String(err)}`)
-    message.error('获取登录二维码失败，请重试')
+    toast.error('获取登录二维码失败，请重试')
     finishQRCodeLogin()
   }
 }
 
 async function handleManualAdd() {
   if (!manualCookieInput.value.trim()) {
-    message.warning('请输入 Cookie 字符串')
+    toast.warning('请输入 Cookie 字符串')
     return
   }
   try {
@@ -205,12 +189,12 @@ async function handleManualAdd() {
       undefined,
       manualAliasInput.value.trim() || undefined,
     )
-    message.success('账号添加成功')
+    toast.success('账号添加成功')
     manualCookieInput.value = ''
     manualAliasInput.value = ''
     showAddModal.value = false
   } catch (err: any) {
-    message.error(`添加失败: ${err?.message || String(err)}`)
+    toast.error(`添加失败: ${err?.message || String(err)}`)
   }
 }
 
@@ -218,10 +202,10 @@ async function handleCloudImport() {
   try {
     isSyncingCloud.value = true
     await accountManager.importFromCookieCloud(cloudConfig.value)
-    message.success('从 CookieCloud 导入账号成功')
+    toast.success('从 CookieCloud 导入账号成功')
     showAddModal.value = false
   } catch (err: any) {
-    message.error(`导入失败: ${err?.message || String(err)}`)
+    toast.error(`导入失败: ${err?.message || String(err)}`)
   } finally {
     isSyncingCloud.value = false
   }
@@ -230,22 +214,22 @@ async function handleCloudImport() {
 async function handleCheckSingle(acc: BiliAccountItem) {
   const valid = await accountManager.checkAccount(acc.id)
   if (valid) {
-    message.success(`账号 [${acc.name}] 状态正常`)
+    toast.success(`账号 [${acc.name}] 状态正常`)
   } else {
-    message.error(`账号 [${acc.name}] Cookie 已失效，请重新扫码`)
+    toast.error(`账号 [${acc.name}] Cookie 已失效，请重新扫码`)
   }
 }
 
 async function handleBatchCheck() {
   if (batchCheckCooldown.isCoolingDown()) {
-    message.warning(`请等待 ${batchCheckCooldown.remaining.value} 秒后再试`)
+    toast.warning(`请等待 ${batchCheckCooldown.remaining.value} 秒后再试`)
     return
   }
   try {
     isBatchChecking.value = true
     await accountManager.checkAllAccounts()
     batchCheckCooldown.trigger()
-    message.success('全部账号有效性检查完成')
+    toast.success('全部账号有效性检查完成')
   } finally {
     isBatchChecking.value = false
   }
@@ -259,66 +243,47 @@ function startEditAlias(acc: BiliAccountItem) {
 async function saveEditAlias(acc: BiliAccountItem) {
   await accountManager.updateAccountAlias(acc.id, editingAliasText.value.trim())
   editingAccountId.value = null
-  message.success('备注已更新')
+  toast.success('备注已更新')
 }
 
 async function handleRemoveAccount(id: string) {
   await accountManager.removeAccount(id)
-  message.info('账号已从账号池移除')
+  toast.info('账号已从账号池移除')
 }
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="14"
-    class="bili-account-manager-card"
-  >
+  <div class="w-full flex flex-col gap-3.5">
     <!-- 顶部操作与角色分配栏 -->
-    <NCard
-      size="small"
-      bordered
-    >
-      <template #header>
-        <NFlex
-          align="center"
-          justify="space-between"
-        >
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NIcon
-              :component="PersonOutline"
-              size="20"
-              style="color: var(--vtsuru-primary)"
-            />
+    <Card class="border bg-card">
+      <CardHeader class="p-3 pb-2 border-b">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-2">
+            <PersonOutline class="size-5 text-primary" />
             <div>
-              <div style="font-size: 15px; font-weight: 600">B 站多账号管理池</div>
-              <div style="font-size: 12px; color: var(--vtsuru-fg-muted); font-weight: normal">
-                可任意添加多个 B 站账号，灵活指定主播号（主管开播与禁言）与自动化号（自动发送欢迎、感谢、回复与定时弹幕）
+              <CardTitle class="text-sm font-semibold">B 站多账号管理池</CardTitle>
+              <div class="text-xs text-muted-foreground mt-0.5">
+                可任意添加多个 B
+                站账号，灵活指定主播号（主管开播与禁言）与自动化号（自动发送欢迎、感谢、回复与定时弹幕）
               </div>
             </div>
-          </NFlex>
+          </div>
 
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NButton
-              size="small"
-              secondary
-              :loading="isBatchChecking"
+          <div class="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              class="gap-1.5"
+              :disabled="isBatchChecking"
               @click="handleBatchCheck"
             >
-              <template #icon>
-                <NIcon :component="RefreshOutline" />
-              </template>
+              <RefreshOutline
+                class="size-3.5"
+                :class="{ 'animate-spin': isBatchChecking }"
+              />
               检查全部有效性
-            </NButton>
-            <NButton
-              size="small"
-              type="primary"
+            </Button>
+            <Button
+              class="gap-1.5"
               @click="
                 () => {
                   showAddModal = true
@@ -326,532 +291,437 @@ async function handleRemoveAccount(id: string) {
                 }
               "
             >
-              <template #icon>
-                <NIcon :component="AddOutline" />
-              </template>
+              <AddOutline class="size-4" />
               添加新账号
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </template>
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
 
-      <!-- 快速身份路由配置 -->
-      <div class="routing-control-panel">
-        <NFlex
-          :size="16"
-          align="center"
-          wrap
-        >
-          <div style="flex: 1; min-width: 240px">
-            <div class="routing-label">
-              <NIcon
-                :component="StarOutline"
-                style="vertical-align: -2px; margin-right: 4px; color: var(--vtsuru-warning)"
-              />
-              主播管理账号（主管开播/关播/改分区/房管禁言）
+      <CardContent class="p-3">
+        <!-- 快速身份路由配置 -->
+        <div class="p-3 bg-muted rounded-md border border-border">
+          <div class="flex flex-wrap items-center gap-4">
+            <div class="flex-1 min-w-[240px]">
+              <div class="text-xs font-medium text-foreground mb-1 flex items-center gap-1">
+                <StarOutline class="size-3.5 text-amber-500" />
+                <span>主播管理账号（主管开播/关播/改分区/房管禁言）</span>
+              </div>
+              <Select
+                :model-value="accountManager.routing.mainAccountId"
+                @update:model-value="(val) => accountManager.setMainAccount(String(val ?? ''))"
+              >
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="请选择主账号" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in mainAccountOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                    :disabled="opt.disabled"
+                    class="text-xs"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <NSelect
-              :value="accountManager.routing.mainAccountId"
-              :options="mainAccountOptions"
-              placeholder="请选择主账号"
-              size="small"
-              @update:value="(val) => accountManager.setMainAccount(val)"
-            />
-          </div>
 
-          <div style="flex: 1; min-width: 240px">
-            <div class="routing-label">
-              <NIcon
-                :component="ChatbubbleEllipsesOutline"
-                style="vertical-align: -2px; margin-right: 4px; color: var(--vtsuru-primary)"
-              />
-              自动操作发弹幕/私信账号（入场/礼物/SC/回复/定时）
+            <div class="flex-1 min-w-[240px]">
+              <div class="text-xs font-medium text-foreground mb-1 flex items-center gap-1">
+                <ChatbubbleEllipsesOutline class="size-3.5 text-primary" />
+                <span>自动操作发弹幕/私信账号（入场/礼物/SC/回复/定时）</span>
+              </div>
+              <Select
+                :model-value="accountManager.routing.danmakuAccountId"
+                @update:model-value="(val) => accountManager.setDanmakuAccount(String(val ?? ''))"
+              >
+                <SelectTrigger class="w-full">
+                  <SelectValue placeholder="选择发弹幕账号" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in danmakuAccountOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                    class="text-xs"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <NSelect
-              :value="accountManager.routing.danmakuAccountId"
-              :options="danmakuAccountOptions"
-              placeholder="选择发弹幕账号"
-              size="small"
-              @update:value="(val) => accountManager.setDanmakuAccount(val)"
-            />
-          </div>
 
-          <div style="display: flex; flex-direction: column; justify-content: center; padding-top: 14px">
-            <NFlex
-              align="center"
-              :size="8"
-            >
-              <NTooltip>
-                <template #trigger>
-                  <NSwitch
-                    :value="accountManager.routing.fallbackToMain"
-                    size="small"
-                    @update:value="(val) => accountManager.setFallbackToMain(val)"
-                  />
-                </template>
-                当选中的小号 Cookie 过期或异常时，自动回退到主播主账号发送，避免互动断档
-              </NTooltip>
-              <span style="font-size: 12px; color: var(--vtsuru-fg-muted)">小号失效自动回退主账号</span>
-            </NFlex>
+            <div class="flex flex-col justify-center pt-3.5">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <div class="flex items-center gap-2 cursor-pointer select-none">
+                      <Switch
+                        :checked="accountManager.routing.fallbackToMain"
+                        @update:checked="(val) => accountManager.setFallbackToMain(val)"
+                      />
+                      <span class="text-xs text-muted-foreground">小号失效自动回退主账号</span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent class="text-xs max-w-[260px]">
+                    当选中的小号 Cookie 过期或异常时，自动回退到主播主账号发送，避免互动断档
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </div>
-        </NFlex>
-      </div>
-    </NCard>
+        </div>
+      </CardContent>
+    </Card>
 
     <!-- 账号列表 -->
     <div
       v-if="accountManager.accounts.length === 0"
-      class="empty-box"
+      class="py-10 text-center bg-popover rounded-lg border border-dashed border-border"
     >
-      <NEmpty description="账号池中暂无 B 站账号">
-        <template #extra>
-          <NButton
-            type="primary"
-            size="small"
-            @click="
-              () => {
-                showAddModal = true
-                startQRCodeLogin()
-              }
-            "
-          >
-            立即扫码添加
-          </NButton>
-        </template>
-      </NEmpty>
+      <Empty description="账号池中暂无 B 站账号">
+        <Button
+          class="mt-3"
+          @click="
+            () => {
+              showAddModal = true
+              startQRCodeLogin()
+            }
+          "
+        >
+          立即扫码添加
+        </Button>
+      </Empty>
     </div>
 
     <div
       v-else
-      class="accounts-grid"
+      class="flex flex-col gap-2.5"
     >
-      <NCard
+      <Card
         v-for="acc in accountManager.accounts"
         :key="acc.id"
-        size="small"
-        bordered
-        class="account-card"
+        class="border bg-card transition-[border-color,box-shadow] duration-200"
         :class="{
-          'is-main': acc.id === accountManager.routing.mainAccountId,
-          'is-danmaku':
+          'border-l-[3px] border-l-amber-500': acc.id === accountManager.routing.mainAccountId,
+          'border-r-[3px] border-r-primary':
             acc.id === accountManager.routing.danmakuAccountId ||
             (accountManager.routing.danmakuAccountId === 'main' && acc.id === accountManager.routing.mainAccountId),
         }"
       >
-        <NFlex
-          align="center"
-          justify="space-between"
-        >
-          <!-- 账号头像与信息 -->
-          <NFlex
-            align="center"
-            :size="12"
-          >
-            <NAvatar
-              round
-              :size="46"
-              :src="acc.face"
-              fallback-src="https://static.hdslb.com/images/member/noface.gif"
-            />
-            <div>
-              <NFlex
-                align="center"
-                :size="6"
-              >
-                <NText
-                  strong
-                  style="font-size: 14px"
-                >
-                  {{ acc.name }}
-                </NText>
+        <CardContent class="p-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <!-- 账号头像与信息 -->
+            <div class="flex items-center gap-3">
+              <img
+                :src="acc.face || 'https://static.hdslb.com/images/member/noface.gif'"
+                class="size-11 rounded-full border object-cover shrink-0"
+                alt="avatar"
+              />
+              <div>
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="font-semibold text-sm text-foreground">
+                    {{ acc.name }}
+                  </span>
 
-                <!-- 备注展示/内联编辑 -->
-                <div
-                  v-if="editingAccountId === acc.id"
-                  style="display: inline-flex; align-items: center; gap: 4px"
-                >
-                  <NInput
-                    v-model:value="editingAliasText"
-                    size="tiny"
-                    placeholder="输入备注"
-                    style="width: 100px"
-                    @keyup.enter="saveEditAlias(acc)"
-                  />
-                  <NButton
-                    size="tiny"
-                    type="primary"
-                    @click="saveEditAlias(acc)"
+                  <!-- 备注展示/内联编辑 -->
+                  <div
+                    v-if="editingAccountId === acc.id"
+                    class="inline-flex items-center gap-1"
                   >
-                    保存
-                  </NButton>
-                  <NButton
-                    size="tiny"
-                    @click="editingAccountId = null"
+                    <Input
+                      v-model="editingAliasText"
+                      placeholder="输入备注"
+                      class="h-6 w-24"
+                      @keyup.enter="saveEditAlias(acc)"
+                    />
+                    <Button
+                      size="xs"
+                      class="h-6 px-2"
+                      @click="saveEditAlias(acc)"
+                    >
+                      保存
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 px-2"
+                      @click="editingAccountId = null"
+                    >
+                      取消
+                    </Button>
+                  </div>
+                  <Badge
+                    v-else-if="acc.alias"
+                    variant="outline"
+                    class="text-[10px] h-5 px-1.5 cursor-pointer border-sky-500/40 text-sky-600 bg-sky-500/10"
+                    @click="startEditAlias(acc)"
                   >
-                    取消
-                  </NButton>
+                    {{ acc.alias }}
+                  </Badge>
+                  <Button
+                    v-else
+                    size="xs"
+                    variant="ghost"
+                    class="h-5 px-1.5 text-[11px] text-muted-foreground gap-1"
+                    @click="startEditAlias(acc)"
+                  >
+                    <CreateOutline class="size-3" />
+                    设备注
+                  </Button>
+
+                  <!-- 有效性 Badge -->
+                  <Badge
+                    v-if="acc.isValid"
+                    variant="outline"
+                    class="text-[10px] h-4.5 px-1.5 border-emerald-500/40 text-emerald-600 bg-emerald-500/10 gap-0.5"
+                  >
+                    <CheckmarkCircleOutline class="size-3" />
+                    有效
+                  </Badge>
+                  <Badge
+                    v-else
+                    variant="outline"
+                    class="text-[10px] h-4.5 px-1.5 border-destructive/40 text-destructive bg-destructive/10 gap-0.5"
+                  >
+                    <CloseCircleOutline class="size-3" />
+                    已失效
+                  </Badge>
                 </div>
-                <NTag
-                  v-else-if="acc.alias"
-                  size="small"
-                  type="info"
-                  round
-                  style="cursor: pointer"
-                  @click="startEditAlias(acc)"
-                >
-                  {{ acc.alias }}
-                </NTag>
-                <NButton
-                  v-else
-                  text
-                  size="tiny"
-                  style="color: var(--vtsuru-fg-muted)"
-                  @click="startEditAlias(acc)"
-                >
-                  <template #icon>
-                    <NIcon :component="CreateOutline" />
-                  </template>
-                  设备注
-                </NButton>
 
-                <!-- 有效性 Tag -->
-                <NTag
-                  v-if="acc.isValid"
-                  type="success"
-                  size="tiny"
-                  round
-                >
-                  <template #icon>
-                    <NIcon :component="CheckmarkCircleOutline" />
-                  </template>
-                  有效
-                </NTag>
-                <NTag
-                  v-else
-                  type="error"
-                  size="tiny"
-                  round
-                >
-                  <template #icon>
-                    <NIcon :component="CloseCircleOutline" />
-                  </template>
-                  已失效
-                </NTag>
-              </NFlex>
-
-              <div style="font-size: 12px; color: var(--vtsuru-fg-muted); margin-top: 2px">
-                UID: {{ acc.mid }}
+                <div class="text-xs text-muted-foreground mt-0.5">UID: {{ acc.mid }}</div>
               </div>
             </div>
-          </NFlex>
 
-          <!-- 角色徽章与操作 -->
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <!-- 角色徽章 -->
-            <NTag
-              v-if="acc.id === accountManager.routing.mainAccountId"
-              type="warning"
-              size="small"
-              round
-            >
-              <template #icon>
-                <NIcon :component="StarOutline" />
-              </template>
-              主播管理
-            </NTag>
-            <NTag
-              v-if="
-                acc.id === accountManager.routing.danmakuAccountId ||
-                (accountManager.routing.danmakuAccountId === 'main' && acc.id === accountManager.routing.mainAccountId)
-              "
-              type="primary"
-              size="small"
-              round
-            >
-              <template #icon>
-                <NIcon :component="ChatbubbleEllipsesOutline" />
-              </template>
-              发弹幕
-            </NTag>
+            <!-- 角色徽章与操作 -->
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <!-- 角色徽章 -->
+              <Badge
+                v-if="acc.id === accountManager.routing.mainAccountId"
+                variant="outline"
+                class="text-[10px] h-5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10 gap-1"
+              >
+                <StarOutline class="size-3" />
+                主播管理
+              </Badge>
+              <Badge
+                v-if="
+                  acc.id === accountManager.routing.danmakuAccountId ||
+                  (accountManager.routing.danmakuAccountId === 'main' &&
+                    acc.id === accountManager.routing.mainAccountId)
+                "
+                variant="outline"
+                class="text-[10px] h-5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10 gap-1"
+              >
+                <ChatbubbleEllipsesOutline class="size-3" />
+                发弹幕
+              </Badge>
 
-            <!-- 操作按钮组 -->
-            <NButton
-              size="tiny"
-              secondary
-              @click="handleCheckSingle(acc)"
-            >
-              <template #icon>
-                <NIcon :component="RefreshOutline" />
-              </template>
-              检查
-            </NButton>
+              <!-- 操作按钮组 -->
+              <Button
+                size="xs"
+                variant="secondary"
+                class="gap-1"
+                @click="handleCheckSingle(acc)"
+              >
+                <RefreshOutline class="size-3" />
+                检查
+              </Button>
 
-            <NButton
-              v-if="acc.id !== accountManager.routing.mainAccountId"
-              size="tiny"
-              secondary
-              type="warning"
-              @click="accountManager.setMainAccount(acc.id)"
-            >
-              设为主播号
-            </NButton>
+              <Button
+                v-if="acc.id !== accountManager.routing.mainAccountId"
+                size="xs"
+                variant="outline"
+                class="border-amber-500/40 text-amber-600 hover:bg-amber-500/10"
+                @click="accountManager.setMainAccount(acc.id)"
+              >
+                设为主播号
+              </Button>
 
-            <NButton
-              v-if="acc.id !== accountManager.routing.danmakuAccountId"
-              size="tiny"
-              secondary
-              type="primary"
-              @click="accountManager.setDanmakuAccount(acc.id)"
-            >
-              设为发弹幕号
-            </NButton>
+              <Button
+                v-if="acc.id !== accountManager.routing.danmakuAccountId"
+                size="xs"
+                variant="outline"
+                class="border-sky-500/40 text-sky-600 hover:bg-sky-500/10"
+                @click="accountManager.setDanmakuAccount(acc.id)"
+              >
+                设为发弹幕号
+              </Button>
 
-            <NPopconfirm
-              positive-text="确认删除"
-              negative-text="取消"
-              @positive-click="handleRemoveAccount(acc.id)"
-            >
-              <template #trigger>
-                <NButton
-                  size="tiny"
-                  secondary
-                  type="error"
-                >
-                  <template #icon>
-                    <NIcon :component="TrashOutline" />
-                  </template>
-                </NButton>
-              </template>
-              确定要将账号「{{ acc.name }}」从账号池中移除吗？
-            </NPopconfirm>
-          </NFlex>
-        </NFlex>
-      </NCard>
+              <Popconfirm
+                title="确认删除"
+                @positive-click="handleRemoveAccount(acc.id)"
+              >
+                <template #trigger>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="w-7 p-0 border-destructive/40 text-destructive hover:bg-destructive/10"
+                  >
+                    <TrashOutline class="size-3.5" />
+                  </Button>
+                </template>
+                确定要将账号「{{ acc.name }}」从账号池中移除吗？
+              </Popconfirm>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
 
     <!-- 添加新账号模态框 -->
-    <NModal
-      v-model:show="showAddModal"
-      preset="card"
-      title="添加 B 站账号至账号池"
-      style="width: 520px; max-width: 95vw"
-      :segmented="true"
-    >
-      <NTabs
-        v-model:value="addTab"
-        type="segment"
-        animated
-      >
-        <!-- 扫码登录 -->
-        <NTabPane
-          name="qrcode"
-          tab="二维码扫码登录"
+    <Dialog v-model:open="showAddModal">
+      <DialogContent class="sm:max-w-[520px]">
+        <DialogHeader>
+          <DialogTitle class="text-base font-semibold">添加 B 站账号至账号池</DialogTitle>
+        </DialogHeader>
+
+        <Tabs
+          v-model="addTab"
+          class="w-full mt-2"
         >
-          <NFlex
-            vertical
-            align="center"
-            :size="14"
-            style="padding: 16px 0"
+          <TabsList class="grid w-full grid-cols-3">
+            <TabsTrigger
+              value="qrcode"
+              class="text-xs"
+            >
+              二维码扫码登录
+            </TabsTrigger>
+            <TabsTrigger
+              value="cloud"
+              class="text-xs"
+            >
+              CookieCloud 导入
+            </TabsTrigger>
+            <TabsTrigger
+              value="manual"
+              class="text-xs"
+            >
+              手动粘贴 Cookie
+            </TabsTrigger>
+          </TabsList>
+
+          <!-- 扫码登录 -->
+          <TabsContent
+            value="qrcode"
+            class="pt-3"
           >
-            <div
-              v-if="isQRCodeLogining"
-              class="qrcode-wrapper"
-            >
-              <NQrCode
-                :value="loginUrl"
-                :size="170"
-              />
-            </div>
-            <div
-              v-else
-              style="height: 170px; display: flex; align-items: center; justify-content: center"
-            >
-              <NButton
-                type="primary"
-                @click="startQRCodeLogin"
+            <div class="flex flex-col items-center gap-3.5 py-2">
+              <div
+                v-if="isQRCodeLogining"
+                class="p-3 bg-white rounded-lg shadow-sm"
               >
-                <template #icon>
-                  <NIcon :component="QrCodeOutline" />
-                </template>
-                点击生成登录二维码
-              </NButton>
+                <QrcodeVue
+                  :value="loginUrl"
+                  :size="170"
+                />
+              </div>
+              <div
+                v-else
+                class="h-[170px] flex items-center justify-center"
+              >
+                <Button
+                  class="h-9 gap-1.5"
+                  @click="startQRCodeLogin"
+                >
+                  <QrCodeOutline class="size-4" />
+                  点击生成登录二维码
+                </Button>
+              </div>
+
+              <div class="text-xs font-medium text-foreground">
+                {{ isQRCodeLogining ? loginStatusText : '请使用手机哔哩哔哩客户端扫码' }}
+              </div>
+
+              <div class="w-[85%] space-y-1">
+                <span class="text-xs text-muted-foreground">账号备注别名 (可选)</span>
+                <Input
+                  v-model="newAccountAlias"
+                  placeholder="例如: 房管机器人、小号、副播"
+                />
+              </div>
+
+              <Button
+                v-if="isQRCodeLogining"
+                size="xs"
+                variant="secondary"
+                @click="finishQRCodeLogin"
+              >
+                刷新二维码
+              </Button>
             </div>
+          </TabsContent>
 
-            <div style="font-size: 13px; font-weight: 500">
-              {{ isQRCodeLogining ? loginStatusText : '请使用手机哔哩哔哩客户端扫码' }}
-            </div>
-
-            <NFormItem
-              label="账号备注别名 (可选)"
-              :show-feedback="false"
-              style="width: 80%"
-            >
-              <NInput
-                v-model:value="newAccountAlias"
-                placeholder="例如: 房管机器人、小号、副播"
-              />
-            </NFormItem>
-
-            <NButton
-              v-if="isQRCodeLogining"
-              size="small"
-              secondary
-              @click="finishQRCodeLogin"
-            >
-              刷新二维码
-            </NButton>
-          </NFlex>
-        </NTabPane>
-
-        <!-- CookieCloud 导入 -->
-        <NTabPane
-          name="cloud"
-          tab="CookieCloud 导入"
-        >
-          <NFlex
-            vertical
-            :size="12"
-            style="padding-top: 10px"
+          <!-- CookieCloud 导入 -->
+          <TabsContent
+            value="cloud"
+            class="pt-3 space-y-3"
           >
-            <NFormItem
-              label="CookieCloud 服务地址"
-              :show-feedback="false"
-            >
-              <NInput
-                v-model:value="cloudConfig.host"
+            <div class="space-y-1">
+              <span class="text-xs text-muted-foreground">CookieCloud 服务地址</span>
+              <Input
+                v-model="cloudConfig.host"
                 placeholder="https://cookie.vtsuru.live"
               />
-            </NFormItem>
-            <NFormItem
-              label="用户 Key"
-              :show-feedback="false"
-            >
-              <NInput
-                v-model:value="cloudConfig.key"
+            </div>
+
+            <div class="space-y-1">
+              <span class="text-xs text-muted-foreground">用户 Key</span>
+              <Input
+                v-model="cloudConfig.key"
                 placeholder="请输入 CookieCloud Key"
               />
-            </NFormItem>
-            <NFormItem
-              label="端到端加密密码"
-              :show-feedback="false"
-            >
-              <NInput
-                v-model:value="cloudConfig.password"
+            </div>
+
+            <div class="space-y-1">
+              <span class="text-xs text-muted-foreground">端到端加密密码</span>
+              <Input
+                v-model="cloudConfig.password"
                 type="password"
-                show-password-on="click"
                 placeholder="请输入加密密码"
               />
-            </NFormItem>
-            <NFlex justify="flex-end">
-              <NButton
-                type="primary"
-                :loading="isSyncingCloud"
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <Button
+                :disabled="isSyncingCloud"
                 @click="handleCloudImport"
               >
                 从云端拉取并添加
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
+              </Button>
+            </div>
+          </TabsContent>
 
-        <!-- 手动输入 -->
-        <NTabPane
-          name="manual"
-          tab="手动粘贴 Cookie"
-        >
-          <NFlex
-            vertical
-            :size="12"
-            style="padding-top: 10px"
+          <!-- 手动输入 -->
+          <TabsContent
+            value="manual"
+            class="pt-3 space-y-3"
           >
-            <NFormItem
-              label="账号备注别名 (可选)"
-              :show-feedback="false"
-            >
-              <NInput
-                v-model:value="manualAliasInput"
+            <div class="space-y-1">
+              <span class="text-xs text-muted-foreground">账号备注别名 (可选)</span>
+              <Input
+                v-model="manualAliasInput"
                 placeholder="例如: 感谢机器人"
               />
-            </NFormItem>
-            <NFormItem
-              label="Cookie 完整字符串"
-              :show-feedback="false"
-            >
-              <NInput
-                v-model:value="manualCookieInput"
-                type="textarea"
+            </div>
+
+            <div class="space-y-1">
+              <span class="text-xs text-muted-foreground">Cookie 完整字符串</span>
+              <Textarea
+                v-model="manualCookieInput"
                 placeholder="粘贴包含 SESSDATA 和 bili_jct 的完整 Cookie"
-                :rows="4"
+                class="text-xs resize-none h-24"
               />
-            </NFormItem>
-            <NFlex justify="flex-end">
-              <NButton
-                type="primary"
-                @click="handleManualAdd"
-              >
-                验证并添加账号
-              </NButton>
-            </NFlex>
-          </NFlex>
-        </NTabPane>
-      </NTabs>
-    </NModal>
-  </NFlex>
+            </div>
+
+            <div class="flex justify-end pt-2">
+              <Button @click="handleManualAdd"> 验证并添加账号 </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>
-
-<style scoped>
-.bili-account-manager-card {
-  width: 100%;
-}
-
-.routing-control-panel {
-  padding: 12px 14px;
-  margin-top: 8px;
-  background: var(--vtsuru-bg-inset, rgba(0, 0, 0, 0.03));
-  border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.routing-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--vtsuru-fg);
-  margin-bottom: 4px;
-}
-
-.accounts-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.account-card {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.account-card.is-main {
-  border-left: 3px solid var(--vtsuru-warning, #f59e0b);
-}
-
-.account-card.is-danmaku {
-  border-right: 3px solid var(--vtsuru-primary, #10b981);
-}
-
-.empty-box {
-  padding: 40px 0;
-  text-align: center;
-  background: var(--vtsuru-bg-elevated);
-  border-radius: 8px;
-  border: 1px dashed var(--vtsuru-border);
-}
-
-.qrcode-wrapper {
-  padding: 12px;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-</style>

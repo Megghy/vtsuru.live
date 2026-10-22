@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { useThemeVars } from 'naive-ui'
-import { computed } from 'vue'
-
 defineProps<{
   active: boolean
   title: string
@@ -9,88 +6,28 @@ defineProps<{
   badge?: string
 }>()
 defineEmits<{ (e: 'click'): void }>()
-
-const themeVars = useThemeVars()
-const activeColor = computed(() => themeVars.value.primaryColor)
-const activeBg = computed(() => `${themeVars.value.primaryColor}14`)
 </script>
 
 <template>
   <button
     type="button"
-    class="provider-tile"
-    :class="{ active }"
+    class="appearance-none bg-background border-[1.5px] border-border rounded-lg py-2.5 px-3 cursor-pointer text-left flex flex-col gap-1 transition-colors min-h-14 w-full font-inherit text-inherit hover:border-primary"
+    :class="{ 'border-primary bg-primary/10 shadow-[inset_0_0_0_1.5px_var(--primary)]': active }"
     @click="$emit('click')"
   >
-    <div class="row">
-      <span class="title">{{ title }}</span>
+    <div class="flex items-center justify-between gap-1.5">
+      <span class="text-[13px] font-semibold leading-tight">{{ title }}</span>
       <span
         v-if="badge"
-        class="badge"
+        class="text-[11px] py-px px-1.5 rounded bg-muted text-muted-foreground border border-border"
         >{{ badge }}</span
       >
     </div>
     <p
       v-if="description"
-      class="desc"
+      class="text-[11px] text-muted-foreground m-0 leading-snug"
     >
       {{ description }}
     </p>
   </button>
 </template>
-
-<style scoped>
-.provider-tile {
-  appearance: none;
-  background: var(--vtsuru-bg-surface, #fff);
-  border: 1.5px solid var(--border-color, #e5e5e5);
-  border-radius: 8px;
-  padding: 10px 12px;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease,
-    box-shadow 120ms ease;
-  min-height: 56px;
-  width: 100%;
-  font: inherit;
-  color: inherit;
-}
-.provider-tile:hover {
-  border-color: v-bind('activeColor');
-}
-.provider-tile.active {
-  border-color: v-bind('activeColor');
-  background: v-bind('activeBg');
-  box-shadow: 0 0 0 1.5px v-bind('activeColor') inset;
-}
-.row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-}
-.title {
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-.badge {
-  font-size: 11px;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg-muted);
-  border: 1px solid var(--vtsuru-border);
-}
-.desc {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  margin: 0;
-  line-height: 1.4;
-}
-</style>

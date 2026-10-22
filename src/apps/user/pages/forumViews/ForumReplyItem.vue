@@ -1,10 +1,15 @@
 <script setup lang="ts">
 import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
-import { NAvatar, NButton, NFlex, NIcon, NPopconfirm, NText, NTime, NTooltip } from 'naive-ui'
+import { format, formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { ForumCommentModel, ForumReplyModel, ForumTopicModel } from '@/api/models/forum'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { getUserAvatarUrl } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
@@ -26,111 +31,122 @@ const accountInfo = useAccount()
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
 })
+
+function formatRelativeTime(time: number) {
+  try {
+    return formatDistanceToNow(new Date(time), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(time)
+  }
+}
+
+function formatFullTime(time: number) {
+  try {
+    return format(new Date(time), 'yyyy-MM-dd HH:mm:ss')
+  } catch {
+    return String(time)
+  }
+}
 </script>
 
 <template>
-  <NFlex
-    align="center"
-    class="forum-reply-item"
-  >
-    <NFlex
-      :wrap="false"
-      align="center"
-    >
-      <NTooltip v-if="replyTo">
-        <template #trigger>
-          <NIcon :component="ArrowReply16Filled" />
-        </template>
-        <ForumReplyItem
-          :item="replyTo"
-          :comment="comment"
-          :topic="topic"
-          :show-reply-button="false"
-        />
-      </NTooltip>
-      <NAvatar
-        :src="getUserAvatarUrl(item.user.id)"
-        :img-props="{ referrerpolicy: 'no-referrer' }"
-        size="small"
-        round
-        style="margin-top: -3px; min-width: 28px; min-height: 28px"
-      />
-      <NText
-        strong
-        depth="3"
-        style="white-space: nowrap"
-      >
-        {{ item.user.name }}
-      </NText>
-    </NFlex>
-    {{ item.content }}
-    <NFlex
-      justify="end"
-      align="center"
-      :wrap="false"
-      style="flex: 1"
-    >
-      <NTooltip>
-        <template #trigger>
-          <NText
-            depth="3"
-            style="font-size: small; min-width: 50px"
-          >
-            <NTime
-              :time="item.sendAt"
-              type="relative"
+  <TooltipProvider>
+    <div class="forum-reply-item flex flex-wrap sm:flex-nowrap items-center gap-2 text-xs py-1">
+      <div class="flex items-center gap-1.5 shrink-0">
+        <Tooltip v-if="replyTo">
+          <TooltipTrigger as-child>
+            <span class="text-muted-foreground hover:text-foreground cursor-pointer">
+              <component
+                :is="ArrowReply16Filled"
+                class="size-3.5"
+              />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent class="max-w-xs p-2 text-xs">
+            <ForumReplyItem
+              :item="replyTo"
+              :comment="comment"
+              :topic="topic"
+              :show-reply-button="false"
             />
-          </NText>
-        </template>
-        <NTime :time="item.sendAt" />
-      </NTooltip>
-      <NTooltip v-if="showReplyButton">
-        <template #trigger>
-          <NButton
-            size="tiny"
-            round
-            secondary
-            :disabled="!canOprate"
-            @click="useForum.SetReplyingComment(comment, item)"
-          >
-            <template #icon>
-              <NIcon :component="ArrowReply16Filled" />
-            </template>
-          </NButton>
-        </template>
-        回复这条回复
-      </NTooltip>
-      <NPopconfirm
-        v-if="(item.user.id === accountInfo.id || topic.isAdmin) && showReplyButton"
-        @positive-click="emits('delete', item.id)"
-      >
-        <template #trigger>
-          <NTooltip v-if="showReplyButton">
-            <template #trigger>
-              <NButton
-                size="tiny"
-                round
-                secondary
-                :disabled="!canOprate"
-              >
-                <template #icon>
-                  <NIcon :component="Delete24Filled" />
-                </template>
-              </NButton>
-            </template>
-            删除
-          </NTooltip>
-        </template>
-        确定删除这条回复吗
-      </NPopconfirm>
-    </NFlex>
-  </NFlex>
-</template>
+          </TooltipContent>
+        </Tooltip>
 
-<style scoped>
-@media screen and (min-width: 900px) {
-  .forum-reply-item {
-    flex-wrap: nowrap !important;
-  }
-}
-</style>
+        <Avatar class="size-6 rounded-full shrink-0">
+          <AvatarImage
+            :src="getUserAvatarUrl(item.user.id)"
+            referrerpolicy="no-referrer"
+          />
+          <AvatarFallback class="text-[10px]">{{ item.user.name.charAt(0) }}</AvatarFallback>
+        </Avatar>
+
+        <strong class="text-muted-foreground font-semibold whitespace-nowrap text-xs">
+          {{ item.user.name }}
+        </strong>
+      </div>
+
+      <div class="text-foreground flex-1 min-w-0 break-words">
+        {{ item.content }}
+      </div>
+
+      <div class="flex items-center justify-end gap-1.5 shrink-0 ml-auto">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="text-[11px] text-muted-foreground min-w-12 text-right cursor-help">
+              {{ formatRelativeTime(item.sendAt) }}
+            </span>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">
+            {{ formatFullTime(item.sendAt) }}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip v-if="showReplyButton">
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-6 rounded-full text-muted-foreground hover:text-foreground"
+              :disabled="!canOprate"
+              @click="useForum.SetReplyingComment(comment, item)"
+            >
+              <component
+                :is="ArrowReply16Filled"
+                class="size-3"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs">回复这条回复</TooltipContent>
+        </Tooltip>
+
+        <Popconfirm
+          v-if="(item.user.id === accountInfo.id || topic.isAdmin) && showReplyButton"
+          title="确定删除这条回复吗？"
+          positive-text="确认删除"
+          negative-text="取消"
+          @positive-click="emits('delete', item.id)"
+        >
+          <template #trigger>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="size-6 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  :disabled="!canOprate"
+                >
+                  <component
+                    :is="Delete24Filled"
+                    class="size-3"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">删除</TooltipContent>
+            </Tooltip>
+          </template>
+          确定删除这条回复吗？
+        </Popconfirm>
+      </div>
+    </div>
+  </TooltipProvider>
+</template>

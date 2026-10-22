@@ -12,19 +12,30 @@ export interface DanmujiStyle {
 }
 
 export const defaultDanmujiStyle: DanmujiStyle = {
-  preset: 'classic', opacity: 1, fontSize: 18, reverse: true,
-  autoHide: 0, pinned: false, pinnedMinPrice: 30, customCss: '',
+  preset: 'classic',
+  opacity: 1,
+  fontSize: 18,
+  reverse: true,
+  autoHide: 0,
+  pinned: false,
+  pinnedMinPrice: 30,
+  customCss: '',
 }
 
 /** 配置文件与 URL 都是外部输入，在进入渲染器前统一校验。 */
 export function normalizeDanmujiStyle(input: unknown): DanmujiStyle {
-  const raw = input && typeof input === 'object' ? input as Record<string, unknown> : {}
+  const raw = input && typeof input === 'object' ? (input as Record<string, unknown>) : {}
   const style = { ...defaultDanmujiStyle }
   if (raw.preset === 'classic' || raw.preset === 'bubble' || raw.preset === 'minimal') style.preset = raw.preset
   for (const key of ['reverse', 'pinned'] as const) {
     if (typeof raw[key] === 'boolean') style[key] = raw[key]
   }
-  for (const [key, min, max] of [['opacity', 0, 1], ['fontSize', 10, 72], ['autoHide', 0, 3600], ['pinnedMinPrice', 0, 100000]] as const) {
+  for (const [key, min, max] of [
+    ['opacity', 0, 1],
+    ['fontSize', 10, 72],
+    ['autoHide', 0, 3600],
+    ['pinnedMinPrice', 0, 100000],
+  ] as const) {
     const value = raw[key]
     if (typeof value === 'number' && Number.isFinite(value)) style[key] = Math.min(max, Math.max(min, value))
   }

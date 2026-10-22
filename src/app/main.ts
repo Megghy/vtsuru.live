@@ -1,12 +1,15 @@
+import '@unocss/reset/tailwind.css'
+import 'virtual:uno.css'
+import 'vue-sonner/style.css'
 import { createPinia } from 'pinia'
 import { createApp } from 'vue'
 // @ts-expect-error vue3-konva types
 import VueKonva from 'vue3-konva'
 
-import { initPersistedStorage } from '@/shared/storage/persist'
 import { initializeAPISelection } from '@/shared/config'
 import { initSentry } from '@/shared/services/sentry'
 import { installStaleChunkReload } from '@/shared/services/staleChunkReload'
+import { initPersistedStorage } from '@/shared/storage/persist'
 
 import App from './App.vue'
 import emitter from './mitt'

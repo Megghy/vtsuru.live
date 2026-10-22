@@ -96,17 +96,19 @@ export const useOBSStore = defineStore('obs', () => {
     const result = await client.call('GetInputList')
     if (generation !== inputGeneration || !obsConnected.value) return
     const names = result.inputs.map((input) => String(input.inputName))
-    for (const name of inputMuted.keys()) if (!names.includes(name)) {
-      inputMuted.delete(name)
-      emitVolume({ inputName: name, volume: 0, muted: true })
-    }
+    for (const name of inputMuted.keys())
+      if (!names.includes(name)) {
+        inputMuted.delete(name)
+        emitVolume({ inputName: name, volume: 0, muted: true })
+      }
     await Promise.all(
       names.map(async (inputName) => {
         // Unknown/non-audio inputs remain muted until OBS confirms their state.
         if (inputMuted.has(inputName)) return
         try {
-          const result = await client.call('GetInputMute', { inputName })
-          if (generation === inputGeneration && !inputMuted.has(inputName)) inputMuted.set(inputName, result.inputMuted)
+          const muteResult = await client.call('GetInputMute', { inputName })
+          if (generation === inputGeneration && !inputMuted.has(inputName))
+            inputMuted.set(inputName, muteResult.inputMuted)
         } catch (cause) {
           // OBS 604 (InputHasNoAudio) is expected for image/browser-only inputs.
           if (!(cause && typeof cause === 'object' && 'code' in cause && cause.code === 604)) throw cause
@@ -114,7 +116,7 @@ export const useOBSStore = defineStore('obs', () => {
       }),
     )
     if (generation === inputGeneration && obsConnected.value) {
-      obsInputs.value = names.filter(name => inputMuted.has(name))
+      obsInputs.value = names.filter((name) => inputMuted.has(name))
     }
   }
 
@@ -143,7 +145,7 @@ export const useOBSStore = defineStore('obs', () => {
         for (const input of event.inputs) {
           const name = String(input.inputName)
           const channels = input.inputLevelsMul as number[][]
-          const rms = Math.max(0, ...channels.map((channel) => Number.isFinite(channel[0]) ? channel[0] : 0))
+          const rms = Math.max(0, ...channels.map((channel) => (Number.isFinite(channel[0]) ? channel[0] : 0)))
           const muted = inputMuted.get(name) ?? true
           emitVolume({ inputName: name, volume: muted ? 0 : Math.min(100, rms * 220), muted })
         }
@@ -520,14 +522,11 @@ export const useOBSStore = defineStore('obs', () => {
 
   async function inspectPreflight() {
     if (!obs || !obsConnected.value) throw new Error('OBS 未连接')
-    const [stream, scenes] = await Promise.all([
-      obs.call('GetStreamServiceSettings'),
-      obs.call('GetSceneList'),
-    ])
+    const [stream, scenes] = await Promise.all([obs.call('GetStreamServiceSettings'), obs.call('GetSceneList')])
     // 自检只返回是否已填写，不把推流密钥带到面板或诊断结果中。
     return {
       streamReady: Boolean(stream.streamServiceSettings.server && stream.streamServiceSettings.key),
-      scenes: scenes.scenes.map(scene => String(scene.sceneName)),
+      scenes: scenes.scenes.map((scene) => String(scene.sceneName)),
     }
   }
 

@@ -1,21 +1,7 @@
 <script setup lang="ts">
 import { TextFont24Regular } from '@vicons/fluent'
 import { SearchOutline } from '@vicons/ionicons5'
-import { useEventListener } from '@vueuse/core'
-import type { SelectOption } from 'naive-ui'
-import {
-  NButton,
-  NEmpty,
-  NIcon,
-  NInput,
-  NModal,
-  NSelect,
-  NSpin,
-  NText,
-  NTooltip,
-  NVirtualList,
-} from 'naive-ui'
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import {
   getGoogleFontFamilyCss,
@@ -25,10 +11,18 @@ import {
   loadGoogleFontsCatalog,
   useGoogleFont,
 } from '@/apps/user-page/googleFonts'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spin } from '@/shared/ui/spin'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import GoogleFontBrowserRow from './GoogleFontBrowserRow.vue'
 
-export interface GoogleFontPickerOption extends SelectOption {
+export interface GoogleFontPickerOption {
   label: string
   value: string
 }
@@ -83,9 +77,6 @@ const fontBrowserShown = ref(false)
 const fontSearch = ref('')
 const fontCategory = ref<string | null>(null)
 const fontPreviewFamily = ref<string | null>(null)
-const fontRowPreviewEnabled = ref(true)
-let fontScrollIdleTimer: ReturnType<typeof setTimeout> | undefined
-let fontPointerActive = false
 
 const fontCategoryLabels: Record<string, string> = {
   'sans-serif': '无衬线',
@@ -123,41 +114,15 @@ const browserLoadFamily = computed(() => {
 useGoogleFont(selectedLoadFamily)
 useGoogleFont(browserLoadFamily)
 
-function loadFontCatalog(show = true) {
-  if (!show) return
+function loadFontCatalog() {
   void loadGoogleFontsCatalog().catch((error) => console.error('Google Fonts 字体目录加载失败', error))
 }
 
 function openFontBrowser() {
   fontPreviewFamily.value = model.value
-  fontRowPreviewEnabled.value = true
   fontBrowserShown.value = true
   loadFontCatalog()
 }
-
-function handleFontBrowserScroll() {
-  fontRowPreviewEnabled.value = false
-  clearTimeout(fontScrollIdleTimer)
-  if (fontPointerActive) return
-  fontScrollIdleTimer = setTimeout(() => {
-    fontRowPreviewEnabled.value = true
-  }, 180)
-}
-
-function handleFontBrowserPointerDown() {
-  fontPointerActive = true
-  fontRowPreviewEnabled.value = false
-  clearTimeout(fontScrollIdleTimer)
-}
-
-function handleFontBrowserPointerEnd() {
-  if (!fontPointerActive) return
-  fontPointerActive = false
-  handleFontBrowserScroll()
-}
-
-useEventListener(window, ['pointerup', 'pointercancel'], handleFontBrowserPointerEnd)
-onBeforeUnmount(() => clearTimeout(fontScrollIdleTimer))
 
 function applyPreviewFont() {
   if (!activePreviewFamily.value) return
@@ -167,248 +132,180 @@ function applyPreviewFont() {
 </script>
 
 <template>
-  <div class="google-font-picker">
-    <div class="font-field">
-      <div class="font-picker">
-        <NSelect
-          v-model:value="model"
-          :options="fontOptions"
-          :loading="googleFontsCatalogLoading"
-          filterable
-          :clearable="clearable"
-          :placeholder="placeholder"
-          @focus="loadFontCatalog()"
-          @update:show="loadFontCatalog"
-        />
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              quaternary
-              class="font-browser-button"
-              aria-label="浏览字体库"
-              @click="openFontBrowser"
-            >
-              <template #icon>
-                <NIcon :component="TextFont24Regular" />
-              </template>
-            </NButton>
-          </template>
-          浏览字体库
-        </NTooltip>
-      </div>
-      <div
-        v-if="showPreview && model"
-        class="font-preview"
-        :style="selectedFontStyle"
-      >
-        春风又绿江南岸 Aa 123
-      </div>
-      <NText
-        v-if="googleFontsCatalogError"
-        type="error"
-        depth="3"
-      >
-        {{ googleFontsCatalogError }}
-      </NText>
-    </div>
+  <TooltipProvider>
+    <div class="google-font-picker w-full">
+      <div class="font-field grid gap-2 w-full">
+        <div class="font-picker flex items-center gap-1.5">
+          <Select
+            :model-value="model ?? ''"
+            @update:model-value="model = $event ? String($event) : null"
+          >
+            <SelectTrigger class="flex-1">
+              <SelectValue :placeholder="placeholder" />
+            </SelectTrigger>
+            <SelectContent class="max-h-60">
+              <SelectItem
+                v-if="clearable"
+                value=""
+                class="text-xs text-muted-foreground"
+              >
+                默认字体
+              </SelectItem>
+              <SelectItem
+                v-for="opt in fontOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
 
-    <NModal
-      v-model:show="fontBrowserShown"
-      preset="card"
-      title="Google Fonts"
-      class="font-browser-modal"
-      style="width: min(820px, 92vw)"
-    >
-      <div class="font-browser-controls">
-        <NInput
-          v-model:value="fontSearch"
-          clearable
-          placeholder="搜索字体名称"
-        >
-          <template #prefix>
-            <NIcon :component="SearchOutline" />
-          </template>
-        </NInput>
-        <NSelect
-          v-model:value="fontCategory"
-          :options="fontCategoryOptions"
-          clearable
-          placeholder="全部分类"
-        />
-      </div>
-      <NText
-        v-if="googleFontsCatalogError"
-        class="font-browser-error"
-        type="error"
-      >
-        {{ googleFontsCatalogError }}
-      </NText>
-      <div class="font-browser-body">
-        <NVirtualList
-          v-if="browsableFonts.length"
-          class="font-browser-list"
-          :items="browsableFonts"
-          :item-size="46"
-          key-field="family"
-          @pointerdown.capture="handleFontBrowserPointerDown"
-          @scroll="handleFontBrowserScroll"
-        >
-          <template #default="{ item }">
-            <GoogleFontBrowserRow
-              :font="item"
-              :active="activePreviewFamily === item.family"
-              :category-label="fontCategoryLabels[item.category] ?? item.category"
-              :load-preview="fontRowPreviewEnabled"
-              @select="fontPreviewFamily = $event"
-            />
-          </template>
-        </NVirtualList>
-        <div
-          v-else-if="googleFontsCatalogLoading"
-          class="font-browser-empty"
-        >
-          <NSpin size="small" />
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="outline"
+                size="icon"
+                class="size-8 shrink-0"
+                aria-label="浏览字体库"
+                @click="openFontBrowser"
+              >
+                <component
+                  :is="TextFont24Regular"
+                  class="size-4"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>浏览字体库</TooltipContent>
+          </Tooltip>
         </div>
-        <NEmpty
-          v-else
-          class="font-browser-empty"
-          size="small"
-        />
-        <section
-          v-if="activePreviewFamily"
-          class="font-browser-preview"
+
+        <div
+          v-if="showPreview && model"
+          class="font-preview p-2 rounded-md border border-border bg-muted/20 text-foreground text-sm"
+          :style="selectedFontStyle"
         >
-          <NText depth="3">
-            {{ activePreviewFamily }}
-          </NText>
-          <div
-            class="font-browser-preview__sample"
-            :style="browserPreviewStyle"
-          >
-            春风又绿江南岸<br />
-            The quick brown fox<br />
-            0123456789
-          </div>
-          <NButton
-            type="primary"
-            :disabled="model === activePreviewFamily"
-            @click="applyPreviewFont"
-          >
-            {{ model === activePreviewFamily ? '正在使用' : '使用此字体' }}
-          </NButton>
-        </section>
+          春风又绿江南岸 Aa 123
+        </div>
+
+        <span
+          v-if="googleFontsCatalogError"
+          class="text-destructive text-xs"
+        >
+          {{ googleFontsCatalogError }}
+        </span>
       </div>
-    </NModal>
-  </div>
+
+      <Dialog v-model:open="fontBrowserShown">
+        <DialogContent class="sm:max-w-2xl max-h-[85vh] flex flex-col p-4 gap-3">
+          <DialogHeader class="pb-2 border-b border-border/60">
+            <DialogTitle class="text-sm font-semibold">Google Fonts 字体库</DialogTitle>
+          </DialogHeader>
+
+          <div class="font-browser-controls flex items-center gap-2">
+            <div class="relative flex-1">
+              <component
+                :is="SearchOutline"
+                class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                v-model="fontSearch"
+                placeholder="搜索字体名称..."
+                class="pl-8"
+              />
+            </div>
+
+            <Select
+              :model-value="fontCategory ?? 'all'"
+              @update:model-value="fontCategory = $event === 'all' ? null : String($event)"
+            >
+              <SelectTrigger class="w-36 shrink-0">
+                <SelectValue placeholder="全部分类" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部分类</SelectItem
+                >
+                <SelectItem
+                  v-for="cat in fontCategoryOptions"
+                  :key="cat.value"
+                  :value="cat.value"
+                  class="text-xs"
+                >
+                  {{ cat.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <span
+            v-if="googleFontsCatalogError"
+            class="text-destructive text-xs"
+          >
+            {{ googleFontsCatalogError }}
+          </span>
+
+          <div class="font-browser-body grid grid-cols-1 md:grid-cols-[1fr_260px] gap-3 flex-1 min-h-0 overflow-hidden">
+            <ScrollArea class="h-80 border border-border/80 rounded-lg p-1">
+              <div
+                v-if="browsableFonts.length"
+                class="space-y-1"
+              >
+                <GoogleFontBrowserRow
+                  v-for="item in browsableFonts.slice(0, 150)"
+                  :key="item.family"
+                  :font="item"
+                  :active="activePreviewFamily === item.family"
+                  :category-label="fontCategoryLabels[item.category] ?? item.category"
+                  :load-preview="true"
+                  @select="fontPreviewFamily = $event"
+                />
+              </div>
+              <div
+                v-else-if="googleFontsCatalogLoading"
+                class="py-16 flex justify-center"
+              >
+                <Spin />
+              </div>
+              <Empty
+                v-else
+                class="py-12"
+                description="未找到匹配的字体"
+              />
+            </ScrollArea>
+
+            <section
+              v-if="activePreviewFamily"
+              class="font-browser-preview p-3 rounded-lg border border-border/80 bg-muted/20 flex flex-col justify-between gap-3 text-xs"
+            >
+              <div class="space-y-2">
+                <span class="text-xs font-semibold text-foreground block">
+                  {{ activePreviewFamily }}
+                </span>
+                <div
+                  class="font-browser-preview__sample p-3 rounded bg-background border border-border/60 text-sm leading-relaxed"
+                  :style="browserPreviewStyle"
+                >
+                  春风又绿江南岸<br />
+                  The quick brown fox<br />
+                  0123456789
+                </div>
+              </div>
+
+              <Button
+                class="w-full"
+                :disabled="model === activePreviewFamily"
+                @click="applyPreviewFont"
+              >
+                {{ model === activePreviewFamily ? '正在使用' : '使用此字体' }}
+              </Button>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  </TooltipProvider>
 </template>
-
-<style scoped>
-.google-font-picker {
-  width: 100%;
-}
-
-.font-field {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-}
-
-.font-picker {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px;
-  gap: 6px;
-}
-
-.font-browser-button {
-  width: 34px;
-  height: 34px;
-}
-
-.font-preview {
-  min-height: 36px;
-  padding: 8px 10px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  color: var(--vtsuru-fg);
-  font-size: 16px;
-  line-height: 1.25;
-}
-
-.font-browser-controls {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 150px;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.font-browser-body {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 16px;
-  min-height: 420px;
-}
-
-.font-browser-error {
-  display: block;
-  margin: -4px 0 10px;
-}
-
-.font-browser-list {
-  height: 420px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-}
-
-.font-browser-empty {
-  height: 420px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.font-browser-preview {
-  min-width: 0;
-  padding-left: 16px;
-  border-left: 1px solid var(--vtsuru-border);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.font-browser-preview__sample {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-  color: var(--vtsuru-fg);
-  font-size: 24px;
-  line-height: 1.65;
-}
-
-@media (max-width: 640px) {
-  .font-browser-controls,
-  .font-browser-body {
-    grid-template-columns: 1fr;
-  }
-
-  .font-browser-body {
-    min-height: 0;
-  }
-
-  .font-browser-list,
-  .font-browser-empty {
-    height: 300px;
-  }
-
-  .font-browser-preview {
-    padding: 12px 0 0;
-    border-top: 1px solid var(--vtsuru-border);
-    border-left: 0;
-  }
-
-  .font-browser-preview__sample {
-    min-height: 150px;
-  }
-}
-</style>

@@ -7,5 +7,5 @@
  */
 
 export type GetApiOrgOrgIdStreamersParams = {
-includeAll?: boolean;
-};
+  includeAll?: boolean
+}

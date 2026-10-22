@@ -5,32 +5,32 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsAssistantProcessStepDto } from './vTsuruCoreAIContractsAssistantProcessStepDto';
-import type { VTsuruCoreAIContractsAssistantProposalDto } from './vTsuruCoreAIContractsAssistantProposalDto';
-import type { VTsuruCoreAIContractsAssistantTokenUsageDto } from './vTsuruCoreAIContractsAssistantTokenUsageDto';
+import type { VTsuruCoreAIContractsAssistantProcessStepDto } from './vTsuruCoreAIContractsAssistantProcessStepDto'
+import type { VTsuruCoreAIContractsAssistantProposalDto } from './vTsuruCoreAIContractsAssistantProposalDto'
+import type { VTsuruCoreAIContractsAssistantTokenUsageDto } from './vTsuruCoreAIContractsAssistantTokenUsageDto'
 
 /**
  * 会话内单条历史消息 (含可能的提案预览)
  */
 export interface VTsuruCoreAIContractsAssistantHistoryMessageDto {
-  id: number;
-  role: string;
-  text: string;
-  createTime: number;
+  id: number
+  role: string
+  text: string
+  createTime: number
   /**
-     * 历史消息附带图片的访问 URL (从 fileId 解析)
-     * @nullable
-     */
-  images?: string[] | null;
-  usage?: VTsuruCoreAIContractsAssistantTokenUsageDto;
+   * 历史消息附带图片的访问 URL (从 fileId 解析)
+   * @nullable
+   */
+  images?: string[] | null
+  usage?: VTsuruCoreAIContractsAssistantTokenUsageDto
   /**
-     * 本条回复关联的待审批提案 (可能多个)
-     * @nullable
-     */
-  proposals?: VTsuruCoreAIContractsAssistantProposalDto[] | null;
+   * 本条回复关联的待审批提案 (可能多个)
+   * @nullable
+   */
+  proposals?: VTsuruCoreAIContractsAssistantProposalDto[] | null
   /**
-     * 答复前的工作过程 (思考 + 工具调用), 按时序排列; 仅 assistant 消息有
-     * @nullable
-     */
-  process?: VTsuruCoreAIContractsAssistantProcessStepDto[] | null;
+   * 答复前的工作过程 (思考 + 工具调用), 按时序排列; 仅 assistant 消息有
+   * @nullable
+   */
+  process?: VTsuruCoreAIContractsAssistantProcessStepDto[] | null
 }

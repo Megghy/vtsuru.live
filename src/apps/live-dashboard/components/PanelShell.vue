@@ -5,84 +5,28 @@ defineSlots<{ actions?: () => unknown; default: () => unknown }>()
 
 <template>
   <section
-    class="panel"
-    :class="{ 'panel--blurred': blurred }"
+    class="flex flex-col h-full min-w-0 min-h-0 bg-background"
+    :class="{ 'blur-[6px] grayscale-[0.6] opacity-50 pointer-events-none': blurred }"
   >
-    <header class="panel__head">
-      <span class="panel__title">{{ title }}</span>
+    <header class="flex items-center gap-1.5 h-[30px] px-2 shrink-0 text-xs text-muted-foreground border-b border-border">
+      <span class="font-semibold text-foreground">{{ title }}</span>
       <span
         v-if="count !== undefined"
-        class="panel__count"
-      >{{ count }}</span>
+        class="tabular-nums"
+        >{{ count }}</span
+      >
       <span
         v-if="unread"
-        class="panel__unread"
+        class="px-1.5 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] tabular-nums"
         title="未读"
-      >{{ unread }}</span>
-      <div class="panel__actions">
+        >{{ unread }}</span
+      >
+      <div class="ml-auto flex items-center gap-0.5">
         <slot name="actions" />
       </div>
     </header>
-    <div class="panel__body">
+    <div class="flex-1 min-h-0">
       <slot />
     </div>
   </section>
 </template>
-
-<style scoped>
-.panel {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-width: 0;
-  min-height: 0;
-  background: var(--vtsuru-bg);
-}
-
-.panel--blurred {
-  filter: blur(6px) grayscale(0.6);
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.panel__head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 30px;
-  padding: 0 8px;
-  flex-shrink: 0;
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  border-bottom: 1px solid var(--vtsuru-border);
-}
-
-.panel__title {
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.panel__count {
-  font-variant-numeric: tabular-nums;
-}
-
-.panel__unread {
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
-  font-variant-numeric: tabular-nums;
-}
-
-.panel__actions {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.panel__body {
-  flex: 1;
-  min-height: 0;
-}
-</style>

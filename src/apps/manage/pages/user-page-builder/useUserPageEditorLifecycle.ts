@@ -1,4 +1,10 @@
-import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
+type MessageApiInjection = {
+  success: (msg: any, options?: any) => any
+  error: (msg: any, options?: any) => any
+  warning: (msg: any, options?: any) => any
+  info: (msg: any, options?: any) => any
+  loading?: (msg: any, options?: any) => any
+}
 import type { ComputedRef } from 'vue'
 import { computed, ref, watch } from 'vue'
 

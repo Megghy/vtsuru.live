@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NForm, NFormItem, NInput, NInputNumber, NSelect, NText } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 import PropsGrid from '../PropsGrid.vue'
 import RepeaterEditor from '../RepeaterEditor.vue'
@@ -14,55 +15,58 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
+  <div class="space-y-3">
     <PropsGrid>
-      <NFormItem
+      <div
         v-if="propertyAvailable('borderTitle')"
-        label="边框标题"
+        class="space-y-1"
       >
-        <NInput
-          v-model:value="blockProps.borderTitle"
+        <label class="text-xs text-muted-foreground">边框标题</label>
+        <Input
+          v-model="blockProps.borderTitle"
           placeholder="例如：导航"
         />
-      </NFormItem>
-      <NFormItem
+      </div>
+      <div
         v-if="propertyAvailable('borderTitleAlign')"
-        label="标题对齐"
+        class="space-y-1"
       >
-        <NSelect
-          v-model:value="blockProps.borderTitleAlign"
-          :options="[
-            { label: '左', value: 'left' },
-            { label: '中', value: 'center' },
-            { label: '右', value: 'right' },
-          ]"
-        />
-      </NFormItem>
-      <NFormItem label="排列方向">
-        <NSelect
-          v-model:value="blockProps.direction"
-          :options="[
-            { label: '竖向', value: 'vertical' },
-            { label: '横向 - 自动换行', value: 'horizontal' },
-          ]"
-        />
-      </NFormItem>
+        <label class="text-xs text-muted-foreground">标题对齐</label>
+        <Select v-model="blockProps.borderTitleAlign">
+          <SelectTrigger>
+            <SelectValue placeholder="标题对齐" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="left">左</SelectItem>
+            <SelectItem value="center">中</SelectItem>
+            <SelectItem value="right">右</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">排列方向</label>
+        <Select v-model="blockProps.direction">
+          <SelectTrigger>
+            <SelectValue placeholder="排列方向" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="vertical">竖向</SelectItem>
+            <SelectItem value="horizontal">横向 - 自动换行</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <ButtonAppearanceFields :block="props.block" />
-      <NFormItem label="间距 px">
-        <NInputNumber
-          v-model:value="blockProps.gap"
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">间距 px</label>
+        <NumberField
+          v-model="blockProps.gap"
           :min="0"
           :max="32"
-          style="width: 100%"
+          class="w-full"
         />
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="按钮项"
-      >
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">按钮项</label>
         <RepeaterEditor
           :items="editor.ensureItems(props.block)"
           :create-item="() => ({ label: '', url: 'https://' })"
@@ -73,45 +77,61 @@ const { editor, blockProps, propertyAvailable, internalPageOptions } = useBlockP
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="标题">
-                <NInput v-model:value="item.label" />
-              </NFormItem>
-              <NFormItem label="跳转类型">
-                <NSelect
-                  :value="getNavigationTargetType(item)"
-                  :options="[
-                    { label: '页面', value: 'page' },
-                    { label: '外链', value: 'external' },
-                    { label: '返回', value: 'back' },
-                  ]"
-                  @update:value="(value) => setNavigationTargetType(item, value)"
-                />
-              </NFormItem>
-              <NFormItem
-                class="span-full"
-                label="目标"
-              >
-                <NSelect
+              <div class="space-y-1">
+                <label class="text-xs text-muted-foreground">标题</label>
+                <Input v-model="item.label" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs text-muted-foreground">跳转类型</label>
+                <Select
+                  :model-value="getNavigationTargetType(item)"
+                  @update:model-value="(value) => setNavigationTargetType(item, value as any)"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="跳转类型" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="page">页面</SelectItem>
+                    <SelectItem value="external">外链</SelectItem>
+                    <SelectItem value="back">返回</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div class="span-full space-y-1">
+                <label class="text-xs text-muted-foreground">目标</label>
+                <Select
                   v-if="item.page"
-                  v-model:value="item.page"
-                  :options="internalPageOptions"
-                />
-                <NInput
+                  v-model="item.page"
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="选择内部页面" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="opt in internalPageOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
+                      {{ opt.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
                   v-else-if="!item.back"
-                  v-model:value="item.url"
+                  v-model="item.url"
                   placeholder="https://..."
                 />
-                <NText
+                <span
                   v-else
-                  depth="3"
+                  class="text-xs text-muted-foreground"
                 >
                   点击后返回上一页
-                </NText>
-              </NFormItem>
+                </span>
+              </div>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

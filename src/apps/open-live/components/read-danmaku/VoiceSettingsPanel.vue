@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NDivider, NFlex, NSlider } from 'naive-ui'
 import { computed } from 'vue'
 
+import { Separator } from '@/shared/ui/separator'
+import { Slider } from '@/shared/ui/slider'
 import { useSpeechService } from '@/store/useSpeechService'
 
 import AzureForm from './providers/AzureForm.vue'
@@ -37,16 +38,17 @@ const providers = [
 </script>
 
 <template>
-  <div class="voice-settings">
+  <div class="flex flex-col gap-3">
     <SectionField
       label="音量"
       :value="`${(settings.speechInfo.volume * 100).toFixed(0)}%`"
     >
-      <NSlider
-        v-model:value="settings.speechInfo.volume"
+      <Slider
+        :model-value="[settings.speechInfo.volume]"
         :min="0"
         :max="1"
         :step="0.01"
+        @update:model-value="settings.speechInfo.volume = $event?.[0] ?? 1"
       />
     </SectionField>
 
@@ -55,11 +57,12 @@ const providers = [
         label="音调"
         :value="settings.speechInfo.pitch.toFixed(2)"
       >
-        <NSlider
-          v-model:value="settings.speechInfo.pitch"
+        <Slider
+          :model-value="[settings.speechInfo.pitch]"
           :min="0.5"
           :max="2"
           :step="0.01"
+          @update:model-value="settings.speechInfo.pitch = $event?.[0] ?? 1"
         />
       </SectionField>
 
@@ -67,22 +70,20 @@ const providers = [
         label="语速"
         :value="settings.speechInfo.rate.toFixed(2)"
       >
-        <NSlider
-          v-model:value="settings.speechInfo.rate"
+        <Slider
+          :model-value="[settings.speechInfo.rate]"
           :min="0.5"
           :max="2"
           :step="0.01"
+          @update:model-value="settings.speechInfo.rate = $event?.[0] ?? 1"
         />
       </SectionField>
     </template>
 
-    <NDivider style="margin: 4px 0" />
+    <Separator class="my-1" />
 
     <SectionField label="语音引擎">
-      <NFlex
-        :size="6"
-        :wrap="true"
-      >
+      <div class="flex flex-wrap gap-1.5">
         <ProviderTile
           v-for="p in providers"
           :key="p.id"
@@ -93,7 +94,7 @@ const providers = [
           style="flex: 1 1 calc(50% - 3px); min-width: 140px"
           @click="settings.provider = p.id"
         />
-      </NFlex>
+      </div>
     </SectionField>
 
     <Transition
@@ -116,11 +117,6 @@ const providers = [
 </template>
 
 <style scoped>
-.voice-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.18s ease;

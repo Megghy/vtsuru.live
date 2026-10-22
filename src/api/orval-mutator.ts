@@ -23,7 +23,10 @@ function headerTuples(headers?: HeadersInit): [string, string][] | undefined {
   let entries: [string, string][]
   if (headers instanceof Headers) entries = [...headers.entries()]
   else if (Array.isArray(headers)) entries = headers.map(([k, v]) => [k, String(v)])
-  else entries = Object.entries(headers).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)])
+  else
+    entries = Object.entries(headers)
+      .filter(([, v]) => v != null)
+      .map(([k, v]) => [k, String(v)])
   return entries.length ? entries : undefined
 }
 

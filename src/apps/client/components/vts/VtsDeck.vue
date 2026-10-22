@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { Add24Regular, ArrowImport24Regular, Checkmark24Regular, Delete24Regular, Edit24Regular } from '@vicons/fluent'
-import { NAlert, NButton, NCard, NEmpty, NFlex, NIcon, NSpin, NText } from 'naive-ui'
-import { VueDraggable } from 'vue-draggable-plus'
 import { computed, reactive, ref } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
-import { newDeckTile } from '@/apps/client/store/vts/deck'
 import type { VtsDeckTile } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { newDeckTile } from '@/apps/client/store/vts/deck'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
 
 import { DECK_TYPE_META, useDeckTargets } from './deckMeta'
 import { useVtsAction } from './useVtsAction'
@@ -50,100 +53,87 @@ function addExpressions() {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="操作台"
-  >
-    <template #header-extra>
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NButton
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+      <CardTitle class="text-sm font-semibold">操作台</CardTitle>
+      <div class="flex items-center gap-2">
+        <Button
           v-if="editing"
-          size="small"
+          variant="outline"
+          class="gap-1"
           :disabled="!vts.connected || vts.expressions.length === 0"
           @click="addExpressions"
         >
-          <template #icon>
-            <NIcon :component="ArrowImport24Regular" />
-          </template>
+          <ArrowImport24Regular class="size-3.5" />
           导入当前模型表情
-        </NButton>
-        <NButton
+        </Button>
+        <Button
           v-if="editing"
-          size="small"
+          variant="outline"
+          class="gap-1"
           @click="openEditor()"
         >
-          <template #icon>
-            <NIcon :component="Add24Regular" />
-          </template>
+          <Add24Regular class="size-3.5" />
           添加格子
-        </NButton>
-        <NButton
-          size="small"
-          :type="editing ? 'primary' : 'default'"
-          secondary
+        </Button>
+        <Button
+          :variant="editing ? 'default' : 'secondary'"
+          class="gap-1"
           @click="editing = !editing"
         >
-          <template #icon>
-            <NIcon :component="editing ? Checkmark24Regular : Edit24Regular" />
-          </template>
+          <Checkmark24Regular
+            v-if="editing"
+            class="size-3.5"
+          />
+          <Edit24Regular
+            v-else
+            class="size-3.5"
+          />
           {{ editing ? '完成' : '编辑' }}
-        </NButton>
-      </NFlex>
-    </template>
+        </Button>
+      </div>
+    </CardHeader>
 
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NText
+    <CardContent class="p-3 space-y-3">
+      <div
         v-if="editing"
-        depth="3"
+        class="text-xs text-muted-foreground"
       >
         拖动格子调整顺序，点击格子修改动作、颜色与全局快捷键
-      </NText>
-      <NAlert
+      </div>
+      <Alert
         v-if="vts.deckShortcutError"
-        type="warning"
-        :show-icon="false"
+        class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
       >
-        全局快捷键注册失败：{{ vts.deckShortcutError }}
-      </NAlert>
+        <AlertDescription class="text-xs m-0"> 全局快捷键注册失败：{{ vts.deckShortcutError }} </AlertDescription>
+      </Alert>
 
-      <NEmpty
+      <div
         v-if="tiles.length === 0"
-        description="把常用的表情、热键、宏、机位预设放到这里，一键切换"
+        class="py-6 flex flex-col items-center justify-center"
       >
-        <template #extra>
-          <NFlex
-            justify="center"
-            :size="8"
-          >
-            <NButton
-              size="small"
-              type="primary"
+        <Empty description="把常用的表情、热键、宏、机位预设放到这里，一键切换">
+          <div class="flex items-center justify-center gap-2 mt-3">
+            <Button
               :disabled="!vts.connected || vts.expressions.length === 0"
               @click="addExpressions"
             >
               导入当前模型表情
-            </NButton>
-            <NButton
-              size="small"
+            </Button>
+            <Button
+              variant="outline"
               @click="openEditor()"
             >
               手动添加
-            </NButton>
-          </NFlex>
-        </template>
-      </NEmpty>
+            </Button>
+          </div>
+        </Empty>
+      </div>
 
       <VueDraggable
         v-else
         v-model="tiles"
-        class="deck-grid"
+        class="grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-2.5"
         :animation="150"
         :disabled="!editing"
         force-fallback
@@ -154,157 +144,59 @@ function addExpressions() {
           :key="tile.id"
           role="button"
           :tabindex="tileDisabled ? -1 : 0"
-          class="deck-tile"
-          :class="{
-            'is-disabled': tileDisabled,
-            'is-active': vts.isDeckTileActive(tile),
-            'is-missing': isTargetMissing(tile.type, tile.targetId),
-            'is-editing': editing,
+          class="relative flex flex-col items-center justify-center gap-1 min-w-0 aspect-[5/4] p-2 border border-border rounded-md bg-popover select-none transition-all duration-150"
+          :class="[
+            tileDisabled
+              ? 'cursor-not-allowed opacity-50'
+              : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:scale-[0.97]',
+            vts.isDeckTileActive(tile)
+              ? 'bg-primary/15 shadow-[0_0_0_2px_var(--primary)]'
+              : '',
+            isTargetMissing(tile.type, tile.targetId)
+              ? 'border-dashed opacity-60'
+              : '',
+            editing ? 'cursor-grab' : '',
+          ]"
+          :style="{
+            borderTopWidth: '3px',
+            borderTopColor: tile.color || 'var(--primary)',
           }"
-          :style="tile.color ? { '--tile-color': tile.color } : undefined"
           @click="onTileClick(tile)"
           @keydown.enter.space.prevent="onTileClick(tile)"
         >
-          <NIcon
-            :component="DECK_TYPE_META[tile.type].icon"
-            size="22"
-            class="deck-tile-icon"
+          <component
+            :is="DECK_TYPE_META[tile.type].icon"
+            class="size-5 flex"
+            :style="{ color: tile.color || 'var(--primary)' }"
           />
-          <span class="deck-tile-label">{{ tile.label }}</span>
-          <span class="deck-tile-sub">
+          <span class="max-w-full overflow-hidden text-[13px] font-semibold text-ellipsis whitespace-nowrap">{{ tile.label }}</span>
+          <span class="text-[11px] text-muted-foreground">
             {{ isTargetMissing(tile.type, tile.targetId) ? '目标不存在' : DECK_TYPE_META[tile.type].label }}
           </span>
-          <NSpin
+          <div
             v-if="running.has(tile.id)"
-            size="small"
-            class="deck-tile-spin"
+            class="absolute top-1.5 left-1.5 size-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
           />
           <kbd
             v-if="tile.shortcut"
-            class="deck-tile-kbd"
-          >{{ tile.shortcut.replaceAll('Digit', '').replaceAll('Key', '') }}</kbd>
-          <NButton
+            class="absolute right-1 bottom-1 px-1 border border-border rounded font-inherit text-[10px] text-muted-foreground"
+            >{{ tile.shortcut.replaceAll('Digit', '').replaceAll('Key', '') }}</kbd
+          >
+          <button
             v-if="editing"
-            class="deck-tile-delete"
-            size="tiny"
-            circle
-            type="error"
-            secondary
+            type="button"
+            class="absolute top-1 right-1 size-5 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
             @click.stop="run(() => vts.removeDeckTile(tile.id))"
           >
-            <template #icon>
-              <NIcon :component="Delete24Regular" />
-            </template>
-          </NButton>
+            <Delete24Regular class="size-3" />
+          </button>
         </div>
       </VueDraggable>
-    </NFlex>
+    </CardContent>
 
     <VtsDeckTileEditor
       v-model:show="showEditor"
       :tile="editorTile"
     />
-  </NCard>
+  </Card>
 </template>
-
-<style scoped>
-.deck-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 10px;
-}
-
-.deck-tile {
-  --tile-color: var(--vtsuru-primary, #18a058);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: 0;
-  aspect-ratio: 5 / 4;
-  padding: 8px;
-  border: 1px solid var(--vtsuru-border);
-  border-top: 3px solid var(--tile-color);
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-elevated);
-  cursor: pointer;
-  user-select: none;
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-.deck-tile:hover:not(.is-disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
-}
-
-.deck-tile:active:not(.is-disabled) {
-  transform: scale(0.97);
-}
-
-.deck-tile.is-disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.deck-tile.is-active {
-  background: color-mix(in srgb, var(--tile-color) 18%, var(--vtsuru-bg-elevated));
-  box-shadow: 0 0 0 2px var(--tile-color);
-}
-
-.deck-tile.is-missing {
-  border-style: dashed;
-  opacity: 0.6;
-}
-
-.deck-tile.is-editing {
-  cursor: grab;
-}
-
-.deck-tile-spin {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-}
-
-.deck-tile-icon {
-  display: flex;
-  color: var(--tile-color);
-}
-
-.deck-tile-label {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.deck-tile-sub {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.deck-tile-kbd {
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  padding: 0 4px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 3px;
-  font-family: inherit;
-  font-size: 10px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.deck-tile-delete {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-}
-</style>

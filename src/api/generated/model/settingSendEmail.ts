@@ -7,7 +7,7 @@
  */
 
 export interface SettingSendEmail {
-  recieveQA: boolean;
-  recieveQAReply: boolean;
-  receiveOrder: boolean;
+  recieveQA: boolean
+  recieveQAReply: boolean
+  receiveOrder: boolean
 }

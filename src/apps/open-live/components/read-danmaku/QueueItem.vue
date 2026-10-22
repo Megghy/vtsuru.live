@@ -1,10 +1,19 @@
 <script setup lang="ts">
 import { ArrowUp20Filled, Copy20Filled, Delete20Filled, Play20Filled, ReOrder24Filled } from '@vicons/fluent'
 import { useTimeAgo } from '@vueuse/core'
-import { NButton, NDropdown, NIcon, NTag, NText, NTooltip } from 'naive-ui'
-import { computed, h } from 'vue'
+import { computed } from 'vue'
 
 import { EventDataTypes } from '@/api/api-models'
+import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Tag } from '@/shared/ui/tag'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { copyToClipboard } from '@/shared/utils'
 import { useSpeechService } from '@/store/useSpeechService'
 import type { QueueItem } from '@/store/useSpeechService'
@@ -59,16 +68,8 @@ const absoluteTime = computed(() => {
 
 const speechText = computed(() => speechService.getTextFromDanmaku(props.item.data) ?? '')
 
-const dropdownOptions = computed(() => [
-  { label: '立即播放', key: 'play', icon: () => h(NIcon, null, { default: () => h(Play20Filled) }) },
-  { label: '置顶', key: 'pin', icon: () => h(NIcon, null, { default: () => h(ArrowUp20Filled) }) },
-  { label: '复制内容', key: 'copy', icon: () => h(NIcon, null, { default: () => h(Copy20Filled) }) },
-  { type: 'divider', key: 'd1' },
-  { label: '从队列移除', key: 'remove', icon: () => h(NIcon, null, { default: () => h(Delete20Filled) }) },
-])
-
-function handleSelect(key: string) {
-  switch (key) {
+function handleSelect(action: string) {
+  switch (action) {
     case 'play':
       speechService.forceSpeak(props.item.data)
       break
@@ -86,153 +87,104 @@ function handleSelect(key: string) {
 </script>
 
 <template>
-  <NDropdown
-    trigger="click"
-    placement="bottom-start"
-    :options="dropdownOptions"
-    @select="handleSelect"
-  >
-    <div
-      class="queue-item"
-      :draggable="true"
-      @dragstart="$emit('dragstart', index)"
+  <DropdownMenu>
+    <DropdownMenuTrigger as-child>
+      <div
+        class="flex items-center gap-2 py-2 px-2.5 border border-border rounded-md bg-card text-xs cursor-grab select-none transition-colors hover:border-primary active:cursor-grabbing"
+        :draggable="true"
+        @dragstart="$emit('dragstart', index)"
+      >
+        <div
+          class="text-muted-foreground flex items-center"
+          @click.stop
+        >
+          <ReOrder24Filled class="size-3.5" />
+        </div>
+
+        <Tag
+          :type="tag.type"
+          class="shrink-0 text-[10px] px-1 py-0 h-5"
+        >
+          {{ tag.text }}
+        </Tag>
+
+        <span class="font-semibold shrink-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{ item.data.uname }}</span>
+
+        <span class="flex-1 text-xs overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-muted-foreground">
+          {{ speechText }}
+        </span>
+
+        <Tag
+          v-if="item.data.type === EventDataTypes.Gift && item.combineCount"
+          type="info"
+          class="text-[10px] px-1 py-0 h-4"
+        >
+          ×{{ item.combineCount }}
+        </Tag>
+        <Tag
+          v-else-if="item.data.type === EventDataTypes.Gift && settings.combineGiftDelay"
+          type="success"
+          class="text-[10px] px-1 py-0 h-4"
+        >
+          合并中
+        </Tag>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="text-[11px] text-muted-foreground tabular-nums shrink-0">{{ timeAgo }}</span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p class="text-xs">{{ absoluteTime }}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <div
+          class="flex gap-0.5 shrink-0"
+          @click.stop
+        >
+          <Button
+            variant="ghost"
+            class="h-6 w-6 p-0 rounded-full"
+            @click="speechService.forceSpeak(item.data)"
+          >
+            <Play20Filled class="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
+            class="h-6 w-6 p-0 rounded-full text-destructive hover:bg-destructive/10"
+            @click="speechService.removeFromQueue(item)"
+          >
+            <Delete20Filled class="size-3.5" />
+          </Button>
+        </div>
+      </div>
+    </DropdownMenuTrigger>
+    <DropdownMenuContent
+      align="start"
+      class="w-36 text-xs"
     >
-      <div
-        class="drag-handle"
-        @click.stop
+      <DropdownMenuItem @click="handleSelect('play')">
+        <Play20Filled class="size-3.5 mr-2" />
+        立即播放
+      </DropdownMenuItem>
+      <DropdownMenuItem @click="handleSelect('pin')">
+        <ArrowUp20Filled class="size-3.5 mr-2" />
+        置顶
+      </DropdownMenuItem>
+      <DropdownMenuItem @click="handleSelect('copy')">
+        <Copy20Filled class="size-3.5 mr-2" />
+        复制内容
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        class="text-destructive"
+        @click="handleSelect('remove')"
       >
-        <NIcon
-          :component="ReOrder24Filled"
-          :size="14"
-        />
-      </div>
-
-      <NTag
-        :type="tag.type"
-        size="small"
-        :bordered="false"
-        class="type-tag"
-      >
-        {{ tag.text }}
-      </NTag>
-
-      <span class="uname">{{ item.data.uname }}</span>
-
-      <NText
-        depth="3"
-        class="content"
-      >
-        {{ speechText }}
-      </NText>
-
-      <NTag
-        v-if="item.data.type === EventDataTypes.Gift && item.combineCount"
-        type="info"
-        size="tiny"
-        :bordered="false"
-      >
-        ×{{ item.combineCount }}
-      </NTag>
-      <NTag
-        v-else-if="item.data.type === EventDataTypes.Gift && settings.combineGiftDelay"
-        type="success"
-        size="tiny"
-        :bordered="false"
-      >
-        合并中
-      </NTag>
-
-      <NTooltip>
-        <template #trigger>
-          <span class="time">{{ timeAgo }}</span>
-        </template>
-        {{ absoluteTime }}
-      </NTooltip>
-
-      <div
-        class="actions"
-        @click.stop
-      >
-        <NButton
-          size="tiny"
-          tertiary
-          circle
-          @click="speechService.forceSpeak(item.data)"
-        >
-          <template #icon>
-            <NIcon :component="Play20Filled" />
-          </template>
-        </NButton>
-        <NButton
-          size="tiny"
-          tertiary
-          circle
-          @click="speechService.removeFromQueue(item)"
-        >
-          <template #icon>
-            <NIcon :component="Delete20Filled" />
-          </template>
-        </NButton>
-      </div>
-    </div>
-  </NDropdown>
+        <Delete20Filled class="size-3.5 mr-2" />
+        从队列移除
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
 </template>
-
-<style scoped>
-.queue-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-surface);
-  font-size: 12px;
-  cursor: grab;
-  user-select: none;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease;
-}
-.queue-item:hover {
-  border-color: var(--vtsuru-primary);
-}
-.queue-item:active {
-  cursor: grabbing;
-}
-.drag-handle {
-  color: var(--vtsuru-fg-muted);
-  display: flex;
-  align-items: center;
-}
-.type-tag {
-  flex-shrink: 0;
-}
-.uname {
-  font-weight: 600;
-  flex-shrink: 0;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.content {
-  flex: 1;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-.time {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-.actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
-</style>

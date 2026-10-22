@@ -10,14 +10,16 @@ import {
 } from '@vicons/fluent'
 import { snapdom } from '@zumer/snapdom'
 import { saveAs } from 'file-saver'
-import type { SelectOption } from 'naive-ui'
-import { NButton, NIcon, NPopover, NSelect, useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { ScheduleDayInfo, UploadFileResponse } from '@/api/api-models'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
+import { Button } from '@/shared/ui/button'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { toast } from '@/shared/utils'
 
 import { resolveScheduleCategory } from './scheduleCategories'
 import { scheduleFontStylesheetDomains, waitForScheduleFonts } from './scheduleFonts'
@@ -34,43 +36,55 @@ import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 import './scheduleTemplateTheme.css'
 import './timeGridSchedule.css'
 
-export interface TimeGridConfig {
+interface TimeGridConfig {
   heading: string
   subheading: string
   accentColor: RGBAColor
-  showNowIndicator: boolean
-  autoFocusActiveTime: boolean
   backgroundFile: UploadFileResponse[]
+  autoFocusActiveTime: boolean
+  showNowIndicator: boolean
 }
 
 const props = defineProps<ScheduleConfigTypeWithConfig<TimeGridConfig>>()
-const message = useMessage()
 
 const Config = defineTemplateConfig([
   {
-    name: '背景图片',
-    type: 'file',
-    key: 'backgroundFile',
-    fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: TimeGridConfig) => (config.backgroundFile = files),
+    name: '主标题',
+    type: 'string',
+    key: 'heading',
+    default: '时序周历 · TimeGrid',
   },
-  { name: '周历标题', type: 'string', key: 'heading', default: '时序周历 · TimeGrid' },
-  { name: '副标题/寄语', type: 'string', key: 'subheading', default: '按周排期与每日开播时段一览' },
   {
-    name: '主题主色',
+    name: '副标题',
+    type: 'string',
+    key: 'subheading',
+    default: '按周排期与每日开播时段一览',
+  },
+  {
+    name: '主题色',
     type: 'color',
     key: 'accentColor',
-    default: { r: 16, g: 185, b: 129, a: 1 } as RGBAColor,
-    showAlpha: false,
+    default: { r: 16, g: 185, b: 129, a: 1 },
   },
   {
-    name: '自动聚焦有直播的时段',
+    name: '背景图',
+    type: 'file',
+    fileLimit: 1,
+    key: 'backgroundFile',
+    onUploaded: (file, config) => {
+      config.backgroundFile = file
+    },
+  },
+  {
+    name: '聚焦开播时段',
+    description: '自动裁切早晚无人开播的空闲时段，让主要直播时段充满横向轨道',
     type: 'boolean',
     key: 'autoFocusActiveTime',
     default: true,
   },
   {
     name: '显示当前时刻指示线',
+    description: '在当天轨道上标注当前北京时间的位置',
     type: 'boolean',
     key: 'showNowIndicator',
     default: true,
@@ -107,7 +121,9 @@ const boardStyle = computed(() => ({
 // 周次切换
 const dateFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'numeric', day: 'numeric' })
 
-interface WeekOption extends SelectOption {
+interface WeekOption {
+  label: string
+  value: string
   year: number
   week: number
 }
@@ -127,7 +143,7 @@ const weekOptions = computed<WeekOption[]>(() => {
       const weekOfMonth = Math.floor((anchor.getDate() + firstDayOffset - 1) / 7) + 1
       const year = showYear ? `${item.year}年 · ` : ''
       return {
-        label: `${year}${anchor.getMonth() + 1}月第${weekOfMonth}周 (${dateFormatter.format(start)}–${dateFormatter.format(end)})`,
+        label: `${year}${anchor.getMonth() + 1}月第${weekOfMonth}周 · ${dateFormatter.format(start)}–${dateFormatter.format(end)}`,
         value: `${item.year}-${item.week}`,
         year: item.year,
         week: item.week,
@@ -135,38 +151,49 @@ const weekOptions = computed<WeekOption[]>(() => {
     })
 })
 
-const selectedWeekIndex = computed(() => weekOptions.value.findIndex((option) => option.value === selectedWeek.value))
-const hasPreviousWeek = computed(() => selectedWeekIndex.value > 0)
-const hasNextWeek = computed(() => selectedWeekIndex.value >= 0 && selectedWeekIndex.value < weekOptions.value.length - 1)
+const currentWeekIndex = computed(() => weekOptions.value.findIndex((option) => option.value === selectedWeek.value))
+const hasPreviousWeek = computed(() => currentWeekIndex.value > 0)
+const hasNextWeek = computed(() => currentWeekIndex.value >= 0 && currentWeekIndex.value < weekOptions.value.length - 1)
 
 function moveWeek(offset: number) {
-  const option = weekOptions.value[selectedWeekIndex.value + offset]
-  if (option) selectedWeek.value = option.value as string
+  const option = weekOptions.value[currentWeekIndex.value + offset]
+  if (option) selectedWeek.value = option.value
 }
 
+// 是否正在查看现实里的“本周”
 const now = useScheduleNow()
-const currentRealWeekOrder = computed(() => getCurrentWeekOrder(now.value))
+const realCurrentWeekOrder = computed(() => getCurrentWeekOrder(now.value))
 const isViewingCurrentRealWeek = computed(() => {
   if (!currentWeek.value) return false
-  return getWeekOrder(currentWeek.value.year, currentWeek.value.week) === currentRealWeekOrder.value
+  const viewingOrder = getWeekOrder(currentWeek.value.year, currentWeek.value.week)
+  return viewingOrder === realCurrentWeekOrder.value
 })
 
 function goToThisWeek() {
-  const thisWeekOpt = weekOptions.value.find((opt) => getWeekOrder(opt.year, opt.week) === currentRealWeekOrder.value)
-  if (thisWeekOpt) {
-    selectedWeek.value = thisWeekOpt.value as string
+  const match = weekOptions.value.find((opt) => getWeekOrder(opt.year, opt.week) === realCurrentWeekOrder.value)
+  if (match) {
+    selectedWeek.value = match.value
+  } else if (weekOptions.value.length) {
+    selectedWeek.value = weekOptions.value[weekOptions.value.length - 1].value
   }
 }
 
-// ---------------------------------------------------------------------------
-// 智能聚焦时段计算 (仅截取有直播的时间段)
-// ---------------------------------------------------------------------------
+// 实时时间计算 (NOW)
+const nowMinutes = computed(() => now.value.getHours() * 60 + now.value.getMinutes())
+const nowTimeFormatted = computed(() => {
+  const h = String(now.value.getHours()).padStart(2, '0')
+  const m = String(now.value.getMinutes()).padStart(2, '0')
+  return `${h}:${m}`
+})
+const isCurrentRealWeek = isViewingCurrentRealWeek
+
+// 提取本周所有有具体时间的安排，用于计算最优时段聚焦
 const allWeekTimedMinutes = computed<number[]>(() => {
   const list: number[] = []
   for (const day of days.value) {
     for (const item of day.items) {
       const m = parseScheduleMinutes(item.time)
-      if (m !== undefined) {
+      if (m !== null) {
         list.push(m)
       }
     }
@@ -211,55 +238,61 @@ const activeTimeRange = computed<TimeRange>(() => {
     const padAfter = diff - padBefore
     startH = Math.max(0, startH - padBefore)
     endH = Math.min(24, endH + padAfter)
-    // 若贴近 24 点则反向补齐前侧
-    if (endH === 24 && endH - startH < minSpan) {
-      startH = Math.max(0, endH - minSpan)
+    if (endH - startH < minSpan) {
+      if (startH === 0) endH = Math.min(24, startH + minSpan)
+      if (endH === 24) startH = Math.max(0, endH - minSpan)
     }
   }
 
-  const totalMinutes = (endH - startH) * 60
-  const spanHours = endH - startH
+  const startMinutes = startH * 60
+  const endMinutes = endH * 60
+  const totalMinutes = endMinutes - startMinutes
 
-  // 生成刻度 (若跨度 <= 8 小时每 1 小时一刻度，否则每 2 小时一刻度)
-  const step = spanHours <= 8 ? 1 : spanHours <= 14 ? 2 : 3
+  // 生成刻度 (每 2 小时或每 3 小时整点一条)
+  const spanHours = endH - startH
+  const step = spanHours <= 8 ? 1 : spanHours <= 16 ? 2 : 3
   const ticks: number[] = []
   for (let h = startH; h <= endH; h += step) {
     ticks.push(h)
   }
-  if (!ticks.includes(endH)) {
+  if (ticks[ticks.length - 1] !== endH) {
     ticks.push(endH)
   }
 
   return {
     startHour: startH,
     endHour: endH,
-    startMinutes: startH * 60,
-    endMinutes: endH * 60,
+    startMinutes,
+    endMinutes,
     totalMinutes,
     ticks,
   }
 })
 
-// 当前时间指示线
-const nowMinutes = computed(() => now.value.getHours() * 60 + now.value.getMinutes())
-const isNowInRange = computed(() => {
-  return (
-    nowMinutes.value >= activeTimeRange.value.startMinutes &&
-    nowMinutes.value <= activeTimeRange.value.endMinutes
-  )
-})
-const nowLeftPercent = computed(() => {
+// 将分钟数转换为当前聚焦时间范围内的百分比 (0 ~ 100)
+function minutesToPercent(minutes: number): number {
   const { startMinutes, totalMinutes } = activeTimeRange.value
-  return ((nowMinutes.value - startMinutes) / totalMinutes) * 100
-})
-const nowTimeFormatted = computed(() => {
-  const h = String(now.value.getHours()).padStart(2, '0')
-  const m = String(now.value.getMinutes()).padStart(2, '0')
-  return `${h}:${m}`
-})
-const todayDayIndex = computed(() => days.value.findIndex((d) => d.isToday))
+  const clamped = Math.max(startMinutes, Math.min(startMinutes + totalMinutes, minutes))
+  return ((clamped - startMinutes) / totalMinutes) * 100
+}
 
-// 分类图例与过滤
+// NOW 指示线坐标
+const isNowInRange = computed(() => {
+  const m = nowMinutes.value
+  const { startMinutes, endMinutes } = activeTimeRange.value
+  return m >= startMinutes && m <= endMinutes
+})
+
+const nowLeftPercent = computed(() => minutesToPercent(nowMinutes.value))
+
+// 今日索引 (0 ~ 6: 周一到周日)
+const todayDayIndex = computed(() => {
+  if (!isCurrentRealWeek.value) return -1
+  const currentDate = new Date()
+  return (currentDate.getDay() + 6) % 7
+})
+
+// 分类图例与筛选
 const activeCategoryFilter = ref<string | null>(null)
 
 interface CategoryLegendItem {
@@ -321,71 +354,69 @@ interface ProcessedDayTimeline {
   date: string
   isToday: boolean
   isPast: boolean
-  items: ScheduleDayInfo[]
   scheduled: TimelineEventItem[]
   allday: ScheduleDayInfo[]
   totalSubRows: number
 }
 
-function computeDayTimeline(day: (typeof days.value)[number]): ProcessedDayTimeline {
-  const scheduled: TimelineEventItem[] = []
-  const allday: ScheduleDayInfo[] = []
-  const timedItems: { item: ScheduleDayInfo; minutes: number }[] = []
+const processedTimelineDays = computed<ProcessedDayTimeline[]>(() => {
+  return days.value.map((day, idx) => {
+    const isToday = idx === todayDayIndex.value
+    const isPast = todayDayIndex.value !== -1 && idx < todayDayIndex.value
 
-  const { startMinutes, totalMinutes } = activeTimeRange.value
+    const scheduledRaw: { item: ScheduleDayInfo; minutes: number }[] = []
+    const allday: ScheduleDayInfo[] = []
 
-  for (const item of day.items) {
-    const minutes = parseScheduleMinutes(item.time)
-    if (minutes !== undefined) {
-      timedItems.push({ item, minutes })
-    } else {
-      allday.push(item)
-    }
-  }
-
-  timedItems.sort((a, b) => a.minutes - b.minutes)
-
-  // 检测同日事件是否在横向时间上有紧贴/冲突 (若相隔 < 90 分钟则分入下一子行)
-  const subRowLastMinutes: number[] = []
-
-  for (const entry of timedItems) {
-    let assignedRow = -1
-    for (let r = 0; r < subRowLastMinutes.length; r++) {
-      if (entry.minutes - subRowLastMinutes[r]! >= 90) {
-        assignedRow = r
-        subRowLastMinutes[r] = entry.minutes
-        break
+    for (const item of day.items) {
+      const m = parseScheduleMinutes(item.time)
+      if (m !== null) {
+        scheduledRaw.push({ item, minutes: m })
+      } else {
+        allday.push(item)
       }
     }
-    if (assignedRow === -1) {
-      assignedRow = subRowLastMinutes.length
-      subRowLastMinutes.push(entry.minutes)
-    }
 
-    // 将绝对分钟数投影到当前的 activeTimeRange 区间中
-    const clampedMinutes = Math.max(startMinutes, Math.min(startMinutes + totalMinutes, entry.minutes))
-    const leftPercent = ((clampedMinutes - startMinutes) / totalMinutes) * 100
-    const color = entry.item.tagColor || 'var(--timegrid-accent)'
+    // 按开播时间升序排序
+    scheduledRaw.sort((a, b) => a.minutes - b.minutes)
 
-    scheduled.push({
-      item: entry.item,
-      minutes: entry.minutes,
-      leftPercent,
-      subRowIndex: assignedRow,
-      color,
+    // 多场直播重叠防撞贪心分配 (若两场时间间隔小于 75 分钟则推入次行轨道)
+    const subRowEndMinutes: number[] = []
+    const scheduled: TimelineEventItem[] = scheduledRaw.map(({ item, minutes }) => {
+      let assignedRow = 0
+      for (let r = 0; r < subRowEndMinutes.length; r++) {
+        if (minutes >= subRowEndMinutes[r] + 75) {
+          assignedRow = r
+          break
+        }
+      }
+      if (assignedRow === subRowEndMinutes.length) {
+        subRowEndMinutes.push(minutes)
+      } else {
+        subRowEndMinutes[assignedRow] = minutes
+      }
+
+      const color = item.tagColor || 'var(--timegrid-accent)'
+
+      return {
+        item,
+        minutes,
+        leftPercent: minutesToPercent(minutes),
+        subRowIndex: assignedRow,
+        color,
+      }
     })
-  }
 
-  return {
-    ...day,
-    scheduled,
-    allday,
-    totalSubRows: Math.max(1, subRowLastMinutes.length),
-  }
-}
-
-const processedTimelineDays = computed(() => {
-  return days.value.map(computeDayTimeline)
+    return {
+      isoDate: day.isoDate,
+      label: day.label,
+      date: day.date,
+      isToday,
+      isPast,
+      scheduled,
+      allday,
+      totalSubRows: Math.max(1, subRowEndMinutes.length),
+    }
+  })
 })
 
 const hasAlldayEvents = computed(() => processedTimelineDays.value.some((d) => d.allday.length > 0))
@@ -409,10 +440,10 @@ async function saveScheduleImage() {
       dpr: Math.max(window.devicePixelRatio, 2),
     })
     saveAs(blob, `时序周历_${selectedWeek.value || '本周'}_${streamerName.value}.png`)
-    message.success('已导出日程海报')
+    toast.success('已导出日程海报')
   } catch (error) {
     console.error(error)
-    message.error('保存图片失败')
+    toast.error('保存图片失败')
   } finally {
     saving.value = false
   }
@@ -433,13 +464,15 @@ defineExpose({ Config, DefaultConfig })
       <header class="timegrid-header">
         <div class="timegrid-header__title-group">
           <div class="timegrid-header__eyebrow">
-            <NIcon :size="14"><CalendarLtr20Regular aria-hidden="true" /></NIcon>
+            <component
+              :is="CalendarLtr20Regular"
+              class="size-3.5 inline"
+              aria-hidden="true"
+            />
             <span>WEEKLY TIMELINE</span>
           </div>
           <h2 class="timegrid-header__title">{{ effectiveConfig.heading }}</h2>
-          <p class="timegrid-header__meta">
-            {{ streamerName }} · {{ effectiveConfig.subheading }}
-          </p>
+          <p class="timegrid-header__meta">{{ streamerName }} · {{ effectiveConfig.subheading }}</p>
         </div>
 
         <div class="timegrid-header__badges">
@@ -450,7 +483,11 @@ defineExpose({ Config, DefaultConfig })
             <span>聚焦时段 {{ activeTimeRange.startHour }}:00 - {{ activeTimeRange.endHour }}:00</span>
           </span>
           <span class="timegrid-badge timegrid-badge--accent">
-            <NIcon :size="13"><Clock20Regular aria-hidden="true" /></NIcon>
+            <component
+              :is="Clock20Regular"
+              class="size-3.5 inline"
+              aria-hidden="true"
+            />
             <span>北京时间 (UTC+8)</span>
           </span>
           <span
@@ -476,19 +513,32 @@ defineExpose({ Config, DefaultConfig })
             title="上一周"
             @click="moveWeek(-1)"
           >
-            <NIcon><ChevronLeft20Regular /></NIcon>
+            <component
+              :is="ChevronLeft20Regular"
+              class="size-4"
+            />
           </button>
 
           <div class="timegrid-controls__range">
-            <NSelect
+            <Select
               v-if="weekOptions.length"
-              v-model:value="selectedWeek"
-              class="timegrid-week-select"
-              :options="weekOptions"
-              :to="false"
-              placeholder="选择周次"
-              size="small"
-            />
+              :model-value="selectedWeek"
+              @update:model-value="selectedWeek = String($event)"
+            >
+              <SelectTrigger class="timegrid-week-select w-48">
+                <SelectValue placeholder="选择周次" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in weekOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
             <span
               v-else
               class="timegrid-controls__empty-label"
@@ -505,7 +555,10 @@ defineExpose({ Config, DefaultConfig })
             title="下一周"
             @click="moveWeek(1)"
           >
-            <NIcon><ChevronRight20Regular /></NIcon>
+            <component
+              :is="ChevronRight20Regular"
+              class="size-4"
+            />
           </button>
 
           <button
@@ -525,7 +578,10 @@ defineExpose({ Config, DefaultConfig })
             :disabled="saving"
             @click="saveScheduleImage"
           >
-            <NIcon><ArrowDownload20Regular /></NIcon>
+            <component
+              :is="ArrowDownload20Regular"
+              class="size-4"
+            />
             <span>{{ saving ? '生成中...' : '导出海报' }}</span>
           </button>
         </div>
@@ -544,14 +600,12 @@ defineExpose({ Config, DefaultConfig })
             v-for="day in processedTimelineDays"
             :key="`allday-group-${day.isoDate}`"
           >
-            <NPopover
+            <Popover
               v-for="item in day.allday"
               :key="item.id || item.title"
-              trigger="hover"
-              placement="bottom"
             >
-              <template #trigger>
-                <div class="timegrid-allday-chip">
+              <PopoverTrigger as-child>
+                <div class="timegrid-allday-chip cursor-pointer">
                   <span class="timegrid-allday-chip__day">{{ day.label }}</span>
                   <span
                     class="timegrid-event__dot"
@@ -559,26 +613,34 @@ defineExpose({ Config, DefaultConfig })
                   />
                   <span class="timegrid-allday-chip__title">{{ item.title || '待定安排' }}</span>
                 </div>
-              </template>
-              <div class="timegrid-popover">
-                <h4 class="timegrid-popover__title">{{ item.title || '未命名活动' }}</h4>
-                <div class="timegrid-popover__time-row">
-                  <NIcon :size="14"><Clock20Regular aria-hidden="true" /></NIcon>
+              </PopoverTrigger>
+              <PopoverContent class="timegrid-popover w-60 p-3 text-xs space-y-2">
+                <h4 class="timegrid-popover__title font-semibold text-foreground">{{ item.title || '未命名活动' }}</h4>
+                <div class="timegrid-popover__time-row flex items-center gap-1.5 text-muted-foreground text-[11px]">
+                  <component
+                    :is="Clock20Regular"
+                    class="size-3.5 inline"
+                    aria-hidden="true"
+                  />
                   <span>{{ day.label }} ({{ day.date }}) · {{ formatEventTime(item.time) }}</span>
                 </div>
                 <div
                   v-if="item.tag"
-                  class="timegrid-popover__tag"
+                  class="timegrid-popover__tag inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]"
                   :style="{
                     background: item.tagColor ? `${item.tagColor}22` : 'var(--timegrid-accent-soft)',
                     color: item.tagColor || 'var(--timegrid-accent)',
                   }"
                 >
-                  <NIcon :size="12"><Tag20Regular aria-hidden="true" /></NIcon>
+                  <component
+                    :is="Tag20Regular"
+                    class="size-3 inline"
+                    aria-hidden="true"
+                  />
                   <span>{{ item.tag }}</span>
                 </div>
-              </div>
-            </NPopover>
+              </PopoverContent>
+            </Popover>
           </template>
         </div>
       </div>
@@ -669,15 +731,13 @@ defineExpose({ Config, DefaultConfig })
 
               <!-- 当天有日程安排时的事件条 (Event Pills) -->
               <template v-if="day.scheduled.length > 0">
-                <NPopover
+                <Popover
                   v-for="entry in day.scheduled"
                   :key="entry.item.id || `${entry.item.title}-${entry.minutes}`"
-                  trigger="hover"
-                  placement="top"
                 >
-                  <template #trigger>
+                  <PopoverTrigger as-child>
                     <div
-                      class="timegrid-pill"
+                      class="timegrid-pill cursor-pointer"
                       :class="{ 'is-filtered-out': isItemFilteredOut(entry.item) }"
                       :style="{
                         left: `${entry.leftPercent}%`,
@@ -703,48 +763,56 @@ defineExpose({ Config, DefaultConfig })
                         {{ entry.item.tag }}
                       </span>
                     </div>
-                  </template>
+                  </PopoverTrigger>
 
                   <!-- 弹层详情卡片 -->
-                  <div class="timegrid-popover">
-                    <h4 class="timegrid-popover__title">{{ entry.item.title || '未命名直播' }}</h4>
-                    <div class="timegrid-popover__time-row">
-                      <NIcon :size="14"><Clock20Regular aria-hidden="true" /></NIcon>
+                  <PopoverContent class="timegrid-popover w-64 p-3 text-xs space-y-2">
+                    <h4 class="timegrid-popover__title font-semibold text-foreground">
+                      {{ entry.item.title || '未命名直播' }}
+                    </h4>
+                    <div class="timegrid-popover__time-row flex items-center gap-1.5 text-muted-foreground text-[11px]">
+                      <component
+                        :is="Clock20Regular"
+                        class="size-3.5 inline"
+                        aria-hidden="true"
+                      />
                       <span>{{ day.label }} ({{ day.date }}) · {{ entry.item.time }}</span>
                     </div>
                     <div
                       v-if="entry.item.tag"
-                      class="timegrid-popover__tag"
+                      class="timegrid-popover__tag inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px]"
                       :style="{
                         background: `color-mix(in srgb, ${entry.color} 18%, transparent)`,
                         color: entry.color,
                         border: `1px solid color-mix(in srgb, ${entry.color} 36%, transparent)`,
                       }"
                     >
-                      <NIcon :size="12"><Tag20Regular aria-hidden="true" /></NIcon>
+                      <component
+                        :is="Tag20Regular"
+                        class="size-3 inline"
+                        aria-hidden="true"
+                      />
                       <span>{{ entry.item.tag }}</span>
                     </div>
                     <div
                       v-if="liveRoomUrl"
-                      class="timegrid-popover__actions"
+                      class="timegrid-popover__actions pt-1"
                     >
-                      <NButton
-                        size="tiny"
-                        type="primary"
-                        secondary
-                        tag="a"
+                      <a
                         :href="liveRoomUrl"
                         target="_blank"
                         rel="noopener noreferrer"
+                        class="inline-flex items-center gap-1 text-primary text-xs hover:underline"
                       >
-                        <template #icon>
-                          <NIcon><Open20Regular /></NIcon>
-                        </template>
+                        <component
+                          :is="Open20Regular"
+                          class="size-3.5"
+                        />
                         前往直播间
-                      </NButton>
+                      </a>
                     </div>
-                  </div>
-                </NPopover>
+                  </PopoverContent>
+                </Popover>
               </template>
 
               <!-- 当天无日程安排 (休播日) -->
@@ -759,34 +827,41 @@ defineExpose({ Config, DefaultConfig })
         </div>
       </div>
 
-      <!-- 底部图例与说明 -->
-      <footer class="timegrid-footer">
-        <div
-          v-if="legendItems.length"
-          class="timegrid-legend"
-        >
-          <button
-            class="timegrid-legend__btn"
-            :class="{ 'is-active': activeCategoryFilter === null }"
-            type="button"
-            @click="activeCategoryFilter = null"
-          >
-            <span>全部 ({{ eventCount }})</span>
-          </button>
-          <button
-            v-for="legend in legendItems"
-            :key="legend.key"
-            class="timegrid-legend__btn"
-            :class="{ 'is-active': activeCategoryFilter === legend.key }"
-            type="button"
-            @click="toggleCategoryFilter(legend.key)"
-          >
-            <span
-              class="timegrid-legend__dot"
-              :style="{ background: legend.color }"
-            />
-            <span>{{ legend.name }} ({{ legend.count }})</span>
-          </button>
+      <!-- 板底: 分类图例/统计 (Category Legend & Filter) -->
+      <footer
+        v-if="legendItems.length > 0"
+        class="timegrid-footer"
+      >
+        <div class="timegrid-legend">
+          <span class="timegrid-legend__label">活动分类 (点击筛选):</span>
+          <div class="timegrid-legend__items">
+            <button
+              v-for="cat in legendItems"
+              :key="cat.key"
+              type="button"
+              class="timegrid-legend-pill"
+              :class="{ 'is-active': activeCategoryFilter === cat.key }"
+              :style="{
+                '--legend-color': cat.color,
+              }"
+              @click="toggleCategoryFilter(cat.key)"
+            >
+              <span
+                class="timegrid-legend-pill__dot"
+                :style="{ background: cat.color }"
+              />
+              <span class="timegrid-legend-pill__name">{{ cat.name }}</span>
+              <span class="timegrid-legend-pill__count">{{ cat.count }}</span>
+            </button>
+            <button
+              v-if="activeCategoryFilter"
+              type="button"
+              class="timegrid-legend-pill timegrid-legend-pill--clear"
+              @click="activeCategoryFilter = null"
+            >
+              重置筛选
+            </button>
+          </div>
         </div>
       </footer>
     </div>

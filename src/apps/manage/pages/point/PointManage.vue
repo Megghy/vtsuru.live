@@ -2,53 +2,21 @@
 import {
   Add24Filled,
   ArrowSync24Filled,
+  Copy24Regular,
   Delete24Filled,
   Edit24Filled,
-  Eye24Filled,
   Image24Regular,
   Info24Filled,
+  Open24Regular,
   ShoppingBag24Filled,
 } from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
-import type { UploadFileInfo } from 'naive-ui'
-import {
-  NAlert,
-  NButton,
-  NCheckbox,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NDynamicTags,
-  NEmpty,
-  NFlex,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NProgress,
-  NRadioButton,
-  NRadioGroup,
-  NScrollbar,
-  NSelect,
-  NSwitch,
-  NTabPane,
-  NTabs,
-  NText,
-  NTooltip,
-  NUpload,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
+import { Plus, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ResponsePointGoodModel, UploadSubPointGoodsModel, UploadPointGoodsModel } from '@/api/api-models'
-import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode, ServiceFieldType } from '@/api/api-models'
+import type { ResponsePointGoodModel, UploadPointGoodsModel, UploadSubPointGoodsModel } from '@/api/api-models'
+import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode } from '@/api/api-models'
 import {
   postApiPointDeleteGoods,
   postApiPointUpdateGoods,
@@ -61,6 +29,22 @@ import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
+import type { UploadFileInfo } from '@/shared/types/upload'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { copyToClipboard, toast, useMessage } from '@/shared/utils'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -72,14 +56,11 @@ import ServiceGoodsConfig from './ServiceGoodsConfig.vue'
 
 const message = useMessage()
 const accountInfo = useAccount()
-const dialog = useDialog()
 const biliAuth = useBiliAuth()
-const formRef = ref()
 
 const isUpdating = ref(false)
 const isAllowedPrivacyPolicy = ref(false)
 const showAddGoodsModal = ref(false)
-const uploadProgress = ref(0)
 const isUploadingCover = ref(false)
 const shouldWatermarkCover = ref(true)
 const goodsModalTab = ref<'basic' | 'subItems' | 'rules'>('basic')
@@ -200,272 +181,77 @@ function removeSubItemByKey(subKey: string) {
   list.splice(index, 1)
 }
 
-function updateSubItemFileList(subKey: string, list: UploadFileInfo[]) {
-  subItemFileLists.value[subKey] = list
-}
-
-function moveSubItemByKey(subKey: string, direction: -1 | 1) {
-  if (subItemsSortMode.value !== 'manual') return
-  ensureSubItems()
-  const list = currentGoodsModel.value.goods.subItems!
-  const index = list.findIndex((s) => getSubItemKey(s) === subKey)
-  if (index < 0) return
-  const nextIndex = index + direction
-  if (nextIndex < 0 || nextIndex >= list.length) return
-  const [item] = list.splice(index, 1)
-  list.splice(nextIndex, 0, item)
-}
-
-// 监听 fileList 变化，确保 cover 和 fileList 同步
-watch(
-  () => currentGoodsModel.value.fileList,
-  (newFileList, oldFileList) => {
-    if (oldFileList && oldFileList.length > 0 && newFileList.length === 0) {
-      if (currentGoodsModel.value.goods.id && currentGoodsModel.value.goods.cover) {
-        currentGoodsModel.value.goods.cover = undefined
-      }
-    }
-  },
-  { deep: true },
-)
-
-// 计算属性
-const allowedYearOptions = computed(() => {
-  return Array.from({ length: new Date().getFullYear() - 2024 + 1 }, (_, i) => 2024 + i).map((item) => ({
-    label: `${item.toString()}年`,
-    value: item,
-  }))
-})
-
-const allowedMonthOptions = computed(() => {
-  return Array.from({ length: 12 }, (_, i) => i + 1).map((item) => ({
-    label: `${item.toString()}月`,
-    value: item,
-  }))
-})
-
-const existTags = computed(() => {
-  if (goods.value.length === 0) return []
-
-  const tempSet = new Set<string>()
-  for (const good of goods.value) {
-    if (!good.tags || good.tags.length === 0) continue
-    good.tags.forEach((tag) => tempSet.add(tag))
-  }
-
-  return Array.from(tempSet).map((tag) => ({ label: tag, value: tag }))
-})
-
-const subItemsForDisplay = computed(() => {
-  const list = currentGoodsModel.value.goods.subItems ?? []
-  if (subItemsSortMode.value === 'manual') return list
-  const cloned = list.slice()
-  if (subItemsSortMode.value === 'name') {
-    cloned.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
-  } else if (subItemsSortMode.value === 'price') {
-    cloned.sort((a, b) => Number(a.price ?? 0) - Number(b.price ?? 0))
-  } else if (subItemsSortMode.value === 'stock') {
-    const toStock = (v: number | undefined) => (v === undefined ? Number.POSITIVE_INFINITY : Number(v))
-    cloned.sort((a, b) => toStock(a.stock) - toStock(b.stock))
-  }
-  return cloned
-})
-
-// 表单验证规则
-const rules = {
-  name: {
-    required: true,
-    message: '请输入礼物名称',
-  },
-  price: {
-    required: true,
-    message: '请输入礼物价格',
-  },
-  type: {
-    required: true,
-    message: '请选择礼物类型',
-  },
-}
+const currentYear = new Date().getFullYear()
+const allowedYearOptions = [
+  { label: `${currentYear}年`, value: currentYear },
+  { label: `${currentYear - 1}年`, value: currentYear - 1 },
+  { label: `${currentYear - 2}年`, value: currentYear - 2 },
+]
+const allowedMonthOptions = Array.from({ length: 12 }, (_, i) => ({
+  label: `${i + 1}月`,
+  value: i + 1,
+}))
 
 async function uploadCover(file: File) {
-  const uploadFile = shouldWatermarkCover.value ? await addVtsuruLiveWatermark(file) : file
-  return uploadFiles([uploadFile], FileStore.Goods, (stage: string) => {
-    if (stage === UploadStage.Uploading) {
-      uploadProgress.value = 0
+  let fileToUpload = file
+  if (shouldWatermarkCover.value) {
+    try {
+      fileToUpload = await addVtsuruLiveWatermark(file)
+    } catch (e) {
+      console.warn('水印添加失败，将使用原图上传:', e)
     }
+  }
+  return await uploadFiles(fileToUpload, FileStore.Goods, (stage: string) => {
+    if (stage === UploadStage.Preparing) toast.info('正在处理图片...')
+    else if (stage === UploadStage.Uploading) toast.info('正在上传到云存储...')
   })
 }
 
-async function updateGoods(e: MouseEvent) {
-  if (isUpdating.value || !formRef.value) return
-  e.preventDefault()
+function onCoverFileInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  target.value = ''
+  currentGoodsModel.value.fileList = [
+    {
+      id: String(Date.now()),
+      name: file.name,
+      file,
+      status: 'finished',
+      url: URL.createObjectURL(file),
+    },
+  ]
+}
+
+function onSubCoverFileInput(subKey: string, e: Event) {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const file = target.files[0]
+  target.value = ''
+  subItemFileLists.value[subKey] = [
+    {
+      id: String(Date.now()),
+      name: file.name,
+      file,
+      status: 'finished',
+      url: URL.createObjectURL(file),
+    },
+  ]
+}
+
+async function updateGoods() {
+  if (isUpdating.value || isUploadingCover.value) return
   isUpdating.value = true
-  isUploadingCover.value = false
-  uploadProgress.value = 0
 
   try {
-    // 1. 舰长高级规则校验
-    if (currentGoodsModel.value.goods.setting?.guardFree !== undefined) {
-      currentGoodsModel.value.goods.setting.guardFree = undefined
-    }
-    if (currentGoodsModel.value.goods.setting?.guardFreeMonths) {
-      const months = currentGoodsModel.value.goods.setting.guardFreeMonths
-      if (months.length > 0) {
-        for (const m of months) {
-          if (!m?.year || !m?.month) {
-            goodsModalTab.value = 'rules'
-            throw new Error('请选择舰长免费兑换的年份和月份')
-          }
-        }
-      }
-    }
-
-    if (currentGoodsModel.value.goods.setting?.guardLevelMonths) {
-      const months = currentGoodsModel.value.goods.setting.guardLevelMonths
-      if (months.length > 0) {
-        for (const m of months) {
-          if (!m?.year || !m?.month) {
-            goodsModalTab.value = 'rules'
-            throw new Error('请选择最低兑换等级限制的年份和月份')
-          }
-        }
-      }
-    }
-
-    // 2. 基础表单项校验
-    try {
-      await formRef.value.validate()
-    } catch {
-      goodsModalTab.value = 'basic'
-      throw new Error('请填写必要的基础信息')
-    }
-
-    // 3. 交付方式与内容校验
-    if (currentGoodsModel.value.goods.type === GoodsTypes.Physical) {
-      const url = currentGoodsModel.value.goods.collectUrl
-      if (url !== undefined) {
-        try {
-          void new URL(url)
-        } catch {
-          goodsModalTab.value = 'basic'
-          throw new Error('请输入正确的站外收集链接')
-        }
-      } else if (!isAllowedPrivacyPolicy.value) {
-        goodsModalTab.value = 'basic'
-        throw new Error('需要阅读并同意本站隐私协议')
-      }
-      if ((currentGoodsModel.value.goods.maxBuyCount ?? 0) < 1) {
-        goodsModalTab.value = 'rules'
-        throw new Error('最大兑换数量必须大于 0')
-      }
-    } else if (currentGoodsModel.value.goods.type === GoodsTypes.Virtual) {
-      if ((currentGoodsModel.value.goods.content?.trim().length ?? 0) === 0) {
-        goodsModalTab.value = 'basic'
-        throw new Error('请输入虚拟礼物的交付内容')
-      }
-    } else if (currentGoodsModel.value.goods.type === GoodsTypes.Service) {
-      const config = currentGoodsModel.value.goods.serviceConfig
-      if (!config) {
-        goodsModalTab.value = 'basic'
-        throw new Error('请配置服务兑换信息')
-      }
-      if (config.estimatedDays !== undefined && config.estimatedDays !== null && config.estimatedDays < 1) {
-        goodsModalTab.value = 'basic'
-        throw new Error('预计完成周期必须大于 0')
-      }
-      if (config.maxActiveOrders !== undefined && config.maxActiveOrders !== null && config.maxActiveOrders < 1) {
-        goodsModalTab.value = 'basic'
-        throw new Error('最大未完成订单数必须大于 0')
-      }
-      const ids = new Set<string>()
-      for (const field of config.fields ?? []) {
-        const fieldId = field.id?.trim() ?? ''
-        const fieldLabel = field.label?.trim() ?? ''
-        field.id = fieldId
-        field.label = fieldLabel
-        if (!fieldId || !fieldLabel) {
-          goodsModalTab.value = 'basic'
-          throw new Error('服务需求字段的 ID 和名称不能为空')
-        }
-        if (ids.has(fieldId)) {
-          goodsModalTab.value = 'basic'
-          throw new Error(`服务需求字段 ID 重复：${fieldId}`)
-        }
-        ids.add(fieldId)
-        if (
-          (field.type === ServiceFieldType.Select || field.type === ServiceFieldType.MultiSelect) &&
-          field.options.length === 0
-        ) {
-          goodsModalTab.value = 'basic'
-          throw new Error(`服务需求字段“${field.label}”至少需要一个选项`)
-        }
-      }
-    }
-
-    // 4. 款式校验与“默认继承父商品”归一化
-    ensureSubItems()
     const parent = currentGoodsModel.value.goods
-    for (const sub of currentGoodsModel.value.goods.subItems ?? []) {
-      const name = (sub.name ?? '').trim()
-      if (!name) {
-        goodsModalTab.value = 'subItems'
-        throw new Error('款式名称不能为空')
-      }
-      sub.name = name
-
-      if (sub.price === undefined || sub.price === null || Number(sub.price) < 0) {
-        goodsModalTab.value = 'subItems'
-        throw new Error(`款式 ${name} 的积分价格不能小于0`)
-      }
-
-      if (sub.stock !== undefined && sub.stock !== null && Number(sub.stock) < 0) {
-        goodsModalTab.value = 'subItems'
-        throw new Error(`款式 ${name} 的库存不能小于0`)
-      }
-
-      if (sub.maxBuyCount !== undefined && sub.maxBuyCount !== null && Number(sub.maxBuyCount) < 1) {
-        goodsModalTab.value = 'subItems'
-        throw new Error(`款式 ${name} 的最大兑换数量必须大于0`)
-      }
-
-      if (currentGoodsModel.value.goods.type === GoodsTypes.Service) {
-        if (sub.type !== undefined && sub.type !== GoodsTypes.Service) {
-          goodsModalTab.value = 'subItems'
-          throw new Error(`服务商品的款式“${name}”只能使用服务类型`)
-        }
-      } else if (sub.type === GoodsTypes.Service) {
-        goodsModalTab.value = 'subItems'
-        throw new Error(`款式“${name}”不能混用服务类型`)
-      }
-
-      if (
-        sub.collectUrl !== undefined &&
-        sub.collectUrl !== null &&
-        sub.collectUrl !== '' &&
-        !String(sub.collectUrl).trim()
-      ) {
-        goodsModalTab.value = 'subItems'
-        throw new Error(`款式 ${name} 的收集链接不能为空`)
-      }
-
-      if (sub.collectUrl !== undefined && sub.collectUrl !== '' && sub.collectUrl !== null) {
-        try {
-          void new URL(String(sub.collectUrl))
-        } catch {
-          goodsModalTab.value = 'subItems'
-          throw new Error(`款式 ${name} 的收集链接不合法`)
-        }
-      }
-
-      // 归一化：与父商品一致则不下发，交给后端按“继承父商品”处理
-      if (sub.description !== undefined && (sub.description ?? '').trim() === '') sub.description = undefined
-      if (sub.description === parent.description) sub.description = undefined
-      if (sub.type === parent.type) sub.type = undefined
-      if (sub.isAllowRebuy === parent.isAllowRebuy) sub.isAllowRebuy = undefined
-      if (sub.maxBuyCount === parent.maxBuyCount) sub.maxBuyCount = undefined
-      if (sub.collectUrl === parent.collectUrl) sub.collectUrl = undefined
-      if (sub.collectUrl === undefined) sub.embedCollectUrl = undefined
-      if (sub.embedCollectUrl === parent.embedCollectUrl) sub.embedCollectUrl = undefined
+    if (!parent.name || !parent.name.trim()) {
+      goodsModalTab.value = 'basic'
+      throw new Error('请输入礼物名称')
+    }
+    if (parent.price < 0) {
+      goodsModalTab.value = 'basic'
+      throw new Error('礼物所需积分不能为负数')
     }
 
     const newFilesToUpload = currentGoodsModel.value.fileList.filter((f) => f.file && f.status !== 'finished')
@@ -477,13 +263,6 @@ async function updateGoods(e: MouseEvent) {
       if (uploadResults && uploadResults.length > 0) {
         currentGoodsModel.value.goods.cover = uploadResults[0]
         message.success('封面上传成功')
-        const uploadedFileIndex = currentGoodsModel.value.fileList.findIndex((f) => f.id === newFilesToUpload[0].id)
-        if (uploadedFileIndex > -1) {
-          currentGoodsModel.value.fileList[uploadedFileIndex] = {
-            ...currentGoodsModel.value.fileList[uploadedFileIndex],
-            ...createCoverFileInfo(uploadResults[0])[0],
-          }
-        }
       } else {
         throw new Error('封面上传失败')
       }
@@ -491,7 +270,7 @@ async function updateGoods(e: MouseEvent) {
       currentGoodsModel.value.goods.cover = undefined
     }
 
-    // 上传款式封面（如有）
+    // 上传款式封面
     ensureSubItems()
     for (const sub of currentGoodsModel.value.goods.subItems ?? []) {
       const key = getSubItemKey(sub)
@@ -499,20 +278,13 @@ async function updateGoods(e: MouseEvent) {
       const subFilesToUpload = fileList.filter((f) => f.file && f.status !== 'finished')
       if (subFilesToUpload.length > 0 && subFilesToUpload[0].file) {
         isUploadingCover.value = true
-        const uploadAction = shouldWatermarkCover.value ? '添加水印并上传' : '上传'
-        message.info(`正在${uploadAction}款式封面: ${sub.name || '未命名'}...`)
         const uploadResults = await uploadCover(subFilesToUpload[0].file)
         isUploadingCover.value = false
         if (uploadResults && uploadResults.length > 0) {
           sub.cover = uploadResults[0]
-          message.success(`款式封面上传成功: ${sub.name || uploadResults[0].name || '封面'}`)
-          // 同步 fileList 状态
           subItemFileLists.value[key] = createCoverFileInfo(uploadResults[0])
-        } else {
-          throw new Error(`款式封面上传失败: ${sub.name || '未命名'}`)
         }
       } else if (fileList.length === 0) {
-        // 清空封面 => 让后端按“继承父商品”处理
         sub.cover = undefined
       }
     }
@@ -542,98 +314,24 @@ async function updateGoods(e: MouseEvent) {
       message.error(`商品信息保存失败: ${errMsg}`)
     }
   } catch (err: any) {
-    console.error(currentGoodsModel.value, err)
-    const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '表单验证失败或上传出错'
-    message.error(`失败: ${errorMsg}`)
+    const errorMsg = err instanceof Error ? err.message : typeof err === 'string' ? err : '保存失败'
+    message.error(errorMsg)
   } finally {
     isUpdating.value = false
     isUploadingCover.value = false
   }
 }
 
-function OnFileListChange(files: UploadFileInfo[]) {
-  if (files.length === 1 && (files[0].file?.size ?? 0) > 10 * 1024 * 1024) {
-    message.error('文件大小不能超过10MB')
-    currentGoodsModel.value.fileList = []
-  } else {
-    currentGoodsModel.value.fileList = files
-  }
-}
-
 function onUpdateClick(item: ResponsePointGoodModel) {
-  const copiedItem = JSON.parse(JSON.stringify(item))
-  // 确保 setting 对象存在
-  if (!copiedItem.setting) {
-    copiedItem.setting = {
-      allowGuardLevel: 0,
-      allowGuardFreeMinLevel: 0,
-    }
-  }
-
-  if (copiedItem.setting?.allowGuardFreeMinLevel === undefined) {
-    copiedItem.setting.allowGuardFreeMinLevel = 0
-  }
-
-  if (copiedItem.setting?.guardFreeMonths === undefined && copiedItem.setting?.guardFree) {
-    copiedItem.setting.guardFreeMonths = [copiedItem.setting.guardFree]
-  }
-
-  if (copiedItem.count === null) copiedItem.count = undefined
-  if (copiedItem.collectUrl === null) copiedItem.collectUrl = undefined
-  if (copiedItem.embedCollectUrl === null) copiedItem.embedCollectUrl = undefined
-  if (copiedItem.type === GoodsTypes.Service && !copiedItem.serviceConfig) {
-    copiedItem.serviceConfig = { fields: [], rules: '', paused: false }
-  }
-
-  const parentCoverId = item.cover?.id
-  const parentCollectUrl = copiedItem.collectUrl ?? undefined
-  const parentEmbedCollectUrl = copiedItem.embedCollectUrl ?? undefined
-  const parentType = copiedItem.type
-  const parentIsAllowRebuy = copiedItem.isAllowRebuy
-  const parentMaxBuyCount = copiedItem.maxBuyCount ?? 1
-  const parentDescription = copiedItem.description ?? undefined
-
-  // 款式：响应模型使用 count 表示库存，这里映射为 stock
-  if (Array.isArray(item.subItems)) {
-    copiedItem.subItems = item.subItems.map((s: any) => ({
-      id: s.id,
-      name: s.name,
-      price: s.price,
-      stock: s.count ?? undefined,
-      description: (s.description ?? undefined) === parentDescription ? undefined : (s.description ?? undefined),
-      type: s.type === parentType ? undefined : s.type,
-      tags: JSON.stringify(s.tags ?? []) === JSON.stringify(copiedItem.tags ?? []) ? undefined : s.tags,
-      cover: s.cover && parentCoverId && s.cover.id === parentCoverId ? undefined : s.cover,
-      collectUrl: (s.collectUrl ?? undefined) === parentCollectUrl ? undefined : (s.collectUrl ?? undefined),
-      embedCollectUrl:
-        (s.collectUrl ?? undefined) === parentCollectUrl
-          ? undefined
-          : (s.embedCollectUrl ?? undefined) === parentEmbedCollectUrl
-            ? undefined
-            : (s.embedCollectUrl ?? undefined),
-      isAllowRebuy: s.isAllowRebuy === parentIsAllowRebuy ? undefined : s.isAllowRebuy,
-      maxBuyCount: s.maxBuyCount === parentMaxBuyCount ? undefined : s.maxBuyCount,
-      content: (s.content ?? undefined) === (copiedItem.content ?? undefined) ? undefined : (s.content ?? undefined),
-      virtualKeys:
-        JSON.stringify(s.virtualKeys ?? []) === JSON.stringify(copiedItem.virtualKeys ?? [])
-          ? undefined
-          : s.virtualKeys,
-      keySelectionMode: s.keySelectionMode === copiedItem.keySelectionMode ? undefined : s.keySelectionMode,
-      setting: JSON.stringify(s.setting ?? {}) === JSON.stringify(copiedItem.setting ?? {}) ? undefined : s.setting,
-    })) as UploadSubPointGoodsModel[]
-  } else {
-    copiedItem.subItems = []
-  }
-
-  // 初始化款式封面上传列表
-  subItemFileLists.value = {}
-  for (const s of copiedItem.subItems as UploadSubPointGoodsModel[]) {
-    const key = getSubItemKey(s)
-    subItemFileLists.value[key] = createCoverFileInfo(s.cover)
-  }
+  const copiedItem = JSON.parse(JSON.stringify(item)) as UploadPointGoodsModel
   currentGoodsModel.value = {
     goods: copiedItem,
     fileList: createCoverFileInfo(item.cover),
+  }
+  subItemFileLists.value = {}
+  for (const s of copiedItem.subItems ?? []) {
+    const key = getSubItemKey(s)
+    subItemFileLists.value[key] = createCoverFileInfo(s.cover)
   }
   isAllowedPrivacyPolicy.value = true
   shouldWatermarkCover.value = true
@@ -643,78 +341,50 @@ function onUpdateClick(item: ResponsePointGoodModel) {
 }
 
 async function onSetShelfClick(item: ResponsePointGoodModel, status: GoodsStatus) {
-  const d = dialog.warning({
-    title: '警告',
-    content: `你确定要${status == GoodsStatus.Normal ? '重新上架' : '下架'}这个礼物吗？`,
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      d.loading = true
-      const originStatus = item.status
+  const originStatus = item.status
+  try {
+    const { code, message: errMsg } = (await postApiPointUpdateGoodsStatus({
+      ids: [item.id],
+      status: status as any,
+    })) as unknown as {
+      code: number
+      message: string
+    }
 
-      try {
-        const { code, message: errMsg } = (await postApiPointUpdateGoodsStatus({
-          ids: [item.id],
-          status: status as any,
-        })) as unknown as {
-          code: number
-          message: string
-        }
-
-        if (code === 200) {
-          message.success('成功')
-          const index = goods.value.findIndex((g) => g.id === item.id)
-          if (index > -1) {
-            goods.value[index].status = status
-          }
-        } else {
-          message.error(`失败: ${errMsg}`)
-          item.status = originStatus
-          console.error(errMsg)
-        }
-      } catch (err) {
-        message.error(`失败: ${err}`)
-        item.status = originStatus
-        console.error(err)
-      } finally {
-        d.loading = false
+    if (code === 200) {
+      message.success('操作成功')
+      const index = goods.value.findIndex((g) => g.id === item.id)
+      if (index > -1) {
+        goods.value[index].status = status
       }
-    },
-  })
+    } else {
+      message.error(`失败: ${errMsg}`)
+      item.status = originStatus
+    }
+  } catch (err) {
+    message.error(`失败: ${err}`)
+    item.status = originStatus
+  }
 }
 
-function onDeleteClick(item: ResponsePointGoodModel) {
-  const d = dialog.warning({
-    title: '警告',
-    content: '你确定要删除这个礼物吗？',
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      d.loading = true
+async function onDeleteClick(item: ResponsePointGoodModel) {
+  try {
+    const { code, message: errMsg } = (await postApiPointDeleteGoods({
+      id: item.id,
+    })) as unknown as {
+      code: number
+      message: string
+    }
 
-      try {
-        const { code, message: errMsg } = (await postApiPointDeleteGoods({
-          id: item.id,
-        })) as unknown as {
-          code: number
-          message: string
-        }
-
-        if (code === 200) {
-          message.success('成功')
-          goods.value = goods.value.filter((g) => g.id !== item.id)
-        } else {
-          message.error(`失败: ${errMsg}`)
-          console.error(errMsg)
-        }
-      } catch (err) {
-        message.error(`失败: ${err}`)
-        console.error(err)
-      } finally {
-        d.loading = false
-      }
-    },
-  })
+    if (code === 200) {
+      message.success('删除成功')
+      goods.value = goods.value.filter((g) => g.id !== item.id)
+    } else {
+      message.error(`删除失败: ${errMsg}`)
+    }
+  } catch (err) {
+    message.error(`删除失败: ${err}`)
+  }
 }
 
 function onModalOpen() {
@@ -749,1523 +419,682 @@ function resetGoods() {
 </script>
 
 <template>
-  <!-- 头部 -->
-  <ManagePageHeader
-    title="积分管理"
-    subtitle="礼物、订单、用户与配置"
-    :function-type="FunctionTypes.Point"
-    :links="[{ label: '礼物展示页链接', value: goodsPageUrl }]"
-  />
-
-  <NCard
-    size="small"
-    :bordered="true"
-    content-style="padding: 12px;"
-    style="max-width: 800px"
-  >
-    <NFlex
-      justify="space-between"
-      align="center"
-      wrap
-      :gap="12"
+  <div class="space-y-4">
+    <!-- 头部 -->
+    <ManagePageHeader
+      title="积分管理"
+      subtitle="礼物、订单、用户与配置"
+      :function-type="FunctionTypes.Point"
     >
-      <NAlert
-        v-if="!accountInfo.eventFetcherState.online"
-        :type="
-          accountInfo.settings.enableFunctions.includes(FunctionTypes.Point) && accountInfo.eventFetcherState.online
-            ? 'success'
-            : 'warning'
-        "
-        :bordered="false"
-        style="flex: 1; min-width: 300px"
-      >
-        <NFlex
-          align="center"
-          :gap="8"
-          wrap
-        >
-          <NText>
-            此功能依赖
-            <NButton
-              text
-              type="primary"
-              tag="a"
-              href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
+      <template #action>
+        <div class="flex items-center gap-2 flex-wrap w-full sm:w-auto">
+          <div
+            v-if="goodsPageUrl"
+            class="flex items-center gap-1.5 w-full sm:w-auto"
+          >
+            <Input
+              :model-value="goodsPageUrl"
+              readonly
+              class="hidden md:flex h-control-sm w-60 lg:w-72 xl:w-80 font-mono text-xs bg-muted/40 text-muted-foreground select-all"
+              title="礼物展示页链接（点击全选）"
+              @click="($event.target as HTMLInputElement).select()"
+            />
+            <Button
+              variant="outline"
+              class="flex-1 sm:flex-initial"
+              @click="copyToClipboard(goodsPageUrl)"
+            >
+              <component
+                :is="Copy24Regular"
+                class="size-3.5 mr-1"
+              />
+              复制链接
+            </Button>
+            <Button
+              variant="outline"
+              class="flex-1 sm:flex-initial"
+              as="a"
+              :href="goodsPageUrl"
               target="_blank"
             >
-              VtsuruEventFetcher
-            </NButton>
-            (事件监听器), 否则将无法自动记录礼物/舰长等事件
-          </NText>
-          <NDivider vertical />
-          <NButton
-            text
-            type="info"
-            tag="a"
-            href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
+              <component
+                :is="Open24Regular"
+                class="size-3.5 mr-1"
+              />
+              前往展示页
+            </Button>
+          </div>
+          <EventFetcherStatusCard class="w-full sm:w-auto" />
+        </div>
+      </template>
+    </ManagePageHeader>
+
+    <Alert
+      v-if="!accountInfo.eventFetcherState.online"
+      variant="default"
+      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2"
+    >
+      <AlertDescription class="text-xs flex items-center gap-1.5 flex-wrap">
+        <span>
+          此功能依赖
+          <a
+            href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
             target="_blank"
+            rel="noreferrer"
+            class="font-medium underline hover:text-foreground"
           >
-            积分系统说明
-          </NButton>
-        </NFlex>
-      </NAlert>
-      <EventFetcherStatusCard />
-    </NFlex>
-  </NCard>
+            VtsuruEventFetcher
+          </a>
+          (事件监听器)，否则无法自动记录直播事件
+        </span>
+        <Separator
+          orientation="vertical"
+          class="h-3 mx-1"
+        />
+        <a
+          href="https://www.wolai.com/ueENtfAm9gPEqHrAVSB2Co"
+          target="_blank"
+          rel="noreferrer"
+          class="text-blue-500 hover:underline"
+        >
+          积分说明
+        </a>
+      </AlertDescription>
+    </Alert>
 
-  <!-- 主要内容标签页 -->
-  <NTabs
-    v-model:value="hash"
-    animated
-  >
-    <!-- 礼物管理标签页 -->
-    <NTabPane
-      name="goods"
-      tab="礼物"
+    <!-- 标签页 -->
+    <Tabs
+      v-model="hash"
+      class="w-full"
     >
-      <NFlex
-        justify="start"
-        :gap="12"
-        style="margin-bottom: 16px"
-      >
-        <NButton
-          type="primary"
-          size="medium"
-          @click="onModalOpen"
-        >
-          <template #icon>
-            <NIcon :component="Add24Filled" />
-          </template>
-          添加礼物
-        </NButton>
-        <NButton
-          secondary
-          size="medium"
-          @click="$router.push({ name: 'user-goods', params: { id: accountInfo?.name } })"
-        >
-          <template #icon>
-            <NIcon :component="Eye24Filled" />
-          </template>
-          前往展示页
-        </NButton>
-      </NFlex>
+      <TabsList>
+        <TabsTrigger value="goods">礼物</TabsTrigger>
+        <TabsTrigger value="orders">订单</TabsTrigger>
+        <TabsTrigger value="users">用户</TabsTrigger>
+        <TabsTrigger value="guard-duplicates">重复上舰</TabsTrigger>
+        <TabsTrigger value="settings">设置</TabsTrigger>
+        <TabsTrigger value="test">测试</TabsTrigger>
+      </TabsList>
 
-      <!-- 上架礼物列表 -->
-      <NEmpty
-        v-if="onShelfGoods.length === 0"
-        description="暂无礼物"
-      />
-      <NGrid
-        v-else
-        cols="1 500:2 700:3 1000:4 1200:5"
-        :x-gap="16"
-        :y-gap="16"
+      <!-- 礼物管理 -->
+      <TabsContent
+        value="goods"
+        class="pt-4 space-y-4"
       >
-        <NGridItem
-          v-for="item in onShelfGoods"
-          :key="item.id"
-        >
-          <PointGoodsItem
-            :goods="item"
-            :is-manage="true"
-            class="point-goods-card"
+        <div class="flex items-center gap-2.5">
+          <Button
+            class="gap-1.5"
+            @click="onModalOpen"
           >
-            <template #footer>
-              <NFlex
-                vertical
-                :gap="8"
-                style="width: 100%"
-              >
-                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500">
-                  <NIcon
-                    :component="ShoppingBag24Filled"
-                    style="vertical-align: -0.15em; margin-right: 4px"
-                  />
-                  积分: {{ item.price }}
-                </NText>
-                <NFlex
-                  justify="space-between"
-                  :gap="8"
-                >
-                  <NButton
-                    type="info"
-                    size="small"
-                    style="flex: 1"
-                    @click="onUpdateClick(item)"
-                  >
-                    <template #icon>
-                      <NIcon :component="Edit24Filled" />
-                    </template>
-                    修改
-                  </NButton>
-                  <NButton
-                    type="warning"
-                    size="small"
-                    style="flex: 1"
-                    @click="onSetShelfClick(item, GoodsStatus.Discontinued)"
-                  >
-                    <template #icon>
-                      <NIcon :component="ArrowSync24Filled" />
-                    </template>
-                    下架
-                  </NButton>
-                  <NButton
-                    type="error"
-                    size="small"
-                    style="flex: 1"
-                    @click="onDeleteClick(item)"
-                  >
-                    <template #icon>
-                      <NIcon :component="Delete24Filled" />
-                    </template>
-                    删除
-                  </NButton>
-                </NFlex>
-              </NFlex>
-            </template>
-          </PointGoodsItem>
-        </NGridItem>
-      </NGrid>
+            <Add24Filled class="size-4" />
+            添加礼物
+          </Button>
+        </div>
 
-      <!-- 下架礼物列表 -->
-      <NDivider style="margin: 24px 0 16px"> 已下架 </NDivider>
-      <NEmpty
-        v-if="offShelfGoods.length === 0"
-        description="暂无已下架的礼物"
-      />
-      <NGrid
-        v-else
-        cols="1 500:2 700:3 1000:4 1200:5"
-        :x-gap="16"
-        :y-gap="16"
-      >
-        <NGridItem
-          v-for="item in offShelfGoods"
-          :key="item.id"
+        <!-- 上架礼物 -->
+        <Empty
+          v-if="onShelfGoods.length === 0"
+          description="暂无礼物"
+          class="py-12"
+        />
+        <div
+          v-else
+          class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
         >
           <PointGoodsItem
+            v-for="item in onShelfGoods"
+            :key="item.id"
             :goods="item"
             :is-manage="true"
-            class="point-goods-card"
+            class="h-full flex flex-col"
           >
             <template #footer>
-              <NFlex
-                vertical
-                :gap="8"
-                style="width: 100%"
-              >
-                <NText style="font-size: 14px; color: var(--vtsuru-primary); font-weight: 500">
-                  <NIcon
-                    :component="ShoppingBag24Filled"
-                    style="vertical-align: -0.15em; margin-right: 4px"
-                  />
+              <div class="space-y-2 pt-2 border-t mt-auto">
+                <div class="text-xs font-semibold text-primary flex items-center gap-1">
+                  <ShoppingBag24Filled class="size-3.5" />
                   积分: {{ item.price }}
-                </NText>
-                <NFlex
-                  justify="space-between"
-                  :gap="8"
-                >
-                  <NButton
-                    type="info"
-                    size="small"
-                    style="flex: 1"
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="flex-1"
                     @click="onUpdateClick(item)"
                   >
-                    <template #icon>
-                      <NIcon :component="Edit24Filled" />
-                    </template>
+                    <Edit24Filled class="size-3 mr-1" />
                     修改
-                  </NButton>
-                  <NButton
-                    type="success"
-                    size="small"
-                    style="flex: 1"
-                    @click="onSetShelfClick(item, GoodsStatus.Normal)"
+                  </Button>
+                  <Popconfirm
+                    positive-text="确认下架"
+                    negative-text="取消"
+                    @positive-click="onSetShelfClick(item, GoodsStatus.Discontinued)"
                   >
-                    <template #icon>
-                      <NIcon :component="ArrowSync24Filled" />
+                    <template #trigger>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        class="flex-1 text-amber-500 hover:text-amber-600"
+                      >
+                        <ArrowSync24Filled class="size-3 mr-1" />
+                        下架
+                      </Button>
                     </template>
-                    上架
-                  </NButton>
-                  <NButton
-                    type="error"
-                    size="small"
-                    style="flex: 1"
-                    @click="onDeleteClick(item)"
+                    确定要下架这个礼物吗？
+                  </Popconfirm>
+                  <Popconfirm
+                    positive-text="确认删除"
+                    negative-text="取消"
+                    @positive-click="onDeleteClick(item)"
                   >
-                    <template #icon>
-                      <NIcon :component="Delete24Filled" />
+                    <template #trigger>
+                      <Button
+                        variant="outline"
+                        size="xs"
+                        class="flex-1 text-destructive hover:bg-destructive/10"
+                      >
+                        <Delete24Filled class="size-3 mr-1" />
+                        删除
+                      </Button>
                     </template>
-                    删除
-                  </NButton>
-                </NFlex>
-              </NFlex>
+                    确定要删除这个礼物吗？
+                  </Popconfirm>
+                </div>
+              </div>
             </template>
           </PointGoodsItem>
-        </NGridItem>
-      </NGrid>
-    </NTabPane>
+        </div>
 
-    <!-- 订单管理标签页 -->
-    <NTabPane
-      name="orders"
-      tab="订单"
-      display-directive="show:lazy"
-    >
-      <PointOrderManage :goods="goods" />
-    </NTabPane>
+        <!-- 已下架 -->
+        <div class="pt-4">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">已下架礼物</span>
+            <Separator class="flex-1" />
+          </div>
 
-    <!-- 用户管理标签页 -->
-    <NTabPane
-      name="users"
-      tab="用户"
-      display-directive="show:lazy"
-    >
-      <PointUserManage
-        :goods="goods"
-        :point-setting="currentPointSetting"
-        @open-source-settings="openPointSourceSettings"
-      />
-    </NTabPane>
-
-    <NTabPane
-      name="guard-duplicates"
-      tab="重复上舰"
-      display-directive="show:lazy"
-    >
-      <PointGuardDuplicateManage />
-    </NTabPane>
-
-    <!-- 设置标签页 -->
-    <NTabPane
-      name="settings"
-      tab="设置"
-      display-directive="show:lazy"
-    >
-      <PointSettings source-anchor-id="point-source-settings" />
-    </NTabPane>
-
-    <!-- 测试标签页 -->
-    <NTabPane
-      name="test"
-      tab="测试"
-      display-directive="show:lazy"
-    >
-      <PointTestPanel />
-    </NTabPane>
-  </NTabs>
-
-  <!-- 添加/修改礼物模态框 -->
-  <!-- 添加/修改礼物模态框 -->
-  <NModal
-    v-model:show="showAddGoodsModal"
-    preset="card"
-    style="width: 860px; max-width: 96vw"
-    :title="currentGoodsModel.goods.id ? '编辑礼物' : '添加礼物'"
-    class="goods-modal"
-    :mask-closable="!isUpdating && !isUploadingCover"
-    :close-on-esc="!isUpdating && !isUploadingCover"
-    :segmented="{
-      content: 'soft',
-      footer: 'soft',
-    }"
-  >
-    <template #header-extra>
-      <NPopconfirm
-        v-if="!currentGoodsModel.goods.id"
-        @positive-click="resetGoods"
-      >
-        <template #trigger>
-          <NButton
-            type="warning"
-            size="small"
-            quaternary
+          <Empty
+            v-if="offShelfGoods.length === 0"
+            description="暂无已下架的礼物"
+            class="py-6"
+          />
+          <div
+            v-else
+            class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
           >
-            重置
-          </NButton>
-        </template>
-        确定要重置此页面内容?
-      </NPopconfirm>
-    </template>
-    <div class="scrollable-container">
-      <NScrollbar
-        style="max-height: 72vh; padding-right: 12px"
-        class="goods-scrollbar"
-      >
-        <NForm
-          ref="formRef"
-          :model="currentGoodsModel.goods"
-          :rules="rules"
-          label-placement="top"
-          style="width: 100%"
-        >
-          <NTabs
-            v-model:value="goodsModalTab"
-            type="segment"
-            animated
-            style="margin-bottom: 16px"
-          >
-            <!-- Tab 1: 核心信息与交付 (所有必填项) -->
-            <NTabPane
-              name="basic"
-              tab="商品与交付"
+            <PointGoodsItem
+              v-for="item in offShelfGoods"
+              :key="item.id"
+              :goods="item"
+              :is-manage="true"
+              class="h-full flex flex-col opacity-75 hover:opacity-100 transition-opacity"
             >
-              <!-- 1. 基本信息 -->
-              <div class="form-section-title">基本信息</div>
-              <NGrid
-                cols="1 s:2"
-                :x-gap="16"
-                :y-gap="0"
-              >
-                <NGridItem>
-                  <NFormItem
-                    path="name"
-                    label="礼物名称"
-                    required
-                  >
-                    <NInput
-                      v-model:value="currentGoodsModel.goods.name"
+              <template #footer>
+                <div class="space-y-2 pt-2 border-t mt-auto">
+                  <div class="text-xs font-semibold text-primary flex items-center gap-1">
+                    <ShoppingBag24Filled class="size-3.5" />
+                    积分: {{ item.price }}
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      class="flex-1"
+                      @click="onUpdateClick(item)"
+                    >
+                      <Edit24Filled class="size-3 mr-1" />
+                      修改
+                    </Button>
+                    <Popconfirm
+                      positive-text="重新上架"
+                      negative-text="取消"
+                      @positive-click="onSetShelfClick(item, GoodsStatus.Normal)"
+                    >
+                      <template #trigger>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          class="flex-1 text-emerald-500 hover:text-emerald-600"
+                        >
+                          <ArrowSync24Filled class="size-3 mr-1" />
+                          上架
+                        </Button>
+                      </template>
+                      确定要重新上架这个礼物吗？
+                    </Popconfirm>
+                    <Popconfirm
+                      positive-text="确认删除"
+                      negative-text="取消"
+                      @positive-click="onDeleteClick(item)"
+                    >
+                      <template #trigger>
+                        <Button
+                          variant="outline"
+                          size="xs"
+                          class="flex-1 text-destructive hover:bg-destructive/10"
+                        >
+                          <Delete24Filled class="size-3 mr-1" />
+                          删除
+                        </Button>
+                      </template>
+                      确定要删除这个礼物吗？
+                    </Popconfirm>
+                  </div>
+                </div>
+              </template>
+            </PointGoodsItem>
+          </div>
+        </div>
+      </TabsContent>
+
+      <!-- 订单 -->
+      <TabsContent
+        value="orders"
+        class="pt-4"
+      >
+        <PointOrderManage :goods="goods" />
+      </TabsContent>
+
+      <!-- 用户 -->
+      <TabsContent
+        value="users"
+        class="pt-4"
+      >
+        <PointUserManage
+          :goods="goods"
+          :point-setting="currentPointSetting"
+          @open-source-settings="openPointSourceSettings"
+        />
+      </TabsContent>
+
+      <!-- 重复上舰 -->
+      <TabsContent
+        value="guard-duplicates"
+        class="pt-4"
+      >
+        <PointGuardDuplicateManage />
+      </TabsContent>
+
+      <!-- 设置 -->
+      <TabsContent
+        value="settings"
+        class="pt-4"
+      >
+        <PointSettings source-anchor-id="point-source-settings" />
+      </TabsContent>
+
+      <!-- 测试 -->
+      <TabsContent
+        value="test"
+        class="pt-4"
+      >
+        <PointTestPanel />
+      </TabsContent>
+    </Tabs>
+
+    <!-- 添加 / 修改礼物模态框 -->
+    <Dialog v-model:open="showAddGoodsModal">
+      <DialogContent class="max-w-3xl max-h-[88vh] flex flex-col p-0">
+        <DialogHeader class="p-4 border-b flex flex-row items-center justify-between space-y-0">
+          <DialogTitle class="text-sm font-semibold">
+            {{ currentGoodsModel.goods.id ? '编辑礼物' : '添加礼物' }}
+          </DialogTitle>
+          <Button
+            v-if="!currentGoodsModel.goods.id"
+            variant="ghost"
+            size="xs"
+            class="text-amber-500 hover:text-amber-600 mr-6"
+            @click="resetGoods"
+          >
+            重置表单
+          </Button>
+        </DialogHeader>
+
+        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+          <Tabs
+            v-model="goodsModalTab"
+            class="w-full"
+          >
+            <TabsList>
+              <TabsTrigger value="basic">商品与交付</TabsTrigger>
+              <TabsTrigger value="subItems">款式设置 ({{ currentGoodsModel.goods.subItems?.length || 0 }})</TabsTrigger>
+              <TabsTrigger value="rules">规则与特权</TabsTrigger>
+            </TabsList>
+
+            <!-- 基本信息与交付 -->
+            <TabsContent
+              value="basic"
+              class="pt-3 space-y-4"
+            >
+              <div class="space-y-3">
+                <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">基本信息</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-foreground"
+                      >礼物名称 <span class="text-destructive">*</span></label
+                    >
+                    <Input
+                      v-model="currentGoodsModel.goods.name"
                       placeholder="如：舰长专属定制抱枕"
                       maxlength="200"
                     />
-                  </NFormItem>
-                </NGridItem>
-                <NGridItem>
-                  <NFormItem
-                    path="price"
-                    label="所需积分"
-                    required
-                  >
-                    <NInputNumber
-                      v-model:value="currentGoodsModel.goods.price"
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-foreground"
+                      >所需积分 <span class="text-destructive">*</span></label
+                    >
+                    <NumberField
+                      v-model="currentGoodsModel.goods.price"
                       placeholder="兑换所需的积分数"
                       :min="0"
-                      style="width: 100%"
+                      class="w-full"
                     />
-                  </NFormItem>
-                </NGridItem>
-                <NGridItem>
-                  <NFormItem
-                    path="count"
-                    label="库存设置"
-                  >
-                    <NFlex
-                      align="center"
-                      :gap="12"
-                      style="width: 100%"
-                    >
-                      <NCheckbox
-                        :checked="currentGoodsModel.goods.count === undefined"
-                        @update:checked="(v) => (currentGoodsModel.goods.count = v ? undefined : 100)"
-                      >
-                        不限制库存
-                      </NCheckbox>
-                      <NInputNumber
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-foreground">库存设置</label>
+                    <div class="flex items-center gap-3 h-8">
+                      <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <Checkbox
+                          :checked="currentGoodsModel.goods.count === undefined"
+                          @update:checked="(v) => (currentGoodsModel.goods.count = v ? undefined : 100)"
+                        />
+                        <span>不限库存</span>
+                      </label>
+                      <NumberField
                         v-if="currentGoodsModel.goods.count !== undefined"
-                        v-model:value="currentGoodsModel.goods.count"
-                        placeholder="礼物库存"
+                        v-model="currentGoodsModel.goods.count"
                         :min="0"
-                        style="flex: 1"
+                        class="flex-1"
                       />
-                    </NFlex>
-                  </NFormItem>
-                </NGridItem>
-                <NGridItem>
-                  <NFormItem
-                    path="isPinned"
-                    label="展示设置"
-                  >
-                    <div style="padding-top: 4px">
-                      <NCheckbox v-model:checked="currentGoodsModel.goods.isPinned"> 在礼物列表顶部置顶显示 </NCheckbox>
                     </div>
-                  </NFormItem>
-                </NGridItem>
-              </NGrid>
-
-              <!-- 2. 交付与内容配置 -->
-              <div class="form-section-title">交付与内容配置</div>
-
-              <NFormItem
-                path="type"
-                label="礼物类型"
-                required
-              >
-                <NRadioGroup
-                  v-model:value="currentGoodsModel.goods.type"
-                  @update:value="onGoodsTypeChange"
-                >
-                  <NRadioButton :value="GoodsTypes.Virtual">虚拟礼物 (卡密/网盘/文本)</NRadioButton>
-                  <NRadioButton :value="GoodsTypes.Physical">实体礼物 (实物邮寄)</NRadioButton>
-                  <NRadioButton :value="GoodsTypes.Service">服务兑换 (约稿/预约/定制)</NRadioButton>
-                </NRadioGroup>
-              </NFormItem>
-
-              <ServiceGoodsConfig
-                v-if="currentGoodsModel.goods.type === GoodsTypes.Service"
-                v-model="currentGoodsModel.goods.serviceConfig"
-              />
-
-              <!-- 虚拟礼物专用 -->
-              <template v-if="currentGoodsModel.goods.type === GoodsTypes.Virtual">
-                <NFormItem
-                  path="content"
-                  label="交付内容"
-                  required
-                >
-                  <template #label>
-                    <NFlex
-                      align="center"
-                      :gap="4"
-                    >
-                      <span>交付内容</span>
-                      <NTooltip>
-                        <template #trigger>
-                          <NIcon
-                            :component="Info24Filled"
-                            style="cursor: pointer; color: var(--vtsuru-fg-muted)"
-                          />
-                        </template>
-                        兑换成功后展示给用户的具体内容。若启用了卡密发放，可在文本中使用 {key} 占位符自动替换。
-                      </NTooltip>
-                    </NFlex>
-                  </template>
-                  <NInput
-                    v-model:value="currentGoodsModel.goods.content"
-                    type="textarea"
-                    placeholder="请输入兑换成功后展示给用户的文本、下载链接或提取码（支持 {key} 占位符）"
-                    :rows="3"
-                    maxlength="10000"
-                    show-count
-                    clearable
-                  />
-                </NFormItem>
-
-                <NGrid
-                  cols="1 s:2"
-                  :x-gap="16"
-                  :y-gap="0"
-                >
-                  <NGridItem :span="currentGoodsModel.goods.keySelectionMode !== KeySelectionMode.None ? 1 : 2">
-                    <NFormItem
-                      path="keySelectionMode"
-                      label="卡密 / 密钥自动发放"
-                    >
-                      <NRadioGroup v-model:value="currentGoodsModel.goods.keySelectionMode">
-                        <NRadioButton :value="KeySelectionMode.None"> 不使用 </NRadioButton>
-                        <NRadioButton :value="KeySelectionMode.Random"> 随机分配 </NRadioButton>
-                        <NRadioButton :value="KeySelectionMode.Sequential"> 顺序分配 </NRadioButton>
-                      </NRadioGroup>
-                    </NFormItem>
-                  </NGridItem>
-                  <NGridItem v-if="currentGoodsModel.goods.keySelectionMode !== KeySelectionMode.None">
-                    <NFormItem
-                      path="virtualKeys"
-                      label="卡密库"
-                    >
-                      <NFlex
-                        vertical
-                        :gap="6"
-                        style="width: 100%"
-                      >
-                        <NDynamicTags
-                          v-model:value="currentGoodsModel.goods.virtualKeys"
-                          placeholder="输入卡密后回车"
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-foreground">展示设置</label>
+                    <div class="flex items-center h-8">
+                      <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <Checkbox
+                          :checked="currentGoodsModel.goods.isPinned"
+                          @update:checked="currentGoodsModel.goods.isPinned = $event"
                         />
-                        <NText
-                          depth="3"
-                          style="font-size: 12px"
-                        >
-                          已添加 {{ (currentGoodsModel.goods.virtualKeys || []).length }} 个密钥
-                        </NText>
-                      </NFlex>
-                    </NFormItem>
-                  </NGridItem>
-                </NGrid>
-              </template>
-
-              <!-- 实体礼物专用 -->
-              <template v-if="currentGoodsModel.goods.type === GoodsTypes.Physical">
-                <NGrid
-                  cols="1 s:2"
-                  :x-gap="16"
-                  :y-gap="0"
-                >
-                  <NGridItem>
-                    <NFormItem
-                      path="address"
-                      label="收货地址收集方式"
-                      required
-                    >
-                      <NRadioGroup
-                        :value="currentGoodsModel.goods.collectUrl === undefined ? 0 : 1"
-                        @update:value="
-                          (v) => {
-                            if (v === 0) currentGoodsModel.goods.collectUrl = undefined
-                            else
-                              currentGoodsModel.goods.collectUrl =
-                                currentGoodsModel.goods.collectUrl && currentGoodsModel.goods.collectUrl !== ''
-                                  ? currentGoodsModel.goods.collectUrl
-                                  : 'https://'
-                          }
-                        "
-                      >
-                        <NRadioButton :value="0"> 通过本站直接收集 </NRadioButton>
-                        <NRadioButton :value="1"> 使用站外链接收集 </NRadioButton>
-                      </NRadioGroup>
-                    </NFormItem>
-                  </NGridItem>
-                  <NGridItem v-if="currentGoodsModel.goods.collectUrl === undefined">
-                    <NFormItem
-                      path="privacy"
-                      label="隐私协议"
-                      required
-                    >
-                      <div style="padding-top: 6px">
-                        <NCheckbox v-model:checked="isAllowedPrivacyPolicy"> 我已阅读并同意本站收货隐私协议 </NCheckbox>
-                      </div>
-                    </NFormItem>
-                  </NGridItem>
-                  <NGridItem
-                    v-else
-                    :span="2"
-                  >
-                    <NFormItem
-                      path="collectUrl"
-                      label="站外收集链接"
-                      required
-                    >
-                      <NFlex
-                        vertical
-                        :gap="8"
-                        style="width: 100%"
-                      >
-                        <NInput
-                          v-model:value="currentGoodsModel.goods.collectUrl"
-                          placeholder="请输入用于收集地址的表单链接（如问卷星、腾讯文档等）"
-                          maxlength="300"
-                        />
-                        <NCheckbox v-model:checked="currentGoodsModel.goods.embedCollectUrl">
-                          尝试将外部收集表单直接内嵌到网页中展示
-                        </NCheckbox>
-                      </NFlex>
-                    </NFormItem>
-                  </NGridItem>
-                </NGrid>
-              </template>
-
-              <!-- 3. 外观与介绍 -->
-              <div class="form-section-title">外观与介绍</div>
-              <NGrid
-                cols="1 s:12"
-                :x-gap="16"
-                :y-gap="0"
-              >
-                <NGridItem :span="4">
-                  <NFormItem
-                    path="cover"
-                    label="封面图片"
-                  >
-                    <NFlex
-                      vertical
-                      :gap="8"
-                      style="width: 100%"
-                    >
-                      <NUpload
-                        v-model:file-list="currentGoodsModel.fileList"
-                        :max="1"
-                        accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
-                        list-type="image-card"
-                        :default-upload="false"
-                        :disabled="isUploadingCover"
-                        :should-use-thumbnail-url="() => true"
-                        @update:file-list="OnFileListChange"
-                      >
-                        <NFlex
-                          vertical
-                          align="center"
-                          justify="center"
-                          style="width: 100%; height: 100%"
-                        >
-                          <NIcon
-                            size="24"
-                            :depth="3"
-                            :component="Image24Regular"
-                          />
-                          <span>上传封面</span>
-                          <span style="font-size: 11px; color: var(--vtsuru-fg-muted)">&lt; 10MB</span>
-                        </NFlex>
-                      </NUpload>
-                      <NFlex
-                        align="center"
-                        :gap="6"
-                      >
-                        <NSwitch
-                          v-model:value="shouldWatermarkCover"
-                          size="small"
-                        />
-                        <NText
-                          depth="3"
-                          style="font-size: 12px"
-                        >
-                          添加 vtsuru.live 水印
-                        </NText>
-                      </NFlex>
-                      <NProgress
-                        v-if="isUploadingCover"
-                        type="line"
-                        :percentage="uploadProgress"
-                        indicator-placement="inside"
-                        processing
-                      />
-                    </NFlex>
-                  </NFormItem>
-                </NGridItem>
-                <NGridItem :span="8">
-                  <NFormItem
-                    path="description"
-                    label="礼物详细描述"
-                  >
-                    <NInput
-                      v-model:value="currentGoodsModel.goods.description"
-                      placeholder="可选，输入关于礼物的详细介绍与说明"
-                      maxlength="500"
-                      type="textarea"
-                      :rows="3"
-                    />
-                  </NFormItem>
-                  <NFormItem
-                    path="tags"
-                    label="分类标签"
-                  >
-                    <NSelect
-                      v-model:value="currentGoodsModel.goods.tags"
-                      filterable
-                      multiple
-                      clearable
-                      tag
-                      placeholder="可选，输入标签后回车添加"
-                      :options="existTags"
-                    />
-                  </NFormItem>
-                </NGridItem>
-              </NGrid>
-            </NTabPane>
-
-            <!-- Tab 2: 多规格/款式配置 -->
-            <NTabPane
-              name="subItems"
-              :tab="`款式规格 (${(currentGoodsModel.goods.subItems ?? []).length})`"
-            >
-              <NAlert
-                type="info"
-                :bordered="false"
-                style="margin-bottom: 16px"
-              >
-                前台兑换时用户可选择具体款式；款式价格为最终兑换价，库存按款式独立计算。未单独配置的属性默认沿用商品主属性。
-              </NAlert>
-
-              <NFlex
-                justify="space-between"
-                align="center"
-                style="margin-bottom: 16px"
-              >
-                <NFlex
-                  align="center"
-                  :gap="8"
-                >
-                  <NText
-                    depth="2"
-                    style="font-size: 13px"
-                  >
-                    最多可选款式数：
-                  </NText>
-                  <NInputNumber
-                    v-model:value="currentGoodsModel.goods.maxSubItemSelections"
-                    :min="0"
-                    size="small"
-                    placeholder="0 为不限制"
-                    style="width: 140px"
-                  >
-                    <template #suffix> 种 </template>
-                  </NInputNumber>
-                </NFlex>
-                <NFlex
-                  align="center"
-                  :gap="12"
-                >
-                  <NSelect
-                    v-model:value="subItemsSortMode"
-                    size="small"
-                    style="width: 130px"
-                    :options="[
-                      { label: '手动排序', value: 'manual' },
-                      { label: '按名称', value: 'name' },
-                      { label: '按价格', value: 'price' },
-                      { label: '按库存', value: 'stock' },
-                    ]"
-                  />
-                  <NButton
-                    type="primary"
-                    secondary
-                    size="small"
-                    @click="addSubItem"
-                  >
-                    <template #icon>
-                      <NIcon :component="Add24Filled" />
-                    </template>
-                    添加款式
-                  </NButton>
-                </NFlex>
-              </NFlex>
-
-              <NEmpty
-                v-if="!(currentGoodsModel.goods.subItems ?? []).length"
-                description="暂未添加款式（单规格礼物无需配置）"
-                style="margin: 32px 0"
-              />
-
-              <template v-else>
-                <div
-                  v-for="(sub, idx) in subItemsForDisplay"
-                  :key="getSubItemKey(sub)"
-                  class="manage-sub-item-card"
-                >
-                  <NFlex
-                    justify="space-between"
-                    align="center"
-                    style="margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--vtsuru-border)"
-                  >
-                    <NText strong> 款式 #{{ idx + 1 }} </NText>
-                    <NFlex
-                      :gap="8"
-                      align="center"
-                    >
-                      <NButton
-                        quaternary
-                        size="tiny"
-                        :disabled="subItemsSortMode !== 'manual'"
-                        @click="moveSubItemByKey(getSubItemKey(sub), -1)"
-                      >
-                        上移
-                      </NButton>
-                      <NButton
-                        quaternary
-                        size="tiny"
-                        :disabled="subItemsSortMode !== 'manual'"
-                        @click="moveSubItemByKey(getSubItemKey(sub), 1)"
-                      >
-                        下移
-                      </NButton>
-                      <NButton
-                        type="error"
-                        secondary
-                        size="tiny"
-                        @click="removeSubItemByKey(getSubItemKey(sub))"
-                      >
-                        <template #icon>
-                          <NIcon :component="Delete24Filled" />
-                        </template>
-                        删除
-                      </NButton>
-                    </NFlex>
-                  </NFlex>
-
-                  <NGrid
-                    cols="1 s:3"
-                    :x-gap="12"
-                    :y-gap="8"
-                    style="margin-bottom: 8px"
-                  >
-                    <NGridItem>
-                      <NFormItem
-                        label="款式名称"
-                        required
-                        style="margin-bottom: 0"
-                      >
-                        <NInput
-                          v-model:value="sub.name"
-                          placeholder="如：款式A / 立牌"
-                          maxlength="200"
-                        />
-                      </NFormItem>
-                    </NGridItem>
-                    <NGridItem>
-                      <NFormItem
-                        label="所需积分"
-                        required
-                        style="margin-bottom: 0"
-                      >
-                        <NInputNumber
-                          v-model:value="sub.price"
-                          :min="0"
-                          placeholder="款式积分价"
-                          style="width: 100%"
-                        />
-                      </NFormItem>
-                    </NGridItem>
-                    <NGridItem>
-                      <NFormItem
-                        label="款式库存"
-                        style="margin-bottom: 0"
-                      >
-                        <NFlex
-                          :gap="8"
-                          align="center"
-                        >
-                          <NCheckbox
-                            :checked="sub.stock === undefined"
-                            @update:checked="(v) => (sub.stock = v ? undefined : 100)"
-                          >
-                            不限
-                          </NCheckbox>
-                          <NInputNumber
-                            v-if="sub.stock !== undefined"
-                            v-model:value="sub.stock"
-                            :min="0"
-                            placeholder="库存"
-                            style="flex: 1"
-                          />
-                        </NFlex>
-                      </NFormItem>
-                    </NGridItem>
-                  </NGrid>
-
-                  <!-- 款式高级独立覆盖（折叠或网格） -->
-                  <NCollapse style="margin-top: 8px">
-                    <NCollapseItem
-                      title="独立属性覆盖 (可选，默认沿用商品配置)"
-                      name="sub-override"
-                    >
-                      <NGrid
-                        cols="1 s:2"
-                        :x-gap="16"
-                        :y-gap="12"
-                      >
-                        <NGridItem>
-                          <NFormItem label="款式封面">
-                            <NUpload
-                              :file-list="subItemFileLists[getSubItemKey(sub)] || []"
-                              :max="1"
-                              accept=".png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tif,.tiff,.jfif,.jpe,.jp,.psd,."
-                              list-type="image-card"
-                              :default-upload="false"
-                              :disabled="isUploadingCover"
-                              :should-use-thumbnail-url="() => true"
-                              @update:file-list="(list) => updateSubItemFileList(getSubItemKey(sub), list)"
-                            >
-                              <NFlex
-                                vertical
-                                align="center"
-                                justify="center"
-                                style="width: 100%; height: 100%"
-                              >
-                                <NIcon
-                                  size="20"
-                                  :depth="3"
-                                  :component="Image24Regular"
-                                />
-                                <span style="font-size: 12px">上传封面</span>
-                              </NFlex>
-                            </NUpload>
-                          </NFormItem>
-                        </NGridItem>
-                        <NGridItem>
-                          <NFormItem label="款式描述">
-                            <NInput
-                              v-model:value="sub.description"
-                              type="textarea"
-                              placeholder="留空则沿用主商品描述"
-                              maxlength="500"
-                              :rows="3"
-                            />
-                          </NFormItem>
-                        </NGridItem>
-                        <NGridItem>
-                          <NFormItem label="允许重购">
-                            <NFlex
-                              vertical
-                              :gap="6"
-                            >
-                              <NCheckbox
-                                :checked="sub.isAllowRebuy === undefined"
-                                @update:checked="
-                                  (v) =>
-                                    (sub.isAllowRebuy = v ? undefined : (currentGoodsModel.goods.isAllowRebuy ?? false))
-                                "
-                              >
-                                沿用主商品（{{ currentGoodsModel.goods.isAllowRebuy ? '允许' : '不允许' }}）
-                              </NCheckbox>
-                              <NCheckbox
-                                :checked="sub.isAllowRebuy ?? currentGoodsModel.goods.isAllowRebuy"
-                                :disabled="sub.isAllowRebuy === undefined"
-                                @update:checked="(v) => (sub.isAllowRebuy = v)"
-                              >
-                                允许重复兑换
-                              </NCheckbox>
-                            </NFlex>
-                          </NFormItem>
-                        </NGridItem>
-                        <NGridItem>
-                          <NFormItem label="单人限购数">
-                            <NFlex
-                              vertical
-                              :gap="6"
-                              style="width: 100%"
-                            >
-                              <NCheckbox
-                                :checked="sub.maxBuyCount === undefined"
-                                @update:checked="
-                                  (v) => (sub.maxBuyCount = v ? undefined : (currentGoodsModel.goods.maxBuyCount ?? 1))
-                                "
-                              >
-                                沿用主商品（{{ currentGoodsModel.goods.maxBuyCount ?? 1 }} 件）
-                              </NCheckbox>
-                              <NInputNumber
-                                :value="sub.maxBuyCount ?? currentGoodsModel.goods.maxBuyCount ?? 1"
-                                :disabled="sub.maxBuyCount === undefined"
-                                :min="1"
-                                style="width: 100%"
-                                @update:value="(v) => (sub.maxBuyCount = v)"
-                              />
-                            </NFlex>
-                          </NFormItem>
-                        </NGridItem>
-                      </NGrid>
-                    </NCollapseItem>
-                  </NCollapse>
+                        <span>在礼物列表顶部置顶显示</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
-              </template>
-            </NTabPane>
 
-            <!-- Tab 3: 兑换规则与高级特权 -->
-            <NTabPane
-              name="rules"
-              tab="规则与特权"
-            >
-              <div class="form-section-title">常规兑换限制</div>
-              <NGrid
-                cols="1 s:2"
-                :x-gap="16"
-                :y-gap="12"
-              >
-                <NGridItem>
-                  <NFormItem label="重复兑换限制">
-                    <div style="padding-top: 4px">
-                      <NCheckbox v-model:checked="currentGoodsModel.goods.isAllowRebuy">
-                        允许同一用户多次重复兑换
-                      </NCheckbox>
-                    </div>
-                  </NFormItem>
-                </NGridItem>
-                <NGridItem>
-                  <NFormItem
-                    path="maxBuyCount"
-                    label="单人最大兑换数量"
-                  >
-                    <NInputNumber
-                      v-model:value="currentGoodsModel.goods.maxBuyCount"
-                      placeholder="每个用户最大可兑换数量"
-                      :min="1"
-                      style="width: 100%"
-                    />
-                  </NFormItem>
-                </NGridItem>
-              </NGrid>
+                <!-- 封面上传 -->
+                <div class="space-y-1.5 pt-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-medium text-foreground">礼物封面</label>
+                    <label class="flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer">
+                      <Checkbox v-model:checked="shouldWatermarkCover" />
+                      <span>自动添加水印</span>
+                    </label>
+                  </div>
 
-              <div class="form-section-title">舰长 (大航海) 特权配置</div>
-              <div class="privilege-card">
-                <NFlex
-                  vertical
-                  :gap="16"
-                >
-                  <!-- 舰长免费兑换 -->
-                  <div>
-                    <NFlex
-                      align="center"
-                      :gap="8"
-                      style="margin-bottom: 10px"
-                    >
-                      <NCheckbox
-                        :checked="Array.isArray(currentGoodsModel.goods.setting?.guardFreeMonths)"
-                        @update:checked="
-                          (v) => {
-                            if (!currentGoodsModel.goods.setting) {
-                              currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                            }
-                            currentGoodsModel.goods.setting.guardFreeMonths = v
-                              ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                              : undefined
-                          }
-                        "
-                      >
-                        <span style="font-weight: 600">允许舰长免费兑换</span>
-                      </NCheckbox>
-                      <NTooltip>
-                        <template #trigger>
-                          <NIcon
-                            :component="Info24Filled"
-                            style="color: var(--vtsuru-fg-muted)"
-                          />
-                        </template>
-                        需在舰长和SC事件记录中存在有效航海记录
-                      </NTooltip>
-                    </NFlex>
-
+                  <div class="flex items-center gap-3">
                     <div
-                      v-if="currentGoodsModel.goods.setting?.guardFreeMonths"
-                      class="privilege-sub-block"
+                      v-if="currentGoodsModel.fileList.length > 0"
+                      class="relative size-20 rounded border border-border overflow-hidden group bg-muted/20"
                     >
-                      <NFlex
-                        vertical
-                        :gap="12"
+                      <img
+                        :src="currentGoodsModel.fileList[0].url"
+                        class="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                        @click="currentGoodsModel.fileList = []"
                       >
-                        <NFlex
-                          align="center"
-                          :gap="12"
-                        >
-                          <NText depth="2">最低舰长身份：</NText>
-                          <NRadioGroup
-                            :value="currentGoodsModel.goods.setting?.allowGuardFreeMinLevel ?? 0"
-                            @update:value="
-                              (v) => {
-                                if (!currentGoodsModel.goods.setting) {
-                                  currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                                }
-                                currentGoodsModel.goods.setting.allowGuardFreeMinLevel = v
-                              }
-                            "
-                          >
-                            <NRadioButton :value="0"> 不限 </NRadioButton>
-                            <NRadioButton :value="3"> 舰长 </NRadioButton>
-                            <NRadioButton :value="2"> 提督 </NRadioButton>
-                            <NRadioButton :value="1"> 总督 </NRadioButton>
-                          </NRadioGroup>
-                        </NFlex>
+                        <X class="size-3" />
+                      </button>
+                    </div>
 
-                        <NFlex
-                          align="center"
-                          :gap="12"
-                        >
-                          <NCheckbox
-                            :checked="currentGoodsModel.goods.setting?.guardFreeMonths?.length === 0"
-                            @update:checked="
-                              (v) => {
-                                if (!currentGoodsModel.goods.setting) {
-                                  currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                                }
-                                if (!currentGoodsModel.goods.setting.guardFreeMonths) {
-                                  currentGoodsModel.goods.setting.guardFreeMonths = []
-                                }
-                                currentGoodsModel.goods.setting.guardFreeMonths = v
-                                  ? []
-                                  : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                              }
-                            "
-                          >
-                            当前在舰即可生效 (不限特定历史月份)
-                          </NCheckbox>
-                        </NFlex>
+                    <label
+                      v-else
+                      class="size-20 flex flex-col items-center justify-center rounded border border-dashed border-input hover:border-primary bg-background/50 text-muted-foreground hover:text-foreground cursor-pointer transition-colors p-1 text-center"
+                    >
+                      <Image24Regular class="size-6 text-muted-foreground/60 mb-0.5" />
+                      <span class="text-[10px]">上传封面</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                        @change="onCoverFileInput"
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
 
-                        <NFlex
-                          v-if="currentGoodsModel.goods.setting.guardFreeMonths.length > 0"
-                          vertical
-                          :gap="8"
+              <Separator />
+
+              <!-- 交付与内容配置 -->
+              <div class="space-y-3">
+                <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">交付与类型配置</h4>
+                <div class="space-y-1">
+                  <label class="text-xs font-medium text-foreground"
+                    >礼物类型 <span class="text-destructive">*</span></label
+                  >
+                  <div class="flex items-center gap-2">
+                    <Button
+                      size="xs"
+                      :variant="currentGoodsModel.goods.type === GoodsTypes.Virtual ? 'default' : 'outline'"
+                      @click="onGoodsTypeChange(GoodsTypes.Virtual)"
+                    >
+                      虚拟礼物 (卡密/网盘/文本)
+                    </Button>
+                    <Button
+                      size="xs"
+                      :variant="currentGoodsModel.goods.type === GoodsTypes.Physical ? 'default' : 'outline'"
+                      @click="onGoodsTypeChange(GoodsTypes.Physical)"
+                    >
+                      实体礼物 (实物邮寄)
+                    </Button>
+                    <Button
+                      size="xs"
+                      :variant="currentGoodsModel.goods.type === GoodsTypes.Service ? 'default' : 'outline'"
+                      @click="onGoodsTypeChange(GoodsTypes.Service)"
+                    >
+                      服务兑换 (约稿/预约/定制)
+                    </Button>
+                  </div>
+                </div>
+
+                <!-- 虚拟礼物 -->
+                <div
+                  v-if="currentGoodsModel.goods.type === GoodsTypes.Virtual"
+                  class="space-y-3 pt-2"
+                >
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-foreground flex items-center gap-1.5">
+                      <span>交付内容</span>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger as-child>
+                            <Info24Filled class="size-3 text-muted-foreground cursor-help" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p class="text-xs">
+                              兑换成功后展示给用户的具体内容。若启用了卡密发放，可在文本中使用 {key} 占位符自动替换。
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </label>
+                    <Textarea
+                      v-model="currentGoodsModel.goods.content"
+                      placeholder="请输入兑换成功后展示给用户的文本、下载链接或提取码（支持 {key} 占位符）"
+                      :rows="3"
+                      class="text-xs"
+                    />
+                  </div>
+                </div>
+
+                <!-- 服务兑换 -->
+                <ServiceGoodsConfig
+                  v-if="currentGoodsModel.goods.type === GoodsTypes.Service"
+                  v-model="currentGoodsModel.goods.serviceConfig"
+                />
+              </div>
+            </TabsContent>
+
+            <!-- 款式设置 -->
+            <TabsContent
+              value="subItems"
+              class="pt-3 space-y-3"
+            >
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-muted-foreground">可为主商品添加多种款式（如不同尺码、颜色或套餐）</span>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="gap-1"
+                  @click="addSubItem"
+                >
+                  <Plus class="size-3.5" />
+                  添加款式
+                </Button>
+              </div>
+
+              <Empty
+                v-if="!currentGoodsModel.goods.subItems || currentGoodsModel.goods.subItems.length === 0"
+                description="暂无独立款式（默认仅有主商品）"
+                class="py-8 border rounded-lg border-dashed"
+              />
+
+              <div class="space-y-3">
+                <Card
+                  v-for="(sub, subIdx) in currentGoodsModel.goods.subItems"
+                  :key="getSubItemKey(sub)"
+                  class="border border-border p-3 space-y-3"
+                >
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold text-foreground">款式 #{{ subIdx + 1 }}</span>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      class="text-destructive hover:bg-destructive/10"
+                      @click="removeSubItemByKey(getSubItemKey(sub))"
+                    >
+                      删除款式
+                    </Button>
+                  </div>
+
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                      <label class="text-xs font-medium text-foreground"
+                        >款式名称 <span class="text-destructive">*</span></label
+                      >
+                      <Input
+                        v-model="sub.name"
+                        placeholder="如：黑色 XL 码"
+                      />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-xs font-medium text-foreground">所需积分</label>
+                      <NumberField
+                        v-model="sub.price"
+                        :min="0"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-xs font-medium text-foreground">款式库存</label>
+                      <NumberField
+                        v-model="sub.stock"
+                        placeholder="留空沿用主商品"
+                        :min="0"
+                        class="w-full"
+                      />
+                    </div>
+                    <div class="space-y-1">
+                      <label class="text-xs font-medium text-foreground">款式封面</label>
+                      <div class="flex items-center gap-2">
+                        <div
+                          v-if="subItemFileLists[getSubItemKey(sub)]?.length"
+                          class="relative size-10 rounded border border-border overflow-hidden group"
                         >
-                          <NText
-                            depth="3"
-                            style="font-size: 12px"
+                          <img
+                            :src="subItemFileLists[getSubItemKey(sub)][0].url"
+                            class="w-full h-full object-cover"
+                          />
+                          <button
+                            type="button"
+                            class="absolute top-0.5 right-0.5 p-0.5 bg-black/60 rounded text-white opacity-0 group-hover:opacity-100"
+                            @click="subItemFileLists[getSubItemKey(sub)] = []"
                           >
-                            限定必须在以下指定月份上舰：
-                          </NText>
-                          <NFlex
-                            v-for="(m, idx) in currentGoodsModel.goods.setting.guardFreeMonths"
-                            :key="`${m.year}-${m.month}-${idx}`"
-                            :gap="8"
-                            align="center"
-                          >
-                            <NSelect
-                              style="flex: 1"
-                              :value="m.year"
-                              :options="allowedYearOptions"
-                              placeholder="年份"
-                              @update:value="
-                                (v) => {
-                                  if (currentGoodsModel.goods.setting?.guardFreeMonths) {
-                                    currentGoodsModel.goods.setting.guardFreeMonths[idx].year = v
-                                  }
-                                }
-                              "
-                            />
-                            <NSelect
-                              style="flex: 1"
-                              :value="m.month"
-                              :options="allowedMonthOptions"
-                              placeholder="月份"
-                              @update:value="
-                                (v) => {
-                                  if (currentGoodsModel.goods.setting?.guardFreeMonths) {
-                                    currentGoodsModel.goods.setting.guardFreeMonths[idx].month = v
-                                  }
-                                }
-                              "
-                            />
-                            <NButton
-                              type="error"
-                              secondary
-                              size="small"
-                              @click="
-                                () => {
-                                  if (!currentGoodsModel.goods.setting?.guardFreeMonths) return
-                                  currentGoodsModel.goods.setting.guardFreeMonths.splice(idx, 1)
-                                  if (currentGoodsModel.goods.setting.guardFreeMonths.length === 0) {
-                                    currentGoodsModel.goods.setting.guardFreeMonths = [
-                                      { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
-                                    ]
-                                  }
-                                }
-                              "
-                            >
-                              删除
-                            </NButton>
-                          </NFlex>
-                          <NButton
-                            secondary
-                            size="small"
-                            style="width: 120px"
-                            @click="
-                              () => {
-                                if (!currentGoodsModel.goods.setting?.guardFreeMonths) return
-                                currentGoodsModel.goods.setting.guardFreeMonths.push({
-                                  year: new Date().getFullYear(),
-                                  month: new Date().getMonth() + 1,
-                                })
-                              }
-                            "
-                          >
-                            + 添加月份
-                          </NButton>
-                        </NFlex>
-                      </NFlex>
+                            <X class="size-2.5" />
+                          </button>
+                        </div>
+                        <label
+                          v-else
+                          class="h-8 px-2.5 rounded border border-input text-xs flex items-center gap-1 cursor-pointer hover:bg-muted/30"
+                        >
+                          <Image24Regular class="size-3.5" />
+                          <span>上传款式封面</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            @change="onSubCoverFileInput(getSubItemKey(sub), $event)"
+                          />
+                        </label>
+                      </div>
                     </div>
                   </div>
-
-                  <NDivider style="margin: 0" />
-
-                  <!-- 限制最低兑换舰长等级 -->
-                  <div>
-                    <NFlex
-                      align="center"
-                      :gap="8"
-                      style="margin-bottom: 10px"
-                    >
-                      <NText strong> 兑换门槛 (最低舰长等级限制) </NText>
-                      <NTooltip>
-                        <template #trigger>
-                          <NIcon
-                            :component="Info24Filled"
-                            style="color: var(--vtsuru-fg-muted)"
-                          />
-                        </template>
-                        限制只有达到指定舰长身份的用户才能使用积分兑换
-                      </NTooltip>
-                    </NFlex>
-
-                    <NFlex
-                      vertical
-                      :gap="12"
-                      class="privilege-sub-block"
-                    >
-                      <NFlex
-                        align="center"
-                        :gap="12"
-                      >
-                        <NText depth="2">要求身份：</NText>
-                        <NRadioGroup
-                          :value="currentGoodsModel.goods.setting?.allowGuardLevel ?? 0"
-                          @update:value="
-                            (v) => {
-                              if (!currentGoodsModel.goods.setting) {
-                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                              }
-                              currentGoodsModel.goods.setting.allowGuardLevel = v
-                            }
-                          "
-                        >
-                          <NRadioButton :value="0"> 不限 (普通用户均可) </NRadioButton>
-                          <NRadioButton :value="3"> 舰长及以上 </NRadioButton>
-                          <NRadioButton :value="2"> 提督及以上 </NRadioButton>
-                          <NRadioButton :value="1"> 仅总督 </NRadioButton>
-                        </NRadioGroup>
-                      </NFlex>
-
-                      <template v-if="(currentGoodsModel.goods.setting?.allowGuardLevel ?? 0) > 0">
-                        <NCheckbox
-                          :checked="Array.isArray(currentGoodsModel.goods.setting?.guardLevelMonths)"
-                          @update:checked="
-                            (v) => {
-                              if (!currentGoodsModel.goods.setting) {
-                                currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                              }
-                              currentGoodsModel.goods.setting.guardLevelMonths = v
-                                ? [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                                : undefined
-                            }
-                          "
-                        >
-                          限定特定上舰月份
-                        </NCheckbox>
-
-                        <div
-                          v-if="currentGoodsModel.goods.setting?.guardLevelMonths"
-                          style="padding-left: 8px"
-                        >
-                          <NFlex
-                            vertical
-                            :gap="8"
-                          >
-                            <NCheckbox
-                              :checked="currentGoodsModel.goods.setting?.guardLevelMonths?.length === 0"
-                              @update:checked="
-                                (v) => {
-                                  if (!currentGoodsModel.goods.setting) {
-                                    currentGoodsModel.goods.setting = { allowGuardLevel: 0 }
-                                  }
-                                  if (!currentGoodsModel.goods.setting.guardLevelMonths) {
-                                    currentGoodsModel.goods.setting.guardLevelMonths = []
-                                  }
-                                  currentGoodsModel.goods.setting.guardLevelMonths = v
-                                    ? []
-                                    : [{ year: new Date().getFullYear(), month: new Date().getMonth() + 1 }]
-                                }
-                              "
-                            >
-                              当前在舰即可
-                            </NCheckbox>
-
-                            <NFlex
-                              v-if="currentGoodsModel.goods.setting.guardLevelMonths.length > 0"
-                              vertical
-                              :gap="8"
-                            >
-                              <NFlex
-                                v-for="(m, idx) in currentGoodsModel.goods.setting.guardLevelMonths"
-                                :key="`${m.year}-${m.month}-${idx}`"
-                                :gap="8"
-                                align="center"
-                              >
-                                <NSelect
-                                  style="flex: 1"
-                                  :value="m.year"
-                                  :options="allowedYearOptions"
-                                  placeholder="年份"
-                                  @update:value="
-                                    (v) => {
-                                      if (currentGoodsModel.goods.setting?.guardLevelMonths) {
-                                        currentGoodsModel.goods.setting.guardLevelMonths[idx].year = v
-                                      }
-                                    }
-                                  "
-                                />
-                                <NSelect
-                                  style="flex: 1"
-                                  :value="m.month"
-                                  :options="allowedMonthOptions"
-                                  placeholder="月份"
-                                  @update:value="
-                                    (v) => {
-                                      if (currentGoodsModel.goods.setting?.guardLevelMonths) {
-                                        currentGoodsModel.goods.setting.guardLevelMonths[idx].month = v
-                                      }
-                                    }
-                                  "
-                                />
-                                <NButton
-                                  type="error"
-                                  secondary
-                                  size="small"
-                                  @click="
-                                    () => {
-                                      if (!currentGoodsModel.goods.setting?.guardLevelMonths) return
-                                      currentGoodsModel.goods.setting.guardLevelMonths.splice(idx, 1)
-                                      if (currentGoodsModel.goods.setting.guardLevelMonths.length === 0) {
-                                        currentGoodsModel.goods.setting.guardLevelMonths = [
-                                          { year: new Date().getFullYear(), month: new Date().getMonth() + 1 },
-                                        ]
-                                      }
-                                    }
-                                  "
-                                >
-                                  删除
-                                </NButton>
-                              </NFlex>
-                              <NButton
-                                secondary
-                                size="small"
-                                style="width: 120px"
-                                @click="
-                                  () => {
-                                    if (!currentGoodsModel.goods.setting?.guardLevelMonths) return
-                                    currentGoodsModel.goods.setting.guardLevelMonths.push({
-                                      year: new Date().getFullYear(),
-                                      month: new Date().getMonth() + 1,
-                                    })
-                                  }
-                                "
-                              >
-                                + 添加月份
-                              </NButton>
-                            </NFlex>
-                          </NFlex>
-                        </div>
-                      </template>
-                    </NFlex>
-                  </div>
-                </NFlex>
+                </Card>
               </div>
-            </NTabPane>
-          </NTabs>
-        </NForm>
-        <div style="height: 12px" />
-      </NScrollbar>
-    </div>
-    <template #footer>
-      <NFlex
-        justify="end"
-        :gap="12"
-      >
-        <NButton
-          secondary
-          size="medium"
-          :disabled="isUpdating || isUploadingCover"
-          @click="showAddGoodsModal = false"
-        >
-          取消
-        </NButton>
-        <NButton
-          type="primary"
-          size="medium"
-          :loading="isUpdating || isUploadingCover"
-          :disabled="isUploadingCover"
-          @click="updateGoods"
-        >
-          <span v-if="isUploadingCover">正在上传封面...</span>
-          <span v-else>{{ currentGoodsModel.goods.id ? '保存修改' : '立即创建' }}</span>
-        </NButton>
-      </NFlex>
-    </template>
-  </NModal>
+            </TabsContent>
+
+            <!-- 规则与特权 -->
+            <TabsContent
+              value="rules"
+              class="pt-3 space-y-4"
+            >
+              <div class="space-y-3">
+                <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">常规限制</h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-foreground">重复兑换</label>
+                    <div class="flex items-center h-8">
+                      <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+                        <Checkbox
+                          :checked="currentGoodsModel.goods.isAllowRebuy"
+                          @update:checked="currentGoodsModel.goods.isAllowRebuy = $event"
+                        />
+                        <span>允许同一用户多次重复兑换</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-xs font-medium text-foreground">单人最大兑换数量</label>
+                    <NumberField
+                      v-model="currentGoodsModel.goods.maxBuyCount"
+                      :min="1"
+                      class="w-full"
+                    />
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        <DialogFooter class="p-3 border-t bg-muted/10">
+          <Button
+            variant="outline"
+            :disabled="isUpdating || isUploadingCover"
+            @click="showAddGoodsModal = false"
+          >
+            取消
+          </Button>
+          <Button
+            :disabled="isUpdating || isUploadingCover"
+            @click="updateGoods"
+          >
+            {{ isUpdating ? '保存中...' : currentGoodsModel.goods.id ? '保存修改' : '立即创建' }}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
 </template>
-
-<style scoped>
-.point-goods-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.point-goods-card :deep(.n-card-header) {
-  padding: 16px;
-}
-
-.point-goods-card :deep(.n-card-content) {
-  padding: 16px;
-  flex-grow: 1;
-}
-
-.point-goods-card :deep(.n-card-footer) {
-  padding: 12px 16px;
-}
-
-.goods-modal :deep(.n-card-header) {
-  padding: 16px 20px;
-}
-
-.goods-modal :deep(.n-card-content) {
-  padding: 0 20px 8px;
-}
-
-.goods-modal :deep(.n-card-footer) {
-  padding: 12px 20px 16px;
-  border-top: 1px solid var(--vtsuru-border);
-  background-color: var(--vtsuru-bg-inset);
-}
-
-.scrollable-container {
-  position: relative;
-  background-color: transparent;
-  border: none;
-  border-radius: var(--vtsuru-radius);
-  margin: 0;
-}
-
-.goods-scrollbar {
-  padding: 0;
-  border-radius: 0;
-  background-color: transparent;
-}
-
-.goods-scrollbar :deep(.n-scrollbar-rail) {
-  right: 0;
-}
-
-.goods-scrollbar :deep(.n-scrollbar-content) {
-  padding: 12px 0 8px;
-}
-
-.goods-modal :deep(.n-upload-trigger.n-upload-trigger--image-card),
-.goods-modal :deep(.n-upload-file.n-upload-file--image-card-type) {
-  width: 104px;
-  height: 104px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.goods-modal :deep(.n-upload-file.n-upload-file--image-card-type .n-upload-file-info__thumbnail img) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.manage-sub-item-card {
-  margin-bottom: 12px;
-  padding: 16px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-surface);
-  transition: all 0.3s var(--vtsuru-bezier);
-}
-
-.manage-sub-item-card:hover {
-  border-color: var(--vtsuru-primary);
-  box-shadow: 0 0 0 1px var(--vtsuru-primary) inset;
-}
-
-.form-section-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
-  margin: 16px 0 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.form-section-title:first-of-type {
-  margin-top: 4px;
-}
-
-.privilege-card {
-  padding: 16px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-surface);
-}
-
-.privilege-sub-block {
-  padding: 12px;
-  border-radius: var(--vtsuru-radius);
-  background-color: var(--vtsuru-bg-inset);
-  margin-top: 8px;
-}
-</style>

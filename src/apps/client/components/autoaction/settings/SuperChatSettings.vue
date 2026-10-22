@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import { NInputNumber, NSelect, NFlex, NSwitch, NForm, NFormItem, NTooltip, NIcon, NDivider } from 'naive-ui'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 defineProps({
   action: {
@@ -22,133 +25,104 @@ const scFilterModeOptions = [
 <template>
   <div
     v-if="action.triggerType === TriggerType.SUPER_CHAT"
-    class="sc-trigger-settings"
+    class="sc-trigger-settings space-y-3"
   >
-    <NForm
-      label-placement="left"
-      :label-width="140"
-      size="small"
-      :show-feedback="false"
-    >
-      <NFlex
-        vertical
-        :size="16"
-      >
-        <NFormItem label="SC过滤模式">
-          <NSelect
-            v-model:value="action.triggerConfig.scFilterMode"
-            style="width: 220px"
-            :options="scFilterModeOptions"
-          />
-        </NFormItem>
-
-        <transition name="fade">
-          <NFormItem
-            v-if="action.triggerConfig.scFilterMode === 'price'"
-            label="触发价格区间"
+    <div class="space-y-1">
+      <span class="text-xs text-muted-foreground">SC过滤模式</span>
+      <Select v-model="action.triggerConfig.scFilterMode">
+        <SelectTrigger class="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="opt in scFilterModeOptions"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
           >
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span>价格区间
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                仅当 SC 价格在区间内才触发感谢。<br />
-                • 最低填 30 元可自动忽略 B 站每日赠送的 2 元免费 SC；<br />
-                • 填 2 ~ 29 元可针对 2 元小额 SC 设置专属感谢话术。
-              </NTooltip>
-            </template>
-            <NFlex align="center" :size="8">
-              <NInputNumber
-                v-model:value="action.triggerConfig.scMinPrice"
-                :min="0"
-                style="width: 120px"
-                placeholder="最低 (如 30)"
-              >
-                <template #suffix> 元 </template>
-              </NInputNumber>
-              <span style="color: var(--vtsuru-fg-muted)">至</span>
-              <NInputNumber
-                v-model:value="action.triggerConfig.scMaxPrice"
-                :min="0"
-                style="width: 120px"
-                placeholder="不限"
-              >
-                <template #suffix> 元 </template>
-              </NInputNumber>
-            </NFlex>
-          </NFormItem>
-        </transition>
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
 
-        <NDivider style="margin: 0" />
+    <div
+      v-if="action.triggerConfig.scFilterMode === 'price'"
+      class="p-2.5 rounded border bg-muted/20 space-y-2"
+    >
+      <div class="flex items-center justify-between">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <div class="flex items-center gap-1 cursor-help">
+                <span class="text-xs font-medium text-foreground">价格区间 (元)</span>
+                <Info16Regular class="size-3.5 text-muted-foreground" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs max-w-[280px]">
+              仅当 SC 价格在区间内才触发感谢。<br />
+              • 最低填 30 元可自动忽略 B 站每日赠送的 2 元免费 SC；<br />
+              • 填 2 ~ 29 元可针对 2 元小额 SC 设置专属感谢话术。
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
 
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NFormItem label="防止重复发送">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >防止重复
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                同一用户在单次直播中多次发送 SC 仅触发一次感谢
-              </NTooltip>
-            </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.preventRepeat"
-              size="small"
-            />
-          </NFormItem>
+      <div class="flex items-center gap-2">
+        <NumberField
+          :model-value="action.triggerConfig.scMinPrice"
+          :min="0"
+          placeholder="最低 (如 30)"
+          class="flex-1"
+          @update:model-value="action.triggerConfig.scMinPrice = $event"
+        />
+        <span class="text-xs text-muted-foreground">至</span>
+        <NumberField
+          :model-value="action.triggerConfig.scMaxPrice"
+          :min="0"
+          placeholder="不限"
+          class="flex-1"
+          @update:model-value="action.triggerConfig.scMaxPrice = $event"
+        />
+      </div>
+    </div>
 
-          <NFormItem label="单次合并上限">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单次合并上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单条感谢弹幕中最多合并展示的用户数量
-              </NTooltip>
-            </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxUsersPerMsg"
-              :min="1"
-              :max="50"
-              style="width: 140px"
-            />
-          </NFormItem>
-        </NFlex>
-      </NFlex>
-    </NForm>
+    <div class="h-px bg-border my-1" />
+
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">防止重复发送</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 同一用户在单次直播中多次发送 SC 仅触发一次感谢 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <Switch v-model:checked="action.triggerConfig.preventRepeat" />
+    </div>
+
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">单次合并上限</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <NumberField
+        :model-value="action.actionConfig.maxUsersPerMsg"
+        :min="1"
+        :max="50"
+        class="w-32"
+        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
+      />
+    </div>
   </div>
 </template>
-
-<style scoped>
-.sc-trigger-settings {
-  width: 100%;
-}
-
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

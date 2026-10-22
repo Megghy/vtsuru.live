@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ChatbubbleOutline, OpenOutline } from '@vicons/ionicons5'
-import { NAlert, NButton, NFlex, NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
 import QuestionBoxView from '@/apps/user/pages/QuestionBoxView.vue'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
 
 import BlockCard from '../BlockCard.vue'
 import { parseFeedbackEmbedUrl } from '../embed'
@@ -49,7 +50,8 @@ const cfg = computed<BlockConfig>(() => {
         : 520,
     framed: typeof o.framed === 'boolean' ? o.framed : true,
     backgrounded: typeof o.backgrounded === 'boolean' ? o.backgrounded : true,
-    defaultTag: isBlockPropertyAvailable('feedback', o, 'defaultTag') && typeof o.defaultTag === 'string' ? o.defaultTag : '',
+    defaultTag:
+      isBlockPropertyAvailable('feedback', o, 'defaultTag') && typeof o.defaultTag === 'string' ? o.defaultTag : '',
     showPublicQuestions:
       isBlockPropertyAvailable('feedback', o, 'showPublicQuestions') && typeof o.showPublicQuestions === 'boolean'
         ? o.showPublicQuestions
@@ -107,21 +109,16 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
       v-if="!canEmbedInternalQuestionBox"
       #header
     >
-      <NFlex
-        align="center"
-        style="gap: 8px"
-      >
-        <NIcon
-          size="18"
-          depth="2"
-        >
-          <ChatbubbleOutline />
-        </NIcon>
-        <span>{{ cfg.title }}</span>
-      </NFlex>
+      <div class="flex items-center gap-2">
+        <component
+          :is="ChatbubbleOutline"
+          class="size-4.5 text-muted-foreground"
+        />
+        <span class="font-medium text-sm">{{ cfg.title }}</span>
+      </div>
     </template>
 
-    <div class="feedback-body">
+    <div class="py-1">
       <template v-if="canEmbedInternalQuestionBox">
         <QuestionBoxView
           v-if="props.userInfo"
@@ -130,57 +127,53 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           :default-tag="cfg.defaultTag"
           :show-public-questions="cfg.showPublicQuestions"
         />
-        <NAlert
+        <Alert
           v-else
-          type="info"
-          :show-icon="false"
-          style="border-radius: var(--vtsuru-page-radius)"
+          class="text-xs py-2"
         >
-          未加载到用户信息，无法展示站内提问箱
-        </NAlert>
+          <AlertDescription> 未加载到用户信息，无法展示站内提问箱 </AlertDescription>
+        </Alert>
       </template>
 
       <template v-else>
         <div
           v-if="cfg.description"
-          class="feedback-desc"
+          class="block mb-3 whitespace-pre-wrap leading-relaxed text-muted-foreground"
         >
           {{ cfg.description }}
         </div>
 
-        <NAlert
+        <Alert
           v-if="!url"
-          type="info"
-          :show-icon="false"
-          style="border-radius: var(--vtsuru-page-radius)"
+          class="text-xs py-2"
         >
-          未配置跳转链接
-        </NAlert>
+          <AlertDescription> 未配置跳转链接 </AlertDescription>
+        </Alert>
 
         <template v-else>
-          <div class="action-row">
-            <NButton
-              type="primary"
-              secondary
-              tag="a"
+          <div class="action-row flex items-center gap-3 mb-4">
+            <Button
+              as="a"
+              variant="outline"
               target="_blank"
               rel="noopener noreferrer"
               :href="url"
-              class="open-btn"
+              class="open-btn font-semibold"
             >
-              <template #icon>
-                <NIcon><OpenOutline /></NIcon>
-              </template>
+              <component
+                :is="OpenOutline"
+                class="size-3.5 mr-1.5"
+              />
               {{ cfg.buttonText }}
-            </NButton>
-            <span class="url-hint">
+            </Button>
+            <span class="url-hint text-xs text-muted-foreground truncate flex-1">
               {{ url }}
             </span>
           </div>
 
           <div
             v-if="feedbackEmbed"
-            class="iframe-container"
+            class="w-full overflow-hidden border border-border rounded-[var(--radius)] bg-muted [&_iframe]:block [&_iframe]:w-full [&_iframe]:border-0"
           >
             <iframe
               :src="feedbackEmbed.src"
@@ -192,67 +185,16 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
               loading="lazy"
             />
           </div>
-          <NAlert
+          <Alert
             v-else-if="externalEmbedRejected"
-            type="info"
-            :show-icon="false"
-            class="embed-notice"
+            class="embed-notice text-xs py-2"
           >
-            该来源暂不支持安全内嵌，请使用上方按钮访问
-          </NAlert>
+            <AlertDescription> 该来源暂不支持安全内嵌，请使用上方按钮访问 </AlertDescription>
+          </Alert>
         </template>
       </template>
     </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.feedback-body {
-  padding: 4px 0;
-}
 
-.feedback-desc {
-  display: block;
-  margin-bottom: 12px;
-  white-space: pre-wrap;
-  line-height: 1.6;
-  color: var(--vtsuru-fg-muted);
-}
-
-.action-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.open-btn {
-  border-radius: var(--vtsuru-page-radius);
-  font-weight: 600;
-}
-
-.url-hint {
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  color: var(--vtsuru-fg-muted);
-}
-
-.embed-notice {
-  border-radius: var(--vtsuru-page-radius);
-}
-.iframe-container {
-  width: 100%;
-  overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-bg-muted);
-}
-.iframe-container iframe {
-  display: block;
-  width: 100%;
-  border: 0;
-}
-</style>

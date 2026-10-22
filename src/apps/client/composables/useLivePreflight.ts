@@ -31,7 +31,12 @@ export function useLivePreflight(control: LiveControl) {
       fetcherConnected: fetcher.state === 'connected',
       danmakuConnected: danmaku.connected,
       // 默认地址与默认自动推流开关不代表用户已经启用 OBS。
-    obsEnabled: obs.obsAutoReconnect || obs.obsConnected || obs.obsConnecting || Boolean(obs.obsError) || obs.obsSceneConfig.autoSwitchEnabled,
+      obsEnabled:
+        obs.obsAutoReconnect ||
+        obs.obsConnected ||
+        obs.obsConnecting ||
+        Boolean(obs.obsError) ||
+        obs.obsSceneConfig.autoSwitchEnabled,
       obsConnected: obs.obsConnected,
       obsStreamReady: inspection.value?.streamReady,
       autoSwitch: obs.obsSceneConfig.autoSwitchEnabled,

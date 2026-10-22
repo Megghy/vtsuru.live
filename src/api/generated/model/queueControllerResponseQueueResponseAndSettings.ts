@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseQueueModel } from './responseQueueModel';
-import type { SettingQueue } from './settingQueue';
+import type { ResponseQueueModel } from './responseQueueModel'
+import type { SettingQueue } from './settingQueue'
 
 export interface QueueControllerResponseQueueResponseAndSettings {
-  setting: SettingQueue;
-  queue: ResponseQueueModel[];
+  setting: SettingQueue
+  queue: ResponseQueueModel[]
 }

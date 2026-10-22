@@ -7,8 +7,8 @@
  */
 
 export interface PrepareAccountBiliAuthResponse {
-  proof: string;
-  userId: number;
-  linked: boolean;
-  expiresAt: number;
+  proof: string
+  userId: number
+  linked: boolean
+  expiresAt: number
 }

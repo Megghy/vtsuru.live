@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { NTag, NTime } from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import { computed } from 'vue'
 
 import type { SupportTicketSummary } from '@/api/api-models'
 import { SupportTicketStatus } from '@/api/api-models'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
+import { Badge } from '@/shared/ui/badge'
 
-defineProps<{
+const props = defineProps<{
   ticket: SupportTicketSummary
   active: boolean
 }>()
@@ -15,91 +18,46 @@ function hasUnread(ticket: SupportTicketSummary) {
     ticket.status !== SupportTicketStatus.Resolved && (ticket.lastMessageId ?? 0) > (ticket.userLastReadMessageId ?? 0)
   )
 }
+
+const relativeTime = computed(() => {
+  try {
+    return formatDistanceToNow(new Date(props.ticket.lastMessageTime), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(props.ticket.lastMessageTime)
+  }
+})
+
+const badgeVariant = computed(() => {
+  const type = supportTicketStatusMeta[props.ticket.status].type
+  if (type === 'success') return 'default'
+  if (type === 'info') return 'secondary'
+  return 'outline'
+})
 </script>
 
 <template>
   <button
     type="button"
-    class="ticket-item"
-    :class="{ active }"
+    class="grid gap-2 w-full py-3 px-3.5 border-0 border-b border-border text-foreground bg-transparent text-left cursor-pointer transition-colors hover:bg-muted"
+    :class="{ 'bg-muted shadow-[inset_3px_0_var(--brand)]': active }"
   >
-    <span class="ticket-item__heading">
+    <span class="flex items-center gap-2 min-w-0">
       <span
         v-if="hasUnread(ticket)"
-        class="ticket-item__unread"
+        class="size-1.5 shrink-0 rounded-full bg-[var(--brand)]"
         aria-label="有新消息"
       />
-      <span class="ticket-item__title">{{ ticket.title }}</span>
-      <NTag
-        size="small"
-        :type="supportTicketStatusMeta[ticket.status].type"
-        :bordered="false"
+      <span class="flex-1 overflow-hidden text-sm font-semibold truncate">{{ ticket.title }}</span>
+      <Badge
+        :variant="badgeVariant"
+        class="text-[10px] h-4.5 px-1.5 font-normal shrink-0"
       >
         {{ supportTicketStatusMeta[ticket.status].label }}
-      </NTag>
+      </Badge>
     </span>
-    <span class="ticket-item__meta">
+    <span class="flex items-center justify-between gap-2 min-w-0 text-muted-foreground text-xs">
       <span>#{{ ticket.id }} · {{ supportTicketTypeLabel(ticket.type) }}</span>
-      <NTime
-        :time="ticket.lastMessageTime"
-        type="relative"
-      />
+      <span>{{ relativeTime }}</span>
     </span>
   </button>
 </template>
-
-<style scoped>
-.ticket-item {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-  padding: 12px 14px;
-  border: 0;
-  border-bottom: 1px solid var(--vtsuru-border);
-  color: var(--vtsuru-fg);
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.ticket-item:hover,
-.ticket-item.active {
-  background: var(--vtsuru-bg-muted);
-}
-
-.ticket-item.active {
-  box-shadow: inset 3px 0 var(--vtsuru-brand);
-}
-
-.ticket-item__heading,
-.ticket-item__meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.ticket-item__title {
-  flex: 1;
-  overflow: hidden;
-  font-size: 14px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.ticket-item__meta {
-  justify-content: space-between;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.ticket-item__unread {
-  width: 7px;
-  height: 7px;
-  flex: 0 0 7px;
-  border-radius: 50%;
-  background: var(--vtsuru-brand);
-}
-</style>

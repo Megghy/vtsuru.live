@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PrepareAccountBiliAuthResponse } from './prepareAccountBiliAuthResponse';
+import type { PrepareAccountBiliAuthResponse } from './prepareAccountBiliAuthResponse'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfPrepareAccountBiliAuthResponse {
-  message: string;
-  code: number;
-  data: PrepareAccountBiliAuthResponse;
+  message: string
+  code: number
+  data: PrepareAccountBiliAuthResponse
 }

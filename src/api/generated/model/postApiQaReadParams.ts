@@ -7,6 +7,6 @@
  */
 
 export type PostApiQaReadParams = {
-id?: number;
-read?: boolean;
-};
+  id?: number
+  read?: boolean
+}

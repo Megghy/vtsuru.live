@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { NButton, NDivider, NInput, NTag, NTransfer, useMessage } from 'naive-ui'
-import type { Option } from 'naive-ui/es/transfer/src/interface'
 import { computed, nextTick, ref, watch } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { getApiSongListGetNeteaseList } from '@/api/generated/song-list/song-list'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
+import { Tag } from '@/shared/ui/tag'
+import { Transfer, type TransferOption } from '@/shared/ui/transfer'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   existingSongs: SongsInfo[]
@@ -21,7 +25,7 @@ const message = useMessage()
 
 const neteaseIdInput = ref<string>('')
 const neteaseSongs = ref<SongsInfo[]>([])
-const neteaseSongsOptions = ref<Option[]>([])
+const neteaseSongsOptions = ref<TransferOption[]>([])
 const selectedNeteaseSongs = ref<string[]>([])
 /** 本会话已成功添加的网易云歌曲 Id，避免 props 未及时同步时重复提交 */
 const sessionAddedIds = ref(new Set<number>())
@@ -52,7 +56,7 @@ const neteaseSongListId = computed<number | null>(() => {
       if (match) return Number(match[1])
     }
   } catch {
-    // ignore invalid URL, fallback to number parsing
+    // ignore
   }
 
   const num = Number(input)
@@ -66,12 +70,9 @@ function isSongAlreadyInList(song: SongsInfo) {
 }
 
 function getSelectedNewSongs() {
-  return neteaseSongs.value.filter(
-    (s) => selectedNeteaseSongs.value.includes(s.key) && !isSongAlreadyInList(s),
-  )
+  return neteaseSongs.value.filter((s) => selectedNeteaseSongs.value.includes(s.key) && !isSongAlreadyInList(s))
 }
 
-/** 取消选中已在歌单中的歌曲（从 Transfer 右侧移回左侧） */
 function deselectAlreadyAddedSongs() {
   selectedNeteaseSongs.value = selectedNeteaseSongs.value.filter((key) => {
     const song = neteaseSongs.value.find((s) => s.key === key)
@@ -120,7 +121,7 @@ async function getNeteaseSongList() {
     selectedNeteaseSongs.value = []
     updateNeteaseSongsOptions()
     message.success(
-      `成功获取歌曲信息, 共 ${data.data.length} 条, 歌单中已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
+      `成功获取歌曲信息，共 ${data.data.length} 条，已存在 ${neteaseSongsOptions.value.filter((s) => s.disabled).length} 首`,
     )
   } catch (err) {
     message.error(`获取歌单失败: ${err}`)
@@ -148,13 +149,11 @@ async function addNeteaseSongs() {
       return
     }
 
-    // 记入本会话已添加，立刻取消选中并禁用
     const nextIds = new Set(sessionAddedIds.value)
     for (const s of selected) nextIds.add(s.id)
     for (const s of data.data) nextIds.add(s.id)
     sessionAddedIds.value = nextIds
 
-    // 先取消选中本次添加的歌曲，再刷新禁用态（避免仍留在右侧可重复点添加）
     const addedKeys = new Set(selected.map((s) => s.key))
     selectedNeteaseSongs.value = selectedNeteaseSongs.value.filter((key) => !addedKeys.has(key))
     updateNeteaseSongsOptions()
@@ -183,39 +182,42 @@ async function addNeteaseSongs() {
 </script>
 
 <template>
-  <NInput
-    v-model:value="neteaseIdInput"
-    clearable
-    style="width: 100%"
-    autosize
-    :status="neteaseSongListId ? 'success' : 'error'"
-    placeholder="直接输入歌单Id或者网页链接"
-  >
-    <template #suffix>
-      <NTag
-        v-if="neteaseSongListId"
-        type="success"
-        size="small"
+  <div class="space-y-3">
+    <div class="flex items-center gap-2">
+      <div class="relative flex-1">
+        <Input
+          v-model="neteaseIdInput"
+          placeholder="直接输入网易云歌单Id或网页链接"
+          class="pr-20"
+        />
+        <div
+          v-if="neteaseSongListId"
+          class="absolute right-2 top-1.5"
+        >
+          <Tag
+            type="success"
+            size="small"
+          >
+            ID: {{ neteaseSongListId }}
+          </Tag>
+        </div>
+      </div>
+      <Button
+        :disabled="!neteaseSongListId"
+        @click="getNeteaseSongList"
       >
-        歌单Id: {{ neteaseSongListId }}
-      </NTag>
+        获取歌单
+      </Button>
+    </div>
+
+    <template v-if="neteaseSongsOptions.length > 0">
+      <Separator />
+      <Transfer
+        v-model="selectedNeteaseSongs"
+        :options="neteaseSongsOptions"
+        source-title="网易云歌单"
+        target-title="待添加歌曲"
+      />
     </template>
-  </NInput>
-  <NDivider style="margin: 10px" />
-  <NButton
-    type="primary"
-    :disabled="!neteaseSongListId"
-    @click="getNeteaseSongList"
-  >
-    获取
-  </NButton>
-  <template v-if="neteaseSongsOptions.length > 0">
-    <NDivider style="margin: 10px" />
-    <NTransfer
-      v-model:value="selectedNeteaseSongs"
-      style="height: 500px"
-      :options="neteaseSongsOptions"
-      source-filterable
-    />
-  </template>
+  </div>
 </template>

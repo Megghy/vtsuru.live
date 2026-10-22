@@ -7,7 +7,7 @@
  */
 
 export type GetApiOrgOrgIdAuditParams = {
-take?: number;
-skip?: number;
-actionPrefix?: string;
-};
+  take?: number
+  skip?: number
+  actionPrefix?: string
+}

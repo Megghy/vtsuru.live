@@ -90,9 +90,7 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
       const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
       const params = idStr ? { id: Number(idStr) } : {}
 
-      const data = (await getApiQueueGetActiveAndSettings(
-        params,
-      )) as unknown as {
+      const data = (await getApiQueueGetActiveAndSettings(params)) as unknown as {
         code: number
         data: { queue: ResponseQueueModel[]; setting: Setting_Queue }
       }
@@ -116,9 +114,12 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
     settings.value = result.setting ?? ({} as Setting_Queue)
   }
 
-  watch(() => toValue(currentId), () => {
-    void update()
-  })
+  watch(
+    () => toValue(currentId),
+    () => {
+      void update()
+    },
+  )
 
   return {
     queue,

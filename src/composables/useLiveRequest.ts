@@ -1,6 +1,5 @@
 import { List } from 'linqts'
-import { NTime } from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, useAccount } from '@/api/account'
 import type { EventModel, SongRequestInfo, SongsInfo } from '@/api/api-models'
@@ -146,7 +145,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       window.$notification.info({
         title: `${danmaku.uname} 点播失败`,
         description: '当前未在直播中, 无法添加点播请求. 或者关闭设置中的仅允许直播时加入',
-        meta: () => h(NTime, { type: 'relative', time: Date.now(), key: updateKey.value }),
+        meta: new Date().toLocaleTimeString(),
       })
       return
     }
@@ -168,7 +167,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
             title: `${danmaku.uname} 点播失败`,
             description: data.message,
             duration: isWarnMessageAutoClose.value ? 3000 : 0,
-            meta: () => h(NTime, { type: 'relative', time, key: updateKey.value }),
+            meta: new Date(time).toLocaleTimeString(),
           })
           console.log(`[SONG-REQUEST] [${danmaku.uname}] 添加曲目失败: ${data.message}`)
         }
@@ -310,9 +309,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     isLoading.value = true
 
     try {
-      const data = await postApiLiveRequestDelete(
-        values.map((s) => s.id),
-      )
+      const data = await postApiLiveRequestDelete(values.map((s) => s.id))
 
       if (data.code == 200) {
         window.$message.success('删除成功')

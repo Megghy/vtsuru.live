@@ -29,7 +29,7 @@ describe('shouldIgnoreSentryMessage', () => {
     'Fetch is aborted',
     'Internal error opening backing store for indexedDB database',
     '[Cloudflare Turnstile] Invalid type for parameter "container", expected "string or Element".',
-    "Couldn't resolve component \"default\" at /question-box",
+    'Couldn\'t resolve component "default" at /question-box',
     'Server timeout elapsed without receiving a message from the server.',
   ]
 

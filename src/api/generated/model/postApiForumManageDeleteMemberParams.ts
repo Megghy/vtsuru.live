@@ -7,6 +7,6 @@
  */
 
 export type PostApiForumManageDeleteMemberParams = {
-forum?: number;
-id?: number;
-};
+  forum?: number
+  id?: number
+}

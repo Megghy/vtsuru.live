@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInput, NModal, NText } from 'naive-ui'
 import { ref, watch } from 'vue'
 
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Separator } from '@/shared/ui/separator'
+import { Textarea } from '@/shared/ui/textarea'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const show = defineModel<boolean>('show', { required: true })
@@ -29,84 +32,58 @@ function handleKeydown(e: KeyboardEvent) {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    style="max-width: 90vw; width: 520px"
-    title="回复提问"
-    :mask-closable="false"
-  >
-    <template v-if="useQB.currentQuestion">
-      <div class="reply-target-info">
-        <NText depth="3">正在回复给：</NText>
-        <NText strong>
-          {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}
-        </NText>
-      </div>
+  <Dialog v-model:open="show">
+    <DialogContent class="max-w-md">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">回复提问</DialogTitle>
+      </DialogHeader>
 
-      <NCard
-        size="small"
-        embedded
-        :bordered="false"
-        style="margin-top: 8px; max-height: 140px; overflow-y: auto"
-      >
-        <NText style="white-space: pre-wrap">
-          {{ useQB.currentQuestion.question?.message }}
-        </NText>
-      </NCard>
+      <template v-if="useQB.currentQuestion">
+        <div class="space-y-3 py-1">
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="text-muted-foreground">正在回复给：</span>
+            <span class="font-semibold text-foreground">
+              {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}
+            </span>
+          </div>
 
-      <NDivider style="margin: 16px 0 12px" />
-
-      <NFlex
-        vertical
-        :size="12"
-      >
-        <NInput
-          v-model:value="replyMessage"
-          placeholder="请输入回复内容 (支持 Ctrl + Enter 快捷发送)..."
-          type="textarea"
-          maxlength="10000"
-          show-count
-          clearable
-          :autosize="{ minRows: 4, maxRows: 12 }"
-          @keydown="handleKeydown"
-        />
-      </NFlex>
-
-      <NDivider style="margin: 16px 0 12px" />
-
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
-        <NText
-          depth="3"
-          style="font-size: 11px"
-        >
-          按 Ctrl + Enter 快捷发送
-        </NText>
-
-        <NFlex :size="8">
-          <NButton @click="show = false"> 取消 </NButton>
-          <NButton
-            :loading="useQB.isRepling"
-            :disabled="!replyMessage.trim()"
-            type="primary"
-            @click="submitReply"
+          <div
+            class="p-3 rounded-lg bg-muted/40 text-xs text-foreground whitespace-pre-wrap max-h-36 overflow-y-auto border border-border"
           >
-            {{ useQB.currentQuestion?.answer ? '修改回复' : '发送回复' }}
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </template>
-  </NModal>
-</template>
+            {{ useQB.currentQuestion.question?.message }}
+          </div>
 
-<style scoped>
-.reply-target-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-}
-</style>
+          <Separator />
+
+          <div class="space-y-1.5">
+            <Textarea
+              v-model="replyMessage"
+              placeholder="请输入回复内容 (支持 Ctrl + Enter 快捷发送)..."
+              maxlength="10000"
+              :rows="5"
+              class="text-xs"
+              @keydown="handleKeydown"
+            />
+          </div>
+        </div>
+
+        <DialogFooter class="flex items-center justify-between sm:justify-between w-full pt-2">
+          <span class="text-[11px] text-muted-foreground">按 Ctrl + Enter 快捷发送</span>
+          <div class="flex items-center gap-2">
+            <Button
+              variant="outline"
+              @click="show = false"
+              >取消</Button
+            >
+            <Button
+              :disabled="!replyMessage.trim() || useQB.isRepling"
+              @click="submitReply"
+            >
+              {{ useQB.isRepling ? '发送中...' : useQB.currentQuestion?.answer ? '修改回复' : '发送回复' }}
+            </Button>
+          </div>
+        </DialogFooter>
+      </template>
+    </DialogContent>
+  </Dialog>
+</template>

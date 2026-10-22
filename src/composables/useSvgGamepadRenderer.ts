@@ -131,11 +131,7 @@ export function toHex(r: number, g: number, b: number): string {
 export function lerpColor(from: string, to: string, t: number): string {
   const c1 = parseHexOrRgb(from)
   const c2 = parseHexOrRgb(to)
-  return toHex(
-    c1.r + (c2.r - c1.r) * t,
-    c1.g + (c2.g - c1.g) * t,
-    c1.b + (c2.b - c1.b) * t,
-  )
+  return toHex(c1.r + (c2.r - c1.r) * t, c1.g + (c2.g - c1.g) * t, c1.b + (c2.b - c1.b) * t)
 }
 
 export function getAutoPressedColor(origColor: string | null): string {
@@ -159,11 +155,7 @@ export function extractOriginalFill(el: Element): {
   return { fillAttr, styleFill, effectiveColor }
 }
 
-export function applyColorToElement(
-  el: Element,
-  color: string,
-  _target: ColorTarget,
-) {
+export function applyColorToElement(el: Element, color: string, _target: ColorTarget) {
   el.setAttribute('fill', color)
   if ('style' in el && (el as HTMLElement).style) {
     ;(el as HTMLElement).style.fill = color
@@ -227,11 +219,7 @@ export interface SvgGamepadRendererOptions {
 
 // --- 元素查找与着色提取工具 ---
 
-export function findElementByAliases(
-  root: Element,
-  aliases: string[],
-  usedElements?: Set<Element>,
-): Element | null {
+export function findElementByAliases(root: Element, aliases: string[], usedElements?: Set<Element>): Element | null {
   const allEls = Array.from(root.querySelectorAll('*'))
   const normalizedAliases = aliases.map((a) => a.trim().toLowerCase())
 
@@ -277,9 +265,7 @@ export function findColorTargets(container: Element): ColorTarget[] {
   }
 
   // 如果未明确标 color，提取非 outline/text/icon/symbol/led 的图形节点
-  const graphicEls = Array.from(
-    container.querySelectorAll('path, ellipse, circle, rect, polygon'),
-  ).filter((el) => {
+  const graphicEls = Array.from(container.querySelectorAll('path, ellipse, circle, rect, polygon')).filter((el) => {
     const label = getElementLabel(el)?.toLowerCase() ?? ''
     const isExclude =
       label.includes('outline') ||
@@ -320,11 +306,7 @@ export function useSvgGamepadRenderer(options: SvgGamepadRendererOptions) {
     const raw = toValue(svgContainerRef)
     if (!raw) return null
     const root: Element | null =
-      typeof (raw as any)?.$el !== 'undefined'
-        ? (raw as any).$el
-        : raw instanceof Element
-          ? raw
-          : (raw as any)
+      typeof (raw as any)?.$el !== 'undefined' ? (raw as any).$el : raw instanceof Element ? raw : (raw as any)
     if (!root || typeof (root as Element).querySelector !== 'function') return null
 
     return (root as Element).tagName?.toLowerCase() === 'svg'
@@ -341,7 +323,10 @@ export function useSvgGamepadRenderer(options: SvgGamepadRendererOptions) {
     const viewBoxStr = svgEl.getAttribute('viewBox')
     let viewBoxWidth = 1000
     if (viewBoxStr) {
-      const parts = viewBoxStr.trim().split(/[\s,]+/).map(Number)
+      const parts = viewBoxStr
+        .trim()
+        .split(/[\s,]+/)
+        .map(Number)
       if (parts.length === 4 && parts[2] > 0) {
         viewBoxWidth = parts[2]
       }

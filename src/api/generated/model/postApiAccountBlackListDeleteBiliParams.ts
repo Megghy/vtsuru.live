@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountBlackListDeleteBiliParams = {
-id?: string;
-};
+  id?: string
+}

@@ -1,32 +1,22 @@
 <script setup lang="ts">
-import { CloseOutline } from '@vicons/ionicons5'
-import type { FormInst, FormItemInst, FormItemRule, FormRules } from 'naive-ui'
-import {
-  NButton,
-  NCountdown,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NTabPane,
-  NTabs,
-  NText,
-  useMessage,
-} from 'naive-ui'
+import { Dismiss16Regular } from '@vicons/fluent'
 import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
 import type { AccountInfo } from '@/api/api-models'
+import { cookie } from '@/api/auth'
 import {
   postApiAccountLogin,
   postApiAccountRegister,
   postApiAccountResetPassword,
 } from '@/api/generated/account/account'
-import { cookie } from '@/api/auth'
 import { QueryRequestError } from '@/api/query'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { toast } from '@/shared/utils'
 
 interface RegisterModel {
   username: string
@@ -60,7 +50,6 @@ const emit = defineEmits<{
   success: [accountId: number | undefined]
 }>()
 
-const message = useMessage()
 const account = useAccount()
 
 const registerModel = ref<RegisterModel>({
@@ -82,10 +71,8 @@ const selectedTab = ref<'login' | 'register' | 'forget'>(props.initialTab)
 const inputForgetPasswordValue = ref('')
 const isForgetPassword = ref(false)
 const canSendForgetPassword = ref(true)
-
-const loginFormRef = ref<FormInst | null>(null)
-const registerFormRef = ref<FormInst | null>(null)
-const rPasswordFormItemRef = ref<FormItemInst | null>(null)
+const forgetCountdown = ref(0)
+let forgetTimer: number | undefined
 
 const activeAction = ref<AuthAction>('idle')
 const progressState = ref<AuthProgressState>('idle')
@@ -95,59 +82,6 @@ const activeController = ref<AbortController | null>(null)
 
 let slowTimer: number | undefined
 let feedbackResetTimer: number | undefined
-
-const registerRules: FormRules = {
-  username: [
-    {
-      required: true,
-      message: '请输入用户名',
-    },
-  ],
-  email: [
-    {
-      required: true,
-      message: '请输入邮箱',
-    },
-  ],
-  password: [
-    {
-      required: true,
-      message: '请输入密码',
-    },
-  ],
-  reenteredPassword: [
-    {
-      required: true,
-      message: '请再次输入密码',
-      trigger: ['input', 'blur'],
-    },
-    {
-      validator: validatePasswordStartWith,
-      message: '两次密码输入不一致',
-      trigger: 'input',
-    },
-    {
-      validator: validatePasswordSame,
-      message: '两次密码输入不一致',
-      trigger: ['blur', 'password-input'],
-    },
-  ],
-}
-
-const loginRules: FormRules = {
-  account: [
-    {
-      required: true,
-      message: '请输入用户名 / 邮箱 / B站 UID',
-    },
-  ],
-  password: [
-    {
-      required: true,
-      message: '请输入密码',
-    },
-  ],
-}
 
 const isLoggedInNow = computed(() => Boolean(cookie.value?.cookie))
 const currentAccountName = computed(() => account.value?.name || '当前账号')
@@ -162,43 +96,22 @@ const canSubmitForget = computed(() => Boolean(token.value) && canSendForgetPass
 const defaultFeedback = computed<{ tone: AuthFeedbackTone; text: string }>(() => {
   if (selectedTab.value === 'register') {
     if (!token.value) {
-      return {
-        tone: 'warning',
-        text: '先完成人机验证，再提交注册',
-      }
+      return { tone: 'warning', text: '先完成人机验证，再提交注册' }
     }
-
-    return {
-      tone: 'info',
-      text: '验证已完成',
-    }
+    return { tone: 'info', text: '验证已完成' }
   }
 
   if (selectedTab.value === 'forget') {
     if (!token.value) {
-      return {
-        tone: 'warning',
-        text: '先完成人机验证，再发送密码重置邮件',
-      }
+      return { tone: 'warning', text: '先完成人机验证，再发送密码重置邮件' }
     }
-
     if (!canSendForgetPassword.value) {
-      return {
-        tone: 'success',
-        text: '重置邮件已经发送，如果没有收到请检查邮箱的垃圾箱，或稍后重试发送',
-      }
+      return { tone: 'success', text: '重置邮件已经发送，如果没有收到请检查邮箱的垃圾箱，或稍后重试发送' }
     }
-
-    return {
-      tone: 'info',
-      text: '验证完成后即可发送邮件',
-    }
+    return { tone: 'info', text: '验证完成后即可发送邮件' }
   }
 
-  return {
-    tone: 'info',
-    text: '输入账号和密码进行登录',
-  }
+  return { tone: 'info', text: '输入账号和密码进行登录' }
 })
 
 const currentFeedbackTone = computed(() => {
@@ -229,18 +142,6 @@ watch(selectedTab, () => {
     resetProgressFeedback()
   }
 })
-
-function validatePasswordStartWith(rule: FormItemRule, value: string): boolean {
-  return (
-    !!registerModel.value.password &&
-    registerModel.value.password.startsWith(value) &&
-    registerModel.value.password.length >= value.length
-  )
-}
-
-function validatePasswordSame(rule: FormItemRule, value: string): boolean {
-  return value === registerModel.value.password
-}
 
 function clearSlowTimer() {
   if (slowTimer !== undefined) {
@@ -316,12 +217,6 @@ function resetTurnstile() {
   turnstile.value?.reset?.()
 }
 
-function onPasswordInput() {
-  if (registerModel.value.reenteredPassword) {
-    rPasswordFormItemRef.value?.validate({ trigger: 'password-input' })
-  }
-}
-
 function onForgetPasswordClick() {
   isForgetPassword.value = true
   selectedTab.value = 'forget'
@@ -331,16 +226,6 @@ function onForgetPasswordClick() {
 function backToLogin() {
   selectedTab.value = 'login'
   resetProgressFeedback()
-}
-
-async function validateForm(formRef: FormInst | null, messageText: string) {
-  try {
-    await formRef?.validate()
-    return true
-  } catch {
-    setFeedback('error', 'warning', messageText, 4000)
-    return false
-  }
 }
 
 function cancelActiveRequest() {
@@ -369,13 +254,13 @@ async function finalizeAuthenticatedSession(tokenValue: string, successMessage: 
 
   try {
     await GetSelfAccount()
-    message.success(successMessage)
-    emit('success', account.value.id)
+    toast.success(successMessage)
+    emit('success', account.value?.id)
     emit('close')
   } catch (error) {
     console.error('[Auth] 账号同步失败:', error)
     setFeedback('error', 'warning', '账号已登录，但同步当前账户信息失败。你可以关闭窗口继续，或稍后刷新页面。')
-    message.warning('账号已登录，但同步账户信息失败，请稍后刷新页面。')
+    toast.warning('账号已登录，但同步账户信息失败，请稍后刷新页面。')
   }
 }
 
@@ -390,20 +275,33 @@ function handleRequestError(actionLabel: string, error: unknown) {
 
   if (requestError.kind === 'timeout') {
     setFeedback('timeout', 'error', `${actionLabel}等待超时，系统已切换到备用节点，请重试。`)
-    message.error(`${actionLabel}超时，请重试。`)
+    toast.error(`${actionLabel}超时，请重试。`)
     return
   }
 
   setFeedback('error', 'error', `${actionLabel}失败，请检查网络连接后重试。`)
-  message.error(requestError.message || `${actionLabel}失败`)
+  toast.error(requestError.message || `${actionLabel}失败`)
 }
 
 async function onRegisterButtonClick() {
   if (registerPending.value) return
 
-  const valid = await validateForm(registerFormRef.value, '请先修正注册表单中的问题。')
-  if (!valid) return
-
+  if (!registerModel.value.username.trim()) {
+    setFeedback('error', 'warning', '请输入用户名', 4000)
+    return
+  }
+  if (!registerModel.value.email.trim()) {
+    setFeedback('error', 'warning', '请输入邮箱', 4000)
+    return
+  }
+  if (!registerModel.value.password) {
+    setFeedback('error', 'warning', '请输入密码', 4000)
+    return
+  }
+  if (registerModel.value.password !== registerModel.value.reenteredPassword) {
+    setFeedback('error', 'warning', '两次密码输入不一致', 4000)
+    return
+  }
   if (!token.value) {
     setFeedback('idle', 'warning', '请先完成人机验证，再提交注册。', 4000)
     return
@@ -434,7 +332,7 @@ async function onRegisterButtonClick() {
     if (data.code !== 200) {
       const failureMessage = data.message || '注册失败'
       setFeedback('error', 'error', `无法完成注册：${failureMessage}`)
-      message.error(failureMessage)
+      toast.error(failureMessage)
       return
     }
 
@@ -450,8 +348,14 @@ async function onRegisterButtonClick() {
 async function onLoginButtonClick() {
   if (loginPending.value) return
 
-  const valid = await validateForm(loginFormRef.value, '请先补全登录信息。')
-  if (!valid) return
+  if (!loginModel.value.account.trim()) {
+    setFeedback('error', 'warning', '请输入用户名 / 邮箱 / B站 UID', 4000)
+    return
+  }
+  if (!loginModel.value.password) {
+    setFeedback('error', 'warning', '请输入密码', 4000)
+    return
+  }
 
   const controller = beginRequest('login', '登录')
 
@@ -477,7 +381,7 @@ async function onLoginButtonClick() {
 
     if (data.code !== 200) {
       setFeedback('error', 'error', data.message || '登录失败')
-      message.error(data.message || '登录失败')
+      toast.error(data.message || '登录失败')
       return
     }
 
@@ -522,13 +426,21 @@ async function onForgetPassword() {
 
     if (data.code !== 200) {
       setFeedback('error', 'error', data.message || '发送失败')
-      message.error(data.message || '发送失败')
+      toast.error(data.message || '发送失败')
       return
     }
 
     canSendForgetPassword.value = false
+    forgetCountdown.value = 60
+    forgetTimer = window.setInterval(() => {
+      forgetCountdown.value -= 1
+      if (forgetCountdown.value <= 0) {
+        clearInterval(forgetTimer)
+        canSendForgetPassword.value = true
+      }
+    }, 1000)
     setFeedback('success', 'success', '重置链接已发送到邮箱，请检查收件箱或垃圾箱。')
-    message.success('已发送密码重置链接到你的邮箱，请检查。')
+    toast.success('已发送密码重置链接到你的邮箱，请检查。')
   } catch (error) {
     handleRequestError('重置密码', error)
   } finally {
@@ -541,441 +453,294 @@ onUnmounted(() => {
   activeController.value?.abort()
   clearSlowTimer()
   clearFeedbackResetTimer()
+  if (forgetTimer) clearInterval(forgetTimer)
   turnstile.value?.remove?.()
 })
 </script>
 
 <template>
-  <section class="account-auth">
-    <header class="account-auth__header">
-      <h2>登录或注册</h2>
-      <div class="account-auth__header-actions">
+  <section class="account-auth text-xs text-foreground">
+    <header class="flex items-center justify-between gap-3 pb-3 border-b border-border/60">
+      <h2 class="text-base font-semibold m-0 text-foreground">登录或注册</h2>
+      <div class="flex items-center gap-2">
         <slot name="header-extra" />
-        <NButton
+        <Button
           v-if="props.closable"
-          circle
-          quaternary
-          size="small"
+          variant="ghost"
+          size="icon"
+          class="size-7 rounded-full text-muted-foreground hover:text-foreground"
           title="关闭"
           aria-label="关闭"
           @click="closePanel"
         >
-          <template #icon><NIcon :component="CloseOutline" /></template>
-        </NButton>
+          <component
+            :is="Dismiss16Regular"
+            class="size-4"
+          />
+        </Button>
       </div>
     </header>
 
     <div
       v-if="isLoggedInNow"
-      class="account-auth__success"
+      class="py-6 flex flex-col items-center justify-center gap-3 text-center"
     >
-      <NText type="success">已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。</NText>
-      <NButton
+      <p class="text-sm font-medium text-emerald-600 dark:text-emerald-400 m-0">
+        已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。
+      </p>
+      <Button
         v-if="props.closable"
-        type="primary"
         @click="closePanel"
       >
         继续
-      </NButton>
+      </Button>
     </div>
 
     <div
       v-else
-      class="account-auth__body"
+      class="pt-3 space-y-3"
     >
+      <!-- 提示反馈行 -->
       <div
-        class="auth-feedback"
-        :class="`is-${currentFeedbackTone}`"
+        class="p-2.5 rounded-lg border flex items-center gap-2 text-xs"
+        :class="{
+          'bg-muted/40 border-border/80 text-muted-foreground': currentFeedbackTone === 'info',
+          'bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400': currentFeedbackTone === 'warning',
+          'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400':
+            currentFeedbackTone === 'success',
+          'bg-destructive/10 border-destructive/30 text-destructive': currentFeedbackTone === 'error',
+        }"
         role="status"
         aria-live="polite"
       >
         <span
-          class="auth-feedback__dot"
-          aria-hidden="true"
+          class="size-1.5 rounded-full shrink-0"
+          :class="{
+            'bg-muted-foreground': currentFeedbackTone === 'info',
+            'bg-amber-500': currentFeedbackTone === 'warning',
+            'bg-emerald-500': currentFeedbackTone === 'success',
+            'bg-destructive': currentFeedbackTone === 'error',
+          }"
         />
-        <NText :type="currentFeedbackTone">{{ currentFeedbackText }}</NText>
+        <span class="flex-1 leading-relaxed">{{ currentFeedbackText }}</span>
       </div>
 
-      <NTabs
-        v-model:value="selectedTab"
-        class="auth-tabs"
-        type="line"
-        size="medium"
-        animated
+      <Tabs
+        :model-value="selectedTab"
+        class="w-full"
+        @update:model-value="selectedTab = $event as any"
       >
-        <NTabPane
-          name="login"
-          tab="登录"
+        <TabsList
+          class="grid w-full"
+          :class="isForgetPassword ? 'grid-cols-3' : 'grid-cols-2'"
         >
-          <NForm
-            ref="loginFormRef"
-            :rules="loginRules"
-            :model="loginModel"
+          <TabsTrigger
+            value="login"
+            class="text-xs"
+            >登录</TabsTrigger
           >
-            <NFormItem
-              path="account"
-              label="用户名 / 邮箱 / B站 UID"
-            >
-              <NInput
-                v-model:value="loginModel.account"
-                clearable
-                placeholder="输入用户名 / 邮箱 / B站 UID"
-                :input-props="{ autocomplete: 'username' }"
-              />
-            </NFormItem>
-            <NFormItem
-              path="password"
-              label="密码"
-            >
-              <NInput
-                v-model:value="loginModel.password"
-                type="password"
-                show-password-on="click"
-                placeholder="输入密码"
-                :input-props="{ autocomplete: 'current-password' }"
-                @keydown.enter="onLoginButtonClick"
-              />
-            </NFormItem>
-          </NForm>
+          <TabsTrigger
+            value="register"
+            class="text-xs"
+            >注册</TabsTrigger
+          >
+          <TabsTrigger
+            v-if="isForgetPassword"
+            value="forget"
+            class="text-xs"
+            >忘记密码</TabsTrigger
+          >
+        </TabsList>
 
-          <div class="form-actions">
-            <NButton
-              text
+        <!-- 登录面板 -->
+        <TabsContent
+          value="login"
+          class="pt-3 space-y-3"
+        >
+          <div class="space-y-1">
+            <label class="font-medium text-foreground text-xs">用户名 / 邮箱 / B站 UID</label>
+            <Input
+              v-model="loginModel.account"
+              placeholder="输入用户名 / 邮箱 / B站 UID"
+              autocomplete="username"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-medium text-foreground text-xs">密码</label>
+            <Input
+              v-model="loginModel.password"
+              type="password"
+              placeholder="输入密码"
+              autocomplete="current-password"
+              @keydown.enter="onLoginButtonClick"
+            />
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <button
+              type="button"
+              class="text-xs text-muted-foreground hover:text-foreground transition underline-offset-4 hover:underline"
               @click="onForgetPasswordClick"
             >
               忘记密码
-            </NButton>
-            <NFlex
-              justify="end"
-              :size="8"
-            >
-              <NButton
+            </button>
+
+            <div class="flex items-center gap-2">
+              <Button
                 v-if="loginPending"
-                secondary
+                variant="outline"
                 @click="cancelActiveRequest"
               >
                 取消
-              </NButton>
-              <NButton
-                :loading="loginPending"
+              </Button>
+              <Button
                 :disabled="isBusy && !loginPending"
-                type="primary"
-                class="primary-action"
                 @click="onLoginButtonClick"
               >
                 {{ loginButtonText }}
-              </NButton>
-            </NFlex>
+              </Button>
+            </div>
           </div>
-        </NTabPane>
+        </TabsContent>
 
-        <NTabPane
-          name="register"
-          tab="注册"
+        <!-- 注册面板 -->
+        <TabsContent
+          value="register"
+          class="pt-3 space-y-3"
         >
-          <NForm
-            ref="registerFormRef"
-            :rules="registerRules"
-            :model="registerModel"
-          >
-            <NFormItem
-              path="username"
-              label="用户名"
-            >
-              <NInput
-                v-model:value="registerModel.username"
-                clearable
-                placeholder="输入一个用户名，不允许纯数字"
-                :input-props="{ autocomplete: 'username' }"
-              />
-            </NFormItem>
-            <NFormItem
-              path="email"
-              label="邮箱"
-            >
-              <NInput
-                v-model:value="registerModel.email"
-                clearable
-                placeholder="请输入可接收邮件的邮箱"
-                :input-props="{ autocomplete: 'email' }"
-              />
-            </NFormItem>
-            <NFormItem
-              path="password"
-              label="密码"
-            >
-              <NInput
-                v-model:value="registerModel.password"
-                type="password"
-                show-password-on="click"
-                placeholder="输入密码，需要包含英文和数字"
-                :input-props="{ autocomplete: 'new-password' }"
-                @input="onPasswordInput"
-                @keydown.enter.prevent
-              />
-            </NFormItem>
-            <NFormItem
-              ref="rPasswordFormItemRef"
-              first
-              path="reenteredPassword"
-              label="重复密码"
-            >
-              <NInput
-                v-model:value="registerModel.reenteredPassword"
-                :disabled="!registerModel.password"
-                type="password"
-                show-password-on="click"
-                placeholder="再次输入密码"
-                :input-props="{ autocomplete: 'new-password' }"
-                @keydown.enter="onRegisterButtonClick"
-              />
-            </NFormItem>
-          </NForm>
+          <div class="space-y-1">
+            <label class="font-medium text-foreground text-xs">用户名</label>
+            <Input
+              v-model="registerModel.username"
+              placeholder="输入一个用户名，不允许纯数字"
+              autocomplete="username"
+            />
+          </div>
 
-          <div class="form-actions form-actions--end">
-            <NButton
+          <div class="space-y-1">
+            <label class="font-medium text-foreground text-xs">邮箱</label>
+            <Input
+              v-model="registerModel.email"
+              type="email"
+              placeholder="请输入可接收邮件的邮箱"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-medium text-foreground text-xs">密码</label>
+            <Input
+              v-model="registerModel.password"
+              type="password"
+              placeholder="输入密码，需要包含英文和数字"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-medium text-foreground text-xs">重复密码</label>
+            <Input
+              v-model="registerModel.reenteredPassword"
+              type="password"
+              placeholder="再次输入密码"
+              autocomplete="new-password"
+              @keydown.enter="onRegisterButtonClick"
+            />
+          </div>
+
+          <div class="flex items-center justify-end gap-2 pt-1">
+            <Button
               v-if="registerPending"
-              secondary
+              variant="outline"
               @click="cancelActiveRequest"
             >
               取消
-            </NButton>
-            <NButton
-              :loading="registerPending"
+            </Button>
+            <Button
               :disabled="!canSubmitRegister"
-              type="primary"
-              class="primary-action"
               @click="onRegisterButtonClick"
             >
               {{ registerButtonText }}
-            </NButton>
+            </Button>
           </div>
-        </NTabPane>
+        </TabsContent>
 
-        <NTabPane
+        <!-- 忘记密码面板 -->
+        <TabsContent
           v-if="isForgetPassword"
-          name="forget"
-          tab="忘记密码"
+          value="forget"
+          class="pt-3 space-y-3"
         >
-          <p>已关联 B 站的账号，也可以重新认证身份后设置新密码。</p>
-          <NButton
-            tag="a"
-            href="/bili-auth"
-            block
-            secondary
-            >通过 B 站认证重置密码</NButton
-          >
-          <NFormItem label="注册邮箱">
-            <NInput
-              v-model:value="inputForgetPasswordValue"
-              clearable
-              placeholder="请输入邮箱"
-              maxlength="64"
-              :input-props="{ autocomplete: 'email' }"
-            />
-          </NFormItem>
+          <p class="text-xs text-muted-foreground leading-relaxed m-0">
+            已关联 B 站的账号，也可以重新认证身份后设置新密码。
+          </p>
 
-          <div class="form-actions">
-            <NButton
-              text
+          <Button
+            as="a"
+            href="/bili-auth"
+            variant="outline"
+            class="w-full"
+          >
+            通过 B 站认证重置密码
+          </Button>
+
+          <div class="space-y-1">
+            <label class="font-medium text-foreground text-xs">注册邮箱</label>
+            <Input
+              v-model="inputForgetPasswordValue"
+              type="email"
+              placeholder="请输入注册邮箱"
+            />
+          </div>
+
+          <div class="flex items-center justify-between pt-1">
+            <button
+              type="button"
+              class="text-xs text-muted-foreground hover:text-foreground transition underline-offset-4 hover:underline"
               @click="backToLogin"
             >
               返回登录
-            </NButton>
-            <NFlex
-              justify="end"
-              :size="8"
-            >
-              <NButton
+            </button>
+
+            <div class="flex items-center gap-2">
+              <Button
                 v-if="forgetPending"
-                secondary
+                variant="outline"
                 @click="cancelActiveRequest"
               >
                 取消
-              </NButton>
-              <NButton
-                :loading="forgetPending"
+              </Button>
+              <Button
                 :disabled="!canSubmitForget"
-                type="primary"
-                class="primary-action"
                 @click="onForgetPassword"
               >
                 {{ forgetButtonText }}
-              </NButton>
-            </NFlex>
+              </Button>
+            </div>
           </div>
 
-          <NCountdown
+          <p
             v-if="!canSendForgetPassword"
-            :duration="60000"
-            class="forget-countdown"
-            @finish="canSendForgetPassword = true"
-          />
-        </NTabPane>
-      </NTabs>
+            class="text-center text-xs text-muted-foreground m-0"
+          >
+            {{ forgetCountdown }} 秒后可重新发送
+          </p>
+        </TabsContent>
+      </Tabs>
 
+      <!-- 人机验证区域 -->
       <section
         v-if="selectedTab !== 'login'"
-        class="verification-section"
+        class="pt-2 flex justify-center"
       >
-        <div class="turnstile-wrap">
-          <CaptchaWidget
-            :key="selectedTab"
-            ref="turnstile"
-            v-model="token"
-            :action="selectedTab === 'register' ? 'register' : undefined"
-          />
-        </div>
+        <CaptchaWidget
+          :key="selectedTab"
+          ref="turnstile"
+          v-model="token"
+          :action="selectedTab === 'register' ? 'register' : undefined"
+        />
       </section>
     </div>
   </section>
 </template>
-
-<style scoped>
-.account-auth {
-  min-width: 0;
-  color: var(--vtsuru-fg);
-}
-
-.account-auth__header {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--vtsuru-border);
-}
-
-.account-auth__header h2 {
-  margin: 0;
-  color: var(--vtsuru-fg);
-  font-size: 17px;
-  font-weight: 650;
-  line-height: 1.3;
-  letter-spacing: 0;
-}
-
-.account-auth__header-actions {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 8px;
-}
-
-.account-auth__body,
-.account-auth__success {
-  min-width: 0;
-  margin-top: 16px;
-}
-
-.account-auth__success {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.auth-feedback {
-  --feedback-color: var(--vtsuru-brand);
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 9px 11px;
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--feedback-color) 9%, transparent);
-}
-
-.auth-feedback.is-warning {
-  --feedback-color: #d89b26;
-}
-
-.auth-feedback.is-success {
-  --feedback-color: #26966c;
-}
-
-.auth-feedback.is-error {
-  --feedback-color: #d84a5f;
-}
-
-.auth-feedback__dot {
-  width: 7px;
-  height: 7px;
-  flex: none;
-  border-radius: 50%;
-  background: var(--feedback-color);
-}
-
-.auth-tabs :deep(.n-tab-pane) {
-  padding-top: 18px;
-}
-
-.auth-tabs :deep(.n-tabs-nav-scroll-content) {
-  width: 100%;
-}
-
-.auth-tabs :deep(.n-tabs-tab) {
-  flex: 1;
-  justify-content: center;
-}
-
-.form-actions {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.form-actions--end {
-  justify-content: flex-end;
-}
-
-.primary-action {
-  min-width: 132px;
-}
-
-.verification-section {
-  display: flex;
-  min-width: 0;
-  justify-content: center;
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.turnstile-wrap {
-  min-width: 0;
-  width: 100%;
-  max-width: 100%;
-}
-
-.forget-countdown {
-  display: block;
-  margin-top: 12px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-@media (max-width: 480px) {
-  .account-auth__success {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .form-actions {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .form-actions > :deep(.n-flex) {
-    width: 100%;
-  }
-
-  .primary-action {
-    flex: 1;
-  }
-}
-</style>

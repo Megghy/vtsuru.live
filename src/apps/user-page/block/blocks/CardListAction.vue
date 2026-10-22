@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { NButton } from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+
+import { Button } from '@/shared/ui/button'
 
 const props = defineProps<{
   action: unknown
@@ -34,25 +35,25 @@ const router = useRouter()
 </script>
 
 <template>
-  <NButton
+  <Button
     v-if="label && internalPath"
-    size="small"
-    :type="secondary ? 'default' : 'primary'"
-    :secondary="secondary"
+    :variant="secondary ? 'outline' : 'default'"
+    size="xs"
+    class="font-medium"
     @click="router.push(internalPath)"
   >
     {{ label }}
-  </NButton>
-  <NButton
+  </Button>
+  <Button
     v-else-if="label && url"
-    tag="a"
-    size="small"
-    :type="secondary ? 'default' : 'primary'"
-    :secondary="secondary"
+    as="a"
+    :variant="secondary ? 'outline' : 'default'"
+    size="xs"
+    class="font-medium inline-flex items-center justify-center text-inherit no-underline"
     :href="url"
     target="_blank"
     rel="noopener noreferrer"
   >
     {{ label }}
-  </NButton>
+  </Button>
 </template>

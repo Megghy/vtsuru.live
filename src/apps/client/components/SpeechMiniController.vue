@@ -1,24 +1,19 @@
 <script setup lang="ts">
 import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NText, NTooltip, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { useSpeechService } from '@/store/useSpeechService'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const router = useRouter()
 const route = useRoute()
 const speechService = useSpeechService()
 const { speechState, speakQueue, isPaused } = speechService
-const themeVars = useThemeVars()
 
 const isActive = computed(() => speechState.canSpeech && route.name !== 'client-read-danmaku')
 const queueCount = computed(() => speakQueue.value.length)
-const containerStyle = computed(() => ({
-  '--mini-bg': themeVars.value.popoverColor,
-  '--mini-border': themeVars.value.borderColor,
-  '--mini-badge-bg': themeVars.value.actionColor,
-}))
 
 function goToPage() {
   router.push({ name: 'client-read-danmaku' })
@@ -29,116 +24,109 @@ function goToPage() {
   <Teleport to="body">
     <div
       v-if="isActive"
-      class="speech-mini-controller"
-      :style="containerStyle"
+      class="fixed bottom-4 right-4 z-[9999] bg-popover border border-border rounded-lg py-1.5 px-3 shadow-lg max-w-[360px] flex items-center gap-2 animate-[slide-up_0.25s_ease]"
     >
-      <NFlex
-        align="center"
-        :size="8"
-        :wrap="false"
-        style="flex: 1; overflow: hidden"
+      <div
+        class="flex items-center gap-2 min-w-0 flex-1 cursor-pointer"
+        @click="goToPage"
       >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              size="tiny"
-              quaternary
-              @click="goToPage"
-            >
-              <template #icon>
-                <NIcon
-                  :component="Mic24Filled"
-                  color="#18a058"
-                />
-              </template>
-            </NButton>
-          </template>
-          前往读弹幕页面
-        </NTooltip>
+        <span
+          class="inline-block size-2 rounded-full shrink-0"
+          :class="{
+            'bg-emerald-500 animate-pulse': speechState.isSpeaking && !isPaused,
+            'bg-amber-500': isPaused,
+            'bg-muted-foreground/40': !speechState.isSpeaking && !isPaused,
+          }"
+        />
 
-        <NText
-          class="status-text"
-          :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'"
+        <span
+          class="text-xs flex-1 overflow-hidden text-ellipsis whitespace-nowrap"
+          :class="{
+            'text-foreground font-medium': speechState.isSpeaking,
+            'text-muted-foreground': !speechState.isSpeaking,
+          }"
         >
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
-        </NText>
+        </span>
 
-        <NText
+        <span
           v-if="queueCount > 0"
-          depth="3"
-          class="queue-badge"
+          class="text-[11px] bg-muted text-muted-foreground rounded-full px-1.5 min-w-[18px] text-center"
         >
           {{ queueCount }}
-        </NText>
-      </NFlex>
-      <NFlex
-        :size="4"
-        :wrap="false"
-      >
-        <NButton
-          size="tiny"
-          :type="isPaused ? 'warning' : 'default'"
-          @click="speechService.togglePause()"
-        >
-          <template #icon>
-            <NIcon :component="isPaused ? Play20Filled : Pause20Filled" />
-          </template>
-        </NButton>
-        <NButton
-          size="tiny"
-          :disabled="!speechState.isSpeaking"
-          @click="speechService.skipCurrent()"
-        >
-          <template #icon>
-            <NIcon :component="Next20Filled" />
-          </template>
-        </NButton>
-        <NButton
-          size="tiny"
-          type="error"
-          @click="speechService.stopSpeech()"
-        >
-          <template #icon>
-            <NIcon :component="MicOff24Filled" />
-          </template>
-        </NButton>
-      </NFlex>
+        </span>
+      </div>
+
+      <div class="flex items-center gap-1 shrink-0">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="icon"
+                :variant="isPaused ? 'default' : 'outline'"
+                class="size-6 p-0"
+                @click="speechService.togglePause()"
+              >
+                <component
+                  :is="isPaused ? Play20Filled : Pause20Filled"
+                  class="size-3.5"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs">
+              {{ isPaused ? '恢复朗读' : '暂停朗读' }}
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="icon"
+                variant="outline"
+                class="size-6 p-0"
+                :disabled="!speechState.isSpeaking"
+                @click="speechService.skipCurrent()"
+              >
+                <Next20Filled class="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs"> 跳过当前 </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="icon"
+                variant="destructive"
+                class="size-6 p-0"
+                @click="speechService.stopSpeech()"
+              >
+                <MicOff24Filled class="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs"> 停止朗读并清空 </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="icon"
+                variant="ghost"
+                class="size-6 p-0 text-muted-foreground"
+                @click="goToPage"
+              >
+                <Mic24Filled class="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs"> 打开读弹幕页面 </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
     </div>
   </Teleport>
 </template>
 
 <style scoped>
-.speech-mini-controller {
-  position: fixed;
-  bottom: 16px;
-  right: 16px;
-  z-index: 9999;
-  background: var(--mini-bg);
-  border: 1px solid var(--mini-border);
-  border-radius: 8px;
-  padding: 6px 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-  max-width: 360px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  animation: slide-up 0.25s ease;
-}
-.status-text {
-  font-size: 12px;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.queue-badge {
-  font-size: 11px;
-  background: var(--mini-badge-bg);
-  border-radius: 10px;
-  padding: 0 6px;
-  min-width: 18px;
-  text-align: center;
-}
 @keyframes slide-up {
   from {
     opacity: 0;

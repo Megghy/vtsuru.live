@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import { Chat24Regular } from '@vicons/fluent'
-import { NAvatar, NEmpty, NIcon, NImage, NPagination, NSpin, NTime } from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
 import { AVATAR_URL } from '@/shared/config'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Empty } from '@/shared/ui/empty'
+import { Pagination } from '@/shared/ui/pagination'
+import { Spin } from '@/shared/ui/spin'
+
+function formatRelativeTime(val: number | string | Date | undefined | null) {
+  if (!val) return ''
+  try {
+    const d = typeof val === 'number' ? new Date(val > 1e11 ? val : val * 1000) : new Date(val)
+    return formatDistanceToNow(d, { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(val)
+  }
+}
 
 const props = defineProps<{
   questions: QAInfo[]
@@ -82,15 +97,18 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
 
 <template>
   <section
-    class="question-feed"
+    class="min-w-0 text-card-foreground @container"
     :class="{ 'is-embedded': embedded }"
   >
-    <div class="feed-toolbar">
-      <header class="feed-header">
+    <div
+      class="mb-3 p-4 bg-card border border-border rounded-lg shadow-sm backdrop-blur-sm transition-all"
+      :class="{ '!p-0 !bg-transparent !border-0 !shadow-none !backdrop-blur-none': embedded }"
+    >
+      <header class="flex items-end justify-between gap-5 m-0">
         <div>
-          <span class="feed-kicker">PUBLIC REPLIES</span>
-          <h2>公开问答</h2>
-          <p>
+          <span class="block mb-0.5 text-[10px] font-bold text-primary tracking-normal">PUBLIC REPLIES</span>
+          <h2 class="m-0 text-lg font-semibold leading-snug">公开问答</h2>
+          <p class="m-0 mt-0.5 text-xs text-muted-foreground">
             <template v-if="!questions.length">还没有公开内容</template>
             <template v-else-if="selectedTag">话题「{{ selectedTag }}」· {{ displayCount }} 条</template>
             <template v-else>已公开 {{ questions.length }} 条留言</template>
@@ -98,7 +116,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
         </div>
         <span
           :key="filterPulse"
-          class="reply-count"
+          class="reply-count text-2xl tabular-nums leading-none text-muted-foreground/60"
           :class="{ 'is-pulsing': filterPulse > 0 }"
         >
           {{ displayCount }}
@@ -108,7 +126,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
       <div
         v-if="availableTags.length > 1"
         ref="filterRail"
-        class="feed-filters"
+        class="feed-filters relative flex gap-1.5 pt-3 overflow-x-auto no-scrollbar"
         aria-label="按话题筛选"
         @scroll.passive="scheduleIndicator"
       >
@@ -135,7 +153,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
       </div>
     </div>
 
-    <NSpin :show="isLoading">
+    <Spin :show="isLoading">
       <Transition
         name="feed-swap"
         mode="out-in"
@@ -143,76 +161,82 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
         <div
           v-if="pagedQuestions.length"
           :key="listKey"
-          class="thread-stage"
+          class="min-w-0"
         >
           <TransitionGroup
             name="question-thread"
             tag="div"
-            class="thread-list"
+            class="grid gap-3"
+            :class="{ '!gap-0': embedded }"
           >
             <article
               v-for="(item, index) in pagedQuestions"
               :key="item.id"
-              class="question-thread"
+              class="question-thread grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4 bg-card border border-border rounded-lg shadow-sm backdrop-blur-sm @[max-width:480px]:grid-cols-[minmax(0,1fr)] @[max-width:480px]:p-3.5"
+              :class="{ '!p-4 !px-0 !bg-transparent !border-0 !border-t !border-border !rounded-none !shadow-none': embedded }"
               :style="{ '--thread-index': index }"
             >
-              <div class="question-marker">
-                <NIcon :component="Chat24Regular" />
+              <div class="size-8 shrink-0 rounded-full bg-primary/10 border border-primary/20 text-primary flex-center @[max-width:480px]:size-7">
+                <Chat24Regular class="size-4" />
               </div>
-              <div class="thread-content">
-                <div class="question-meta">
-                  <NTime
-                    :time="item.sendAt"
-                    type="relative"
-                  />
-                  <span v-if="item.tag">{{ item.tag }}</span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2 text-xs text-muted-foreground/70">
+                  <span class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground">{{ formatRelativeTime(item.sendAt) }}</span>
+                  <span v-if="item.tag" class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground">{{ item.tag }}</span>
                 </div>
-                <p class="question-message">{{ item.question.message }}</p>
+                <p class="m-0 mt-2 text-[15px] leading-relaxed break-words whitespace-pre-wrap">{{ item.question.message }}</p>
                 <div
                   v-if="item.questionImages?.length"
-                  class="thread-images"
+                  class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 mt-2.5 @[max-width:480px]:grid-cols-2"
                 >
-                  <NImage
+                  <img
                     v-for="image in item.questionImages"
                     :key="image.path"
                     :src="image.path"
-                    object-fit="cover"
+                    alt=""
+                    class="w-full aspect-[4/3] object-cover rounded-md border border-border bg-secondary/50 cursor-pointer"
+                    loading="lazy"
                   />
                 </div>
 
                 <div
                   v-if="item.answer"
-                  class="answer-block"
+                  class="relative mt-4 p-3.5 bg-secondary/40 border-l-3 border-primary rounded-md @[max-width:480px]:p-3"
                 >
-                  <div class="answer-author">
-                    <NAvatar
-                      round
-                      :size="28"
-                      :src="
-                        userInfo?.faceUrl ||
-                        userInfo?.streamerInfo?.faceUrl ||
-                        (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=64` : undefined)
-                      "
-                      :img-props="{ referrerpolicy: 'no-referrer', alt: `${userInfo?.name || '主播'} 的头像` }"
-                    />
-                    <strong>{{ userInfo?.name || '主播' }}</strong>
+                  <div class="flex items-center gap-1.5 min-w-0 text-xs text-muted-foreground @[max-width:480px]:flex-wrap">
+                    <Avatar class="size-7 rounded-full">
+                      <AvatarImage
+                        :src="
+                          userInfo?.faceUrl ||
+                          userInfo?.streamerInfo?.faceUrl ||
+                          (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=64` : undefined)
+                        "
+                        referrerpolicy="no-referrer"
+                        :alt="`${userInfo?.name || '主播'} 的头像`"
+                      />
+                      <AvatarFallback>{{ (userInfo?.name || '主')[0] }}</AvatarFallback>
+                    </Avatar>
+                    <strong class="truncate font-semibold text-primary">{{ userInfo?.name || '主播' }}</strong>
                     <span>的回复</span>
-                    <NTime
+                    <span
                       v-if="item.answer.createdAt"
-                      :time="item.answer.createdAt"
-                      type="relative"
-                    />
+                      class="text-xs text-muted-foreground/70 ml-auto @[max-width:480px]:w-full @[max-width:480px]:ml-8"
+                    >
+                      {{ formatRelativeTime(item.answer.createdAt) }}
+                    </span>
                   </div>
-                  <p>{{ item.answer.message }}</p>
+                  <p class="m-0 mt-2 text-sm leading-relaxed break-words whitespace-pre-wrap">{{ item.answer.message }}</p>
                   <div
                     v-if="item.answerImages?.length"
-                    class="thread-images"
+                    class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 mt-2.5 @[max-width:480px]:grid-cols-2"
                   >
-                    <NImage
+                    <img
                       v-for="image in item.answerImages"
                       :key="image.path"
                       :src="image.path"
-                      object-fit="cover"
+                      alt=""
+                      class="w-full aspect-[4/3] object-cover rounded-md border border-border bg-secondary/50 cursor-pointer"
+                      loading="lazy"
                     />
                   </div>
                 </div>
@@ -221,135 +245,28 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
           </TransitionGroup>
         </div>
 
-        <NEmpty
+        <Empty
           v-else-if="!isLoading"
           :key="`empty-${listKey}`"
-          class="feed-empty"
+          class="p-10 bg-card border border-border rounded-lg"
           :description="selectedTag ? '该话题暂无公开回复' : '暂无公开回复'"
         />
       </Transition>
-    </NSpin>
+    </Spin>
 
-    <NPagination
+    <Pagination
       v-if="filteredQuestions.length > pageSize"
       v-model:page="page"
-      :item-count="filteredQuestions.length"
+      :total="filteredQuestions.length"
       :page-size="pageSize"
-      class="feed-pagination"
+      class="justify-center mt-4.5"
     />
   </section>
 </template>
 
 <style scoped>
-.question-feed {
-  --feed-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--vtsuru-fg))));
-  --feed-muted: var(
-    --vtsuru-block-fg-muted,
-    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--vtsuru-fg-muted)))
-  );
-  --feed-subtle: var(--vtsuru-block-fg-subtle, var(--vtsuru-surface-fg-subtle, var(--vtsuru-fg-muted)));
-  --feed-bg: var(
-    --vtsuru-block-bg-muted,
-    var(--user-page-theme-surface-bg, var(--vtsuru-page-card-bg, var(--vtsuru-bg-elevated)))
-  );
-  --feed-border: var(
-    --vtsuru-block-border,
-    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--vtsuru-border)))
-  );
-  --feed-accent: var(--vtsuru-page-primary, var(--vtsuru-brand));
-  min-width: 0;
-  color: var(--feed-fg);
-  container-type: inline-size;
-}
-
-.question-feed.is-embedded .question-thread {
-  padding: 16px 0;
-  background: transparent;
-  border: 0;
-  border-top: 1px solid var(--feed-border);
-  border-radius: 0;
-  box-shadow: none;
-}
-
-.question-feed.is-embedded .thread-list {
-  gap: 0;
-}
-
-.question-feed.is-embedded .feed-toolbar {
-  padding: 0 0 16px;
-  background: transparent;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
-  backdrop-filter: none;
-}
-
-.feed-toolbar {
-  margin-bottom: 12px;
-  padding: 16px 18px;
-  background: var(--feed-bg);
-  border: var(--vtsuru-page-border);
-  border-radius: var(--vtsuru-page-radius, 8px);
-  box-shadow: var(--vtsuru-page-shadow);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-}
-
-.feed-header {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 20px;
-  margin: 0;
-}
-
-.feed-header h2,
-.feed-header p {
-  margin: 0;
-}
-
-.feed-header h2 {
-  font-size: 19px;
-  line-height: 1.4;
-}
-
-.feed-header p {
-  margin-top: 3px;
-  color: var(--feed-muted);
-  font-size: 12px;
-}
-
-.feed-kicker {
-  display: block;
-  margin-bottom: 2px;
-  color: var(--feed-accent);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.reply-count {
-  color: var(--feed-subtle);
-  font-size: 28px;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-}
-
 .reply-count.is-pulsing {
   animation: count-pop 0.42s cubic-bezier(0.22, 1.4, 0.36, 1);
-}
-
-.feed-filters {
-  position: relative;
-  display: flex;
-  gap: 6px;
-  padding-top: 13px;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.feed-filters::-webkit-scrollbar {
-  display: none;
 }
 
 .filter-indicator {
@@ -358,10 +275,10 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
   left: 0;
   z-index: 0;
   height: 29px;
-  background: var(--vtsuru-page-primary-soft);
-  border: 1px solid var(--vtsuru-page-primary-border, var(--feed-accent));
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  border: 1px solid var(--primary);
   border-radius: 999px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--feed-accent) 12%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
   pointer-events: none;
   transition:
     width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
@@ -375,11 +292,11 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
   flex: 0 0 auto;
   min-height: 29px;
   padding: 3px 10px;
-  color: var(--feed-muted);
+  color: var(--muted-foreground);
   font: inherit;
   font-size: 12px;
   background: transparent;
-  border: 1px solid var(--feed-border);
+  border: 1px solid var(--border);
   border-radius: 999px;
   cursor: pointer;
   transition:
@@ -390,157 +307,19 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
 }
 
 .feed-filters button:hover {
-  color: var(--vtsuru-page-primary-readable, var(--feed-accent));
-  border-color: var(--vtsuru-page-primary-border, var(--feed-accent));
+  color: var(--primary);
+  border-color: var(--primary);
   transform: translateY(-1px);
 }
 
 .feed-filters button.is-active {
-  color: var(--vtsuru-page-primary-readable, var(--feed-accent));
+  color: var(--primary);
   background: transparent;
   border-color: transparent;
 }
 
-.thread-stage {
-  min-width: 0;
-}
-
-.thread-list {
-  display: grid;
-  gap: 12px;
-}
-
 .question-thread {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  min-width: 0;
-  padding: 18px;
-  background: var(--feed-bg);
-  border: var(--vtsuru-page-border);
-  border-radius: var(--vtsuru-page-radius, 8px);
-  box-shadow: var(--vtsuru-page-shadow);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
   animation: thread-enter 0.48s calc(var(--thread-index) * 55ms) cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.question-marker {
-  display: grid;
-  width: 32px;
-  height: 32px;
-  color: var(--vtsuru-page-primary-readable, var(--feed-accent));
-  background: var(--vtsuru-page-primary-soft);
-  border: 1px solid var(--vtsuru-page-primary-border, var(--feed-accent));
-  border-radius: 50%;
-  place-items: center;
-}
-
-.thread-content {
-  min-width: 0;
-}
-
-.question-meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--feed-subtle);
-  font-size: 11px;
-}
-
-.question-meta > span {
-  max-width: min(100%, 260px);
-  padding: 2px 7px;
-  overflow: hidden;
-  color: var(--feed-muted);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: var(--vtsuru-page-card-bg-embedded, transparent);
-  border: 1px solid var(--feed-border);
-  border-radius: 999px;
-}
-
-.question-message,
-.answer-block p {
-  margin: 0;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-.question-message {
-  margin-top: 9px;
-  font-size: 15px;
-  line-height: 1.7;
-}
-
-.answer-block {
-  position: relative;
-  margin-top: 16px;
-  padding: 14px 16px;
-  background: var(--vtsuru-page-card-bg-embedded, color-mix(in srgb, var(--feed-bg) 82%, transparent));
-  border-left: 3px solid var(--feed-accent);
-  border-radius: var(--vtsuru-page-radius, 8px);
-}
-
-.answer-author {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  color: var(--feed-muted);
-  font-size: 11px;
-}
-
-.answer-author strong {
-  overflow: hidden;
-  color: var(--vtsuru-page-primary-readable, var(--feed-accent));
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.answer-author .n-time {
-  margin-left: auto;
-  color: var(--feed-subtle);
-}
-
-.answer-block p {
-  margin-top: 9px;
-  font-size: 14px;
-  line-height: 1.65;
-}
-
-.thread-images {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-  gap: 7px;
-  margin-top: 11px;
-}
-
-.thread-images :deep(.n-image) {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  background: var(--vtsuru-page-card-bg-embedded, var(--feed-bg));
-  border: 1px solid var(--feed-border);
-  border-radius: var(--vtsuru-page-radius, 8px);
-}
-
-.thread-images :deep(img) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.feed-empty {
-  padding: 42px 16px;
-  background: var(--feed-bg);
-  border: var(--vtsuru-page-border);
-  border-radius: var(--vtsuru-page-radius, 8px);
-}
-
-.feed-pagination {
-  justify-content: center;
-  margin-top: 18px;
 }
 
 .feed-swap-enter-active,
@@ -580,36 +359,6 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
   transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@container (max-width: 480px) {
-  .question-thread {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 8px;
-    padding: 14px;
-  }
-
-  .question-marker {
-    width: 28px;
-    height: 28px;
-  }
-
-  .answer-block {
-    padding: 12px;
-  }
-
-  .answer-author {
-    flex-wrap: wrap;
-  }
-
-  .answer-author .n-time {
-    width: 100%;
-    margin-left: 34px;
-  }
-
-  .thread-images {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @keyframes thread-enter {
   from {
     opacity: 0;
@@ -620,7 +369,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
 @keyframes count-pop {
   0% {
     transform: scale(0.86);
-    color: var(--feed-accent);
+    color: var(--primary);
   }
   55% {
     transform: scale(1.12);

@@ -1,114 +1,60 @@
 <script setup lang="ts">
-import { NTag, NTime } from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
+import { computed } from 'vue'
 
 import type { SupportTicketSummary } from '@/api/api-models'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
+import { Badge } from '@/shared/ui/badge'
 
-defineProps<{
+const props = defineProps<{
   ticket: SupportTicketSummary
 }>()
+
+const relativeTime = computed(() => {
+  try {
+    return formatDistanceToNow(new Date(props.ticket.lastMessageTime), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(props.ticket.lastMessageTime)
+  }
+})
+
+const badgeVariant = computed(() => {
+  const type = supportTicketStatusMeta[props.ticket.status].type
+  if (type === 'success') return 'default'
+  if (type === 'info') return 'secondary'
+  return 'outline'
+})
 </script>
 
 <template>
   <button
     type="button"
-    class="public-ticket-card"
+    class="flex min-w-0 min-h-24 overflow-hidden p-0 border border-border rounded-lg text-foreground bg-background text-left cursor-pointer transition-colors hover:border-[var(--brand)] hover:bg-muted"
   >
     <img
       v-if="ticket.images[0]"
-      class="public-ticket-card__image"
+      class="size-24 shrink-0 self-center object-cover border-r border-border"
       :src="ticket.images[0].path"
       :alt="ticket.images[0].name"
     />
-    <div class="public-ticket-card__body">
-      <div class="public-ticket-card__tags">
-        <NTag
-          size="small"
-          :type="supportTicketStatusMeta[ticket.status].type"
-          :bordered="false"
+    <div class="flex min-w-0 flex-1 flex-col gap-2 py-3 px-3.5">
+      <div class="flex items-center justify-between gap-2.5 text-muted-foreground text-xs">
+        <Badge
+          :variant="badgeVariant"
+          class="text-[10px] h-4.5 px-1.5 font-normal"
         >
           {{ supportTicketStatusMeta[ticket.status].label }}
-        </NTag>
+        </Badge>
         <span>{{ supportTicketTypeLabel(ticket.type) }}</span>
       </div>
-      <h2>{{ ticket.title }}</h2>
-      <div class="public-ticket-card__meta">
+      <h2 class="line-clamp-2 m-0 text-foreground text-[15px] font-semibold leading-normal wrap-anywhere">
+        {{ ticket.title }}
+      </h2>
+      <div class="flex items-center justify-between gap-2.5 text-muted-foreground text-xs mt-auto">
         <span>#{{ ticket.id }}</span>
-        <NTime
-          :time="ticket.lastMessageTime"
-          type="relative"
-        />
+        <span>{{ relativeTime }}</span>
       </div>
     </div>
   </button>
 </template>
-
-<style scoped>
-.public-ticket-card {
-  display: flex;
-  min-width: 0;
-  min-height: 96px;
-  overflow: hidden;
-  padding: 0;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg);
-  text-align: left;
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    background-color 0.15s ease;
-}
-
-.public-ticket-card:hover {
-  border-color: var(--vtsuru-brand);
-  background: var(--vtsuru-bg-muted);
-}
-
-.public-ticket-card__image {
-  width: 96px;
-  height: 96px;
-  flex: 0 0 96px;
-  align-self: center;
-  object-fit: cover;
-  border-right: 1px solid var(--vtsuru-border);
-}
-
-.public-ticket-card__body {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px 14px;
-}
-
-.public-ticket-card__tags,
-.public-ticket-card__meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.public-ticket-card h2 {
-  display: -webkit-box;
-  overflow: hidden;
-  margin: 0;
-  color: var(--vtsuru-fg);
-  font-size: 15px;
-  font-weight: 600;
-  line-height: 1.5;
-  letter-spacing: 0;
-  overflow-wrap: anywhere;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.public-ticket-card__meta {
-  margin-top: auto;
-}
-</style>

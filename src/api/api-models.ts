@@ -1,14 +1,14 @@
-import type { EventModel as GeneratedEventModel } from './generated/model/eventModel'
-import type { ResponsePointHistoryModel } from './generated/model/responsePointHistoryModel'
-import type { ResponseQueueModel as GeneratedQueueModel } from './generated/model/responseQueueModel'
-import type { ResponseSongRequestModel } from './generated/model/responseSongRequestModel'
-import type { SupportTicketMessageModel } from './generated/model/supportTicketMessageModel'
-import type { SupportTicketModel } from './generated/model/supportTicketModel'
 import type { APIFileModel } from './generated/model/aPIFileModel'
 import type { DanmakuModel as GeneratedDanmakuModel } from './generated/model/danmakuModel'
+import type { EventModel as GeneratedEventModel } from './generated/model/eventModel'
 import type { ResponsePointGoodsModel } from './generated/model/responsePointGoodsModel'
+import type { ResponsePointHistoryModel } from './generated/model/responsePointHistoryModel'
+import type { ResponseQueueModel as GeneratedQueueModel } from './generated/model/responseQueueModel'
 import type { ResponseSelectedSubItemOrderInfo } from './generated/model/responseSelectedSubItemOrderInfo'
+import type { ResponseSongRequestModel } from './generated/model/responseSongRequestModel'
 import type { ResponseUserBasicInfo } from './generated/model/responseUserBasicInfo'
+import type { SupportTicketMessageModel } from './generated/model/supportTicketMessageModel'
+import type { SupportTicketModel } from './generated/model/supportTicketModel'
 
 export interface APIRoot<T> {
   code: number
@@ -74,7 +74,14 @@ export type { RequestPointGoodsModelTempRequestGoodsSetting as PointGoodsSetting
 export type { ResponseSubPointGoodsModel as ResponseSubPointGoodModel } from './generated/model/responseSubPointGoodsModel'
 export type { ResponseBasePointGoodsModel } from './generated/model/responseBasePointGoodsModel'
 export type { ResponsePointGoodsModel } from './generated/model/responsePointGoodsModel'
-export type ResponsePointGoodModel = import('./generated/model/responseBasePointGoodsModel').ResponseBasePointGoodsModel & Partial<Pick<import('./generated/model/responsePointGoodsModel').ResponsePointGoodsModel, 'content' | 'collectUrl' | 'embedCollectUrl' | 'setting' | 'serviceConfig' | 'virtualKeys' | 'keySelectionMode'>>
+export type ResponsePointGoodModel =
+  import('./generated/model/responseBasePointGoodsModel').ResponseBasePointGoodsModel &
+    Partial<
+      Pick<
+        import('./generated/model/responsePointGoodsModel').ResponsePointGoodsModel,
+        'content' | 'collectUrl' | 'embedCollectUrl' | 'setting' | 'serviceConfig' | 'virtualKeys' | 'keySelectionMode'
+      >
+    >
 export type { RequestPointGoodsModelTempSubPointGoodsModel as UploadSubPointGoodsModel } from './generated/model/requestPointGoodsModelTempSubPointGoodsModel'
 export type UploadPointGoodsModel = import('./generated/model/requestPointGoodsModel').RequestPointGoodsModel & {
   maxSubItemSelections?: number | null
@@ -274,6 +281,9 @@ export enum ViolationTypes {
   POLITICS,
   ADVERTISING,
   AGGRESSION,
+  PASSIVE_AGGRESSIVE,
+  THREAT,
+  TEASING,
 }
 export enum ThemeType {
   Auto = 'auto',

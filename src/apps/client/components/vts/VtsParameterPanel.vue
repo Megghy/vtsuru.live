@@ -1,21 +1,13 @@
 <script setup lang="ts">
-import {
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NFlex,
-  NInput,
-  NInputNumber,
-  NPopconfirm,
-  NSlider,
-  NSwitch,
-  NText,
-} from 'naive-ui'
-
-import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsParamSlot } from '@/apps/client/store/useVtsStore'
+import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -41,197 +33,175 @@ function addSlot() {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="参数控制"
-  >
-    <NFlex
-      vertical
-      :size="8"
-    >
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="8"
-      >
-        <NButton
-          size="small"
-          @click="addSlot"
-        >
-          添加参数槽
-        </NButton>
-        <NButton
-          size="small"
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+      <CardTitle class="text-sm font-semibold">参数控制</CardTitle>
+      <div class="flex items-center gap-2">
+        <Button @click="addSlot"> 添加参数槽 </Button>
+        <Button
+          variant="outline"
           :disabled="!vts.connected"
           @click="vts.stopAllParamHolds"
         >
           全部停止持有
-        </NButton>
-        <NText depth="3"> Hold 模式会持续注入参数值 </NText>
-      </NFlex>
+        </Button>
+        <span class="text-xs text-muted-foreground"> Hold 模式会持续注入参数值 </span>
+      </div>
+    </CardHeader>
 
-      <NDivider style="margin: 4px 0" />
-
+    <CardContent class="p-3 space-y-3">
       <div
         v-for="slot in vts.paramSlots"
         :key="slot.id"
-        class="param-slot"
+        class="p-2.5 sm:px-3 border border-border rounded-md bg-muted space-y-2.5"
       >
-        <NFlex
-          align="center"
-          justify="space-between"
-          :wrap="true"
-          :size="8"
-        >
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <NText strong>
+        <div class="flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-semibold text-foreground">
               {{ slot.name || slot.parameterId }}
-            </NText>
-            <NText
+            </span>
+            <span
               v-if="slot.name"
-              depth="3"
+              class="text-xs text-muted-foreground"
             >
               {{ slot.parameterId }}
-            </NText>
-          </NFlex>
-          <NFlex
-            :wrap="true"
-            :size="8"
-            align="center"
-          >
-            <NSwitch
-              :value="slot.hold"
-              :disabled="!vts.connected"
-              @update:value="(val) => updateSlot({ ...slot, hold: val })"
-            >
-              <template #checked> Hold </template>
-              <template #unchecked> Hold </template>
-            </NSwitch>
-            <NButton
-              size="small"
+            </span>
+          </div>
+
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 cursor-pointer select-none">
+              <Switch
+                :checked="slot.hold"
+                :disabled="!vts.connected"
+                @update:checked="(val) => updateSlot({ ...slot, hold: val })"
+              />
+              <span class="text-xs text-muted-foreground">Hold</span>
+            </div>
+            <Button
+              size="xs"
+              variant="outline"
               :disabled="!vts.connected"
               @click="injectOnce(slot)"
             >
               注入
-            </NButton>
-            <NPopconfirm @positive-click="vts.removeParamSlot(slot.id)">
+            </Button>
+            <Popconfirm
+              title="确认删除"
+              @positive-click="vts.removeParamSlot(slot.id)"
+            >
               <template #trigger>
-                <NButton
-                  size="small"
-                  type="error"
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="border-destructive/40 text-destructive hover:bg-destructive/10"
                 >
                   删除
-                </NButton>
+                </Button>
               </template>
               确认删除?
-            </NPopconfirm>
-          </NFlex>
-        </NFlex>
+            </Popconfirm>
+          </div>
+        </div>
 
-        <NFlex
-          align="center"
-          :wrap="true"
-          :size="12"
-          style="margin-top: 8px"
-        >
-          <NSlider
-            style="min-width: 320px; flex: 1"
-            :value="slot.value"
+        <div class="flex items-center gap-3">
+          <div class="flex-1 min-w-[200px]">
+            <Slider
+              :model-value="[slot.value]"
+              :min="slot.min"
+              :max="slot.max"
+              :step="slot.step"
+              :disabled="!vts.connected"
+              @update:model-value="
+                (val) => {
+                  if (val?.[0] !== undefined) {
+                    slot.value = val[0]
+                    updateSlot({ ...slot })
+                  }
+                }
+              "
+            />
+          </div>
+          <NumberField
+            :model-value="slot.value"
             :min="slot.min"
             :max="slot.max"
             :step="slot.step"
             :disabled="!vts.connected"
-            @update:value="
-              (val) => {
-                slot.value = val as number
-              }
-            "
-            @change="() => updateSlot({ ...slot })"
-          />
-          <NInputNumber
-            :value="slot.value"
-            :min="slot.min"
-            :max="slot.max"
-            :step="slot.step"
-            :disabled="!vts.connected"
-            style="width: 140px"
-            @update:value="
+            class="w-28"
+            @update:model-value="
               (val) => {
                 slot.value = (val ?? 0) as number
+                updateSlot({ ...slot })
               }
             "
-            @blur="() => updateSlot({ ...slot })"
           />
-        </NFlex>
+        </div>
 
-        <NCollapse style="margin-top: 6px">
-          <NCollapseItem
-            title="参数配置"
-            name="config"
+        <details class="group text-xs pt-1">
+          <summary
+            class="cursor-pointer font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 select-none"
           >
-            <NFlex
-              :wrap="true"
-              :size="12"
-              align="center"
-            >
-              <NInput
-                v-model:value="slot.name"
-                placeholder="显示名"
-                style="width: 140px"
-                @blur="updateSlot({ ...slot })"
-              />
-              <NInput
-                v-model:value="slot.parameterId"
-                placeholder="参数 ID"
-                style="width: 180px"
-                @blur="updateSlot({ ...slot })"
-              />
-              <NInputNumber
-                v-model:value="slot.weight"
+            <span>参数配置</span>
+            <span class="transition-transform group-open:rotate-180 text-[10px]">▾</span>
+          </summary>
+          <div class="flex flex-wrap items-center gap-2 pt-2 border-t mt-2">
+            <Input
+              v-model="slot.name"
+              placeholder="显示名"
+              class="w-28"
+              @blur="updateSlot({ ...slot })"
+            />
+            <Input
+              v-model="slot.parameterId"
+              placeholder="参数 ID"
+              class="w-36"
+              @blur="updateSlot({ ...slot })"
+            />
+            <div class="flex items-center gap-1">
+              <span class="text-muted-foreground">权重:</span>
+              <NumberField
+                v-model="slot.weight"
                 :min="0"
                 :step="0.1"
                 placeholder="权重"
-                style="width: 120px"
-                @blur="updateSlot({ ...slot })"
+                class="w-20"
+                @update:model-value="updateSlot({ ...slot })"
               />
-              <NInputNumber
-                v-model:value="slot.min"
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-muted-foreground">最小:</span>
+              <NumberField
+                v-model="slot.min"
                 :step="0.1"
                 placeholder="最小值"
-                style="width: 120px"
-                @blur="updateSlot({ ...slot })"
+                class="w-20"
+                @update:model-value="updateSlot({ ...slot })"
               />
-              <NInputNumber
-                v-model:value="slot.max"
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-muted-foreground">最大:</span>
+              <NumberField
+                v-model="slot.max"
                 :step="0.1"
                 placeholder="最大值"
-                style="width: 120px"
-                @blur="updateSlot({ ...slot })"
+                class="w-20"
+                @update:model-value="updateSlot({ ...slot })"
               />
-              <NInputNumber
-                v-model:value="slot.step"
+            </div>
+            <div class="flex items-center gap-1">
+              <span class="text-muted-foreground">步长:</span>
+              <NumberField
+                v-model="slot.step"
                 :min="0.0001"
                 :step="0.01"
                 placeholder="步长"
-                style="width: 120px"
-                @blur="updateSlot({ ...slot })"
+                class="w-20"
+                @update:model-value="updateSlot({ ...slot })"
               />
-            </NFlex>
-          </NCollapseItem>
-        </NCollapse>
+            </div>
+          </div>
+        </details>
       </div>
-    </NFlex>
-  </NCard>
+    </CardContent>
+  </Card>
 </template>
-
-<style scoped>
-.param-slot {
-  padding: 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-}
-</style>

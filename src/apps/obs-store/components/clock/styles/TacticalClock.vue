@@ -73,7 +73,8 @@ onMounted(() => {
           <span
             v-if="props.state.showMilliseconds"
             class="hud-ms"
-          >.{{ props.clockData.milliseconds }}</span>
+            >.{{ props.clockData.milliseconds }}</span
+          >
           <span class="hud-bracket">]</span>
         </div>
       </template>
@@ -94,7 +95,8 @@ onMounted(() => {
           <span
             v-if="props.state.showMilliseconds"
             class="hud-ms"
-          >.{{ props.countdownData.ms }}</span>
+            >.{{ props.countdownData.ms }}</span
+          >
           <span class="hud-bracket">]</span>
         </div>
       </template>
@@ -106,7 +108,8 @@ onMounted(() => {
           <span
             v-if="props.state.showMilliseconds"
             class="hud-ms"
-          >.{{ props.stopwatchData.ms }}</span>
+            >.{{ props.stopwatchData.ms }}</span
+          >
           <span class="hud-bracket">]</span>
         </div>
       </template>
@@ -153,10 +156,26 @@ onMounted(() => {
   border-color: var(--accent);
   border-style: solid;
 }
-.hud-corner.top-left { top: -2px; left: -2px; border-width: 2px 0 0 2px; }
-.hud-corner.top-right { top: -2px; right: -2px; border-width: 2px 2px 0 0; }
-.hud-corner.bottom-left { bottom: -2px; left: -2px; border-width: 0 0 2px 2px; }
-.hud-corner.bottom-right { bottom: -2px; right: -2px; border-width: 0 2px 2px 0; }
+.hud-corner.top-left {
+  top: -2px;
+  left: -2px;
+  border-width: 2px 0 0 2px;
+}
+.hud-corner.top-right {
+  top: -2px;
+  right: -2px;
+  border-width: 2px 2px 0 0;
+}
+.hud-corner.bottom-left {
+  bottom: -2px;
+  left: -2px;
+  border-width: 0 0 2px 2px;
+}
+.hud-corner.bottom-right {
+  bottom: -2px;
+  right: -2px;
+  border-width: 0 2px 2px 0;
+}
 
 .hud-top-bar {
   display: flex;
@@ -246,8 +265,13 @@ onMounted(() => {
 }
 
 @keyframes hudAlert {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .hud-bottom-bar {
@@ -273,9 +297,19 @@ onMounted(() => {
   background: var(--accent);
   opacity: 0.8;
 }
-.b1 { height: 3px; }
-.b2 { height: 6px; }
-.b3 { height: 8px; }
-.b4 { height: 4px; }
-.b5 { height: 7px; }
+.b1 {
+  height: 3px;
+}
+.b2 {
+  height: 6px;
+}
+.b3 {
+  height: 8px;
+}
+.b4 {
+  height: 4px;
+}
+.b5 {
+  height: 7px;
+}
 </style>

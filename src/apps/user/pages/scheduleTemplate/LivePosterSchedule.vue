@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Live24Filled } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -135,125 +134,128 @@ defineExpose({ Config, DefaultConfig })
         :style="posterStyle"
         aria-labelledby="live-poster-title"
       >
-      <div
-        class="poster-registration"
-        aria-hidden="true"
-      />
-
-      <header class="poster-top">
-        <div class="poster-edition">
-          <span>VTSURU LIVE</span><strong>NO.{{ String(eventCount).padStart(2, '0') }}</strong>
-        </div>
-        <div class="poster-date">{{ weekLabel }}</div>
-      </header>
-
-      <div class="poster-hero">
-        <div class="poster-copy">
-          <p class="poster-kicker">{{ streamerName }} PRESENTS</p>
-          <h2
-            id="live-poster-title"
-            class="poster-hero__title"
-          >
-            {{ effectiveConfig.heading }}
-          </h2>
-          <p class="poster-hero__sub">{{ effectiveConfig.subheading }}</p>
-        </div>
-
         <div
-          class="poster-mark"
+          class="poster-registration"
           aria-hidden="true"
-        >
-          <span class="poster-mark__signal">ON AIR</span>
-          <span class="poster-mark__tour">ON TOUR</span>
-        </div>
+        />
 
-        <figure
-          v-if="portraitUrl"
-          class="poster-art"
-          :class="{ 'no-halftone': !effectiveConfig.halftone }"
-        >
-          <img
-            :src="portraitUrl"
-            :alt="`${streamerName}的主视觉立绘`"
-            referrerpolicy="no-referrer"
-          />
-        </figure>
-        <div
-          v-else
-          class="poster-no-art"
-          aria-hidden="true"
-        >
-          SIGNAL
-        </div>
-        <div
-          v-if="!portraitUrl"
-          class="poster-archive"
-          aria-hidden="true"
-        >
-          <span>ARCHIVE / {{ String(eventCount).padStart(2, '0') }}</span>
-          <i class="poster-archive__barcode" />
-          <strong>NO PORTRAIT<br />NO PROBLEM</strong>
-        </div>
-      </div>
+        <header class="poster-top">
+          <div class="poster-edition">
+            <span>VTSURU LIVE</span><strong>NO.{{ String(eventCount).padStart(2, '0') }}</strong>
+          </div>
+          <div class="poster-date">{{ weekLabel }}</div>
+        </header>
 
-      <div class="poster-schedule">
-        <div class="poster-schedule__head">
-          <NIcon><Live24Filled /></NIcon>
-          <span>WEEKLY RUNSHEET</span>
-          <span class="poster-schedule__range">MON — SUN</span>
-        </div>
-
-        <ol class="poster-days">
-          <li
-            v-for="day in days"
-            :key="day.english"
-            class="poster-day"
-            :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
-          >
-            <div class="poster-day__head">
-              <strong>{{ day.english }}</strong>
-              <span>{{ day.label }}</span>
-              <time>{{ day.date }}</time>
-            </div>
-            <div
-              v-if="day.items.length"
-              class="poster-day__events"
+        <div class="poster-hero">
+          <div class="poster-copy">
+            <p class="poster-kicker">{{ streamerName }} PRESENTS</p>
+            <h2
+              id="live-poster-title"
+              class="poster-hero__title"
             >
-              <div
-                v-for="(item, itemIndex) in day.items"
-                :key="item.id || itemIndex"
-                class="poster-event"
-                :style="{ '--event-tag-color': resolveTagColor(item.tag, item.tagColor) }"
-              >
-                <time>{{ item.time || 'TBA' }}</time>
-                <strong>{{ item.title || '未命名直播' }}</strong>
-                <span v-if="item.tag">{{ item.tag }}</span>
-              </div>
-            </div>
-            <span
-              v-else
-              class="poster-day__rest"
-              >OFF / REST</span
-            >
-          </li>
-        </ol>
-      </div>
+              {{ effectiveConfig.heading }}
+            </h2>
+            <p class="poster-hero__sub">{{ effectiveConfig.subheading }}</p>
+          </div>
 
-      <footer class="poster-foot">
-        <strong>@{{ streamerName }}</strong>
-        <ul class="poster-legend">
-          <li
-            v-for="item in legendItems"
-            :key="item.name"
+          <div
+            class="poster-mark"
+            aria-hidden="true"
           >
-            <i
-              class="poster-legend__swatch"
-              :style="{ backgroundColor: item.color }"
+            <span class="poster-mark__signal">ON AIR</span>
+            <span class="poster-mark__tour">ON TOUR</span>
+          </div>
+
+          <figure
+            v-if="portraitUrl"
+            class="poster-art"
+            :class="{ 'no-halftone': !effectiveConfig.halftone }"
+          >
+            <img
+              :src="portraitUrl"
+              :alt="`${streamerName}的主视觉立绘`"
+              referrerpolicy="no-referrer"
             />
-            <span>{{ item.name }}</span>
-          </li>
-        </ul>
-      </footer>
+          </figure>
+          <div
+            v-else
+            class="poster-no-art"
+            aria-hidden="true"
+          >
+            SIGNAL
+          </div>
+          <div
+            v-if="!portraitUrl"
+            class="poster-archive"
+            aria-hidden="true"
+          >
+            <span>ARCHIVE / {{ String(eventCount).padStart(2, '0') }}</span>
+            <i class="poster-archive__barcode" />
+            <strong>NO PORTRAIT<br />NO PROBLEM</strong>
+          </div>
+        </div>
+
+        <div class="poster-schedule">
+          <div class="poster-schedule__head">
+            <component
+              :is="Live24Filled"
+              class="size-4 inline"
+            />
+            <span>WEEKLY RUNSHEET</span>
+            <span class="poster-schedule__range">MON — SUN</span>
+          </div>
+
+          <ol class="poster-days">
+            <li
+              v-for="day in days"
+              :key="day.english"
+              class="poster-day"
+              :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
+            >
+              <div class="poster-day__head">
+                <strong>{{ day.english }}</strong>
+                <span>{{ day.label }}</span>
+                <time>{{ day.date }}</time>
+              </div>
+              <div
+                v-if="day.items.length"
+                class="poster-day__events"
+              >
+                <div
+                  v-for="(item, itemIndex) in day.items"
+                  :key="item.id || itemIndex"
+                  class="poster-event"
+                  :style="{ '--event-tag-color': resolveTagColor(item.tag, item.tagColor) }"
+                >
+                  <time>{{ item.time || 'TBA' }}</time>
+                  <strong>{{ item.title || '未命名直播' }}</strong>
+                  <span v-if="item.tag">{{ item.tag }}</span>
+                </div>
+              </div>
+              <span
+                v-else
+                class="poster-day__rest"
+                >OFF / REST</span
+              >
+            </li>
+          </ol>
+        </div>
+
+        <footer class="poster-foot">
+          <strong>@{{ streamerName }}</strong>
+          <ul class="poster-legend">
+            <li
+              v-for="item in legendItems"
+              :key="item.name"
+            >
+              <i
+                class="poster-legend__swatch"
+                :style="{ backgroundColor: item.color }"
+              />
+              <span>{{ item.name }}</span>
+            </li>
+          </ul>
+        </footer>
       </article>
     </Transition>
   </section>

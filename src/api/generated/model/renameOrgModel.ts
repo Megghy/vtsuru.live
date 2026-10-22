@@ -7,5 +7,5 @@
  */
 
 export interface RenameOrgModel {
-  name: string;
+  name: string
 }

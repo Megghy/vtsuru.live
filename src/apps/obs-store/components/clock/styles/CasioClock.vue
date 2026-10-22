@@ -74,15 +74,18 @@ onMounted(() => {
           <span
             v-if="props.state.is24Hour"
             class="indicator active"
-          >24H</span>
+            >24H</span
+          >
           <span
             v-else
             class="indicator active"
-          >{{ props.clockData.ampm }}</span>
+            >{{ props.clockData.ampm }}</span
+          >
           <span
             class="indicator"
             :class="{ active: props.state.timerRunning }"
-          >SPLIT</span>
+            >SPLIT</span
+          >
         </div>
       </div>
 
@@ -101,7 +104,8 @@ onMounted(() => {
             <span
               v-if="props.state.showMilliseconds"
               class="lcd-ms"
-            >{{ props.clockData.milliseconds }}</span>
+              >{{ props.clockData.milliseconds }}</span
+            >
           </div>
         </template>
 
@@ -121,7 +125,8 @@ onMounted(() => {
             <span
               v-if="props.state.showMilliseconds"
               class="lcd-ms"
-            >{{ props.countdownData.ms }}</span>
+              >{{ props.countdownData.ms }}</span
+            >
           </div>
         </template>
 
@@ -132,7 +137,8 @@ onMounted(() => {
             <span
               v-if="props.state.showMilliseconds"
               class="lcd-ms"
-            >{{ props.stopwatchData.ms }}</span>
+              >{{ props.stopwatchData.ms }}</span
+            >
           </div>
         </template>
       </div>
@@ -185,10 +191,22 @@ onMounted(() => {
   background: #64748b;
   box-shadow: inset 0 1px 1px #000;
 }
-.bolt.top-left { top: 6px; left: 6px; }
-.bolt.top-right { top: 6px; right: 6px; }
-.bolt.bottom-left { bottom: 6px; left: 6px; }
-.bolt.bottom-right { bottom: 6px; right: 6px; }
+.bolt.top-left {
+  top: 6px;
+  left: 6px;
+}
+.bolt.top-right {
+  top: 6px;
+  right: 6px;
+}
+.bolt.bottom-left {
+  bottom: 6px;
+  left: 6px;
+}
+.bolt.bottom-right {
+  bottom: 6px;
+  right: 6px;
+}
 
 /* 边框刻字 */
 .case-bezel-top,
@@ -317,8 +335,13 @@ onMounted(() => {
 }
 
 @keyframes lcdBlink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 .lcd-scale-bar {

@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { useMediaQuery, useNow } from '@vueuse/core'
-import type { GlobalThemeOverrides } from 'naive-ui'
-import { darkTheme, NConfigProvider } from 'naive-ui'
 import { computed, provide } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
-import { getUserPageNaiveThemeOverrides, getUserPageThemeCssVars } from '@/apps/user-page/background'
+import { getUserPageThemeCssVars } from '@/apps/user-page/background'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 
 import type { BiliProfileStatus } from '../types'
 import { BLOCK_COMPONENTS } from './registry'
@@ -20,7 +19,6 @@ const props = defineProps<{
   biliStatus?: BiliProfileStatus
   isDark: boolean
   canvasColor?: string
-  extraThemeOverrides?: GlobalThemeOverrides
   highlightBlockId?: string | null
   selectedBlockIds?: string[]
   editorMode?: 'select' | 'interact'
@@ -33,38 +31,7 @@ const emit = defineEmits<{
 }>()
 
 const userThemeVars = computed(() => getUserPageThemeCssVars(props.project.theme, props.isDark, props.canvasColor))
-
-const naiveTheme = computed(() => {
-  if (props.isDark) return darkTheme
-  return null
-})
-
-// Specific overrides from the "Builder" UI
-const userOverrides = computed<GlobalThemeOverrides>(() =>
-  getUserPageNaiveThemeOverrides(props.project.theme, userThemeVars.value, props.isDark),
-)
-
-// 展示页主题是完整基底，外部只允许追加预览态覆盖。
-const mergedThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const sources = [userOverrides.value, props.extraThemeOverrides ?? {}]
-
-  // Simple deep merge for 2 levels (common, Button, etc.)
-  const result: any = {}
-
-  for (const source of sources) {
-    if (!source) continue
-    for (const key of Object.keys(source)) {
-      const val = (source as any)[key]
-      if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
-        result[key] = { ...result[key], ...val }
-      } else {
-        result[key] = val
-      }
-    }
-  }
-
-  return result as GlobalThemeOverrides
-})
+provideThemeScope(userThemeVars)
 
 const blockComponents = BLOCK_COMPONENTS
 const isMobile = useMediaQuery('(max-width: 767px)')
@@ -95,103 +62,56 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 </script>
 
 <template>
-  <NConfigProvider
-    :theme="naiveTheme"
-    :theme-overrides="mergedThemeOverrides"
+  <div
+    class="page w-full mx-auto flex flex-col bg-transparent max-w-[var(--vtsuru-page-max-width,820px)] py-[var(--vtsuru-page-spacing)] gap-[var(--vtsuru-page-spacing)] text-foreground font-[family-name:var(--vtsuru-page-font-family,inherit)]"
+    :style="userThemeVars"
   >
     <div
-      class="page"
-      :style="userThemeVars"
+      v-for="block in renderedBlocks"
+      :key="block.id"
+      class="block relative min-w-0"
+      :class="{
+        highlight: !!props.highlightBlockId && props.highlightBlockId === block.id,
+        'outline outline-1 outline-offset-2 outline-primary/55': !!props.highlightBlockId && props.highlightBlockId === block.id,
+        'outline outline-2 outline-offset-[3px] outline-primary': selectedBlockIdSet.has(block.id),
+        hidden: block.hidden,
+        unavailable: props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext),
+        'min-h-11 opacity-40': block.hidden || (props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext)),
+        'cursor-pointer': props.editorMode === 'select',
+        '[&_iframe]:pointer-events-none': props.editorMode === 'select',
+      }"
+      :data-block-overlay="block.hidden ? '已隐藏' : '当前预览条件下不显示'"
+      :data-block-id="block.id"
+      :data-block-type="block.type"
+      @click="handleBlockClick($event, block.id)"
+      @mouseenter="props.editorMode && emit('hover-block', block.id)"
+      @mouseleave="props.editorMode && emit('hover-block', null)"
     >
-      <div
-        v-for="block in renderedBlocks"
-        :key="block.id"
-        class="block"
-        :class="{
-          layout: block.type === 'layout',
-          highlight: !!props.highlightBlockId && props.highlightBlockId === block.id,
-          selected: selectedBlockIdSet.has(block.id),
-          hidden: block.hidden,
-          unavailable: props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext),
-          selectable: props.editorMode === 'select',
-        }"
-        :data-block-overlay="block.hidden ? '已隐藏' : '当前预览条件下不显示'"
-        :data-block-id="block.id"
-        :data-block-type="block.type"
-        @click="handleBlockClick($event, block.id)"
-        @mouseenter="props.editorMode && emit('hover-block', block.id)"
-        @mouseleave="props.editorMode && emit('hover-block', null)"
-      >
-        <component
-          :is="blockComponents[block.type]"
-          :block-props="block.props"
-          :user-info="userInfo"
-          :bili-info="biliInfo"
-          :bili-status="biliStatus"
-          :block-id="block.type === 'heading' ? block.id : undefined"
-          v-bind="
-            block.type === 'layout'
-              ? {
-                  highlightBlockId: props.highlightBlockId,
-                  selectedBlockIds: props.selectedBlockIds,
-                  editorMode: props.editorMode,
-                  visibilityContext: activeVisibilityContext,
-                  onSelectBlock: (id: string) => emit('select-block', id),
-                  onHoverBlock: (id: string | null) => emit('hover-block', id),
-                }
-              : {}
-          "
-        />
-      </div>
+      <component
+        :is="blockComponents[block.type]"
+        :block-props="block.props"
+        :user-info="userInfo"
+        :bili-info="biliInfo"
+        :bili-status="biliStatus"
+        :block-id="block.type === 'heading' ? block.id : undefined"
+        v-bind="
+          block.type === 'layout'
+            ? {
+                highlightBlockId: props.highlightBlockId,
+                selectedBlockIds: props.selectedBlockIds,
+                editorMode: props.editorMode,
+                visibilityContext: activeVisibilityContext,
+                onSelectBlock: (id: string) => emit('select-block', id),
+                onHoverBlock: (id: string | null) => emit('hover-block', id),
+              }
+            : {}
+        "
+      />
     </div>
-  </NConfigProvider>
+  </div>
 </template>
 
 <style scoped>
-.page {
-  width: 100%;
-  font-family: var(--vtsuru-page-font-family);
-  max-width: var(--vtsuru-page-max-width, 820px);
-  margin: 0 auto;
-  padding: var(--vtsuru-page-spacing) 0 var(--vtsuru-page-spacing) 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--vtsuru-page-spacing);
-  color: var(--vtsuru-page-text);
-  background: transparent;
-}
-.block {
-  min-width: 0;
-  position: relative;
-}
-.block.layout {
-  padding: 0;
-}
-
-.block.highlight {
-  outline: 1px solid color-mix(in srgb, var(--vtsuru-page-primary) 55%, transparent);
-  outline-offset: 2px;
-}
-
-.block.selected {
-  outline: 2px solid var(--vtsuru-page-primary);
-  outline-offset: 3px;
-}
-
-.block.selectable {
-  cursor: pointer;
-}
-
-.block.hidden,
-.block.unavailable {
-  min-height: 44px;
-  opacity: 0.42;
-}
-
-.block.selectable :deep(iframe) {
-  pointer-events: none;
-}
-
 .block.hidden::before,
 .block.unavailable::before {
   content: attr(data-block-overlay);
@@ -200,12 +120,11 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   z-index: 4;
   display: grid;
   place-items: center;
-  border: 1px dashed var(--vtsuru-page-primary);
-  color: var(--vtsuru-page-text);
-  background: color-mix(in srgb, var(--vtsuru-page-bg) 72%, transparent);
+  border: 1px dashed var(--primary);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--background) 72%, transparent);
   pointer-events: none;
 }
-
 .block.highlight::after {
   content: attr(data-block-type);
   position: absolute;
@@ -215,9 +134,9 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   font-size: 11px;
   line-height: 16px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--vtsuru-page-primary) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--vtsuru-page-primary) 45%, transparent);
-  color: var(--vtsuru-page-text);
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  color: var(--foreground);
   pointer-events: none;
   user-select: none;
 }

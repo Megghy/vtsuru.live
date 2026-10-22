@@ -1,83 +1,41 @@
 <script setup lang="ts">
 import { Live24Filled, Person48Filled } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { cn } from '@/shared/utils/cn'
 
-defineProps<{ collapsed?: boolean; block?: boolean }>()
+const props = defineProps<{ collapsed?: boolean; block?: boolean }>()
 
 const { workspace, switchWorkspace } = useManageWorkspace()
+
+function onChange(value: string | string[] | undefined) {
+  if (value === 'streamer' || value === 'user') void switchWorkspace(value)
+}
 </script>
 
 <template>
-  <div
-    class="workspace-switch"
-    :class="{ 'workspace-switch--collapsed': collapsed, 'workspace-switch--block': block }"
+  <ToggleGroup
+    type="single"
+    :model-value="workspace"
+    :class="cn(collapsed ? '!h-auto w-full flex-col' : props.block ? 'w-full' : 'w-[148px]')"
+    @update:model-value="onChange"
   >
-    <button
-      type="button"
-      :class="{ active: workspace === 'streamer' }"
+    <ToggleGroupItem
+      value="streamer"
       :title="collapsed ? '主播后台' : undefined"
-      @click="switchWorkspace('streamer')"
+      :class="collapsed ? 'w-full px-0' : 'flex-1'"
     >
-      <NIcon :component="Live24Filled" />
+      <component :is="Live24Filled" />
       <span v-if="!collapsed">主播</span>
-    </button>
-    <button
-      type="button"
-      :class="{ active: workspace === 'user' }"
+    </ToggleGroupItem>
+    <ToggleGroupItem
+      value="user"
       :title="collapsed ? '观众' : undefined"
-      @click="switchWorkspace('user')"
+      :class="collapsed ? 'w-full px-0' : 'flex-1'"
     >
-      <NIcon :component="Person48Filled" />
+      <component :is="Person48Filled" />
       <span v-if="!collapsed">观众</span>
-    </button>
-  </div>
+    </ToggleGroupItem>
+  </ToggleGroup>
 </template>
-
-<style scoped>
-.workspace-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3px;
-  width: 148px;
-  padding: 3px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 9px;
-  background: var(--vtsuru-bg-muted);
-  box-sizing: border-box;
-}
-
-.workspace-switch button {
-  min-width: 0;
-  height: 28px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--vtsuru-fg-muted);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.workspace-switch button.active {
-  background: var(--vtsuru-bg-elevated);
-  color: var(--vtsuru-fg);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--vtsuru-fg) 12%, transparent);
-}
-
-.workspace-switch--block {
-  width: 100%;
-}
-
-.workspace-switch--collapsed {
-  width: auto;
-  grid-template-columns: 1fr;
-}
-</style>

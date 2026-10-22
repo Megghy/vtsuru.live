@@ -7,6 +7,6 @@
  */
 
 export type PostApiAccountVerifyResetPasswordParams = {
-key?: string;
-password?: string;
-};
+  key?: string
+  password?: string
+}

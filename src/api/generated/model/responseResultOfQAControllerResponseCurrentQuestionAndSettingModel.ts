@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QAControllerResponseCurrentQuestionAndSettingModel } from './qAControllerResponseCurrentQuestionAndSettingModel';
+import type { QAControllerResponseCurrentQuestionAndSettingModel } from './qAControllerResponseCurrentQuestionAndSettingModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfQAControllerResponseCurrentQuestionAndSettingModel {
-  message: string;
-  code: number;
-  data: QAControllerResponseCurrentQuestionAndSettingModel;
+  message: string
+  code: number
+  data: QAControllerResponseCurrentQuestionAndSettingModel
 }

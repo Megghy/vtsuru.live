@@ -6,10 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type ForumForumTopicDataForumTopicTypes = typeof ForumForumTopicDataForumTopicTypes[keyof typeof ForumForumTopicDataForumTopicTypes];
-
+export type ForumForumTopicDataForumTopicTypes =
+  (typeof ForumForumTopicDataForumTopicTypes)[keyof typeof ForumForumTopicDataForumTopicTypes]
 
 export const ForumForumTopicDataForumTopicTypes = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

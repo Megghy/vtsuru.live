@@ -5,40 +5,40 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { KeywordMatchType } from './keywordMatchType';
-import type { QueueGiftFilterType } from './queueGiftFilterType';
-import type { QueueSortType } from './queueSortType';
+import type { KeywordMatchType } from './keywordMatchType'
+import type { QueueGiftFilterType } from './queueGiftFilterType'
+import type { QueueSortType } from './queueSortType'
 
 export interface SettingQueue {
-  keyword: string;
-  matchType: KeywordMatchType;
-  sortType: QueueSortType;
-  queueMaxSize: number;
-  enableOnStreaming: boolean;
-  allowAllDanmaku: boolean;
-  allowFromWeb: boolean;
-  needJianzhang: boolean;
-  needTidu: boolean;
-  needZongdu: boolean;
+  keyword: string
+  matchType: KeywordMatchType
+  sortType: QueueSortType
+  queueMaxSize: number
+  enableOnStreaming: boolean
+  allowAllDanmaku: boolean
+  allowFromWeb: boolean
+  needJianzhang: boolean
+  needTidu: boolean
+  needZongdu: boolean
   /** @nullable */
-  fanMedalMinLevel?: number | null;
-  sendGiftDirectJoin: boolean;
-  sendGiftIgnoreLimit: boolean;
-  allowGift: boolean;
+  fanMedalMinLevel?: number | null
+  sendGiftDirectJoin: boolean
+  sendGiftIgnoreLimit: boolean
+  allowGift: boolean
   /** @nullable */
-  giftNames?: string[] | null;
+  giftNames?: string[] | null
   /** @nullable */
-  minGiftPrice?: number | null;
-  giftFilterType: QueueGiftFilterType;
-  allowIncreasePaymentBySendGift: boolean;
-  allowIncreaseByAnyPayment: boolean;
-  enableCooldown: boolean;
-  cooldownSecond: number;
-  zongduCooldownSecond: number;
-  tiduCooldownSecond: number;
-  jianzhangCooldownSecond: number;
-  showRequireInfo: boolean;
-  showPayment: boolean;
-  showFanMadelInfo: boolean;
-  isReverse: boolean;
+  minGiftPrice?: number | null
+  giftFilterType: QueueGiftFilterType
+  allowIncreasePaymentBySendGift: boolean
+  allowIncreaseByAnyPayment: boolean
+  enableCooldown: boolean
+  cooldownSecond: number
+  zongduCooldownSecond: number
+  tiduCooldownSecond: number
+  jianzhangCooldownSecond: number
+  showRequireInfo: boolean
+  showPayment: boolean
+  showFanMadelInfo: boolean
+  isReverse: boolean
 }

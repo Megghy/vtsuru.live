@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { NAlert } from 'naive-ui'
 import { computed } from 'vue'
+
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 
 import BlockCard from '../BlockCard.vue'
 import { parseMusicEmbedUrl } from '../embed'
@@ -49,19 +50,18 @@ const embed = computed(() => {
 
 <template>
   <BlockCard
-    class="music-player"
-    :class="{ compact: cfg.compact }"
+    class="w-full"
+    :class="{ 'max-w-[720px]': cfg.compact }"
     :framed="cfg.framed"
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <NAlert
+    <Alert
       v-if="!embed"
-      type="info"
-      :show-icon="false"
+      class="text-xs py-2 m-2"
     >
-      未配置可用的音乐链接
-    </NAlert>
+      <AlertDescription> 未配置可用的音乐链接 </AlertDescription>
+    </Alert>
     <iframe
       v-else
       :src="embed.src"
@@ -70,22 +70,10 @@ const embed = computed(() => {
       :allow="embed.allow"
       :sandbox="embed.sandbox"
       :referrerpolicy="embed.referrerPolicy"
-      class="player-frame"
+      class="block w-full border-0"
       loading="lazy"
     />
   </BlockCard>
 </template>
 
-<style scoped>
-.music-player {
-  width: 100%;
-}
-.music-player.compact {
-  max-width: 720px;
-}
-.player-frame {
-  display: block;
-  width: 100%;
-  border: 0;
-}
-</style>
+

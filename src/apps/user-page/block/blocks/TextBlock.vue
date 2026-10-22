@@ -29,24 +29,12 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
     :backgrounded="backgrounded"
   >
     <div
-      class="text-content"
-      :class="fxClass"
+      class="block whitespace-pre-wrap leading-[1.8] text-sm text-foreground"
+      :class="[fxClass, fxClass.includes('vtsuru-text-fx--typewriter') ? 'whitespace-nowrap' : '']"
     >
       {{ text }}
     </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.text-content {
-  white-space: pre-wrap;
-  display: block;
-  line-height: 1.8;
-  font-size: 14px;
-  color: var(--vtsuru-block-fg);
-}
 
-.text-content.vtsuru-text-fx--typewriter {
-  white-space: nowrap;
-}
-</style>

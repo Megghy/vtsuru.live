@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
-import { NButton, NFlex, NIcon, NInput, NSelect, NSpin, useMessage } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
@@ -9,11 +8,15 @@ import { getApiPointUserGetOrders } from '@/api/generated/point/point'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import UserPointOrderList from '@/apps/account/components/UserPointOrderList.vue'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spin } from '@/shared/ui/spin'
+import { toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const emit = defineEmits<{ dataLoaded: [] }>()
 const auth = useBiliAuth()
-const message = useMessage()
 const orders = ref<ResponsePointOrder2UserModel[]>([])
 const loading = ref(false)
 const loaded = ref(false)
@@ -21,12 +24,13 @@ let generation = 0
 let request: { generation: number; promise: Promise<void> } | undefined
 
 const keyword = ref('')
-const status = ref<PointOrderStatus | null>(null)
+const status = ref<string>('all')
 
 const filteredOrders = computed(() => {
   const query = keyword.value.trim().toLocaleLowerCase()
+  const statusNum = status.value === 'all' ? null : Number(status.value)
   return orders.value.filter((order) => {
-    const matchesStatus = status.value === null || order.status === status.value
+    const matchesStatus = statusNum === null || order.status === statusNum
     const matchesKeyword =
       !query || order.goods.name.toLocaleLowerCase().includes(query) || String(order.id).includes(query)
     return matchesStatus && matchesKeyword
@@ -88,7 +92,7 @@ async function loadOrders(force = false) {
     await promise
   } catch (error) {
     if (currentGeneration === generation) {
-      message.error(error instanceof Error ? error.message : `获取订单失败: ${error}`)
+      toast.error(error instanceof Error ? error.message : `获取订单失败: ${error}`)
     }
   } finally {
     if (request?.promise === promise) {
@@ -108,7 +112,7 @@ function reset() {
   loaded.value = false
   loading.value = false
   keyword.value = ''
-  status.value = null
+  status.value = 'all'
 }
 
 defineExpose({ getOrders: loadOrders, reset })
@@ -117,125 +121,109 @@ onMounted(() => void loadOrders())
 </script>
 
 <template>
-  <div class="point-orders-page">
+  <div class="w-full flex flex-col gap-4">
     <AccountPageHeader
       title="我的订单"
       subtitle="查看并跟踪你使用积分兑换的实物礼物与互动服务。"
     >
       <template #actions>
-        <NButton
-          secondary
-          :loading="loading"
+        <Button
+          variant="outline"
+          :disabled="loading"
+          class="flex items-center gap-1.5"
           @click="refresh"
         >
-          <template #icon><NIcon :component="ArrowSync24Regular" /></template>
+          <component
+            :is="ArrowSync24Regular"
+            class="size-4"
+            :class="{ 'animate-spin': loading }"
+          />
           刷新
-        </NButton>
+        </Button>
       </template>
     </AccountPageHeader>
 
-    <NSpin :show="loading">
+    <div
+      v-if="loading"
+      class="py-16 flex justify-center"
+    >
+      <Spin />
+    </div>
+
+    <template v-else>
       <AccountDataPanel :stats="stats">
         <template #toolbar>
-          <div class="order-toolbar">
-            <div class="order-filters">
-              <NInput
-                v-model:value="keyword"
-                clearable
-                placeholder="搜索礼物名或订单号"
-                class="filter-keyword"
-              >
-                <template #prefix><NIcon :component="Search24Regular" /></template>
-              </NInput>
-              <NSelect
-                v-model:value="status"
-                clearable
-                :options="[
-                  { label: '全部状态', value: null },
-                  { label: '待处理', value: PointOrderStatus.Pending },
-                  { label: '已发货', value: PointOrderStatus.Shipped },
-                  { label: '服务进行中', value: PointOrderStatus.InProgress },
-                  { label: '已拒绝', value: PointOrderStatus.Rejected },
-                  { label: '已取消', value: PointOrderStatus.Cancelled },
-                  { label: '已完成', value: PointOrderStatus.Completed },
-                ]"
-                placeholder="订单状态"
-                class="filter-status"
-              />
+          <div
+            class="order-toolbar flex flex-wrap items-center justify-between gap-3 p-3 bg-muted/20 border-b border-border/60 text-xs"
+          >
+            <div class="order-filters flex flex-wrap items-center gap-2">
+              <div class="relative w-48">
+                <component
+                  :is="Search24Regular"
+                  class="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <Input
+                  v-model="keyword"
+                  placeholder="搜索礼物名或订单号"
+                  class="pl-8"
+                />
+              </div>
+
+              <Select v-model="status">
+                <SelectTrigger class="w-36">
+                  <SelectValue placeholder="订单状态" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="all"
+                    class="text-xs"
+                    >全部状态</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Pending)"
+                    class="text-xs"
+                    >待处理</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Shipped)"
+                    class="text-xs"
+                    >已发货</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.InProgress)"
+                    class="text-xs"
+                    >服务进行中</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Rejected)"
+                    class="text-xs"
+                    >已拒绝</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Cancelled)"
+                    class="text-xs"
+                    >已取消</SelectItem
+                  >
+                  <SelectItem
+                    :value="String(PointOrderStatus.Completed)"
+                    class="text-xs"
+                    >已完成</SelectItem
+                  >
+                </SelectContent>
+              </Select>
             </div>
 
             <div class="order-toolbar__meta">
-              <span class="filter-result">显示 {{ filteredOrders.length }} / {{ orders.length }} 条</span>
+              <span class="filter-result text-xs text-muted-foreground font-mono">
+                显示 {{ filteredOrders.length }} / {{ orders.length }} 条
+              </span>
             </div>
           </div>
         </template>
       </AccountDataPanel>
 
       <UserPointOrderList :orders="filteredOrders" />
-    </NSpin>
+    </template>
   </div>
 </template>
 
-<style scoped>
-.point-orders-page {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.order-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.order-filters {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-  flex: 1 1 360px;
-}
-
-.filter-keyword {
-  flex: 1 1 200px;
-  min-width: 160px;
-}
-
-.filter-status {
-  width: 130px;
-  flex-shrink: 0;
-}
-
-.order-toolbar__meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filter-result {
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .order-filters {
-    flex-direction: column;
-    align-items: stretch;
-    width: 100%;
-  }
-
-  .filter-keyword,
-  .filter-status {
-    width: 100% !important;
-  }
-
-  .order-toolbar__meta {
-    width: 100%;
-    justify-content: flex-end;
-  }
-}
-</style>

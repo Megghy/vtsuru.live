@@ -8,36 +8,36 @@
 
 export interface ShippingAddressInfo {
   /** @nullable */
-  id?: string | null;
+  id?: string | null
   /**
-     * @minLength 0
-     * @maxLength 20
-     */
-  province: string;
+   * @minLength 0
+   * @maxLength 20
+   */
+  province: string
   /**
-     * @minLength 0
-     * @maxLength 20
-     */
-  city: string;
+   * @minLength 0
+   * @maxLength 20
+   */
+  city: string
   /**
-     * @minLength 0
-     * @maxLength 20
-     */
-  district: string;
+   * @minLength 0
+   * @maxLength 20
+   */
+  district: string
   /**
-     * @minLength 0
-     * @maxLength 20
-     */
-  street: string;
+   * @minLength 0
+   * @maxLength 20
+   */
+  street: string
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
-  address: string;
-  phone: number;
+   * @minLength 0
+   * @maxLength 100
+   */
+  address: string
+  phone: number
   /**
-     * @minLength 0
-     * @maxLength 20
-     */
-  name: string;
+   * @minLength 0
+   * @maxLength 20
+   */
+  name: string
 }

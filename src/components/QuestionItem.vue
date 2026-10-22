@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { ChevronDown12Regular, ChevronUp12Regular, Tv20Regular } from '@vicons/fluent'
-import { NCard, NCheckbox, NDivider, NFlex, NIcon, NImage, NTag, NText, NTime, NTooltip } from 'naive-ui'
+import { format, formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { computed, ref } from 'vue'
 
 import type { QAInfo } from '@/api/api-models'
+import { Badge } from '@/shared/ui/badge'
+import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Separator } from '@/shared/ui/separator'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const props = defineProps<{
@@ -28,310 +34,222 @@ function getScoreColor(score: number | undefined): string {
   const hue = 120 * (clamped / 100)
   return `hsl(${hue}, 50%, 45%)`
 }
+
+function formatRelative(time: number) {
+  return formatDistanceToNow(time, { addSuffix: true, locale: zhCN })
+}
 </script>
 
 <template>
-  <NCard
+  <Card
     v-if="item"
-    class="question-item"
+    class="question-item transition-all text-xs border border-border/80"
     :class="{
       'is-unread': !item.isReaded,
-      'is-displaying': isDisplaying,
+      'is-displaying ring-1 ring-primary border-primary': isDisplaying,
     }"
-    hoverable
-    size="small"
-    bordered
   >
-    <template #header>
-      <NFlex
-        :size="[6, 6]"
-        align="center"
-        wrap
+    <TooltipProvider>
+      <CardHeader
+        class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2 flex-wrap"
       >
-        <NCheckbox
-          v-if="selectable"
-          :checked="selected"
-          style="margin-right: 4px"
-          @update:checked="emit('select', item.id)"
-          @click.stop
-        />
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <Checkbox
+            v-if="selectable"
+            :checked="selected"
+            class="mr-1"
+            @click.stop
+            @update:checked="emit('select', item.id)"
+          />
 
-        <NTag
-          v-if="isDisplaying"
-          type="success"
-          size="small"
-          round
-          class="displaying-tag"
-        >
-          <template #icon>
-            <NIcon :component="Tv20Regular" />
-          </template>
-          OBS 展示中
-        </NTag>
-
-        <NTag
-          v-if="!item.isReaded"
-          type="warning"
-          size="tiny"
-        >
-          未读
-        </NTag>
-
-        <NDivider
-          v-if="!item.isReaded || isDisplaying"
-          vertical
-        />
-
-        <NText
-          :depth="item.isAnonymous ? 3 : 1"
-          strong
-        >
-          {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name || '观众' }}
-        </NText>
-
-        <NTag
-          v-if="item.isSenderRegisted"
-          size="small"
-          type="info"
-          :bordered="false"
-        >
-          已注册
-        </NTag>
-
-        <NTag
-          v-if="item.isPublic"
-          size="small"
-          type="success"
-          :bordered="false"
-        >
-          公开
-        </NTag>
-        <NTag
-          v-if="item.senderAllowsPublic === false"
-          size="small"
-          type="warning"
-          :bordered="false"
-        >
-          提问者不公开
-        </NTag>
-
-        <NTooltip v-if="item.tag">
-          <template #trigger>
-            <NTag
-              size="small"
-              type="primary"
-            >
-              {{ item.tag }}
-            </NTag>
-          </template>
-          标签/话题
-        </NTooltip>
-
-        <NDivider vertical />
-
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          <NTooltip>
-            <template #trigger>
-              <NTime
-                :time="item.sendAt"
-                :to="Date.now()"
-                type="relative"
-              />
-            </template>
-            <NTime :time="item.sendAt" />
-          </NTooltip>
-        </NText>
-
-        <template v-if="item.reviewResult && item.reviewResult.violationType?.length > 0">
-          <NDivider vertical />
-          <NFlex
-            size="small"
-            wrap
+          <Badge
+            v-if="isDisplaying"
+            variant="default"
+            class="text-[10px] h-4.5 px-1.5 font-normal bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 flex items-center gap-1 displaying-tag"
           >
-            <NTag
-              v-for="v in item.reviewResult.violationType"
-              :key="v"
-              size="small"
-              type="error"
-              :bordered="false"
-            >
-              {{ useQA.getViolationString(v) }}
-            </NTag>
-          </NFlex>
-        </template>
+            <component
+              :is="Tv20Regular"
+              class="size-3"
+            />
+            OBS 展示中
+          </Badge>
 
-        <template v-if="item.reviewResult && item.reviewResult.saftyScore !== undefined">
-          <NDivider vertical />
-          <NTooltip>
-            <template #trigger>
-              <NTag
-                size="small"
-                :style="{
-                  backgroundColor: getScoreColor(item.reviewResult.saftyScore),
-                  color: 'white',
-                  borderColor: 'transparent',
-                }"
+          <Badge
+            v-if="!item.isReaded"
+            variant="default"
+            class="text-[10px] h-4.5 px-1.5 font-normal bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+          >
+            未读
+          </Badge>
+
+          <span
+            v-if="!item.isReaded || isDisplaying"
+            class="text-border"
+          >
+            |
+          </span>
+
+          <strong
+            class="font-semibold text-xs"
+            :class="item.isAnonymous ? 'text-muted-foreground' : 'text-foreground'"
+          >
+            {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name || '观众' }}
+          </strong>
+
+          <Badge
+            v-if="item.isSenderRegisted"
+            variant="secondary"
+            class="text-[10px] h-4 px-1 font-normal text-sky-600 dark:text-sky-400 bg-sky-500/10"
+          >
+            已注册
+          </Badge>
+
+          <Badge
+            v-if="item.isPublic"
+            variant="secondary"
+            class="text-[10px] h-4 px-1 font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+          >
+            公开
+          </Badge>
+          <Badge
+            v-if="item.senderAllowsPublic === false"
+            variant="secondary"
+            class="text-[10px] h-4 px-1 font-normal text-amber-600 dark:text-amber-400 bg-amber-500/10"
+          >
+            提问者不公开
+          </Badge>
+
+          <Tooltip v-if="item.tag">
+            <TooltipTrigger as-child>
+              <Badge
+                variant="outline"
+                class="text-[10px] h-4 px-1 font-normal"
               >
-                得分: {{ item.reviewResult.saftyScore }}
-              </NTag>
-            </template>
-            审查得分, 满分100, 越高越安全
-          </NTooltip>
-        </template>
-      </NFlex>
-    </template>
+                {{ item.tag }}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>标签/话题</TooltipContent>
+          </Tooltip>
 
-    <template #footer>
-      <slot
-        name="footer"
-        :item="item"
-      />
-    </template>
+          <span class="text-border">|</span>
 
-    <template #header-extra>
-      <slot
-        name="header-extra"
-        :item="item"
-      />
-    </template>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="text-muted-foreground text-[11px] cursor-default">
+                {{ formatRelative(item.sendAt) }}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>{{ format(item.sendAt, 'yyyy-MM-dd HH:mm:ss') }}</TooltipContent>
+          </Tooltip>
 
-    <template v-if="item.questionImages && item.questionImages.length > 0">
-      <NFlex
-        class="question-item__images"
-        size="small"
-      >
-        <NImage
-          v-for="(img, index) in item.questionImages"
-          :key="index"
-          :src="img.path"
-          height="100"
-          lazy
+          <template v-if="item.reviewResult && item.reviewResult.violationType?.length">
+            <span class="text-border">|</span>
+            <div class="flex items-center gap-1 flex-wrap">
+              <Badge
+                v-for="v in item.reviewResult.violationType"
+                :key="v"
+                variant="destructive"
+                class="text-[10px] h-4 px-1 font-normal"
+              >
+                {{ useQA.getViolationString(v) }}
+              </Badge>
+            </div>
+          </template>
+
+          <template v-if="item.reviewResult && item.reviewResult.saftyScore !== undefined">
+            <span class="text-border">|</span>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <span
+                  class="text-[10px] px-1.5 py-0.2 rounded font-medium text-white cursor-default"
+                  :style="{ backgroundColor: getScoreColor(item.reviewResult.saftyScore) }"
+                >
+                  得分: {{ item.reviewResult.saftyScore }}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>审查得分, 满分100, 越高越安全</TooltipContent>
+            </Tooltip>
+          </template>
+        </div>
+
+        <slot
+          name="header-extra"
+          :item="item"
         />
-      </NFlex>
-    </template>
+      </CardHeader>
 
-    <NText
-      class="question-item__message"
-      :class="{ 'is-clamped': shouldClampMessage && !showFullMessage }"
-      :style="{
-        filter: isViolation && !showContent ? 'blur(3.7px)' : '',
-        cursor: isViolation && !showContent ? 'pointer' : '',
-        whiteSpace: 'pre-wrap',
-      }"
-      @click="isViolation ? (showContent = !showContent) : null"
-    >
-      {{ message }}
-    </NText>
+      <CardContent class="p-3 space-y-2 text-xs">
+        <div
+          v-if="item.questionImages && item.questionImages.length > 0"
+          class="flex items-center gap-2 flex-wrap"
+        >
+          <img
+            v-for="(img, index) in item.questionImages"
+            :key="index"
+            :src="img.path"
+            class="h-20 rounded border border-border/60 object-cover"
+            alt=""
+          />
+        </div>
 
-    <button
-      v-if="shouldClampMessage"
-      type="button"
-      class="question-item__message-toggle"
-      @click="showFullMessage = !showFullMessage"
-    >
-      <NIcon
-        :component="showFullMessage ? ChevronUp12Regular : ChevronDown12Regular"
-        :size="12"
-      />
-      {{ showFullMessage ? '收起内容' : '展开全部' }}
-    </button>
+        <div
+          class="question-item__message text-foreground leading-relaxed whitespace-pre-wrap break-words"
+          :class="{ 'line-clamp-4': shouldClampMessage && !showFullMessage }"
+          :style="{
+            filter: isViolation && !showContent ? 'blur(3.7px)' : '',
+            cursor: isViolation && !showContent ? 'pointer' : '',
+          }"
+          @click="isViolation ? (showContent = !showContent) : null"
+        >
+          {{ message }}
+        </div>
 
-    <template v-if="item.answer">
-      <NDivider style="margin: 10px 0" />
-      <div class="question-item__answer-box">
-        <span class="answer-label">我的回复：</span>
-        <NText depth="2">
-          {{ item.answer.message }}
-        </NText>
-      </div>
-    </template>
-  </NCard>
+        <button
+          v-if="shouldClampMessage"
+          type="button"
+          class="text-primary hover:underline text-[11px] inline-flex items-center gap-1 font-medium"
+          @click="showFullMessage = !showFullMessage"
+        >
+          <component
+            :is="showFullMessage ? ChevronUp12Regular : ChevronDown12Regular"
+            class="size-3"
+          />
+          {{ showFullMessage ? '收起内容' : '展开全部' }}
+        </button>
+
+        <template v-if="item.answer">
+          <Separator class="my-2" />
+          <div class="question-item__answer-box p-2.5 rounded-lg bg-muted/40 border border-border/60 space-y-1">
+            <span class="font-medium text-[11px] text-muted-foreground block">我的回复：</span>
+            <p class="m-0 text-xs text-foreground leading-relaxed">{{ item.answer.message }}</p>
+          </div>
+        </template>
+      </CardContent>
+
+      <CardFooter
+        v-if="$slots.footer"
+        class="p-3 pt-0 border-t border-border/40 mt-1 pt-2"
+      >
+        <slot
+          name="footer"
+          :item="item"
+        />
+      </CardFooter>
+    </TooltipProvider>
+  </Card>
 </template>
 
 <style scoped>
-.question-item {
-  --question-item-bg: var(--vtsuru-bg-elevated);
-  --question-item-border: var(--vtsuru-border);
-  position: relative;
-  overflow: hidden;
-  border-color: var(--question-item-border);
-  background: var(--question-item-bg);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.question-item.is-displaying {
-  border-color: var(--vtsuru-brand);
-  box-shadow: 0 0 0 1px var(--vtsuru-brand);
-}
-
 .displaying-tag {
-  font-weight: 600;
   animation: pulse-soft 2s infinite ease-in-out;
 }
-
 @keyframes pulse-soft {
   0%,
   100% {
     opacity: 1;
   }
-
   50% {
     opacity: 0.75;
   }
-}
-
-.question-item__images {
-  margin-bottom: 10px;
-}
-
-.question-item__message {
-  display: block;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.question-item__message.is-clamped {
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-}
-
-.question-item__message-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0;
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--vtsuru-brand);
-  background: none;
-  border: none;
-  cursor: pointer;
-}
-
-.question-item__message-toggle:hover {
-  text-decoration: underline;
-}
-
-.question-item__answer-box {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 8px 12px;
-  background: var(--vtsuru-bg-muted);
-  border-radius: 6px;
-  font-size: 13px;
-}
-
-.answer-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
 }
 </style>

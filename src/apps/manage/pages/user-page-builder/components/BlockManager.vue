@@ -1,10 +1,13 @@
 <script setup lang="ts">
-import type { MenuOption } from 'naive-ui'
-import { NButton, NFlex, NInput, NModal, NScrollbar, NText } from 'naive-ui'
 import { computed, inject, nextTick, onBeforeUnmount, ref, watch } from 'vue'
+
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
 
 import { UserPageEditorKey } from '../context'
 import BlockTreeList from './BlockTreeList.vue'
+import type { MenuOption } from './useBlockManagerLibrary'
 
 const props = defineProps<{
   blockActionOptions: MenuOption[]
@@ -332,7 +335,6 @@ function onDragEnd(_evt: any) {
   const targetId = intent.targetId
   const mode = intent.mode
 
-  // 让 Sortable/vuedraggable 先完成自身的收尾，再变更 block tree（避免相互打架）
   setTimeout(() => {
     editor.groupBlocksIntoLayout(dragId, targetId)
     dragStatus.value = mode === 'into-layout' ? '区块已移入布局' : '区块已成组'
@@ -378,7 +380,6 @@ function bulkPaste() {
 function bulkGroup() {
   const ids = editor.selectedBlockIds.value
   if (ids.length < 2) return
-  // 使用第一个选中的区块作为目标，其他区块加入成组
   editor.groupBlocksIntoLayout(ids[1], ids[0])
 }
 
@@ -391,7 +392,7 @@ onBeforeUnmount(() => {
 <template>
   <div
     ref="managerRoot"
-    class="block-manager"
+    class="block-manager flex flex-col flex-1 min-w-0 min-h-0"
   >
     <span
       class="sr-only"
@@ -402,64 +403,59 @@ onBeforeUnmount(() => {
     <Transition name="fade-slide">
       <div
         v-if="selectionCount > 1"
-        class="block-manager__selection-toolbar"
+        class="block-manager__selection-toolbar flex-none p-2 border-b border-border bg-muted/60"
       >
-        <NFlex
-          size="small"
-          align="center"
-        >
-          <NText depth="3"> 已选择 {{ selectionCount }} 个区块 </NText>
-          <NButton
-            size="tiny"
-            type="primary"
-            secondary
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="text-xs text-muted-foreground mr-1">已选 {{ selectionCount }} 个区块</span>
+          <Button
+            variant="default"
+            class="h-6 px-2"
             @click="bulkGroup"
           >
             成组
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+          </Button>
+          <Button
+            variant="outline"
+            class="h-6 px-2"
             @click="bulkHide"
           >
-            批量隐藏
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+            隐藏
+          </Button>
+          <Button
+            variant="outline"
+            class="h-6 px-2"
             @click="bulkShow"
           >
-            批量显示
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+            显示
+          </Button>
+          <Button
+            variant="outline"
+            class="h-6 px-2"
             @click="bulkCopy"
           >
-            批量复制
-          </NButton>
-          <NButton
-            size="tiny"
-            secondary
+            复制
+          </Button>
+          <Button
+            variant="outline"
+            class="h-6 px-2"
             :disabled="!hasClipboard"
             @click="bulkPaste"
           >
             粘贴
-          </NButton>
-          <NButton
-            size="tiny"
-            type="error"
-            secondary
+          </Button>
+          <Button
+            variant="destructive"
+            class="h-6 px-2"
             @click="bulkDelete"
           >
-            批量删除
-          </NButton>
-        </NFlex>
+            删除
+          </Button>
+        </div>
       </div>
     </Transition>
 
-    <NScrollbar class="block-manager__scroll">
-      <div class="block-manager__tree">
+    <div class="block-manager__scroll flex-1 min-h-0 overflow-y-auto">
+      <div class="block-manager__tree p-2">
         <BlockTreeList
           :blocks="blocksModel"
           :depth="0"
@@ -480,85 +476,58 @@ onBeforeUnmount(() => {
           :block-action-options="props.blockActionOptions as any"
         />
       </div>
-    </NScrollbar>
+    </div>
 
-    <NModal
-      v-model:show="renameBlockModal"
-      preset="card"
-      title="重命名区块"
-      style="width: 420px; max-width: 90vw"
-      :auto-focus="false"
-    >
-      <NInput
-        v-model:value="renameBlockName"
-        maxlength="50"
-        show-count
-        placeholder="仅用于编辑器内识别"
-        @keyup.enter="confirmRenameBlock"
-      />
-      <template #footer>
-        <NFlex justify="end">
-          <NButton @click="renameBlockModal = false"> 取消 </NButton>
-          <NButton
-            type="primary"
-            @click="confirmRenameBlock"
+    <!-- 重命名区块弹窗 -->
+    <Dialog v-model:open="renameBlockModal">
+      <DialogContent class="max-w-sm p-4">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">重命名区块</DialogTitle>
+        </DialogHeader>
+        <div class="py-2">
+          <Input
+            v-model="renameBlockName"
+            maxlength="50"
+            placeholder="仅用于编辑器内识别"
+            @keyup.enter="confirmRenameBlock"
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="renameBlockModal = false"
+            >取消</Button
           >
-            保存
-          </NButton>
-        </NFlex>
-      </template>
-    </NModal>
+          <Button @click="confirmRenameBlock">保存</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
 
-    <NModal
-      v-model:show="deleteBlockModal"
-      preset="dialog"
-      type="error"
-      title="删除区块"
-      :content="`将删除 ${pendingDeleteIds.length} 个区块，此操作可通过撤销恢复。`"
-      positive-text="删除"
-      negative-text="取消"
-      @positive-click="confirmDeleteBlocks"
-    />
+    <!-- 删除确认弹窗 -->
+    <Dialog v-model:open="deleteBlockModal">
+      <DialogContent class="max-w-sm p-4">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold text-destructive">删除区块</DialogTitle>
+        </DialogHeader>
+        <div class="py-2 text-xs text-muted-foreground">
+          将删除 {{ pendingDeleteIds.length }} 个区块，此操作可通过撤销恢复。
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="deleteBlockModal = false"
+            >取消</Button
+          >
+          <Button
+            variant="destructive"
+            @click="confirmDeleteBlocks"
+            >删除</Button
+          >
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </div>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
 
-<style scoped>
-.block-manager {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-}
-
-.block-manager__selection-toolbar {
-  flex: none;
-  padding: 10px;
-  border-bottom: 1px solid var(--vtsuru-border);
-  padding-block: 8px;
-  background: var(--vtsuru-bg-muted);
-}
-
-.block-manager__scroll {
-  flex: 1;
-  min-height: 0;
-}
-
-.block-manager__tree {
-  padding: 10px 14px 10px 10px;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-</style>

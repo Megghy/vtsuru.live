@@ -126,8 +126,8 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
       validateInputMode()
       hash = snapshot.hash
       const active = scope.run(() => {
-        const live = usePngtuberRuntime(owner, targetChannel, true)
-        const audio = useAudioReactive({
+        const liveRuntime = usePngtuberRuntime(owner, targetChannel, true)
+        const audioReactive = useAudioReactive({
           autoStart: false,
           deviceId: () => deviceId.value,
           threshold: () => config.value.threshold,
@@ -136,15 +136,16 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
           releaseDelay: () => config.value.releaseDelay,
           gain: () => config.value.gain,
           noiseSuppression: () => config.value.noiseSuppression,
-          muted: () => live.runtime.value.muted || live.runtime.value.away,
-          onVolume: (value, active) => publish(value, active, 'client'),
+          muted: () => liveRuntime.runtime.value.muted || liveRuntime.runtime.value.away,
+          onVolume: (vol, isActive) => publish(vol, isActive, 'client'),
         })
-        function publish(value: number, active: boolean, source: 'client' | 'obs') {
+        function publish(vol: number, isActive: boolean, source: 'client' | 'obs') {
           if (!current()) return
-          const muted = live.runtime.value.muted || live.runtime.value.away || (source === 'obs' && inputMuted.value)
-          volume.value = muted ? 0 : value
-          speaking.value = !muted && active
-          void live.publish(volume.value, speaking.value, source).catch((cause) => {
+          const muted =
+            liveRuntime.runtime.value.muted || liveRuntime.runtime.value.away || (source === 'obs' && inputMuted.value)
+          volume.value = muted ? 0 : vol
+          speaking.value = !muted && isActive
+          void liveRuntime.publish(volume.value, speaking.value, source).catch((cause) => {
             if (current()) error.value = String(cause)
           })
         }
@@ -155,8 +156,10 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
             if (!current() || (sample.inputName && sample.inputName !== obsInput.value)) return
             lastMeter = performance.now()
             inputMuted.value = sample.muted
-            if (sample.muted || live.runtime.value.muted || live.runtime.value.away) gate.reset()
-            const value = Number.isFinite(sample.volume) ? Math.max(0, Math.min(100, sample.volume * config.value.gain)) : 0
+            if (sample.muted || liveRuntime.runtime.value.muted || liveRuntime.runtime.value.away) gate.reset()
+            const value = Number.isFinite(sample.volume)
+              ? Math.max(0, Math.min(100, sample.volume * config.value.gain))
+              : 0
             publish(value, !sample.muted && gate.sample(value, performance.now(), config.value), 'obs')
           })
           // Removed/disconnected/inactive OBS inputs must not leave the mouth open.
@@ -172,7 +175,7 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
           })
         }
         onScopeDispose(() => clearTimeout(refreshTimer))
-        return { live, audio }
+        return { live: liveRuntime, audio: audioReactive }
       })!
       live.value = active.live
       audio.value = active.audio
@@ -217,10 +220,10 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
       starting.value = false
       const refresh = async () => {
         try {
-          const snapshot = await getObsSyncState('pngtuber', targetChannel, hash, owner)
+          const latestSnapshot = await getObsSyncState('pngtuber', targetChannel, hash, owner)
           if (!current()) return
-          if (snapshot.hash !== hash) {
-            config.value = normalizePngtuberState(snapshot.data ? JSON.parse(snapshot.data) : {})
+          if (latestSnapshot.hash !== hash) {
+            config.value = normalizePngtuberState(latestSnapshot.data ? JSON.parse(latestSnapshot.data) : {})
             try {
               validateInputMode()
             } catch (cause) {
@@ -230,7 +233,7 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
             }
             await registerKeys()
             if (!current()) return
-            hash = snapshot.hash
+            hash = latestSnapshot.hash
           }
           error.value = ''
         } catch (cause) {

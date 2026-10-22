@@ -6,8 +6,7 @@
  * OpenAPI spec version: v1
  */
 
-export type OrgInviteStatuses = typeof OrgInviteStatuses[keyof typeof OrgInviteStatuses];
-
+export type OrgInviteStatuses = (typeof OrgInviteStatuses)[keyof typeof OrgInviteStatuses]
 
 export const OrgInviteStatuses = {
   NUMBER_0: 0,
@@ -16,4 +15,4 @@ export const OrgInviteStatuses = {
   NUMBER_3: 3,
   NUMBER_4: 4,
   NUMBER_5: 5,
-} as const;
+} as const

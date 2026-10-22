@@ -14,20 +14,6 @@ import {
   Settings24Filled,
   VideoPerson24Filled,
 } from '@vicons/fluent'
-import {
-  NAvatar,
-  NButton,
-  NCard,
-  NEllipsis,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NPopconfirm,
-  NTag,
-  NText,
-  NTooltip,
-} from 'naive-ui'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -39,6 +25,12 @@ import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -67,14 +59,13 @@ const activeAutoActionCount = computed(() => {
 })
 
 // Cookie 状态
-const cookieStatusType = computed(() => {
-  if (!biliCookie.hasBiliCookie) return 'warning'
-  return biliCookie.isCookieValid ? 'success' : 'error'
-})
-
-const cookieStatusLabel = computed(() => {
-  if (!biliCookie.hasBiliCookie) return '未同步'
-  return biliCookie.isCookieValid ? '有效' : '已失效'
+const cookieBadgeMeta = computed(() => {
+  if (!biliCookie.hasBiliCookie) {
+    return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '未同步' }
+  }
+  return biliCookie.isCookieValid
+    ? { class: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10', text: '有效' }
+    : { class: 'border-destructive/40 text-destructive bg-destructive/10', text: '已失效' }
 })
 
 // 弹幕机浮窗切换
@@ -94,633 +85,507 @@ function toggleGiftWindow() {
     giftWindow.openWindow()
   }
 }
-
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="14"
-    class="dashboard-container"
-  >
+  <div class="flex flex-col gap-3.5 pb-6">
     <!-- 头部主播状态横幅 -->
-    <NCard
-      size="small"
-      bordered
-      class="hero-card"
-    >
-      <div class="hero-wrapper">
-        <div class="hero-left">
-          <div class="avatar-wrap">
-            <NAvatar
-              :size="52"
-              :src="`${accountInfo.streamerInfo?.faceUrl}@100w`"
-              :fallback-src="accountInfo.name?.slice(0, 2)"
-              bordered
-              round
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-            />
-            <span
-              class="status-pulse-dot"
-              :class="{ 'status-pulse-dot--live': isStreaming }"
-            />
-          </div>
-
-          <div class="hero-streamer-meta">
-            <div class="hero-title-row">
-              <NText
-                strong
-                class="hero-streamer-name"
-              >
-                {{ accountInfo.name }}
-              </NText>
-              <NTag
-                size="small"
-                :type="isStreaming ? 'success' : 'default'"
-                :bordered="false"
-                round
-              >
-                {{ isStreaming ? '● 直播中' : '未开播' }}
-              </NTag>
+    <Card class="border bg-card">
+      <CardContent class="p-4">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div class="relative shrink-0">
+              <Avatar class="size-13 border">
+                <AvatarImage
+                  :src="`${accountInfo.streamerInfo?.faceUrl}@100w`"
+                  alt="Avatar"
+                  referrerpolicy="no-referrer"
+                />
+                <AvatarFallback class="text-sm font-semibold">
+                  {{ accountInfo.name?.slice(0, 2) }}
+                </AvatarFallback>
+              </Avatar>
+              <span
+                class="absolute right-0 bottom-0 size-3 rounded-full bg-muted-foreground border-2 border-card"
+                :class="{
+                  'bg-emerald-500 shadow-[0_0_0_0_rgba(16,185,129,0.7)] animate-[pulse-ring_2s_infinite_cubic-bezier(0.66,0,0,1)]':
+                    isStreaming,
+                }"
+              />
             </div>
 
-            <div class="hero-sub-row">
-              <NText depth="3">
-                房间: {{ accountInfo.biliRoomId || '未绑定' }}
-              </NText>
-              <span class="dot-divider">·</span>
-              <NText depth="3">
-                {{ roomInfo?.parent_area_name ? `${roomInfo.parent_area_name} / ${roomInfo.area_name}` : '未选择分区' }}
-              </NText>
-              <span class="dot-divider">·</span>
-              <NText depth="3">
-                UID: {{ accountInfo.streamerInfo?.uId || '—' }}
-              </NText>
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-base text-foreground tracking-tight">
+                  {{ accountInfo.name }}
+                </span>
+                <Badge
+                  variant="outline"
+                  class="text-xs h-5 px-2"
+                  :class="
+                    isStreaming ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'
+                  "
+                >
+                  {{ isStreaming ? '● 直播中' : '未开播' }}
+                </Badge>
+              </div>
+
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span>房间: {{ accountInfo.biliRoomId || '未绑定' }}</span>
+                <span class="opacity-50">·</span>
+                <span>
+                  {{
+                    roomInfo?.parent_area_name ? `${roomInfo.parent_area_name} / ${roomInfo.area_name}` : '未选择分区'
+                  }}
+                </span>
+                <span class="opacity-50">·</span>
+                <span>UID: {{ accountInfo.streamerInfo?.uId || '—' }}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="hero-actions">
-          <NButton size="small" @click="router.push({ name: 'client-pngtuber' })">PNGtuber</NButton>
-          <NButton
-            type="primary"
-            size="small"
-            secondary
-            @click="openUrl(liveRoomUrl)"
-          >
-            <template #icon>
-              <NIcon :component="Open24Regular" />
-            </template>
-            前往直播间
-          </NButton>
+          <div class="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              @click="router.push({ name: 'client-pngtuber' })"
+            >
+              PNGtuber
+            </Button>
+            <Button
+              variant="secondary"
+              class="gap-1.5 text-primary hover:text-primary"
+              @click="openUrl(liveRoomUrl)"
+            >
+              <Open24Regular class="size-3.5" />
+              前往直播间
+            </Button>
 
-          <NPopconfirm @positive-click="logoutAccount">
-            <template #trigger>
-              <NButton
-                quaternary
-                size="small"
-                type="error"
-              >
-                退出登录
-              </NButton>
-            </template>
-            确定要退出登录吗？B站 Cookie 将需重新扫描
-          </NPopconfirm>
+            <Popconfirm
+              title="确认退出"
+              @positive-click="logoutAccount"
+            >
+              <template #trigger>
+                <Button
+                  variant="ghost"
+                  class="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  退出登录
+                </Button>
+              </template>
+              确定要退出登录吗？B站 Cookie 将需重新扫描
+            </Popconfirm>
+          </div>
         </div>
-      </div>
-    </NCard>
+      </CardContent>
+    </Card>
 
     <CookieInvalidAlert variant="home" />
 
     <!-- 核心系统健康矩阵 (4 Bento Grid Cards) -->
-    <NGrid
-      :x-gap="12"
-      :y-gap="12"
-      cols="2 900:4"
-      item-responsive
-    >
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <!-- EventFetcher 弹幕引擎 -->
-      <NGridItem>
-        <NCard
-          size="small"
-          bordered
-          hoverable
-          class="health-card"
-          @click="router.push({ name: 'client-fetcher' })"
-        >
-          <div class="health-card-header">
-            <div class="health-icon health-icon--fetcher">
-              <NIcon :component="CloudArchive24Filled" />
+      <Card
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        @click="router.push({ name: 'client-fetcher' })"
+      >
+        <CardContent class="p-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-blue-500/12 text-blue-500">
+              <CloudArchive24Filled class="size-4" />
             </div>
-            <NTag
-              size="tiny"
-              :type="webfetcher.state === 'connected' ? 'success' : 'error'"
-              :bordered="false"
+            <Badge
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5"
+              :class="
+                webfetcher.state === 'connected'
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'border-destructive/40 text-destructive bg-destructive/10'
+              "
             >
               {{ webfetcher.state === 'connected' ? '运行中' : '已断开' }}
-            </NTag>
+            </Badge>
           </div>
-          <div class="health-title">
-            EventFetcher
+          <div class="text-xs font-semibold text-foreground">EventFetcher</div>
+          <div class="text-xs text-muted-foreground mt-0.5">
+            模式: {{ webfetcher.webfetcherType === 'direct' ? '直连' : '开放平台' }}
           </div>
-          <div class="health-desc">
-            <NText depth="3">
-              模式: {{ webfetcher.webfetcherType === 'direct' ? '直连' : '开放平台' }}
-            </NText>
-          </div>
-        </NCard>
-      </NGridItem>
+        </CardContent>
+      </Card>
 
       <!-- Bilibili 凭据状态 -->
-      <NGridItem>
-        <NCard
-          size="small"
-          bordered
-          hoverable
-          class="health-card"
-          @click="router.push({ name: 'client-fetcher' })"
-        >
-          <div class="health-card-header">
-            <div class="health-icon health-icon--cookie">
-              <NIcon :component="Cookies24Filled" />
+      <Card
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        @click="router.push({ name: 'client-fetcher' })"
+      >
+        <CardContent class="p-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-amber-500/12 text-amber-500">
+              <Cookies24Filled class="size-4" />
             </div>
-            <NTag
-              size="tiny"
-              :type="cookieStatusType"
-              :bordered="false"
+            <Badge
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5"
+              :class="cookieBadgeMeta.class"
             >
-              {{ cookieStatusLabel }}
-            </NTag>
+              {{ cookieBadgeMeta.text }}
+            </Badge>
           </div>
-          <div class="health-title">
-            B站 Cookie
+          <div class="text-xs font-semibold text-foreground">B站 Cookie</div>
+          <div class="text-xs text-muted-foreground mt-0.5">
+            {{ biliCookie.isCookieValid ? '凭据正常运作' : '需要重新扫码' }}
           </div>
-          <div class="health-desc">
-            <NText depth="3">
-              {{ biliCookie.isCookieValid ? '凭据正常运作' : '需要重新扫码' }}
-            </NText>
-          </div>
-        </NCard>
-      </NGridItem>
+        </CardContent>
+      </Card>
 
       <!-- VTube Studio 联动 -->
-      <NGridItem>
-        <NCard
-          size="small"
-          bordered
-          hoverable
-          class="health-card"
-          @click="router.push({ name: 'client-vts' })"
-        >
-          <div class="health-card-header">
-            <div class="health-icon health-icon--vts">
-              <NIcon :component="VideoPerson24Filled" />
+      <Card
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        @click="router.push({ name: 'client-vts' })"
+      >
+        <CardContent class="p-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-purple-500/12 text-purple-500">
+              <VideoPerson24Filled class="size-4" />
             </div>
-            <NTag
-              size="tiny"
-              :type="vtsStore.connected ? 'success' : 'default'"
-              :bordered="false"
+            <Badge
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5"
+              :class="
+                vtsStore.connected
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'text-muted-foreground'
+              "
             >
               {{ vtsStore.connected ? '已连接' : '未连接' }}
-            </NTag>
+            </Badge>
           </div>
-          <div class="health-title">
-            VTube Studio
+          <div class="text-xs font-semibold text-foreground">VTube Studio</div>
+          <div class="text-xs text-muted-foreground truncate mt-0.5">
+            {{ vtsStore.currentModelName || '未加载模型' }}
           </div>
-          <div class="health-desc">
-            <NEllipsis>
-              <NText depth="3">
-                {{ vtsStore.currentModelName || '未加载模型' }}
-              </NText>
-            </NEllipsis>
-          </div>
-        </NCard>
-      </NGridItem>
+        </CardContent>
+      </Card>
 
       <!-- 自动操作引擎 -->
-      <NGridItem>
-        <NCard
-          size="small"
-          bordered
-          hoverable
-          class="health-card"
-          @click="router.push({ name: 'client-auto-action-manage' })"
-        >
-          <div class="health-card-header">
-            <div class="health-icon health-icon--auto">
-              <NIcon :component="FlashAuto24Filled" />
+      <Card
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
+        @click="router.push({ name: 'client-auto-action-manage' })"
+      >
+        <CardContent class="p-3">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-emerald-500/12 text-emerald-500">
+              <FlashAuto24Filled class="size-4" />
             </div>
-            <NTag
-              size="tiny"
-              :type="activeAutoActionCount > 0 ? 'success' : 'default'"
-              :bordered="false"
+            <Badge
+              variant="outline"
+              class="text-[10px] h-4.5 px-1.5"
+              :class="
+                activeAutoActionCount > 0
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'text-muted-foreground'
+              "
             >
               {{ activeAutoActionCount > 0 ? `${activeAutoActionCount} 条规则` : '未启用' }}
-            </NTag>
+            </Badge>
           </div>
-          <div class="health-title">
-            自动操作
-          </div>
-          <div class="health-desc">
-            <NText depth="3">
-              自动回复 / 答谢
-            </NText>
-          </div>
-        </NCard>
-      </NGridItem>
-    </NGrid>
+          <div class="text-xs font-semibold text-foreground">自动操作</div>
+          <div class="text-xs text-muted-foreground mt-0.5">自动回复 / 答谢</div>
+        </CardContent>
+      </Card>
+    </div>
 
     <!-- 直播浮窗控制中心 -->
-    <NCard
-      size="small"
-      bordered
-      title="直播浮窗控制中心"
-    >
-      <NGrid
-        :x-gap="12"
-        :y-gap="12"
-        cols="1 768:2"
-        item-responsive
-      >
-        <!-- 弹幕机浮窗 -->
-        <NGridItem>
-          <div class="float-window-box">
-            <div class="float-window-head">
-              <div class="float-window-icon-title">
-                <NIcon
-                  :size="18"
-                  :component="Chat24Filled"
-                  color="var(--vtsuru-primary)"
-                />
-                <NText strong>
-                  弹幕机
-                </NText>
+    <Card class="border bg-card">
+      <CardHeader class="p-3 pb-2 border-b">
+        <CardTitle class="text-sm font-semibold">直播浮窗控制中心</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- 弹幕机浮窗 -->
+          <div class="p-3 border border-border rounded-md bg-muted/30 flex flex-col gap-2 h-full box-border">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <Chat24Filled class="size-4 text-primary" />
+                <span class="font-semibold text-xs text-foreground">弹幕机</span>
               </div>
-              <NTag
-                size="tiny"
-                :type="danmakuWindow.isDanmakuWindowOpen ? 'success' : 'default'"
-                :bordered="false"
-                round
+              <Badge
+                variant="outline"
+                class="text-[10px] h-4.5 px-1.5"
+                :class="
+                  danmakuWindow.isDanmakuWindowOpen
+                    ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                    : 'text-muted-foreground'
+                "
               >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '运行中' : '未开启' }}
-              </NTag>
+              </Badge>
             </div>
 
-            <div class="float-window-desc">
-              在桌面上显示弹幕机悬浮窗
-            </div>
+            <div class="text-xs text-muted-foreground leading-normal flex-1">在桌面上显示弹幕机悬浮窗</div>
 
-            <div class="float-window-actions">
-              <NButton
-                size="tiny"
-                :type="danmakuWindow.isDanmakuWindowOpen ? 'error' : 'primary'"
-                secondary
+            <div class="flex items-center gap-1.5 mt-1">
+              <Button
+                size="xs"
+                variant="secondary"
+                class="h-6 text-[11px]"
+                :class="
+                  danmakuWindow.isDanmakuWindowOpen
+                    ? 'text-destructive hover:text-destructive'
+                    : 'text-primary hover:text-primary'
+                "
                 @click="toggleDanmakuWindow"
               >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '关闭浮窗' : '开启浮窗' }}
-              </NButton>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <NButton
-                    size="tiny"
-                    quaternary
-                    :disabled="!danmakuWindow.isDanmakuWindowOpen"
-                    @click="danmakuWindow.setDanmakuWindowPosition(100, 100)"
-                  >
-                    <template #icon>
-                      <NIcon :component="ArrowReset24Regular" />
-                    </template>
-                    重置
-                  </NButton>
-                </template>
-                重置浮窗至默认坐标
-              </NTooltip>
-              <NButton
-                size="tiny"
-                quaternary
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 text-[11px] px-2 gap-1"
+                      :disabled="!danmakuWindow.isDanmakuWindowOpen"
+                      @click="danmakuWindow.setDanmakuWindowPosition(100, 100)"
+                    >
+                      <ArrowReset24Regular class="size-3" />
+                      重置
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent class="text-xs"> 重置浮窗至默认坐标 </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 text-[11px] px-2 text-muted-foreground"
                 @click="router.push({ name: 'client-danmaku-window-manage' })"
               >
                 设置
-              </NButton>
+              </Button>
             </div>
           </div>
-        </NGridItem>
 
-        <!-- 礼物与排行浮窗 -->
-        <NGridItem>
-          <div class="float-window-box">
-            <div class="float-window-head">
-              <div class="float-window-icon-title">
-                <NIcon
-                  :size="18"
-                  :component="Gift24Filled"
-                  color="var(--vtsuru-warning, #f59e0b)"
-                />
-                <NText strong>
-                  礼物与高能榜
-                </NText>
+          <!-- 礼物与排行浮窗 -->
+          <div class="p-3 border border-border rounded-md bg-muted/30 flex flex-col gap-2 h-full box-border">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <Gift24Filled class="size-4 text-amber-500" />
+                <span class="font-semibold text-xs text-foreground">礼物与排行</span>
               </div>
-              <NTag
-                size="tiny"
-                :type="giftWindow.isGiftWindowOpen ? 'success' : 'default'"
-                :bordered="false"
-                round
+              <Badge
+                variant="outline"
+                class="text-[10px] h-4.5 px-1.5"
+                :class="
+                  giftWindow.isGiftWindowOpen
+                    ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                    : 'text-muted-foreground'
+                "
               >
                 {{ giftWindow.isGiftWindowOpen ? '运行中' : '未开启' }}
-              </NTag>
+              </Badge>
             </div>
 
-            <div class="float-window-desc">
-              礼物掉落与高能粉丝榜浮窗
-            </div>
+            <div class="text-xs text-muted-foreground leading-normal flex-1">在桌面上显示礼物展示与舰队排行悬浮窗</div>
 
-            <div class="float-window-actions">
-              <NButton
-                size="tiny"
-                :type="giftWindow.isGiftWindowOpen ? 'error' : 'primary'"
-                secondary
+            <div class="flex items-center gap-1.5 mt-1">
+              <Button
+                size="xs"
+                variant="secondary"
+                class="h-6 text-[11px]"
+                :class="
+                  giftWindow.isGiftWindowOpen
+                    ? 'text-destructive hover:text-destructive'
+                    : 'text-primary hover:text-primary'
+                "
                 @click="toggleGiftWindow"
               >
                 {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '开启浮窗' }}
-              </NButton>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <NButton
-                    size="tiny"
-                    quaternary
-                    :disabled="!giftWindow.isGiftWindowOpen"
-                    @click="giftWindow.setPosition(100, 100)"
-                  >
-                    <template #icon>
-                      <NIcon :component="ArrowReset24Regular" />
-                    </template>
-                    重置
-                  </NButton>
-                </template>
-                重置浮窗至默认坐标
-              </NTooltip>
-              <NButton
-                size="tiny"
-                quaternary
+              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="h-6 text-[11px] px-2 gap-1"
+                      :disabled="!giftWindow.isGiftWindowOpen"
+                      @click="giftWindow.setPosition(100, 100)"
+                    >
+                      <ArrowReset24Regular class="size-3" />
+                      重置
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent class="text-xs"> 重置浮窗至默认坐标 </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 text-[11px] px-2 text-muted-foreground"
                 @click="router.push({ name: 'client-gift-window-manage' })"
               >
                 设置
-              </NButton>
+              </Button>
             </div>
           </div>
-        </NGridItem>
-      </NGrid>
-    </NCard>
+        </div>
+      </CardContent>
+    </Card>
 
-    <!-- 直播间状态看板与常用入口 (双栏 Bento) -->
-    <NGrid
-      :x-gap="12"
-      :y-gap="12"
-      cols="1 900:2"
-      item-responsive
-    >
-      <!-- 直播间实时看板 -->
-      <NGridItem>
-        <NCard
-          size="small"
-          bordered
-          content-style="padding: 0;"
-          class="live-monitor-card"
-        >
-          <template #header>
-            <NFlex
-              align="center"
-              justify="space-between"
-            >
-              <NFlex
-                align="center"
-                :size="6"
+    <!-- 直播间快捷概览与常用功能 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
+      <!-- 直播间状态与封面 -->
+      <Card class="border bg-card flex flex-col justify-between overflow-hidden h-full">
+        <div>
+          <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+            <CardTitle class="text-sm font-semibold">当前直播间</CardTitle>
+            <div class="flex items-center gap-2">
+              <Button
+                size="xs"
+                variant="outline"
+                class="h-6 text-[11px] px-2"
+                @click="router.push({ name: 'client-live-manage' })"
               >
-                <NIcon
-                  :component="Live24Filled"
-                  color="var(--vtsuru-primary)"
-                />
-                <NText strong>
-                  直播间监视
-                </NText>
-              </NFlex>
-              <NTag
-                :type="isStreaming ? 'success' : 'default'"
-                size="small"
-                :bordered="false"
-              >
-                {{ isStreaming ? '● 正在推流' : '未推流' }}
-              </NTag>
-            </NFlex>
-          </template>
-
-          <div
-            v-if="roomCover"
-            class="client-index-cover"
-            @click="openUrl(liveRoomUrl)"
-          >
-            <div class="client-index-cover__media">
-              <img
-                :src="roomCover"
-                alt="直播间封面"
-                referrerpolicy="no-referrer"
-                class="client-index-cover__img"
-              >
+                直播管理
+              </Button>
             </div>
-            <div class="client-index-cover__mask" />
-            <div class="client-index-cover__meta">
-              <div class="client-index-cover__title">
-                {{ roomInfo?.title || '暂无标题' }}
+          </CardHeader>
+          <CardContent class="p-3">
+            <div
+              v-if="roomCover"
+              class="group relative w-full aspect-video rounded-md overflow-hidden cursor-pointer bg-muted"
+              @click="openUrl(liveRoomUrl)"
+            >
+              <div class="w-full h-full overflow-hidden">
+                <img
+                  :src="roomCover"
+                  alt="直播间封面"
+                  referrerpolicy="no-referrer"
+                  class="w-full h-full object-cover block transition-all duration-350 ease-out group-hover:scale-105 group-hover:brightness-105"
+                />
               </div>
-              <div class="client-index-cover__sub">
-                <span v-if="roomInfo?.parent_area_name">{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span>
-                <span v-if="roomInfo?.online"> · 人气: {{ roomInfo.online }}</span>
+              <div class="absolute inset-0 z-1 bg-gradient-to-t from-black/90 via-black/25 to-black/5 pointer-events-none" />
+              <div class="absolute left-3 right-3 bottom-2.5 z-2 text-white pointer-events-none">
+                <div class="text-[13px] font-semibold text-shadow-md overflow-hidden whitespace-nowrap text-ellipsis">
+                  {{ roomInfo?.title || '暂无标题' }}
+                </div>
+                <div class="text-[11px] text-white/80 mt-0.5">
+                  <span v-if="roomInfo?.parent_area_name">{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span>
+                  <span v-if="roomInfo?.online"> · 人气: {{ roomInfo.online }}</span>
+                </div>
+              </div>
+              <div class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-all duration-250 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0">
+                <Badge
+                  variant="secondary"
+                  class="text-[10px] h-5 px-2 bg-primary text-primary-foreground gap-1"
+                >
+                  <span>点击前往直播间</span>
+                  <Open24Regular class="size-3" />
+                </Badge>
               </div>
             </div>
-            <div class="client-index-cover__hint">
-              <NTag
-                size="tiny"
-                type="primary"
-                round
-                :bordered="false"
-              >
-                <span>点击前往直播间</span>
-                <NIcon
-                  :component="Open24Regular"
-                  style="margin-left: 2px; vertical-align: -1px;"
-                />
-              </NTag>
-            </div>
-          </div>
-          <div
-            v-else
-            class="client-index-cover__empty"
-          >
-            <NText depth="3">
-              暂无直播间封面信息
-            </NText>
-          </div>
 
-          <div class="client-index-cover__footer">
-            <NButton
-              type="primary"
-              size="small"
-              @click="router.push({ name: 'client-live-manage' })"
+            <div
+              v-else
+              class="flex justify-center p-8"
             >
-              <template #icon>
-                <NIcon :component="Live24Filled" />
-              </template>
-              修改直播标题与分区
-            </NButton>
-          </div>
-        </NCard>
-      </NGridItem>
+              <span class="text-xs text-muted-foreground">暂无直播间封面信息</span>
+            </div>
+          </CardContent>
+        </div>
+
+        <div class="p-2.5 px-3 pb-3 flex justify-end">
+          <Button
+            class="gap-1.5"
+            @click="router.push({ name: 'client-live-manage' })"
+          >
+            <Live24Filled class="size-3.5" />
+            修改直播标题与分区
+          </Button>
+        </div>
+      </Card>
 
       <!-- 常用功能快速入口 -->
-      <NGridItem>
-        <NCard
-          size="small"
-          bordered
-          title="常用工作台"
+      <Card class="border bg-card flex flex-col justify-between">
+        <div>
+          <CardHeader class="p-3 pb-2 border-b">
+            <CardTitle class="text-sm font-semibold">常用工作台</CardTitle>
+          </CardHeader>
+          <CardContent class="p-3">
+            <div class="grid grid-cols-2 gap-2.5">
+              <div
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                @click="router.push({ name: 'client-live-manage' })"
+              >
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-blue-500/10 text-blue-500">
+                  <Live24Filled class="size-4" />
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">直播控制</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">OBS 推流与场次信息</div>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                @click="router.push({ name: 'client-read-danmaku' })"
+              >
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-emerald-500/10 text-emerald-500">
+                  <Mic24Filled class="size-4" />
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">读弹幕 (TTS)</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">语音朗读与音色设置</div>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                @click="router.push({ name: 'client-auto-action-manage' })"
+              >
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-amber-500/10 text-amber-500">
+                  <FlashAuto24Filled class="size-4" />
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">自动操作</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">入场欢迎与进房致谢</div>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                @click="router.push({ name: 'client-settings' })"
+              >
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-muted text-muted-foreground">
+                  <Settings24Filled class="size-4" />
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">客户端设置</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">通知 / 偏好 / 备份</div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </div>
+
+        <div
+          v-if="rpcServer.running"
+          class="p-3 border-t bg-muted/10 text-xs text-muted-foreground flex items-center justify-between"
         >
-          <div class="launchpad-grid">
-            <div
-              class="launchpad-item"
-              @click="router.push({ name: 'client-live-manage' })"
-            >
-              <div class="launchpad-icon launchpad-icon--live">
-                <NIcon :component="Live24Filled" />
-              </div>
-              <div class="launchpad-text">
-                <div class="launchpad-title">
-                  直播控制
-                </div>
-                <div class="launchpad-sub">
-                  OBS 推流与场次信息
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="launchpad-item"
-              @click="router.push({ name: 'client-read-danmaku' })"
-            >
-              <div class="launchpad-icon launchpad-icon--tts">
-                <NIcon :component="Mic24Filled" />
-              </div>
-              <div class="launchpad-text">
-                <div class="launchpad-title">
-                  读弹幕 (TTS)
-                </div>
-                <div class="launchpad-sub">
-                  语音朗读与音色设置
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="launchpad-item"
-              @click="router.push({ name: 'client-auto-action-manage' })"
-            >
-              <div class="launchpad-icon launchpad-icon--auto">
-                <NIcon :component="FlashAuto24Filled" />
-              </div>
-              <div class="launchpad-text">
-                <div class="launchpad-title">
-                  自动操作
-                </div>
-                <div class="launchpad-sub">
-                  入场欢迎与进房致谢
-                </div>
-              </div>
-            </div>
-
-            <div
-              class="launchpad-item"
-              @click="router.push({ name: 'client-settings' })"
-            >
-              <div class="launchpad-icon launchpad-icon--settings">
-                <NIcon :component="Settings24Filled" />
-              </div>
-              <div class="launchpad-text">
-                <div class="launchpad-title">
-                  客户端设置
-                </div>
-                <div class="launchpad-sub">
-                  通知 / 偏好 / 备份
-                </div>
-              </div>
-            </div>
+          <div class="flex items-center gap-1.5">
+            <PlugConnected24Filled
+              class="size-3.5"
+              :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
+            />
+            <span> 本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接 </span>
           </div>
-
-          <div
-            v-if="rpcServer.running"
-            class="rpc-status-footer"
-          >
-            <div class="rpc-status-left">
-              <NIcon
-                :size="14"
-                :component="PlugConnected24Filled"
-                :color="rpcServer.connectionCount > 0 ? 'var(--vtsuru-success)' : 'var(--vtsuru-fg-muted)'"
-              />
-              <NText depth="3">
-                本地开放接口: {{ rpcServer.connectionCount }} 个外部网页/工具已连接
-              </NText>
-            </div>
-          </div>
-        </NCard>
-      </NGridItem>
-    </NGrid>
-  </NFlex>
+        </div>
+      </Card>
+    </div>
+  </div>
 </template>
 
 <style scoped>
-.dashboard-container {
-  padding-bottom: 24px;
-}
-
-/* 主播横幅 */
-.hero-card {
-  background: var(--vtsuru-bg-surface);
-}
-
-.hero-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.hero-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-
-.avatar-wrap {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.status-pulse-dot {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: var(--vtsuru-fg-muted);
-  border: 2px solid var(--vtsuru-bg-surface);
-}
-
-.status-pulse-dot--live {
-  background-color: var(--vtsuru-success, #10b981);
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
-}
-
 @keyframes pulse-ring {
   0% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
@@ -731,325 +596,5 @@ function toggleGiftWindow() {
   100% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
-}
-
-.hero-streamer-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.hero-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hero-streamer-name {
-  font-size: 16px;
-  letter-spacing: -0.01em;
-}
-
-.hero-sub-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.dot-divider {
-  color: var(--vtsuru-fg-muted);
-  opacity: 0.5;
-}
-
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 核心健康卡片 */
-.health-card {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  height: 100%;
-}
-
-.health-card:hover {
-  transform: translateY(-2px);
-}
-
-.health-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.health-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--vtsuru-radius, 6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.health-icon--fetcher {
-  background-color: rgba(59, 130, 246, 0.12);
-  color: #3b82f6;
-}
-
-.health-icon--cookie {
-  background-color: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-}
-
-.health-icon--vts {
-  background-color: rgba(139, 92, 246, 0.12);
-  color: #8b5cf6;
-}
-
-.health-icon--auto {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-}
-
-.health-title {
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-.health-desc {
-  font-size: 12px;
-}
-
-/* 直播浮窗控制盒 */
-.float-window-box {
-  padding: 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.04));
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.float-window-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.float-window-icon-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.float-window-desc {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  line-height: 1.4;
-  flex-grow: 1;
-}
-
-.float-window-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-/* 直播间监视卡片 */
-.live-monitor-card {
-  height: 100%;
-}
-
-.client-index-cover {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--vtsuru-radius, 6px);
-  overflow: hidden;
-  cursor: pointer;
-  background-color: var(--vtsuru-bg-muted, #1e1e20);
-}
-
-.client-index-cover__media {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.client-index-cover__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), filter 0.35s ease;
-}
-
-.client-index-cover:hover .client-index-cover__img {
-  transform: scale(1.05);
-  filter: brightness(1.05);
-}
-
-.client-index-cover__mask {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.05) 100%);
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.client-index-cover__hint {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: all 0.25s ease;
-  pointer-events: none;
-}
-
-.client-index-cover:hover .client-index-cover__hint {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.client-index-cover__meta {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 10px;
-  z-index: 2;
-  color: white;
-  pointer-events: none;
-}
-
-.client-index-cover__title {
-  font-size: 13px;
-  font-weight: 600;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.client-index-cover__sub {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-top: 2px;
-}
-
-.client-index-cover__empty {
-  display: flex;
-  justify-content: center;
-  padding: 32px;
-}
-
-.client-index-cover__footer {
-  padding: 10px 12px 12px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* 常用工作台 Launchpad */
-.launchpad-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.launchpad-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius, 6px);
-  background: var(--vtsuru-bg-surface);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.launchpad-item:hover {
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.08));
-  border-color: var(--vtsuru-border-hover, var(--vtsuru-primary));
-  transform: translateY(-1px);
-}
-
-.launchpad-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.launchpad-icon--live {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.launchpad-icon--tts {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-
-.launchpad-icon--auto {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-.launchpad-icon--settings {
-  background: rgba(107, 114, 128, 0.1);
-  color: var(--vtsuru-fg-muted);
-}
-
-.launchpad-text {
-  min-width: 0;
-}
-
-.launchpad-title {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.launchpad-sub {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  margin-top: 2px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.rpc-status-footer {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid var(--vtsuru-border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 12px;
-}
-
-.rpc-status-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 </style>

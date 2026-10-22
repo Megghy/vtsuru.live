@@ -7,5 +7,5 @@
  */
 
 export type PostApiCheckinCheckInParams = {
-vId?: number;
-};
+  vId?: number
+}

@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type VtsuruControllerLiveEmojiResponsePlain = {[key: string]: string};
+export type VtsuruControllerLiveEmojiResponsePlain = { [key: string]: string }

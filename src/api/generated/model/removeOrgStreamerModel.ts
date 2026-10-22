@@ -7,5 +7,5 @@
  */
 
 export interface RemoveOrgStreamerModel {
-  targetStreamerUserId: number;
+  targetStreamerUserId: number
 }

@@ -7,7 +7,7 @@
  */
 
 export interface ConfigControllerUpdateConfigModel {
-  name: string;
-  json: string;
-  public: boolean;
+  name: string
+  json: string
+  public: boolean
 }

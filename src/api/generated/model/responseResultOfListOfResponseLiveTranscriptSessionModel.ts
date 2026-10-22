@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseLiveTranscriptSessionModel } from './responseLiveTranscriptSessionModel';
+import type { ResponseLiveTranscriptSessionModel } from './responseLiveTranscriptSessionModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseLiveTranscriptSessionModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseLiveTranscriptSessionModel[] | null;
+  data: ResponseLiveTranscriptSessionModel[] | null
 }

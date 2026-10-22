@@ -7,10 +7,10 @@
  */
 
 export type GetApiLiveRankingParams = {
-liveId?: string;
-/**
- * @minimum 1
- * @maximum 100
- */
-limit?: number;
-};
+  liveId?: string
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  limit?: number
+}

@@ -7,12 +7,12 @@
  */
 
 export type GetApiUserInfoParams = {
-/**
- * 通过b站id获取用户信息
- */
-uId?: number;
-/**
- * 通过本站id或用户名获取用户信息
- */
-id?: string;
-};
+  /**
+   * 通过b站id获取用户信息
+   */
+  uId?: number
+  /**
+   * 通过本站id或用户名获取用户信息
+   */
+  id?: string
+}

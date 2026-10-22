@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NModal, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -86,81 +88,81 @@ function cancelImport() {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="导入 / 导出"
-  >
-    <NFlex
-      align="center"
-      :wrap="true"
-      :size="8"
-    >
-      <NButton
-        size="small"
-        @click="exportMinimal"
-      >
-        导出连接信息
-      </NButton>
-      <NButton
-        size="small"
-        @click="exportFull"
-      >
-        导出全量配置
-      </NButton>
-      <NButton
-        size="small"
-        :loading="importing"
-        tag="label"
-      >
-        导入
-        <input
-          type="file"
-          accept="application/json"
-          style="display: none"
-          @change="onImportFileChange"
-        />
-      </NButton>
-      <NText depth="3"> wsUrl: {{ vts.wsUrl || '未设置' }} </NText>
-      <NText depth="3"> Token: {{ vts.authToken ? '已保存' : '无' }} </NText>
-    </NFlex>
-  </NCard>
+  <Card>
+    <CardHeader class="py-3 px-4">
+      <CardTitle class="text-sm font-semibold">导入 / 导出</CardTitle>
+    </CardHeader>
+    <CardContent class="px-4 pb-4 pt-0">
+      <div class="flex items-center gap-2 flex-wrap text-xs">
+        <Button
+          variant="outline"
+          @click="exportMinimal"
+        >
+          导出连接信息
+        </Button>
+        <Button
+          variant="outline"
+          @click="exportFull"
+        >
+          导出全量配置
+        </Button>
+        <label class="cursor-pointer">
+          <Button
+            variant="outline"
+            :disabled="importing"
+            as-child
+          >
+            <span>导入</span>
+          </Button>
+          <input
+            type="file"
+            accept="application/json"
+            style="display: none"
+            @change="onImportFileChange"
+          />
+        </label>
+        <span class="text-[var(--muted-foreground)]">wsUrl: {{ vts.wsUrl || '未设置' }}</span>
+        <span class="text-[var(--muted-foreground)]">Token: {{ vts.authToken ? '已保存' : '无' }}</span>
+      </div>
+    </CardContent>
+  </Card>
 
-  <NModal
-    v-model:show="showPreview"
-    preset="card"
-    title="导入预览"
-    style="width: 560px"
+  <Dialog
+    :open="showPreview"
+    @update:open="
+      (val) => {
+        if (!val) cancelImport()
+      }
+    "
   >
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NText
-        v-for="line in previewLines"
-        :key="line"
-        depth="3"
-      >
-        {{ line }}
-      </NText>
-      <NFlex
-        justify="end"
-        :size="8"
-      >
-        <NButton
+    <DialogContent class="max-w-md">
+      <DialogHeader>
+        <DialogTitle class="text-base font-semibold">导入预览</DialogTitle>
+      </DialogHeader>
+      <div class="flex flex-col gap-2 py-3">
+        <span
+          v-for="line in previewLines"
+          :key="line"
+          class="text-xs text-[var(--muted-foreground)]"
+        >
+          {{ line }}
+        </span>
+      </div>
+      <DialogFooter class="flex justify-end gap-2">
+        <Button
+          variant="outline"
           :disabled="importing"
           @click="cancelImport"
         >
           取消
-        </NButton>
-        <NButton
-          type="primary"
-          :loading="importing"
+        </Button>
+        <Button
+          :disabled="importing"
           @click="confirmImport"
         >
           确认导入
-        </NButton>
-      </NFlex>
-    </NFlex>
-  </NModal>
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>

@@ -5,15 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SettingQuestionBoxSaftyLevels } from './settingQuestionBoxSaftyLevels';
+import type { SettingQuestionBoxSaftyLevels } from './settingQuestionBoxSaftyLevels'
 
 export interface SettingQuestionBox {
-  allowUnregistedUser: boolean;
-  allowAnonymous: boolean;
-  saftyLevel: SettingQuestionBoxSaftyLevels;
-  allowImageUpload: boolean;
-  showPublicReplies: boolean;
+  allowUnregistedUser: boolean
+  allowAnonymous: boolean
+  saftyLevel: SettingQuestionBoxSaftyLevels
+  allowImageUpload: boolean
+  showPublicReplies: boolean
   /** @nullable */
-  defaultPublic?: boolean | null;
-  readonly publishByDefault: boolean;
+  defaultPublic?: boolean | null
+  readonly publishByDefault: boolean
+  reviewImages?: boolean
+  blockedTags?: number[] | null
 }

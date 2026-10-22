@@ -33,7 +33,6 @@ import {
   PlayCircleOutline,
   StatsChartOutline,
 } from '@vicons/ionicons5'
-import { NAvatar, NButton, NDropdown, NIcon, NScrollbar, NTooltip, useMessage } from 'naive-ui'
 import { computed, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
@@ -41,6 +40,16 @@ import type { AccountInfo } from '@/api/api-models'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const props = defineProps<{
@@ -434,169 +443,168 @@ async function go(name: string, query?: Record<string, string>) {
 
 <template>
   <aside
-    class="manage-sider"
+    class="h-full border-r border-border bg-card box-border flex flex-col overflow-hidden transition-[width] duration-200"
     :class="{ collapsed }"
     :style="{ width: collapsed ? `${siderCollapsedWidth}px` : `${siderWidth}px` }"
   >
-    <div class="manage-sider__top">
+    <div class="py-[9px] px-3 pb-1.5 flex flex-col gap-1.5">
       <WorkspaceSwitch
         block
         :collapsed="collapsed"
       />
 
-      <NDropdown
-        v-if="workspace === 'user' && biliAuth.biliAuth.id && !biliAuth.usesAccountIdentity"
-        trigger="click"
-        placement="bottom-start"
-        :options="biliAccountOptions"
-        @select="switchBiliAccount"
-      >
-        <NButton
-          class="identity-button"
-          secondary
-          block
-          :circle="collapsed"
-        >
-          <template #icon>
-            <NAvatar
-              :size="20"
-              round
+      <DropdownMenu v-if="workspace === 'user' && biliAuth.biliAuth.id && !biliAuth.usesAccountIdentity">
+        <DropdownMenuTrigger as-child>
+          <Button
+            variant="secondary"
+            class="h-[34px] w-full flex items-center justify-start gap-2 px-2"
+            :class="{ 'justify-center p-0 w-8.5': collapsed }"
+          >
+            <img
+              v-if="biliAuth.biliAuth.avatar"
               :src="biliAuth.biliAuth.avatar"
+              class="size-5 rounded-full object-cover shrink-0"
+              alt="avatar"
+            />
+            <span
+              v-if="!collapsed"
+              class="truncate text-xs font-normal"
+              >{{ biliAuth.biliAuth.name }}</span
             >
-              {{ biliAuth.biliAuth.name?.slice(0, 1) }}
-            </NAvatar>
-          </template>
-          <span
-            v-if="!collapsed"
-            class="identity-button__label"
-            >{{ biliAuth.biliAuth.name }}</span
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          align="start"
+          class="w-48"
+        >
+          <DropdownMenuItem
+            v-for="account in biliAuth.biliTokens"
+            :key="account.id"
+            :disabled="account.id === biliAuth.biliAuth.id"
+            @click="switchBiliAccount(String(account.id))"
           >
-        </NButton>
-      </NDropdown>
-      <NButton
+            {{ account.name || `UID ${account.uId}` }}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem @click="switchBiliAccount('add')"> 认证其他账号 </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <Button
         v-else-if="workspace === 'user' && biliAuth.biliAuth.id"
-        class="identity-button"
-        secondary
-        block
-        :circle="collapsed"
+        variant="secondary"
+        class="h-[34px] w-full flex items-center justify-start gap-2 px-2"
+        :class="{ 'justify-center p-0 w-8.5': collapsed }"
       >
-        <template #icon>
-          <NAvatar
-            :size="20"
-            round
-            :src="biliAuth.biliAuth.avatar"
-          >
-            {{ biliAuth.biliAuth.name?.slice(0, 1) }}
-          </NAvatar>
-        </template>
+        <img
+          v-if="biliAuth.biliAuth.avatar"
+          :src="biliAuth.biliAuth.avatar"
+          class="size-5 rounded-full object-cover shrink-0"
+          alt="avatar"
+        />
         <span
           v-if="!collapsed"
-          class="identity-button__label"
+          class="truncate text-xs font-normal"
           >{{ biliAuth.biliAuth.name }}</span
         >
-      </NButton>
+      </Button>
 
       <template v-if="workspace === 'streamer'">
-        <div class="manage-sider__top-row">
-          <NButton
-            class="sider-top-btn sider-top-btn--panel"
-            size="small"
-            secondary
-            :circle="collapsed"
+        <div class="flex items-center gap-1.5" :class="{ 'justify-center': collapsed }">
+          <Button
+            variant="secondary"
+            class="h-[34px]"
+            :class="{
+              'w-8.5 p-0 justify-center flex-none': collapsed,
+              'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
+            }"
             :title="collapsed ? '面板' : undefined"
             @click="go('manage-index')"
           >
-            <template #icon>
-              <component
-                :is="GridOutline"
-                class="sider-icon"
-              />
-            </template>
+            <component
+              :is="GridOutline"
+              class="size-[18px] shrink-0"
+            />
             <span
               v-if="!collapsed"
-              class="sider-top-label"
+              class="text-xs font-normal whitespace-nowrap"
               >面板</span
             >
-          </NButton>
+          </Button>
 
-          <NButton
+          <Button
             v-if="!collapsed"
-            class="sider-top-icon-btn"
-            size="small"
-            quaternary
-            circle
-            :title="collapsed ? '反馈' : '反馈'"
+            size="icon-sm"
+            variant="ghost"
+            class="h-[34px] w-8.5"
+            title="反馈"
             @click="go('manage-feedback')"
           >
-            <template #icon>
-              <component
-                :is="PersonFeedback24Filled"
-                class="sider-icon"
-              />
-            </template>
-          </NButton>
+            <component
+              :is="PersonFeedback24Filled"
+              class="size-[18px] shrink-0"
+            />
+          </Button>
         </div>
 
-        <div class="manage-sider__top-row sider-top-row--builder">
-          <NButton
-            class="sider-top-btn sider-top-btn--panel"
-            size="small"
-            type="primary"
-            secondary
-            strong
-            :circle="collapsed"
+        <div class="flex items-center gap-1.5" :class="{ 'justify-center': collapsed }">
+          <Button
+            variant="brand"
+            class="h-[34px]"
+            :class="{
+              'w-8.5 p-0 justify-center flex-none': collapsed,
+              'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
+            }"
             :title="collapsed ? '主页装修' : undefined"
             @click="go('manage-userPageBuilder')"
           >
-            <template #icon>
-              <component
-                :is="ColorPaletteOutline"
-                class="sider-icon"
-              />
-            </template>
+            <component
+              :is="ColorPaletteOutline"
+              class="size-[18px] shrink-0"
+            />
             <span
               v-if="!collapsed"
-              class="sider-btn-label"
+              class="text-xs font-normal whitespace-nowrap"
               >主页装修</span
             >
-          </NButton>
+          </Button>
 
-          <NButton
+          <Button
             v-if="!collapsed"
-            class="sider-top-icon-btn"
-            size="small"
-            quaternary
-            circle
+            size="icon-sm"
+            variant="ghost"
+            class="h-[34px] w-8.5"
             title="更换主页背景与主题"
             @click="go('manage-userPageBuilder', { action: 'theme' })"
           >
-            <template #icon>
-              <component
-                :is="ImageOutline"
-                class="sider-icon"
-              />
-            </template>
-          </NButton>
+            <component
+              :is="ImageOutline"
+              class="size-[18px] shrink-0"
+            />
+          </Button>
         </div>
       </template>
     </div>
 
-    <NScrollbar class="manage-sider__nav">
+    <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin">
       <nav
-        class="manage-sider__nav-inner"
-        :class="{ collapsed }"
+        class="py-1 px-2 pb-2.5"
+        :class="{ 'px-1.5': collapsed }"
       >
         <template
-          v-for="g in groups"
+          v-for="(g, gi) in groups"
           :key="g.key"
         >
-          <div class="nav-group">
+          <div class="py-1.5">
+            <div
+              v-if="collapsed && gi > 0"
+              class="h-px mx-5 my-1 bg-gradient-to-r from-transparent via-[rgba(127,127,127,0.18)] to-transparent"
+            />
             <div
               v-if="!collapsed"
-              class="nav-group__header"
+              class="flex-between gap-1.5 pt-0.5 px-1 pb-1.5"
             >
               <button
-                class="nav-group__toggle"
+                class="border-0 bg-transparent text-muted-foreground text-[11px] font-normal tracking-wider uppercase inline-flex items-center gap-1.5 cursor-pointer py-0.5 px-0"
                 type="button"
                 :disabled="g.key === 'group-user'"
                 @click="toggleGroup(g.key)"
@@ -604,142 +612,127 @@ async function go(name: string, query?: Record<string, string>) {
                 <span class="nav-group__label">{{ g.label }}</span>
                 <span
                   v-if="g.key !== 'group-user'"
-                  class="nav-group__chev"
-                  :class="{ open: isGroupExpanded(g.key) }"
+                  class="inline-block opacity-80 transition-transform duration-150"
+                  :class="isGroupExpanded(g.key) ? '-rotate-90' : 'rotate-90'"
                   >›</span
                 >
               </button>
 
-              <NTooltip
-                v-if="g.key === 'group-danmaku'"
-                placement="right"
-                :show-arrow="false"
-                trigger="hover"
-              >
-                <template #trigger>
-                  <button
-                    class="nav-group__info"
-                    type="button"
-                    :title="g.hint || '提示'"
-                  >
-                    <component
-                      :is="Info24Filled"
-                      class="nav-group__info-icon"
-                    />
-                  </button>
-                </template>
-                <div class="danmaku-tooltip">
-                  <div class="danmaku-tooltip__title">可用性警告</div>
-                  <div class="danmaku-tooltip__body">
-                    当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作（详见
-                    <a
-                      href="https://developer.chrome.com/blog/background_tabs/"
-                      target="_blank"
-                      rel="noreferrer"
-                      >此文章</a
-                    >）。 为避免遗漏事件，建议使用
-                    <a
-                      href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
-                      target="_blank"
-                      rel="noreferrer"
-                      >VtsuruEventFetcher</a
+              <TooltipProvider v-if="g.key === 'group-danmaku'">
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <button
+                      class="size-[22px] rounded-[7px] border border-border bg-transparent text-muted-foreground inline-flex-center cursor-pointer hover:bg-[rgba(127,127,127,0.08)]"
+                      type="button"
+                      :title="g.hint || '提示'"
                     >
-                    或尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。
-                    <div style="margin-top: 6px">
-                      <a
-                        href="https://support.google.com/chrome/answer/12929150?hl=zh-Hans#zippy=%2C%E5%BC%80%E5%90%AF%E6%88%96%E5%85%B3%E9%97%AD%E7%9C%81%E5%86%85%E5%AD%98%E6%A8%A1%E5%BC%8F%2C%E8%AE%A9%E7%89%B9%E5%AE%9A%E7%BD%91%E7%AB%99%E4%BF%9D%E6%8C%81%E6%B4%BB%E5%8A%A8%E7%8A%B6%E6%80%81"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Chrome: 让特定网站保持活动状态</a
-                      >
-                      ，
-                      <a
-                        href="https://support.microsoft.com/zh-cn/topic/%E4%BA%86%E8%A7%A3-microsoft-edge-%E4%B8%AD%E7%9A%84%E6%80%A7%E8%83%BD%E5%8A%9F%E8%83%BD-7b36f363-2119-448a-8de6-375cfd88ab25"
-                        target="_blank"
-                        rel="noreferrer"
-                        >Edge: 永远不想进入睡眠状态的网站</a
-                      >
+                      <component
+                        :is="Info24Filled"
+                        class="size-3.5"
+                      />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="right"
+                    class="max-w-xs text-xs p-3"
+                  >
+                    <div class="font-medium text-destructive mb-1">可用性警告</div>
+                    <div class="text-[11px] text-muted-foreground space-y-1">
+                      <div>
+                        当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作。
+                      </div>
+                      <div>建议尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。</div>
                     </div>
-                  </div>
-                </div>
-              </NTooltip>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
             <div
               v-show="collapsed || g.key === 'group-user' || isGroupExpanded(g.key)"
-              class="nav-group__items"
+              class="flex flex-col gap-0.5"
             >
               <div
                 v-for="item in g.items"
                 :key="item.key"
-                class="nav-item-row"
+                class="group/row"
               >
                 <RouterLink
                   v-if="!item.disabled && item.to"
                   :to="item.to"
-                  class="nav-item"
-                  :class="{ active: activeKey === item.key }"
+                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 no-underline text-foreground border border-transparent bg-transparent transition-colors box-border hover:bg-[rgba(127,127,127,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
+                  :class="{
+                    'bg-[rgba(127,127,127,0.12)] border-[rgba(127,127,127,0.18)]': activeKey === item.key,
+                    'p-0 justify-center': collapsed,
+                  }"
                   :title="collapsed ? item.label : undefined"
                   @click="(ev: any) => onClickNavItem(ev, item)"
                 >
                   <component
                     :is="item.icon"
-                    class="nav-item__icon"
+                    class="size-[18px] shrink-0"
                   />
                   <span
                     v-if="!collapsed"
-                    class="nav-item__label"
+                    class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
                     >{{ item.label }}</span
                   >
 
                   <button
                     v-if="!collapsed"
-                    class="nav-item__fav"
-                    :class="{ active: isFavorite(item.key) }"
+                    class="size-[22px] rounded-[7px] border border-[rgba(127,127,127,0.54)] bg-[rgba(127,127,127,0.04)] inline-flex-center cursor-pointer opacity-50 transition-opacity group-hover/row:opacity-100 group-hover/row:bg-[rgba(127,127,127,0.08)]"
+                    :class="{
+                      'opacity-100 bg-amber-500/25 border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                        isFavorite(item.key),
+                    }"
                     type="button"
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
-                    <NIcon
-                      class="nav-item__fav-icon"
-                      :class="{ active: isFavorite(item.key) }"
-                      :size="12"
-                      :component="Bookmark"
-                      :color="isFavorite(item.key) ? '#f59e0b' : '#777'"
+                    <component
+                      :is="Bookmark"
+                      class="nav-item__fav-icon w-3 h-3 transition-colors"
+                      :class="
+                        isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
+                      "
                     />
                   </button>
                 </RouterLink>
 
                 <div
                   v-else
-                  class="nav-item nav-item--disabled"
+                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 text-foreground border border-transparent bg-transparent box-border opacity-50 cursor-pointer hover:bg-[rgba(127,127,127,0.08)] hover:opacity-70"
+                  :class="{ 'p-0 justify-center': collapsed }"
                   :title="item.disabledReason || item.label"
                   role="button"
                   @click="onClickDisabledItem(item)"
                 >
                   <component
                     :is="item.icon"
-                    class="nav-item__icon"
+                    class="size-[18px] shrink-0"
                   />
                   <span
                     v-if="!collapsed"
-                    class="nav-item__label"
+                    class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
                     >{{ item.label }}</span
                   >
                   <button
                     v-if="!collapsed"
-                    class="nav-item__fav"
-                    :class="{ active: isFavorite(item.key) }"
+                    class="size-[22px] rounded-[7px] border border-[rgba(127,127,127,0.54)] bg-[rgba(127,127,127,0.04)] inline-flex-center cursor-pointer opacity-50 transition-opacity group-hover/row:opacity-100 group-hover/row:bg-[rgba(127,127,127,0.08)]"
+                    :class="{
+                      'opacity-100 bg-amber-500/25 border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                        isFavorite(item.key),
+                    }"
                     type="button"
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
-                    <NIcon
-                      class="nav-item__fav-icon"
-                      :class="{ active: isFavorite(item.key) }"
-                      :size="12"
-                      :component="isFavorite(item.key) ? Bookmark : BookmarkOutline"
-                      :color="isFavorite(item.key) ? '#f59e0b' : '#777'"
+                    <component
+                      :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
+                      class="nav-item__fav-icon w-3 h-3 transition-colors"
+                      :class="
+                        isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
+                      "
                     />
                   </button>
                 </div>
@@ -748,376 +741,31 @@ async function go(name: string, query?: Record<string, string>) {
           </div>
         </template>
       </nav>
-    </NScrollbar>
+    </div>
 
     <div
       v-if="!collapsed"
-      class="manage-sider__footer"
+      class="border-t border-border py-2.5 px-3 flex flex-col gap-1.5 items-center"
     >
-      <div class="footer-line">
+      <div class="text-xs text-muted-foreground text-center">
         有更多功能建议请
-        <NButton
-          text
-          type="primary"
-          size="tiny"
+        <button
+          type="button"
+          class="text-xs text-brand hover:underline cursor-pointer bg-transparent border-0 p-0 font-medium"
           @click="go('manage-feedback')"
         >
           反馈
-        </NButton>
+        </button>
       </div>
-      <div class="footer-line">
-        <NButton
-          text
-          type="primary"
-          size="tiny"
+      <div class="text-xs text-muted-foreground text-center">
+        <button
+          type="button"
+          class="text-xs text-brand hover:underline cursor-pointer bg-transparent border-0 p-0 font-medium"
           @click="go('about')"
         >
           关于本站
-        </NButton>
+        </button>
       </div>
     </div>
   </aside>
 </template>
-
-<style scoped>
-.manage-sider {
-  height: 100%;
-  border-right: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-surface);
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: width 180ms var(--vtsuru-bezier, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.manage-sider__top {
-  padding: 9px 12px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.identity-button {
-  justify-content: flex-start;
-}
-
-.identity-button__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 20px;
-}
-
-.manage-sider__top-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.manage-sider.collapsed .manage-sider__top-row {
-  justify-content: center;
-}
-
-.sider-top-btn {
-  height: 34px;
-  justify-content: flex-start;
-}
-
-.sider-top-btn--panel {
-  flex: 1;
-  min-width: 0;
-}
-
-.manage-sider.collapsed .sider-top-btn--panel {
-  flex: 0 0 auto;
-}
-
-.sider-top-icon-btn {
-  height: 34px;
-  width: 34px;
-  flex: 0 0 auto;
-}
-
-.manage-sider.collapsed .sider-top-icon-btn {
-  height: 32px;
-  width: 32px;
-}
-
-.manage-sider.collapsed .sider-top-btn {
-  height: 32px;
-  width: 32px;
-  padding: 0;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-.sider-top-btn :deep(.n-button__content) {
-  gap: 10px;
-}
-
-.manage-sider.collapsed .sider-top-btn :deep(.n-button__content) {
-  gap: 0;
-}
-
-.sider-icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-}
-
-.sider-top-label,
-.sider-btn-label {
-  font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-.manage-sider__nav {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.manage-sider__nav-inner {
-  padding: 4px 8px 10px;
-  transition: padding 180ms var(--vtsuru-bezier, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.manage-sider__nav-inner.collapsed {
-  padding: 4px 6px 10px;
-}
-
-.nav-group {
-  padding: 6px 0;
-}
-
-.manage-sider.collapsed .nav-group + .nav-group::before {
-  content: '';
-  display: block;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(127, 127, 127, 0.18), transparent);
-  margin: 5px 20px 3px;
-  border-radius: 1px;
-}
-
-.nav-group__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 2px 4px 6px;
-}
-
-.nav-group__toggle {
-  border: none;
-  background: transparent;
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  padding: 2px 0;
-}
-
-.nav-group__chev {
-  display: inline-block;
-  transform: rotate(90deg);
-  transition: transform 120ms ease;
-  opacity: 0.8;
-}
-
-.nav-group__chev.open {
-  transform: rotate(270deg);
-}
-
-.nav-group__info {
-  height: 22px;
-  width: 22px;
-  border-radius: 7px;
-  border: 1px solid var(--vtsuru-border);
-  background: transparent;
-  color: var(--vtsuru-fg-muted);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.nav-group__info:hover {
-  background: rgba(127, 127, 127, 0.08);
-}
-
-.nav-group__info-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.danmaku-tooltip {
-  width: 320px;
-  max-width: min(360px, 70vw);
-  padding: 10px 10px;
-  border-radius: 12px;
-}
-
-.danmaku-tooltip__title {
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.danmaku-tooltip__body {
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--vtsuru-fg);
-}
-
-.danmaku-tooltip__body a {
-  color: var(--vtsuru-primary);
-  text-decoration: none;
-}
-
-.danmaku-tooltip__body a:hover {
-  text-decoration: underline;
-}
-
-.nav-group__items {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.nav-item {
-  height: 34px;
-  border-radius: 10px;
-  padding: 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: var(--vtsuru-fg);
-  border: 1px solid transparent;
-  background: transparent;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
-  box-sizing: border-box;
-}
-
-.manage-sider.collapsed .nav-item {
-  padding: 0;
-  justify-content: center;
-}
-
-.nav-item:hover {
-  background: rgba(127, 127, 127, 0.08);
-}
-
-.nav-item:focus-visible {
-  outline: 2px solid rgba(127, 127, 127, 0.28);
-  outline-offset: 2px;
-}
-
-.nav-item.active {
-  background: rgba(127, 127, 127, 0.12);
-  border-color: rgba(127, 127, 127, 0.18);
-}
-
-.nav-item--disabled {
-  opacity: 0.5;
-  cursor: pointer;
-}
-
-.nav-item--disabled:hover {
-  background: rgba(127, 127, 127, 0.08);
-  opacity: 0.72;
-}
-
-.nav-item__icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-}
-
-.nav-item__label {
-  font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
-}
-
-.nav-item__fav {
-  height: 22px;
-  width: 22px;
-  border-radius: 7px;
-  border: 1px solid rgba(127, 127, 127, 0.541);
-  background: rgba(127, 127, 127, 0.04);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.5;
-  transition:
-    opacity 120ms ease,
-    background-color 120ms ease,
-    border-color 120ms ease;
-}
-
-.nav-item-row:hover .nav-item__fav,
-.nav-item__fav.active {
-  opacity: 1;
-}
-
-.nav-item-row:hover .nav-item__fav {
-  background: rgba(127, 127, 127, 0.08);
-  border-color: rgba(127, 127, 127, 0.25);
-}
-
-.nav-item__fav:hover {
-  background: rgba(127, 127, 127, 0.08);
-  border-color: rgba(127, 127, 127, 0.22);
-}
-
-.nav-item__fav.active {
-  background: rgba(245, 158, 11, 0.26);
-  border-color: rgba(245, 158, 11, 0.58);
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.26);
-}
-
-.nav-item__fav-icon {
-  font-size: 16px;
-  color: var(--vtsuru-fg-muted);
-  transition: color 120ms ease;
-}
-
-.nav-item__fav-icon.active {
-  color: var(--vtsuru-warning);
-}
-
-.nav-item__fav.active .nav-item__fav-icon {
-  color: rgb(245, 158, 11);
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.28));
-}
-
-.manage-sider__footer {
-  border-top: 1px solid var(--vtsuru-border);
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-}
-
-.footer-line {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  text-align: center;
-}
-</style>

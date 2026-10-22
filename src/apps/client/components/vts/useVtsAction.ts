@@ -1,4 +1,4 @@
-import { useMessage } from 'naive-ui'
+import { useMessage } from '@/shared/utils'
 
 export function useVtsAction() {
   const message = useMessage()

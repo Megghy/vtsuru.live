@@ -7,28 +7,15 @@ import {
   Delete24Regular,
   Edit24Regular,
   Folder24Regular,
-  Timer24Regular,
   MoreVertical24Regular,
   Open24Regular,
   Search24Regular,
   TableDismiss24Regular,
+  Timer24Regular,
   Video24Regular,
 } from '@vicons/fluent'
-import {
-  NButton,
-  NDropdown,
-  NEmpty,
-  NIcon,
-  NInput,
-  NProgress,
-  NSelect,
-  NSpin,
-  NTag,
-  NTime,
-  useDialog,
-  useMessage,
-} from 'naive-ui'
-import { computed, h, ref } from 'vue'
+import { format } from 'date-fns'
+import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
@@ -43,6 +30,30 @@ import {
 } from '@/api/generated/video-collect/video-collect'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { CURRENT_HOST } from '@/shared/config'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card } from '@/shared/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { useMessage } from '@/shared/utils'
 import { copyToClipboard } from '@/shared/utils'
 
 import VideoCollectFormModal from './VideoCollectFormModal.vue'
@@ -50,7 +61,6 @@ import VideoCollectFormModal from './VideoCollectFormModal.vue'
 type StatusFilter = 'all' | 'active' | 'finished'
 
 const message = useMessage()
-const dialog = useDialog()
 const router = useRouter()
 const accountInfo = useAccount()
 
@@ -62,6 +72,9 @@ const editModalVisible = ref(false)
 const currentEditingTable = ref<VideoCollectTable>()
 const keyword = ref('')
 const statusFilter = ref<StatusFilter>('all')
+
+const deleteModalVisible = ref(false)
+const tableToDelete = ref<VideoCollectTable | null>(null)
 
 const videoCollectUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '',
@@ -101,7 +114,7 @@ const editInitialValue = computed<VideoCollectCreateModel | undefined>(() => {
   }
 })
 
-await loadTables()
+void loadTables()
 
 function isActive(table: VideoCollectTable) {
   return !table.isFinish && table.endAt > Date.now()
@@ -138,9 +151,7 @@ async function loadTables() {
 async function createTable(model: VideoCollectCreateModel) {
   isCreating.value = true
   try {
-    const response = (await postApiVideoCollectCreate(
-      model as any,
-    )) as unknown as {
+    const response = (await postApiVideoCollectCreate(model as any)) as unknown as {
       code: number
       message?: string
       data: VideoCollectTable
@@ -210,268 +221,317 @@ async function toggleFinish(table: VideoCollectTable) {
   }
 }
 
-function confirmDelete(table: VideoCollectTable) {
-  dialog.warning({
-    title: '删除视频征集',
-    content: `确定删除“${table.name}”吗？此操作无法撤销。`,
-    positiveText: '删除',
-    negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
-        const response = await postApiVideoCollectDelete({ id: table.id })
-        if (response.code !== 200) throw new Error(response.message)
-        videoTables.value = videoTables.value.filter((t) => t.id !== table.id)
-        message.success('征集已删除')
-      } catch (error) {
-        console.error(error)
-        message.error(error instanceof Error ? error.message : '删除失败')
-      }
-    },
-  })
+function promptDelete(table: VideoCollectTable) {
+  tableToDelete.value = table
+  deleteModalVisible.value = true
 }
 
-function getRowDropdownOptions(table: VideoCollectTable) {
-  return [
-    {
-      label: '编辑规则',
-      key: 'edit',
-      icon: () => h(NIcon, null, { default: () => h(Edit24Regular) }),
-    },
-    {
-      label: isActive(table) ? '结束征集' : '重新开启',
-      key: 'toggle',
-      icon: () => h(NIcon, null, { default: () => h(TableDismiss24Regular) }),
-    },
-    { type: 'divider', key: 'divider' },
-    {
-      label: '删除征集',
-      key: 'delete',
-      icon: () => h(NIcon, { color: 'var(--vtsuru-error)' }, { default: () => h(Delete24Regular) }),
-    },
-  ]
-}
-
-function handleRowDropdown(key: string, table: VideoCollectTable) {
-  if (key === 'edit') openEditModal(table)
-  else if (key === 'toggle') toggleFinish(table)
-  else if (key === 'delete') confirmDelete(table)
+async function confirmDelete() {
+  if (!tableToDelete.value) return
+  const id = tableToDelete.value.id
+  try {
+    const response = await postApiVideoCollectDelete({ id })
+    if (response.code !== 200) throw new Error(response.message)
+    videoTables.value = videoTables.value.filter((t) => t.id !== id)
+    message.success('征集已删除')
+  } catch (error) {
+    console.error(error)
+    message.error(error instanceof Error ? error.message : '删除失败')
+  } finally {
+    deleteModalVisible.value = false
+    tableToDelete.value = null
+  }
 }
 </script>
 
 <template>
-  <div class="video-collect-manage">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
       title="视频征集"
       subtitle="征集活动管理与投稿审核"
       :function-type="FunctionTypes.VideoCollect"
-      :loading="isLoading"
       :links="[{ label: '公开展示页', value: videoCollectUrl }]"
     >
       <template #action>
-        <NButton
-          secondary
-          :loading="isLoading"
-          @click="loadTables"
-        >
-          <template #icon><NIcon :component="ArrowSync24Regular" /></template>
-          刷新
-        </NButton>
-        <NButton
-          type="primary"
-          @click="createModalVisible = true"
-        >
-          <template #icon><NIcon :component="Add20Regular" /></template>
-          新建征集
-        </NButton>
+        <div class="flex items-center gap-2">
+          <Button
+            variant="outline"
+            :loading="isLoading"
+            @click="loadTables"
+          >
+            <component
+              :is="ArrowSync24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
+            刷新
+          </Button>
+          <Button
+            variant="brand"
+            @click="createModalVisible = true"
+          >
+            <component
+              :is="Add20Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
+            新建征集
+          </Button>
+        </div>
       </template>
     </ManagePageHeader>
 
     <!-- Bento 概览看板 -->
-    <section
-      class="summary-bento-grid"
-      aria-label="视频征集概览"
-    >
-      <div
-        class="summary-card"
-        :class="{ 'is-active': statusFilter === 'all' }"
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <Card
+        class="p-3 cursor-pointer transition-all hover:border-brand/40"
+        :class="{ 'border-brand bg-brand-soft/20': statusFilter === 'all' }"
         @click="statusFilter = 'all'"
       >
-        <div class="summary-card__top">
-          <NIcon :component="Folder24Regular" />
+        <div class="flex items-center justify-between text-xs text-muted-foreground">
           <span>全部征集</span>
+          <component
+            :is="Folder24Regular"
+            class="h-4 w-4"
+          />
         </div>
-        <strong>{{ videoTables.length }}</strong>
-      </div>
+        <div class="text-2xl font-bold font-mono text-foreground mt-1">
+          {{ videoTables.length }}
+        </div>
+      </Card>
 
-      <div
-        class="summary-card is-active-card"
-        :class="{ 'is-active': statusFilter === 'active' }"
+      <Card
+        class="p-3 cursor-pointer transition-all hover:border-brand/40"
+        :class="{ 'border-brand bg-brand-soft/20': statusFilter === 'active' }"
         @click="statusFilter = 'active'"
       >
-        <div class="summary-card__top">
-          <NIcon :component="Timer24Regular" />
-          <span>进行中/未结束</span>
+        <div class="flex items-center justify-between text-xs text-muted-foreground">
+          <span>进行中 / 开放中</span>
+          <component
+            :is="Timer24Regular"
+            class="h-4 w-4 text-emerald-500"
+          />
         </div>
-        <strong>{{ activeTables.length }}</strong>
-      </div>
+        <div class="text-2xl font-bold font-mono text-emerald-500 mt-1">
+          {{ activeTables.length }}
+        </div>
+      </Card>
 
-      <div class="summary-card is-total-card">
-        <div class="summary-card__top">
-          <NIcon :component="Video24Regular" />
+      <Card class="p-3">
+        <div class="flex items-center justify-between text-xs text-muted-foreground">
           <span>累计征集视频</span>
+          <component
+            :is="Video24Regular"
+            class="h-4 w-4 text-brand"
+          />
         </div>
-        <strong>{{ totalVideoCount }}</strong>
-      </div>
-    </section>
+        <div class="text-2xl font-bold font-mono text-foreground mt-1">
+          {{ totalVideoCount }}
+        </div>
+      </Card>
+    </div>
 
     <!-- 工具栏 -->
-    <div class="collection-toolbar">
-      <NInput
-        v-model:value="keyword"
-        clearable
-        placeholder="搜索征集名称或说明..."
-        class="collection-search"
-      >
-        <template #prefix>
-          <NIcon :component="Search24Regular" />
-        </template>
-      </NInput>
-      <NSelect
-        v-model:value="statusFilter"
-        class="status-filter"
-        :options="[
-          { label: '全部状态', value: 'all' },
-          { label: '仅进行中/未结束', value: 'active' },
-          { label: '仅已结束', value: 'finished' },
-        ]"
+    <Card class="p-3 flex items-center justify-between flex-wrap gap-2.5">
+      <div class="relative w-72">
+        <component
+          :is="Search24Regular"
+          class="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground"
+        />
+        <Input
+          v-model="keyword"
+          placeholder="搜索征集名称或说明..."
+          class="pl-8"
+        />
+      </div>
+
+      <div class="w-40">
+        <Select
+          v-model="statusFilter"
+          default-value="all"
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all"> 全部状态 </SelectItem>
+            <SelectItem value="active"> 仅进行中 / 开放中 </SelectItem>
+            <SelectItem value="finished"> 仅已结束 </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+    </Card>
+
+    <!-- 列表区 -->
+    <div
+      v-if="isLoading && !videoTables.length"
+      class="space-y-3"
+    >
+      <Skeleton
+        v-for="i in 3"
+        :key="i"
+        class="h-24 rounded-lg"
       />
     </div>
 
-    <!-- 列表区 -->
-    <NSpin :show="isLoading">
-      <NEmpty
-        v-if="!isLoading && filteredTables.length === 0"
-        :description="videoTables.length === 0 ? '暂无视频征集活动' : '没有符合条件的征集'"
-        class="collection-empty"
-      >
-        <template
-          v-if="videoTables.length === 0"
-          #extra
-        >
-          <NButton
-            type="primary"
-            @click="createModalVisible = true"
-          >
-            立即创建第一个征集
-          </NButton>
-        </template>
-      </NEmpty>
-
+    <Card
+      v-else-if="!filteredTables.length"
+      class="p-12 text-center"
+    >
+      <div class="text-muted-foreground text-sm">
+        {{ videoTables.length === 0 ? '暂无视频征集活动' : '没有符合条件的征集' }}
+      </div>
       <div
-        v-else
-        class="collection-list"
+        v-if="videoTables.length === 0"
+        class="mt-3"
       >
-        <div
-          v-for="table in filteredTables"
-          :key="table.id"
-          class="collection-card"
-          @click="router.push({ name: 'manage-videoCollect-Detail', params: { id: table.id } })"
+        <Button
+          size="xs"
+          variant="brand"
+          @click="createModalVisible = true"
         >
-          <div class="collection-main">
-            <div class="collection-title-row">
-              <NTag
-                size="small"
-                :type="
-                  tableStatus(table) === '进行中' ? 'success' : tableStatus(table) === '未开始' ? 'info' : 'default'
-                "
-                :bordered="false"
-              >
-                {{ tableStatus(table) }}
-              </NTag>
-              <strong
-                class="collection-title"
-                :title="table.name"
-              >
-                {{ table.name }}
-              </strong>
-            </div>
-            <p class="collection-description">
-              {{ table.description || '未填写征集说明' }}
-            </p>
-          </div>
+          立即创建第一个征集
+        </Button>
+      </div>
+    </Card>
 
-          <div class="collection-deadline">
-            <span class="collection-meta-label">
+    <div
+      v-else
+      class="space-y-2.5"
+    >
+      <div
+        v-for="table in filteredTables"
+        :key="table.id"
+        class="p-3 rounded-lg border border-border bg-card/60 hover:bg-muted/40 cursor-pointer transition-colors flex items-center justify-between flex-wrap gap-3"
+        @click="router.push({ name: 'manage-videoCollect-Detail', params: { id: table.id } })"
+      >
+        <!-- 主体信息 -->
+        <div class="min-w-0 flex-1 space-y-1">
+          <div class="flex items-center gap-2">
+            <Badge
+              :variant="
+                tableStatus(table) === '进行中' ? 'secondary' : tableStatus(table) === '未开始' ? 'outline' : 'default'
+              "
+              class="text-[10px] px-1.5 py-0 h-4"
+            >
+              {{ tableStatus(table) }}
+            </Badge>
+            <strong
+              class="text-sm font-semibold truncate text-foreground hover:text-brand transition-colors"
+              :title="table.name"
+            >
+              {{ table.name }}
+            </strong>
+          </div>
+          <p
+            class="text-xs text-muted-foreground line-clamp-1"
+            :title="table.description"
+          >
+            {{ table.description || '未填写征集说明' }}
+          </p>
+        </div>
+
+        <!-- 时间与进度 -->
+        <div class="flex items-center gap-4 sm:gap-6 text-xs text-muted-foreground shrink-0">
+          <div>
+            <div class="text-[10px]">
               {{ tableStatus(table) === '未开始' ? '开放时间' : '截止时间' }}
-            </span>
-            <NTime
-              :time="tableStatus(table) === '未开始' ? table.startAt : table.endAt"
-              format="yyyy-MM-dd HH:mm"
-              class="deadline-time"
-            />
-          </div>
-
-          <div class="collection-capacity">
-            <div class="collection-capacity-label">
-              <span>名额占用</span>
-              <strong>{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
             </div>
-            <NProgress
-              type="line"
-              :percentage="capacityPercentage(table)"
-              :height="5"
-              :border-radius="3"
-              :show-indicator="false"
-              :status="table.videoCount >= table.maxVideoCount ? 'success' : 'default'"
-            />
+            <div class="font-mono text-xs text-foreground mt-0.5">
+              {{ format(tableStatus(table) === '未开始' ? table.startAt : table.endAt, 'yyyy-MM-dd HH:mm') }}
+            </div>
           </div>
 
-          <!-- 行内快捷操作区 -->
+          <div class="w-28 space-y-1">
+            <div class="flex items-center justify-between text-[10px]">
+              <span>名额占用</span>
+              <strong class="font-mono text-foreground">{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
+            </div>
+            <div class="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+              <div
+                class="h-full bg-brand transition-all rounded-full"
+                :style="{ width: `${capacityPercentage(table)}%` }"
+              />
+            </div>
+          </div>
+
+          <!-- 行内操作 -->
           <div
-            class="collection-row-actions"
+            class="flex items-center gap-1"
             @click.stop
           >
-            <NButton
-              size="small"
-              secondary
+            <Button
+              size="xs"
+              variant="outline"
               title="复制投稿页面链接"
               @click.stop="copyShareLink(table)"
             >
-              <template #icon><NIcon :component="Copy24Regular" /></template>
-              复制链接
-            </NButton>
-            <NButton
-              size="small"
-              secondary
+              <component
+                :is="Copy24Regular"
+                class="h-3.5 w-3.5 mr-1"
+              />
+              链接
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
               title="查看展示结果页"
               @click.stop="openResultPage(table)"
             >
-              <template #icon><NIcon :component="Open24Regular" /></template>
-              结果页
-            </NButton>
-            <NDropdown
-              trigger="click"
-              :options="getRowDropdownOptions(table)"
-              @select="handleRowDropdown($event, table)"
-            >
-              <NButton
-                size="small"
-                secondary
-                circle
-                title="更多操作"
-                @click.stop
-              >
-                <template #icon><NIcon :component="MoreVertical24Regular" /></template>
-              </NButton>
-            </NDropdown>
-            <NIcon
-              :component="ArrowRight24Regular"
-              class="collection-arrow"
+              <component
+                :is="Open24Regular"
+                class="h-3.5 w-3.5 mr-1"
+              />
+              结果
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                >
+                  <component
+                    :is="MoreVertical24Regular"
+                    class="h-3.5 w-3.5"
+                  />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem @click="openEditModal(table)">
+                  <component
+                    :is="Edit24Regular"
+                    class="h-3.5 w-3.5 mr-1.5"
+                  />
+                  编辑规则
+                </DropdownMenuItem>
+                <DropdownMenuItem @click="toggleFinish(table)">
+                  <component
+                    :is="TableDismiss24Regular"
+                    class="h-3.5 w-3.5 mr-1.5"
+                  />
+                  {{ isActive(table) ? '结束征集' : '重新开启' }}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  class="text-destructive"
+                  @click="promptDelete(table)"
+                >
+                  <component
+                    :is="Delete24Regular"
+                    class="h-3.5 w-3.5 mr-1.5"
+                  />
+                  删除征集
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <component
+              :is="ArrowRight24Regular"
+              class="h-4 w-4 text-muted-foreground ml-1"
             />
           </div>
         </div>
       </div>
-    </NSpin>
+    </div>
 
     <!-- 新建弹窗 -->
     <VideoCollectFormModal
@@ -489,222 +549,24 @@ function handleRowDropdown(key: string, table: VideoCollectTable) {
       :loading="isCreating"
       @submit="updateTable"
     />
+
+    <!-- 删除确认对话框 -->
+    <AlertDialog
+      :open="deleteModalVisible"
+      @update:open="(val) => (deleteModalVisible = val)"
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>删除视频征集</AlertDialogTitle>
+          <AlertDialogDescription class="text-xs">
+            确定删除“{{ tableToDelete?.name }}”吗？此操作无法撤销。
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel @click="deleteModalVisible = false"> 取消 </AlertDialogCancel>
+          <AlertDialogAction @click="confirmDelete"> 确定删除 </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </div>
 </template>
-
-<style scoped>
-.video-collect-manage {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  color: var(--vtsuru-fg);
-}
-
-/* Bento 概览看板 */
-.summary-bento-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.summary-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 18px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.16s ease;
-  color: var(--vtsuru-fg);
-}
-
-.summary-card:hover {
-  transform: translateY(-1px);
-  border-color: color-mix(in srgb, var(--vtsuru-brand) 50%, var(--vtsuru-border));
-}
-
-.summary-card.is-active {
-  border-color: var(--vtsuru-brand);
-  background: color-mix(in srgb, var(--vtsuru-brand) 4%, var(--vtsuru-bg-elevated));
-}
-
-.summary-card__top {
-  display: inline-flex;
-  gap: 6px;
-  align-items: center;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.summary-card strong {
-  color: var(--vtsuru-fg);
-  font-size: 22px;
-  line-height: 1.15;
-}
-
-.summary-card.is-active-card .summary-card__top {
-  color: #10b981;
-}
-
-.summary-card.is-total-card {
-  cursor: default;
-}
-
-.summary-card.is-total-card:hover {
-  transform: none;
-  border-color: var(--vtsuru-border);
-}
-
-.collection-toolbar {
-  display: flex;
-  gap: 10px;
-}
-
-.collection-search {
-  width: min(360px, 100%);
-}
-
-.status-filter {
-  width: 160px;
-}
-
-.collection-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.collection-card {
-  display: grid;
-  grid-template-columns: minmax(220px, 1.6fr) minmax(140px, 0.7fr) minmax(150px, 0.8fr) auto;
-  gap: 20px;
-  align-items: center;
-  width: 100%;
-  padding: 14px 16px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  box-sizing: border-box;
-  color: var(--vtsuru-fg);
-}
-
-.collection-card:hover {
-  border-color: color-mix(in srgb, var(--vtsuru-brand) 60%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-brand) 2%, var(--vtsuru-bg-elevated));
-}
-
-.collection-main,
-.collection-capacity {
-  min-width: 0;
-}
-
-.collection-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.collection-title {
-  overflow: hidden;
-  font-size: 15px;
-  color: var(--vtsuru-fg);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.collection-description {
-  overflow: hidden;
-  margin: 6px 0 0;
-  color: var(--vtsuru-fg-muted);
-  font-size: 13px;
-  line-height: 1.4;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.collection-deadline {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 12px;
-}
-
-.collection-meta-label {
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
-}
-
-.deadline-time {
-  color: var(--vtsuru-fg);
-  font-weight: 500;
-}
-
-.collection-capacity-label {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 6px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.collection-capacity-label strong {
-  color: var(--vtsuru-fg);
-  font-weight: 600;
-}
-
-.collection-row-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.collection-arrow {
-  color: var(--vtsuru-fg-muted);
-  font-size: 18px;
-  margin-left: 4px;
-}
-
-.collection-empty {
-  padding: 64px 0;
-}
-
-@media (max-width: 880px) {
-  .collection-card {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 12px;
-  }
-
-  .collection-deadline {
-    flex-direction: row;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .collection-row-actions {
-    justify-content: flex-end;
-    border-top: 1px dashed var(--vtsuru-border);
-    padding-top: 10px;
-  }
-}
-
-@media (max-width: 540px) {
-  .summary-bento-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .collection-toolbar {
-    flex-direction: column;
-  }
-
-  .collection-search,
-  .status-filter {
-    width: 100%;
-  }
-}
-</style>

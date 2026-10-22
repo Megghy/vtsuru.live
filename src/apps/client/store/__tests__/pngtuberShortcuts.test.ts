@@ -63,18 +63,44 @@ describe('shortcut ownership and expression semantics', () => {
   })
 })
 
-it.each(['hold', 'timed', 'toggle'] as const)('handles rapid %s press/release cycles without OS repeat', async (mode) => {
-  let current = 'original'
-  const control = vi.fn(async (id: string, _duration: number) => { current = id })
-  const hotkeys = createExpressionHotkeys({ current: () => current, enabled: () => true, control, onError: vi.fn() })
-  const handler = hotkeys.bind({ ...DEFAULT_PNGTUBER_STATE.expressions[0], id: 'happy', hotkey: 'KeyA', hotkeyMode: mode, durationMs: 1200 })
-  for (let i = 0; i < 2; i++) {
-    handler({ state: 'Pressed', id: 1, shortcut: 'KeyA' })
-    handler({ state: 'Pressed', id: 1, shortcut: 'KeyA' })
-    handler({ state: 'Released', id: 1, shortcut: 'KeyA' })
-  }
-  await hotkeys.release()
-  expect(control.mock.calls).toEqual(mode === 'hold'
-    ? [['happy', 0], ['original', 0], ['happy', 0], ['original', 0]]
-    : mode === 'timed' ? [['happy', 1200], ['happy', 1200]] : [['happy', 0], ['', 0]])
-})
+it.each(['hold', 'timed', 'toggle'] as const)(
+  'handles rapid %s press/release cycles without OS repeat',
+  async (mode) => {
+    let current = 'original'
+    const control = vi.fn(async (id: string, _duration: number) => {
+      current = id
+    })
+    const hotkeys = createExpressionHotkeys({ current: () => current, enabled: () => true, control, onError: vi.fn() })
+    const handler = hotkeys.bind({
+      ...DEFAULT_PNGTUBER_STATE.expressions[0],
+      id: 'happy',
+      hotkey: 'KeyA',
+      hotkeyMode: mode,
+      durationMs: 1200,
+    })
+    for (let i = 0; i < 2; i++) {
+      handler({ state: 'Pressed', id: 1, shortcut: 'KeyA' })
+      handler({ state: 'Pressed', id: 1, shortcut: 'KeyA' })
+      handler({ state: 'Released', id: 1, shortcut: 'KeyA' })
+    }
+    await hotkeys.release()
+    expect(control.mock.calls).toEqual(
+      mode === 'hold'
+        ? [
+            ['happy', 0],
+            ['original', 0],
+            ['happy', 0],
+            ['original', 0],
+          ]
+        : mode === 'timed'
+          ? [
+              ['happy', 1200],
+              ['happy', 1200],
+            ]
+          : [
+              ['happy', 0],
+              ['', 0],
+            ],
+    )
+  },
+)

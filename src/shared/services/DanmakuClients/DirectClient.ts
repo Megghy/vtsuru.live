@@ -88,7 +88,7 @@ export default class DirectClient extends BaseDanmakuClient {
       info,
       {
         type: EventDataTypes.Message,
-        uname: info[2][1],
+        uname: info[2][1] || user?.base?.name || '',
         uid,
         msg: info[1],
         price: 0,
@@ -236,7 +236,7 @@ export default class DirectClient extends BaseDanmakuClient {
     this.emitInteraction(
       {
         uid: data.uid,
-        uname: data.uname,
+        uname: data.uname || data.uinfo?.base?.name || '',
         msgType: data.msg_type,
         timestamp: data.timestamp,
         privilegeType: data.privilege_type,
@@ -289,7 +289,7 @@ export default class DirectClient extends BaseDanmakuClient {
       data,
       {
         type: EventDataTypes.Like,
-        uname: data.uname,
+        uname: data.uname || data.uinfo?.base?.name || '',
         uid: data.uid,
         msg: '为直播间点赞',
         price: 0,

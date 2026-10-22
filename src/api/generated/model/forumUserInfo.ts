@@ -7,10 +7,10 @@
  */
 
 export interface ForumUserInfo {
-  isAdmin: boolean;
-  name: string;
-  id: number;
-  isBiliAuthed: boolean;
+  isAdmin: boolean
+  name: string
+  id: number
+  isBiliAuthed: boolean
   /** @nullable */
-  faceUrl?: string | null;
+  faceUrl?: string | null
 }

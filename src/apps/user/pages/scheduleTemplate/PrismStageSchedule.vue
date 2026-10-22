@@ -94,95 +94,95 @@ defineExpose({ Config, DefaultConfig })
         :class="{ 'has-background': effectiveConfig.backgroundFile[0]?.path }"
         :style="scheduleStyle"
       >
-      <div
-        class="paper-grain"
-        aria-hidden="true"
-      />
-      <header class="stage-head">
-        <div class="stage-title">
-          <p class="stage-eyebrow">七曜和纸 · 物候历</p>
-          <h2 class="stage-title__kanji">{{ effectiveConfig.heading }}</h2>
-          <p class="stage-title__meta">{{ streamerName }} · {{ weekLabel }}</p>
-        </div>
-        <div class="stage-index">
-          <div
-            class="stage-seal"
-            aria-hidden="true"
-          >
-            暦
-          </div>
-          <div class="stage-count">
-            <strong>{{ String(eventCount).padStart(2, '0') }}</strong
-            ><span>场 · W{{ String(currentWeek?.week || '--').padStart(2, '0') }}</span>
-          </div>
-        </div>
-      </header>
-
-      <div
-        class="lunar-rail"
-        aria-hidden="true"
-      >
-        <svg
-          viewBox="0 0 1000 54"
-          preserveAspectRatio="none"
-        >
-          <path d="M 0 40 Q 500 4 1000 40 Q 500 8 0 40 Z" />
-        </svg>
-        <span class="lunar-moon lunar-moon--new" /><span class="lunar-moon lunar-moon--half" /><span
-          class="lunar-moon lunar-moon--full"
+        <div
+          class="paper-grain"
+          aria-hidden="true"
         />
-      </div>
-
-      <ol class="stage-days schedule-day-stagger">
-        <li
-          v-for="(day, dayIndex) in days"
-          :key="day.english"
-          class="stage-day"
-          :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
-          :style="{ '--day-index': dayIndex }"
-        >
-          <div class="stage-day__marker">
-            <span>{{ day.shortLabel }}</span
-            ><b>{{ String(dayIndex + 1).padStart(2, '0') }}</b>
+        <header class="stage-head">
+          <div class="stage-title">
+            <p class="stage-eyebrow">七曜和纸 · 物候历</p>
+            <h2 class="stage-title__kanji">{{ effectiveConfig.heading }}</h2>
+            <p class="stage-title__meta">{{ streamerName }} · {{ weekLabel }}</p>
           </div>
-          <div class="stage-day__identity">
-            <strong>{{ day.label }}</strong
-            ><time>{{ day.date }} · {{ day.english }}</time>
-          </div>
-          <div
-            v-if="day.items.length"
-            class="stage-day__events"
-          >
-            <article
-              v-for="(item, itemIndex) in day.items"
-              :key="item.id || itemIndex"
-              class="stage-event"
-              :data-type="eventType(item.tag)"
+          <div class="stage-index">
+            <div
+              class="stage-seal"
+              aria-hidden="true"
             >
-              <time>{{ item.time || '待定' }}</time>
-              <div class="stage-event__copy">
-                <strong>{{ item.title || '未命名直播' }}</strong
-                ><span v-if="item.tag">{{ item.tag }}</span>
-              </div>
-            </article>
+              暦
+            </div>
+            <div class="stage-count">
+              <strong>{{ String(eventCount).padStart(2, '0') }}</strong
+              ><span>场 · W{{ String(currentWeek?.week || '--').padStart(2, '0') }}</span>
+            </div>
           </div>
-          <span
-            v-else
-            class="stage-day__rest"
-            >留白 · 无排期</span
-          >
-          <span
-            v-if="day.isToday"
-            class="stage-day__live"
-            >今日</span
-          >
-        </li>
-      </ol>
+        </header>
 
-      <footer class="stage-foot">
-        <span>七曜 · {{ streamerName }}</span
-        ><span>愿每一次相逢，都有好天气</span>
-      </footer>
+        <div
+          class="lunar-rail"
+          aria-hidden="true"
+        >
+          <svg
+            viewBox="0 0 1000 54"
+            preserveAspectRatio="none"
+          >
+            <path d="M 0 40 Q 500 4 1000 40 Q 500 8 0 40 Z" />
+          </svg>
+          <span class="lunar-moon lunar-moon--new" /><span class="lunar-moon lunar-moon--half" /><span
+            class="lunar-moon lunar-moon--full"
+          />
+        </div>
+
+        <ol class="stage-days schedule-day-stagger">
+          <li
+            v-for="(day, dayIndex) in days"
+            :key="day.english"
+            class="stage-day"
+            :class="{ 'is-today': day.isToday, 'is-rest': !day.items.length }"
+            :style="{ '--day-index': dayIndex }"
+          >
+            <div class="stage-day__marker">
+              <span>{{ day.shortLabel }}</span
+              ><b>{{ String(dayIndex + 1).padStart(2, '0') }}</b>
+            </div>
+            <div class="stage-day__identity">
+              <strong>{{ day.label }}</strong
+              ><time>{{ day.date }} · {{ day.english }}</time>
+            </div>
+            <div
+              v-if="day.items.length"
+              class="stage-day__events"
+            >
+              <article
+                v-for="(item, itemIndex) in day.items"
+                :key="item.id || itemIndex"
+                class="stage-event"
+                :data-type="eventType(item.tag)"
+              >
+                <time>{{ item.time || '待定' }}</time>
+                <div class="stage-event__copy">
+                  <strong>{{ item.title || '未命名直播' }}</strong
+                  ><span v-if="item.tag">{{ item.tag }}</span>
+                </div>
+              </article>
+            </div>
+            <span
+              v-else
+              class="stage-day__rest"
+              >留白 · 无排期</span
+            >
+            <span
+              v-if="day.isToday"
+              class="stage-day__live"
+              >今日</span
+            >
+          </li>
+        </ol>
+
+        <footer class="stage-foot">
+          <span>七曜 · {{ streamerName }}</span
+          ><span>愿每一次相逢，都有好天气</span>
+        </footer>
       </div>
     </Transition>
   </section>

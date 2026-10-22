@@ -1,4 +1,3 @@
-import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
@@ -180,10 +179,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
 
   async function GetSpecificPoint(id: number) {
     try {
-      const data = await getApiPointUserGetPoint(
-        { id },
-        { headers: Object.fromEntries(await getBiliAuthHeaders()) },
-      )
+      const data = await getApiPointUserGetPoint({ id }, { headers: Object.fromEntries(await getBiliAuthHeaders()) })
       if (data.code == 200) {
         return data.data
       } else {
@@ -195,7 +191,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     return null
   }
 
-  async function GetGoods(id: number | undefined = undefined, message?: MessageApiInjection) {
+  async function GetGoods(id: number | undefined = undefined, message?: any) {
     if (!id) {
       return []
     }

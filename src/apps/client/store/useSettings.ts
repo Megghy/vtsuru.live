@@ -1,4 +1,4 @@
-import { useTauriStore } from './useTauriStore'
+import { persistedSetJson, usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 
 export type NotificationType = 'question-box' | 'danmaku' | 'goods-buy' | 'message-failed' | 'live-danmaku-failed'
 export interface NotificationSettings {
@@ -40,7 +40,6 @@ export interface VTsuruClientSettings {
 }
 
 export const useSettings = defineStore('settings', () => {
-  const store = useTauriStore().getTarget<VTsuruClientSettings>('settings')
   const defaultSettings: VTsuruClientSettings = {
     useDanmakuClientType: 'openlive',
     fallbackToOpenLive: true,
@@ -76,30 +75,27 @@ export const useSettings = defineStore('settings', () => {
       lastBackupFile: null,
     },
   }
-  const settings = ref<VTsuruClientSettings>(Object.assign({}, defaultSettings))
+  const settings = usePersistedStorage<VTsuruClientSettings>('settings', defaultSettings, {
+    mergeDefaults: (stored, defaults) => ({
+      ...defaults,
+      ...stored,
+      notificationSettings: {
+        ...defaults.notificationSettings,
+        ...stored.notificationSettings,
+        enableTypes: stored.notificationSettings?.enableTypes ?? defaults.notificationSettings.enableTypes,
+      },
+      backup: {
+        ...defaults.backup,
+        ...stored.backup,
+      },
+    }),
+  })
 
   async function init() {
-    settings.value = (await store.get()) || Object.assign({}, defaultSettings)
-    settings.value.notificationSettings ??= defaultSettings.notificationSettings
-    settings.value.notificationSettings.enableTypes ??= ['question-box', 'danmaku', 'message-failed']
-    // 初始化消息队列间隔设置
-    settings.value.danmakuInterval ??= defaultSettings.danmakuInterval
-    settings.value.pmInterval ??= defaultSettings.pmInterval
-    // 初始化 EventFetcher 开关
-    settings.value.enableEventFetcher ??= defaultSettings.enableEventFetcher
-    settings.value.enableBotAccount ??= defaultSettings.enableBotAccount
-    settings.value.botAccountFallbackToMain ??= defaultSettings.botAccountFallbackToMain
-    settings.value.backup ??= Object.assign({}, defaultSettings.backup)
-    settings.value.backup.directory ??= defaultSettings.backup.directory
-    settings.value.backup.scheduleEnabled ??= defaultSettings.backup.scheduleEnabled
-    settings.value.backup.presetHours ??= defaultSettings.backup.presetHours
-    settings.value.backup.customHours ??= defaultSettings.backup.customHours
-    settings.value.backup.keepCount ??= defaultSettings.backup.keepCount
-    settings.value.backup.lastBackupAt ??= defaultSettings.backup.lastBackupAt
-    settings.value.backup.lastBackupFile ??= defaultSettings.backup.lastBackupFile
+    await whenPersistedReady(settings)
   }
   async function save() {
-    await store.set(settings.value)
+    await persistedSetJson('settings', settings.value)
   }
 
   return { init, save, settings }

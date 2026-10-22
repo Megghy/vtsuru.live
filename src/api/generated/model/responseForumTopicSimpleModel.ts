@@ -5,24 +5,24 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumForumSectionData } from './forumForumSectionData';
-import type { ForumUserInfo } from './forumUserInfo';
+import type { ForumForumSectionData } from './forumForumSectionData'
+import type { ForumUserInfo } from './forumUserInfo'
 
 export interface ResponseForumTopicSimpleModel {
-  user: ForumUserInfo;
-  latestRepliedBy?: ForumUserInfo;
+  user: ForumUserInfo
+  latestRepliedBy?: ForumUserInfo
   /** @nullable */
-  repliedAt?: number | null;
-  id: number;
-  title: string;
-  createAt: number;
-  likeCount: number;
-  viewCount: number;
-  commentCount: number;
-  section?: ForumForumSectionData;
-  sampleLikedBy: number[];
-  isLiked: boolean;
-  isPinned: boolean;
-  isLocked: boolean;
-  isDeleted: boolean;
+  repliedAt?: number | null
+  id: number
+  title: string
+  createAt: number
+  likeCount: number
+  viewCount: number
+  commentCount: number
+  section?: ForumForumSectionData
+  sampleLikedBy: number[]
+  isLiked: boolean
+  isPinned: boolean
+  isLocked: boolean
+  isDeleted: boolean
 }

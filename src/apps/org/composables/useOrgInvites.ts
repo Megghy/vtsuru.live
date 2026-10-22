@@ -1,4 +1,3 @@
-import { useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import {
@@ -9,8 +8,9 @@ import {
   postApiOrgOrgIdInvitesStreamer,
 } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
+import { toast } from '@/shared/utils'
 
-import type { OrgInviteMemberListItem, OrgInviteResponseModel, OrgInviteStreamerListItem } from '../types'
+import type { OrgInviteMemberListItem, OrgInviteStreamerListItem } from '../types'
 import type { OrgContext } from './useOrgContext'
 
 type InviteKind = 'member' | 'streamer'
@@ -27,7 +27,6 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
   ctx: OrgContext,
   kind: InviteKind,
 ) {
-  const message = useMessage()
   const invites = ref<T[]>([])
   const loading = ref(false)
   const creating = ref(false)
@@ -44,7 +43,7 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
         '加载邀请失败',
       )
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载邀请失败')
+      toast.error(err instanceof Error ? err.message : '加载邀请失败')
     } finally {
       loading.value = false
     }
@@ -63,7 +62,7 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
       await load()
       return data.joinUrl
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '生成邀请失败')
+      toast.error(err instanceof Error ? err.message : '生成邀请失败')
     } finally {
       creating.value = false
     }
@@ -79,10 +78,10 @@ export function useOrgInvites<T extends OrgInviteMemberListItem | OrgInviteStrea
         })) as any,
         '撤销失败',
       )
-      message.success('已撤销邀请')
+      toast.success('已撤销邀请')
       await load()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '撤销失败')
+      toast.error(err instanceof Error ? err.message : '撤销失败')
     }
   }
 

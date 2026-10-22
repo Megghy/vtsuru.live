@@ -6,10 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type SettingQuestionDisplayQuestionDisplayImageLayout = typeof SettingQuestionDisplayQuestionDisplayImageLayout[keyof typeof SettingQuestionDisplayQuestionDisplayImageLayout];
-
+export type SettingQuestionDisplayQuestionDisplayImageLayout =
+  (typeof SettingQuestionDisplayQuestionDisplayImageLayout)[keyof typeof SettingQuestionDisplayQuestionDisplayImageLayout]
 
 export const SettingQuestionDisplayQuestionDisplayImageLayout = {
   NUMBER_0: 0,
   NUMBER_1: 1,
-} as const;
+} as const

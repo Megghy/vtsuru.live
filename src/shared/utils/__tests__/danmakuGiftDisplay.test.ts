@@ -2,11 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { EventDataTypes } from '@/api/api-models'
 
-import {
-  formatDanmakuPrice,
-  getDanmakuGiftDisplayMeta,
-  getGiftPaymentDisplayMeta,
-} from '../danmakuGiftDisplay'
+import { formatDanmakuPrice, getDanmakuGiftDisplayMeta, getGiftPaymentDisplayMeta } from '../danmakuGiftDisplay'
 
 describe('formatDanmakuPrice', () => {
   it('formats finite numbers and drops invalid values', () => {

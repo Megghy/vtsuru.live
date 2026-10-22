@@ -3,20 +3,18 @@ import {
   ArrowClockwise24Regular,
   ArrowDown24Regular,
   ArrowTrending24Regular,
-  ArrowUpRight24Regular,
   CalendarClock24Regular,
   CalendarLtr24Regular,
   ChatMultiple24Regular,
-  Clock24Regular,
+  ChevronDown24Regular,
+  ChevronUp24Regular,
   DataTrending24Regular,
   Grid24Regular,
-  Heart24Regular,
   MoneyHand24Regular,
   People24Regular,
   Sparkle24Regular,
   Star24Regular,
   Table24Regular,
-  Tag24Regular,
   Timer24Regular,
   Trophy24Regular,
   Wallet24Regular,
@@ -34,40 +32,10 @@ import {
 } from 'echarts/components'
 import * as echarts from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
-import {
-  NButton,
-  NButtonGroup,
-  NCard,
-  NCheckbox,
-  NCheckboxGroup,
-  NCollapse,
-  NCollapseItem,
-  NDatePicker,
-  NDescriptions,
-  NDescriptionsItem,
-  NEmpty,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NNumberAnimation,
-  NProgress,
-  NSkeleton,
-  NSwitch,
-  NTable,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
 import { storeToRefs } from 'pinia'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import EventFetcherAlert from '@/apps/manage/components/event-fetcher/EventFetcherAlert.vue'
+import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import {
   computeAreaStatsFromSessions,
@@ -83,11 +51,21 @@ import {
   type AnalyzeOfflineEventItem,
   type AnalyzeRangeSummary,
   type AnalyzeSessionItem,
-  type AnalyzeTopUser,
-  type BackendAnalyzeData,
 } from '@/apps/manage/composables/analyzeRange'
-import { useAnalyzeStore } from '@/apps/manage/composables/useAnalyzeStore'
 import { formatCurrency, formatDate, formatNumber } from '@/apps/manage/composables/formatters'
+import { useAnalyzeStore } from '@/apps/manage/composables/useAnalyzeStore'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { DateRangePicker } from '@/shared/ui/date-picker'
+import { Input } from '@/shared/ui/input'
+import { Skeleton } from '@/shared/ui/skeleton'
+import { Switch } from '@/shared/ui/switch'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { isDarkMode, toast } from '@/shared/utils'
 
 // 注册 ECharts 必要组件
 echarts.use([
@@ -106,9 +84,7 @@ echarts.use([
 
 // 状态管理（SWR 跨页面保活）
 const analyzeStore = useAnalyzeStore()
-const { analyzeData, loading, refreshing, lastUpdateTime, hasData } = storeToRefs(analyzeStore)
-const message = useMessage()
-const themeVars = useThemeVars()
+const { analyzeData, loading, refreshing, hasData } = storeToRefs(analyzeStore)
 
 // 区间预设与选择
 type RangePreset = '7d' | '30d' | '60d' | 'all' | 'custom'
@@ -118,31 +94,42 @@ const dateRange = ref<[number, number] | null>([
   endOfDay(new Date()).getTime(),
 ])
 
-const isDark = computed(() => themeVars.value.baseColor !== '#FFF' && themeVars.value.baseColor !== '#ffffff')
+const customStartDate = ref(format(addDays(new Date(), -29), 'yyyy-MM-dd'))
+const customEndDate = ref(format(new Date(), 'yyyy-MM-dd'))
 
 function setPreset(preset: RangePreset) {
   activePreset.value = preset
   const now = new Date()
   if (preset === '7d') {
     dateRange.value = [startOfDay(addDays(now, -6)).getTime(), endOfDay(now).getTime()]
+    customStartDate.value = format(addDays(now, -6), 'yyyy-MM-dd')
+    customEndDate.value = format(now, 'yyyy-MM-dd')
   } else if (preset === '30d') {
     dateRange.value = [startOfDay(addDays(now, -29)).getTime(), endOfDay(now).getTime()]
+    customStartDate.value = format(addDays(now, -29), 'yyyy-MM-dd')
+    customEndDate.value = format(now, 'yyyy-MM-dd')
   } else if (preset === '60d') {
     dateRange.value = [startOfDay(addDays(now, -59)).getTime(), endOfDay(now).getTime()]
+    customStartDate.value = format(addDays(now, -59), 'yyyy-MM-dd')
+    customEndDate.value = format(now, 'yyyy-MM-dd')
   } else if (preset === 'all') {
     dateRange.value = null
   }
 }
 
-function handleDateRangeChange(val: [number, number] | null) {
-  if (val) {
-    activePreset.value = 'custom'
+function handleCustomDateApply() {
+  if (!customStartDate.value || !customEndDate.value) return
+  activePreset.value = 'custom'
+  const start = startOfDay(new Date(customStartDate.value)).getTime()
+  const end = endOfDay(new Date(customEndDate.value)).getTime()
+  if (start <= end) {
+    dateRange.value = [start, end]
   } else {
-    activePreset.value = 'all'
+    dateRange.value = [end, start]
   }
 }
 
-// 格式化全部图表点数组（按日期升序，单例响应式缓存）
+// 格式化全部图表点数组（按日期升序）
 const allChartPoints = computed<Array<AnalyzeDayPoint & { date: string }>>(() => {
   if (!analyzeData.value?.chartData) return []
 
@@ -274,7 +261,7 @@ const currentSummary = computed<UnifiedSummary>(() => {
   }
 })
 
-// 过滤后的离线事件流水（在选定日期区间内）
+// 过滤后的离线事件流水
 const filteredOfflineEvents = computed<AnalyzeOfflineEventItem[]>(() => {
   const all = analyzeData.value?.offlineEvents || []
   if (!dateRange.value) return all
@@ -349,20 +336,21 @@ const heatmapStats = computed(() => {
   }
 })
 
-// 单场高光 Top 5 场次
-const topSessionsByIncome = computed(() => {
-  return currentFilteredSessions.value.toSorted((a, b) => b.totalIncome - a.totalIncome).slice(0, 5)
-})
-const topSessionsByDanmaku = computed(() => {
-  return currentFilteredSessions.value.toSorted((a, b) => b.danmakuCount - a.danmakuCount).slice(0, 5)
-})
-const topSessionsByDuration = computed(() => {
-  return currentFilteredSessions.value.toSorted((a, b) => b.liveMinutes - a.liveMinutes).slice(0, 5)
-})
+// 单场高光 Top 5
+const topSessionsByIncome = computed(() =>
+  currentFilteredSessions.value.toSorted((a, b) => b.totalIncome - a.totalIncome).slice(0, 5),
+)
+const topSessionsByDanmaku = computed(() =>
+  currentFilteredSessions.value.toSorted((a, b) => b.danmakuCount - a.danmakuCount).slice(0, 5),
+)
+const topSessionsByDuration = computed(() =>
+  currentFilteredSessions.value.toSorted((a, b) => b.liveMinutes - a.liveMinutes).slice(0, 5),
+)
 
 const activeTopSessionTab = ref<'income' | 'danmaku' | 'duration'>('income')
 
 // 每日明细复盘表配置
+const isDailyTableExpanded = ref(false)
 const showOnlyLiveDays = ref(true)
 const dailyTableSortKey = ref<'date' | 'income' | 'danmaku' | 'duration' | 'interactions'>('date')
 const dailyTableSortAsc = ref(false)
@@ -439,6 +427,16 @@ const chartMetrics = computed(() => [
   { label: '时长(小时)', value: 'liveHours', color: '#a855f7', unit: 'h', yAxisIndex: 0 },
 ])
 
+function toggleMetric(value: string) {
+  if (selectedMetrics.value.includes(value)) {
+    if (selectedMetrics.value.length > 1) {
+      selectedMetrics.value = selectedMetrics.value.filter((m) => m !== value)
+    }
+  } else {
+    selectedMetrics.value = [...selectedMetrics.value, value]
+  }
+}
+
 function initChart() {
   if (!chartRef.value) return
   if (filteredChartData.value.length === 0) return
@@ -457,15 +455,16 @@ function updateChartOption() {
   const chartData = filteredChartData.value
   const dates = chartData.map((item) => item.date)
 
-  const isIncomeMetric = (m: string) => ['income', 'giftIncome', 'scIncome', 'guardIncome', 'offlineIncome', 'grandTotalIncome'].includes(m)
+  const isIncomeMetric = (m: string) =>
+    ['income', 'giftIncome', 'scIncome', 'guardIncome', 'offlineIncome', 'grandTotalIncome'].includes(m)
   const showRightAxis = selectedMetrics.value.some(isIncomeMetric)
   const showLeftAxis = selectedMetrics.value.some((m) => !isIncomeMetric(m))
 
-  const textColor = isDark.value ? '#a1a1aa' : '#52525b'
-  const textHeadingColor = isDark.value ? '#fafafa' : '#18181b'
-  const borderColor = isDark.value ? 'rgba(255, 255, 255, 0.1)' : '#e4e4e7'
-  const dividerColor = isDark.value ? 'rgba(255, 255, 255, 0.05)' : '#f4f4f5'
-  const tooltipBg = isDark.value ? 'rgba(18, 20, 28, 0.96)' : 'rgba(255, 255, 255, 0.96)'
+  const textColor = isDarkMode.value ? '#a1a1aa' : '#52525b'
+  const textHeadingColor = isDarkMode.value ? '#fafafa' : '#18181b'
+  const borderColor = isDarkMode.value ? 'rgba(255, 255, 255, 0.1)' : '#e4e4e7'
+  const dividerColor = isDarkMode.value ? 'rgba(255, 255, 255, 0.05)' : '#f4f4f5'
+  const tooltipBg = isDarkMode.value ? 'rgba(18, 20, 28, 0.96)' : 'rgba(255, 255, 255, 0.96)'
 
   const series = selectedMetrics.value
     .map((metricKey) => {
@@ -556,17 +555,19 @@ function updateChartOption() {
           const cfg = chartMetrics.value.find((m) => m.label === param.seriesName)
           const unit = cfg?.unit || ''
           const val =
-            unit === '¥' ? formatCurrency(param.value) : `${formatNumber(param.value)} <span style="font-size:11px; opacity:0.8;">${unit}</span>`
+            unit === '¥'
+              ? formatCurrency(param.value)
+              : `${formatNumber(param.value)} <span style="font-size:11px; opacity:0.8;">${unit}</span>`
           html += `<div style="display:flex; justify-content:space-between; align-items:center; gap:16px; margin: 3px 0; font-size: 11.5px;">
             <span style="display:flex; align-items:center; gap:6px;">
               <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:${param.color};"></span>
               <span style="color:${textColor};">${param.seriesName}</span>
             </span>
-            <span style="font-weight:600; font-family:var(--n-font-family-mono, monospace);">${val}</span>
+            <span style="font-weight:600; font-family:monospace;">${val}</span>
           </div>`
         })
         if (rawPoint && rawPoint.liveMinutes > 0) {
-          html += `<div style="margin-top:6px; pt-1; border-top:1px dashed ${dividerColor}; font-size:11px; color:${textColor}; text-align:right;">开播约 ${(rawPoint.liveMinutes / 60).toFixed(1)} 小时</div>`
+          html += `<div style="margin-top:6px; padding-top:4px; border-top:1px dashed ${dividerColor}; font-size:11px; color:${textColor}; text-align:right;">开播约 ${(rawPoint.liveMinutes / 60).toFixed(1)} 小时</div>`
         }
         return html
       },
@@ -601,11 +602,11 @@ function updateChartOption() {
         bottom: 4,
         height: 18,
         borderColor: borderColor,
-        backgroundColor: isDark.value ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
-        fillerColor: isDark.value ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.25)',
+        backgroundColor: isDarkMode.value ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)',
+        fillerColor: isDarkMode.value ? 'rgba(245, 158, 11, 0.15)' : 'rgba(245, 158, 11, 0.25)',
         handleStyle: {
           color: '#f59e0b',
-          borderColor: isDark.value ? '#18181b' : '#ffffff',
+          borderColor: isDarkMode.value ? '#18181b' : '#ffffff',
         },
         textStyle: { color: textColor, fontSize: 10 },
       },
@@ -619,12 +620,11 @@ function updateChartOption() {
   mainChart.setOption(option, true)
 }
 
-// 加载数据（利用 SWR 策略）
 async function loadData() {
   try {
     await analyzeStore.loadData()
   } catch (err: any) {
-    message.error(err?.message || '获取分析数据失败')
+    toast.error(err?.message || '获取分析数据失败')
   } finally {
     await nextTick()
     initChart()
@@ -633,17 +633,17 @@ async function loadData() {
 
 async function refreshData() {
   try {
-    await analyzeStore.loadData(true)
-    message.success('数据已刷新')
+    await analyzeStore.loadData()
+    toast.success('数据已刷新')
   } catch (err: any) {
-    message.error(err?.message || '刷新数据失败')
+    toast.error(err?.message || '刷新数据失败')
   } finally {
     await nextTick()
     updateChartOption()
   }
 }
 
-watch([filteredChartData, selectedMetrics, isDark, chartViewType], () => {
+watch([filteredChartData, selectedMetrics, isDarkMode, chartViewType], () => {
   updateChartOption()
 })
 
@@ -662,2265 +662,910 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="analyze-dashboard">
+  <div class="space-y-4 w-full">
     <!-- 顶部标题与控制栏 -->
-    <ManagePageHeader title="直播数据罗盘" description="沉淀过去 60 天多维全景直播战报，透视收益构成、粉丝互动深度与开播偏好。">
+    <ManagePageHeader
+      title="直播数据罗盘"
+      subtitle="沉淀过去 60 天多维全景直播战报，透视收益构成、粉丝互动深度与开播偏好"
+    >
       <template #action>
-        <NFlex align="center" :size="8" wrap>
+        <div class="flex items-center gap-2 flex-wrap">
           <!-- 预设选择器 -->
-          <NButtonGroup size="small">
-            <NButton
-              :type="activePreset === '7d' ? 'primary' : 'default'"
-              :secondary="activePreset !== '7d'"
+          <ToggleGroup
+            v-model="activePreset"
+            type="single"
+          >
+            <ToggleGroupItem
+              value="7d"
               @click="setPreset('7d')"
+              >近7天</ToggleGroupItem
             >
-              近7天
-            </NButton>
-            <NButton
-              :type="activePreset === '30d' ? 'primary' : 'default'"
-              :secondary="activePreset !== '30d'"
+            <ToggleGroupItem
+              value="30d"
               @click="setPreset('30d')"
+              >近30天</ToggleGroupItem
             >
-              近30天
-            </NButton>
-            <NButton
-              :type="activePreset === '60d' ? 'primary' : 'default'"
-              :secondary="activePreset !== '60d'"
+            <ToggleGroupItem
+              value="60d"
               @click="setPreset('60d')"
+              >近60天</ToggleGroupItem
             >
-              近60天
-            </NButton>
-            <NButton
-              :type="activePreset === 'all' ? 'primary' : 'default'"
-              :secondary="activePreset !== 'all'"
+            <ToggleGroupItem
+              value="all"
               @click="setPreset('all')"
+              >全部</ToggleGroupItem
             >
-              全部
-            </NButton>
-          </NButtonGroup>
+          </ToggleGroup>
 
-          <!-- 自定义日历选择 -->
-          <NDatePicker
-            v-model:value="dateRange"
-            type="daterange"
-            size="small"
-            clearable
-            placeholder="自定义统计范围"
-            class="range-datepicker"
-            @update:value="handleDateRangeChange"
+          <!-- 自定义日期区间 -->
+          <DateRangePicker
+            v-model:start="customStartDate"
+            v-model:end="customEndDate"
+            size="sm"
+            @update:start="handleCustomDateApply"
+            @update:end="handleCustomDateApply"
           />
 
           <!-- 刷新按钮 -->
-          <NButton size="small" secondary :loading="refreshing" @click="refreshData">
-            <template #icon>
-              <NIcon><ArrowClockwise24Regular /></NIcon>
-            </template>
+          <Button
+            variant="outline"
+            :loading="refreshing"
+            @click="refreshData"
+          >
+            <component
+              :is="ArrowClockwise24Regular"
+              class="h-3.5 w-3.5 mr-1"
+            />
             刷新
-          </NButton>
-        </NFlex>
+          </Button>
+        </div>
       </template>
     </ManagePageHeader>
 
     <!-- 异常状态提示 -->
-    <EventFetcherAlert />
+    <EventFetcherStatusCard />
 
-    <!-- 高保真 Bento 骨架屏 (1:1 消除 Layout Shift) -->
-    <div v-if="loading" class="dashboard-skeleton">
-      <!-- 状态微提示 -->
-      <div class="skeleton-header-hint">
-        <div class="skeleton-pulse-dot"></div>
-        <span>正在盘点过去 60 天直播战报与全盘指标...</span>
+    <!-- 骨架屏 -->
+    <div
+      v-if="loading"
+      class="space-y-4"
+    >
+      <div class="flex items-center gap-2 text-xs text-muted-foreground">
+        <div class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping" />
+        <span>正在盘点过去 60 天直播战报与全盘指标…</span>
       </div>
 
-      <!-- 高光胶囊条骨架 -->
-      <div class="skeleton-milestone-ribbon">
-        <NSkeleton height="16px" width="70px" :sharp="false" />
-        <div class="skeleton-pills-row">
-          <NSkeleton height="26px" width="160px" :sharp="false" style="border-radius: 6px;" />
-          <NSkeleton height="26px" width="170px" :sharp="false" style="border-radius: 6px;" />
-          <NSkeleton height="26px" width="150px" :sharp="false" style="border-radius: 6px;" />
-          <NSkeleton height="26px" width="165px" :sharp="false" style="border-radius: 6px;" />
-        </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <Skeleton
+          v-for="i in 4"
+          :key="i"
+          class="h-40 rounded-xl"
+        />
       </div>
 
-      <!-- 4 宫格 Bento 核心指标大卡骨架 (1:1 高度对齐) -->
-      <div class="bento-metric-grid">
-        <div v-for="i in 4" :key="i" class="bento-skeleton-card">
-          <div class="skeleton-card-top">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <NSkeleton circle size="medium" />
-              <NSkeleton height="16px" width="100px" :sharp="false" />
-            </div>
-            <NSkeleton height="20px" width="48px" :sharp="false" style="border-radius: 4px;" />
-          </div>
-          <div class="skeleton-card-mid">
-            <NSkeleton height="36px" width="140px" :sharp="false" style="border-radius: 6px;" />
-            <NSkeleton height="14px" width="100%" :sharp="false" style="margin-top: 14px; border-radius: 4px;" />
-          </div>
-          <div class="skeleton-card-bot">
-            <NSkeleton height="14px" width="45%" :sharp="false" />
-            <NSkeleton height="14px" width="45%" :sharp="false" />
-          </div>
-        </div>
-      </div>
-
-      <!-- 全维交互主趋势看板骨架 -->
-      <div class="chart-skeleton-card">
-        <div class="skeleton-chart-header">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <NSkeleton height="18px" width="18px" :sharp="false" />
-            <NSkeleton height="18px" width="200px" :sharp="false" />
-          </div>
-          <NSkeleton height="24px" width="220px" :sharp="false" style="border-radius: 6px;" />
-        </div>
-        <div class="skeleton-chart-metrics">
-          <NSkeleton v-for="j in 6" :key="j" height="20px" width="76px" :sharp="false" style="border-radius: 4px;" />
-        </div>
-        <div class="skeleton-chart-body">
-          <NSkeleton height="380px" width="100%" :sharp="false" style="border-radius: 8px;" />
-        </div>
-      </div>
-
-      <!-- 双列深度洞察 Bento 骨架 -->
-      <div class="insight-bento-grid">
-        <div v-for="k in 2" :key="k" class="insight-skeleton-card">
-          <div class="skeleton-card-top" style="margin-bottom: 18px;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <NSkeleton height="18px" width="18px" :sharp="false" />
-              <NSkeleton height="18px" width="160px" :sharp="false" />
-            </div>
-          </div>
-          <div style="display: flex; flex-direction: column; gap: 14px;">
-            <NSkeleton height="28px" width="100%" :sharp="false" style="border-radius: 6px;" />
-            <NSkeleton height="28px" width="100%" :sharp="false" style="border-radius: 6px;" />
-            <NSkeleton height="28px" width="100%" :sharp="false" style="border-radius: 6px;" />
-            <NSkeleton height="90px" width="100%" :sharp="false" style="border-radius: 8px; margin-top: 8px;" />
-          </div>
-        </div>
-      </div>
+      <Skeleton class="h-96 rounded-xl" />
     </div>
 
     <!-- 空数据态 -->
-    <div v-else-if="!hasData" class="dashboard-empty">
-      <NCard class="empty-card" :bordered="false">
-        <NEmpty description="暂无直播分析数据" size="large">
-          <template #extra>
-            <NText depth="3">系统会自动采集并维护你的直播数据，开播后将在此生成全景图表与复盘洞察。</NText>
-          </template>
-        </NEmpty>
-      </NCard>
-    </div>
+    <Card
+      v-else-if="!hasData"
+      class="p-12 text-center"
+    >
+      <div class="text-muted-foreground text-sm">暂无直播分析数据</div>
+      <div class="text-xs text-muted-foreground/70 mt-1">
+        系统会自动采集并维护你的直播数据，开播后将在此生成全景图表与复盘洞察。
+      </div>
+    </Card>
 
     <!-- 主体内容 -->
-    <div v-else class="dashboard-content">
+    <div
+      v-else
+      class="space-y-4"
+    >
       <!-- 峰值高光胶囊条 (Milestones Ribbon) -->
-      <div v-if="currentMilestones.maxIncomeDay || currentMilestones.maxDanmakuDay" class="milestone-ribbon">
-        <div class="ribbon-title">
-          <NIcon><Trophy24Regular /></NIcon>
-          <span>{{ currentSummary.titlePrefix }}高光</span>
+      <div
+        v-if="currentMilestones.maxIncomeDay || currentMilestones.maxDanmakuDay"
+        class="flex items-center gap-2.5 p-2.5 rounded-lg border border-border bg-card overflow-x-auto text-xs"
+      >
+        <div class="flex items-center gap-1.5 font-semibold shrink-0 text-foreground">
+          <component
+            :is="Trophy24Regular"
+            class="h-4 w-4 text-amber-500"
+          />
+          <span>{{ currentSummary.titlePrefix }}高光:</span>
         </div>
-        <div class="ribbon-scroll">
-          <div v-if="currentMilestones.maxIncomeDay" class="milestone-pill is-gold">
-            <span class="pill-badge">单日最高收益</span>
-            <span class="pill-value">¥{{ formatNumber(currentMilestones.maxIncomeDay.value) }}</span>
-            <span class="pill-date">{{ currentMilestones.maxIncomeDay.dateStr }}</span>
-          </div>
-          <div v-if="currentMilestones.maxDanmakuDay" class="milestone-pill is-green">
-            <span class="pill-badge">单日弹幕狂欢</span>
-            <span class="pill-value">{{ formatNumber(currentMilestones.maxDanmakuDay.value) }} 条</span>
-            <span class="pill-date">{{ currentMilestones.maxDanmakuDay.dateStr }}</span>
-          </div>
-          <div v-if="currentMilestones.maxDurationDay" class="milestone-pill is-purple">
-            <span class="pill-badge">单日最长开播</span>
-            <span class="pill-value">{{ (currentMilestones.maxDurationDay.value / 60).toFixed(1) }} 小时</span>
-            <span class="pill-date">{{ currentMilestones.maxDurationDay.dateStr }}</span>
-          </div>
-          <div v-if="currentMilestones.maxInteractionDay" class="milestone-pill is-cyan">
-            <span class="pill-badge">单日互动峰值</span>
-            <span class="pill-value">{{ formatNumber(currentMilestones.maxInteractionDay.value) }} 人</span>
-            <span class="pill-date">{{ currentMilestones.maxInteractionDay.dateStr }}</span>
-          </div>
-          <div v-if="currentMilestones.maxPayingRateDay" class="milestone-pill is-amber">
-            <span class="pill-badge">最高付费转化</span>
-            <span class="pill-value">{{ currentMilestones.maxPayingRateDay.value.toFixed(1) }}%</span>
-            <span class="pill-date">{{ currentMilestones.maxPayingRateDay.dateStr }}</span>
-          </div>
+
+        <div
+          v-if="currentMilestones.maxIncomeDay"
+          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
+        >
+          <span class="text-muted-foreground">单日最高收益</span>
+          <span class="font-bold text-amber-500 font-mono"
+            >¥{{ formatNumber(currentMilestones.maxIncomeDay.value) }}</span
+          >
+          <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxIncomeDay.dateStr }}</span>
+        </div>
+
+        <div
+          v-if="currentMilestones.maxDanmakuDay"
+          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
+        >
+          <span class="text-muted-foreground">单日弹幕狂欢</span>
+          <span class="font-bold text-emerald-500 font-mono"
+            >{{ formatNumber(currentMilestones.maxDanmakuDay.value) }} 条</span
+          >
+          <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxDanmakuDay.dateStr }}</span>
+        </div>
+
+        <div
+          v-if="currentMilestones.maxDurationDay"
+          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
+        >
+          <span class="text-muted-foreground">最长开播</span>
+          <span class="font-bold text-purple-500 font-mono"
+            >{{ (currentMilestones.maxDurationDay.value / 60).toFixed(1) }} 小时</span
+          >
+          <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxDurationDay.dateStr }}</span>
+        </div>
+
+        <div
+          v-if="currentMilestones.maxInteractionDay"
+          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/60 border border-border shrink-0"
+        >
+          <span class="text-muted-foreground">互动峰值</span>
+          <span class="font-bold text-cyan-500 font-mono"
+            >{{ formatNumber(currentMilestones.maxInteractionDay.value) }} 人</span
+          >
+          <span class="text-[10px] text-muted-foreground">{{ currentMilestones.maxInteractionDay.dateStr }}</span>
         </div>
       </div>
 
       <!-- Section 1: 4 宫格 Bento 核心指标大卡 -->
-      <div class="bento-metric-grid">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Card 1: 收益总览 -->
-        <div class="bento-card is-revenue">
-          <div class="bento-card-header">
-            <div class="header-tag">
-              <div class="icon-avatar is-gold"><Wallet24Regular /></div>
-              <span class="header-label">{{ currentSummary.titlePrefix }}全盘总收益</span>
+        <Card class="flex flex-col justify-between">
+          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded bg-amber-500/15 text-amber-500 flex items-center justify-center">
+                <component
+                  :is="Wallet24Regular"
+                  class="h-3.5 w-3.5"
+                />
+              </div>
+              <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}总收益</span>
             </div>
-            <NTag
+            <Badge
               v-if="currentSummary.incomeTrend !== undefined"
-              size="small"
-              :bordered="false"
-              :type="currentSummary.incomeTrend >= 0 ? 'success' : 'error'"
-              class="trend-tag"
+              :variant="currentSummary.incomeTrend >= 0 ? 'brand' : 'destructive'"
+              class="text-[10px] px-1 py-0 h-4"
             >
-              <template #icon>
-                <NIcon>
-                  <ArrowTrending24Regular v-if="currentSummary.incomeTrend >= 0" />
-                  <ArrowDown24Regular v-else />
-                </NIcon>
-              </template>
+              <component
+                :is="currentSummary.incomeTrend >= 0 ? ArrowTrending24Regular : ArrowDown24Regular"
+                class="h-3 w-3 mr-0.5"
+              />
               {{ Math.abs(currentSummary.incomeTrend) }}%
-            </NTag>
-          </div>
+            </Badge>
+          </CardHeader>
 
-          <div class="bento-card-body">
-            <div class="primary-metric-val">
-              <span class="currency-symbol">¥</span>
-              <NNumberAnimation :from="0" :to="currentSummary.grandTotalIncome" :precision="2" :duration="800" />
+          <CardContent class="p-3.5 pt-0 space-y-2">
+            <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
+              <span class="text-amber-500 text-lg">¥</span>
+              {{ formatNumber(currentSummary.grandTotalIncome) }}
             </div>
 
-            <!-- 收入构成细分胶囊条（礼物、SC、直播舰长、下播上舰） -->
-            <div class="income-split-bar">
-              <div class="split-info">
+            <!-- 收入构成细分 -->
+            <div class="space-y-1 text-[11px] text-muted-foreground">
+              <div class="flex justify-between">
                 <span>礼物 ¥{{ formatNumber(currentSummary.giftIncome) }}</span>
                 <span>SC ¥{{ formatNumber(currentSummary.scIncome) }}</span>
-                <span v-if="currentSummary.guardIncome > 0">直播舰长 ¥{{ formatNumber(currentSummary.guardIncome) }}</span>
-                <span v-if="currentSummary.offlineIncome > 0" class="offline-split-text">下播支持 ¥{{ formatNumber(currentSummary.offlineIncome) }}</span>
               </div>
-              <div class="split-progress-track">
+              <div class="h-1.5 rounded-full bg-muted flex overflow-hidden gap-0.5">
                 <div
-                  class="split-seg is-gift"
-                  :title="`普通礼物: ¥${formatNumber(currentSummary.giftIncome)}`"
+                  class="bg-amber-500 h-full"
                   :style="{
                     width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.giftIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
                   }"
-                ></div>
+                />
                 <div
-                  class="split-seg is-sc"
-                  :title="`醒目留言: ¥${formatNumber(currentSummary.scIncome)}`"
+                  class="bg-orange-500 h-full"
                   :style="{
                     width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.scIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
                   }"
-                ></div>
+                />
                 <div
                   v-if="currentSummary.guardIncome > 0"
-                  class="split-seg is-guard"
-                  :title="`直播舰长: ¥${formatNumber(currentSummary.guardIncome)}`"
+                  class="bg-blue-500 h-full"
                   :style="{
                     width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.guardIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
                   }"
-                ></div>
-                <div
-                  v-if="currentSummary.offlineIncome > 0"
-                  class="split-seg is-offline"
-                  :title="`下播上舰支持: ¥${formatNumber(currentSummary.offlineIncome)}`"
-                  :style="{
-                    width: `${currentSummary.grandTotalIncome > 0 ? (currentSummary.offlineIncome / currentSummary.grandTotalIncome) * 100 : 0}%`,
-                  }"
-                ></div>
+                />
               </div>
             </div>
-          </div>
 
-          <div class="bento-card-footer">
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">开播时薪</span>
-              <span class="sub-stat-val">¥{{ currentSummary.hourlyIncome.toFixed(1) }}/h</span>
+            <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
+              <span
+                >时薪:
+                <strong class="text-foreground font-mono">¥{{ currentSummary.hourlyIncome.toFixed(1) }}</strong></span
+              >
+              <span
+                >场均:
+                <strong class="text-foreground font-mono">¥{{ currentSummary.dailyAvgIncome.toFixed(1) }}</strong></span
+              >
             </div>
-            <div class="sub-stat-sep"></div>
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">场均直播收益</span>
-              <span class="sub-stat-val">¥{{ currentSummary.dailyAvgIncome.toFixed(1) }}</span>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <!-- Card 2: 弹幕与互动 -->
-        <div class="bento-card is-danmaku">
-          <div class="bento-card-header">
-            <div class="header-tag">
-              <div class="icon-avatar is-green"><ChatMultiple24Regular /></div>
-              <span class="header-label">{{ currentSummary.titlePrefix }}弹幕总量</span>
+        <Card class="flex flex-col justify-between">
+          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+                <component
+                  :is="ChatMultiple24Regular"
+                  class="h-3.5 w-3.5"
+                />
+              </div>
+              <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}弹幕数</span>
             </div>
-            <NTag
+            <Badge
               v-if="currentSummary.danmakuTrend !== undefined"
-              size="small"
-              :bordered="false"
-              :type="currentSummary.danmakuTrend >= 0 ? 'success' : 'error'"
-              class="trend-tag"
+              :variant="currentSummary.danmakuTrend >= 0 ? 'brand' : 'destructive'"
+              class="text-[10px] px-1 py-0 h-4"
             >
-              <template #icon>
-                <NIcon>
-                  <ArrowTrending24Regular v-if="currentSummary.danmakuTrend >= 0" />
-                  <ArrowDown24Regular v-else />
-                </NIcon>
-              </template>
               {{ Math.abs(currentSummary.danmakuTrend) }}%
-            </NTag>
-          </div>
+            </Badge>
+          </CardHeader>
 
-          <div class="bento-card-body">
-            <div class="primary-metric-val">
-              <NNumberAnimation :from="0" :to="currentSummary.totalDanmakuCount" :duration="800" />
-              <span class="metric-unit">条</span>
+          <CardContent class="p-3.5 pt-0 space-y-2">
+            <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
+              {{ formatNumber(currentSummary.totalDanmakuCount) }}
+              <span class="text-xs font-normal text-muted-foreground">条</span>
             </div>
-            <div class="metric-context-text">
-              <span class="context-label">观众互动粘性</span>
-              <span class="context-highlight">{{ currentSummary.avgDanmakuPerUser.toFixed(1) }} 条/人</span>
-            </div>
-          </div>
 
-          <div class="bento-card-footer">
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">互动总人次</span>
-              <span class="sub-stat-val">{{ formatNumber(currentSummary.totalInteractions) }}</span>
+            <div class="text-xs text-muted-foreground flex items-center justify-between">
+              <span>观众互动粘性</span>
+              <span class="font-semibold text-foreground">{{ currentSummary.avgDanmakuPerUser.toFixed(1) }} 条/人</span>
             </div>
-            <div class="sub-stat-sep"></div>
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">点赞总数</span>
-              <span class="sub-stat-val">{{ formatNumber(currentSummary.totalLikeCount) }}</span>
+
+            <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
+              <span
+                >互动:
+                <strong class="text-foreground font-mono">{{
+                  formatNumber(currentSummary.totalInteractions)
+                }}</strong></span
+              >
+              <span
+                >点赞:
+                <strong class="text-foreground font-mono">{{
+                  formatNumber(currentSummary.totalLikeCount)
+                }}</strong></span
+              >
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <!-- Card 3: 粉丝与转化 -->
-        <div class="bento-card is-audience">
-          <div class="bento-card-header">
-            <div class="header-tag">
-              <div class="icon-avatar is-cyan"><People24Regular /></div>
-              <span class="header-label">{{ currentSummary.titlePrefix }}互动与付费</span>
+        <Card class="flex flex-col justify-between">
+          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded bg-cyan-500/15 text-cyan-500 flex items-center justify-center">
+                <component
+                  :is="People24Regular"
+                  class="h-3.5 w-3.5"
+                />
+              </div>
+              <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}互动人数</span>
             </div>
-            <NTag size="small" :bordered="false" type="info" class="trend-tag">
+            <Badge
+              variant="secondary"
+              class="text-[10px] px-1 py-0 h-4"
+            >
               转化率 {{ currentSummary.payingRate.toFixed(1) }}%
-            </NTag>
-          </div>
+            </Badge>
+          </CardHeader>
 
-          <div class="bento-card-body">
-            <div class="primary-metric-val">
-              <NNumberAnimation :from="0" :to="currentSummary.interactionUsers" :duration="800" />
-              <span class="metric-unit">人互动</span>
+          <CardContent class="p-3.5 pt-0 space-y-2">
+            <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
+              {{ formatNumber(currentSummary.interactionUsers) }}
+              <span class="text-xs font-normal text-muted-foreground">人</span>
             </div>
-            <div class="metric-context-text">
-              <span class="context-label">付费用户</span>
-              <span class="context-highlight">{{ formatNumber(currentSummary.payingUsers) }} 人</span>
-              <span class="context-sub">· 客单价 ¥{{ currentSummary.avgIncomePerPayingUser.toFixed(1) }}</span>
-            </div>
-          </div>
 
-          <div class="bento-card-footer">
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">付费渗透率</span>
-              <span class="sub-stat-val">{{ currentSummary.payingRate.toFixed(1) }}%</span>
+            <div class="text-xs text-muted-foreground flex items-center justify-between">
+              <span
+                >付费观众:
+                <strong class="text-foreground">{{ formatNumber(currentSummary.payingUsers) }}人</strong></span
+              >
+              <span>客单价: ¥{{ currentSummary.avgIncomePerPayingUser.toFixed(1) }}</span>
             </div>
-            <div class="sub-stat-sep"></div>
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">日均互动人</span>
-              <span class="sub-stat-val">{{ currentSummary.dailyAvgInteractions.toFixed(0) }} 人</span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Card 4: 开播勤奋度与时长 -->
-        <div class="bento-card is-duration">
-          <div class="bento-card-header">
-            <div class="header-tag">
-              <div class="icon-avatar is-purple"><Timer24Regular /></div>
-              <span class="header-label">{{ currentSummary.titlePrefix }}直播时长</span>
+            <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
+              <span
+                >渗透率:
+                <strong class="text-foreground font-mono">{{ currentSummary.payingRate.toFixed(1) }}%</strong></span
+              >
+              <span
+                >日均:
+                <strong class="text-foreground font-mono"
+                  >{{ currentSummary.dailyAvgInteractions.toFixed(0) }}人</strong
+                ></span
+              >
             </div>
-            <NTag size="small" :bordered="false" type="warning" class="trend-tag">
+          </CardContent>
+        </Card>
+
+        <!-- Card 4: 开播时长 -->
+        <Card class="flex flex-col justify-between">
+          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-6 h-6 rounded bg-purple-500/15 text-purple-500 flex items-center justify-center">
+                <component
+                  :is="Timer24Regular"
+                  class="h-3.5 w-3.5"
+                />
+              </div>
+              <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}直播时长</span>
+            </div>
+            <Badge
+              variant="secondary"
+              class="text-[10px] px-1 py-0 h-4"
+            >
               开播 {{ currentSummary.activeLiveDays }} 天
-            </NTag>
-          </div>
+            </Badge>
+          </CardHeader>
 
-          <div class="bento-card-body">
-            <div class="primary-metric-val">
-              <NNumberAnimation :from="0" :to="Math.round((currentSummary.totalLiveMinutes / 60) * 10) / 10" :precision="1" :duration="800" />
-              <span class="metric-unit">小时</span>
+          <CardContent class="p-3.5 pt-0 space-y-2">
+            <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
+              {{ (currentSummary.totalLiveMinutes / 60).toFixed(1) }}
+              <span class="text-xs font-normal text-muted-foreground">小时</span>
             </div>
-            <div class="metric-context-text">
-              <span class="context-label">周期开播率</span>
-              <span class="context-highlight">
-                {{ filteredChartData.length > 0 ? ((currentSummary.activeLiveDays / filteredChartData.length) * 100).toFixed(0) : 0 }}%
+
+            <div class="text-xs text-muted-foreground flex items-center justify-between">
+              <span>周期开播率</span>
+              <span class="font-semibold text-foreground">
+                {{
+                  filteredChartData.length > 0
+                    ? ((currentSummary.activeLiveDays / filteredChartData.length) * 100).toFixed(0)
+                    : 0
+                }}%
               </span>
-              <span class="context-sub">({{ currentSummary.activeLiveDays }}/{{ filteredChartData.length }}天)</span>
             </div>
-          </div>
 
-          <div class="bento-card-footer">
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">场均开播</span>
-              <span class="sub-stat-val">{{ (currentSummary.avgLiveMinutesPerSession / 60).toFixed(1) }} 小时</span>
+            <div class="pt-2 border-t border-border flex justify-between text-[11px] text-muted-foreground">
+              <span
+                >场均:
+                <strong class="text-foreground font-mono"
+                  >{{ (currentSummary.avgLiveMinutesPerSession / 60).toFixed(1) }}h</strong
+                ></span
+              >
+              <span
+                >总场次: <strong class="text-foreground font-mono">{{ currentSummary.totalSessions }}场</strong></span
+              >
             </div>
-            <div class="sub-stat-sep"></div>
-            <div class="sub-stat">
-              <span class="sub-stat-lbl">总开播场次</span>
-              <span class="sub-stat-val">{{ currentSummary.totalSessions }} 场</span>
-            </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
 
-      <!-- Section 2: 全维交互主趋势看板 (Interactive Multi-Series Chart) -->
-      <NCard class="dashboard-chart-card" :bordered="false">
-        <div class="chart-header-bar">
-          <div class="chart-title-group">
-            <div class="chart-title">
-              <NIcon><DataTrending24Regular /></NIcon>
-              <span>{{ currentSummary.titlePrefix }}直播多维演进趋势</span>
-            </div>
-            <div class="chart-presets">
-              <NButtonGroup size="tiny">
-                <NButton :secondary="activeMetricPreset !== 'income'" :type="activeMetricPreset === 'income' ? 'primary' : 'default'" @click="applyMetricPreset('income')">
-                  收益拆解
-                </NButton>
-                <NButton :secondary="activeMetricPreset !== 'danmaku'" :type="activeMetricPreset === 'danmaku' ? 'primary' : 'default'" @click="applyMetricPreset('danmaku')">
-                  弹幕与互动
-                </NButton>
-                <NButton :secondary="activeMetricPreset !== 'audience'" :type="activeMetricPreset === 'audience' ? 'primary' : 'default'" @click="applyMetricPreset('audience')">
-                  观众与付费
-                </NButton>
-                <NButton :secondary="activeMetricPreset !== 'all'" :type="activeMetricPreset === 'all' ? 'primary' : 'default'" @click="applyMetricPreset('all')">
-                  全维概览
-                </NButton>
-              </NButtonGroup>
-            </div>
+      <!-- Section 2: 全维交互主趋势看板 -->
+      <Card class="p-4 space-y-3">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <div class="flex items-center gap-2 text-xs font-semibold">
+            <component
+              :is="DataTrending24Regular"
+              class="h-4 w-4 text-brand"
+            />
+            <span>{{ currentSummary.titlePrefix }}直播多维演进趋势</span>
           </div>
 
-          <div class="chart-view-switch">
-            <NButtonGroup size="tiny">
-              <NButton :secondary="chartViewType !== 'trend'" :type="chartViewType === 'trend' ? 'primary' : 'default'" @click="chartViewType = 'trend'">
-                折线趋势
-              </NButton>
-              <NButton :secondary="chartViewType !== 'bar'" :type="chartViewType === 'bar' ? 'primary' : 'default'" @click="chartViewType = 'bar'">
-                柱状对比
-              </NButton>
-            </NButtonGroup>
+          <div class="flex items-center gap-2">
+            <ToggleGroup
+              v-model="activeMetricPreset"
+              type="single"
+              size="xs"
+            >
+              <ToggleGroupItem
+                value="income"
+                @click="applyMetricPreset('income')"
+                >收益拆解</ToggleGroupItem
+              >
+              <ToggleGroupItem
+                value="danmaku"
+                @click="applyMetricPreset('danmaku')"
+                >弹幕互动</ToggleGroupItem
+              >
+              <ToggleGroupItem
+                value="audience"
+                @click="applyMetricPreset('audience')"
+                >观众付费</ToggleGroupItem
+              >
+              <ToggleGroupItem
+                value="all"
+                @click="applyMetricPreset('all')"
+                >全维概览</ToggleGroupItem
+              >
+            </ToggleGroup>
+
+            <ToggleGroup
+              v-model="chartViewType"
+              type="single"
+              size="xs"
+            >
+              <ToggleGroupItem value="trend">折线</ToggleGroupItem>
+              <ToggleGroupItem value="bar">柱状</ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
 
-        <!-- 指标多选复选框 -->
-        <div class="chart-metric-selector">
-          <NCheckboxGroup v-model:value="selectedMetrics">
-            <NFlex :size="12" wrap>
-              <NCheckbox
-                v-for="metric in chartMetrics"
-                :key="metric.value"
-                :value="metric.value"
-                :style="{ '--metric-color': metric.color }"
-                class="metric-checkbox"
-              >
-                <span class="metric-pill" :style="{ backgroundColor: metric.color }"></span>
-                <span>{{ metric.label }}</span>
-              </NCheckbox>
-            </NFlex>
-          </NCheckboxGroup>
+        <!-- 显隐指标勾选条 -->
+        <div class="flex items-center gap-3 p-2 rounded-md bg-muted/40 border border-border flex-wrap text-xs">
+          <div
+            v-for="metric in chartMetrics"
+            :key="metric.value"
+            class="flex items-center gap-1.5 cursor-pointer select-none"
+            @click="toggleMetric(metric.value)"
+          >
+            <div
+              class="w-2.5 h-2.5 rounded-full"
+              :style="{ backgroundColor: metric.color }"
+            />
+            <span
+              :class="{
+                'font-semibold text-foreground': selectedMetrics.includes(metric.value),
+                'text-muted-foreground/60': !selectedMetrics.includes(metric.value),
+              }"
+            >
+              {{ metric.label }}
+            </span>
+          </div>
         </div>
 
         <!-- ECharts 容器 -->
-        <div ref="chartRef" class="main-echart-box"></div>
-      </NCard>
+        <div
+          ref="chartRef"
+          class="w-full h-80"
+        />
+      </Card>
 
-      <!-- Section 3: 双列深度洞察 Bento (收入结构与周度偏好) -->
-      <div class="insight-bento-grid">
-        <!-- 左列: 收入结构与付费转化深度剖析 -->
-        <NCard class="insight-card" :bordered="false">
-          <div class="insight-card-header">
-            <div class="insight-title">
-              <NIcon><MoneyHand24Regular /></NIcon>
-              <span>{{ currentSummary.titlePrefix }}收入结构与变现盘面</span>
+      <!-- Section 3: 双列深度洞察 Bento -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <!-- 收入结构卡片 -->
+        <Card class="p-4 space-y-3">
+          <div class="flex items-center gap-2 text-xs font-semibold">
+            <component
+              :is="MoneyHand24Regular"
+              class="h-4 w-4 text-amber-500"
+            />
+            <span>{{ currentSummary.titlePrefix }}收入结构与变现盘面</span>
+          </div>
+
+          <div class="space-y-2">
+            <div class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs">
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                <span>普通打赏礼物</span>
+              </div>
+              <div class="font-mono font-semibold">
+                ¥{{ formatNumber(currentSummary.giftIncome) }}
+                <span class="text-muted-foreground font-normal ml-1">
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.giftIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs">
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                <span>醒目留言 (SC)</span>
+              </div>
+              <div class="font-mono font-semibold">
+                ¥{{ formatNumber(currentSummary.scIncome) }}
+                <span class="text-muted-foreground font-normal ml-1">
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.scIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
+                </span>
+              </div>
+            </div>
+
+            <div
+              v-if="currentSummary.guardIncome > 0"
+              class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs"
+            >
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                <span>直播大航海</span>
+              </div>
+              <div class="font-mono font-semibold">
+                ¥{{ formatNumber(currentSummary.guardIncome) }}
+                <span class="text-muted-foreground font-normal ml-1">
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.guardIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
+                </span>
+              </div>
+            </div>
+
+            <div
+              v-if="currentSummary.offlineIncome > 0"
+              class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs"
+            >
+              <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span>下播/未开播支持</span>
+              </div>
+              <div class="font-mono font-semibold text-emerald-500">
+                ¥{{ formatNumber(currentSummary.offlineIncome) }}
+                <span class="text-muted-foreground font-normal ml-1">
+                  ({{
+                    currentSummary.grandTotalIncome > 0
+                      ? ((currentSummary.offlineIncome / currentSummary.grandTotalIncome) * 100).toFixed(1)
+                      : 0
+                  }}%)
+                </span>
+              </div>
             </div>
           </div>
 
-          <div class="revenue-breakdown-content">
-            <div class="revenue-pie-summary">
-              <div class="pie-stat-row">
-                <div class="pie-stat-item">
-                  <div class="stat-dot is-gift"></div>
-                  <div class="stat-meta">
-                    <span class="meta-label">普通打赏礼物</span>
-                    <span class="meta-val">¥{{ formatNumber(currentSummary.giftIncome) }}</span>
-                  </div>
-                  <span class="stat-pct">
-                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.giftIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
-                  </span>
-                </div>
-
-                <div class="pie-stat-item">
-                  <div class="stat-dot is-sc"></div>
-                  <div class="stat-meta">
-                    <span class="meta-label">SuperChat (醒目留言)</span>
-                    <span class="meta-val">¥{{ formatNumber(currentSummary.scIncome) }}</span>
-                  </div>
-                  <span class="stat-pct">
-                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.scIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
-                  </span>
-                </div>
-
-                <div v-if="currentSummary.guardIncome > 0" class="pie-stat-item">
-                  <div class="stat-dot is-guard"></div>
-                  <div class="stat-meta">
-                    <span class="meta-label">直播大航海 (舰长/提督)</span>
-                    <span class="meta-val">¥{{ formatNumber(currentSummary.guardIncome) }}</span>
-                  </div>
-                  <span class="stat-pct">
-                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.guardIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
-                  </span>
-                </div>
-
-                <div v-if="currentSummary.offlineIncome > 0" class="pie-stat-item">
-                  <div class="stat-dot is-offline"></div>
-                  <div class="stat-meta">
-                    <span class="meta-label">下播支持 (未开播/主站上舰)</span>
-                    <span class="meta-val">¥{{ formatNumber(currentSummary.offlineIncome) }}</span>
-                  </div>
-                  <span class="stat-pct">
-                    {{ currentSummary.grandTotalIncome > 0 ? ((currentSummary.offlineIncome / currentSummary.grandTotalIncome) * 100).toFixed(1) : 0 }}%
-                  </span>
-                </div>
+          <!-- 付费转化漏斗 -->
+          <div class="pt-2 border-t border-border space-y-1.5">
+            <span class="text-xs font-semibold text-muted-foreground">观众变现转化</span>
+            <div class="space-y-1 text-xs">
+              <div class="flex justify-between text-muted-foreground text-[11px]">
+                <span>互动观众: {{ formatNumber(currentSummary.interactionUsers) }} 人</span>
+                <span>100%</span>
               </div>
-            </div>
-
-            <!-- 付费转化漏斗阶梯 -->
-            <div class="monetization-funnel">
-              <div class="funnel-title">互动观众变现转化阶梯</div>
-              <div class="funnel-steps">
-                <div class="funnel-step">
-                  <div class="step-bar is-active" style="width: 100%"></div>
-                  <div class="step-meta">
-                    <span>互动用户 {{ formatNumber(currentSummary.interactionUsers) }} 人</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-                <div class="funnel-step">
-                  <div
-                    class="step-bar is-paying"
-                    :style="{
-                      width: `${Math.max(8, currentSummary.payingRate)}%`,
-                    }"
-                  ></div>
-                  <div class="step-meta">
-                    <span>付费观众 {{ formatNumber(currentSummary.payingUsers) }} 人</span>
-                    <span class="is-highlight">{{ currentSummary.payingRate.toFixed(1) }}% 转化</span>
-                  </div>
-                </div>
+              <div class="h-2 rounded bg-blue-500/20 overflow-hidden">
+                <div class="h-full bg-blue-500 w-full" />
               </div>
-            </div>
 
-            <!-- 下播上舰与离线创收流水清单 -->
-            <div v-if="filteredOfflineEvents.length > 0" class="offline-monetization-section">
-              <div class="offline-section-header">
-                <span class="offline-header-title">下播/未开播上舰支持明细 (共 {{ filteredOfflineEvents.length }} 笔)</span>
-                <span class="offline-header-sum">累计 ¥{{ formatNumber(currentSummary.offlineIncome) }}</span>
+              <div class="flex justify-between text-muted-foreground text-[11px] pt-1">
+                <span>付费观众: {{ formatNumber(currentSummary.payingUsers) }} 人</span>
+                <span class="text-purple-500 font-semibold">{{ currentSummary.payingRate.toFixed(1) }}% 转化</span>
               </div>
-              <div class="offline-cards-scroll">
-                <div v-for="ev in filteredOfflineEvents.slice(0, 10)" :key="ev.id" class="offline-event-chip">
-                  <div class="chip-main">
-                    <NTag size="tiny" :bordered="false" type="success">{{ ev.message }}</NTag>
-                    <span class="chip-user">{{ ev.name }}</span>
-                  </div>
-                  <div class="chip-side">
-                    <span class="chip-price">¥{{ formatNumber(ev.price) }}</span>
-                    <span class="chip-date">{{ formatDate(ev.time) }}</span>
-                  </div>
-                </div>
+              <div class="h-2 rounded bg-purple-500/20 overflow-hidden">
+                <div
+                  class="h-full bg-purple-500"
+                  :style="{ width: `${Math.max(5, currentSummary.payingRate)}%` }"
+                />
               </div>
             </div>
           </div>
-        </NCard>
+        </Card>
 
-        <!-- 右列: 周开播习惯与活跃节奏热力 -->
-        <NCard class="insight-card rhythm-card" :bordered="false">
-          <div class="insight-card-header">
-            <div class="insight-title">
-              <NIcon><CalendarLtr24Regular /></NIcon>
-              <span>周开播习惯与黄金周期分布</span>
+        <!-- 周开播黄金日与出勤热力 -->
+        <Card class="p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs font-semibold">
+              <component
+                :is="CalendarLtr24Regular"
+                class="h-4 w-4 text-brand"
+              />
+              <span>周开播习惯与黄金日</span>
             </div>
-            <NTag v-if="bestDayInsight" size="small" type="success" :bordered="false" class="best-day-tag">
-              推荐黄金日: {{ bestDayInsight.income.dayName }}
-            </NTag>
+            <Badge
+              v-if="bestDayInsight"
+              variant="brand"
+              class="text-[10px] px-1 py-0 h-4"
+            >
+              黄金日: {{ bestDayInsight.income.dayName }}
+            </Badge>
           </div>
 
-          <div class="dow-stats-container">
-            <div class="dow-grid">
-              <div
-                v-for="item in currentDayOfWeekStats"
-                :key="item.dayOfWeek"
-                class="dow-col"
-                :class="{ 'is-active-day': item.liveDaysCount > 0, 'is-best': bestDayInsight?.income.dayOfWeek === item.dayOfWeek }"
-              >
-                <div class="dow-header">
-                  <span class="dow-name">{{ item.dayName }}</span>
-                  <span class="dow-count">{{ item.liveDaysCount }}次</span>
-                </div>
+          <!-- 周一至周日柱状分布 -->
+          <div class="grid grid-cols-7 gap-1.5 pt-2 text-center text-xs">
+            <div
+              v-for="item in currentDayOfWeekStats"
+              :key="item.dayOfWeek"
+              class="p-1.5 rounded border border-border/50 bg-muted/20 flex flex-col items-center justify-between h-28"
+              :class="{ 'border-brand/40 bg-brand/5': bestDayInsight?.income.dayOfWeek === item.dayOfWeek }"
+            >
+              <span class="font-semibold text-[11px]">{{ item.dayName }}</span>
 
-                <div class="dow-bars">
-                  <!-- 收益条 -->
-                  <div class="bar-track">
-                    <div
-                      class="bar-fill is-gold"
-                      :style="{
-                        height: `${bestDayInsight && bestDayInsight.income.avgIncome > 0 ? (item.avgIncome / bestDayInsight.income.avgIncome) * 100 : 0}%`,
-                      }"
-                      :title="`场均收益: ¥${item.avgIncome.toFixed(1)}`"
-                    ></div>
-                  </div>
-                  <!-- 弹幕条 -->
-                  <div class="bar-track">
-                    <div
-                      class="bar-fill is-green"
-                      :style="{
-                        height: `${bestDayInsight && bestDayInsight.danmaku.avgDanmaku > 0 ? (item.avgDanmaku / bestDayInsight.danmaku.avgDanmaku) * 100 : 0}%`,
-                      }"
-                      :title="`场均弹幕: ${item.avgDanmaku.toFixed(0)}条`"
-                    ></div>
-                  </div>
-                </div>
-
-                <div class="dow-footer-val">
-                  <span class="footer-income">¥{{ Math.round(item.avgIncome) }}</span>
-                </div>
+              <div class="flex items-end gap-1 h-14 w-full justify-center">
+                <div
+                  class="w-2 rounded-t bg-amber-500"
+                  :style="{
+                    height: `${bestDayInsight && bestDayInsight.income.avgIncome > 0 ? (item.avgIncome / bestDayInsight.income.avgIncome) * 100 : 0}%`,
+                  }"
+                  :title="`场均收益 ¥${item.avgIncome.toFixed(0)}`"
+                />
+                <div
+                  class="w-2 rounded-t bg-emerald-500"
+                  :style="{
+                    height: `${bestDayInsight && bestDayInsight.danmaku.avgDanmaku > 0 ? (item.avgDanmaku / bestDayInsight.danmaku.avgDanmaku) * 100 : 0}%`,
+                  }"
+                  :title="`场均弹幕 ${item.avgDanmaku.toFixed(0)}`"
+                />
               </div>
-            </div>
 
-            <!-- 小贴士 -->
-            <div v-if="bestDayInsight" class="dow-insight-tip">
-              <NIcon><Sparkle24Regular /></NIcon>
-              <span>
-                <strong>{{ bestDayInsight.income.dayName }}</strong> 场均收益最高 (¥{{ bestDayInsight.income.avgIncome.toFixed(1) }})，
-                <strong>{{ bestDayInsight.danmaku.dayName }}</strong> 场均弹幕最活跃 ({{ bestDayInsight.danmaku.avgDanmaku.toFixed(0) }}条)。建议重要活动优先安排在黄金日。
-              </span>
+              <span class="text-[10px] text-muted-foreground font-mono">¥{{ Math.round(item.avgIncome) }}</span>
             </div>
           </div>
 
-          <!-- 下方: 60 天开播活跃热力矩阵 -->
-          <div class="heatmap-section-divider">
-            <div class="heatmap-section-header">
-              <div class="heatmap-section-title">
-                <NIcon><CalendarClock24Regular /></NIcon>
-                <span>60 天开播活跃热力矩阵</span>
-              </div>
-              <div class="heatmap-summary-badge">
-                <span>开播 {{ heatmapStats.liveDays }}天</span>
-                <span class="badge-dot">·</span>
-                <span>休整 {{ heatmapStats.restDays }}天</span>
-                <span class="badge-dot">·</span>
-                <span>出勤率 {{ heatmapStats.rate }}%</span>
-              </div>
-            </div>
-
-            <div class="heatmap-compact-box">
-              <div class="heatmap-grid-scroll">
-                <div class="heatmap-grid">
-                  <NTooltip v-for="point in heatmapDays" :key="point.timestamp" trigger="hover">
-                    <template #trigger>
-                      <div
-                        class="heatmap-day-cell"
-                        :class="`lvl-${getHeatmapLevel(point.liveMinutes)}`"
-                      ></div>
-                    </template>
-                    <div class="heatmap-tooltip">
-                      <div class="tooltip-date">{{ point.date }}</div>
-                      <div v-if="point.liveMinutes > 0" class="tooltip-body">
-                        <div>直播时长: {{ (point.liveMinutes / 60).toFixed(1) }} 小时</div>
-                        <div>总收益: ¥{{ formatNumber(point.income) }}</div>
-                        <div>弹幕数: {{ formatNumber(point.danmakuCount) }} 条</div>
-                        <div>互动人数: {{ formatNumber(point.interactionUsers) }} 人</div>
-                      </div>
-                      <div v-else class="tooltip-body is-rest">
-                        <span>未开播 / 休整日</span>
-                      </div>
-                    </div>
-                  </NTooltip>
-                </div>
-              </div>
-
-              <div class="heatmap-footer-meta">
-                <span class="heatmap-footer-note">近 60 天每日直播状态</span>
-                <div class="heatmap-legend">
-                  <span class="legend-lbl">少</span>
-                  <div class="legend-cell lvl-0"></div>
-                  <div class="legend-cell lvl-1"></div>
-                  <div class="legend-cell lvl-2"></div>
-                  <div class="legend-cell lvl-3"></div>
-                  <div class="legend-cell lvl-4"></div>
-                  <span class="legend-lbl">多</span>
-                </div>
-              </div>
-            </div>
+          <div
+            v-if="bestDayInsight"
+            class="p-2 rounded bg-brand/5 border border-brand/20 text-xs text-foreground flex items-center gap-2"
+          >
+            <component
+              :is="Sparkle24Regular"
+              class="h-4 w-4 text-brand shrink-0"
+            />
+            <span>
+              <strong>{{ bestDayInsight.income.dayName }}</strong> 场均收益最高 (¥{{
+                bestDayInsight.income.avgIncome.toFixed(1)
+              }})，建议将关键活动安排在该日。
+            </span>
           </div>
-        </NCard>
+        </Card>
       </div>
 
-      <!-- Section 4: 分区效能矩阵 & 单场高光 Top Sessions -->
-      <div class="area-session-bento-grid">
-        <!-- 分区效能表现 -->
-        <NCard class="area-card" :bordered="false">
-          <div class="insight-card-header">
-            <div class="insight-title">
-              <NIcon><Grid24Regular /></NIcon>
-              <span>{{ currentSummary.titlePrefix }}直播分区效能矩阵</span>
-            </div>
+      <!-- Section 4: 分区效能与单场高光 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+        <!-- 分区效能 -->
+        <Card class="p-4 space-y-3">
+          <div class="flex items-center gap-2 text-xs font-semibold">
+            <component
+              :is="Grid24Regular"
+              class="h-4 w-4 text-brand"
+            />
+            <span>{{ currentSummary.titlePrefix }}直播分区效能</span>
           </div>
 
-          <div v-if="currentAreaStats.length === 0" class="sub-empty-hint">
-            <NText depth="3">当前区间无分区直播记录</NText>
+          <div
+            v-if="currentAreaStats.length === 0"
+            class="text-xs text-muted-foreground text-center py-8"
+          >
+            当前区间无分区直播记录
           </div>
-
-          <div v-else class="area-metric-list">
-            <div v-for="area in currentAreaStats" :key="`${area.parentArea}-${area.area}`" class="area-metric-card">
-              <div class="area-card-top">
-                <div class="area-info-left">
-                  <span class="area-parent-badge">{{ area.parentArea }}</span>
-                  <span class="area-name-text">{{ area.area }}</span>
+          <div
+            v-else
+            class="space-y-2 max-h-80 overflow-y-auto pr-1"
+          >
+            <div
+              v-for="area in currentAreaStats"
+              :key="`${area.parentArea}-${area.area}`"
+              class="p-2.5 rounded-lg border border-border bg-card/60 flex items-center justify-between text-xs"
+            >
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <Badge
+                    variant="outline"
+                    class="text-[10px] px-1 py-0 h-4"
+                  >
+                    {{ area.parentArea }}
+                  </Badge>
+                  <span class="font-semibold">{{ area.area }}</span>
                 </div>
-                <div class="area-income-right">
-                  <span class="area-income-val">¥{{ formatNumber(area.totalIncome) }}</span>
-                  <span class="area-income-avg">场均 ¥{{ area.avgIncome.toFixed(1) }}</span>
+                <div class="text-[11px] text-muted-foreground mt-1">
+                  {{ area.sessionCount }} 场直播 · {{ (area.totalLiveMinutes / 60).toFixed(1) }} 小时 · 场均
+                  {{ formatNumber(area.avgDanmaku) }} 弹幕
                 </div>
               </div>
-              <div class="area-card-bottom">
-                <span class="area-sub-metric"><strong>{{ area.sessionCount }}</strong> 场直播</span>
-                <span class="metric-divider">·</span>
-                <span class="area-sub-metric"><strong>{{ (area.totalLiveMinutes / 60).toFixed(1) }}</strong> 小时</span>
-                <span class="metric-divider">·</span>
-                <span class="area-sub-metric">场均 <strong>{{ formatNumber(area.avgDanmaku) }}</strong> 弹幕</span>
+              <div class="text-right font-mono">
+                <span class="font-bold text-amber-500">¥{{ formatNumber(area.totalIncome) }}</span>
+                <span class="text-[10px] text-muted-foreground block">场均 ¥{{ area.avgIncome.toFixed(0) }}</span>
               </div>
             </div>
           </div>
-        </NCard>
+        </Card>
 
         <!-- 单场高光排行 Top 5 -->
-        <NCard class="top-sessions-card" :bordered="false">
-          <div class="insight-card-header">
-            <div class="insight-title">
-              <NIcon><Star24Regular /></NIcon>
+        <Card class="p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs font-semibold">
+              <component
+                :is="Star24Regular"
+                class="h-4 w-4 text-amber-500"
+              />
               <span>单场直播高光 TOP 5</span>
             </div>
-            <NTabs v-model:value="activeTopSessionTab" type="segment" size="small">
-              <NTabPane name="income" tab="最高收益" />
-              <NTabPane name="danmaku" tab="最密弹幕" />
-              <NTabPane name="duration" tab="最长开播" />
-            </NTabs>
+
+            <ToggleGroup
+              v-model="activeTopSessionTab"
+              type="single"
+              size="xs"
+            >
+              <ToggleGroupItem value="income">最高收益</ToggleGroupItem>
+              <ToggleGroupItem value="danmaku">最密弹幕</ToggleGroupItem>
+              <ToggleGroupItem value="duration">最长开播</ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
-          <div class="top-sessions-list">
+          <div
+            v-if="currentFilteredSessions.length === 0"
+            class="text-xs text-muted-foreground text-center py-8"
+          >
+            暂无单场直播记录
+          </div>
+          <div
+            v-else
+            class="space-y-2 max-h-80 overflow-y-auto pr-1"
+          >
             <div
-              v-for="(session, idx) in (activeTopSessionTab === 'income' ? topSessionsByIncome : activeTopSessionTab === 'danmaku' ? topSessionsByDanmaku : topSessionsByDuration)"
+              v-for="(session, idx) in activeTopSessionTab === 'income'
+                ? topSessionsByIncome
+                : activeTopSessionTab === 'danmaku'
+                  ? topSessionsByDanmaku
+                  : topSessionsByDuration"
               :key="session.id"
-              class="top-session-item"
+              class="p-2.5 rounded-lg border border-border bg-card/60 flex items-center gap-2.5 text-xs"
             >
-              <div class="session-rank-badge" :class="`is-rank-${idx + 1}`">
+              <div
+                class="w-5 h-5 rounded flex items-center justify-center font-bold text-[11px] shrink-0"
+                :class="{
+                  'bg-amber-500 text-black': idx === 0,
+                  'bg-slate-400 text-black': idx === 1,
+                  'bg-amber-700 text-white': idx === 2,
+                  'bg-muted text-muted-foreground': idx > 2,
+                }"
+              >
                 {{ idx + 1 }}
               </div>
-              <div class="session-main-meta">
-                <div class="session-title-row">
-                  <span class="session-title-text" :title="session.title">{{ session.title }}</span>
-                  <NTag size="tiny" :bordered="false" class="session-area-tag">
-                    {{ session.parentArea }} · {{ session.area }}
-                  </NTag>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="font-semibold truncate"
+                    :title="session.title"
+                    >{{ session.title }}</span
+                  >
+                  <Badge
+                    variant="outline"
+                    class="text-[9px] px-1 py-0 h-3.5 shrink-0"
+                  >
+                    {{ session.area }}
+                  </Badge>
                 </div>
-                <div class="session-time-row">
-                  <span>{{ formatDate(session.startTime) }}</span>
-                  <span class="time-sep">·</span>
-                  <span>时长 {{ (session.liveMinutes / 60).toFixed(1) }} 小时</span>
+                <div class="text-[11px] text-muted-foreground mt-0.5">
+                  {{ formatDate(session.startTime) }} · {{ (session.liveMinutes / 60).toFixed(1) }} 小时
                 </div>
               </div>
-              <div class="session-highlight-stat">
+
+              <div class="text-right font-mono shrink-0">
                 <template v-if="activeTopSessionTab === 'income'">
-                  <span class="stat-highlight is-gold">¥{{ formatNumber(session.totalIncome) }}</span>
-                  <span class="stat-sub">弹幕 {{ formatNumber(session.danmakuCount) }}</span>
+                  <span class="font-bold text-amber-500">¥{{ formatNumber(session.totalIncome) }}</span>
+                  <span class="text-[10px] text-muted-foreground block"
+                    >{{ formatNumber(session.danmakuCount) }} 条弹幕</span
+                  >
                 </template>
                 <template v-else-if="activeTopSessionTab === 'danmaku'">
-                  <span class="stat-highlight is-green">{{ formatNumber(session.danmakuCount) }} 条</span>
-                  <span class="stat-sub">收益 ¥{{ formatNumber(session.totalIncome) }}</span>
+                  <span class="font-bold text-emerald-500">{{ formatNumber(session.danmakuCount) }} 条</span>
+                  <span class="text-[10px] text-muted-foreground block">¥{{ formatNumber(session.totalIncome) }}</span>
                 </template>
                 <template v-else>
-                  <span class="stat-highlight is-purple">{{ (session.liveMinutes / 60).toFixed(1) }} 小时</span>
-                  <span class="stat-sub">收益 ¥{{ formatNumber(session.totalIncome) }}</span>
+                  <span class="font-bold text-purple-500">{{ (session.liveMinutes / 60).toFixed(1) }} 小时</span>
+                  <span class="text-[10px] text-muted-foreground block">¥{{ formatNumber(session.totalIncome) }}</span>
                 </template>
               </div>
             </div>
-
-            <div v-if="currentFilteredSessions.length === 0" class="sub-empty-hint">
-              <NText depth="3">暂无单场直播记录</NText>
-            </div>
           </div>
-        </NCard>
+        </Card>
       </div>
 
-
-
-      <!-- Section 6: 高频粉丝贡献与互动画像 (Top Supporters & Chatters) -->
-      <div v-if="(analyzeData?.topSpenders && analyzeData.topSpenders.length > 0) || (analyzeData?.topChatters && analyzeData.topChatters.length > 0)" class="supporters-grid">
-        <!-- 打赏榜 Top 10 -->
-        <NCard v-if="analyzeData?.topSpenders && analyzeData.topSpenders.length > 0" class="supporter-card" :bordered="false">
-          <div class="insight-card-header">
-            <div class="insight-title">
-              <NIcon><Trophy24Regular /></NIcon>
-              <span>近 60 天核心打赏金主 TOP 10</span>
-            </div>
+      <!-- Section 5: 每日直播明细复盘表 (可折叠) -->
+      <Card class="p-4 space-y-3">
+        <div
+          class="flex items-center justify-between cursor-pointer select-none"
+          @click="isDailyTableExpanded = !isDailyTableExpanded"
+        >
+          <div class="flex items-center gap-2 text-xs font-semibold">
+            <component
+              :is="Table24Regular"
+              class="h-4 w-4 text-brand"
+            />
+            <span>{{ currentSummary.titlePrefix }}每日明细复盘表 (共 {{ dailyTableData.length }} 条记录)</span>
           </div>
-          <div class="supporter-list">
-            <div v-for="(user, idx) in analyzeData.topSpenders" :key="user.name" class="supporter-item">
-              <div class="supporter-rank" :class="`is-rank-${idx + 1}`">{{ idx + 1 }}</div>
-              <div class="supporter-info">
-                <span class="supporter-name">{{ user.name }}</span>
-                <span v-if="user.lastTime" class="supporter-time">最近互动: {{ formatDate(user.lastTime) }}</span>
-              </div>
-              <div class="supporter-val is-gold">
-                ¥{{ formatNumber(user.totalPaid || 0) }}
-                <span v-if="user.payCount" class="supporter-count">({{ user.payCount }}次)</span>
-              </div>
+
+          <div class="flex items-center gap-2">
+            <div
+              class="flex items-center gap-1.5 text-xs text-muted-foreground mr-2"
+              @click.stop
+            >
+              <Switch
+                :checked="showOnlyLiveDays"
+                @update:checked="(val) => (showOnlyLiveDays = val)"
+              />
+              <span>仅开播日</span>
             </div>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+            >
+              <component :is="isDailyTableExpanded ? ChevronUp24Regular : ChevronDown24Regular" />
+            </Button>
           </div>
-        </NCard>
+        </div>
 
-        <!-- 弹幕狂热榜 Top 10 -->
-        <NCard v-if="analyzeData?.topChatters && analyzeData.topChatters.length > 0" class="supporter-card" :bordered="false">
-          <div class="insight-card-header">
-            <div class="insight-title">
-              <NIcon><ChatMultiple24Regular /></NIcon>
-              <span>近 60 天弹幕活跃真爱粉 TOP 10</span>
-            </div>
-          </div>
-          <div class="supporter-list">
-            <div v-for="(user, idx) in analyzeData.topChatters" :key="user.name" class="supporter-item">
-              <div class="supporter-rank" :class="`is-rank-${idx + 1}`">{{ idx + 1 }}</div>
-              <div class="supporter-info">
-                <span class="supporter-name">{{ user.name }}</span>
-                <span v-if="user.lastTime" class="supporter-time">最近发言: {{ formatDate(user.lastTime) }}</span>
-              </div>
-              <div class="supporter-val is-green">
-                {{ formatNumber(user.danmakuCount || 0) }} 条
-              </div>
-            </div>
-          </div>
-        </NCard>
-      </div>
-
-      <!-- Section 7: 每日直播明细复盘表 (可折叠) -->
-      <NCard class="daily-table-card" :bordered="false">
-        <NCollapse :default-expanded-names="[]">
-          <NCollapseItem name="daily-table">
-            <template #header>
-              <div class="table-collapse-header">
-                <div class="insight-title">
-                  <NIcon><Table24Regular /></NIcon>
-                  <span>{{ currentSummary.titlePrefix }}每日明细复盘表 (共 {{ dailyTableData.length }} 条记录)</span>
-                </div>
-              </div>
-            </template>
-
-            <div class="table-toolbar">
-              <NFlex align="center" justify="space-between" style="width: 100%">
-                <NFlex align="center" :size="12">
-                  <NSwitch v-model:value="showOnlyLiveDays" size="small" />
-                  <span class="switch-lbl">仅显示开播日期 (已过滤未开播休整日)</span>
-                </NFlex>
-              </NFlex>
-            </div>
-
-            <div class="daily-breakdown-table-box">
-              <NTable size="small" :single-line="false" class="clean-daily-table">
-                <thead>
-                  <tr>
-                    <th class="clickable-th" @click="toggleDailySort('date')">
-                      日期 {{ dailyTableSortKey === 'date' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
-                    </th>
-                    <th class="clickable-th" style="text-align: right" @click="toggleDailySort('income')">
-                      收益 (¥) {{ dailyTableSortKey === 'income' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
-                    </th>
-                    <th class="clickable-th" style="text-align: right" @click="toggleDailySort('danmaku')">
-                      弹幕数 {{ dailyTableSortKey === 'danmaku' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
-                    </th>
-                    <th class="clickable-th" style="text-align: right" @click="toggleDailySort('interactions')">
-                      互动人次 {{ dailyTableSortKey === 'interactions' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
-                    </th>
-                    <th style="text-align: right">付费人数</th>
-                    <th class="clickable-th" style="text-align: right" @click="toggleDailySort('duration')">
-                      开播时长 {{ dailyTableSortKey === 'duration' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
-                    </th>
-                    <th style="text-align: right">点赞数</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="row in dailyTableData" :key="row.timestamp">
-                    <td>
-                      <span class="table-date-cell">{{ row.date }}</span>
-                    </td>
-                    <td style="text-align: right; font-weight: 600; color: #f59e0b">
-                      {{ row.income > 0 ? `¥${formatCurrency(row.income)}` : '-' }}
-                    </td>
-                    <td style="text-align: right">
-                      {{ row.danmakuCount > 0 ? formatNumber(row.danmakuCount) : '-' }}
-                    </td>
-                    <td style="text-align: right">
-                      {{ row.interactionCount > 0 ? formatNumber(row.interactionCount) : '-' }}
-                    </td>
-                    <td style="text-align: right">
-                      {{ row.payingUsers > 0 ? `${row.payingUsers} 人` : '-' }}
-                    </td>
-                    <td style="text-align: right">
-                      <NTag v-if="row.liveMinutes > 0" size="tiny" :bordered="false" type="info">
-                        {{ row.liveHours }} h
-                      </NTag>
-                      <span v-else class="text-muted-dash">-</span>
-                    </td>
-                    <td style="text-align: right">
-                      {{ row.likeCount > 0 ? formatNumber(row.likeCount) : '-' }}
-                    </td>
-                  </tr>
-                </tbody>
-              </NTable>
-            </div>
-          </NCollapseItem>
-        </NCollapse>
-      </NCard>
+        <div
+          v-if="isDailyTableExpanded"
+          class="pt-2 border-t border-border overflow-x-auto"
+        >
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead
+                  class="cursor-pointer"
+                  @click="toggleDailySort('date')"
+                >
+                  日期 {{ dailyTableSortKey === 'date' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
+                </TableHead>
+                <TableHead
+                  class="text-right cursor-pointer"
+                  @click="toggleDailySort('income')"
+                >
+                  收益 (¥) {{ dailyTableSortKey === 'income' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
+                </TableHead>
+                <TableHead
+                  class="text-right cursor-pointer"
+                  @click="toggleDailySort('danmaku')"
+                >
+                  弹幕数 {{ dailyTableSortKey === 'danmaku' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
+                </TableHead>
+                <TableHead
+                  class="text-right cursor-pointer"
+                  @click="toggleDailySort('interactions')"
+                >
+                  互动人次 {{ dailyTableSortKey === 'interactions' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
+                </TableHead>
+                <TableHead class="text-right"> 付费人数 </TableHead>
+                <TableHead
+                  class="text-right cursor-pointer"
+                  @click="toggleDailySort('duration')"
+                >
+                  开播时长 {{ dailyTableSortKey === 'duration' ? (dailyTableSortAsc ? '↑' : '↓') : '' }}
+                </TableHead>
+                <TableHead class="text-right"> 点赞数 </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow
+                v-for="row in dailyTableData"
+                :key="row.timestamp"
+              >
+                <TableCell class="font-mono text-xs">
+                  {{ row.date }}
+                </TableCell>
+                <TableCell class="text-right font-mono font-semibold text-amber-500 text-xs">
+                  {{ row.income > 0 ? `¥${formatCurrency(row.income)}` : '-' }}
+                </TableCell>
+                <TableCell class="text-right font-mono text-xs">
+                  {{ row.danmakuCount > 0 ? formatNumber(row.danmakuCount) : '-' }}
+                </TableCell>
+                <TableCell class="text-right font-mono text-xs">
+                  {{ row.interactionCount > 0 ? formatNumber(row.interactionCount) : '-' }}
+                </TableCell>
+                <TableCell class="text-right text-xs">
+                  {{ row.payingUsers > 0 ? `${row.payingUsers} 人` : '-' }}
+                </TableCell>
+                <TableCell class="text-right text-xs">
+                  <Badge
+                    v-if="row.liveMinutes > 0"
+                    variant="outline"
+                    class="text-[10px] px-1 py-0 h-4"
+                  >
+                    {{ row.liveHours }} h
+                  </Badge>
+                  <span
+                    v-else
+                    class="text-muted-foreground"
+                    >-</span
+                  >
+                </TableCell>
+                <TableCell class="text-right font-mono text-xs">
+                  {{ row.likeCount > 0 ? formatNumber(row.likeCount) : '-' }}
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </div>
+      </Card>
     </div>
   </div>
 </template>
-
-<style scoped>
-.analyze-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-bottom: 32px;
-}
-
-.range-datepicker {
-  width: 240px;
-}
-
-/* 骨架屏与空状态 */
-.dashboard-skeleton {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-top: 8px;
-}
-
-.skeleton-header-hint {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  padding: 2px 4px;
-}
-
-.skeleton-pulse-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: #f59e0b;
-  animation: pulse-dot 1.5s ease-in-out infinite;
-}
-
-@keyframes pulse-dot {
-  0%, 100% {
-    opacity: 0.3;
-    transform: scale(0.9);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.2);
-  }
-}
-
-.skeleton-milestone-ribbon {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 10px;
-  padding: 8px 14px;
-}
-
-.skeleton-pills-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: hidden;
-}
-
-.bento-skeleton-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 180px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.skeleton-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.skeleton-card-mid {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.skeleton-card-bot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.chart-skeleton-card {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 12px;
-  padding: 16px;
-}
-
-.skeleton-chart-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.skeleton-chart-metrics {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.insight-skeleton-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 12px;
-  padding: 16px;
-  min-height: 320px;
-}
-
-.dashboard-empty {
-  margin-top: 8px;
-}
-
-.empty-card {
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-}
-
-.dashboard-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-/* 峰值战报胶囊条 */
-.milestone-ribbon {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 10px;
-  padding: 8px 14px;
-  overflow-x: auto;
-}
-
-.ribbon-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.ribbon-scroll {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow-x: auto;
-}
-
-.milestone-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  padding: 3px 10px;
-  font-size: 11.5px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.pill-badge {
-  color: var(--vtsuru-fg-muted);
-}
-
-.pill-value {
-  font-weight: 700;
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.milestone-pill.is-gold .pill-value {
-  color: #f59e0b;
-}
-
-.milestone-pill.is-green .pill-value {
-  color: #10b981;
-}
-
-.milestone-pill.is-purple .pill-value {
-  color: #8b5cf6;
-}
-
-.milestone-pill.is-cyan .pill-value {
-  color: #06b6d4;
-}
-
-.milestone-pill.is-amber .pill-value {
-  color: #f97316;
-}
-
-.pill-date {
-  font-size: 10.5px;
-  color: var(--vtsuru-fg-muted);
-  opacity: 0.8;
-}
-
-/* 4 宫格 Bento 核心指标大卡 */
-.bento-metric-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 14px;
-}
-
-@media (max-width: 1200px) {
-  .bento-metric-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
-  .bento-metric-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.bento-card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 12px;
-  padding: 16px;
-  position: relative;
-  overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-}
-
-.bento-card:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
-}
-
-.bento-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.header-tag {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.icon-avatar {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.icon-avatar.is-gold {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
-}
-
-.icon-avatar.is-green {
-  background: rgba(16, 185, 129, 0.15);
-  color: #10b981;
-}
-
-.icon-avatar.is-cyan {
-  background: rgba(6, 182, 212, 0.15);
-  color: #06b6d4;
-}
-
-.icon-avatar.is-purple {
-  background: rgba(139, 92, 246, 0.15);
-  color: #8b5cf6;
-}
-
-.header-label {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.bento-card-body {
-  margin-bottom: 12px;
-}
-
-.primary-metric-val {
-  font-size: 26px;
-  font-weight: 800;
-  font-family: var(--n-font-family-mono, monospace);
-  color: var(--vtsuru-fg);
-  line-height: 1.1;
-  display: flex;
-  align-items: baseline;
-  gap: 3px;
-  margin-bottom: 8px;
-}
-
-.currency-symbol {
-  font-size: 18px;
-  font-weight: 600;
-  color: #f59e0b;
-}
-
-.metric-unit {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--vtsuru-fg-muted);
-  margin-left: 2px;
-}
-
-.income-split-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 6px;
-}
-
-.split-info {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.split-progress-track {
-  display: flex;
-  height: 4px;
-  background: var(--vtsuru-bg);
-  border-radius: 2px;
-  overflow: hidden;
-  gap: 1px;
-}
-
-.split-seg.is-gift {
-  background: #f59e0b;
-}
-
-.split-seg.is-sc {
-  background: #f97316;
-}
-
-.split-seg.is-guard {
-  background: #3b82f6;
-}
-
-.split-seg.is-offline {
-  background: #10b981;
-}
-
-.offline-split-text {
-  color: #10b981;
-  font-weight: 600;
-}
-
-.metric-context-text {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.context-highlight {
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.context-sub {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.bento-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 10px;
-  border-top: 1px solid var(--vtsuru-border);
-  font-size: 11.5px;
-}
-
-.sub-stat {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.sub-stat-lbl {
-  color: var(--vtsuru-fg-muted);
-}
-
-.sub-stat-val {
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.sub-stat-sep {
-  width: 1px;
-  height: 12px;
-  background: var(--vtsuru-border);
-}
-
-/* 主图表卡片 */
-.dashboard-chart-card {
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.chart-header-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.chart-title-group {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
-}
-
-.chart-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--vtsuru-fg);
-}
-
-.chart-metric-selector {
-  margin-bottom: 12px;
-  padding: 8px 12px;
-  background: var(--vtsuru-bg);
-  border-radius: 8px;
-  border: 1px solid var(--vtsuru-border);
-}
-
-.metric-pill {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 4px;
-}
-
-.main-echart-box {
-  width: 100%;
-  height: 380px;
-}
-
-/* 深度洞察 Bento */
-.insight-bento-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-}
-
-@media (max-width: 900px) {
-  .insight-bento-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.insight-card {
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.insight-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 14px;
-}
-
-.insight-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--vtsuru-fg);
-}
-
-.revenue-breakdown-content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.pie-stat-row {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.pie-stat-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-}
-
-.stat-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-right: 10px;
-}
-
-.stat-dot.is-gift {
-  background: #f59e0b;
-}
-
-.stat-dot.is-sc {
-  background: #f97316;
-}
-
-.stat-dot.is-guard {
-  background: #3b82f6;
-}
-
-.stat-dot.is-offline {
-  background: #10b981;
-}
-
-.stat-meta {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.meta-label {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.meta-val {
-  font-size: 13.5px;
-  font-weight: 700;
-  color: var(--vtsuru-fg);
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.stat-pct {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--vtsuru-fg-muted);
-}
-
-.monetization-funnel {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.funnel-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
-}
-
-.funnel-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.offline-monetization-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 14px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.offline-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.offline-header-title {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.offline-header-sum {
-  font-size: 12px;
-  font-weight: 700;
-  color: #10b981;
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.offline-cards-scroll {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-height: 200px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.offline-event-chip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 10px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  font-size: 11.5px;
-  transition: border-color 0.15s;
-}
-
-.offline-event-chip:hover {
-  border-color: rgba(16, 185, 129, 0.4);
-}
-
-.chip-main {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.chip-user {
-  font-weight: 500;
-  color: var(--vtsuru-fg);
-}
-
-.chip-side {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.chip-price {
-  font-weight: 700;
-  color: #10b981;
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.chip-date {
-  font-size: 10.5px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.funnel-step {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.step-bar {
-  height: 6px;
-  border-radius: 3px;
-}
-
-.step-bar.is-active {
-  background: #3b82f6;
-}
-
-.step-bar.is-paying {
-  background: #8b5cf6;
-}
-
-.step-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.step-meta .is-highlight {
-  font-weight: 600;
-  color: #8b5cf6;
-}
-
-/* 周开播习惯柱状图 */
-.dow-stats-container {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.dow-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  height: 135px;
-  align-items: flex-end;
-  padding: 6px 0;
-}
-
-.dow-col {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  height: 100%;
-  justify-content: flex-end;
-  padding: 6px;
-  border-radius: 8px;
-  background: var(--vtsuru-bg);
-  border: 1px solid transparent;
-  transition: all 0.2s;
-}
-
-.dow-col.is-active-day {
-  border-color: var(--vtsuru-border);
-}
-
-.dow-col.is-best {
-  border-color: rgba(245, 158, 11, 0.4);
-  background: rgba(245, 158, 11, 0.05);
-}
-
-.dow-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-}
-
-.dow-name {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.dow-count {
-  font-size: 9.5px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.dow-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 80px;
-  width: 100%;
-  justify-content: center;
-}
-
-.bar-track {
-  width: 8px;
-  height: 100%;
-  display: flex;
-  align-items: flex-end;
-  background: rgba(255, 255, 255, 0.04);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.bar-fill {
-  width: 100%;
-  border-radius: 3px 3px 0 0;
-  transition: height 0.3s;
-}
-
-.bar-fill.is-gold {
-  background: #f59e0b;
-}
-
-.bar-fill.is-green {
-  background: #10b981;
-}
-
-.dow-footer-val {
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.dow-insight-tip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.2);
-  border-radius: 8px;
-  font-size: 11.5px;
-  color: var(--vtsuru-fg);
-  line-height: 1.4;
-}
-
-/* 分区与单场高光 Bento */
-.area-session-bento-grid {
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 14px;
-}
-
-@media (max-width: 960px) {
-  .area-session-bento-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.area-card,
-.top-sessions-card {
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.area-metric-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.area-metric-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 14px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.area-metric-card:hover {
-  border-color: rgba(245, 158, 11, 0.3);
-}
-
-.area-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.area-info-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.area-parent-badge {
-  display: inline-block;
-  padding: 1px 6px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 4px;
-  font-size: 10.5px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.area-name-text {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--vtsuru-fg);
-}
-
-.area-income-right {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.area-income-val {
-  font-size: 14px;
-  font-weight: 800;
-  color: #f59e0b;
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.area-income-avg {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.area-card-bottom {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.area-sub-metric strong {
-  color: var(--vtsuru-fg);
-  font-weight: 600;
-}
-
-.metric-divider {
-  opacity: 0.4;
-}
-
-.top-sessions-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.top-session-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.top-session-item:hover {
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.session-rank-badge {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  background: var(--vtsuru-bg-elevated);
-  color: var(--vtsuru-fg-muted);
-  flex-shrink: 0;
-}
-
-.session-rank-badge.is-rank-1 {
-  background: #f59e0b;
-  color: #000;
-}
-
-.session-rank-badge.is-rank-2 {
-  background: #94a3b8;
-  color: #000;
-}
-
-.session-rank-badge.is-rank-3 {
-  background: #b45309;
-  color: #fff;
-}
-
-.session-main-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-}
-
-.session-title-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.session-title-text {
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.session-area-tag {
-  font-size: 10px;
-  flex-shrink: 0;
-}
-
-.session-time-row {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.time-sep {
-  margin: 0 4px;
-}
-
-.session-highlight-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-
-.stat-highlight {
-  font-size: 13px;
-  font-weight: 700;
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.stat-highlight.is-gold {
-  color: #f59e0b;
-}
-
-.stat-highlight.is-green {
-  color: #10b981;
-}
-
-.stat-highlight.is-purple {
-  color: #8b5cf6;
-}
-
-.stat-sub {
-  font-size: 10.5px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.sub-empty-hint {
-  padding: 24px;
-  text-align: center;
-}
-
-/* 嵌入式 60 天开播热力矩阵 */
-.heatmap-section-divider {
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.heatmap-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.heatmap-section-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--vtsuru-fg);
-}
-
-.heatmap-summary-badge {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-weight: 500;
-}
-
-.badge-dot {
-  opacity: 0.5;
-}
-
-.heatmap-compact-box {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.heatmap-grid-scroll {
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.heatmap-grid {
-  display: grid;
-  grid-template-rows: repeat(7, 1fr);
-  grid-auto-flow: column;
-  gap: 3.5px;
-  width: max-content;
-}
-
-.heatmap-day-cell {
-  width: 13px;
-  height: 13px;
-  border-radius: 2.5px;
-  transition: transform 0.15s, opacity 0.15s;
-  cursor: pointer;
-}
-
-.heatmap-day-cell:hover {
-  transform: scale(1.3);
-  z-index: 2;
-}
-
-.heatmap-footer-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 2px;
-}
-
-.heatmap-footer-note {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.heatmap-legend {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10.5px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.legend-cell {
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-}
-
-.lvl-0 {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.lvl-1 {
-  background: rgba(16, 185, 129, 0.25);
-}
-
-.lvl-2 {
-  background: rgba(16, 185, 129, 0.5);
-}
-
-.lvl-3 {
-  background: rgba(16, 185, 129, 0.75);
-}
-
-.lvl-4 {
-  background: #10b981;
-}
-
-.heatmap-tooltip {
-  font-size: 11.5px;
-  padding: 2px;
-}
-
-.tooltip-date {
-  font-weight: 700;
-  margin-bottom: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: 2px;
-}
-
-.tooltip-body {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.tooltip-body.is-rest {
-  color: var(--vtsuru-fg-muted);
-}
-
-/* 金主与粉丝榜 */
-.supporters-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 14px;
-}
-
-@media (max-width: 900px) {
-  .supporters-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.supporter-card {
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.supporter-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.supporter-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-}
-
-.supporter-rank {
-  width: 20px;
-  height: 20px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--vtsuru-bg-elevated);
-  color: var(--vtsuru-fg-muted);
-}
-
-.supporter-rank.is-rank-1 {
-  background: #f59e0b;
-  color: #000;
-}
-
-.supporter-rank.is-rank-2 {
-  background: #94a3b8;
-  color: #000;
-}
-
-.supporter-rank.is-rank-3 {
-  background: #b45309;
-  color: #fff;
-}
-
-.supporter-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.supporter-name {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.supporter-time {
-  font-size: 10px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.supporter-val {
-  font-size: 12.5px;
-  font-weight: 700;
-  font-family: var(--n-font-family-mono, monospace);
-}
-
-.supporter-val.is-gold {
-  color: #f59e0b;
-}
-
-.supporter-val.is-green {
-  color: #10b981;
-}
-
-.supporter-count {
-  font-size: 10px;
-  font-weight: normal;
-  color: var(--vtsuru-fg-muted);
-}
-
-/* 每日复盘明细卡片 */
-.daily-table-card {
-  border-radius: 12px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.table-collapse-header {
-  display: flex;
-  align-items: center;
-  width: 100%;
-}
-
-.table-toolbar {
-  margin-bottom: 10px;
-  padding: 6px 0;
-}
-
-.switch-lbl {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.daily-breakdown-table-box {
-  max-height: 420px;
-  overflow-y: auto;
-}
-
-.clean-daily-table {
-  background: transparent;
-  font-size: 12px;
-}
-
-.clickable-th {
-  cursor: pointer;
-  user-select: none;
-}
-
-.clickable-th:hover {
-  color: var(--vtsuru-fg);
-}
-
-.table-date-cell {
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.text-muted-dash {
-  color: var(--vtsuru-fg-muted);
-}
-</style>

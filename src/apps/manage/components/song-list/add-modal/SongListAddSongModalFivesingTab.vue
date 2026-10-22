@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { NButton, NDivider, NInput, NPagination, NFlex, NTable, NTag, useMessage } from 'naive-ui'
 import { ref } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { FETCH_API } from '@/shared/config'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tag } from '@/shared/ui/tag'
+import { useMessage } from '@/shared/utils'
 
 defineProps<{
   existingSongs: SongsInfo[]
@@ -70,13 +74,13 @@ async function getFivesingSearchList(isRestart = false) {
       const songInfo = {
         id: song.songId,
         name: extractTextFromHtml(song.songName),
-        author: [song.originSinger, song.singer],
+        author: [song.originSinger, song.singer].filter(Boolean),
       } as SongsInfo
       fivesingResults.value.push(songInfo)
     })
 
     fivesingTotalPageCount.value = json.pageInfo.totalPages
-    message.success(`成功获取搜索信息, 共 ${json.pageInfo.totalCount} 条, 当前第 ${fivesingCurrentPage.value} 页`)
+    message.success(`成功获取搜索信息，共 ${json.pageInfo.totalCount} 条`)
   } catch (err) {
     message.error(`获取歌单失败: ${err}`)
   } finally {
@@ -91,7 +95,7 @@ async function addFivesingSongs(song: SongsInfo) {
       try {
         song.url = await getFivesingSongUrl(song)
       } catch {
-        message.error('未能获取到歌曲链接, 将留空')
+        message.error('未能获取到歌曲链接，将留空')
       }
     }
 
@@ -112,91 +116,82 @@ async function addFivesingSongs(song: SongsInfo) {
 </script>
 
 <template>
-  <NInput
-    v-model:value="fivesingSearchInput"
-    clearable
-    style="width: 100%"
-    autosize
-    placeholder="输入要搜索的歌名"
-    maxlength="15"
-  />
-  <NDivider style="margin: 10px" />
-  <NButton
-    type="primary"
-    :disabled="!fivesingSearchInput"
-    @click="getFivesingSearchList(true)"
-  >
-    搜索
-  </NButton>
-  <template v-if="fivesingResults.length > 0">
-    <NDivider style="margin: 10px" />
-    <div style="overflow-x: auto">
-      <NTable
-        size="small"
-        style="overflow-x: auto"
+  <div class="space-y-3">
+    <div class="flex items-center gap-2">
+      <Input
+        v-model="fivesingSearchInput"
+        placeholder="输入要搜索的歌名"
+        maxlength="15"
+        class="flex-1"
+        @keyup.enter="getFivesingSearchList(true)"
+      />
+      <Button
+        :disabled="!fivesingSearchInput"
+        @click="getFivesingSearchList(true)"
       >
-        <thead>
-          <tr>
-            <th>名称</th>
-            <th>作者</th>
-            <th>试听</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
+        搜索
+      </Button>
+    </div>
+
+    <div
+      v-if="fivesingResults.length > 0"
+      class="border rounded-lg overflow-hidden"
+    >
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>名称</TableHead>
+            <TableHead>作者</TableHead>
+            <TableHead class="w-32 text-center">试听</TableHead>
+            <TableHead class="w-20 text-center">操作</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow
             v-for="song in fivesingResults"
             :key="song.id"
           >
-            <td>{{ song.name }}</td>
-            <td>
-              <NFlex>
-                <NTag
+            <TableCell class="text-xs font-medium">{{ song.name }}</TableCell>
+            <TableCell>
+              <div class="flex flex-wrap gap-1">
+                <Tag
                   v-for="author in song.author"
                   :key="author"
                   size="small"
                 >
                   {{ author }}
-                </NTag>
-              </NFlex>
-            </td>
-            <td style="display: flex; justify-content: flex-end">
-              <NButton
+                </Tag>
+              </div>
+            </TableCell>
+            <TableCell class="text-center">
+              <Button
                 v-if="!song.url"
-                size="small"
-                :loading="isGettingFivesingSongPlayUrl === song.id"
+                size="xs"
+                variant="outline"
+                :disabled="isGettingFivesingSongPlayUrl === song.id"
                 @click="playFivesingSong(song)"
               >
-                试听
-              </NButton>
+                {{ isGettingFivesingSongPlayUrl === song.id ? '获取中...' : '试听' }}
+              </Button>
               <audio
                 v-else
                 controls
-                style="max-height: 30px"
+                class="h-7 w-40 max-w-full"
               >
                 <source :src="song.url" />
               </audio>
-            </td>
-            <td>
-              <NButton
-                size="small"
-                type="success"
-                :disabled="existingSongs.findIndex((s) => s.from === SongFrom.FiveSing && s.id === song.id) > -1"
+            </TableCell>
+            <TableCell class="text-center">
+              <Button
+                size="xs"
                 @click="addFivesingSongs(song)"
               >
                 添加
-              </NButton>
-            </td>
-          </tr>
-        </tbody>
-      </NTable>
+              </Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
     </div>
-    <br />
-    <NPagination
-      v-model:page="fivesingCurrentPage"
-      :page-count="fivesingTotalPageCount"
-      simple
-      @update-page="getFivesingSearchList(false)"
-    />
-  </template>
+  </div>
 </template>

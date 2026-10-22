@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { NButton, NCard, NInput, NSpin } from 'naive-ui'
 import { onMounted, ref } from 'vue'
 
 import { getApiOrgOrgIdAudit } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Spin } from '@/shared/ui/spin'
 
 import { useOrgContext } from '../composables/useOrgContext'
 import OrgAuditList from './OrgAuditList.vue'
@@ -43,27 +46,37 @@ onMounted(loadLogs)
 </script>
 
 <template>
-  <NCard
-    title="操作审计"
-    size="small"
-  >
-    <div style="margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 8px">
-      <NInput
-        v-model:value="actionPrefix"
-        placeholder="按 action 前缀过滤（可选）"
-        style="min-width: 220px; flex: 1"
-        @keydown.enter="loadLogs"
-      />
-      <NButton
-        type="primary"
-        :loading="isLoading"
-        @click="loadLogs"
+  <Card class="border border-border/80">
+    <CardHeader class="pb-3 border-b border-border/60">
+      <CardTitle class="text-sm font-semibold">操作审计</CardTitle>
+    </CardHeader>
+
+    <CardContent class="pt-4 space-y-3">
+      <div class="flex flex-wrap items-center gap-2">
+        <Input
+          v-model="actionPrefix"
+          placeholder="按 action 前缀过滤（可选）"
+          class="min-w-[220px] flex-1"
+          @keydown.enter="loadLogs"
+        />
+        <Button
+          :disabled="isLoading"
+          @click="loadLogs"
+        >
+          查询
+        </Button>
+      </div>
+
+      <div
+        v-if="isLoading"
+        class="py-8 flex justify-center"
       >
-        查询
-      </NButton>
-    </div>
-    <NSpin :show="isLoading">
-      <OrgAuditList :logs="logs" />
-    </NSpin>
-  </NCard>
+        <Spin />
+      </div>
+      <OrgAuditList
+        v-else
+        :logs="logs"
+      />
+    </CardContent>
+  </Card>
 </template>

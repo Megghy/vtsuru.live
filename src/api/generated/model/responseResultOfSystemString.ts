@@ -10,8 +10,8 @@
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfSystemString {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: string | null;
+  data: string | null
 }

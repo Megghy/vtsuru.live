@@ -12,7 +12,7 @@ export function getGuardColor(level: number | null | undefined): string {
     case 3:
       return 'rgb(104, 136, 241)'
     default:
-      return 'var(--vtsuru-fg-muted)'
+      return 'var(--muted-foreground)'
   }
 }
 

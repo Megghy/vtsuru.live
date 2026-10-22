@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { CheckmarkCircle16Regular, ChevronDown12Regular, ErrorCircle16Regular, Toolbox16Regular } from '@vicons/fluent'
-import { NCollapseTransition, NIcon, NText } from 'naive-ui'
 import { computed, reactive } from 'vue'
 
 import type { AssistantToolEvent } from '../api/assistant'
@@ -33,171 +32,82 @@ function formatDuration(ms?: number): string {
 <template>
   <div
     v-if="visibleTools.length"
-    class="tool-trace"
+    class="grid gap-1 my-px mb-0.5"
   >
     <div
       v-for="tool in visibleTools"
       :key="tool.id"
-      class="tool-line"
+      class="min-w-0 rounded-[7px] bg-muted/60"
       :class="`tool-line--${tool.status}`"
     >
       <button
         type="button"
-        class="tool-line__head"
+        class="w-full min-h-[30px] grid grid-cols-[18px_minmax(0,1fr)_auto_14px] items-center gap-1.5 py-[5px] px-[7px] border-0 rounded-[7px] bg-transparent text-inherit cursor-pointer text-left hover:bg-[rgba(128,128,128,0.07)]"
         :aria-expanded="isOpen(tool)"
         @click="toggle(tool)"
       >
-        <span class="tool-line__state">
-          <NIcon
-            :component="STATUS_META[tool.status].icon"
-            size="15"
+        <span
+          class="size-[18px] inline-flex-center text-muted-foreground"
+          :class="{
+            'text-brand animate-[tool-pulse_1.2s_ease-in-out_infinite]': tool.status === 'running',
+            'text-emerald-600': tool.status === 'completed',
+            'text-destructive': tool.status === 'failed',
+          }"
+        >
+          <component
+            :is="STATUS_META[tool.status].icon"
+            class="size-3.5"
           />
         </span>
-        <span class="tool-line__title">{{ tool.title || tool.name }}</span>
-        <span class="tool-line__meta">
+        <span class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-xs font-semibold">{{ tool.title || tool.name }}</span>
+        <span class="text-muted-foreground text-[11px] whitespace-nowrap">
           {{ STATUS_META[tool.status].label }}
           <template v-if="formatDuration(tool.durationMs)"> · {{ formatDuration(tool.durationMs) }} </template>
         </span>
-        <NIcon
-          :component="ChevronDown12Regular"
-          size="12"
-          class="tool-line__chevron"
-          :class="{ 'is-open': isOpen(tool) }"
+        <component
+          :is="ChevronDown12Regular"
+          class="size-3 text-muted-foreground transition-transform duration-200"
+          :class="{ 'rotate-180': isOpen(tool) }"
         />
       </button>
 
-      <NCollapseTransition :show="isOpen(tool)">
-        <div class="tool-line__body">
-          <NText
-            v-if="tool.error"
-            type="error"
-            class="tool-line__detail"
-          >
-            {{ tool.error }}
-          </NText>
-          <NText
-            v-else-if="tool.summary"
-            depth="3"
-            class="tool-line__detail"
-          >
-            {{ tool.summary }}
-          </NText>
-          <NText
-            v-else
-            depth="3"
-            class="tool-line__detail tool-line__detail--muted"
-          >
-            {{ tool.name }}
-          </NText>
-        </div>
-      </NCollapseTransition>
+      <div
+        v-if="isOpen(tool)"
+        class="pt-0 pr-[7px] pb-[7px] pl-[31px]"
+      >
+        <p
+          v-if="tool.error"
+          class="m-0 leading-normal break-all text-destructive text-xs"
+        >
+          {{ tool.error }}
+        </p>
+        <p
+          v-else-if="tool.summary"
+          class="m-0 leading-normal break-all text-muted-foreground text-xs"
+        >
+          {{ tool.summary }}
+        </p>
+        <p
+          v-else
+          class="m-0 leading-normal break-all text-muted-foreground/60 text-xs"
+        >
+          {{ tool.name }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.tool-trace {
-  display: grid;
-  gap: 4px;
-  margin: 1px 0 2px;
-}
-
-.tool-line {
-  min-width: 0;
-  border-radius: 7px;
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.055));
-}
-
-.tool-line__head {
-  width: 100%;
-  min-height: 30px;
-  display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto 14px;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 7px;
-  border: 0;
-  border-radius: 7px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-}
-
-.tool-line__head:hover {
-  background: rgba(128, 128, 128, 0.07);
-}
-
-.tool-line__state {
-  width: 18px;
-  height: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-}
-
-.tool-line--running .tool-line__state {
-  color: var(--vtsuru-brand, #23ade5);
-  animation: tool-pulse 1.2s ease-in-out infinite;
-}
-
-.tool-line--completed .tool-line__state {
-  color: #18a058;
-}
-
-.tool-line--failed .tool-line__state {
-  color: #d03050;
-}
-
-.tool-line__title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.tool-line__meta {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-  font-size: 11px;
-  white-space: nowrap;
-}
-
-.tool-line__chevron {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-  transition: transform 0.2s;
-}
-
-.tool-line__chevron.is-open {
-  transform: rotate(180deg);
-}
-
-.tool-line__body {
-  padding: 0 7px 7px 31px;
-}
-
-.tool-line__detail {
-  display: block;
-  min-width: 0;
-  font-size: 12px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.tool-line__detail--muted {
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-}
-
 @keyframes tool-pulse {
   0%,
   100% {
-    opacity: 0.52;
+    opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 1;
+    opacity: 0.5;
+    transform: scale(0.9);
   }
 }
 </style>

@@ -1,29 +1,18 @@
 <script setup lang="ts">
 import { Copy24Regular, Info24Filled, Open24Regular } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCollapse,
-  NCollapseItem,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NLi,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NTooltip,
-  NUl,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { copyToClipboard } from '@/shared/utils'
 
 type ObsStyle = 'classic' | 'fresh' | 'minimal'
@@ -88,218 +77,148 @@ const obsUrl = computed(() =>
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
-    preset="card"
-    class="obs-config-modal"
-    style="width: 880px; max-width: 95vw; max-height: 90vh"
-    title="OBS 组件"
-    closable
-    content-style="overflow-y: auto; max-height: calc(90vh - 110px); padding: 16px 20px;"
-  >
-    <template #header-extra>
-      <NButton
-        tag="a"
-        type="primary"
-        size="small"
-        target="_blank"
-        :href="obsUrl"
-      >
-        <template #icon>
-          <NIcon :component="Open24Regular" />
-        </template>
-        浏览
-      </NButton>
-    </template>
-
-    <div class="obs-config-modal__body">
-      <!-- 左侧：操作、链接与配置 -->
-      <div class="obs-config-modal__main">
-        <NAlert
-          type="info"
-          size="small"
-          :bordered="false"
+  <Dialog v-model:open="showModel">
+    <DialogContent class="max-w-[880px] max-h-[90vh] overflow-hidden flex flex-col p-6">
+      <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
+        <DialogTitle class="text-base font-semibold">OBS 组件</DialogTitle>
+        <Button
+          as="a"
+          variant="outline"
+          target="_blank"
+          :href="obsUrl"
+          class="mr-6 gap-1"
         >
-          {{ description }}
-        </NAlert>
+          <Open24Regular class="size-4" />
+          浏览
+        </Button>
+      </DialogHeader>
 
-        <!-- 核心区域：OBS 浏览器源链接与复制 -->
-        <div class="obs-config-modal__section">
-          <div class="obs-config-modal__section-title">OBS 浏览器源链接</div>
-          <NInputGroup>
-            <NInput
-              :value="obsUrl"
-              readonly
-              placeholder="OBS 组件链接"
-            />
-            <NButton
-              type="primary"
-              :disabled="!obsUrl"
-              @click="copyToClipboard(obsUrl)"
-            >
-              <template #icon>
-                <NIcon :component="Copy24Regular" />
-              </template>
-              复制
-            </NButton>
-          </NInputGroup>
-        </div>
+      <div class="overflow-y-auto max-h-[calc(90vh-110px)] pr-1 pt-4">
+        <div class="grid grid-cols-[minmax(320px,1fr)_280px] gap-6 items-start max-[720px]:grid-cols-1">
+          <!-- 左侧：操作、链接与配置 -->
+          <div class="flex flex-col gap-4 min-w-0">
+            <Alert class="text-xs py-2 bg-muted/50 border-muted">
+              <AlertDescription>{{ description }}</AlertDescription>
+            </Alert>
 
-        <!-- 样式与速度配置 -->
-        <div
-          v-if="showStyleOptions"
-          class="obs-config-modal__section"
-        >
-          <div class="obs-config-modal__section-title">样式与速度</div>
-          <NFlex
-            vertical
-            :size="10"
-          >
-            <NRadioGroup
-              v-model:value="styleModel"
-              name="obsStyle"
-            >
-              <NFlex
-                :wrap="true"
-                :size="8"
-              >
-                <NRadioButton value="classic">经典黑色</NRadioButton>
-                <NRadioButton value="fresh">清新明亮</NRadioButton>
-                <NRadioButton value="minimal">极简透明</NRadioButton>
-              </NFlex>
-            </NRadioGroup>
-            <NFlex
-              align="center"
-              :size="8"
-            >
-              <NInputGroup class="obs-config-modal__speed-group">
-                <NInputGroupLabel size="small">滚动速度</NInputGroupLabel>
-                <NInputNumber
-                  v-model:value="speedModel"
-                  size="small"
-                  :min="0.5"
-                  :max="5"
-                  :step="0.1"
-                  placeholder="1"
+            <!-- 核心区域：OBS 浏览器源链接与复制 -->
+            <div class="flex flex-col gap-2">
+              <div class="text-[13px] font-medium text-foreground">OBS 浏览器源链接</div>
+              <div class="flex items-center gap-2">
+                <Input
+                  :model-value="obsUrl"
+                  readonly
+                  placeholder="OBS 组件链接"
+                  class="font-mono"
                 />
-              </NInputGroup>
-              <NTooltip>
-                <template #trigger>
-                  <NIcon
-                    :component="Info24Filled"
-                    class="obs-config-modal__info-icon"
-                  />
-                </template>
-                数值越大滚动越快（0.5 ~ 5）
-              </NTooltip>
-            </NFlex>
-          </NFlex>
-        </div>
+                <Button
+                  :disabled="!obsUrl"
+                  class="shrink-0 gap-1.5"
+                  @click="copyToClipboard(obsUrl)"
+                >
+                  <Copy24Regular class="size-4" />
+                  复制
+                </Button>
+              </div>
+            </div>
 
-        <!-- 使用说明折叠 -->
-        <NCollapse class="obs-config-modal__help">
-          <NCollapseItem title="OBS 使用说明">
-            <NUl style="padding-left: 18px; margin: 4px 0">
-              <NLi>在 OBS 来源中添加一个新的「浏览器」源。</NLi>
-              <NLi>将上方链接复制并粘贴到「URL」栏中。</NLi>
-              <NLi>推荐初始尺寸：宽 280px，高 500px（可按实际直播布局自由缩放）。</NLi>
-              <NLi>右侧可实时预览组件视觉效果，调整好风格后直接复制链接使用。</NLi>
-            </NUl>
-          </NCollapseItem>
-        </NCollapse>
-      </div>
+            <!-- 样式与速度配置 -->
+            <div
+              v-if="showStyleOptions"
+              class="flex flex-col gap-2"
+            >
+              <div class="text-[13px] font-medium text-foreground">样式与速度</div>
+              <div class="flex flex-col gap-2.5">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <Button
+                    type="button"
+                    :variant="styleModel === 'classic' ? 'default' : 'outline'"
+                    @click="styleModel = 'classic'"
+                  >
+                    经典黑色
+                  </Button>
+                  <Button
+                    type="button"
+                    :variant="styleModel === 'fresh' ? 'default' : 'outline'"
+                    @click="styleModel = 'fresh'"
+                  >
+                    清新明亮
+                  </Button>
+                  <Button
+                    type="button"
+                    :variant="styleModel === 'minimal' ? 'default' : 'outline'"
+                    @click="styleModel = 'minimal'"
+                  >
+                    极简透明
+                  </Button>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center border rounded-md overflow-hidden text-xs w-[200px]">
+                    <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">滚动速度</span>
+                    <NumberField
+                      v-model="speedModel"
+                      :min="0.5"
+                      :max="5"
+                      :step="0.1"
+                      placeholder="1"
+                      class="border-0 shadow-none flex-1"
+                    />
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Info24Filled class="size-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p class="text-xs">数值越大滚动越快（0.5 ~ 5）</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
+            </div>
 
-      <!-- 右侧：实时预览 -->
-      <div class="obs-config-modal__side">
-        <div class="obs-config-modal__preview-label">实时预览 (280 × 500)</div>
-        <div class="obs-config-modal__preview">
-          <slot
-            v-if="effectiveUserId"
-            name="preview"
-            :style-type="styleModel"
-            :speed="speedModel"
-          />
-          <NEmpty
-            v-else
-            description="无法预览：未获取到用户信息"
-            size="small"
-            class="obs-config-modal__empty"
-          />
+            <!-- 使用说明折叠 -->
+            <Accordion
+              type="single"
+              collapsible
+              class="border rounded-md px-3 text-xs"
+            >
+              <AccordionItem
+                value="help"
+                class="border-none"
+              >
+                <AccordionTrigger class="py-2 text-xs hover:no-underline"> OBS 使用说明 </AccordionTrigger>
+                <AccordionContent class="text-muted-foreground text-xs pb-3 space-y-1">
+                  <p>1. 在 OBS 来源中添加一个新的「浏览器」源。</p>
+                  <p>2. 将上方链接复制并粘贴到「URL」栏中。</p>
+                  <p>3. 推荐初始尺寸：宽 280px，高 500px（可按实际直播布局自由缩放）。</p>
+                  <p>4. 右侧可实时预览组件视觉效果，调整好风格后直接复制链接使用。</p>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+
+          <!-- 右侧：实时预览 -->
+          <div class="flex flex-col items-center gap-2">
+            <div class="text-xs text-muted-foreground">实时预览 (280 × 500)</div>
+            <div class="h-[500px] w-[280px] relative border border-dashed border-border rounded-lg overflow-hidden bg-muted">
+              <slot
+                v-if="effectiveUserId"
+                name="preview"
+                :style-type="styleModel"
+                :speed="speedModel"
+              />
+              <Empty
+                v-else
+                description="无法预览：未获取到用户信息"
+                class="pt-[140px]"
+              />
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </NModal>
+    </DialogContent>
+  </Dialog>
 </template>
 
-<style scoped>
-.obs-config-modal__body {
-  display: grid;
-  grid-template-columns: minmax(320px, 1fr) 280px;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 720px) {
-  .obs-config-modal__body {
-    grid-template-columns: 1fr;
-  }
-}
-
-.obs-config-modal__main {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-width: 0;
-}
-
-.obs-config-modal__section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.obs-config-modal__section-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--vtsuru-fg);
-}
-
-.obs-config-modal__speed-group {
-  width: 200px;
-}
-
-.obs-config-modal__info-icon {
-  color: var(--vtsuru-fg-muted);
-  cursor: help;
-}
-
-.obs-config-modal__side {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-
-.obs-config-modal__preview-label {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.obs-config-modal__preview {
-  height: 500px;
-  width: 280px;
-  position: relative;
-  border: 1px dashed var(--vtsuru-border);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--vtsuru-bg-muted);
-}
-
-.obs-config-modal__empty {
-  padding-top: 140px;
-}
-
-.obs-config-modal__help {
-  margin-top: 4px;
-}
-</style>

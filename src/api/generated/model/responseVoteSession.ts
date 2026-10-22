@@ -5,17 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
-import type { VoteOption } from './voteOption';
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
+import type { VoteOption } from './voteOption'
 
 export interface ResponseVoteSession {
-  id: number;
-  title: string;
-  options: VoteOption[];
-  startTime: number;
+  id: number
+  title: string
+  options: VoteOption[]
+  startTime: number
   /** @nullable */
-  endTime?: number | null;
-  isActive: boolean;
-  totalVotes: number;
-  creator?: ResponseUserBasicInfo;
+  endTime?: number | null
+  isActive: boolean
+  totalVotes: number
+  creator?: ResponseUserBasicInfo
 }

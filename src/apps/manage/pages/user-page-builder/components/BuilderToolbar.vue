@@ -1,21 +1,30 @@
 <script setup lang="ts">
 import {
+  AlertCircleOutline,
   ArrowRedoOutline,
   ArrowUndoOutline,
-  AlertCircleOutline,
   ColorPaletteOutline,
   EllipsisHorizontalOutline,
+  EyeOutline,
   FolderOpenOutline,
   GridOutline,
-  EyeOutline,
   RefreshOutline,
   SaveOutline,
   SettingsOutline,
   TrashOutline,
 } from '@vicons/ionicons5'
-import type { DropdownOption } from 'naive-ui'
-import { NButton, NDropdown, NFlex, NIcon, NText, NTooltip, useDialog } from 'naive-ui'
-import { computed, h, inject } from 'vue'
+import { computed, inject } from 'vue'
+
+import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useDialog } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
 
@@ -34,54 +43,6 @@ const statusText = computed(() =>
     : editor.saveStatusText.value,
 )
 const problemCount = computed(() => editor.liveValidationIssues.value.length)
-
-const moreOptions = computed<DropdownOption[]>(() => {
-  const options: DropdownOption[] = [
-    {
-      label: `编辑来源：${editor.loadedFromLabel.value}`,
-      key: 'version-state',
-      disabled: true,
-    },
-  ]
-  if (editor.currentPage.value.mode === 'block') {
-    options.push(
-      { label: '资源管理', key: 'resources', icon: () => h(NIcon, null, { default: () => h(FolderOpenOutline) }) },
-      { label: '编辑器布局', key: 'layout', icon: () => h(NIcon, null, { default: () => h(GridOutline) }) },
-      { type: 'divider', key: 'divider-block' },
-    )
-  }
-  options.push(
-    {
-      label: editor.autoSaveEnabled.value ? '关闭自动保存' : '开启自动保存',
-      key: 'auto-save',
-      icon: () => h(NIcon, null, { default: () => h(SettingsOutline) }),
-    },
-    {
-      type: 'divider',
-      key: 'divider-history',
-    },
-    {
-      label: '预览可回滚版本',
-      key: 'preview-rollback',
-      disabled: !editor.rollbackAvailable.value,
-      icon: () => h(NIcon, null, { default: () => h(EyeOutline) }),
-    },
-    {
-      label: '回滚已发布版本',
-      key: 'rollback',
-      disabled: !editor.rollbackAvailable.value || editor.isSaving.value,
-      icon: () => h(NIcon, null, { default: () => h(RefreshOutline) }),
-    },
-    {
-      label: '清空草稿',
-      key: 'clear',
-      disabled: editor.isSaving.value,
-      props: { style: 'color: #d03050' },
-      icon: () => h(NIcon, null, { default: () => h(TrashOutline) }),
-    },
-  )
-  return options
-})
 
 function confirmRollback() {
   dialog.warning({
@@ -125,167 +86,197 @@ function handleMoreAction(key: string) {
 </script>
 
 <template>
-  <NFlex
-    class="builder-toolbar"
-    justify="end"
-    align="center"
-    :wrap="false"
-    size="small"
-  >
-    <NTooltip>
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="!editor.canUndo.value"
-          aria-label="撤销"
-          @click="editor.undo"
-        >
-          <template #icon>
-            <NIcon><ArrowUndoOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      撤销
-    </NTooltip>
-    <NTooltip>
-      <template #trigger>
-        <NButton
-          quaternary
-          circle
-          size="small"
-          :disabled="!editor.canRedo.value"
-          aria-label="重做"
-          @click="editor.redo"
-        >
-          <template #icon>
-            <NIcon><ArrowRedoOutline /></NIcon>
-          </template>
-        </NButton>
-      </template>
-      重做
-    </NTooltip>
-    <NButton
-      size="small"
-      type="primary"
-      secondary
+  <div class="min-w-0 flex items-center justify-end gap-1.5 flex-nowrap">
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            class="size-8 p-0"
+            :disabled="!editor.canUndo.value"
+            aria-label="撤销"
+            @click="editor.undo"
+          >
+            <component
+              :is="ArrowUndoOutline"
+              class="size-4"
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>撤销</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            class="size-8 p-0"
+            :disabled="!editor.canRedo.value"
+            aria-label="重做"
+            @click="editor.redo"
+          >
+            <component
+              :is="ArrowRedoOutline"
+              class="size-4"
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>重做</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+
+    <Button
+      variant="outline"
       @click="emit('open-global-style')"
     >
-      <template #icon>
-        <NIcon><ColorPaletteOutline /></NIcon>
-      </template>
+      <component
+        :is="ColorPaletteOutline"
+        class="size-4 mr-1 text-primary"
+      />
       外观与主题
-    </NButton>
-    <NTooltip>
-      <template #trigger>
-        <NButton
-          class="discard-button"
-          size="small"
-          secondary
-          :disabled="!editor.isDirty.value || editor.isSaving.value"
-          aria-label="放弃本地修改"
-          @click="confirmDiscardLocalChanges"
-        >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon>
-          </template>
-          <span class="discard-label">放弃本地修改</span>
-        </NButton>
-      </template>
-      放弃本地修改
-    </NTooltip>
-    <NButton
-      size="small"
-      :loading="editor.isSaving.value"
+    </Button>
+
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            class="max-[760px]:w-7 max-[760px]:p-0"
+            variant="outline"
+            :disabled="!editor.isDirty.value || editor.isSaving.value"
+            aria-label="放弃本地修改"
+            @click="confirmDiscardLocalChanges"
+          >
+            <component
+              :is="RefreshOutline"
+              class="size-4 mr-1"
+            />
+            <span class="max-[760px]:hidden">放弃本地修改</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>放弃本地修改</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+
+    <Button
+      variant="outline"
+      :disabled="editor.isSaving.value"
       @click="editor.saveDraft"
     >
-      <template #icon>
-        <NIcon><SaveOutline /></NIcon>
-      </template>
+      <component
+        :is="SaveOutline"
+        class="size-4 mr-1"
+      />
       保存
-    </NButton>
-    <NButton
+    </Button>
+
+    <Button
       v-if="problemCount"
-      size="small"
-      type="error"
-      secondary
+      variant="destructive"
       @click="editor.openPublishModal"
     >
-      <template #icon>
-        <NIcon><AlertCircleOutline /></NIcon>
-      </template>
+      <component
+        :is="AlertCircleOutline"
+        class="size-4 mr-1"
+      />
       {{ problemCount }} 个问题
-    </NButton>
-    <NButton
-      type="primary"
-      size="small"
-      :loading="editor.isSaving.value"
+    </Button>
+
+    <Button
+      :disabled="editor.isSaving.value"
       @click="editor.openPublishModal"
     >
       发布
-    </NButton>
-    <NTooltip>
-      <template #trigger>
-        <NDropdown
-          :options="moreOptions"
-          trigger="click"
-          @select="(key) => handleMoreAction(String(key))"
+    </Button>
+
+    <DropdownMenu>
+      <DropdownMenuTrigger as-child>
+        <Button
+          variant="ghost"
+          class="size-8 p-0"
+          aria-label="更多操作"
         >
-          <NButton
-            quaternary
-            circle
-            size="small"
-            aria-label="更多操作"
-          >
-            <template #icon>
-              <NIcon><EllipsisHorizontalOutline /></NIcon>
-            </template>
-          </NButton>
-        </NDropdown>
-      </template>
-      更多操作
-    </NTooltip>
-    <NText
-      class="save-state"
-      :type="editor.hasSyncError.value ? 'error' : undefined"
-      depth="3"
+          <component
+            :is="EllipsisHorizontalOutline"
+            class="size-4"
+          />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        class="w-48 text-xs"
+      >
+        <div class="px-2 py-1.5 text-[11px] text-muted-foreground select-none">
+          编辑来源：{{ editor.loadedFromLabel.value }}
+        </div>
+        <template v-if="editor.currentPage.value.mode === 'block'">
+          <DropdownMenuItem @click="handleMoreAction('resources')">
+            <component
+              :is="FolderOpenOutline"
+              class="size-3.5 mr-2"
+            />
+            资源管理
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="handleMoreAction('layout')">
+            <component
+              :is="GridOutline"
+              class="size-3.5 mr-2"
+            />
+            编辑器布局
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+        </template>
+        <DropdownMenuItem @click="handleMoreAction('auto-save')">
+          <component
+            :is="SettingsOutline"
+            class="size-3.5 mr-2"
+          />
+          {{ editor.autoSaveEnabled.value ? '关闭自动保存' : '开启自动保存' }}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          :disabled="!editor.rollbackAvailable.value"
+          @click="handleMoreAction('preview-rollback')"
+        >
+          <component
+            :is="EyeOutline"
+            class="size-3.5 mr-2"
+          />
+          预览可回滚版本
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          :disabled="!editor.rollbackAvailable.value || editor.isSaving.value"
+          @click="handleMoreAction('rollback')"
+        >
+          <component
+            :is="RefreshOutline"
+            class="size-3.5 mr-2"
+          />
+          回滚已发布版本
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          :disabled="editor.isSaving.value"
+          class="text-destructive focus:text-destructive"
+          @click="handleMoreAction('clear')"
+        >
+          <component
+            :is="TrashOutline"
+            class="size-3.5 mr-2"
+          />
+          清空草稿
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+
+    <span
+      class="inline-block w-[108px] overflow-hidden text-left text-ellipsis whitespace-nowrap text-xs text-muted-foreground max-[760px]:hidden"
+      :class="{ 'text-destructive': editor.hasSyncError.value }"
       role="status"
       aria-live="polite"
       :title="statusText"
     >
       {{ statusText }}
-    </NText>
-  </NFlex>
+    </span>
+  </div>
 </template>
-
-<style scoped>
-.builder-toolbar {
-  min-width: 0;
-}
-
-.save-state {
-  display: inline-block;
-  width: 108px;
-  overflow: hidden;
-  font-size: 12px;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-  .discard-label {
-    display: none;
-  }
-
-  .discard-button {
-    width: 28px;
-    padding: 0;
-  }
-
-  .save-state {
-    display: none;
-  }
-}
-</style>

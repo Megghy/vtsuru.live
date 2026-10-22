@@ -11,9 +11,9 @@
  */
 export interface VTsuruCoreAIContractsAssistantContextDto {
   /** @nullable */
-  routeName?: string | null;
+  routeName?: string | null
   /** @nullable */
-  title?: string | null;
+  title?: string | null
   /** @nullable */
-  path?: string | null;
+  path?: string | null
 }

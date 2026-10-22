@@ -8,9 +8,9 @@
 
 export interface RegisterModel {
   /** @minLength 1 */
-  name: string;
+  name: string
   /** @minLength 1 */
-  email: string;
+  email: string
   /** @minLength 1 */
-  password: string;
+  password: string
 }

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Live24Regular } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -111,139 +110,143 @@ defineExpose({ Config, DefaultConfig })
         :class="{ 'has-background': backgroundUrl }"
         :style="boardStyle"
       >
-      <header class="signal-head">
-        <div class="on-air"><span class="signal-dot" />CHANNEL READY</div>
-        <div class="signal-title">
-          <span>VTSURU / WEEKLY TRANSMISSION DESK</span>
-          <h2>{{ effectiveConfig.heading }}</h2>
-        </div>
-        <div class="week-code">
-          <span>{{ currentWeek?.year || '----' }}</span>
-          <strong>W{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
-        </div>
-      </header>
-
-      <div class="stage-layout">
-        <aside class="control-console">
-          <div class="channel-identity">
-            <img
-              v-if="portraitUrl"
-              :src="portraitUrl"
-              :alt="`${props.userInfo?.name || '主播'}的频道识别图`"
-              referrerpolicy="no-referrer"
-            />
-            <span
-              v-else
-              class="channel-monogram"
-              >{{ (props.userInfo?.name || 'V').slice(0, 1) }}</span
-            >
-            <div>
-              <small>CHANNEL ID</small>
-              <strong>{{ props.userInfo?.name || 'VTUBER' }}</strong>
-            </div>
+        <header class="signal-head">
+          <div class="on-air"><span class="signal-dot" />CHANNEL READY</div>
+          <div class="signal-title">
+            <span>VTSURU / WEEKLY TRANSMISSION DESK</span>
+            <h2>{{ effectiveConfig.heading }}</h2>
           </div>
-
-          <dl class="console-readings">
-            <div>
-              <dt>PROGRAMS</dt>
-              <dd>{{ eventCount.toString().padStart(2, '0') }}</dd>
-            </div>
-            <div>
-              <dt>ACTIVE DAYS</dt>
-              <dd>{{ activeDayCount }} / 7</dd>
-            </div>
-            <div class="reading-wide">
-              <dt>TRANSMISSION WINDOW</dt>
-              <dd>{{ weekLabel }}</dd>
-            </div>
-          </dl>
-
-          <div class="load-monitor">
-            <div class="console-label"><span>DAILY LOAD</span><span>CH 01—07</span></div>
-            <div class="load-bars">
-              <span
-                v-for="day in days"
-                :key="day.english"
-                :class="{ 'is-active': day.items.length }"
-                :style="loadStyle(day.items.length)"
-                ><i
-              /></span>
-            </div>
+          <div class="week-code">
+            <span>{{ currentWeek?.year || '----' }}</span>
+            <strong>W{{ String(currentWeek?.week || '--').padStart(2, '0') }}</strong>
           </div>
+        </header>
 
-          <div class="tag-monitor">
-            <div class="console-label">
-              <span>CONTENT INDEX</span><span>{{ tagSummary.length || '—' }}</span>
-            </div>
-            <ul v-if="tagSummary.length">
-              <li
-                v-for="tag in tagSummary"
-                :key="tag.name"
-              >
-                <span>{{ tag.name }}</span
-                ><strong>{{ String(tag.count).padStart(2, '0') }}</strong>
-              </li>
-            </ul>
-            <p v-else>NO TAG DATA</p>
-          </div>
-        </aside>
-
-        <main class="program-panel">
-          <div class="program-head">
-            <span>PROGRAM QUEUE</span>
-            <span
-              ><NIcon><Live24Regular /></NIcon> LIVE LOG</span
-            >
-          </div>
-
-          <div class="program-list">
-            <article
-              v-for="(day, dayIndex) in days"
-              :key="day.english"
-              class="program-day"
-              :class="{ 'is-today': day.isToday }"
-            >
-              <span class="queue-index">{{ String(dayIndex + 1).padStart(2, '0') }}</span>
-              <div class="day-code">
-                <strong>{{ day.english }}</strong>
-                <small>{{ day.date }}</small>
-              </div>
-
-              <div
-                v-if="day.items.length"
-                class="program-events"
-              >
-                <div
-                  v-for="(item, itemIndex) in day.items"
-                  :key="item.id || itemIndex"
-                  class="program-event"
-                  :data-type="eventType(item.tag)"
-                >
-                  <time>{{ item.time || 'TBA' }}</time>
-                  <div class="event-copy">
-                    <strong>{{ item.title || '未命名直播' }}</strong>
-                    <span
-                      v-if="item.tag"
-                      class="event-type"
-                      >[TYPE: {{ item.tag }}]</span
-                    >
-                  </div>
-                </div>
-              </div>
+        <div class="stage-layout">
+          <aside class="control-console">
+            <div class="channel-identity">
+              <img
+                v-if="portraitUrl"
+                :src="portraitUrl"
+                :alt="`${props.userInfo?.name || '主播'}的频道识别图`"
+                referrerpolicy="no-referrer"
+              />
               <span
                 v-else
-                class="schedule-empty-copy offline-copy"
-                >CHANNEL IDLE</span
+                class="channel-monogram"
+                >{{ (props.userInfo?.name || 'V').slice(0, 1) }}</span
               >
-            </article>
-          </div>
-        </main>
-      </div>
+              <div>
+                <small>CHANNEL ID</small>
+                <strong>{{ props.userInfo?.name || 'VTUBER' }}</strong>
+              </div>
+            </div>
 
-      <footer class="signal-foot">
-        <span>MASTER OUTPUT / NOMINAL</span>
-        <span>READY · SYNC · BROADCAST</span>
-      </footer>
+            <dl class="console-readings">
+              <div>
+                <dt>PROGRAMS</dt>
+                <dd>{{ eventCount.toString().padStart(2, '0') }}</dd>
+              </div>
+              <div>
+                <dt>ACTIVE DAYS</dt>
+                <dd>{{ activeDayCount }} / 7</dd>
+              </div>
+              <div class="reading-wide">
+                <dt>TRANSMISSION WINDOW</dt>
+                <dd>{{ weekLabel }}</dd>
+              </div>
+            </dl>
+
+            <div class="load-monitor">
+              <div class="console-label"><span>DAILY LOAD</span><span>CH 01—07</span></div>
+              <div class="load-bars">
+                <span
+                  v-for="day in days"
+                  :key="day.english"
+                  :class="{ 'is-active': day.items.length }"
+                  :style="loadStyle(day.items.length)"
+                  ><i
+                /></span>
+              </div>
+            </div>
+
+            <div class="tag-monitor">
+              <div class="console-label">
+                <span>CONTENT INDEX</span><span>{{ tagSummary.length || '—' }}</span>
+              </div>
+              <ul v-if="tagSummary.length">
+                <li
+                  v-for="tag in tagSummary"
+                  :key="tag.name"
+                >
+                  <span>{{ tag.name }}</span
+                  ><strong>{{ String(tag.count).padStart(2, '0') }}</strong>
+                </li>
+              </ul>
+              <p v-else>NO TAG DATA</p>
+            </div>
+          </aside>
+
+          <main class="program-panel">
+            <div class="program-head">
+              <span>PROGRAM QUEUE</span>
+              <span
+                ><component
+                  :is="Live24Regular"
+                  class="size-4 inline"
+                />
+                LIVE LOG</span
+              >
+            </div>
+
+            <div class="program-list">
+              <article
+                v-for="(day, dayIndex) in days"
+                :key="day.english"
+                class="program-day"
+                :class="{ 'is-today': day.isToday }"
+              >
+                <span class="queue-index">{{ String(dayIndex + 1).padStart(2, '0') }}</span>
+                <div class="day-code">
+                  <strong>{{ day.english }}</strong>
+                  <small>{{ day.date }}</small>
+                </div>
+
+                <div
+                  v-if="day.items.length"
+                  class="program-events"
+                >
+                  <div
+                    v-for="(item, itemIndex) in day.items"
+                    :key="item.id || itemIndex"
+                    class="program-event"
+                    :data-type="eventType(item.tag)"
+                  >
+                    <time>{{ item.time || 'TBA' }}</time>
+                    <div class="event-copy">
+                      <strong>{{ item.title || '未命名直播' }}</strong>
+                      <span
+                        v-if="item.tag"
+                        class="event-type"
+                        >[TYPE: {{ item.tag }}]</span
+                      >
+                    </div>
+                  </div>
+                </div>
+                <span
+                  v-else
+                  class="schedule-empty-copy offline-copy"
+                  >CHANNEL IDLE</span
+                >
+              </article>
+            </div>
+          </main>
+        </div>
+
+        <footer class="signal-foot">
+          <span>MASTER OUTPUT / NOMINAL</span>
+          <span>READY · SYNC · BROADCAST</span>
+        </footer>
       </div>
     </Transition>
   </section>

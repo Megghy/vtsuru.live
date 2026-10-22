@@ -2,10 +2,10 @@
   "name": "@vtsuru/event-fetcher",
   "version": "1.0.8.0",
   "private": true,
-  "type": "module",
   "bin": {
     "vtsuru-event-fetcher": "./src/cli.ts"
   },
+  "type": "module",
   "exports": {
     ".": "./src/index.ts"
   },

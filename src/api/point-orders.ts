@@ -35,17 +35,11 @@ export async function updateOrdersStatus(
   if (!ids.length) return
 
   if (scope.kind === 'owner') {
-    unwrapOk(
-      await postApiPointBatchUpdateOrderStatus({ orderIds: ids, status }),
-      '更新订单状态失败',
-    )
+    unwrapOk(await postApiPointBatchUpdateOrderStatus({ orderIds: ids, status }), '更新订单状态失败')
     return
   }
 
-  unwrapOk(
-    await postApiOrgOrgIdPointsOrdersStatus(scope.orgId, { orderIds: ids, status }),
-    '更新订单状态失败',
-  )
+  unwrapOk(await postApiOrgOrgIdPointsOrdersStatus(scope.orgId, { orderIds: ids, status }), '更新订单状态失败')
 }
 
 export async function updateOrderExpress(

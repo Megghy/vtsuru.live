@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseVideoCollectModel } from './responseVideoCollectModel';
+import type { ResponseVideoCollectModel } from './responseVideoCollectModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfIEnumerableOfResponseVideoCollectModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseVideoCollectModel[] | null;
+  data: ResponseVideoCollectModel[] | null
 }

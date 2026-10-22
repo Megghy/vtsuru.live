@@ -141,7 +141,7 @@ export function computeRangeSummary(points: AnalyzeDayPoint[]): AnalyzeRangeSumm
   const offlineGuardIncome = points.reduce((s, p) => s + (p.offlineGuardIncome || 0), 0)
   const offlineScIncome = points.reduce((s, p) => s + (p.offlineScIncome || 0), 0)
   const grandTotalIncome = points.reduce(
-    (s, p) => s + (p.grandTotalIncome ?? ((p.income || 0) + (p.offlineIncome || 0))),
+    (s, p) => s + (p.grandTotalIncome ?? (p.income || 0) + (p.offlineIncome || 0)),
     0,
   )
   const totalIncomeWithGuard = points.reduce(

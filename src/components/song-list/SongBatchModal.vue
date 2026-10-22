@@ -1,30 +1,25 @@
 <script setup lang="ts">
-import type { SelectOption } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NFlex,
-  NInputGroup,
-  NInputGroupLabel,
-  NInputNumber,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NTabPane,
-  NTabs,
-  NText,
-  useMessage,
-} from 'naive-ui'
 import { ref } from 'vue'
 
 import type { SongRequestOption } from '@/api/api-models'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { toast } from '@/shared/utils'
+
+interface OptionItem {
+  label: string
+  value: string
+}
 
 defineProps<{
   selectedCount: number
-  languageOptions: SelectOption[]
-  tagOptions: SelectOption[]
-  authorOptions: SelectOption[]
+  languageOptions: OptionItem[]
+  tagOptions: OptionItem[]
+  authorOptions: OptionItem[]
 }>()
 
 const emit = defineEmits<{
@@ -35,12 +30,11 @@ const emit = defineEmits<{
   (e: 'updateOption', value: SongRequestOption | undefined): void
 }>()
 
-const message = useMessage()
 const show = ref(false)
 
-const batchAuthor = ref<string[]>([])
-const batchTag = ref<string[]>([])
-const batchLanguage = ref<string[]>([])
+const batchAuthorText = ref('')
+const batchTagText = ref('')
+const batchLanguageText = ref('')
 const batchOption = ref<SongRequestOption | undefined>()
 
 const authorMode = ref<'replace' | 'append'>('append')
@@ -54,244 +48,280 @@ function close() {
   show.value = false
 }
 
+function parseTags(text: string): string[] {
+  return text
+    .split(/[,，\s]+/)
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
 function handleUpdateAuthor() {
-  if (batchAuthor.value.length === 0) {
-    message.warning('请选择作者')
+  const authors = parseTags(batchAuthorText.value)
+  if (authors.length === 0) {
+    toast.warning('请输入作者')
     return
   }
-  emit('updateAuthor', batchAuthor.value, authorMode.value)
-  batchAuthor.value = []
+  emit('updateAuthor', authors, authorMode.value)
+  batchAuthorText.value = ''
+  close()
 }
+
 function handleUpdateTag() {
-  if (batchTag.value.length === 0) {
-    message.warning('请选择标签')
+  const tags = parseTags(batchTagText.value)
+  if (tags.length === 0) {
+    toast.warning('请输入标签')
     return
   }
-  emit('updateTag', batchTag.value, tagMode.value)
-  batchTag.value = []
+  emit('updateTag', tags, tagMode.value)
+  batchTagText.value = ''
+  close()
 }
+
 function handleUpdateLanguage() {
-  if (batchLanguage.value.length === 0) {
-    message.warning('请选择语言')
+  const langs = parseTags(batchLanguageText.value)
+  if (langs.length === 0) {
+    toast.warning('请输入语言')
     return
   }
-  emit('updateLanguage', batchLanguage.value, languageMode.value)
-  batchLanguage.value = []
+  emit('updateLanguage', langs, languageMode.value)
+  batchLanguageText.value = ''
+  close()
 }
 
 function handleUpdateOption() {
   emit('updateOption', batchOption.value)
   batchOption.value = undefined
+  close()
 }
 
 defineExpose({ open, close })
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    style="max-width: 560px"
-    :title="`批量操作 · 已选 ${selectedCount} 首`"
-    :mask-closable="false"
-  >
-    <NTabs
-      type="line"
-      animated
-    >
-      <NTabPane
-        name="author"
-        tab="作者"
+  <Dialog v-model:open="show">
+    <DialogContent class="sm:max-w-lg p-4 space-y-3">
+      <DialogHeader class="pb-2 border-b border-border/60">
+        <DialogTitle class="text-sm font-semibold">批量操作 · 已选 {{ selectedCount }} 首</DialogTitle>
+      </DialogHeader>
+
+      <Tabs
+        default-value="author"
+        class="w-full"
       >
-        <NFlex
-          vertical
-          :size="12"
-        >
-          <NRadioGroup
-            v-model:value="authorMode"
-            size="small"
+        <TabsList class="grid grid-cols-5">
+          <TabsTrigger
+            value="author"
+            class="text-xs"
+            >作者</TabsTrigger
           >
-            <NRadioButton value="append"> 追加 </NRadioButton>
-            <NRadioButton value="replace"> 替换 </NRadioButton>
-          </NRadioGroup>
-          <NSelect
-            v-model:value="batchAuthor"
-            :options="authorOptions"
-            placeholder="选择或输入作者"
-            filterable
-            multiple
-            tag
-            clearable
+          <TabsTrigger
+            value="tag"
+            class="text-xs"
+            >标签</TabsTrigger
+          >
+          <TabsTrigger
+            value="language"
+            class="text-xs"
+            >语言</TabsTrigger
+          >
+          <TabsTrigger
+            value="option"
+            class="text-xs"
+            >要求</TabsTrigger
+          >
+          <TabsTrigger
+            value="delete"
+            class="text-xs text-destructive"
+            >删除</TabsTrigger
+          >
+        </TabsList>
+
+        <TabsContent
+          value="author"
+          class="pt-3 space-y-3 text-xs"
+        >
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                value="append"
+                v-model="authorMode"
+              />
+              <span>追加</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                value="replace"
+                v-model="authorMode"
+              />
+              <span>替换</span>
+            </label>
+          </div>
+          <Input
+            v-model="batchAuthorText"
+            placeholder="输入作者，多个用空格或逗号分隔"
           />
-          <NButton
-            type="primary"
-            @click="handleUpdateAuthor"
-          >
-            应用
-          </NButton>
-        </NFlex>
-      </NTabPane>
-      <NTabPane
-        name="tag"
-        tab="标签"
-      >
-        <NFlex
-          vertical
-          :size="12"
+          <div class="flex justify-end">
+            <Button @click="handleUpdateAuthor"> 应用 </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent
+          value="tag"
+          class="pt-3 space-y-3 text-xs"
         >
-          <NRadioGroup
-            v-model:value="tagMode"
-            size="small"
-          >
-            <NRadioButton value="append"> 追加 </NRadioButton>
-            <NRadioButton value="replace"> 替换 </NRadioButton>
-          </NRadioGroup>
-          <NSelect
-            v-model:value="batchTag"
-            :options="tagOptions"
-            placeholder="选择或输入标签"
-            filterable
-            multiple
-            tag
-            clearable
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                value="append"
+                v-model="tagMode"
+              />
+              <span>追加</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                value="replace"
+                v-model="tagMode"
+              />
+              <span>替换</span>
+            </label>
+          </div>
+          <Input
+            v-model="batchTagText"
+            placeholder="输入标签，多个用空格或逗号分隔"
           />
-          <NButton
-            type="primary"
-            @click="handleUpdateTag"
-          >
-            应用
-          </NButton>
-        </NFlex>
-      </NTabPane>
-      <NTabPane
-        name="language"
-        tab="语言"
-      >
-        <NFlex
-          vertical
-          :size="12"
+          <div class="flex justify-end">
+            <Button @click="handleUpdateTag"> 应用 </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent
+          value="language"
+          class="pt-3 space-y-3 text-xs"
         >
-          <NRadioGroup
-            v-model:value="languageMode"
-            size="small"
-          >
-            <NRadioButton value="append"> 追加 </NRadioButton>
-            <NRadioButton value="replace"> 替换 </NRadioButton>
-          </NRadioGroup>
-          <NSelect
-            v-model:value="batchLanguage"
-            :options="languageOptions"
-            placeholder="选择或输入语言"
-            filterable
-            multiple
-            tag
-            clearable
+          <div class="flex items-center gap-3">
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                value="append"
+                v-model="languageMode"
+              />
+              <span>追加</span>
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input
+                type="radio"
+                value="replace"
+                v-model="languageMode"
+              />
+              <span>替换</span>
+            </label>
+          </div>
+          <Input
+            v-model="batchLanguageText"
+            placeholder="输入语言，多个用空格或逗号分隔"
           />
-          <NButton
-            type="primary"
-            @click="handleUpdateLanguage"
-          >
-            应用
-          </NButton>
-        </NFlex>
-      </NTabPane>
-      <NTabPane
-        name="option"
-        tab="点歌要求"
-      >
-        <NFlex
-          vertical
-          :size="12"
+          <div class="flex justify-end">
+            <Button @click="handleUpdateLanguage"> 应用 </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent
+          value="option"
+          class="pt-3 space-y-3 text-xs"
         >
-          <NCheckbox
-            :checked="batchOption != null"
-            @update:checked="
-              (v: boolean) =>
-                (batchOption = v ? { needJianzhang: false, needTidu: false, needZongdu: false } : undefined)
-            "
-          >
-            启用独立要求（将覆盖原有设置）
-          </NCheckbox>
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <Checkbox
+              :checked="batchOption != null"
+              @update:checked="
+                (v: boolean) =>
+                  (batchOption = v ? { needJianzhang: false, needTidu: false, needZongdu: false } : undefined)
+              "
+            />
+            <span class="font-medium text-foreground">启用独立要求（将覆盖原有设置）</span>
+          </label>
+
           <template v-if="batchOption">
-            <NFlex :size="12">
-              <NCheckbox v-model:checked="batchOption!.needJianzhang"> 舰长 </NCheckbox>
-              <NCheckbox v-model:checked="batchOption!.needTidu"> 提督 </NCheckbox>
-              <NCheckbox v-model:checked="batchOption!.needZongdu"> 总督 </NCheckbox>
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="8"
-            >
-              <NCheckbox
-                :checked="batchOption!.scMinPrice != null"
-                @update:checked="(v: boolean) => (batchOption!.scMinPrice = v ? 30 : undefined)"
-              >
-                SC
-              </NCheckbox>
-              <NInputGroup
-                v-if="batchOption!.scMinPrice != null"
-                style="width: auto"
-              >
-                <NInputGroupLabel size="small"> ≥ </NInputGroupLabel>
-                <NInputNumber
-                  v-model:value="batchOption!.scMinPrice"
+            <div class="flex items-center gap-3 pl-5">
+              <label class="flex items-center gap-1 cursor-pointer">
+                <Checkbox v-model:checked="batchOption.needJianzhang" />
+                <span>舰长</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <Checkbox v-model:checked="batchOption.needTidu" />
+                <span>提督</span>
+              </label>
+              <label class="flex items-center gap-1 cursor-pointer">
+                <Checkbox v-model:checked="batchOption.needZongdu" />
+                <span>总督</span>
+              </label>
+            </div>
+
+            <div class="flex items-center gap-3 pl-5 flex-wrap">
+              <div class="flex items-center gap-1.5">
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <Checkbox
+                    :checked="batchOption.scMinPrice != null"
+                    @update:checked="(v: boolean) => (batchOption!.scMinPrice = v ? 30 : undefined)"
+                  />
+                  <span>SC ≥</span>
+                </label>
+                <NumberField
+                  v-if="batchOption.scMinPrice != null"
+                  v-model="batchOption.scMinPrice"
                   :min="1"
-                  size="small"
-                  style="width: 80px"
+                  class="w-20"
                 />
-                <NInputGroupLabel size="small"> 元 </NInputGroupLabel>
-              </NInputGroup>
-            </NFlex>
-            <NFlex
-              align="center"
-              :size="8"
-            >
-              <NCheckbox
-                :checked="batchOption!.fanMedalMinLevel != null"
-                @update:checked="(v: boolean) => (batchOption!.fanMedalMinLevel = v ? 1 : undefined)"
-              >
-                粉丝牌
-              </NCheckbox>
-              <NInputGroup
-                v-if="batchOption!.fanMedalMinLevel != null"
-                style="width: auto"
-              >
-                <NInputGroupLabel size="small"> ≥ </NInputGroupLabel>
-                <NInputNumber
-                  v-model:value="batchOption!.fanMedalMinLevel"
+                <span v-if="batchOption.scMinPrice != null">元</span>
+              </div>
+
+              <div class="flex items-center gap-1.5">
+                <label class="flex items-center gap-1 cursor-pointer">
+                  <Checkbox
+                    :checked="batchOption.fanMedalMinLevel != null"
+                    @update:checked="(v: boolean) => (batchOption!.fanMedalMinLevel = v ? 1 : undefined)"
+                  />
+                  <span>粉丝牌 ≥</span>
+                </label>
+                <NumberField
+                  v-if="batchOption.fanMedalMinLevel != null"
+                  v-model="batchOption.fanMedalMinLevel"
                   :min="1"
-                  size="small"
-                  style="width: 80px"
+                  class="w-20"
                 />
-                <NInputGroupLabel size="small"> 级 </NInputGroupLabel>
-              </NInputGroup>
-            </NFlex>
+                <span v-if="batchOption.fanMedalMinLevel != null">级</span>
+              </div>
+            </div>
           </template>
-          <NButton
-            type="primary"
-            @click="handleUpdateOption"
-          >
-            应用
-          </NButton>
-        </NFlex>
-      </NTabPane>
-      <NTabPane
-        name="delete"
-        tab="删除"
-      >
-        <NFlex
-          vertical
-          :size="12"
+
+          <div class="flex justify-end pt-2">
+            <Button @click="handleUpdateOption"> 应用 </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent
+          value="delete"
+          class="pt-3 space-y-3 text-xs"
         >
-          <NText type="error"> 确定要删除选中的 {{ selectedCount }} 首歌曲？此操作不可恢复。 </NText>
-          <NButton
-            type="error"
-            @click="emit('delete')"
-          >
-            确认删除
-          </NButton>
-        </NFlex>
-      </NTabPane>
-    </NTabs>
-  </NModal>
+          <p class="text-destructive leading-relaxed m-0">
+            确定要删除选中的 {{ selectedCount }} 首歌曲？此操作不可恢复。
+          </p>
+          <div class="flex justify-end">
+            <Button
+              variant="destructive"
+              @click="
+                emit('delete');
+                close()
+              "
+            >
+              确认删除
+            </Button>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </DialogContent>
+  </Dialog>
 </template>

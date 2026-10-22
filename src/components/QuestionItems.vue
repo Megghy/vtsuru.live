@@ -13,7 +13,7 @@ const emit = defineEmits<{ (e: 'select', id: number): void }>()
 </script>
 
 <template>
-  <div class="question-list">
+  <div class="flex flex-col gap-2">
     <QuestionItem
       v-for="item in questions"
       :key="item?.id"
@@ -38,10 +38,3 @@ const emit = defineEmits<{ (e: 'select', id: number): void }>()
   </div>
 </template>
 
-<style scoped>
-.question-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-</style>

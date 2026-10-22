@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseSongModel } from './responseSongModel';
+import type { ResponseSongModel } from './responseSongModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseSongModel {
-  message: string;
-  code: number;
-  data: ResponseSongModel;
+  message: string
+  code: number
+  data: ResponseSongModel
 }

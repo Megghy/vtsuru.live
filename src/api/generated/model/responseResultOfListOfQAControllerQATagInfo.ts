@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QAControllerQATagInfo } from './qAControllerQATagInfo';
+import type { QAControllerQATagInfo } from './qAControllerQATagInfo'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfQAControllerQATagInfo {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: QAControllerQATagInfo[] | null;
+  data: QAControllerQATagInfo[] | null
 }

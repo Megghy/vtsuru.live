@@ -1,5 +1,30 @@
 <script setup lang="ts">
+import {
+  AlertCircle,
+  CheckCircle2,
+  HelpCircle,
+  Info,
+  Play,
+  RefreshCw,
+  Square,
+  Video,
+} from 'lucide-vue-next'
+
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{ control: LiveControl }>()
 const obsStore = props.control.obsStore
@@ -14,226 +39,277 @@ const handleToggleConnect = () => {
 </script>
 
 <template>
-  <NCard
-    embedded
-    size="small"
-    class="live-manage-card"
-  >
-    <template #header>
-      <NFlex
-        align="center"
-        justify="space-between"
-      >
-        <NText strong> OBS 控制 / 统计 </NText>
-        <NTooltip placement="bottom">
-          <template #trigger>
-            <NText
-              depth="3"
-              style="font-size: 12px; cursor: help"
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex-row items-center justify-between space-y-0">
+      <CardTitle class="text-sm font-semibold">OBS 控制与统计</CardTitle>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <button
+              type="button"
+              class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-help"
             >
+              <HelpCircle class="size-3.5" />
               使用说明
-            </NText>
-          </template>
-          <div style="max-width: 260px">
-            <p style="margin: 0 0 8px">在 OBS 中开启 WebSocket：</p>
-            <ol style="padding-left: 18px; margin: 0">
+            </button>
+          </TooltipTrigger>
+          <TooltipContent class="max-w-[280px] text-xs space-y-1.5 p-3">
+            <p class="font-semibold text-foreground">在 OBS 中开启 WebSocket 服务：</p>
+            <ol class="pl-4 list-decimal space-y-0.5 text-muted-foreground">
               <li>在 OBS 菜单中选择「工具 - WebSocket 服务器设置」</li>
-              <li>选择「开启 WebSocket 服务器」</li>
-              <li>服务器密码选择手动输入或点击「生成密码」自动生成，也可留空</li>
-              <li>点击「应用」</li>
-              <li>点击「显示连接信息」，记下端口与密码</li>
+              <li>勾选「开启 WebSocket 服务器」</li>
+              <li>设置密码或留空</li>
+              <li>点击「应用」，记下端口（默认 4455）与密码</li>
             </ol>
-            <p style="margin: 8px 0 0">在上方输入对应的连接信息，点击「连接」即可</p>
-          </div>
-        </NTooltip>
-      </NFlex>
-    </template>
-    <NFlex
-      vertical
-      :size="16"
-    >
-      <NFlex
-        align="center"
-        justify="space-between"
-      >
-        <NButton
-          :type="obsStore.obsStreamActive ? 'error' : 'success'"
-          :disabled="!obsStore.obsConnected"
-          :loading="obsStore.isTogglingObsStream"
+            <p class="text-[11px] text-muted-foreground pt-1 border-t border-border/50">
+              在下方输入对应连接信息，点击「连接 OBS」即可
+            </p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </CardHeader>
+
+    <CardContent class="p-3 space-y-4">
+      <!-- 快捷推流控制与重连状态 -->
+      <div class="flex items-center justify-between">
+        <Button
+          type="button"
+          :variant="obsStore.obsStreamActive ? 'destructive' : 'default'"
+          :disabled="!obsStore.obsConnected || obsStore.isTogglingObsStream"
+          class="gap-1.5"
           @click="obsStore.handleObsToggleStream"
         >
+          <Square
+            v-if="obsStore.obsStreamActive"
+            class="size-3.5 fill-current"
+          />
+          <Play
+            v-else
+            class="size-3.5 fill-current"
+          />
           {{ obsStore.obsStreamActive ? '停止推流' : '开始推流' }}
-        </NButton>
+        </Button>
 
-        <NTag
+        <Badge
           v-if="obsStore.obsStreamReconnecting"
-          type="warning"
-          size="small"
+          variant="outline"
+          class="border-amber-500/40 text-amber-600 bg-amber-500/10 text-xs py-0.5"
         >
-          重连中
-        </NTag>
-      </NFlex>
+          推流重连中
+        </Badge>
+      </div>
 
-      <NFlex
-        vertical
-        :size="8"
-      >
-        <NInputGroup>
-          <NInput
-            v-model:value="obsStore.obsAddress"
-            placeholder="OBS WebSocket 地址 (默认: ws://127.0.0.1:4455)"
-            :disabled="obsStore.obsConnected"
-          />
-          <NInput
-            v-model:value="obsStore.obsPassword"
-            type="password"
-            placeholder="OBS WebSocket 密码 (可选)"
-            :disabled="obsStore.obsConnected"
-            show-password-on="click"
-          />
-        </NInputGroup>
+      <!-- OBS WebSocket 连接参数配置 -->
+      <div class="space-y-2 p-3 rounded-lg border border-border bg-muted/20">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div class="space-y-1">
+            <label class="text-[11px] text-muted-foreground block">WebSocket 地址</label>
+            <Input
+              v-model="obsStore.obsAddress"
+              placeholder="ws://127.0.0.1:4455"
+              :disabled="obsStore.obsConnected"
+              class="font-mono text-xs bg-background"
+            />
+          </div>
 
-        <NFlex
-          align="center"
-          justify="space-between"
-        >
-          <NButton
-            :type="obsStore.obsConnected ? 'default' : 'primary'"
-            :loading="obsStore.obsConnecting"
+          <div class="space-y-1">
+            <label class="text-[11px] text-muted-foreground block">连接密码（可选）</label>
+            <Input
+              v-model="obsStore.obsPassword"
+              type="password"
+              placeholder="无密码可留空"
+              :disabled="obsStore.obsConnected"
+              class="text-xs bg-background"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <Button
+            type="button"
+            :variant="obsStore.obsConnected ? 'outline' : 'default'"
+            :disabled="obsStore.obsConnecting"
+            class="gap-1.5"
             @click="handleToggleConnect"
           >
+            <RefreshCw
+              v-if="obsStore.obsConnecting"
+              class="size-3.5 animate-spin"
+            />
             {{ obsStore.obsConnected ? '断开 OBS' : '连接 OBS' }}
-          </NButton>
+          </Button>
 
-          <NTag
-            :type="obsStore.obsConnected ? (obsStore.obsStreamActive ? 'success' : 'info') : 'default'"
-            size="medium"
+          <!-- 状态徽章 -->
+          <div
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium border"
+            :class="
+              obsStore.obsConnected
+                ? obsStore.obsStreamActive
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                  : 'bg-primary/10 text-primary border-primary/30'
+                : 'bg-muted text-muted-foreground border-border'
+            "
           >
+            <span
+              class="size-1.5 rounded-full"
+              :class="
+                obsStore.obsConnected
+                  ? obsStore.obsStreamActive
+                    ? 'bg-emerald-500 animate-pulse'
+                    : 'bg-primary'
+                  : 'bg-muted-foreground/60'
+              "
+            />
             {{ obsStore.obsConnected ? (obsStore.obsStreamActive ? '已连接 · 正在推流' : '已连接') : '未连接' }}
-          </NTag>
-        </NFlex>
+          </div>
+        </div>
 
-        <NAlert
+        <!-- 错误提示 -->
+        <Alert
           v-if="obsStore.obsError"
-          type="error"
-          size="small"
+          class="py-2 px-2.5 border-destructive/30 bg-destructive/10 text-destructive mt-2"
         >
-          {{ obsStore.obsError }}
-        </NAlert>
-      </NFlex>
+          <div class="flex items-center gap-1.5">
+            <AlertCircle class="size-4 shrink-0" />
+            <AlertDescription class="text-xs m-0">
+              {{ obsStore.obsError }}
+            </AlertDescription>
+          </div>
+        </Alert>
+      </div>
 
-      <!-- __STATS__ -->
-      <NGrid
-        :x-gap="12"
-        :y-gap="12"
-        responsive="screen"
-        item-responsive
-        cols="1 s:2 m:3"
-      >
-        <NGi>
-          <NStatistic label="码率">
-            {{ obsStore.obsStats.bitrateKbps != null ? `${obsStore.obsStats.bitrateKbps.toFixed(0)} kbps` : '—' }}
-          </NStatistic>
-        </NGi>
-        <NGi>
-          <NStatistic label="帧率">
-            {{ obsStore.obsStats.fps != null ? `${obsStore.obsStats.fps.toFixed(1)} fps` : '—' }}
-          </NStatistic>
-        </NGi>
-        <NGi>
-          <NStatistic label="丢帧（输出）">
-            <NTooltip
+      <!-- 实时流统计网格 -->
+      <div class="space-y-2">
+        <span class="text-xs font-semibold text-foreground block">实时推流监控</span>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <!-- 码率 -->
+          <div class="p-2.5 rounded-md border border-border bg-card">
+            <span class="text-[11px] text-muted-foreground block">当前码率</span>
+            <span class="text-sm font-semibold text-foreground mt-0.5 block font-mono">
+              {{ obsStore.obsStats.bitrateKbps != null ? `${obsStore.obsStats.bitrateKbps.toFixed(0)} kbps` : '—' }}
+            </span>
+          </div>
+
+          <!-- 帧率 -->
+          <div class="p-2.5 rounded-md border border-border bg-card">
+            <span class="text-[11px] text-muted-foreground block">帧率 (FPS)</span>
+            <span class="text-sm font-semibold text-foreground mt-0.5 block font-mono">
+              {{ obsStore.obsStats.fps != null ? `${obsStore.obsStats.fps.toFixed(1)} fps` : '—' }}
+            </span>
+          </div>
+
+          <!-- 丢帧率 -->
+          <div class="p-2.5 rounded-md border border-border bg-card">
+            <span class="text-[11px] text-muted-foreground block">丢帧率（输出）</span>
+            <TooltipProvider
               v-if="
                 obsStore.obsStats.outputSkippedFrames != null &&
                 obsStore.obsStats.outputTotalFrames != null &&
                 obsStore.obsStats.outputTotalFrames > 0
               "
             >
-              <template #trigger>
-                <span style="cursor: help">
-                  {{
-                    ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100).toFixed(2)
-                  }}%
-                </span>
-              </template>
-              {{ obsStore.obsStats.outputSkippedFrames }} / {{ obsStore.obsStats.outputTotalFrames }}
-            </NTooltip>
-            <template v-else> — </template>
-          </NStatistic>
-        </NGi>
-        <NGi>
-          <NStatistic label="CPU 使用率">
-            {{ obsStore.obsStats.cpuUsage != null ? `${obsStore.obsStats.cpuUsage.toFixed(1)} %` : '—' }}
-          </NStatistic>
-        </NGi>
-        <NGi>
-          <NStatistic label="内存使用">
-            {{ obsStore.obsStats.memoryUsage != null ? `${obsStore.obsStats.memoryUsage.toFixed(0)} MB` : '—' }}
-          </NStatistic>
-        </NGi>
-        <NGi>
-          <NStatistic label="渲染跳帧">
-            <NTooltip
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span
+                    class="text-sm font-semibold mt-0.5 block font-mono cursor-help"
+                    :class="
+                      ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100) > 2
+                        ? 'text-amber-500'
+                        : 'text-foreground'
+                    "
+                  >
+                    {{ ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100).toFixed(2) }}%
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent class="text-xs">
+                  {{ obsStore.obsStats.outputSkippedFrames }} / {{ obsStore.obsStats.outputTotalFrames }} 帧
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span
+              v-else
+              class="text-sm font-semibold text-foreground mt-0.5 block font-mono"
+            >—</span>
+          </div>
+
+          <!-- CPU 使用率 -->
+          <div class="p-2.5 rounded-md border border-border bg-card">
+            <span class="text-[11px] text-muted-foreground block">CPU 使用率</span>
+            <span class="text-sm font-semibold text-foreground mt-0.5 block font-mono">
+              {{ obsStore.obsStats.cpuUsage != null ? `${obsStore.obsStats.cpuUsage.toFixed(1)} %` : '—' }}
+            </span>
+          </div>
+
+          <!-- 内存使用 -->
+          <div class="p-2.5 rounded-md border border-border bg-card">
+            <span class="text-[11px] text-muted-foreground block">OBS 内存占用</span>
+            <span class="text-sm font-semibold text-foreground mt-0.5 block font-mono">
+              {{ obsStore.obsStats.memoryUsage != null ? `${obsStore.obsStats.memoryUsage.toFixed(0)} MB` : '—' }}
+            </span>
+          </div>
+
+          <!-- 渲染跳帧 -->
+          <div class="p-2.5 rounded-md border border-border bg-card">
+            <span class="text-[11px] text-muted-foreground block">渲染跳帧</span>
+            <TooltipProvider
               v-if="
                 obsStore.obsStats.renderSkippedFrames != null &&
                 obsStore.obsStats.renderTotalFrames != null &&
                 obsStore.obsStats.renderTotalFrames > 0
               "
             >
-              <template #trigger>
-                <span style="cursor: help">
-                  {{
-                    ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100).toFixed(2)
-                  }}%
-                </span>
-              </template>
-              {{ obsStore.obsStats.renderSkippedFrames }} / {{ obsStore.obsStats.renderTotalFrames }}
-            </NTooltip>
-            <template v-else> — </template>
-          </NStatistic>
-        </NGi>
-      </NGrid>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <span
+                    class="text-sm font-semibold mt-0.5 block font-mono cursor-help"
+                    :class="
+                      ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100) > 2
+                        ? 'text-amber-500'
+                        : 'text-foreground'
+                    "
+                  >
+                    {{ ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100).toFixed(2) }}%
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent class="text-xs">
+                  {{ obsStore.obsStats.renderSkippedFrames }} / {{ obsStore.obsStats.renderTotalFrames }} 帧
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span
+              v-else
+              class="text-sm font-semibold text-foreground mt-0.5 block font-mono"
+            >—</span>
+          </div>
+        </div>
+      </div>
 
-      <!-- __SCENE__ -->
-      <!-- OBS 场景控制 -->
-      <NDivider style="margin: 0" />
+      <div class="h-px bg-border" />
 
-      <NText
-        strong
-        style="display: block"
-      >
-        OBS 场景控制
-      </NText>
-
-      <!-- 场景切换 -->
-      <div>
-        <NFlex
-          align="center"
-          justify="space-between"
-          style="margin-bottom: 8px"
-        >
-          <NText strong> 场景切换 </NText>
-          <NTag
-            :type="obsStore.currentObsScene ? 'success' : 'default'"
-            size="small"
+      <!-- 场景控制 -->
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold text-foreground block">场景切换</span>
+          <Badge
+            variant="outline"
+            class="text-[11px] font-normal"
           >
-            当前：{{ obsStore.currentObsScene || '未连接' }}
-          </NTag>
-        </NFlex>
+            当前场景：{{ obsStore.currentObsScene || '未连接' }}
+          </Badge>
+        </div>
 
-        <NFlex
+        <div
           v-if="obsStore.obsScenes.length > 0"
-          :size="8"
-          wrap
+          class="flex flex-wrap gap-2"
         >
-          <NTag
+          <Button
             v-for="scene in obsStore.obsScenes"
             :key="scene"
-            :type="scene === obsStore.currentObsScene ? 'primary' : 'default'"
-            :bordered="scene !== obsStore.currentObsScene"
-            size="medium"
-            style="cursor: pointer"
-            :loading="obsStore.isSwitchingScene"
+            type="button"
+            :variant="scene === obsStore.currentObsScene ? 'default' : 'outline'"
+            class="text-xs h-7 px-2.5"
+            :disabled="obsStore.isSwitchingScene"
             @click="
               () => {
                 if (!obsStore.isSwitchingScene && scene !== obsStore.currentObsScene) {
@@ -243,114 +319,143 @@ const handleToggleConnect = () => {
             "
           >
             {{ scene }}
-          </NTag>
-        </NFlex>
-        <NEmpty
+          </Button>
+        </div>
+
+        <div
           v-else
-          description="暂无可用场景"
-          size="small"
-        />
+          class="py-4 text-center text-xs text-muted-foreground rounded-md border border-dashed border-border"
+        >
+          {{ obsStore.obsConnected ? '未检测到 OBS 场景' : '连接 OBS 后将自动加载可用场景列表' }}
+        </div>
       </div>
 
-      <!-- 场景配置 -->
-      <NDivider style="margin: 0" />
+      <div class="h-px bg-border" />
 
-      <NText strong> 场景联动配置 </NText>
+      <!-- 场景联动配置 -->
+      <div class="space-y-3">
+        <span class="text-xs font-semibold text-foreground block">场景联动设置</span>
 
-      <NFlex
-        vertical
-        :size="8"
-      >
-        <NFlex
-          align="center"
-          justify="space-between"
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-foreground">启用自动场景切换</span>
+            <Switch
+              :checked="obsStore.obsSceneConfig.autoSwitchEnabled"
+              @update:checked="
+                obsStore.obsSceneConfig.autoSwitchEnabled = $event;
+                obsStore.saveSceneConfig();
+              "
+            />
+          </div>
+
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs text-foreground block">开播/下播联动推流</span>
+              <span class="text-[11px] text-muted-foreground block mt-0.5">
+                开始直播时自动开始 OBS 推流，停止直播时自动停止推流
+              </span>
+            </div>
+            <Switch
+              :checked="obsStore.obsSceneConfig.autoToggleStream"
+              @update:checked="
+                obsStore.obsSceneConfig.autoToggleStream = $event;
+                obsStore.saveSceneConfig();
+              "
+            />
+          </div>
+        </div>
+
+        <!-- 联动场景选择器 -->
+        <div
+          v-if="obsStore.obsSceneConfig.autoSwitchEnabled"
+          class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2"
         >
-          <NText>启用自动场景切换</NText>
-          <NSwitch
-            v-model:value="obsStore.obsSceneConfig.autoSwitchEnabled"
-            @update:value="obsStore.saveSceneConfig"
-          />
-        </NFlex>
-
-        <NFlex
-          align="center"
-          justify="space-between"
-        >
-          <div>
-            <NText>开播下播后自动切换 OBS 推流状态</NText>
-            <NText
-              depth="3"
-              style="font-size: 12px; display: block; margin-top: 2px"
+          <!-- 开播场景 -->
+          <div class="space-y-1">
+            <label class="text-[11px] text-muted-foreground block">开播场景</label>
+            <Select
+              v-model="obsStore.obsSceneConfig.startScene"
+              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+              @update:model-value="obsStore.saveSceneConfig"
             >
-              开播时自动开始推流，下播时自动停止推流
-            </NText>
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="选择开播场景" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="scene in obsStore.obsScenes"
+                  :key="scene"
+                  :value="scene"
+                >
+                  {{ scene }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <NSwitch
-            v-model:value="obsStore.obsSceneConfig.autoToggleStream"
-            @update:value="obsStore.saveSceneConfig"
-          />
-        </NFlex>
-      </NFlex>
 
-      <template v-if="obsStore.obsSceneConfig.autoSwitchEnabled">
-        <NFlex
-          vertical
-          :size="12"
+          <!-- 下播场景 -->
+          <div class="space-y-1">
+            <label class="text-[11px] text-muted-foreground block">下播场景</label>
+            <Select
+              v-model="obsStore.obsSceneConfig.stopScene"
+              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+              @update:model-value="obsStore.saveSceneConfig"
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="选择下播场景" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="scene in obsStore.obsScenes"
+                  :key="scene"
+                  :value="scene"
+                >
+                  {{ scene }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <!-- 等待场景 -->
+          <div class="space-y-1">
+            <label class="text-[11px] text-muted-foreground block">等待场景（可选）</label>
+            <Select
+              v-model="obsStore.obsSceneConfig.waitingScene"
+              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+              @update:model-value="obsStore.saveSceneConfig"
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="选择等待场景" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="scene in obsStore.obsScenes"
+                  :key="scene"
+                  :value="scene"
+                >
+                  {{ scene }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <Alert
+          v-if="obsStore.obsSceneError"
+          class="py-2 px-2.5 border-destructive/30 bg-destructive/10 text-destructive mt-2"
         >
-          <div>
-            <NText strong> 开播场景 </NText>
-            <NSelect
-              v-model:value="obsStore.obsSceneConfig.startScene"
-              :options="obsStore.obsScenes.map((scene) => ({ label: scene, value: scene }))"
-              placeholder="选择开播时自动切换的场景"
-              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              style="margin-top: 8px"
-              @update:value="obsStore.saveSceneConfig"
-            />
+          <div class="flex items-center gap-1.5">
+            <AlertCircle class="size-4 shrink-0" />
+            <AlertDescription class="text-xs m-0">
+              {{ obsStore.obsSceneError }}
+            </AlertDescription>
           </div>
+        </Alert>
 
-          <div>
-            <NText strong> 下播场景 </NText>
-            <NSelect
-              v-model:value="obsStore.obsSceneConfig.stopScene"
-              :options="obsStore.obsScenes.map((scene) => ({ label: scene, value: scene }))"
-              placeholder="选择下播时自动切换的场景"
-              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              style="margin-top: 8px"
-              @update:value="obsStore.saveSceneConfig"
-            />
-          </div>
-
-          <div>
-            <NText strong> 等待场景 </NText>
-            <NSelect
-              v-model:value="obsStore.obsSceneConfig.waitingScene"
-              :options="obsStore.obsScenes.map((scene) => ({ label: scene, value: scene }))"
-              placeholder="选择等待直播时的场景（可选）"
-              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              style="margin-top: 8px"
-              @update:value="obsStore.saveSceneConfig"
-            />
-          </div>
-        </NFlex>
-      </template>
-
-      <!-- 错误提示 -->
-      <NAlert
-        v-if="obsStore.obsSceneError"
-        type="error"
-        size="small"
-      >
-        {{ obsStore.obsSceneError }}
-      </NAlert>
-
-      <!-- 帮助提示 -->
-      <NText
-        depth="3"
-        style="font-size: 12px; display: block"
-      >
-        配置场景联动后，开播/下播时会自动切换到对应的场景。请确保 OBS 中已创建相应的场景。
-      </NText>
-    </NFlex>
-  </NCard>
+        <p class="text-[11px] text-muted-foreground">
+          配置场景联动后，在 VTsuru 开播/下播时将自动切换 OBS 场景。请确保 OBS 中已创建对应同名场景。
+        </p>
+      </div>
+    </CardContent>
+  </Card>
 </template>

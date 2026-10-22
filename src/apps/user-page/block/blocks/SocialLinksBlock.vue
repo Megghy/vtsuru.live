@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { GlobeOutline, LinkOutline } from '@vicons/ionicons5'
-import { NFlex, NIcon } from 'naive-ui'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 
@@ -151,10 +150,10 @@ const sizePx = computed(() => {
   return 44
 })
 
-const iconSize = computed(() => {
-  if (cfg.value.size === 'sm') return 18
-  if (cfg.value.size === 'lg') return 24
-  return 20
+const iconSizeClass = computed(() => {
+  if (cfg.value.size === 'sm') return 'size-4.5'
+  if (cfg.value.size === 'lg') return 'size-6'
+  return 'size-5'
 })
 </script>
 
@@ -163,15 +162,11 @@ const iconSize = computed(() => {
     :framed="cfg.framed"
     :backgrounded="cfg.backgrounded"
   >
-    <NFlex
-      justify="center"
-      wrap
-      style="gap: 10px"
-    >
+    <div class="flex justify-center flex-wrap gap-2.5">
       <a
         v-for="(it, idx) in items"
         :key="idx"
-        class="social"
+        class="inline-flex items-center justify-center gap-2 h-[var(--social-size)] px-4 min-w-[var(--social-size)] rounded-[var(--social-radius)] bg-[var(--social-bg)] text-[var(--social-fg)] no-underline border border-border transition-all duration-200 hover:brightness-108 hover:-translate-y-0.5 active:brightness-95 active:translate-y-0 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[3px] [&_svg]:block [&_svg]:fill-current"
         :href="it.url"
         target="_blank"
         rel="noopener noreferrer"
@@ -181,67 +176,24 @@ const iconSize = computed(() => {
           '--social-bg': getStyle(it.platform).bg,
           '--social-fg': getStyle(it.platform).fg,
           '--social-size': `${sizePx}px`,
-          '--social-radius': cfg.variant === 'round' ? '999px' : 'var(--vtsuru-page-radius)',
+          '--social-radius': cfg.variant === 'round' ? '999px' : 'var(--radius)',
         }"
       >
-        <NIcon
-          :size="iconSize"
-          class="social-icon"
+        <component
+          :is="platformIcons[it.platform]"
+          :class="iconSizeClass"
+          class="shrink-0"
           aria-hidden="true"
-        >
-          <component :is="platformIcons[it.platform]" />
-        </NIcon>
+        />
         <span
           v-if="cfg.showLabel"
-          class="social-label"
+          class="text-xs font-semibold text-[var(--social-fg)]"
         >
           {{ it.label || SOCIAL_PLATFORM_NAMES[it.platform] }}
         </span>
       </a>
-    </NFlex>
+    </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.social {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  height: var(--social-size);
-  padding: 0 16px;
-  min-width: var(--social-size);
-  border-radius: var(--social-radius);
-  background: var(--social-bg);
-  color: var(--social-fg);
-  text-decoration: none;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-card-border-color);
-  transition:
-    filter 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  box-shadow: var(--vtsuru-page-shadow);
-}
-.social:hover {
-  filter: brightness(1.08);
-  transform: translateY(-2px);
-  box-shadow: var(--vtsuru-page-shadow);
-}
-.social:active {
-  filter: brightness(0.95);
-  transform: translateY(0);
-}
-.social :deep(svg) {
-  display: block;
-  fill: currentColor;
-}
-.social-label {
-  color: var(--social-fg);
-  font-weight: 600;
-}
 
-.social:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
-  outline-offset: 3px;
-}
-</style>

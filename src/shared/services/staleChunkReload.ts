@@ -1,7 +1,8 @@
 export const CHUNK_RELOAD_KEY = 'vtsuru:chunk-reload-at'
 export const CHUNK_RELOAD_COOLDOWN_MS = 10_000
 
-const STALE_CHUNK_RE = /Failed to fetch dynamically imported module|Importing a module script failed|is not a valid JavaScript MIME type|Unable to preload CSS/
+const STALE_CHUNK_RE =
+  /Failed to fetch dynamically imported module|Importing a module script failed|is not a valid JavaScript MIME type|Unable to preload CSS/
 
 export function shouldReloadForStaleChunk(now = Date.now(), lastRaw?: string | null) {
   const last = Number(lastRaw || 0)

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import { ArrowSync20Regular, Sparkle24Regular, Alert24Regular } from '@vicons/fluent'
-import { NIcon, NScrollbar, NSpin } from 'naive-ui'
+import { Alert24Regular, ArrowSync20Regular, Sparkle24Regular } from '@vicons/fluent'
 import { nextTick, onMounted, ref, watch } from 'vue'
 
-import { getDigest, type AssistantDigestItem } from '../api/assistant'
+import { Spin } from '@/shared/ui/spin'
+
+import type { AssistantDigestItem } from '../api/assistant'
+import { getDigest } from '../api/assistant'
 import { useAssistantStore } from '../store/useAssistantStore'
 import AssistantComposer from './AssistantComposer.vue'
 import AssistantMessageList from './AssistantMessageList.vue'
 
 const store = useAssistantStore()
-const scrollRef = ref<InstanceType<typeof NScrollbar> | null>(null)
+const scrollRef = ref<HTMLDivElement | null>(null)
 const composerRef = ref<InstanceType<typeof AssistantComposer> | null>(null)
 
 /** 主动建议提示 (后台待办概览), 仅在欢迎页拉取一次 */
@@ -166,10 +168,10 @@ function onPickSuggestion(text: string) {
 </script>
 
 <template>
-  <div class="chat-window">
-    <NScrollbar
+  <div class="flex flex-col h-full min-h-0">
+    <div
       ref="scrollRef"
-      class="chat-window__scroll"
+      class="flex-1 min-h-0 overflow-y-auto"
       @scroll="onScroll"
     >
       <AssistantMessageList
@@ -188,47 +190,47 @@ function onPickSuggestion(text: string) {
       />
       <div
         v-else-if="store.messagesLoading"
-        class="chat-window__loading"
+        class="flex-center py-16 px-4"
       >
-        <NSpin size="medium" />
+        <Spin />
       </div>
       <div
         v-else
-        class="chat-window__welcome"
+        class="flex flex-col items-center gap-2 pt-12 px-4 pb-6 text-center"
       >
-        <div class="chat-window__welcome-icon">
-          <NIcon
-            :component="Sparkle24Regular"
-            size="26"
+        <div class="flex-center size-12 rounded-xl bg-[var(--brand-soft,rgba(35,173,229,0.12))] text-[var(--brand,#23ade5)] mb-1">
+          <component
+            :is="Sparkle24Regular"
+            class="size-6 text-primary"
           />
         </div>
-        <div class="chat-window__welcome-title">有什么可以帮你的?</div>
-        <div class="chat-window__welcome-sub">用自然语言管理日程、查询数据, 或上传截图让我识别</div>
+        <div class="text-base font-semibold text-foreground">有什么可以帮你的?</div>
+        <div class="text-[13px] text-muted-foreground max-w-[380px]">用自然语言管理日程、查询数据, 或上传截图让我识别</div>
         <div
           v-if="digest.length"
-          class="chat-window__digest"
+          class="flex flex-col gap-1.5 w-full max-w-[440px] mt-2"
         >
           <button
             v-for="d in digest"
             :key="d.kind + d.text"
             type="button"
-            class="chat-window__digest-item"
+            class="flex items-center gap-2 py-2 px-3 rounded-lg bg-muted border border-border text-foreground text-xs text-left cursor-pointer transition hover:enabled:border-[var(--brand)] hover:enabled:bg-[var(--brand-soft)]"
             :disabled="store.sending"
             @click="onPickSuggestion(d.prompt)"
           >
-            <NIcon
-              :component="Alert24Regular"
-              size="15"
+            <component
+              :is="Alert24Regular"
+              class="size-3.5 text-amber-500 shrink-0"
             />
             <span>{{ d.text }}</span>
           </button>
         </div>
-        <div class="chat-window__suggestions">
+        <div class="flex flex-wrap gap-2 justify-center max-w-[520px] mt-3">
           <button
             v-for="s in suggestions"
             :key="s"
             type="button"
-            class="chat-window__chip"
+            class="py-1.5 px-3 rounded-2xl bg-muted border border-border text-foreground text-xs cursor-pointer transition hover:enabled:border-[var(--brand)] hover:enabled:text-[var(--brand)]"
             :disabled="store.sending"
             @click="onPickSuggestion(s)"
           >
@@ -236,22 +238,22 @@ function onPickSuggestion(text: string) {
           </button>
           <button
             type="button"
-            class="chat-window__chip chat-window__chip--roll"
+            class="inline-flex items-center gap-1 py-1.5 px-3 rounded-2xl bg-muted border border-border text-muted-foreground text-xs cursor-pointer transition hover:enabled:text-foreground hover:enabled:border-[var(--brand)]"
             :disabled="store.sending"
             title="换一批"
             @click="rollSuggestions"
           >
-            <NIcon
-              :component="ArrowSync20Regular"
-              size="15"
+            <component
+              :is="ArrowSync20Regular"
+              class="size-3.5"
             />
             换一批
           </button>
         </div>
       </div>
-    </NScrollbar>
+    </div>
 
-    <div class="chat-window__composer">
+    <div class="shrink-0 pt-2.5 mt-1.5 border-t border-border">
       <AssistantComposer
         ref="composerRef"
         :loading="store.sending"
@@ -262,135 +264,3 @@ function onPickSuggestion(text: string) {
   </div>
 </template>
 
-<style scoped>
-.chat-window {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-}
-.chat-window__scroll {
-  flex: 1 1 0;
-  min-height: 0;
-}
-.chat-window__loading {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 16px;
-}
-.chat-window__composer {
-  flex: 0 0 auto;
-  padding-top: 10px;
-  margin-top: 6px;
-  border-top: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.18));
-}
-
-.chat-window__welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 48px 16px 24px;
-  text-align: center;
-}
-.chat-window__welcome-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 4px;
-  border-radius: 16px;
-  color: var(--vtsuru-brand, #23ade5);
-  background: var(--vtsuru-brand-soft, rgba(35, 173, 229, 0.1));
-}
-.chat-window__welcome-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--vtsuru-fg, var(--vtsuru-fg));
-}
-.chat-window__welcome-sub {
-  font-size: 13px;
-  max-width: 360px;
-  line-height: 1.5;
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-}
-.chat-window__suggestions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
-  margin-top: 12px;
-  max-width: 440px;
-}
-.chat-window__digest {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 14px;
-  width: 100%;
-  max-width: 360px;
-}
-.chat-window__digest-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 12px;
-  border-radius: 10px;
-  text-align: left;
-  border: 1px solid color-mix(in srgb, var(--vtsuru-warning) 35%, transparent);
-  background: var(--vtsuru-warning-soft, rgba(240, 160, 32, 0.08));
-  color: var(--vtsuru-fg, var(--vtsuru-fg));
-  font-size: 13px;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    transform 0.1s;
-}
-.chat-window__digest-item:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--vtsuru-warning) 16%, transparent);
-}
-.chat-window__digest-item:active:not(:disabled) {
-  transform: scale(0.99);
-}
-.chat-window__digest-item:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.chat-window__digest-item > span {
-  flex: 1 1 0;
-  min-width: 0;
-}
-.chat-window__chip {
-  padding: 7px 13px;
-  border-radius: 999px;
-  border: 1px solid var(--vtsuru-border, rgba(128, 128, 128, 0.2));
-  background: var(--vtsuru-bg-muted, rgba(128, 128, 128, 0.05));
-  color: var(--vtsuru-fg, var(--vtsuru-fg));
-  font-size: 13px;
-  cursor: pointer;
-  transition:
-    border-color 0.15s,
-    background 0.15s,
-    transform 0.1s;
-}
-.chat-window__chip:hover:not(:disabled) {
-  border-color: var(--vtsuru-brand-tint, rgba(35, 173, 229, 0.5));
-  background: var(--vtsuru-brand-soft, rgba(35, 173, 229, 0.08));
-}
-.chat-window__chip:active:not(:disabled) {
-  transform: scale(0.97);
-}
-.chat-window__chip:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.chat-window__chip--roll {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--vtsuru-fg-muted, var(--vtsuru-fg-muted));
-  border-style: dashed;
-}
-</style>

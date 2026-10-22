@@ -1,19 +1,6 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NDivider,
-  NDynamicTags,
-  NFlex,
-  NForm,
-  NFormItem,
-  NInput,
-  NPopconfirm,
-  NSelect,
-  NTag,
-  NText,
-} from 'naive-ui'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import type { ResponseCurrentLiveModel } from '@/api/api-models'
@@ -26,6 +13,12 @@ import {
   TRANSCRIPTION_MIN_CLIENT_VERSION,
 } from '@/shared/config/clientVersion'
 import type { TranscriptionProfile, TranscriptionProvider } from '@/shared/models/transcription'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
 const settingsStore = useTranscriptionSettings()
@@ -33,6 +26,12 @@ const transcription = useTranscription()
 const account = useAccount()
 const webFetcher = useWebFetcher()
 const activeProfile = computed(() => settingsStore.activeProfile)
+const activeOpenAIProfile = computed(() =>
+  settingsStore.activeProfile?.provider === 'openai' ? settingsStore.activeProfile : undefined,
+)
+const activeTencentProfile = computed(() =>
+  settingsStore.activeProfile?.provider === 'tencent' ? settingsStore.activeProfile : undefined,
+)
 const isRunning = computed(() => transcription.status.running)
 const isBusy = computed(() =>
   ['resolving_stream', 'connecting_provider', 'starting_ffmpeg', 'stopping'].includes(transcription.status.phase),
@@ -73,9 +72,7 @@ const readiness = computed(() => {
   return [
     {
       state: isSupported.value ? 'ok' : 'bad',
-      label: isSupported.value
-        ? `客户端 ${version}`
-        : `需要客户端 ${TRANSCRIPTION_MIN_CLIENT_VERSION} 或更高版本`,
+      label: isSupported.value ? `客户端 ${version}` : `需要客户端 ${TRANSCRIPTION_MIN_CLIENT_VERSION} 或更高版本`,
     },
     {
       state: roomId ? 'ok' : 'bad',
@@ -100,21 +97,21 @@ const startBlocked = computed(
 const statusMeta = computed(() => {
   switch (transcription.status.phase) {
     case 'resolving_stream':
-      return { type: 'warning' as const, text: '正在获取播放流' }
+      return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '正在获取播放流' }
     case 'connecting_provider':
-      return { type: 'warning' as const, text: '正在连接识别服务' }
+      return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '正在连接识别服务' }
     case 'starting_ffmpeg':
-      return { type: 'warning' as const, text: '正在启动 FFmpeg' }
+      return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '正在启动 FFmpeg' }
     case 'running':
-      return { type: 'success' as const, text: '转写中' }
+      return { class: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10', text: '转写中' }
     case 'reconnecting':
-      return { type: 'warning' as const, text: '正在重连' }
+      return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '正在重连' }
     case 'stopping':
-      return { type: 'warning' as const, text: '正在停止' }
+      return { class: 'border-amber-500/40 text-amber-600 bg-amber-500/10', text: '正在停止' }
     case 'error':
-      return { type: 'error' as const, text: '已停止' }
+      return { class: 'border-destructive/40 text-destructive bg-destructive/10', text: '已停止' }
     default:
-      return { type: 'default' as const, text: '未运行' }
+      return { class: 'border-border text-muted-foreground', text: '未运行' }
   }
 })
 
@@ -122,15 +119,25 @@ const notice = computed(() => {
   if (transcription.status.phase === 'reconnecting') {
     const headline = transcription.status.message || '连接中断，正在重新连接'
     const detail = transcription.runtimeError
-    return { type: 'warning' as const, text: detail ? `${headline}：${detail}` : headline }
+    return {
+      class: 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      text: detail ? `${headline}：${detail}` : headline,
+    }
   }
   if (transcription.runtimeError && transcription.status.phase === 'error') {
-    return { type: 'error' as const, text: transcription.runtimeError }
+    return { class: 'border-destructive/20 bg-destructive/10 text-destructive', text: transcription.runtimeError }
   }
   if (transcription.archivePaused || transcription.uploadError) {
-    return { type: 'warning' as const, text: transcription.uploadError || '归档暂停，转写仍在继续' }
+    return {
+      class: 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+      text: transcription.uploadError || '归档暂停，转写仍在继续',
+    }
   }
-  if (transcription.status.message) return { type: 'info' as const, text: transcription.status.message }
+  if (transcription.status.message)
+    return {
+      class: 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400',
+      text: transcription.status.message,
+    }
   return undefined
 })
 
@@ -209,10 +216,10 @@ function addProfile(provider: TranscriptionProvider) {
   settingsStore.addProfile(provider)
 }
 
-function changeProvider(provider: TranscriptionProvider) {
+function changeProvider(provider: string) {
   const current = activeProfile.value
   if (!current || current.provider === provider) return
-  const replacement = createTranscriptionProfile(provider)
+  const replacement = createTranscriptionProfile(provider as TranscriptionProvider)
   replacement.id = current.id
   replacement.name = current.name
   const index = settingsStore.settings.profiles.findIndex((profile) => profile.id === current.id)
@@ -223,366 +230,397 @@ async function start() {
   try {
     await settingsStore.save()
     await transcription.start()
-    window.$message.success('实时转写已启动')
+    toast.success('实时转写已启动')
   } catch (error) {
-    window.$message.error(`启动转写失败: ${error}`)
+    toast.error(`启动转写失败: ${error}`)
   }
 }
 
 async function stop() {
   try {
     await transcription.stop()
-    window.$message.success('实时转写已停止')
+    toast.success('实时转写已停止')
   } catch (error) {
-    window.$message.error(`停止转写失败: ${error}`)
+    toast.error(`停止转写失败: ${error}`)
   }
+}
+
+// 动态热词输入
+const newHotword = ref('')
+function addHotword() {
+  const val = newHotword.value.trim()
+  if (!val || !activeProfile.value) return
+  if (!activeProfile.value.hotwords) activeProfile.value.hotwords = []
+  if (!activeProfile.value.hotwords.includes(val)) {
+    activeProfile.value.hotwords.push(val)
+  }
+  newHotword.value = ''
+}
+function removeHotword(index: number) {
+  if (!activeProfile.value?.hotwords) return
+  activeProfile.value.hotwords.splice(index, 1)
 }
 </script>
 
 <template>
-  <NFlex
-    vertical
-    :size="16"
-  >
-    <section class="setting-section">
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
+  <div class="flex flex-col gap-4">
+    <section class="flex flex-col gap-3">
+      <div class="flex justify-between items-center">
         <div>
-          <NText strong>
-            运行状态
-          </NText>
-          <div class="section-description">
-            最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。
-          </div>
+          <span class="font-semibold text-sm text-foreground">运行状态</span>
+          <div class="mt-0.5 text-xs text-muted-foreground">最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。</div>
         </div>
-        <NTag
-          :type="statusMeta.type"
-          :bordered="false"
+        <Badge
+          variant="outline"
+          class="text-xs"
+          :class="statusMeta.class"
         >
           {{ statusMeta.text }}
-        </NTag>
-      </NFlex>
+        </Badge>
+      </div>
 
       <div
         v-if="!isRunning"
-        class="readiness"
+        class="flex flex-col gap-1.5"
       >
         <div
           v-for="item in readiness"
           :key="item.label"
-          class="readiness-item"
+          class="flex items-center gap-2 text-[13px]"
         >
           <span
-            class="readiness-dot"
-            :data-state="item.state"
+            class="size-1.5 rounded-full shrink-0"
+            :class="item.state === 'ok' ? 'bg-emerald-500' : 'bg-destructive'"
           />
-          <NText :depth="item.state === 'ok' ? undefined : 3">
+          <span :class="item.state === 'ok' ? 'text-foreground' : 'text-muted-foreground'">
             {{ item.label }}
-          </NText>
+          </span>
         </div>
       </div>
 
-      <NFlex
-        class="runtime-actions"
-        align="center"
-      >
-        <NButton
+      <div class="min-h-8 flex items-center gap-3">
+        <Button
           v-if="!isRunning"
-          type="primary"
-          size="small"
-          :loading="isBusy"
-          :disabled="startBlocked"
+          :disabled="startBlocked || isBusy"
           @click="start"
         >
-          开始转写
-        </NButton>
-        <NButton
+          {{ isBusy ? '启动中...' : '开始转写' }}
+        </Button>
+        <Button
           v-else
-          type="error"
-          size="small"
-          :loading="isBusy"
+          variant="destructive"
+          :disabled="isBusy"
           @click="stop"
         >
-          停止转写
-        </NButton>
-        <NText depth="3">
+          {{ isBusy ? '停止中...' : '停止转写' }}
+        </Button>
+        <span class="text-xs text-muted-foreground">
           已归档 {{ transcription.archivedCount }} 条
-          <template v-if="transcription.pendingCount">
-            ，待上传 {{ transcription.pendingCount }} 条
-          </template>
-          <template v-if="sourceLabel">
-            · {{ sourceLabel }}
-          </template>
-        </NText>
-      </NFlex>
+          <template v-if="transcription.pendingCount"> ，待上传 {{ transcription.pendingCount }} 条 </template>
+          <template v-if="sourceLabel"> · {{ sourceLabel }} </template>
+        </span>
+      </div>
 
-      <NAlert
+      <Alert
         v-if="notice"
-        :type="notice.type"
-        size="small"
-        :bordered="false"
+        class="py-2 px-2.5"
+        :class="notice.class"
       >
-        {{ notice.text }}
-      </NAlert>
+        <AlertDescription class="text-xs m-0">
+          {{ notice.text }}
+        </AlertDescription>
+      </Alert>
 
       <div
         ref="transcriptEl"
-        class="transcript"
+        class="max-h-80 overflow-auto p-2.5 px-3 border border-border rounded-md bg-muted"
       >
         <div
           v-if="!transcription.lines.length && !transcription.partialText"
-          class="transcript-empty"
+          class="text-muted-foreground text-[13px]"
         >
           开始后在这里显示本场字幕
         </div>
         <div
           v-for="(line, index) in transcription.lines"
           :key="`${line.startMs}-${index}`"
-          class="transcript-line"
+          class="flex gap-2.5 py-0.5 text-[13px] leading-relaxed"
         >
-          <span class="transcript-time">{{ formatOffset(line.startMs) }}</span>
+          <span class="shrink-0 w-10 text-muted-foreground tabular-nums">{{ formatOffset(line.startMs) }}</span>
           <span>{{ line.text }}</span>
         </div>
         <div
           v-if="transcription.partialText"
-          class="transcript-line transcript-line--partial"
+          class="flex gap-2.5 py-0.5 text-[13px] leading-relaxed text-muted-foreground"
         >
-          <span class="transcript-time">…</span>
+          <span class="shrink-0 w-10 text-muted-foreground tabular-nums">…</span>
           <span>{{ transcription.partialText }}</span>
         </div>
       </div>
     </section>
 
-    <NDivider />
+    <div class="h-px bg-border my-1" />
 
-    <section class="setting-section">
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
+    <section class="flex flex-col gap-3">
+      <div class="flex justify-between items-center">
         <div>
-          <NText strong>
-            识别服务
-          </NText>
-          <div class="section-description">
-            可保存多个本地配置，启动时使用当前选中的配置。
-          </div>
+          <span class="font-semibold text-sm text-foreground">识别服务</span>
+          <div class="mt-0.5 text-xs text-muted-foreground">可保存多个本地配置，启动时使用当前选中的配置。</div>
         </div>
-        <NFlex>
-          <NButton
-            size="tiny"
+        <div class="flex items-center gap-2">
+          <Button
+            size="xs"
+            variant="outline"
+            class="h-6 text-[11px]"
             :disabled="isRunning"
             @click="addProfile('tencent')"
           >
             新增腾讯云
-          </NButton>
-          <NButton
-            size="tiny"
+          </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            class="h-6 text-[11px]"
             :disabled="isRunning"
             @click="addProfile('openai')"
           >
             新增 OpenAI
-          </NButton>
-        </NFlex>
-      </NFlex>
+          </Button>
+        </div>
+      </div>
 
-      <NFlex
-        align="center"
-        class="profile-picker"
-      >
-        <NSelect
-          v-model:value="settingsStore.settings.activeProfileId"
-          :options="profileOptions"
-          :disabled="isRunning"
-          style="min-width: 260px; flex: 1"
-        />
-        <NPopconfirm
+      <div class="min-h-8 flex items-center gap-2">
+        <div class="flex-1 min-w-[260px]">
+          <Select
+            v-model="settingsStore.settings.activeProfileId"
+            :disabled="isRunning"
+          >
+            <SelectTrigger class="w-full">
+              <SelectValue placeholder="选择配置" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in profileOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Popconfirm
+          title="确认删除"
           :disabled="settingsStore.settings.profiles.length === 1 || isRunning"
           @positive-click="settingsStore.removeActiveProfile()"
         >
           <template #trigger>
-            <NButton
-              size="small"
-              type="error"
-              secondary
+            <Button
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10"
               :disabled="settingsStore.settings.profiles.length === 1 || isRunning"
             >
               删除
-            </NButton>
+            </Button>
           </template>
           删除后本地保存的该组凭据也会一并移除。
-        </NPopconfirm>
-      </NFlex>
+        </Popconfirm>
+      </div>
 
-      <NForm
+      <div
         v-if="activeProfile"
-        label-placement="left"
-        label-width="120"
-        size="small"
-        :disabled="isRunning"
+        class="space-y-3 pt-2 text-xs"
       >
-        <NFormItem label="配置名称">
-          <NInput
-            v-model:value="activeProfile.name"
+        <div class="flex items-center gap-3">
+          <span class="w-24 text-muted-foreground shrink-0">配置名称</span>
+          <Input
+            v-model="activeProfile.name"
+            :disabled="isRunning"
             placeholder="用于区分本地配置"
+            class="flex-1"
           />
-        </NFormItem>
-        <NFormItem label="识别服务">
-          <NSelect
-            :value="activeProfile.provider"
-            :options="[
-              { label: '腾讯云', value: 'tencent' },
-              { label: 'OpenAI', value: 'openai' },
-            ]"
-            @update:value="changeProvider"
-          />
-        </NFormItem>
-        <NFormItem label="识别语言">
-          <NSelect
-            v-model:value="activeProfile.language"
-            filterable
-            tag
-            :options="languageOptions"
-          />
-        </NFormItem>
+        </div>
 
-        <template v-if="activeProfile.provider === 'tencent'">
-          <NFormItem label="引擎模型">
-            <NSelect
-              v-model:value="activeProfile.engineModelType"
-              filterable
-              tag
-              :options="tencentModelOptions"
+        <div class="flex items-center gap-3">
+          <span class="w-24 text-muted-foreground shrink-0">识别服务</span>
+          <div class="flex-1">
+            <Select
+              :model-value="activeProfile.provider"
+              :disabled="isRunning"
+              @update:model-value="changeProvider"
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  value="tencent"
+                  class="text-xs"
+                  >腾讯云</SelectItem
+                >
+                <SelectItem
+                  value="openai"
+                  class="text-xs"
+                  >OpenAI</SelectItem
+                >
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="w-24 text-muted-foreground shrink-0">识别语言</span>
+          <div class="flex-1">
+            <Select
+              v-model="activeProfile.language"
+              :disabled="isRunning"
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in languageOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <template v-if="activeTencentProfile">
+          <div class="flex items-center gap-3">
+            <span class="w-24 text-muted-foreground shrink-0">引擎模型</span>
+            <div class="flex-1">
+              <Select
+                v-model="activeTencentProfile.engineModelType"
+                :disabled="isRunning"
+              >
+                <SelectTrigger class="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in tencentModelOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                    class="text-xs"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="w-24 text-muted-foreground shrink-0">App ID</span>
+            <Input
+              v-model="activeTencentProfile.appId"
+              :disabled="isRunning"
+              class="flex-1"
             />
-          </NFormItem>
-          <NFormItem label="App ID">
-            <NInput v-model:value="activeProfile.appId" />
-          </NFormItem>
-          <NFormItem label="Secret ID">
-            <NInput
-              v-model:value="activeProfile.secretId"
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="w-24 text-muted-foreground shrink-0">Secret ID</span>
+            <Input
+              v-model="activeTencentProfile.secretId"
               type="password"
-              show-password-on="click"
+              :disabled="isRunning"
+              class="flex-1"
             />
-          </NFormItem>
-          <NFormItem label="Secret Key">
-            <NInput
-              v-model:value="activeProfile.secretKey"
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="w-24 text-muted-foreground shrink-0">Secret Key</span>
+            <Input
+              v-model="activeTencentProfile.secretKey"
               type="password"
-              show-password-on="click"
+              :disabled="isRunning"
+              class="flex-1"
             />
-          </NFormItem>
+          </div>
         </template>
 
-        <template v-else>
-          <NFormItem label="模型">
-            <NInput
-              v-model:value="activeProfile.model"
+        <template v-else-if="activeOpenAIProfile">
+          <div class="flex items-center gap-3">
+            <span class="w-24 text-muted-foreground shrink-0">模型</span>
+            <Input
+              v-model="activeOpenAIProfile.model"
+              :disabled="isRunning"
               placeholder="gpt-live-transcribe"
+              class="flex-1"
             />
-          </NFormItem>
-          <NFormItem label="API 地址">
-            <NInput
-              v-model:value="activeProfile.baseUrl"
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="w-24 text-muted-foreground shrink-0">API 地址</span>
+            <Input
+              v-model="activeOpenAIProfile.baseUrl"
+              :disabled="isRunning"
               placeholder="wss://api.openai.com/v1/realtime"
+              class="flex-1"
             />
-          </NFormItem>
-          <NFormItem label="API Key">
-            <NInput
-              v-model:value="activeProfile.apiKey"
+          </div>
+
+          <div class="flex items-center gap-3">
+            <span class="w-24 text-muted-foreground shrink-0">API Key</span>
+            <Input
+              v-model="activeOpenAIProfile.apiKey"
               type="password"
-              show-password-on="click"
+              :disabled="isRunning"
+              class="flex-1"
             />
-          </NFormItem>
+          </div>
         </template>
 
-        <NFormItem label="热词">
-          <NDynamicTags v-model:value="activeProfile.hotwords" />
-        </NFormItem>
-      </NForm>
+        <div class="flex items-start gap-3">
+          <span class="w-24 text-muted-foreground shrink-0 pt-1.5">热词</span>
+          <div class="flex-1 flex flex-wrap items-center gap-1.5">
+            <Badge
+              v-for="(word, wIdx) in activeProfile.hotwords || []"
+              :key="wIdx"
+              variant="secondary"
+              class="text-xs h-6 px-2 gap-1"
+            >
+              <span>{{ word }}</span>
+              <button
+                type="button"
+                :disabled="isRunning"
+                class="hover:text-destructive transition-colors ml-0.5 text-muted-foreground"
+                @click="removeHotword(wIdx)"
+              >
+                ✕
+              </button>
+            </Badge>
+            <div class="flex items-center gap-1">
+              <Input
+                v-model="newHotword"
+                :disabled="isRunning"
+                placeholder="+ 新增热词"
+                class="h-6 w-24"
+                @keyup.enter="addHotword"
+              />
+              <Button
+                size="xs"
+                variant="ghost"
+                class="h-6 px-1.5"
+                :disabled="isRunning || !newHotword.trim()"
+                @click="addHotword"
+              >
+                添加
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
-  </NFlex>
+  </div>
 </template>
-
-<style scoped>
-.setting-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.section-description {
-  margin-top: 2px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.runtime-actions,
-.profile-picker {
-  min-height: 32px;
-}
-
-.readiness {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.readiness-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.readiness-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--vtsuru-fg-muted);
-  flex: none;
-}
-
-.readiness-dot[data-state='ok'] {
-  background: var(--vtsuru-success, #18a058);
-}
-
-.readiness-dot[data-state='bad'] {
-  background: var(--vtsuru-error, #d03050);
-}
-
-.transcript {
-  max-height: 320px;
-  overflow: auto;
-  padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
-}
-
-.transcript-empty {
-  color: var(--vtsuru-fg-muted);
-  font-size: 13px;
-}
-
-.transcript-line {
-  display: flex;
-  gap: 10px;
-  padding: 3px 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.transcript-line--partial {
-  color: var(--vtsuru-fg-muted);
-}
-
-.transcript-time {
-  flex: none;
-  width: 42px;
-  color: var(--vtsuru-fg-muted);
-  font-variant-numeric: tabular-nums;
-}
-</style>

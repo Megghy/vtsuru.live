@@ -6,11 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type OrgMemberDataOrgMemberRoles = typeof OrgMemberDataOrgMemberRoles[keyof typeof OrgMemberDataOrgMemberRoles];
-
+export type OrgMemberDataOrgMemberRoles = (typeof OrgMemberDataOrgMemberRoles)[keyof typeof OrgMemberDataOrgMemberRoles]
 
 export const OrgMemberDataOrgMemberRoles = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

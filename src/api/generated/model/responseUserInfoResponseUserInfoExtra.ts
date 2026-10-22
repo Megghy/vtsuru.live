@@ -5,17 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserInfoResponseUserInfoExtraTemplateTypes } from './responseUserInfoResponseUserInfoExtraTemplateTypes';
-import type { VTsuruEnumsFunctionTypes } from './vTsuruEnumsFunctionTypes';
+import type { ResponseUserInfoResponseUserInfoExtraTemplateTypes } from './responseUserInfoResponseUserInfoExtraTemplateTypes'
+import type { VTsuruEnumsFunctionTypes } from './vTsuruEnumsFunctionTypes'
 
 export interface ResponseUserInfoResponseUserInfoExtra {
-  templateTypes: ResponseUserInfoResponseUserInfoExtraTemplateTypes;
-  enableFunctions: VTsuruEnumsFunctionTypes[];
+  templateTypes: ResponseUserInfoResponseUserInfoExtraTemplateTypes
+  enableFunctions: VTsuruEnumsFunctionTypes[]
   /** @nullable */
-  isInBlackList?: boolean | null;
-  allowQuestionBoxUploadImage: boolean;
-  allowQuestionBoxAnonymous: boolean;
-  allowQuestionBoxUnregistedUser: boolean;
-  showQuestionBoxPublicReplies: boolean;
-  questionBoxDefaultPublic: boolean;
+  isInBlackList?: boolean | null
+  allowQuestionBoxUploadImage: boolean
+  allowQuestionBoxAnonymous: boolean
+  allowQuestionBoxUnregistedUser: boolean
+  showQuestionBoxPublicReplies: boolean
+  questionBoxDefaultPublic: boolean
 }

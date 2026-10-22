@@ -10,15 +10,15 @@
  * 返回给前端展示的工具调用状态。
  */
 export interface VTsuruCoreAIContractsAssistantToolEventDto {
-  id: string;
-  name: string;
-  title: string;
-  status: string;
+  id: string
+  name: string
+  title: string
+  status: string
   /** @nullable */
-  summary?: string | null;
+  summary?: string | null
   /** @nullable */
-  error?: string | null;
-  time: number;
+  error?: string | null
+  time: number
   /** @nullable */
-  durationMs?: number | null;
+  durationMs?: number | null
 }

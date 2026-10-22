@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useClipboard } from '@vueuse/core'
 import {
   Add24Regular,
   ArrowCounterclockwise24Regular,
@@ -8,42 +7,27 @@ import {
   Open24Regular,
   Subtract24Regular,
 } from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NColorPicker,
-  NDivider,
-  NFlex,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSpace,
-  NSwitch,
-  NText,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
-import {
-  computed,
-  onActivated,
-  onDeactivated,
-  ref,
-} from 'vue'
+import { useClipboard } from '@vueuse/core'
+import { computed, onActivated, onDeactivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
-import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import CounterDisplay from './CounterDisplay.vue'
 import { DEFAULT_COUNTER_STATE } from './types'
 import type { CounterAction, CounterState, CounterTheme } from './types'
 
-const message = useMessage()
 const { copy, isSupported: isCopySupported } = useClipboard()
 
 const route = useRoute()
@@ -51,28 +35,20 @@ const channelId = ref(resolveObsSyncChannel(route.query.channel))
 const channelDraft = ref(channelId.value)
 const copied = ref(false)
 
-const {
-  state,
-  updateState,
-  sendAction,
-  currentHash,
-  isSyncing,
-  lastSyncError,
-  hasPendingChanges,
-  retry,
-} = useObsBridge<CounterState, CounterAction>({
-  componentId: 'counter',
-  channelId,
-  defaultState: DEFAULT_COUNTER_STATE,
-  role: 'controller',
-})
+const { state, updateState, sendAction, currentHash, isSyncing, lastSyncError, hasPendingChanges, retry } =
+  useObsBridge<CounterState, CounterAction>({
+    componentId: 'counter',
+    channelId,
+    defaultState: DEFAULT_COUNTER_STATE,
+    role: 'controller',
+  })
 
 // 主题选项
-const themeOptions = [
-  { label: '悬浮卡片 (Card)', value: 'card' as CounterTheme },
-  { label: '极简透明 (Minimal)', value: 'minimal' as CounterTheme },
-  { label: '赛博霓虹 (Neon)', value: 'neon' as CounterTheme },
-  { label: '玻璃拟态 (Glass)', value: 'glass' as CounterTheme },
+const themeOptions: { label: string; value: CounterTheme }[] = [
+  { label: '悬浮卡片 (Card)', value: 'card' },
+  { label: '极简透明 (Minimal)', value: 'minimal' },
+  { label: '赛博霓虹 (Neon)', value: 'neon' },
+  { label: '玻璃拟态 (Glass)', value: 'glass' },
 ]
 
 // 预览背景切换
@@ -80,10 +56,15 @@ const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 
 // OBS URL 计算
 const account = useAccount()
-const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
-  path: '/obs-store/counter', host: window.location.origin, credential: 'public-id',
-  userId: account.value.id, params: { channel: channelId.value },
-}))
+const obsAbsoluteUrl = computed(() =>
+  buildObsSourceUrl({
+    path: '/obs-store/counter',
+    host: window.location.origin,
+    credential: 'public-id',
+    userId: account.value.id,
+    params: { channel: channelId.value },
+  }),
+)
 
 function handleIncrement(amount = 1) {
   const newCount = state.value.count + amount
@@ -104,18 +85,18 @@ function handleReset() {
 
 async function copyObsUrl() {
   if (!isCopySupported.value) {
-    message.warning('当前环境不支持直接写入剪贴板，请手动复制')
+    toast.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }
   try {
     await copy(obsAbsoluteUrl.value)
     copied.value = true
-    message.success('OBS 浏览器源链接已复制到剪贴板！')
+    toast.success('OBS 浏览器源链接已复制到剪贴板！')
     setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch {
-    message.error('复制失败，请手动复制')
+    toast.error('复制失败，请手动复制')
   }
 }
 
@@ -123,11 +104,7 @@ async function copyObsUrl() {
 function openPopoutWindow() {
   if (typeof window === 'undefined') return
   const url = `/manage/obs-store?component=counter&channel=${encodeURIComponent(channelId.value)}`
-  window.open(
-    url,
-    'VtsuruCounterPopout',
-    'width=420,height=600,menubar=no,toolbar=no,location=no,status=no',
-  )
+  window.open(url, 'VtsuruCounterPopout', 'width=420,height=600,menubar=no,toolbar=no,location=no,status=no')
 }
 
 // 快捷键支持（当未处于 input 输入框时按 +/=/- 直接增减）
@@ -149,7 +126,7 @@ function handleKeyDown(e: KeyboardEvent) {
 function changeChannel() {
   const next = parseObsSyncChannel(channelDraft.value)
   if (!next) {
-    message.error(OBS_SYNC_CHANNEL_HINT)
+    toast.error(OBS_SYNC_CHANNEL_HINT)
     return
   }
   channelId.value = next
@@ -175,109 +152,92 @@ activateKeyboard()
 
 <template>
   <div class="counter-viewer-page">
-    <NCard
-      size="small"
-      class="counter-viewer-card"
-    >
-      <!-- 头部栏 -->
-      <NFlex
-        justify="space-between"
-        align="center"
-        class="card-header-row"
-      >
-        <div>
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <span class="card-header-title">挑战与直播计数器</span>
-            <span class="version-tag">v1.0</span>
-          </NFlex>
-          <div class="sync-meta-text">
-            <span
-              class="sync-indicator-dot"
-              :class="{ syncing: isSyncing, error: lastSyncError }"
+    <Card class="counter-viewer-card p-4">
+      <CardContent class="p-0 space-y-3">
+        <!-- 头部栏 -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="card-header-title">挑战与直播计数器</span>
+              <span class="version-tag">v1.0</span>
+            </div>
+            <div class="sync-meta-text">
+              <span
+                class="sync-indicator-dot"
+                :class="{ syncing: isSyncing, error: lastSyncError }"
+              />
+              <span v-if="lastSyncError">同步失败，请重试</span>
+              <span v-else-if="isSyncing">正在同步状态...</span>
+              <span v-else-if="hasPendingChanges">有修改尚未保存</span>
+              <span v-else-if="currentHash">已同步 (Hash: {{ currentHash.slice(0, 8) }})</span>
+              <span v-else>就绪</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <Input
+              v-model="channelDraft"
+              class="w-[120px]"
+              placeholder="频道"
+              maxlength="64"
+              @keyup.enter="changeChannel"
             />
-            <span v-if="lastSyncError">同步失败，请重试</span>
-            <span v-else-if="isSyncing">正在同步状态...</span>
-            <span v-else-if="hasPendingChanges">有修改尚未保存</span>
-            <span v-else-if="currentHash">已同步 (Hash: {{ currentHash.slice(0, 8) }})</span>
-            <span v-else>就绪</span>
+            <Button
+              variant="secondary"
+              @click="changeChannel"
+            >
+              切换频道
+            </Button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <Button
+              v-if="lastSyncError"
+              variant="secondary"
+              :disabled="isSyncing"
+              @click="retry"
+            >
+              重试同步
+            </Button>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="secondary"
+                    class="gap-1.5"
+                    @click="openPopoutWindow"
+                  >
+                    <Open24Regular class="size-4" />
+                    独立小窗
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent> 弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边 </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <Button
+              class="gap-1.5"
+              @click="copyObsUrl"
+            >
+              <Checkmark24Regular
+                v-if="copied"
+                class="size-4"
+              />
+              <Copy24Regular
+                v-else
+                class="size-4"
+              />
+              复制 OBS 源链接
+            </Button>
           </div>
         </div>
 
-        <NSpace
-          align="center"
-          :size="6"
-        >
-          <NInput
-            v-model:value="channelDraft"
-            size="small"
-            placeholder="频道"
-            :maxlength="64"
-            style="width: 120px"
-            @keyup.enter="changeChannel"
-          />
-          <NButton
-            size="small"
-            secondary
-            @click="changeChannel"
-          >
-            切换频道
-          </NButton>
-        </NSpace>
+        <div class="h-px bg-border my-2.5" />
 
-        <NSpace size="small">
-          <NButton
-            v-if="lastSyncError"
-            size="small"
-            secondary
-            :loading="isSyncing"
-            :disabled="isSyncing"
-            @click="retry"
-          >
-            重试同步
-          </NButton>
-          <NTooltip trigger="hover">
-            <template #trigger>
-              <NButton
-                size="small"
-                secondary
-                @click="openPopoutWindow"
-              >
-                <template #icon>
-                  <NIcon :component="Open24Regular" />
-                </template>
-                独立小窗
-              </NButton>
-            </template>
-            弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边
-          </NTooltip>
-
-          <NButton
-            type="primary"
-            size="small"
-            @click="copyObsUrl"
-          >
-            <template #icon>
-              <NIcon :component="copied ? Checkmark24Regular : Copy24Regular" />
-            </template>
-            复制 OBS 源链接
-          </NButton>
-        </NSpace>
-      </NFlex>
-
-      <NDivider style="margin: 10px 0" />
-
-      <!-- 主控制台与实时预览 -->
-      <NGrid
-        cols="1 m:2"
-        responsive="screen"
-        :x-gap="14"
-        :y-gap="14"
-      >
-        <!-- 左侧：快速操作盘 -->
-        <NGridItem>
+        <!-- 主控制台与实时预览 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+          <!-- 左侧：快速操作盘 -->
           <div class="operator-deck-box">
             <div class="deck-header-row">
               <span class="deck-label">实时操作盘</span>
@@ -292,7 +252,8 @@ activateKeyboard()
                 <span
                   v-if="state.target > 0"
                   class="hero-target-denom"
-                >/ {{ state.target }}</span>
+                  >/ {{ state.target }}</span
+                >
               </div>
             </div>
 
@@ -303,10 +264,7 @@ activateKeyboard()
                 class="btn-action btn-main-plus"
                 @click="handleIncrement(1)"
               >
-                <NIcon
-                  :component="Add24Regular"
-                  class="btn-icon"
-                />
+                <Add24Regular class="btn-icon" />
                 <span class="btn-text">+1 次</span>
               </button>
 
@@ -324,10 +282,7 @@ activateKeyboard()
                 :disabled="state.count <= 0"
                 @click="handleDecrement(1)"
               >
-                <NIcon
-                  :component="Subtract24Regular"
-                  class="btn-icon"
-                />
+                <Subtract24Regular class="btn-icon" />
                 <span class="btn-text">-1</span>
               </button>
 
@@ -336,70 +291,54 @@ activateKeyboard()
                 class="btn-action btn-reset"
                 @click="handleReset"
               >
-                <NIcon
-                  :component="ArrowCounterclockwise24Regular"
-                  class="btn-icon"
-                />
+                <ArrowCounterclockwise24Regular class="btn-icon" />
                 <span class="btn-text">归零</span>
               </button>
             </div>
 
             <!-- 直接设定数值 -->
-            <NFlex
-              align="center"
-              :size="8"
-              style="margin-top: 12px"
-            >
-              <NText
-                depth="3"
-                style="font-size: 12px"
-              >
-                直接设值:
-              </NText>
-              <NInputNumber
-                :value="state.count"
+            <div class="flex items-center gap-2 mt-3">
+              <span class="text-xs text-muted-foreground">直接设值:</span>
+              <NumberField
+                :model-value="state.count"
                 :min="0"
-                size="small"
-                style="width: 110px"
-                @update:value="updateState({ count: $event || 0 })"
+                class="w-[110px]"
+                @update:model-value="updateState({ count: $event || 0 })"
               />
-            </NFlex>
+            </div>
           </div>
-        </NGridItem>
 
-        <!-- 右侧：实时 OBS 监视器 -->
-        <NGridItem>
+          <!-- 右侧：实时 OBS 监视器 -->
           <div class="monitor-panel-box">
-            <NFlex
-              justify="space-between"
-              align="center"
-              style="margin-bottom: 8px"
-            >
+            <div class="flex items-center justify-between mb-2">
               <span class="deck-label">OBS 画面实时监视器</span>
-              <NSpace :size="6">
-                <NButton
-                  size="tiny"
-                  :type="previewBg === 'checker' ? 'primary' : 'default'"
+              <div class="flex items-center gap-1.5">
+                <Button
+                  size="xs"
+                  class="h-6 text-[11px] px-2"
+                  :variant="previewBg === 'checker' ? 'default' : 'outline'"
                   @click="previewBg = 'checker'"
                 >
                   网格底
-                </NButton>
-                <NButton
-                  size="tiny"
-                  :type="previewBg === 'dark' ? 'primary' : 'default'"
+                </Button>
+                <Button
+                  size="xs"
+                  class="h-6 text-[11px] px-2"
+                  :variant="previewBg === 'dark' ? 'default' : 'outline'"
                   @click="previewBg = 'dark'"
                 >
                   暗黑底
-                </NButton>
-                <NButton
-                  size="tiny"
-                  :type="previewBg === 'transparent' ? 'primary' : 'default'"
+                </Button>
+                <Button
+                  size="xs"
+                  class="h-6 text-[11px] px-2"
+                  :variant="previewBg === 'transparent' ? 'default' : 'outline'"
                   @click="previewBg = 'transparent'"
                 >
                   透明底
-                </NButton>
-              </NSpace>
-            </NFlex>
+                </Button>
+              </div>
+            </div>
 
             <!-- 舞台监视器 -->
             <div
@@ -413,105 +352,86 @@ activateKeyboard()
               />
             </div>
 
-            <div class="monitor-tip">
-              推荐 OBS 分辨率: <b>360 × 140 px</b> (浏览器源开启透明背景)
-            </div>
+            <div class="monitor-tip">推荐 OBS 分辨率: <b>360 × 140 px</b> (浏览器源开启透明背景)</div>
           </div>
-        </NGridItem>
-      </NGrid>
+        </div>
 
-      <NDivider style="margin: 14px 0 10px" />
+        <div class="h-px bg-border my-3.5" />
 
-      <!-- 参数与视觉配置 -->
-      <div class="deck-label">
-        配置与样式微调
-      </div>
+        <!-- 参数与视觉配置 -->
+        <div class="deck-label mb-2">配置与样式微调</div>
 
-      <NGrid
-        cols="1 s:2 m:3"
-        responsive="screen"
-        :x-gap="14"
-        :y-gap="10"
-      >
-        <NGridItem>
-          <NFormItem
-            label="标题文本"
-            size="small"
-          >
-            <NInput
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground">标题文本</label>
+            <Input
               :value="state.title"
               placeholder="例如：艾尔登法环 死亡挑战"
-              @update:value="updateState({ title: $event })"
+              @input="updateState({ title: ($event.target as HTMLInputElement).value })"
             />
-          </NFormItem>
-        </NGridItem>
+          </div>
 
-        <NGridItem>
-          <NFormItem
-            label="前缀小标"
-            size="small"
-          >
-            <NInput
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground">前缀小标</label>
+            <Input
               :value="state.prefix"
               placeholder="例如：DEATHS / WINS"
-              @update:value="updateState({ prefix: $event })"
+              @input="updateState({ prefix: ($event.target as HTMLInputElement).value })"
             />
-          </NFormItem>
-        </NGridItem>
+          </div>
 
-        <NGridItem>
-          <NFormItem
-            label="目标数值 (0 为不设限)"
-            size="small"
-          >
-            <NInputNumber
-              :value="state.target"
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground">目标数值 (0 为不设限)</label>
+            <NumberField
+              :model-value="state.target"
               :min="0"
-              style="width: 100%"
-              @update:value="updateState({ target: $event || 0 })"
+              class="w-full"
+              @update:model-value="updateState({ target: $event || 0 })"
             />
-          </NFormItem>
-        </NGridItem>
+          </div>
 
-        <NGridItem>
-          <NFormItem
-            label="视觉主题风格"
-            size="small"
-          >
-            <NSelect
-              :value="state.theme"
-              :options="themeOptions"
-              @update:value="updateState({ theme: $event })"
-            />
-          </NFormItem>
-        </NGridItem>
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground">视觉主题风格</label>
+            <Select
+              :model-value="state.theme"
+              @update:model-value="updateState({ theme: $event as CounterTheme })"
+            >
+              <SelectTrigger class="w-full">
+                <SelectValue placeholder="选择风格" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in themeOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <NGridItem>
-          <NFormItem
-            label="强调高亮色"
-            size="small"
-          >
-            <NColorPicker
-              :value="state.accentColor"
-              :show-alpha="false"
-              @update:value="updateState({ accentColor: $event })"
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground">强调高亮色</label>
+            <ColorPicker
+              :model-value="state.accentColor"
+              @update:model-value="updateState({ accentColor: $event })"
             />
-          </NFormItem>
-        </NGridItem>
+          </div>
 
-        <NGridItem>
-          <NFormItem
-            label="显示目标进度条"
-            size="small"
-          >
-            <NSwitch
-              :value="state.showProgress"
-              @update:value="updateState({ showProgress: $event })"
-            />
-          </NFormItem>
-        </NGridItem>
-      </NGrid>
-    </NCard>
+          <div class="space-y-1.5">
+            <label class="text-xs font-medium text-foreground">显示目标进度条</label>
+            <div class="pt-1">
+              <Switch
+                :checked="state.showProgress"
+                @update:checked="updateState({ showProgress: $event })"
+              />
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
@@ -521,129 +441,125 @@ activateKeyboard()
 }
 
 .counter-viewer-card {
-  border-radius: var(--vtsuru-radius);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.card-header-row {
-  margin-bottom: 2px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
 }
 
 .card-header-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .version-tag {
   font-size: 10px;
-  color: var(--vtsuru-fg-muted);
-  background: var(--vtsuru-bg-muted);
-  padding: 1px 6px;
+  color: var(--muted-foreground);
+  background: var(--muted);
+  padding: 1px 5px;
   border-radius: 4px;
 }
 
 .sync-meta-text {
+  font-size: 12px;
+  color: var(--muted-foreground);
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
+  gap: 6px;
   margin-top: 2px;
 }
 
 .sync-indicator-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #10b981;
+  background-color: #10b981;
+  display: inline-block;
 }
 
 .sync-indicator-dot.syncing {
-  background: #3b82f6;
-  animation: pulse 1s infinite;
+  background-color: #f59e0b;
+  animation: pulse-dot 1s infinite alternate;
 }
 
 .sync-indicator-dot.error {
-  background: #ef4444;
+  background-color: #ef4444;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+@keyframes pulse-dot {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .deck-label {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--vtsuru-fg);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 8px;
+  color: var(--foreground);
 }
 
-/* 操作盘 */
+.keyboard-tip {
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+
 .operator-deck-box {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px;
-  height: 100%;
-  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .deck-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-}
-
-.keyboard-tip {
-  font-size: 10px;
-  color: var(--vtsuru-fg-muted);
+  align-items: baseline;
+  margin-bottom: 10px;
 }
 
 .count-hero-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 16px;
-  margin: 8px 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 .hero-tag {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
-  color: var(--vtsuru-brand);
-  letter-spacing: 0.08em;
+  color: var(--muted-foreground);
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
 .hero-num-wrap {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  gap: 6px;
 }
 
 .hero-number {
-  font-size: 52px;
+  font-size: 38px;
   font-weight: 900;
-  color: var(--vtsuru-fg);
-  font-variant-numeric: tabular-nums;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: var(--brand);
   line-height: 1;
 }
 
 .hero-target-denom {
-  font-size: 15px;
+  font-size: 18px;
   font-weight: 600;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
-/* 物理按键群 */
 .action-button-grid {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
@@ -651,93 +567,100 @@ activateKeyboard()
 }
 
 .btn-action {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
+  height: 44px;
+  border: 1px solid var(--border);
   border-radius: 6px;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-elevated);
-  color: var(--vtsuru-fg);
-  padding: 10px 0;
-  transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.15s ease;
+  background: var(--background);
+  color: var(--foreground);
   user-select: none;
 }
 
 .btn-action:hover:not(:disabled) {
-  border-color: var(--vtsuru-brand);
-  background: var(--vtsuru-bg-muted);
+  background: var(--popover);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 .btn-action:active:not(:disabled) {
-  transform: scale(0.96);
+  transform: scale(0.97);
 }
 
 .btn-action:disabled {
-  opacity: 0.5;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btn-main-plus {
-  background: var(--vtsuru-brand);
-  border-color: var(--vtsuru-brand);
-  color: #ffffff;
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
 }
 
 .btn-main-plus:hover:not(:disabled) {
-  background: var(--vtsuru-brand-tint, var(--vtsuru-brand));
-  border-color: var(--vtsuru-brand);
+  background: var(--brand, #0284c7);
+  color: #fff;
+  border-color: var(--brand, #0284c7);
 }
 
 .btn-icon {
-  font-size: 18px;
+  width: 18px;
+  height: 18px;
 }
 
-/* 监视器 */
 .monitor-panel-box {
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 14px;
-  height: 100%;
-  box-sizing: border-box;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
 }
 
 .monitor-stage-wrap {
-  min-height: 150px;
+  width: 100%;
+  height: 140px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  position: relative;
   overflow: hidden;
-  border: 1px dashed var(--vtsuru-border);
+  border: 1px dashed var(--border);
 }
 
-.monitor-stage-wrap.bg-checker {
-  background-image: linear-gradient(45deg, #18181b 25%, transparent 25%),
-    linear-gradient(-45deg, #18181b 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #18181b 75%),
-    linear-gradient(-45deg, transparent 75%, #18181b 75%);
+.bg-checker {
+  background-color: #1e1e24;
+  background-image:
+    linear-gradient(45deg, #2b2b36 25%, transparent 25%), linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b36 75%), linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
   background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-  background-color: #09090b;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
 }
 
-.monitor-stage-wrap.bg-dark {
-  background-color: #09090b;
+.bg-dark {
+  background: #09090b;
 }
 
-.monitor-stage-wrap.bg-transparent {
-  background-color: transparent;
+.bg-transparent {
+  background: transparent;
 }
 
 .monitor-tip {
   font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  text-align: center;
+  color: var(--muted-foreground);
   margin-top: 8px;
+  text-align: center;
 }
 </style>

@@ -7,8 +7,8 @@
  */
 
 export type GetApiSongListGetNeteaseLyricParams = {
-/**
- * 歌曲Id
- */
-id?: number;
-};
+  /**
+   * 歌曲Id
+   */
+  id?: number
+}

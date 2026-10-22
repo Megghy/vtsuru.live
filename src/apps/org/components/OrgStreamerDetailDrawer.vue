@@ -1,33 +1,21 @@
 <script setup lang="ts">
 import { ChatbubblesOutline, PeopleOutline, TimeOutline, WalletOutline } from '@vicons/ionicons5'
-import {
-  NButton,
-  NCard,
-  NDrawer,
-  NDrawerContent,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NHeatmap,
-  NIcon,
-  NImage,
-  NInput,
-  NList,
-  NListItem,
-  NSelect,
-  NSpin,
-  NStatistic,
-  NTag,
-  NTime,
-  NFlex,
-} from 'naive-ui'
-import { watch } from 'vue'
+import { format } from 'date-fns'
+import { computed, watch } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
+import { Spin } from '@/shared/ui/spin'
+import { Textarea } from '@/shared/ui/textarea'
 
 import { useOrgContext } from '../composables/useOrgContext'
 import type { useStreamerDetail } from '../composables/useOrgStreamers'
-import { DEFAULT_COVER, formatDate, streamerStatusLabel, streamerStatusTagType } from '../utils'
+import { DEFAULT_COVER, formatDate, streamerStatusLabel } from '../utils'
 import OrgUserAvatar from './OrgUserAvatar.vue'
 
 const props = defineProps<{ detail: ReturnType<typeof useStreamerDetail> }>()
@@ -39,285 +27,265 @@ const d = props.detail
 watch([() => d.show.value, () => d.selectedId.value], ([show, id]) => {
   if (show && id) d.load(true)
 })
+
+const maxHeatmapValue = computed(() => {
+  const vals = (d.detail.value?.heatmap || []).map((h) => h.value || 0)
+  return Math.max(1, ...vals)
+})
+
+function getHeatmapColor(val: number) {
+  if (!val) return 'var(--muted)'
+  const ratio = Math.min(1, val / maxHeatmapValue.value)
+  if (ratio < 0.25) return 'rgba(16, 185, 129, 0.3)'
+  if (ratio < 0.5) return 'rgba(16, 185, 129, 0.55)'
+  if (ratio < 0.75) return 'rgba(16, 185, 129, 0.75)'
+  return 'rgba(16, 185, 129, 1)'
+}
 </script>
 
 <template>
-  <NDrawer
-    v-model:show="d.show.value"
-    placement="right"
-    :width="520"
-    :style="{ maxWidth: '92vw' }"
-  >
-    <NDrawerContent>
-      <template #header>
-        <NFlex
-          align="center"
-          :wrap="false"
-        >
+  <Sheet v-model:open="d.show.value">
+    <SheetContent
+      side="right"
+      class="sm:max-w-lg w-full p-4 flex flex-col gap-3"
+    >
+      <SheetHeader class="pb-2 border-b border-border/60">
+        <div class="flex items-center gap-3">
           <OrgUserAvatar
             :face-url="d.detail.value?.streamer.faceUrl"
             :size="40"
           />
-          <NFlex
-            vertical
-            :size="0"
-            style="min-width: 0"
-          >
-            <div style="font-weight: 600; line-height: 1.2">
+          <div class="min-w-0 flex-1 flex flex-col">
+            <SheetTitle class="text-sm font-semibold truncate text-foreground">
               {{ d.detail.value?.streamer.name || (d.selectedId.value ? `ID: ${d.selectedId.value}` : '主播详情') }}
-            </div>
-            <div style="font-size: 12px; opacity: 0.7">
+            </SheetTitle>
+            <span class="text-xs text-muted-foreground font-mono">
               ID: {{ d.detail.value?.streamer.id || d.selectedId.value || '-' }}
-            </div>
-          </NFlex>
-          <NTag
+            </span>
+          </div>
+
+          <Badge
             v-if="d.detail.value"
-            :bordered="false"
-            size="small"
-            :type="streamerStatusTagType(d.detail.value.status)"
-            style="margin-left: auto"
+            variant="secondary"
+            class="text-[10px] h-4.5 px-1.5 font-normal ml-auto"
           >
             {{ streamerStatusLabel(d.detail.value.status) }}
-          </NTag>
-        </NFlex>
-      </template>
+          </Badge>
+        </div>
+      </SheetHeader>
 
-      <NSpin :show="d.loading.value">
-        <NEmpty
-          v-if="!d.detail.value"
-          description="暂无数据"
-        />
-        <template v-else>
-          <NGrid
-            :x-gap="12"
-            :y-gap="12"
-            :cols="2"
-          >
-            <NGridItem>
-              <NCard
-                size="small"
-                :bordered="false"
-                class="stat-card"
-              >
-                <NStatistic
-                  label="总收入"
-                  :value="d.detail.value.summary.totalIncomeWithGuard"
-                  :precision="2"
-                >
-                  <template #prefix> ¥ </template>
-                </NStatistic>
-              </NCard>
-            </NGridItem>
-            <NGridItem>
-              <NCard
-                size="small"
-                :bordered="false"
-                class="stat-card"
-              >
-                <NStatistic
-                  label="直播时长"
-                  :value="d.detail.value.summary.liveDurationMinutes"
-                >
-                  <template #suffix> min </template>
-                </NStatistic>
-              </NCard>
-            </NGridItem>
-            <NGridItem>
-              <NCard
-                size="small"
-                :bordered="false"
-                class="stat-card"
-              >
-                <NStatistic
-                  label="互动"
-                  :value="d.detail.value.summary.interactionCount"
+      <ScrollArea class="flex-1 pr-2">
+        <div
+          v-if="d.loading.value && !d.detail.value"
+          class="py-12 flex justify-center"
+        >
+          <Spin />
+        </div>
+        <div
+          v-else-if="!d.detail.value"
+          class="py-10"
+        >
+          <Empty description="暂无数据" />
+        </div>
+        <div
+          v-else
+          class="space-y-3.5 text-xs"
+        >
+          <!-- 统计指标网格 -->
+          <div class="grid grid-cols-2 gap-2">
+            <Card class="border border-border/80">
+              <CardContent class="p-3 space-y-0.5">
+                <span class="text-[11px] text-muted-foreground block">总收入</span>
+                <span class="text-base font-semibold font-mono text-primary">
+                  ¥{{ d.detail.value.summary.totalIncomeWithGuard.toFixed(2) }}
+                </span>
+              </CardContent>
+            </Card>
+
+            <Card class="border border-border/80">
+              <CardContent class="p-3 space-y-0.5">
+                <span class="text-[11px] text-muted-foreground block">直播时长</span>
+                <span class="text-base font-semibold font-mono text-foreground">
+                  {{ d.detail.value.summary.liveDurationMinutes }}
+                  <span class="text-xs font-normal text-muted-foreground">min</span>
+                </span>
+              </CardContent>
+            </Card>
+
+            <Card class="border border-border/80">
+              <CardContent class="p-3 space-y-0.5">
+                <span class="text-[11px] text-muted-foreground block">互动人次</span>
+                <span class="text-base font-semibold font-mono text-foreground">
+                  {{ d.detail.value.summary.interactionCount }}
+                </span>
+              </CardContent>
+            </Card>
+
+            <Card class="border border-border/80">
+              <CardContent class="p-3 space-y-0.5">
+                <span class="text-[11px] text-muted-foreground block">弹幕数量</span>
+                <span class="text-base font-semibold font-mono text-foreground">
+                  {{ d.detail.value.summary.danmakuCount }}
+                </span>
+              </CardContent>
+            </Card>
+          </div>
+
+          <!-- 直播热力图 -->
+          <Card class="border border-border/80">
+            <CardHeader class="p-3 pb-2 border-b border-border/60">
+              <CardTitle class="text-xs font-semibold">直播时间热力图</CardTitle>
+            </CardHeader>
+            <CardContent class="p-3">
+              <div class="flex flex-wrap gap-1">
+                <div
+                  v-for="item in d.detail.value.heatmap"
+                  :key="item.date"
+                  class="size-3.5 rounded-xs transition-colors cursor-pointer"
+                  :style="{ backgroundColor: getHeatmapColor(item.value) }"
+                  :title="`${formatDate(item.date)}: ${item.value ?? 0} min`"
                 />
-              </NCard>
-            </NGridItem>
-            <NGridItem>
-              <NCard
-                size="small"
-                :bordered="false"
-                class="stat-card"
-              >
-                <NStatistic
-                  label="弹幕"
-                  :value="d.detail.value.summary.danmakuCount"
-                />
-              </NCard>
-            </NGridItem>
-          </NGrid>
+              </div>
+            </CardContent>
+          </Card>
 
-          <NCard
-            title="直播时间热力图"
-            size="small"
-            :bordered="false"
-            style="margin-top: 12px"
-          >
-            <NHeatmap
-              :data="d.detail.value.heatmap.map((item) => ({ timestamp: item.date, value: item.value }))"
-              size="small"
-              :tooltip="true"
-            >
-              <template #tooltip="p">
-                <div style="font-size: 12px">
-                  {{ formatDate(p.timestamp) }}
-                  <template v-if="p.value != null"> : {{ p.value }} min </template>
-                </div>
-              </template>
-            </NHeatmap>
-          </NCard>
-
-          <NCard
+          <!-- 主播设置（管理员权限） -->
+          <Card
             v-if="isOrgAdmin"
-            title="主播设置"
-            size="small"
-            :bordered="false"
-            style="margin-top: 12px"
+            class="border border-border/80"
           >
-            <NForm
-              label-placement="left"
-              label-width="auto"
-              size="small"
-            >
-              <NFormItem label="状态">
-                <NSelect
-                  v-model:value="d.editStatus.value"
-                  style="width: 180px"
-                  :options="[
-                    { label: 'Active', value: 1 },
-                    { label: 'Removed', value: 3 },
-                  ]"
-                />
-              </NFormItem>
-              <NFormItem label="备注">
-                <NInput
-                  v-model:value="d.editNote.value"
-                  type="textarea"
-                  :autosize="{ minRows: 2, maxRows: 4 }"
-                  placeholder="仅组织管理员可见"
-                />
-              </NFormItem>
-              <NFormItem>
-                <NButton
-                  type="primary"
-                  :loading="d.saving.value"
-                  @click="d.save(() => emit('saved'))"
+            <CardHeader class="p-3 pb-2 border-b border-border/60">
+              <CardTitle class="text-xs font-semibold">主播设置</CardTitle>
+            </CardHeader>
+            <CardContent class="p-3 space-y-3">
+              <div class="space-y-1">
+                <label class="font-medium text-foreground text-xs">状态</label>
+                <Select
+                  :model-value="String(d.editStatus.value ?? 1)"
+                  @update:model-value="d.editStatus.value = Number($event)"
                 >
-                  保存
-                </NButton>
-              </NFormItem>
-            </NForm>
-          </NCard>
+                  <SelectTrigger class="w-40">
+                    <SelectValue placeholder="状态" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      value="1"
+                      class="text-xs"
+                      >Active</SelectItem
+                    >
+                    <SelectItem
+                      value="3"
+                      class="text-xs"
+                      >Removed</SelectItem
+                    >
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <NCard
-            title="直播记录"
-            size="small"
-            :bordered="false"
-            style="margin-top: 12px"
-          >
-            <NEmpty
-              v-if="d.lives.value.length === 0"
-              description="暂无直播记录"
-            />
-            <NList v-else>
-              <NListItem
-                v-for="live in d.lives.value"
-                :key="live.liveId"
+              <div class="space-y-1">
+                <label class="font-medium text-foreground text-xs">备注</label>
+                <Textarea
+                  v-model="d.editNote.value"
+                  rows="2"
+                  placeholder="仅组织管理员可见"
+                  class="text-xs resize-none"
+                />
+              </div>
+
+              <Button
+                :disabled="d.saving.value"
+                @click="d.save(() => emit('saved'))"
               >
-                <NFlex
-                  :wrap="false"
-                  style="gap: 10px; width: 100%"
+                {{ d.saving.value ? '保存中...' : '保存设置' }}
+              </Button>
+            </CardContent>
+          </Card>
+
+          <!-- 直播记录 -->
+          <Card class="border border-border/80">
+            <CardHeader class="p-3 pb-2 border-b border-border/60">
+              <CardTitle class="text-xs font-semibold">直播记录</CardTitle>
+            </CardHeader>
+            <CardContent class="p-3">
+              <div
+                v-if="d.lives.value.length === 0"
+                class="py-6"
+              >
+                <Empty description="暂无直播记录" />
+              </div>
+              <div
+                v-else
+                class="divide-y divide-border/60 space-y-2"
+              >
+                <div
+                  v-for="live in d.lives.value"
+                  :key="live.liveId"
+                  class="pt-2 first:pt-0 flex items-start gap-2.5"
                 >
-                  <NImage
-                    width="96"
-                    height="54"
-                    object-fit="cover"
-                    :src="live.coverUrl"
-                    :img-props="{ referrerpolicy: 'no-referrer' }"
-                    :fallback-src="DEFAULT_COVER"
-                    style="border-radius: var(--vtsuru-radius); overflow: hidden; flex: 0 0 auto"
+                  <img
+                    :src="live.coverUrl || DEFAULT_COVER"
+                    referrerpolicy="no-referrer"
+                    class="w-24 h-14 rounded object-cover border border-border/60 shrink-0"
+                    alt=""
+                    @error="(e) => ((e.target as HTMLImageElement).src = DEFAULT_COVER)"
                   />
-                  <NFlex
-                    vertical
-                    :size="2"
-                    style="min-width: 0; flex: 1"
-                  >
-                    <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">
+                  <div class="min-w-0 flex-1 space-y-1">
+                    <strong class="font-medium text-foreground text-xs block truncate">
                       {{ live.title }}
-                    </div>
-                    <div style="font-size: 12px; opacity: 0.7">
-                      <NIcon
-                        :component="TimeOutline"
-                        style="vertical-align: -2px"
+                    </strong>
+                    <div class="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <component
+                        :is="TimeOutline"
+                        class="size-3 inline"
                       />
-                      <NTime
-                        :time="live.startAt"
-                        format="yyyy-MM-dd HH:mm"
-                      />
+                      <span>{{ format(live.startAt, 'yyyy-MM-dd HH:mm') }}</span>
                       <template v-if="live.stopAt">
-                        -
-                        <NTime
-                          :time="live.stopAt"
-                          format="HH:mm"
-                        />
+                        <span>- {{ format(live.stopAt, 'HH:mm') }}</span>
                       </template>
                     </div>
-                    <NFlex
-                      style="margin-top: 4px; font-size: 12px; opacity: 0.85"
-                      wrap
-                    >
-                      <span title="营收">
-                        <NIcon
-                          :component="WalletOutline"
-                          style="vertical-align: -2px"
+                    <div class="flex items-center gap-3 text-[11px] text-muted-foreground flex-wrap">
+                      <span class="inline-flex items-center gap-1">
+                        <component
+                          :is="WalletOutline"
+                          class="size-3"
                         />
                         {{ live.totalIncomeWithGuard.toFixed(0) }}
                       </span>
-                      <span title="互动">
-                        <NIcon
-                          :component="PeopleOutline"
-                          style="vertical-align: -2px"
+                      <span class="inline-flex items-center gap-1">
+                        <component
+                          :is="PeopleOutline"
+                          class="size-3"
                         />
                         {{ live.interactionCount }}
                       </span>
-                      <span title="弹幕">
-                        <NIcon
-                          :component="ChatbubblesOutline"
-                          style="vertical-align: -2px"
+                      <span class="inline-flex items-center gap-1">
+                        <component
+                          :is="ChatbubblesOutline"
+                          class="size-3"
                         />
                         {{ live.danmakusCount }}
                       </span>
-                    </NFlex>
-                  </NFlex>
-                </NFlex>
-              </NListItem>
-            </NList>
-            <NFlex
-              v-if="d.hasMore.value"
-              justify="center"
-              style="margin-top: 8px"
-            >
-              <NButton
-                secondary
-                :loading="d.loading.value"
-                @click="d.loadMore"
-              >
-                加载更多
-              </NButton>
-            </NFlex>
-          </NCard>
-        </template>
-      </NSpin>
-    </NDrawerContent>
-  </NDrawer>
-</template>
+                    </div>
+                  </div>
+                </div>
 
-<style scoped>
-.stat-card {
-  border: 1px solid var(--vtsuru-border);
-}
-.stat-card:hover {
-  border-color: var(--vtsuru-primary);
-}
-</style>
+                <div
+                  v-if="d.hasMore.value"
+                  class="pt-3 flex justify-center"
+                >
+                  <Button
+                    variant="outline"
+                    :disabled="d.loading.value"
+                    @click="d.loadMore"
+                  >
+                    {{ d.loading.value ? '加载中...' : '加载更多' }}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </ScrollArea>
+    </SheetContent>
+  </Sheet>
+</template>

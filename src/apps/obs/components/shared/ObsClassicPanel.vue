@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { NDivider, NEmpty } from 'naive-ui'
 import { computed, toRef } from 'vue'
+
+import { Empty } from '@/shared/ui/empty'
 
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from './obsDisplay'
 import { useObsListAnimation } from './useObsListAnimation'
@@ -38,11 +39,13 @@ const {
     <p class="obs-classic-header">
       {{ title }}
     </p>
-    <NDivider class="obs-classic-divider">
-      <p class="obs-classic-count">
+    <div class="obs-classic-divider flex items-center justify-center gap-2">
+      <div class="h-px flex-1 bg-white/40" />
+      <p class="obs-classic-count shrink-0">
         {{ countText }}
       </p>
-    </NDivider>
+      <div class="h-px flex-1 bg-white/40" />
+    </div>
 
     <div
       class="obs-classic-current"
@@ -126,7 +129,7 @@ const {
         v-else
         class="obs-classic-empty-wrapper"
       >
-        <NEmpty :description="emptyText" />
+        <Empty :description="emptyText" />
       </div>
     </div>
 
@@ -166,10 +169,12 @@ const {
 
 .obs-classic-header {
   margin: 0;
+  padding-top: 4px;
   color: #fff;
   text-align: center;
   font-size: 20px;
   font-weight: bold;
+  line-height: 1.2;
   text-shadow:
     0 0 10px #ca7b7b6e,
     0 0 20px #ffffff8e,
@@ -184,9 +189,7 @@ const {
 }
 
 .obs-classic-divider {
-  margin: 0 auto;
-  margin-top: -15px;
-  margin-bottom: -15px;
+  margin: 2px auto 6px;
   width: 90%;
 }
 
@@ -256,9 +259,6 @@ const {
   }
 }
 
-.n-divider__line {
-  background-color: #ffffffd5;
-}
 
 .obs-classic-content {
   background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));

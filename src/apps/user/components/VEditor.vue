@@ -2,11 +2,10 @@
 import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 // @ts-ignore
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-import { useMessage, useThemeVars } from 'naive-ui'
 import { onBeforeUnmount, shallowRef } from 'vue'
 
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
-import { isDarkMode } from '@/shared/utils'
+import { isDarkMode, toast } from '@/shared/utils'
 
 import '@/assets/editorDarkMode.css'
 import '@wangeditor/editor/dist/css/style.css' // 引入 css
@@ -27,8 +26,6 @@ const props = defineProps({
     default: 10000,
   },
 })
-const message = useMessage()
-const themeVars = useThemeVars()
 
 const editorRef = shallowRef()
 const toolbarConfig: Partial<IToolbarConfig> = {
@@ -44,12 +41,12 @@ const editorConfig: Partial<IEditorConfig> = {
       maxNumberOfFiles: 10,
       async customUpload(file: File, insertFn: InsertFnType) {
         try {
-          message.info('图片上传中')
+          toast.info('图片上传中')
           const [result] = await uploadFiles(file, FileStore.Forum)
           insertFn(result.path, result.name || '', result.path)
-          message.success('图片上传成功')
+          toast.success('图片上传成功')
         } catch (e) {
-          message.error((e as Error).message || '图片上传失败')
+          toast.error((e as Error).message || '图片上传失败')
           throw e
         }
       },
@@ -82,11 +79,11 @@ defineExpose({
 
 <template>
   <div
+    class="rounded-lg border border-border overflow-hidden"
     :class="{ 'dark-theme': isDarkMode }"
-    :style="{ border: `1px solid ${themeVars.borderColor}`, borderRadius: themeVars.borderRadius, overflow: 'hidden' }"
   >
     <Toolbar
-      :style="{ borderBottom: `1px solid ${themeVars.borderColor}` }"
+      class="border-b border-border"
       :editor="editorRef"
       :default-config="toolbarConfig"
       :mode="mode"

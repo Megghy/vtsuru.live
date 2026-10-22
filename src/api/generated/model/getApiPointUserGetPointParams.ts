@@ -7,5 +7,5 @@
  */
 
 export type GetApiPointUserGetPointParams = {
-id?: number;
-};
+  id?: number
+}

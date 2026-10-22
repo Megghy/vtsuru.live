@@ -59,7 +59,10 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   let flushTimer: ReturnType<typeof setTimeout> | undefined
   let started = false
 
-  watch(() => settings.value.card.size, (size) => cardGrid.resize(size))
+  watch(
+    () => settings.value.card.size,
+    (size) => cardGrid.resize(size),
+  )
 
   function queueWrite(event: DashboardEvent) {
     pendingWrites.set(event.key, event)
@@ -97,11 +100,11 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     known.add(event.key)
 
     if (
-      event.type === EventDataTypes.Message
-      && event.msg.trim() === RELOAD_COMMAND
-      && event.uid > 0
-      && event.uid === account.value.biliId
-      && event.time > pageLoadedAt
+      event.type === EventDataTypes.Message &&
+      event.msg.trim() === RELOAD_COMMAND &&
+      event.uid > 0 &&
+      event.uid === account.value.biliId &&
+      event.time > pageLoadedAt
     ) {
       location.reload()
       return
@@ -120,7 +123,11 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   async function loadRecent() {
     const since = Date.now() - settings.value.historyHours * 3600_000
     const events = await dashboardDB.events.where('time').aboveOrEqual(since).sortBy('time')
-    const buckets: Record<'danmaku' | 'interaction' | 'paid', DashboardEvent[]> = { danmaku: [], interaction: [], paid: [] }
+    const buckets: Record<'danmaku' | 'interaction' | 'paid', DashboardEvent[]> = {
+      danmaku: [],
+      interaction: [],
+      paid: [],
+    }
     for (const event of events) {
       const panel = panelOf(event.type)
       buckets[panel === 'danmaku' || panel === 'interaction' ? panel : 'paid'].push(event)
@@ -212,15 +219,19 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     const hideRead = settings.value.hideRead
     if (!searchPredicate && !user && !hideRead) return undefined
     return (event: DashboardEvent) =>
-      (!user || userKeyOf(event) === user)
-      && (!hideRead || !readKeys.has(event.key))
-      && (!searchPredicate || searchPredicate(event))
+      (!user || userKeyOf(event) === user) &&
+      (!hideRead || !readKeys.has(event.key)) &&
+      (!searchPredicate || searchPredicate(event))
   })
 
   const source = computed(() => {
     const history = historyEvents.value
     if (!history) return { messages: messages.value, interactions: interactions.value, paid: paid.value }
-    const split = { messages: [] as DashboardEvent[], interactions: [] as DashboardEvent[], paid: [] as DashboardEvent[] }
+    const split = {
+      messages: [] as DashboardEvent[],
+      interactions: [] as DashboardEvent[],
+      paid: [] as DashboardEvent[],
+    }
     for (const event of history) {
       const panel = panelOf(event.type)
       split[panel === 'danmaku' ? 'messages' : panel === 'interaction' ? 'interactions' : 'paid'].push(event)
@@ -237,14 +248,21 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const danmakuList = computed(() => applyFilter(source.value.messages))
   const interactionList = computed(() => applyFilter(source.value.interactions))
   const scList = computed(() =>
-    sortPaid(applyFilter(source.value.paid.filter((e) => e.type === EventDataTypes.SC && !deletedKeys.has(e.key))), settings.value.sort.sc),
+    sortPaid(
+      applyFilter(source.value.paid.filter((e) => e.type === EventDataTypes.SC && !deletedKeys.has(e.key))),
+      settings.value.sort.sc,
+    ),
   )
   const giftList = computed(() => {
     const { giftMinPrice, showFreeGift } = settings.value
     return sortPaid(
-      applyFilter(source.value.paid.filter((e) =>
-        e.type === EventDataTypes.Guard
-        || (e.type === EventDataTypes.Gift && (e.price > 0 || showFreeGift) && e.price >= giftMinPrice))),
+      applyFilter(
+        source.value.paid.filter(
+          (e) =>
+            e.type === EventDataTypes.Guard ||
+            (e.type === EventDataTypes.Gift && (e.price > 0 || showFreeGift) && e.price >= giftMinPrice),
+        ),
+      ),
       settings.value.sort.gift,
     )
   })

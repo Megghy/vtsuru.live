@@ -5,25 +5,25 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsEditableFieldOption } from './vTsuruCoreAIContractsEditableFieldOption';
+import type { VTsuruCoreAIContractsEditableFieldOption } from './vTsuruCoreAIContractsEditableFieldOption'
 
 /**
  * 预览项里一个可编辑字段的元数据 + 当前值。
  */
 export interface VTsuruCoreAIContractsEditableField {
-  key: string;
-  label: string;
-  value: string;
+  key: string
+  label: string
+  value: string
   /**
-     * 原值 (修改前), 用于只读对比展示。新增项为空。
-     * @nullable
-     */
-  before?: string | null;
+   * 原值 (修改前), 用于只读对比展示。新增项为空。
+   * @nullable
+   */
+  before?: string | null
   /** 输入类型: text(默认) / textarea / time / number / tags(逗号分隔) / select。 */
-  type: string;
+  type: string
   /**
-     * select 类型的可选项。
-     * @nullable
-     */
-  options?: VTsuruCoreAIContractsEditableFieldOption[] | null;
+   * select 类型的可选项。
+   * @nullable
+   */
+  options?: VTsuruCoreAIContractsEditableFieldOption[] | null
 }

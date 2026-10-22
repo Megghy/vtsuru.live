@@ -7,5 +7,5 @@
  */
 
 export interface EventControllerDeleteGuardEventRequest {
-  id: number;
+  id: number
 }

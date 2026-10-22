@@ -7,5 +7,5 @@
  */
 
 export interface FollowingControllerFollowRequest {
-  following: boolean;
+  following: boolean
 }

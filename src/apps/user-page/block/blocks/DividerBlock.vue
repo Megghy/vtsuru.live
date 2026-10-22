@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NDivider } from 'naive-ui'
 import { computed } from 'vue'
 
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -38,15 +37,32 @@ const dividerStyle = computed(() => {
 </script>
 
 <template>
-  <NDivider
+  <div
     v-if="text"
-    :title-placement="titlePlacement"
+    class="flex items-center my-4"
     :style="dividerStyle"
   >
-    {{ text }}
-  </NDivider>
-  <NDivider
+    <div
+      class="h-px bg-border flex-1"
+      :class="{ 'max-w-[40px]': titlePlacement === 'left', hidden: titlePlacement === 'left' && false }"
+    />
+    <span
+      class="text-xs text-muted-foreground font-medium px-3 shrink-0"
+      :class="{
+        'pl-0 pr-3': titlePlacement === 'left',
+        'pr-0 pl-3': titlePlacement === 'right',
+      }"
+    >
+      {{ text }}
+    </span>
+    <div
+      class="h-px bg-border flex-1"
+      :class="{ 'max-w-[40px]': titlePlacement === 'right' }"
+    />
+  </div>
+  <div
     v-else
+    class="h-px bg-border my-4 w-full"
     :style="dividerStyle"
   />
 </template>

@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { NDivider, NGrid } from 'naive-ui'
+import { h } from 'vue'
 import type { VNode } from 'vue'
 
 import type { updateNoteItemContentType } from '@/shared/services/UpdateNote'
 import { updateNotes } from '@/shared/services/UpdateNote'
+import { Badge } from '@/shared/ui/badge'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Separator } from '@/shared/ui/separator'
 
 function renderContent(content: updateNoteItemContentType): VNode | string | undefined {
   if (Array.isArray(content)) {
@@ -26,75 +29,62 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
 </script>
 
 <template>
-  <NScrollbar
-    style="max-height: 80vh; padding-right: 16px"
-    trigger="none"
-  >
-    <NFlex vertical>
+  <ScrollArea class="max-h-[80vh] pr-4">
+    <div class="flex flex-col gap-6">
       <div
         v-for="item in updateNotes"
         :key="item.ver"
+        class="space-y-3"
       >
-        <NDivider title-placement="left">
-          {{ item.date }}
-        </NDivider>
-        <NGrid
-          x-gap="10"
-          y-gap="10"
-        >
+        <div class="flex items-center gap-3">
+          <span class="text-sm font-semibold text-foreground">{{ item.date }}</span>
+          <Separator class="flex-1" />
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-[100px_1fr] gap-3 text-xs">
           <template
-            v-for="note in item.items"
-            :key="note.title"
+            v-for="(note, noteIndex) in item.items"
+            :key="noteIndex"
           >
-            <NGridItem span="6">
-              <div style="">
-                <NTag
-                  v-if="note.type === 'fix'"
-                  type="info"
-                  round
-                  :bordered="false"
-                >
-                  错误修复
-                </NTag>
-                <NTag
-                  v-else-if="note.type === 'new'"
-                  type="success"
-                  round
-                  :bordered="false"
-                >
-                  功能添加
-                </NTag>
-                <NTag
-                  v-else-if="note.type === 'optimize'"
-                  type="warning"
-                  round
-                  :bordered="false"
-                >
-                  功能优化
-                </NTag>
-                <NTag
-                  v-else-if="note.type === 'other'"
-                  type="error"
-                  round
-                  :bordered="false"
-                >
-                  其他
-                </NTag>
-              </div>
-            </NGridItem>
-            <NGridItem span="18">
-              <NFlex vertical>
-                <template
-                  v-for="content in note.content"
-                  :key="content"
-                >
-                  <component :is="renderContent(content)" />
-                </template>
-              </NFlex>
-            </NGridItem>
+            <div class="flex items-start">
+              <Badge
+                v-if="note.type === 'fix'"
+                variant="secondary"
+                class="text-[10px] h-5"
+              >
+                错误修复
+              </Badge>
+              <Badge
+                v-else-if="note.type === 'new'"
+                class="text-[10px] h-5"
+              >
+                功能添加
+              </Badge>
+              <Badge
+                v-else-if="note.type === 'optimize'"
+                variant="outline"
+                class="text-[10px] h-5"
+              >
+                功能优化
+              </Badge>
+              <Badge
+                v-else-if="note.type === 'other'"
+                variant="destructive"
+                class="text-[10px] h-5"
+              >
+                其他
+              </Badge>
+            </div>
+            <div class="flex flex-col gap-1 text-muted-foreground leading-relaxed">
+              <template
+                v-for="(content, cIdx) in note.content"
+                :key="cIdx"
+              >
+                <component :is="renderContent(content)" />
+              </template>
+            </div>
           </template>
-        </NGrid>
+        </div>
       </div>
-    </NFlex>
-  </NScrollbar>
+    </div>
+  </ScrollArea>
 </template>

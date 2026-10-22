@@ -25,9 +25,7 @@ export function useScheduleTemplateAssets<T extends ScheduleTemplateAssetsConfig
     () => props.userInfo?.faceUrl || props.userInfo?.streamerInfo?.faceUrl || props.biliInfo?.face || '',
   )
   const portraitUrl = computed(
-    () =>
-      customPortraitUrl.value ||
-      (effectiveConfig.value.showAvatar ? props.previewPortrait || avatarUrl.value : ''),
+    () => customPortraitUrl.value || (effectiveConfig.value.showAvatar ? props.previewPortrait || avatarUrl.value : ''),
   )
   const backgroundUrl = computed(() => effectiveConfig.value.backgroundFile[0]?.path)
   /** 供模板 :style 直接绑定的背景图样式, 无背景时为 undefined */

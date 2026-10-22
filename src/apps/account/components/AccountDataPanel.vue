@@ -8,21 +8,39 @@ export interface AccountStatItem {
 defineProps<{
   stats: AccountStatItem[]
 }>()
+
+const TONE_CARD: Record<string, string> = {
+  default: '',
+  primary: 'border-primary/30 bg-primary/5',
+  success: 'border-[color-mix(in_srgb,var(--vtsuru-success)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-success)_4%,var(--card))]',
+  warning: 'border-[color-mix(in_srgb,var(--vtsuru-warning)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-warning)_4%,var(--card))]',
+  error: 'border-[color-mix(in_srgb,var(--vtsuru-error)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-error)_4%,var(--card))]',
+  info: 'border-[color-mix(in_srgb,var(--vtsuru-info)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-info)_4%,var(--card))]',
+}
+
+const TONE_VALUE: Record<string, string> = {
+  default: 'text-foreground',
+  primary: 'text-primary',
+  success: 'text-[var(--vtsuru-success)]',
+  warning: 'text-[var(--vtsuru-warning)]',
+  error: 'text-[var(--vtsuru-error)]',
+  info: 'text-[var(--vtsuru-info)]',
+}
 </script>
 
 <template>
-  <div class="account-data-panel">
-    <div class="account-stat-grid">
+  <div class="flex flex-col gap-3 mb-3">
+    <div class="grid grid-cols-[repeat(auto-fit,minmax(130px,1fr))] gap-2.5 max-[640px]:grid-cols-2 max-[640px]:gap-2">
       <div
         v-for="item in stats"
         :key="item.label"
-        class="account-stat"
-        :class="`account-stat--${item.tone ?? 'default'}`"
+        class="flex flex-col justify-between min-w-0 py-3 px-3.5 max-[640px]:py-2.5 max-[640px]:px-3 border border-border rounded-[var(--radius)] bg-card shadow-sm transition-colors hover:border-input"
+        :class="TONE_CARD[item.tone ?? 'default']"
       >
-        <span class="account-stat__label">{{ item.label }}</span>
+        <span class="block text-muted-foreground text-xs font-medium leading-snug truncate">{{ item.label }}</span>
         <strong
-          class="account-stat__value"
-          :class="`account-stat__value--${item.tone ?? 'default'}`"
+          class="block mt-1 text-xl max-[640px]:text-lg font-bold leading-tight tabular-nums truncate"
+          :class="TONE_VALUE[item.tone ?? 'default']"
         >
           {{ item.value }}
         </strong>
@@ -31,133 +49,9 @@ defineProps<{
 
     <div
       v-if="$slots.toolbar"
-      class="account-data-toolbar"
+      class="py-2.5 px-3 border border-border rounded-[var(--radius)] bg-card shadow-sm"
     >
       <slot name="toolbar" />
     </div>
   </div>
 </template>
-
-<style scoped>
-.account-data-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
-.account-stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 10px;
-}
-
-.account-stat {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-width: 0;
-  padding: 12px 14px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
-  box-shadow: var(--vtsuru-shadow-1, 0 1px 2px rgba(0, 0, 0, 0.03));
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.account-stat:hover {
-  border-color: var(--vtsuru-border-hover, color-mix(in srgb, var(--vtsuru-fg) 20%, var(--vtsuru-border)));
-}
-
-.account-stat--primary {
-  border-color: color-mix(in srgb, var(--vtsuru-primary) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-primary) 4%, var(--vtsuru-bg-surface));
-}
-
-.account-stat--success {
-  border-color: color-mix(in srgb, var(--vtsuru-success) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-success) 4%, var(--vtsuru-bg-surface));
-}
-
-.account-stat--warning {
-  border-color: color-mix(in srgb, var(--vtsuru-warning) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-warning) 4%, var(--vtsuru-bg-surface));
-}
-
-.account-stat--error {
-  border-color: color-mix(in srgb, var(--vtsuru-error) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-error) 4%, var(--vtsuru-bg-surface));
-}
-
-.account-stat--info {
-  border-color: color-mix(in srgb, var(--vtsuru-info) 32%, var(--vtsuru-border));
-  background: color-mix(in srgb, var(--vtsuru-info) 4%, var(--vtsuru-bg-surface));
-}
-
-.account-stat__label {
-  display: block;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  font-weight: 500;
-  line-height: 1.4;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.account-stat__value {
-  display: block;
-  margin-top: 4px;
-  color: var(--vtsuru-fg);
-  font-size: 20px;
-  font-weight: 700;
-  line-height: 1.25;
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.account-stat__value--primary {
-  color: var(--vtsuru-primary);
-}
-
-.account-stat__value--success {
-  color: var(--vtsuru-success);
-}
-
-.account-stat__value--warning {
-  color: var(--vtsuru-warning);
-}
-
-.account-stat__value--error {
-  color: var(--vtsuru-error);
-}
-
-.account-stat__value--info {
-  color: var(--vtsuru-info);
-}
-
-.account-data-toolbar {
-  padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
-  box-shadow: var(--vtsuru-shadow-1, 0 1px 2px rgba(0, 0, 0, 0.03));
-}
-
-@media (max-width: 640px) {
-  .account-stat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .account-stat {
-    padding: 10px 12px;
-  }
-
-  .account-stat__value {
-    font-size: 18px;
-  }
-}
-</style>

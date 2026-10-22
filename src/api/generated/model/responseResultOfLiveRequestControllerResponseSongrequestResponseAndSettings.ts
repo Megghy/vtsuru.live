@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LiveRequestControllerResponseSongrequestResponseAndSettings } from './liveRequestControllerResponseSongrequestResponseAndSettings';
+import type { LiveRequestControllerResponseSongrequestResponseAndSettings } from './liveRequestControllerResponseSongrequestResponseAndSettings'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfLiveRequestControllerResponseSongrequestResponseAndSettings {
-  message: string;
-  code: number;
-  data: LiveRequestControllerResponseSongrequestResponseAndSettings;
+  message: string
+  code: number
+  data: LiveRequestControllerResponseSongrequestResponseAndSettings
 }

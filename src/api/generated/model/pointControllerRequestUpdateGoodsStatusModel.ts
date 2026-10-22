@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus';
+import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus'
 
 export interface PointControllerRequestUpdateGoodsStatusModel {
-  ids: number[];
-  status: PointGoodsDataGoodsStatus;
+  ids: number[]
+  status: PointGoodsDataGoodsStatus
 }

@@ -7,8 +7,8 @@
  */
 
 export type GetApiLiveGetTranscriptSegmentsParams = {
-liveId?: string;
-sessionId?: string;
-page?: number;
-pageSize?: number;
-};
+  liveId?: string
+  sessionId?: string
+  page?: number
+  pageSize?: number
+}

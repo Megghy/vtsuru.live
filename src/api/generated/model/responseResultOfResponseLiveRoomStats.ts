@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseLiveRoomStats } from './responseLiveRoomStats';
+import type { ResponseLiveRoomStats } from './responseLiveRoomStats'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseLiveRoomStats {
-  message: string;
-  code: number;
-  data: ResponseLiveRoomStats;
+  message: string
+  code: number
+  data: ResponseLiveRoomStats
 }

@@ -1,4 +1,9 @@
-import type { SelectOption } from 'naive-ui'
+export interface SelectOption {
+  label: string
+  value: string | number
+  disabled?: boolean
+  [key: string]: any
+}
 import type { VNode } from 'vue'
 
 // 导入 Vue 的 VNode 类型和 h 函数（用于示例）

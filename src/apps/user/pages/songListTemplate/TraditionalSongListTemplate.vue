@@ -5,13 +5,18 @@ import {
   ArrowSortUp20Filled,
   SquareArrowForward24Filled,
 } from '@vicons/fluent'
-import { NButton, NEmpty, NIcon, NInput, NScrollbar, NSelect, NTag, NTooltip } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import type { SongsInfo } from '@/api/api-models'
 import { SongFrom } from '@/api/api-models'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
-import { getUserAvatarUrl } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { getUserAvatarUrl, toast } from '@/shared/utils'
 import bilibili from '@/svgs/bilibili.svg'
 import douyin from '@/svgs/douyin.svg'
 import neteaseMusic from '@/svgs/neteaseMusic.svg'
@@ -45,6 +50,21 @@ const selectedOption = ref<string | null>(null)
 const sortKey = ref<SortKey | null>(null)
 const sortOrder = ref<'asc' | 'desc'>('asc')
 
+const dialogState = ref<{
+  open: boolean
+  title: string
+  content: string
+  positiveText: string
+  negativeText?: string
+  onConfirm: () => void
+}>({
+  open: false,
+  title: '',
+  content: '',
+  positiveText: '',
+  onConfirm: () => {},
+})
+
 const {
   requestAuthState,
   isSelf,
@@ -70,6 +90,7 @@ const optionFilters: Record<string, (song: SongsInfo) => boolean> = {
   sc: (song) => (song.options?.scMinPrice ?? 0) > 0,
 }
 const optionOptions = [
+  { label: '全部条件', value: 'all' },
   { label: '未设定', value: 'unset' },
   { label: '舰长', value: 'captain' },
   { label: '提督', value: 'admiral' },
@@ -77,8 +98,8 @@ const optionOptions = [
   { label: '粉丝牌', value: 'medal' },
   { label: 'SC', value: 'sc' },
 ]
-const sortOptions = [
-  { label: '默认顺序', value: null },
+const sortOptions: { label: string; value: SortKey | 'default' }[] = [
+  { label: '默认顺序', value: 'default' },
   { label: '按歌名', value: 'name' },
   { label: '按歌手', value: 'author' },
   { label: '按语言', value: 'language' },
@@ -94,10 +115,10 @@ const filteredAndSortedSongs = computed(() => {
   }).filter((song) => {
     if (!matchesField(song.language, selectedLanguage.value)) return false
     if (!matchesField(song.tags, selectedTag.value)) return false
-    return !selectedOption.value || optionFilters[selectedOption.value](song)
+    return !selectedOption.value || selectedOption.value === 'all' || optionFilters[selectedOption.value]?.(song)
   })
 
-  if (!sortKey.value) return songs
+  if (!sortKey.value || (sortKey.value as any) === 'default') return songs
   const direction = sortOrder.value === 'asc' ? 1 : -1
   return songs.toSorted((left, right) => {
     const compared = compareSongs(left, right, sortKey.value as SortKey)
@@ -140,7 +161,7 @@ watch(artistOptions, (options) => {
 })
 
 function matchesField(values: string[] | undefined, selected: string | null) {
-  if (!selected) return true
+  if (!selected || selected === 'all') return true
   return selected === '__unset' ? !values?.length : values?.includes(selected) === true
 }
 
@@ -176,34 +197,33 @@ function clearFilters() {
 function randomOrder() {
   const songs = filteredAndSortedSongs.value.length ? filteredAndSortedSongs.value : (props.data ?? [])
   if (!songs.length) {
-    window.$message?.warning('当前没有可选歌曲')
+    toast.warning('当前没有可选歌曲')
     return
   }
   const song = songs[Math.floor(Math.random() * songs.length)]
-  window.$modal.create({
-    preset: 'dialog',
-    type: 'success',
+  dialogState.value = {
+    open: true,
     title: '随机结果',
     content: `${song.name}${song.author?.length ? ` · ${song.author.join(' / ')}` : ''}`,
     positiveText: isSelf.value ? '知道了' : '点这首',
     negativeText: isSelf.value ? undefined : '再看看',
-    onPositiveClick: () => {
+    onConfirm: () => {
       if (!isSelf.value) emit('requestSong', song)
     },
-  })
+  }
 }
 
 function requestSong(song: SongsInfo) {
   if (isSelf.value) return
   const tooltip = getSongRequestTooltip(song, props.liveRequestSettings, requestAuthState.value)
-  window.$modal.create({
-    preset: 'dialog',
+  dialogState.value = {
+    open: true,
     title: '点歌',
     content: `${getSongRequestConfirmText(song)}${tooltip === '点歌' ? '' : `\n${tooltip}`}`,
     positiveText: '点歌',
     negativeText: '取消',
-    onPositiveClick: () => emit('requestSong', song),
-  })
+    onConfirm: () => emit('requestSong', song),
+  }
 }
 
 function getSongLink(song: SongsInfo) {
@@ -229,889 +249,424 @@ function getSafeUrl(value?: string) {
 </script>
 
 <template>
-  <section
-    class="traditional-song-list"
-    :class="{ 'has-background': config?.backgroundFile?.length }"
-    :style="{
-      backgroundImage: config?.backgroundFile?.length ? `url(${config.backgroundFile[0].path})` : undefined,
-    }"
-  >
-    <div class="content-frame">
-      <header class="profile-panel">
-        <img
-          class="profile-avatar"
-          :src="userInfo?.faceUrl || userInfo?.streamerInfo?.faceUrl || getUserAvatarUrl(userInfo?.id)"
-          :alt="userInfo?.name ?? '主播头像'"
-          referrerpolicy="no-referrer"
-        />
-        <div class="profile-copy">
-          <p class="eyebrow">SONG LIBRARY</p>
-          <h1>{{ config?.title ?? `${userInfo?.name ?? ''}的歌单` }}</h1>
-          <p
-            v-if="config?.description"
-            class="profile-summary"
-          >
-            {{ config.description }}
-          </p>
-          <p
-            v-else
-            class="profile-summary"
-          >
-            选择喜欢的歌曲，点击歌名即可点歌
-          </p>
-        </div>
-        <div
-          v-if="profileLinks.length || customLinks.length"
-          class="profile-links"
+  <TooltipProvider>
+    <section
+      class="w-full"
+      :class="{ 'has-background': config?.backgroundFile?.length }"
+      :style="{
+        '--song-list-bg-image': config?.backgroundFile?.length
+          ? `url(&quot;${config.backgroundFile[0].path}&quot;)`
+          : undefined,
+      }"
+    >
+      <div class="content-frame max-w-5xl mx-auto px-4 py-8 space-y-6">
+        <header
+          class="profile-panel flex flex-wrap items-center gap-6 p-6 rounded-2xl bg-card/80 backdrop-blur-md border border-border/80 shadow-xs"
         >
-          <a
-            v-for="link in profileLinks"
-            :key="link.label"
-            :href="link.url"
-            :title="link.label"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="profile-icon-link"
-          >
-            <component :is="link.icon" />
-          </a>
-          <a
-            v-for="link in customLinks"
-            :key="`${link.name}-${link.url}`"
-            :href="link.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="custom-link"
-          >
-            {{ link.name }}
-          </a>
-        </div>
-      </header>
-
-      <p
-        v-if="config?.longDescription"
-        class="long-description"
-      >
-        {{ config.longDescription }}
-      </p>
-
-      <main class="song-panel">
-        <div class="filter-grid">
-          <NInput
-            v-model:value="searchQuery"
-            clearable
-            placeholder="搜索歌名、歌手、语言、标签或备注"
-            class="search-input"
+          <img
+            class="profile-avatar size-20 rounded-full object-cover border-2 border-primary/20"
+            :src="userInfo?.faceUrl || userInfo?.streamerInfo?.faceUrl || getUserAvatarUrl(userInfo?.id)"
+            :alt="userInfo?.name ?? '主播头像'"
+            referrerpolicy="no-referrer"
           />
-          <NSelect
-            v-model:value="selectedArtist"
-            :options="artistOptions"
-            filterable
-            clearable
-            placeholder="歌手"
-          />
-          <NSelect
-            v-model:value="selectedLanguage"
-            :options="languageOptions"
-            filterable
-            clearable
-            placeholder="语言"
-          />
-          <NSelect
-            v-model:value="selectedTag"
-            :options="tagOptions"
-            filterable
-            clearable
-            placeholder="标签"
-          />
-          <NSelect
-            v-model:value="selectedOption"
-            :options="optionOptions"
-            clearable
-            placeholder="点歌条件"
-          />
-          <div class="sort-control">
-            <NSelect
-              v-model:value="sortKey"
-              :options="sortOptions"
-              placeholder="排序"
-            />
-            <NButton
-              secondary
-              circle
-              :disabled="!sortKey"
-              :title="sortOrder === 'asc' ? '升序' : '降序'"
-              @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+          <div class="profile-copy flex-1 min-w-48">
+            <p class="eyebrow text-xs font-semibold tracking-wider text-primary uppercase">SONG LIBRARY</p>
+            <h1 class="text-2xl font-bold text-foreground mt-0.5">
+              {{ config?.title ?? `${userInfo?.name ?? ''}的歌单` }}
+            </h1>
+            <p
+              v-if="config?.description"
+              class="profile-summary text-xs text-muted-foreground mt-1"
             >
-              <template #icon
-                ><NIcon :component="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
-              /></template>
-            </NButton>
-          </div>
-        </div>
-
-        <div class="result-toolbar">
-          <span class="result-count">{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span>
-          <div class="toolbar-actions">
-            <NButton
-              quaternary
-              :disabled="!hasFilters"
-              @click="clearFilters"
-            >
-              <template #icon><NIcon :component="ArrowCounterclockwise20Filled" /></template>
-              清空
-            </NButton>
-            <NButton
-              type="primary"
-              secondary
-              @click="randomOrder"
-              >随机一首</NButton
-            >
-          </div>
-        </div>
-
-        <div
-          class="song-table-shell"
-          :class="{ 'is-fixed': config?.fixedHeight }"
-        >
-          <NScrollbar
-            class="song-table-scroller"
-            style="max-height: var(--song-table-max-height)"
-          >
-            <NEmpty
-              v-if="!filteredAndSortedSongs.length"
-              :description="data?.length ? '没有符合条件的歌曲' : '歌单里还没有歌曲'"
-            />
-            <table
+              {{ config.description }}
+            </p>
+            <p
               v-else
-              class="song-table"
+              class="profile-summary text-xs text-muted-foreground mt-1"
             >
-              <thead>
-                <tr>
-                  <th
-                    v-for="column in sortOptions.slice(1)"
-                    :key="column.value"
-                  >
-                    <button
-                      type="button"
-                      class="sort-heading"
-                      @click="setSort(column.value as SortKey)"
-                    >
-                      {{ column.label.replace('按', '') }}
-                      <NIcon
-                        v-if="sortKey === column.value"
-                        :component="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
-                      />
-                    </button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="song in visibleItems"
-                  :key="song.key || `${song.name}-${song.author?.join('/')}`"
-                  :class="{
-                    'is-singing': singingSongKeySet.has(song.key),
-                    'is-queued': queuedSongKeySet.has(song.key),
-                  }"
-                >
-                  <td class="title-cell">
-                    <div class="title-content">
-                      <SongStatusBadge
-                        :song-key="song.key"
-                        :singing-keys="singingSongKeySet"
-                        :queued-keys="queuedSongKeySet"
-                        variant="text"
-                      />
-                      <NTooltip :disabled="isSelf">
-                        <template #trigger>
-                          <button
-                            class="song-title-button"
-                            type="button"
-                            :disabled="isSelf"
-                            @click="requestSong(song)"
-                          >
-                            {{ song.name }}
-                          </button>
-                        </template>
-                        {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
-                      </NTooltip>
-                      <NButton
-                        v-if="getSongLink(song)"
-                        tag="a"
-                        text
-                        :href="getSongLink(song)"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title="打开歌曲链接"
-                      >
-                        <template #icon><NIcon :component="SquareArrowForward24Filled" /></template>
-                      </NButton>
-                    </div>
-                  </td>
-                  <td>
-                    <span class="cell-label">歌手</span>
-                    <span
-                      v-if="song.author?.length"
-                      class="inline-list"
-                    >
-                      <button
-                        v-for="artist in song.author"
-                        :key="artist"
-                        type="button"
-                        :class="{ active: selectedArtist === artist }"
-                        @click="selectedArtist = selectedArtist === artist ? null : artist"
-                      >
-                        {{ artist }}
-                      </button>
-                    </span>
-                    <span
-                      v-else
-                      class="muted"
-                      >未知</span
-                    >
-                  </td>
-                  <td>
-                    <span class="cell-label">语言</span>
-                    <span class="inline-list">
-                      <button
-                        v-for="language in song.language"
-                        :key="language"
-                        type="button"
-                        :class="{ active: selectedLanguage === language }"
-                        @click="selectedLanguage = selectedLanguage === language ? null : language"
-                      >
-                        {{ language }}
-                      </button>
-                    </span>
-                  </td>
-                  <td>
-                    <span class="cell-label">标签</span>
-                    <div class="tag-list">
-                      <NTag
-                        v-for="tag in song.tags"
-                        :key="tag"
-                        class="song-tag"
-                        :class="{ active: selectedTag === tag }"
-                        size="small"
-                        checkable
-                        round
-                        :bordered="false"
-                        :checked="selectedTag === tag"
-                        @update:checked="selectedTag = selectedTag === tag ? null : tag"
-                        >{{ tag }}</NTag
-                      >
-                    </div>
-                  </td>
-                  <td>
-                    <span class="cell-label">点歌条件</span>
-                    <SongOptionBadges
-                      :options="song.options"
-                      variant="semantic"
-                      empty-text="无限制"
-                    />
-                  </td>
-                  <td>
-                    <span class="cell-label">备注</span>
-                    <span :class="{ muted: !song.description }">{{ song.description || '无' }}</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+              选择喜欢的歌曲，点击歌名即可点歌
+            </p>
+          </div>
+          <div
+            v-if="profileLinks.length || customLinks.length"
+            class="profile-links flex items-center gap-2 flex-wrap"
+          >
+            <a
+              v-for="link in profileLinks"
+              :key="link.label"
+              :href="link.url"
+              :title="link.label"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="profile-icon-link p-2 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition size-9 flex items-center justify-center"
+            >
+              <component
+                :is="link.icon"
+                class="size-4"
+              />
+            </a>
+            <a
+              v-for="link in customLinks"
+              :key="`${link.name}-${link.url}`"
+              :href="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="custom-link px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted text-xs font-medium text-foreground transition"
+            >
+              {{ link.name }}
+            </a>
+          </div>
+        </header>
 
-            <button
-              v-if="hasMore"
-              ref="loadMoreTrigger"
-              type="button"
-              class="load-more-trigger"
-              @click="loadMore"
+        <p
+          v-if="config?.longDescription"
+          class="long-description text-xs text-muted-foreground leading-relaxed px-2"
+        >
+          {{ config.longDescription }}
+        </p>
+
+        <main
+          class="song-panel p-5 rounded-2xl bg-card/85 backdrop-blur-md border border-border/80 shadow-xs space-y-4"
+        >
+          <div class="filter-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            <Input
+              v-model="searchQuery"
+              placeholder="搜索歌名、歌手、语言、标签或备注"
+              class="search-input col-span-1 sm:col-span-2"
+            />
+            <Select
+              :model-value="selectedArtist || 'all'"
+              @update:model-value="selectedArtist = $event === 'all' ? null : String($event)"
             >
-              加载更多
-            </button>
-          </NScrollbar>
-        </div>
-      </main>
-    </div>
-  </section>
+              <SelectTrigger>
+                <SelectValue placeholder="歌手" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部歌手</SelectItem
+                >
+                <SelectItem
+                  v-for="opt in artistOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              :model-value="selectedLanguage || 'all'"
+              @update:model-value="selectedLanguage = $event === 'all' ? null : String($event)"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="语言" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部语言</SelectItem
+                >
+                <SelectItem
+                  v-for="opt in languageOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              :model-value="selectedTag || 'all'"
+              @update:model-value="selectedTag = $event === 'all' ? null : String($event)"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="标签" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  value="all"
+                  class="text-xs"
+                  >全部标签</SelectItem
+                >
+                <SelectItem
+                  v-for="opt in tagOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <div class="sort-control flex items-center gap-1">
+              <Select
+                :model-value="sortKey || 'default'"
+                @update:model-value="sortKey = $event === 'default' ? null : ($event as SortKey)"
+              >
+                <SelectTrigger class="flex-1">
+                  <SelectValue placeholder="排序" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in sortOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                    class="text-xs"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-8 shrink-0 text-muted-foreground"
+                :disabled="!sortKey"
+                :title="sortOrder === 'asc' ? '升序' : '降序'"
+                @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+              >
+                <component
+                  :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
+                  class="size-4"
+                />
+              </Button>
+            </div>
+          </div>
+
+          <div class="result-toolbar flex items-center justify-between gap-3 text-xs pt-1 border-t border-border/50">
+            <span class="result-count text-muted-foreground font-mono"
+              >{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span
+            >
+            <div class="toolbar-actions flex items-center gap-2">
+              <Button
+                variant="ghost"
+                class="flex items-center gap-1 text-muted-foreground"
+                :disabled="!hasFilters"
+                @click="clearFilters"
+              >
+                <component
+                  :is="ArrowCounterclockwise20Filled"
+                  class="size-3.5"
+                />
+                清空
+              </Button>
+              <Button
+                variant="secondary"
+                @click="randomOrder"
+              >
+                随机一首
+              </Button>
+            </div>
+          </div>
+
+          <div
+            class="song-table-shell overflow-x-auto"
+            :class="{ 'is-fixed': config?.fixedHeight }"
+          >
+            <div
+              class="song-table-scroller"
+              :style="config?.fixedHeight ? 'max-height: 560px; overflow-y: auto;' : undefined"
+            >
+              <Empty
+                v-if="!filteredAndSortedSongs.length"
+                :description="data?.length ? '没有符合条件的歌曲' : '歌单里还没有歌曲'"
+                class="py-12"
+              />
+              <table
+                v-else
+                class="song-table w-full text-left border-collapse text-xs"
+              >
+                <thead>
+                  <tr class="border-b border-border/80 text-muted-foreground font-medium">
+                    <th
+                      v-for="column in sortOptions.slice(1)"
+                      :key="column.value"
+                      class="py-2.5 px-3 whitespace-nowrap"
+                    >
+                      <button
+                        type="button"
+                        class="sort-heading flex items-center gap-1 hover:text-foreground cursor-pointer font-medium"
+                        @click="setSort(column.value as SortKey)"
+                      >
+                        {{ column.label.replace('按', '') }}
+                        <component
+                          :is="sortOrder === 'asc' ? ArrowSortUp20Filled : ArrowSortDown20Filled"
+                          v-if="sortKey === column.value"
+                          class="size-3"
+                        />
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-border/40">
+                  <tr
+                    v-for="song in visibleItems"
+                    :key="song.key || `${song.name}-${song.author?.join('/')}`"
+                    class="hover:bg-muted/40 transition"
+                    :class="{
+                      'bg-amber-500/5': singingSongKeySet.has(song.key),
+                      'bg-emerald-500/5': queuedSongKeySet.has(song.key),
+                    }"
+                  >
+                    <td class="title-cell py-2 px-3">
+                      <div class="title-content flex items-center gap-1.5 flex-wrap">
+                        <SongStatusBadge
+                          :song-key="song.key"
+                          :singing-keys="singingSongKeySet"
+                          :queued-keys="queuedSongKeySet"
+                          variant="text"
+                        />
+                        <Tooltip :disabled="isSelf">
+                          <TooltipTrigger as-child>
+                            <button
+                              class="song-title-button font-medium text-foreground hover:text-primary transition cursor-pointer text-left"
+                              type="button"
+                              :disabled="isSelf"
+                              @click="requestSong(song)"
+                            >
+                              {{ song.name }}
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent class="text-xs">
+                            {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
+                          </TooltipContent>
+                        </Tooltip>
+                        <a
+                          v-if="getSongLink(song)"
+                          :href="getSongLink(song)"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title="打开歌曲链接"
+                          class="text-muted-foreground hover:text-primary p-0.5"
+                        >
+                          <component
+                            :is="SquareArrowForward24Filled"
+                            class="size-3.5"
+                          />
+                        </a>
+                      </div>
+                    </td>
+                    <td class="py-2 px-3">
+                      <span
+                        v-if="song.author?.length"
+                        class="inline-list flex items-center gap-1 flex-wrap"
+                      >
+                        <button
+                          v-for="artist in song.author"
+                          :key="artist"
+                          type="button"
+                          class="hover:text-primary transition cursor-pointer"
+                          :class="{ 'text-primary font-medium': selectedArtist === artist }"
+                          @click="selectedArtist = selectedArtist === artist ? null : artist"
+                        >
+                          {{ artist }}
+                        </button>
+                      </span>
+                      <span
+                        v-else
+                        class="muted text-muted-foreground/60"
+                      >
+                        未知
+                      </span>
+                    </td>
+                    <td class="py-2 px-3">
+                      <span class="inline-list flex items-center gap-1 flex-wrap">
+                        <button
+                          v-for="language in song.language"
+                          :key="language"
+                          type="button"
+                          class="hover:text-primary transition cursor-pointer"
+                          :class="{ 'text-primary font-medium': selectedLanguage === language }"
+                          @click="selectedLanguage = selectedLanguage === language ? null : language"
+                        >
+                          {{ language }}
+                        </button>
+                      </span>
+                    </td>
+                    <td class="py-2 px-3">
+                      <div class="tag-list flex items-center gap-1 flex-wrap">
+                        <button
+                          v-for="tag in song.tags"
+                          :key="tag"
+                          type="button"
+                          class="px-1.5 py-0.5 rounded text-[10px] transition cursor-pointer"
+                          :class="
+                            selectedTag === tag
+                              ? 'bg-primary text-primary-foreground font-medium'
+                              : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                          "
+                          @click="selectedTag = selectedTag === tag ? null : tag"
+                        >
+                          {{ tag }}
+                        </button>
+                      </div>
+                    </td>
+                    <td class="py-2 px-3">
+                      <SongOptionBadges
+                        :options="song.options"
+                        variant="semantic"
+                        empty-text="无限制"
+                      />
+                    </td>
+                    <td class="py-2 px-3">
+                      <span :class="{ 'text-muted-foreground/60': !song.description }">{{
+                        song.description || '无'
+                      }}</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <button
+                v-if="hasMore"
+                ref="loadMoreTrigger"
+                type="button"
+                class="load-more-trigger w-full py-4 text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+                @click="loadMore"
+              >
+                加载更多
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+
+      <!-- 点歌/随机结果弹窗 -->
+      <Dialog v-model:open="dialogState.open">
+        <DialogContent class="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle class="text-sm font-semibold">{{ dialogState.title }}</DialogTitle>
+            <DialogDescription class="text-xs whitespace-pre-wrap pt-2">
+              {{ dialogState.content }}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter class="pt-3">
+            <Button
+              v-if="dialogState.negativeText"
+              variant="outline"
+              @click="dialogState.open = false"
+            >
+              {{ dialogState.negativeText }}
+            </Button>
+            <Button
+              @click="
+                () => {
+                  dialogState.onConfirm()
+                  dialogState.open = false
+                }
+              "
+            >
+              {{ dialogState.positiveText }}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </section>
+  </TooltipProvider>
 </template>
 
-<style scoped>
-.traditional-song-list {
-  width: 100%;
-  min-width: 0;
-  padding: clamp(12px, 2vw, 24px);
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background-position: center;
-  background-size: cover;
-  color: var(--song-fg);
-}
-
-.traditional-song-list.has-background {
-  position: relative;
-  isolation: isolate;
-}
-
-.traditional-song-list.has-background::before {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  border-radius: inherit;
-  background: color-mix(in srgb, var(--song-bg) 78%, transparent);
-  backdrop-filter: blur(12px) saturate(1.15);
-  content: '';
-}
-
-.content-frame {
-  display: grid;
-  width: min(100%, var(--vtsuru-page-max-width, 1180px));
-  min-width: 0;
-  margin: 0 auto;
-  gap: var(--vtsuru-page-spacing, 16px);
-}
-
-.profile-panel,
-.song-panel,
-.long-description {
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background: var(--song-panel);
-  box-shadow: var(--vtsuru-page-shadow, none);
-  backdrop-filter: blur(12px);
-}
-
-.profile-panel {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  padding: clamp(16px, 2vw, 24px);
-  gap: 16px;
-}
-
-.profile-avatar {
-  width: 68px;
-  height: 68px;
-  border: var(--vtsuru-page-border, 1px solid var(--song-border));
-  border-radius: 50%;
-  object-fit: cover;
-  box-shadow: var(--vtsuru-page-shadow, none);
-}
-
-.profile-copy {
-  min-width: 0;
-}
-
-.eyebrow {
-  margin: 0 0 3px;
-  color: var(--song-accent);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.profile-copy h1 {
-  margin: 0;
-  overflow-wrap: anywhere;
-  font-size: clamp(22px, 3vw, 32px);
-  line-height: 1.15;
-}
-
-.profile-summary {
-  margin: 7px 0 0;
-  color: var(--song-muted);
-  line-height: 1.5;
-}
-
-.profile-links {
-  display: flex;
-  max-width: 360px;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.profile-icon-link,
-.custom-link {
-  display: inline-flex;
-  min-height: 32px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--song-border) 80%, transparent);
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background: var(--song-bg);
-  color: var(--song-muted);
-  text-decoration: none;
-  transition: 160ms ease;
-}
-
-.profile-icon-link {
-  width: 34px;
-}
-
-.profile-icon-link svg {
-  width: 17px;
-  height: 17px;
-}
-
-.custom-link {
-  max-width: 150px;
-  padding: 0 10px;
-  overflow: hidden;
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.profile-icon-link:hover,
-.custom-link:hover {
-  border-color: var(--song-accent);
-  background: var(--song-accent-soft);
-  color: var(--song-accent);
-  transform: translateY(-1px);
-}
-
-.long-description {
-  margin: 0;
-  padding: 14px 18px;
-  color: var(--song-muted);
-  line-height: 1.7;
-  white-space: pre-wrap;
-}
-
-.song-panel {
-  min-width: 0;
-  padding: clamp(12px, 2vw, 20px);
-}
-
-.filter-grid {
-  display: grid;
-  grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(110px, 0.8fr)) minmax(150px, 1fr);
-  align-items: center;
-  gap: 8px;
-}
-
-.search-input {
-  min-width: 0;
-}
-
-.sort-control {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  min-width: 0;
-  gap: 6px;
-}
-
-.result-toolbar {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0 10px;
-  gap: 12px;
-}
-
-.result-count {
-  color: var(--song-muted);
-  font-size: 13px;
-}
-
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.song-table-shell {
-  --song-table-max-height: none;
-
-  min-width: 0;
-  overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--song-border) 78%, transparent);
-  border-radius: var(--vtsuru-page-radius, 8px);
-  background: color-mix(in srgb, var(--song-bg) 88%, transparent);
-}
-
-.song-table-shell.is-fixed {
-  --song-table-max-height: 55vh;
-}
-
-.song-table-shell :deep(.n-empty) {
-  padding: 72px 20px;
-}
-
-.song-table {
-  width: 100%;
-  min-width: 0;
-  border-spacing: 0;
-  table-layout: fixed;
-}
-
-.song-table th,
-.song-table td {
-  min-width: 0;
-  padding: 11px 12px;
-  border-bottom: 1px solid color-mix(in srgb, var(--song-border) 68%, transparent);
-  text-align: left;
-  vertical-align: middle;
-}
-
-.song-table th:first-child,
-.song-table td:first-child {
-  width: 28%;
-}
-
-.song-table th:nth-child(2),
-.song-table td:nth-child(2) {
-  width: 14%;
-}
-
-.song-table th:nth-child(3),
-.song-table td:nth-child(3) {
-  width: 10%;
-}
-
-.song-table th:nth-child(4),
-.song-table td:nth-child(4) {
-  width: 14%;
-}
-
-.song-table th:nth-child(5),
-.song-table td:nth-child(5) {
-  width: 17%;
-}
-
-.song-table th {
-  position: sticky;
-  z-index: 2;
-  top: 0;
-  background: color-mix(in srgb, var(--song-bg) 94%, transparent);
-  color: var(--song-muted);
-  font-size: 12px;
-  font-weight: 600;
-  backdrop-filter: blur(12px);
-}
-
-.song-table tbody tr:last-child td {
-  border-bottom: 0;
-}
-
-.song-table tbody tr {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 56px;
-  transition: background-color 150ms ease;
-}
-
-.song-table tbody tr:hover {
-  background: var(--song-bg-hover);
-}
-
-.song-table tbody tr.is-singing {
-  box-shadow: inset 3px 0 var(--vtsuru-success, #22c55e);
-}
-
-.song-table tbody tr.is-queued {
-  box-shadow: inset 3px 0 var(--vtsuru-warning, #f59e0b);
-}
-
-.sort-heading {
-  display: inline-flex;
-  align-items: center;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  gap: 3px;
-}
-
-.sort-heading .n-icon {
-  color: var(--song-accent);
-}
-
-.title-cell {
-  min-width: 0;
-}
-
-.title-content {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-width: 0;
-}
-
-.song-title-button {
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  background: transparent;
-  color: var(--song-fg);
-  font: inherit;
-  font-weight: 650;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.song-title-button:not(:disabled):hover {
-  color: var(--song-accent);
-}
-
-.song-title-button:disabled {
-  cursor: default;
-}
-
-.inline-list,
-.tag-list {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-}
-
-.song-tag,
-.request-tag {
-  font-weight: 600;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 16%, transparent);
-}
-
-.song-tag {
-  color: var(--song-muted) !important;
-  background: color-mix(in srgb, var(--song-accent) 9%, var(--song-bg)) !important;
-  transition:
-    color 150ms ease,
-    background-color 150ms ease,
-    transform 150ms ease;
-}
-
-.song-tag:hover,
-.song-tag.active {
-  color: var(--vtsuru-page-primary-readable, var(--song-accent)) !important;
-  background: color-mix(in srgb, var(--song-accent) 22%, var(--song-bg)) !important;
-  transform: translateY(-1px);
-}
-
-.inline-list button {
-  max-width: 100%;
-  padding: 0;
-  overflow: hidden;
-  border: 0;
-  background: transparent;
-  color: var(--song-muted);
-  font: inherit;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.inline-list button:hover,
-.inline-list button.active {
-  color: var(--song-accent);
-}
-
-.muted {
-  color: var(--song-subtle);
-}
-
-.cell-label {
-  display: none;
-}
-
-.load-more-trigger {
-  width: 100%;
-  min-height: 40px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--song-muted);
-  font: inherit;
-  cursor: pointer;
-}
-
-.load-more-trigger:hover {
-  color: var(--song-accent);
-}
-
-@media (max-width: 980px) {
-  .filter-grid {
-    grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(120px, 1fr));
-  }
-
-  .profile-panel {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .profile-links {
-    grid-column: 1 / -1;
-    max-width: none;
-    justify-content: flex-start;
-  }
-}
-
-@media (max-width: 640px) {
-  .traditional-song-list {
-    padding: 0;
-    background-image: none !important;
-  }
-
-  .traditional-song-list.has-background::before {
-    display: none;
-  }
-
-  .content-frame {
-    gap: 10px;
-  }
-
-  .profile-panel,
-  .song-panel,
-  .long-description {
-    border-radius: var(--vtsuru-page-radius, 8px);
-  }
-
-  .profile-panel {
-    grid-template-columns: 52px minmax(0, 1fr);
-    padding: 14px;
-    gap: 11px;
-  }
-
-  .profile-avatar {
-    width: 52px;
-    height: 52px;
-  }
-
-  .profile-copy h1 {
-    font-size: 20px;
-  }
-
-  .profile-summary {
-    margin-top: 4px;
-    font-size: 13px;
-  }
-
-  .profile-links {
-    grid-column: 1 / -1;
-  }
-
-  .long-description {
-    padding: 12px 14px;
-    font-size: 13px;
-  }
-
-  .song-panel {
-    padding: 12px;
-  }
-
-  .filter-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .search-input,
-  .sort-control {
-    grid-column: 1 / -1;
-  }
-
-  .result-toolbar {
-    padding: 10px 0;
-  }
-
-  .song-table-shell,
-  .song-table-shell.is-fixed {
-    --song-table-max-height: none;
-
-    border: 0;
-    background: transparent;
-  }
-
-  .song-table,
-  .song-table tbody {
-    display: block;
-    width: 100%;
-  }
-
-  .song-table thead {
-    display: none;
-  }
-
-  .song-table tbody {
-    display: grid;
-    gap: 8px;
-  }
-
-  .song-table tbody tr {
-    display: grid;
-    width: 100%;
-    min-width: 0;
-    padding: 12px;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--song-border) 72%, transparent);
-    border-radius: var(--vtsuru-page-radius, 8px);
-    background: color-mix(in srgb, var(--song-bg) 92%, transparent);
-    contain-intrinsic-size: auto 230px;
-    gap: 9px;
-  }
-
-  .song-table tbody tr.is-singing,
-  .song-table tbody tr.is-queued {
-    padding-left: 14px;
-  }
-
-  .song-table th,
-  .song-table td,
-  .song-table th:first-child,
-  .song-table td:first-child,
-  .song-table th:nth-child(2),
-  .song-table td:nth-child(2),
-  .song-table th:nth-child(3),
-  .song-table td:nth-child(3),
-  .song-table th:nth-child(4),
-  .song-table td:nth-child(4),
-  .song-table th:nth-child(5),
-  .song-table td:nth-child(5),
-  .song-table th:nth-child(6),
-  .song-table td:nth-child(6) {
-    display: flex;
-    width: 100%;
-    min-width: 0;
-    align-items: flex-start;
-    padding: 0;
-    border: 0;
-    gap: 10px;
-  }
-
-  .title-content {
-    align-items: center !important;
-    padding-bottom: 3px !important;
-  }
-
-  .song-title-button {
-    flex: 1;
-    font-size: 15px;
-  }
-
-  .cell-label {
-    display: block;
-    width: 58px;
-    flex: 0 0 58px;
-    color: var(--song-subtle);
-    font-size: 12px;
-  }
-
-  .inline-list,
-  .tag-list,
-  .song-table td > :last-child {
-    min-width: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .profile-icon-link,
-  .custom-link,
-  .song-table tbody tr {
-    transition: none;
-  }
-}
-</style>

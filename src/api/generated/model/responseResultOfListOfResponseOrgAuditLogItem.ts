@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseOrgAuditLogItem } from './responseOrgAuditLogItem';
+import type { ResponseOrgAuditLogItem } from './responseOrgAuditLogItem'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseOrgAuditLogItem {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseOrgAuditLogItem[] | null;
+  data: ResponseOrgAuditLogItem[] | null
 }

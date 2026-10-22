@@ -1,19 +1,6 @@
 <script setup lang="ts">
 import { SearchOutline } from '@vicons/ionicons5'
 import { useElementSize } from '@vueuse/core'
-import {
-  NButton,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NRadioButton,
-  NRadioGroup,
-  NSpin,
-  NText,
-  NVirtualList,
-} from 'naive-ui'
 import { computed, ref, shallowRef, watch } from 'vue'
 
 import {
@@ -22,6 +9,10 @@ import {
   getUserPageNavIconSearchText,
   resolveUserPageNavIcon,
 } from '@/apps/user-page/pageIcons'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { Spin } from '@/shared/ui/spin'
 
 type IconStyle = 'common' | 'all' | 'outline' | 'filled' | 'sharp' | 'logo'
 
@@ -59,12 +50,12 @@ const styleOptions = computed(() => {
   const counts = { outline: 0, filled: 0, sharp: 0, logo: 0 }
   iconNames.value.forEach((name) => counts[getIconStyle(name)]++)
   return [
-    { label: `常用 ${COMMON_USER_PAGE_NAV_ICON_NAMES.length}`, value: 'common' },
-    { label: `全部 ${iconNames.value.length}`, value: 'all' },
-    { label: `描边 ${counts.outline}`, value: 'outline' },
-    { label: `实心 ${counts.filled}`, value: 'filled' },
-    { label: `Sharp ${counts.sharp}`, value: 'sharp' },
-    { label: `品牌 ${counts.logo}`, value: 'logo' },
+    { label: `常用 ${COMMON_USER_PAGE_NAV_ICON_NAMES.length}`, value: 'common' as const },
+    { label: `全部 ${iconNames.value.length}`, value: 'all' as const },
+    { label: `描边 ${counts.outline}`, value: 'outline' as const },
+    { label: `实心 ${counts.filled}`, value: 'filled' as const },
+    { label: `Sharp ${counts.sharp}`, value: 'sharp' as const },
+    { label: `品牌 ${counts.logo}`, value: 'logo' as const },
   ]
 })
 
@@ -112,205 +103,110 @@ watch(show, (visible) => {
 </script>
 
 <template>
-  <NModal
-    v-model:show="show"
-    preset="card"
-    title="选择导航图标"
-    class="page-icon-picker-modal"
-    style="width: min(860px, 94vw)"
-    :auto-focus="false"
+  <Dialog
+    :open="show"
+    @update:open="(val) => (show = val)"
   >
-    <div class="page-icon-picker">
-      <NInput
-        v-model:value="search"
-        clearable
-        placeholder="搜索图标名称"
-      >
-        <template #prefix>
-          <NIcon :component="SearchOutline" />
-        </template>
-      </NInput>
+    <DialogContent class="max-w-[min(860px,94vw)] p-6">
+      <DialogHeader>
+        <DialogTitle class="text-base font-semibold"> 选择导航图标 </DialogTitle>
+      </DialogHeader>
 
-      <div class="style-filter-scroll">
-        <NRadioGroup
-          v-model:value="styleFilter"
-          size="small"
-          class="style-filter"
+      <div class="page-icon-picker space-y-3">
+        <div class="relative">
+          <SearchOutline class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            v-model="search"
+            class="pl-8"
+            placeholder="搜索图标名称"
+          />
+        </div>
+
+        <div class="overflow-x-auto pb-0.5">
+          <div class="inline-flex rounded-lg border bg-muted p-0.5 text-muted-foreground text-xs">
+            <button
+              v-for="option in styleOptions"
+              :key="option.value"
+              type="button"
+              class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all"
+              :class="
+                styleFilter === option.value ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'
+              "
+              @click="styleFilter = option.value"
+            >
+              {{ option.label }}
+            </button>
+          </div>
+        </div>
+
+        <div
+          ref="iconGridHost"
+          class="min-w-0 h-[min(58vh,528px)] border border-border rounded-md bg-muted overflow-y-auto"
         >
-          <NRadioButton
-            v-for="option in styleOptions"
-            :key="option.value"
-            :value="option.value"
+          <div
+            v-if="iconRows.length"
+            class="icon-grid-list space-y-2 p-2"
           >
-            {{ option.label }}
-          </NRadioButton>
-        </NRadioGroup>
-      </div>
-
-      <div
-        ref="iconGridHost"
-        class="icon-grid-host"
-      >
-        <NVirtualList
-          v-if="iconRows.length"
-          class="icon-grid-list"
-          :items="iconRows"
-          :item-size="88"
-          key-field="key"
-        >
-          <template #default="{ item }">
             <div
-              class="icon-grid-row"
+              v-for="row in iconRows"
+              :key="row.key"
+              class="grid gap-2 min-h-[76px]"
               :style="{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }"
             >
               <button
-                v-for="icon in item.icons"
+                v-for="icon in row.icons"
                 :key="icon"
                 type="button"
-                class="icon-option"
-                :class="{ 'icon-option--selected': icon === props.value }"
+                class="icon-option flex flex-col items-center justify-center p-2 rounded-md hover:bg-muted/70 transition-colors border border-transparent"
+                :class="{ 'icon-option--selected !border-primary bg-primary/10 text-primary': icon === props.value }"
                 :aria-label="getUserPageNavIconLabel(icon)"
                 :aria-pressed="icon === props.value"
                 @click="selectIcon(icon)"
               >
-                <NIcon
-                  :component="resolveUserPageNavIcon(icon)"
-                  :size="27"
+                <component
+                  :is="resolveUserPageNavIcon(icon)"
+                  class="size-6 shrink-0 mb-1"
                 />
-                <span>{{ getUserPageNavIconLabel(icon) }}</span>
+                <span class="text-[11px] truncate w-full text-center">{{ getUserPageNavIconLabel(icon) }}</span>
               </button>
             </div>
-          </template>
-        </NVirtualList>
-        <div
-          v-else-if="loading"
-          class="picker-state"
-        >
-          <NSpin size="small" />
+          </div>
+          <div
+            v-else-if="loading"
+            class="picker-state h-full flex items-center justify-center"
+          >
+            <Spin />
+          </div>
+          <div
+            v-else-if="loadError"
+            class="picker-state h-full flex items-center justify-center text-xs text-destructive"
+          >
+            {{ loadError }}
+          </div>
+          <div
+            v-else
+            class="picker-state h-full flex items-center justify-center text-xs text-muted-foreground"
+          >
+            未找到匹配图标
+          </div>
         </div>
-        <div
-          v-else-if="loadError"
-          class="picker-state"
-        >
-          <NText type="error">{{ loadError }}</NText>
-        </div>
-        <NEmpty
-          v-else
-          class="picker-state"
-          size="small"
-        />
       </div>
-    </div>
 
-    <template #footer>
-      <NFlex justify="space-between">
-        <NButton @click="selectIcon(undefined)"> 使用默认图标 </NButton>
-        <NButton @click="show = false"> 取消 </NButton>
-      </NFlex>
-    </template>
-  </NModal>
+      <DialogFooter class="flex flex-row justify-between items-center sm:justify-between pt-2">
+        <Button
+          variant="outline"
+          @click="selectIcon(undefined)"
+        >
+          使用默认图标
+        </Button>
+        <Button
+          variant="outline"
+          @click="show = false"
+        >
+          取消
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
 
-<style scoped>
-.page-icon-picker {
-  display: grid;
-  gap: 12px;
-  min-width: 0;
-}
-
-.style-filter-scroll {
-  overflow-x: auto;
-  padding-bottom: 2px;
-}
-
-.style-filter {
-  display: flex;
-  min-width: max-content;
-}
-
-.icon-grid-host {
-  min-width: 0;
-  height: min(58vh, 528px);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-inset);
-  overflow: hidden;
-}
-
-.icon-grid-list {
-  height: 100%;
-  padding: 8px;
-  box-sizing: border-box;
-}
-
-.icon-grid-row {
-  display: grid;
-  gap: 8px;
-  height: 88px;
-}
-
-.icon-option {
-  display: grid;
-  grid-template-rows: 32px minmax(0, 1fr);
-  place-items: center;
-  gap: 4px;
-  min-width: 0;
-  height: 80px;
-  padding: 7px 4px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--vtsuru-fg);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    color 120ms ease,
-    border-color 120ms ease,
-    background-color 120ms ease;
-}
-
-.icon-option:hover {
-  color: var(--vtsuru-brand);
-  border-color: var(--vtsuru-border-strong);
-  background: var(--vtsuru-bg-muted);
-}
-
-.icon-option--selected {
-  color: var(--vtsuru-brand);
-  border-color: var(--vtsuru-brand);
-  background: var(--vtsuru-brand-tint);
-}
-
-.icon-option span {
-  display: -webkit-box;
-  overflow: hidden;
-  max-width: 100%;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-height: 1.25;
-  font-size: 11px;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-
-.picker-state {
-  display: grid;
-  place-items: center;
-  height: 100%;
-  padding: 24px;
-  box-sizing: border-box;
-}
-
-@media (max-width: 480px) {
-  .icon-grid-host {
-    height: min(56vh, 440px);
-  }
-
-  .icon-grid-list {
-    padding: 6px;
-  }
-
-  .icon-grid-row {
-    gap: 6px;
-  }
-}
-</style>

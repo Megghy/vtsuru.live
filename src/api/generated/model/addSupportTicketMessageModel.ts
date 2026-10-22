@@ -8,9 +8,9 @@
 
 export interface AddSupportTicketMessageModel {
   /**
-     * @minLength 0
-     * @maxLength 5000
-     */
-  content: string;
-  imageFileIds: number[];
+   * @minLength 0
+   * @maxLength 5000
+   */
+  content: string
+  imageFileIds: number[]
 }

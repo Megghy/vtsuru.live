@@ -7,39 +7,38 @@
  * 用法：bun run build:emails
  */
 
-import nunjucks from 'nunjucks'
-import path from 'node:path'
 import fs from 'node:fs'
+import path from 'node:path'
+
+import nunjucks from 'nunjucks'
 
 const EMAILS_DIR = path.resolve(import.meta.dirname, '..', 'emails')
 const TEMPLATES_DIR = path.join(EMAILS_DIR, 'templates')
 const OUT_DIR = path.resolve(import.meta.dirname, '..', '..', 'VTsuru', 'VTsuru', 'VtsuruData', 'Email')
 
 // 配置 Nunjucks：以 emails/ 为根，自定义定界符避免与 C# {{}} 冲突
-const env = new nunjucks.Environment(
-  new nunjucks.FileSystemLoader(EMAILS_DIR),
-  {
-    autoescape: false,
-    tags: {
-      variableStart: '[[',
-      variableEnd:   ']]',
-      commentStart:  '[#',
-      commentEnd:    '#]',
-      // block / raw 标签保留默认 {% %}
-    },
-  }
-)
+const env = new nunjucks.Environment(new nunjucks.FileSystemLoader(EMAILS_DIR), {
+  autoescape: false,
+  tags: {
+    variableStart: '[[',
+    variableEnd: ']]',
+    commentStart: '[#',
+    commentEnd: '#]',
+    // block / raw 标签保留默认 {% %}
+  },
+})
 
 // 注入构建时固定的占位符（Nunjucks 层面，最终写入 HTML 的是字面量）
 const buildVars = {
-  site_name:   'VTsuru',
-  logo_url:    'https://oss.suki.club/vtsuru/icon.ico',
+  site_name: 'VTsuru',
+  logo_url: 'https://oss.suki.club/vtsuru/icon.ico',
   current_year: new Date().getFullYear().toString(),
 }
 
-const templates = fs.readdirSync(TEMPLATES_DIR).filter(f => f.endsWith('.njk'))
+const templates = fs.readdirSync(TEMPLATES_DIR).filter((f) => f.endsWith('.njk'))
 
-let ok = 0, fail = 0
+let ok = 0,
+  fail = 0
 for (const tpl of templates) {
   const outName = tpl.replace('.njk', '.html')
   const outPath = path.join(OUT_DIR, outName)

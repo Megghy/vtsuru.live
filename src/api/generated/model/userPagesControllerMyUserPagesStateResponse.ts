@@ -8,9 +8,9 @@
 
 export interface UserPagesControllerMyUserPagesStateResponse {
   /** @nullable */
-  draftJson?: string | null;
+  draftJson?: string | null
   /** @nullable */
-  publishedJson?: string | null;
+  publishedJson?: string | null
   /** @nullable */
-  rollbackJson?: string | null;
+  rollbackJson?: string | null
 }

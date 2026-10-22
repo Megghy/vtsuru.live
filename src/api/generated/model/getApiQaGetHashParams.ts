@@ -7,5 +7,5 @@
  */
 
 export type GetApiQaGetHashParams = {
-id?: number;
-};
+  id?: number
+}

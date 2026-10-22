@@ -7,6 +7,6 @@
  */
 
 export type PostApiForumLikeTopicParams = {
-topic?: number;
-like?: boolean;
-};
+  topic?: number
+  like?: boolean
+}

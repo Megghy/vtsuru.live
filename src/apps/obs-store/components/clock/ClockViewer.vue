@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useClipboard } from '@vueuse/core'
 import {
   ArrowCounterclockwise24Regular,
   Checkmark24Regular,
@@ -8,51 +7,27 @@ import {
   Pause24Regular,
   Play24Regular,
 } from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NColorPicker,
-  NDivider,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NRadioButton,
-  NRadioGroup,
-  NSlider,
-  NSpace,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
-import {
-  computed,
-  onMounted,
-  ref,
-} from 'vue'
+import { useClipboard } from '@vueuse/core'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
-import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
-import {
-  loadObsStoreFonts,
-  OBS_CLOCK_FONTS,
-} from '@/apps/obs-store/utils/fontLoader'
+import { loadObsStoreFonts, OBS_CLOCK_FONTS } from '@/apps/obs-store/utils/fontLoader'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Slider } from '@/shared/ui/slider'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import ClockDisplay from './ClockDisplay.vue'
-import {
-  CLOCK_THEME_PRESETS,
-  DEFAULT_CLOCK_STATE,
-} from './types'
-import type {
-  ClockAction,
-  ClockMode,
-  ClockState,
-} from './types'
+import { CLOCK_THEME_PRESETS, DEFAULT_CLOCK_STATE } from './types'
+import type { ClockAction, ClockMode, ClockState } from './types'
 
-const message = useMessage()
 const { copy, isSupported: isCopySupported } = useClipboard()
 
 const route = useRoute()
@@ -60,21 +35,13 @@ const channelId = ref(resolveObsSyncChannel(route.query.channel))
 const channelDraft = ref(channelId.value)
 const copied = ref(false)
 
-const {
-  state,
-  updateState,
-  sendAction,
-  currentHash,
-  isSyncing,
-  lastSyncError,
-  hasPendingChanges,
-  retry,
-} = useObsBridge<ClockState, ClockAction>({
-  componentId: 'clock',
-  channelId,
-  defaultState: DEFAULT_CLOCK_STATE,
-  role: 'controller',
-})
+const { state, updateState, sendAction, currentHash, isSyncing, lastSyncError, hasPendingChanges, retry } =
+  useObsBridge<ClockState, ClockAction>({
+    componentId: 'clock',
+    channelId,
+    defaultState: DEFAULT_CLOCK_STATE,
+    role: 'controller',
+  })
 
 onMounted(() => loadObsStoreFonts(OBS_CLOCK_FONTS))
 
@@ -83,33 +50,38 @@ const previewBg = ref<'checker' | 'dark' | 'transparent'>('checker')
 
 // OBS URL
 const account = useAccount()
-const obsAbsoluteUrl = computed(() => buildObsSourceUrl({
-  path: '/obs-store/clock', host: window.location.origin, credential: 'public-id',
-  userId: account.value.id, params: { channel: channelId.value },
-}))
+const obsAbsoluteUrl = computed(() =>
+  buildObsSourceUrl({
+    path: '/obs-store/clock',
+    host: window.location.origin,
+    credential: 'public-id',
+    userId: account.value.id,
+    params: { channel: channelId.value },
+  }),
+)
 const obsRelativeUrl = obsAbsoluteUrl
 
 async function copyObsUrl() {
   if (!isCopySupported.value) {
-    message.warning('当前环境不支持直接写入剪贴板，请手动复制')
+    toast.warning('当前环境不支持直接写入剪贴板，请手动复制')
     return
   }
   try {
     await copy(obsAbsoluteUrl.value)
     copied.value = true
-    message.success('OBS 浏览器源链接已复制到剪贴板！')
+    toast.success('OBS 浏览器源链接已复制到剪贴板！')
     setTimeout(() => {
       copied.value = false
     }, 2000)
   } catch {
-    message.error('复制失败，请手动复制')
+    toast.error('复制失败，请手动复制')
   }
 }
 
 function changeChannel() {
   const next = parseObsSyncChannel(channelDraft.value)
   if (!next) {
-    message.error(OBS_SYNC_CHANNEL_HINT)
+    toast.error(OBS_SYNC_CHANNEL_HINT)
     return
   }
   channelId.value = next
@@ -129,7 +101,7 @@ function openPopoutWindow() {
 function toggleTimer() {
   if (state.value.timerRunning) {
     const now = Date.now()
-    const elapsed = state.value.timerElapsed + (state.value.timerStartTime > 0 ? (now - state.value.timerStartTime) : 0)
+    const elapsed = state.value.timerElapsed + (state.value.timerStartTime > 0 ? now - state.value.timerStartTime : 0)
     updateState({
       timerRunning: false,
       timerStartTime: 0,
@@ -165,133 +137,119 @@ function quickSetMinutes(mins: number) {
   })
   sendAction({ type: 'SET_COUNTDOWN', seconds })
 }
+
+const modeOptions: { label: string; value: ClockMode }[] = [
+  { label: '实时时钟', value: 'clock' },
+  { label: '开播倒计时', value: 'countdown' },
+  { label: '正计时 / 速通', value: 'stopwatch' },
+]
 </script>
 
 <template>
   <div class="clock-viewer-page">
-    <NCard
-      size="small"
-      class="clock-viewer-card"
-    >
-      <!-- 头部状态与模式导航条 -->
-      <NFlex
-        justify="space-between"
-        align="center"
-        class="card-header-row"
-      >
-        <div class="header-left">
-          <NFlex
-            align="center"
-            :size="8"
-          >
-            <span class="card-header-title">时钟与倒计时挂件</span>
-            <span class="version-tag">形态驱动版</span>
-          </NFlex>
-          <div class="sync-meta-text">
-            <span
-              class="sync-indicator-dot"
-              :class="{ syncing: isSyncing, error: lastSyncError }"
+    <Card class="clock-viewer-card p-4">
+      <CardContent class="p-0 space-y-3">
+        <!-- 头部状态与模式导航条 -->
+        <div class="card-header-row flex flex-wrap items-center justify-between gap-3">
+          <div class="header-left">
+            <div class="flex items-center gap-2">
+              <span class="card-header-title">时钟与倒计时挂件</span>
+              <span class="version-tag">形态驱动版</span>
+            </div>
+            <div class="sync-meta-text">
+              <span
+                class="sync-indicator-dot"
+                :class="{ syncing: isSyncing, error: lastSyncError }"
+              />
+              <span v-if="lastSyncError">同步失败，请重试</span>
+              <span v-else-if="isSyncing">正在同步状态...</span>
+              <span v-else-if="hasPendingChanges">有修改尚未保存</span>
+              <span v-else-if="currentHash">已同步 (Hash: {{ currentHash.slice(0, 8) }})</span>
+              <span v-else>就绪</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-1.5">
+            <Input
+              v-model="channelDraft"
+              class="w-[120px]"
+              placeholder="频道"
+              maxlength="64"
+              @keyup.enter="changeChannel"
             />
-            <span v-if="lastSyncError">同步失败，请重试</span>
-            <span v-else-if="isSyncing">正在同步状态...</span>
-            <span v-else-if="hasPendingChanges">有修改尚未保存</span>
-            <span v-else-if="currentHash">已同步 (Hash: {{ currentHash.slice(0, 8) }})</span>
-            <span v-else>就绪</span>
+            <Button
+              variant="secondary"
+              @click="changeChannel"
+            >
+              切换频道
+            </Button>
+          </div>
+
+          <!-- 模式切换控制器 -->
+          <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
+            <button
+              v-for="opt in modeOptions"
+              :key="opt.value"
+              type="button"
+              class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
+              :class="
+                state.mode === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
+              "
+              @click="updateState({ mode: opt.value })"
+            >
+              {{ opt.label }}
+            </button>
+          </div>
+
+          <!-- 快捷操作按钮 -->
+          <div class="flex items-center gap-1.5">
+            <Button
+              v-if="lastSyncError"
+              variant="secondary"
+              :disabled="isSyncing"
+              @click="retry"
+            >
+              重试同步
+            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="secondary"
+                    class="gap-1.5"
+                    @click="openPopoutWindow"
+                  >
+                    <Open24Regular class="size-4" />
+                    独立小窗
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent> 弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边 </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <Button
+              class="gap-1.5"
+              @click="copyObsUrl"
+            >
+              <Checkmark24Regular
+                v-if="copied"
+                class="size-4"
+              />
+              <Copy24Regular
+                v-else
+                class="size-4"
+              />
+              复制 OBS 源链接
+            </Button>
           </div>
         </div>
 
-        <NSpace
-          align="center"
-          :size="6"
-        >
-          <NInput
-            v-model:value="channelDraft"
-            size="small"
-            placeholder="频道"
-            :maxlength="64"
-            style="width: 120px"
-            @keyup.enter="changeChannel"
-          />
-          <NButton
-            size="small"
-            secondary
-            @click="changeChannel"
-          >
-            切换频道
-          </NButton>
-        </NSpace>
+        <div class="h-px bg-border my-2.5" />
 
-        <!-- 模式切换控制器 -->
-        <NRadioGroup
-          :value="state.mode"
-          size="small"
-          class="mode-switch-radio"
-          @update:value="updateState({ mode: $event as ClockMode })"
-        >
-          <NRadioButton value="clock">
-            实时时钟
-          </NRadioButton>
-          <NRadioButton value="countdown">
-            开播倒计时
-          </NRadioButton>
-          <NRadioButton value="stopwatch">
-            正计时 / 速通
-          </NRadioButton>
-        </NRadioGroup>
-
-        <!-- 快捷操作按钮 -->
-        <NSpace :size="6">
-          <NButton
-            v-if="lastSyncError"
-            size="small"
-            secondary
-            :loading="isSyncing"
-            :disabled="isSyncing"
-            @click="retry"
-          >
-            重试同步
-          </NButton>
-          <NTooltip trigger="hover">
-            <template #trigger>
-              <NButton
-                size="small"
-                secondary
-                @click="openPopoutWindow"
-              >
-                <template #icon>
-                  <NIcon :component="Open24Regular" />
-                </template>
-                独立小窗
-              </NButton>
-            </template>
-            弹出一个紧凑独立的悬浮控制窗口，方便拖拽至副屏或 OBS 旁边
-          </NTooltip>
-
-          <NButton
-            type="primary"
-            size="small"
-            @click="copyObsUrl"
-          >
-            <template #icon>
-              <NIcon :component="copied ? Checkmark24Regular : Copy24Regular" />
-            </template>
-            复制 OBS 源链接
-          </NButton>
-        </NSpace>
-      </NFlex>
-
-      <NDivider style="margin: 10px 0" />
-
-      <!-- 主控制台与实时预览双栏布局 -->
-      <NGrid
-        cols="1 m:2"
-        responsive="screen"
-        :x-gap="12"
-        :y-gap="12"
-      >
-        <!-- 左栏：控制与自定义操作区 -->
-        <NGridItem>
-          <div class="deck-col-container">
+        <!-- 主控制台与实时预览双栏布局 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- 左栏：控制与自定义操作区 -->
+          <div class="deck-col-container flex flex-col gap-3">
             <!-- 计时器运行控制区 (仅倒计时与正计时模式展示) -->
             <div
               v-if="state.mode === 'countdown' || state.mode === 'stopwatch'"
@@ -353,8 +311,12 @@ function quickSetMinutes(mins: number) {
                   :class="{ 'is-running': state.timerRunning }"
                   @click="toggleTimer"
                 >
-                  <NIcon
-                    :component="state.timerRunning ? Pause24Regular : Play24Regular"
+                  <Pause24Regular
+                    v-if="state.timerRunning"
+                    class="btn-icon"
+                  />
+                  <Play24Regular
+                    v-else
                     class="btn-icon"
                   />
                   <span class="btn-text">{{ state.timerRunning ? '暂停计时' : '开始计时' }}</span>
@@ -365,10 +327,7 @@ function quickSetMinutes(mins: number) {
                   class="btn-action btn-reset"
                   @click="resetTimer"
                 >
-                  <NIcon
-                    :component="ArrowCounterclockwise24Regular"
-                    class="btn-icon"
-                  />
+                  <ArrowCounterclockwise24Regular class="btn-icon" />
                   <span class="btn-text">重置归零</span>
                 </button>
               </div>
@@ -379,13 +338,12 @@ function quickSetMinutes(mins: number) {
                 class="custom-duration-row"
               >
                 <span class="quick-label">自定义倒计时 (秒):</span>
-                <NInputNumber
-                  :value="state.countdownDuration"
+                <NumberField
+                  :model-value="state.countdownDuration"
                   :min="5"
                   :step="30"
-                  size="small"
-                  style="width: 130px"
-                  @update:value="updateState({ countdownDuration: $event || 300 })"
+                  class="w-[130px]"
+                  @update:model-value="updateState({ countdownDuration: $event || 300 })"
                 />
               </div>
             </div>
@@ -423,32 +381,27 @@ function quickSetMinutes(mins: number) {
               <div class="color-control-grid">
                 <div class="color-item">
                   <span class="color-label">强调发光色</span>
-                  <NColorPicker
-                    :value="state.accentColor"
-                    :modes="['hex']"
-                    size="small"
-                    :show-alpha="false"
-                    @update:value="updateState({ accentColor: $event })"
+                  <ColorPicker
+                    :model-value="state.accentColor"
+                    @update:model-value="updateState({ accentColor: $event })"
                   />
                 </div>
 
                 <div class="color-item">
                   <span class="color-label">文字颜色</span>
-                  <NInput
+                  <Input
                     :value="state.textColor"
                     placeholder="默认或 #ffffff"
-                    size="small"
-                    @update:value="updateState({ textColor: $event })"
+                    @input="updateState({ textColor: ($event.target as HTMLInputElement).value })"
                   />
                 </div>
 
                 <div class="color-item">
                   <span class="color-label">外壳背景底色</span>
-                  <NInput
+                  <Input
                     :value="state.bgColor"
                     placeholder="默认或 #1e2024"
-                    size="small"
-                    @update:value="updateState({ bgColor: $event })"
+                    @input="updateState({ bgColor: ($event.target as HTMLInputElement).value })"
                   />
                 </div>
 
@@ -457,31 +410,35 @@ function quickSetMinutes(mins: number) {
                     <span class="color-label">背景不透明度</span>
                     <span class="slider-val">{{ state.bgOpacity }}%</span>
                   </div>
-                  <NSlider
-                    :value="state.bgOpacity"
+                  <Slider
+                    :model-value="[state.bgOpacity]"
                     :min="0"
                     :max="100"
                     :step="5"
-                    @update:value="updateState({ bgOpacity: $event })"
+                    @update:model-value="
+                      (val) => {
+                        if (val?.[0] !== undefined) updateState({ bgOpacity: val[0] })
+                      }
+                    "
                   />
                 </div>
               </div>
 
               <!-- 标题文本输入行 -->
               <div class="text-inputs-row">
-                <NInput
+                <Input
                   :value="state.title"
                   placeholder="自定义副标 / 标题文本 (如 LIVE NOW)"
-                  size="small"
-                  @update:value="updateState({ title: $event })"
+                  class="flex-1"
+                  @input="updateState({ title: ($event.target as HTMLInputElement).value })"
                 />
 
-                <NInput
+                <Input
                   v-if="state.mode === 'countdown'"
                   :value="state.timerEndText"
                   placeholder="倒计时结束提示 (如 LIVE STARTED)"
-                  size="small"
-                  @update:value="updateState({ timerEndText: $event })"
+                  class="flex-1"
+                  @input="updateState({ timerEndText: ($event.target as HTMLInputElement).value })"
                 />
               </div>
 
@@ -556,69 +513,68 @@ function quickSetMinutes(mins: number) {
               </div>
             </div>
           </div>
-        </NGridItem>
 
-        <!-- 右栏：实时 OBS 监视器与链接管理 -->
-        <NGridItem>
-          <div class="monitor-panel-box">
-            <NFlex
-              justify="space-between"
-              align="center"
-              style="margin-bottom: 8px"
-            >
-              <span class="deck-label">OBS 画面实时监视器</span>
-              <NSpace :size="6">
-                <NButton
-                  size="tiny"
-                  :type="previewBg === 'checker' ? 'primary' : 'default'"
-                  @click="previewBg = 'checker'"
-                >
-                  网格底
-                </NButton>
-                <NButton
-                  size="tiny"
-                  :type="previewBg === 'dark' ? 'primary' : 'default'"
-                  @click="previewBg = 'dark'"
-                >
-                  暗黑底
-                </NButton>
-                <NButton
-                  size="tiny"
-                  :type="previewBg === 'transparent' ? 'primary' : 'default'"
-                  @click="previewBg = 'transparent'"
-                >
-                  透明底
-                </NButton>
-              </NSpace>
-            </NFlex>
-
-            <!-- 舞台监视器 -->
-            <div
-              class="monitor-stage-wrap"
-              :class="`bg-${previewBg}`"
-            >
-              <ClockDisplay
-                :key="`${state.theme}-${state.mode}-${state.accentColor}-${state.textColor}-${state.bgColor}-${state.bgOpacity}`"
-                :channel-id="channelId"
-                :inline-mode="true"
-              />
-            </div>
-
-            <!-- OBS 挂件配置说明卡 -->
-            <div class="obs-source-meta-card">
-              <div class="meta-card-row">
-                <span class="meta-label">OBS 源地址</span>
-                <span class="meta-code">{{ obsRelativeUrl }}</span>
+          <!-- 右栏：实时 OBS 监视器与链接管理 -->
+          <div>
+            <div class="monitor-panel-box">
+              <div class="flex items-center justify-between mb-2">
+                <span class="deck-label">OBS 画面实时监视器</span>
+                <div class="flex items-center gap-1.5">
+                  <Button
+                    size="xs"
+                    class="h-6 text-[11px] px-2"
+                    :variant="previewBg === 'checker' ? 'default' : 'outline'"
+                    @click="previewBg = 'checker'"
+                  >
+                    网格底
+                  </Button>
+                  <Button
+                    size="xs"
+                    class="h-6 text-[11px] px-2"
+                    :variant="previewBg === 'dark' ? 'default' : 'outline'"
+                    @click="previewBg = 'dark'"
+                  >
+                    暗黑底
+                  </Button>
+                  <Button
+                    size="xs"
+                    class="h-6 text-[11px] px-2"
+                    :variant="previewBg === 'transparent' ? 'default' : 'outline'"
+                    @click="previewBg = 'transparent'"
+                  >
+                    透明底
+                  </Button>
+                </div>
               </div>
-              <div class="meta-card-row">
-                <span class="meta-label">推荐分辨率</span>
-                <span class="meta-val">420 × 160 px (支持自由缩放与透明背景)</span>
+
+              <!-- 舞台监视器 -->
+              <div
+                class="monitor-stage-wrap"
+                :class="`bg-${previewBg}`"
+              >
+                <ClockDisplay
+                  :key="`${state.theme}-${state.mode}-${state.accentColor}-${state.textColor}-${state.bgColor}-${state.bgOpacity}`"
+                  :channel-id="channelId"
+                  :inline-mode="true"
+                />
+              </div>
+
+              <!-- OBS 挂件配置说明卡 -->
+              <div class="obs-source-meta-card">
+                <div class="meta-card-row">
+                  <span class="meta-label">OBS 源地址</span>
+                  <span class="meta-code">{{ obsRelativeUrl }}</span>
+                </div>
+                <div class="meta-card-row">
+                  <span class="meta-label">推荐分辨率</span>
+                  <span class="meta-val">420 × 160 px (支持自由缩放与透明背景)</span>
+                </div>
               </div>
             </div>
           </div>
-        </NGridItem>
-      </NGrid>
-    </NCard>
+        </div>
+      </CardContent>
+    </Card>
   </div>
 </template>
 
@@ -628,72 +584,68 @@ function quickSetMinutes(mins: number) {
 }
 
 .clock-viewer-card {
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--popover);
+  border: 1px solid var(--border);
   border-radius: 8px;
 }
 
 .card-header-row {
   margin-bottom: 2px;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .card-header-title {
   font-size: 15px;
   font-weight: 700;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
 }
 
 .version-tag {
   font-size: 11px;
   font-weight: 600;
+  color: var(--muted-foreground);
+  background: var(--muted);
   padding: 1px 6px;
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
   border-radius: 4px;
-  color: var(--vtsuru-fg-muted);
 }
 
 .sync-meta-text {
+  font-size: 12px;
+  color: var(--muted-foreground);
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 .sync-indicator-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: #22c55e;
+  background-color: #10b981;
+  display: inline-block;
 }
 
 .sync-indicator-dot.syncing {
-  background: #38bdf8;
-  animation: pulse 1s infinite;
+  background-color: #f59e0b;
+  animation: pulse-dot 1s infinite alternate;
 }
 
 .sync-indicator-dot.error {
-  background: #ef4444;
+  background-color: #ef4444;
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.85); }
-}
-
-.deck-col-container {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+@keyframes pulse-dot {
+  from {
+    opacity: 0.4;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .operator-deck-box {
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--muted);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px;
 }
@@ -701,258 +653,162 @@ function quickSetMinutes(mins: number) {
 .deck-header-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: baseline;
+  margin-bottom: 10px;
 }
 
 .deck-label {
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--vtsuru-fg-muted);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
 }
 
 .status-tip {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--vtsuru-brand);
-}
-
-/* 计时控制盘 */
-.timer-deck-box {
-  border-color: rgba(56, 189, 248, 0.3);
+  color: var(--muted-foreground);
 }
 
 .quick-time-row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 6px;
+  flex-wrap: wrap;
   margin-bottom: 10px;
 }
 
 .quick-label {
   font-size: 12px;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .btn-quick {
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 4px;
   padding: 3px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
+  font-size: 12px;
+  color: var(--foreground);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
 }
 
 .btn-quick:hover {
-  background: var(--vtsuru-border);
-  color: var(--vtsuru-brand);
-}
-
-.btn-quick:active {
-  transform: scale(0.96);
+  background: var(--popover);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
 .action-button-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  gap: 10px;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
 .btn-action {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 14px;
+  gap: 6px;
+  height: 40px;
+  border: 1px solid var(--border);
   border-radius: 6px;
-  border: 1px solid transparent;
-  font-weight: 700;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  background: var(--background);
+  color: var(--foreground);
+  user-select: none;
 }
 
-.btn-action:active {
-  transform: scale(0.97);
+.btn-action:hover {
+  background: var(--popover);
+  border-color: var(--brand);
+  color: var(--brand);
 }
 
-.btn-main {
-  background: var(--vtsuru-brand);
-  color: #ffffff;
+.btn-action.btn-main {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
 }
 
-.btn-main.is-running {
-  background: #eab308;
-  color: #000000;
-}
-
-.btn-reset {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-border);
-  color: var(--vtsuru-fg);
-}
-
-.btn-reset:hover {
-  border-color: #ef4444;
-  color: #ef4444;
+.btn-action.btn-main.is-running {
+  background: #f59e0b;
+  border-color: #f59e0b;
 }
 
 .btn-icon {
-  font-size: 16px;
+  width: 16px;
+  height: 16px;
 }
 
 .custom-duration-row {
   display: flex;
   align-items: center;
   gap: 8px;
+  font-size: 12px;
 }
 
-/* 监视器面板 */
-.monitor-panel-box {
-  background: var(--vtsuru-bg);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.monitor-stage-wrap {
-  min-height: 220px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  position: relative;
-  padding: 16px;
-}
-
-.monitor-stage-wrap.bg-checker {
-  background-color: #18181b;
-  background-image:
-    linear-gradient(45deg, #27272a 25%, transparent 25%),
-    linear-gradient(-45deg, #27272a 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #27272a 75%),
-    linear-gradient(-45deg, transparent 75%, #27272a 75%);
-  background-size: 16px 16px;
-  background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
-}
-
-.monitor-stage-wrap.bg-dark {
-  background: #09090b;
-}
-
-.monitor-stage-wrap.bg-transparent {
-  background: transparent;
-}
-
-.obs-source-meta-card {
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.meta-card-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-size: 11px;
-}
-
-.meta-label {
-  color: var(--vtsuru-fg-muted);
-}
-
-.meta-code {
-  font-family: monospace;
-  color: var(--vtsuru-brand);
-}
-
-.meta-val {
-  color: var(--vtsuru-fg);
-}
-
-/* 预设形态网格 */
 .theme-preset-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 6px;
 }
 
 .theme-preset-card {
-  display: flex;
-  flex-direction: column;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
+  background: var(--background);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  padding: 6px 8px;
+  padding: 8px;
   text-align: left;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .theme-preset-card:hover {
-  border-color: var(--vtsuru-brand);
+  border-color: var(--brand);
 }
 
 .theme-preset-card.active {
-  border-color: var(--vtsuru-brand);
-  background: rgba(56, 189, 248, 0.08);
+  border-color: var(--brand);
+  background: var(--brand-soft);
 }
 
 .preset-card-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2px;
 }
 
 .preset-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--vtsuru-fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.preset-archetype {
-  font-size: 9px;
-  font-family: monospace;
-  color: var(--vtsuru-brand);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--foreground);
 }
 
 .preset-tag {
   font-size: 9px;
-  font-weight: 600;
-  padding: 1px 3px;
+  background: var(--muted);
+  color: var(--muted-foreground);
+  padding: 0 4px;
   border-radius: 3px;
-  background: var(--vtsuru-bg);
-  color: var(--vtsuru-fg-muted);
-  border: 1px solid var(--vtsuru-border);
+}
+
+.preset-archetype {
+  font-size: 10px;
+  color: var(--muted-foreground);
 }
 
 .color-control-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px 10px;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .color-item {
@@ -963,8 +819,7 @@ function quickSetMinutes(mins: number) {
 
 .color-label {
   font-size: 11px;
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .slider-header {
@@ -975,62 +830,131 @@ function quickSetMinutes(mins: number) {
 
 .slider-val {
   font-size: 11px;
-  font-weight: 700;
-  color: var(--vtsuru-brand);
+  color: var(--muted-foreground);
   font-family: monospace;
 }
 
 .text-inputs-row {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 
 .compact-toggle-matrix {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 8px;
 }
 
 .toggle-chip {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 5px;
-  padding: 4px 8px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  padding: 3px 10px;
   font-size: 11px;
-  font-weight: 600;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.15s ease;
   user-select: none;
 }
 
 .toggle-chip:hover {
-  border-color: var(--vtsuru-fg-muted);
-  color: var(--vtsuru-fg);
+  border-color: var(--brand);
+  color: var(--foreground);
 }
 
 .toggle-chip.active {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: var(--vtsuru-brand);
-  color: var(--vtsuru-fg);
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+  font-weight: 600;
 }
 
 .chip-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: #71717a;
-  transition: all 0.15s;
+  background: currentColor;
 }
 
-.toggle-chip.active .chip-dot {
-  background: var(--vtsuru-brand);
-  box-shadow: 0 0 5px var(--vtsuru-brand);
+.monitor-panel-box {
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.monitor-stage-wrap {
+  width: 100%;
+  height: 180px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px dashed var(--border);
+  margin-bottom: 10px;
+}
+
+.bg-checker {
+  background-color: #1e1e24;
+  background-image:
+    linear-gradient(45deg, #2b2b36 25%, transparent 25%), linear-gradient(-45deg, #2b2b36 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b36 75%), linear-gradient(-45deg, transparent 75%, #2b2b36 75%);
+  background-size: 16px 16px;
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+}
+
+.bg-dark {
+  background: #09090b;
+}
+
+.bg-transparent {
+  background: transparent;
+}
+
+.obs-source-meta-card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+}
+
+.meta-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.meta-label {
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.meta-code {
+  font-family: monospace;
+  color: var(--brand);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.meta-val {
+  color: var(--foreground);
 }
 </style>

@@ -7,7 +7,7 @@
  */
 
 export type GetApiCheckinRankingParams = {
-vId?: number;
-count?: number;
-startTime?: string;
-};
+  vId?: number
+  count?: number
+  startTime?: string
+}

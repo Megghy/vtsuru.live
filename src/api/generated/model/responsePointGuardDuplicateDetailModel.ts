@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointGuardDuplicateGroupModel } from './responsePointGuardDuplicateGroupModel';
-import type { ResponsePointGuardDuplicatePointValues } from './responsePointGuardDuplicatePointValues';
-import type { ResponsePointGuardDuplicateUserModel } from './responsePointGuardDuplicateUserModel';
+import type { ResponsePointGuardDuplicateGroupModel } from './responsePointGuardDuplicateGroupModel'
+import type { ResponsePointGuardDuplicatePointValues } from './responsePointGuardDuplicatePointValues'
+import type { ResponsePointGuardDuplicateUserModel } from './responsePointGuardDuplicateUserModel'
 
 export interface ResponsePointGuardDuplicateDetailModel {
-  user: ResponsePointGuardDuplicateUserModel;
-  currentPointValues: ResponsePointGuardDuplicatePointValues;
-  groups: ResponsePointGuardDuplicateGroupModel[];
+  user: ResponsePointGuardDuplicateUserModel
+  currentPointValues: ResponsePointGuardDuplicatePointValues
+  groups: ResponsePointGuardDuplicateGroupModel[]
 }

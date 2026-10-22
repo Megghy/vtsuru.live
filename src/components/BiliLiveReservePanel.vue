@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { CalendarLtr20Regular, Clock20Regular } from '@vicons/fluent'
-import { NButton, NEmpty, NFlex, NIcon, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { BiliLiveReserveItem } from '@/api/api-models'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Switch } from '@/shared/ui/switch'
 import { formatBiliLiveReserveInterval, formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 
 const props = defineProps<{
@@ -34,67 +36,58 @@ const fetchedLabel = computed(() => {
 </script>
 
 <template>
-  <section class="bili-reserve">
-    <header class="bili-reserve__head">
-      <div class="bili-reserve__title">
-        <NIcon :component="CalendarLtr20Regular" />
+  <section class="grid gap-2.5 min-w-0 py-3.5 px-4 border border-border rounded-[var(--radius,10px)] bg-popover">
+    <header class="flex items-start justify-between gap-3">
+      <div class="flex min-w-0 gap-2.5">
+        <component
+          :is="CalendarLtr20Regular"
+          class="size-5 shrink-0 text-[#fb7299] mt-0.5"
+        />
         <div>
-          <strong>B 站直播预约</strong>
-          <p>{{ fetchedLabel }} · {{ formatBiliLiveReserveInterval(intervalMinutes) }}</p>
+          <strong class="block text-sm font-semibold text-foreground">B 站直播预约</strong>
+          <p class="text-xs text-muted-foreground mt-0.5 leading-[1.45]">
+            {{ fetchedLabel }} · {{ formatBiliLiveReserveInterval(intervalMinutes) }}
+          </p>
         </div>
       </div>
-      <NFlex
+
+      <div
         v-if="manage"
-        align="center"
-        :size="10"
-        class="bili-reserve__actions"
+        class="bili-reserve__actions flex items-center gap-2.5"
       >
-        <NFlex
-          align="center"
-          :size="6"
-        >
-          <NText
-            depth="3"
-            style="font-size: 12px"
-          >
-            写入日程表
-          </NText>
-          <NSwitch
-            :value="autoSync"
-            :loading="syncing"
-            size="small"
-            @update:value="emit('update:autoSync', $event)"
-          >
-            <template #checked> 开 </template>
-            <template #unchecked> 关 </template>
-          </NSwitch>
-        </NFlex>
-        <NButton
-          size="small"
-          :loading="refreshing"
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-muted-foreground">写入日程表</span>
+          <Switch
+            :checked="autoSync"
+            :disabled="syncing"
+            @update:checked="emit('update:autoSync', $event)"
+          />
+        </div>
+        <Button
+          variant="outline"
+          :disabled="refreshing"
           @click="emit('refresh')"
         >
           立即刷新
-        </NButton>
-      </NFlex>
+        </Button>
+      </div>
     </header>
 
-    <NText
+    <p
       v-if="manage"
-      depth="3"
-      class="bili-reserve__hint"
+      class="text-xs text-muted-foreground m-0 leading-[1.45]"
     >
       开启后会把预约合并进周历展示和日历订阅，手填日程不会被覆盖。同步有延迟，可手动刷新。
-    </NText>
+    </p>
 
-    <NEmpty
+    <Empty
       v-if="!upcoming.length"
-      size="small"
       description="暂无即将开始的 B 站预约"
+      class="py-4"
     />
     <ul
       v-else
-      class="bili-reserve__list"
+      class="grid gap-2 m-0 p-0 list-none"
     >
       <li
         v-for="item in upcoming"
@@ -105,117 +98,33 @@ const fetchedLabel = computed(() => {
           :href="liveRoomUrl"
           target="_blank"
           rel="noopener noreferrer"
+          class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 py-2 px-2.5 rounded-md bg-muted no-underline text-inherit hover:bg-muted/80"
         >
-          <span class="bili-reserve__time">
-            <NIcon :component="Clock20Regular" />
+          <span class="flex items-center text-xs text-muted-foreground">
+            <component
+              :is="Clock20Regular"
+              class="size-3.5 inline mr-1"
+            />
             {{ formatBiliLiveReserveTime(item.planStart) }}
           </span>
-          <strong>{{ item.title }}</strong>
-          <em v-if="item.total > 0">{{ item.total }} 人预约</em>
+          <strong class="text-[13px] truncate">{{ item.title }}</strong>
+          <em v-if="item.total > 0" class="text-[11px] not-italic text-[#fb7299]">{{ item.total }} 人预约</em>
         </a>
-        <div v-else>
-          <span class="bili-reserve__time">
-            <NIcon :component="Clock20Regular" />
+        <div
+          v-else
+          class="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 py-2 px-2.5 rounded-md bg-muted text-inherit"
+        >
+          <span class="flex items-center text-xs text-muted-foreground">
+            <component
+              :is="Clock20Regular"
+              class="size-3.5 inline mr-1"
+            />
             {{ formatBiliLiveReserveTime(item.planStart) }}
           </span>
-          <strong>{{ item.title }}</strong>
-          <em v-if="item.total > 0">{{ item.total }} 人预约</em>
+          <strong class="text-[13px] truncate">{{ item.title }}</strong>
+          <em v-if="item.total > 0" class="text-[11px] not-italic text-[#fb7299]">{{ item.total }} 人预约</em>
         </div>
       </li>
     </ul>
   </section>
 </template>
-
-<style scoped>
-.bili-reserve {
-  display: grid;
-  gap: 10px;
-  min-width: 0;
-  padding: 14px 16px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius, 10px);
-  background: var(--vtsuru-bg-elevated, var(--vtsuru-bg));
-}
-.bili-reserve__head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.bili-reserve__title {
-  display: flex;
-  min-width: 0;
-  gap: 10px;
-}
-.bili-reserve__title :deep(.n-icon) {
-  flex: none;
-  margin-top: 2px;
-  color: #fb7299;
-}
-.bili-reserve__title strong {
-  display: block;
-  font-size: 14px;
-  font-weight: 650;
-}
-.bili-reserve__title p,
-.bili-reserve__hint {
-  margin: 2px 0 0;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  line-height: 1.45;
-}
-.bili-reserve__list {
-  display: grid;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.bili-reserve__list a,
-.bili-reserve__list div {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: var(--vtsuru-bg-muted, color-mix(in srgb, var(--vtsuru-fg) 4%, transparent));
-  color: inherit;
-  text-decoration: none;
-}
-.bili-reserve__list strong {
-  min-width: 0;
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.bili-reserve__list em {
-  flex: none;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  font-style: normal;
-}
-.bili-reserve__time {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #fb7299;
-  font-size: 12px;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-@media (max-width: 640px) {
-  .bili-reserve__head,
-  .bili-reserve__actions {
-    flex-wrap: wrap;
-  }
-  .bili-reserve__list a,
-  .bili-reserve__list div {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
-  }
-}
-</style>

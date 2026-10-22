@@ -1,11 +1,18 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NColorPicker, NFlex, NInput, NInputNumber, NSelect, NSlider, NSwitch, NText } from 'naive-ui'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 
 import { useLocalFonts, markFontUsed } from '@/composables/useLocalFonts'
 import { trackManageToolSuccess } from '@/shared/services/umami'
-import { canvasToBlob } from '@/shared/utils'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
+import { Textarea } from '@/shared/ui/textarea'
+import { canvasToBlob, useMessage } from '@/shared/utils'
 
 const message = useMessage()
 
@@ -139,180 +146,206 @@ async function download() {
 </script>
 
 <template>
-  <NCard
-    title="文字转图片"
-    segmented
-  >
-    <template #header-extra>
-      <NButton
-        type="primary"
+  <Card>
+    <CardHeader class="flex flex-row items-center justify-between pb-4">
+      <CardTitle class="text-base font-semibold">文字转图片</CardTitle>
+      <Button
         :disabled="!text"
         @click="download"
       >
         下载 PNG
-      </NButton>
-    </template>
-    <div class="text-to-image-layout">
-      <div class="controls-panel">
-        <NText
-          depth="3"
-          style="margin-bottom: 8px; display: block"
-        >
-          输入文本
-        </NText>
-        <NInput
-          v-model:value="text"
-          type="textarea"
-          placeholder="在此粘贴长文本，将自动渲染为图片..."
-          :autosize="{ minRows: 6, maxRows: 16 }"
-        />
-        <NFlex
-          vertical
-          style="margin-top: 16px; gap: 12px"
-        >
-          <NFlex align="center">
-            <NText style="width: 70px"> 字体 </NText>
-            <NSelect
-              :value="style.fontFamily"
-              :options="fontOptions"
-              :loading="fontsLoading"
-              filterable
-              style="flex: 1"
-              @update:value="onFontChange"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 加粗 </NText>
-            <NSwitch v-model:value="style.bold" />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 水平对齐 </NText>
-            <NSelect
-              v-model:value="style.textAlign"
-              :options="alignOptions"
-              style="width: 120px"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 垂直对齐 </NText>
-            <NSelect
-              v-model:value="style.verticalAlign"
-              :options="vAlignOptions"
-              style="width: 120px"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 字号 </NText>
-            <NSlider
-              v-model:value="style.fontSize"
-              :min="14"
-              :max="48"
-              :step="1"
-              style="flex: 1"
-            />
-            <NInputNumber
-              v-model:value="style.fontSize"
-              :min="14"
-              :max="48"
-              size="small"
-              style="width: 80px"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 行高 </NText>
-            <NSlider
-              v-model:value="style.lineHeight"
-              :min="1.2"
-              :max="2.5"
-              :step="0.1"
-              style="flex: 1"
-            />
-            <NInputNumber
-              v-model:value="style.lineHeight"
-              :min="1.2"
-              :max="2.5"
-              :step="0.1"
-              size="small"
-              style="width: 80px"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 内边距 </NText>
-            <NSlider
-              v-model:value="style.padding"
-              :min="16"
-              :max="80"
-              :step="4"
-              style="flex: 1"
-            />
-            <NInputNumber
-              v-model:value="style.padding"
-              :min="16"
-              :max="80"
-              size="small"
-              style="width: 80px"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 最大宽度 </NText>
-            <NSlider
-              v-model:value="style.maxWidth"
-              :min="400"
-              :max="1200"
-              :step="50"
-              style="flex: 1"
-            />
-            <NInputNumber
-              v-model:value="style.maxWidth"
-              :min="400"
-              :max="1200"
-              :step="50"
-              size="small"
-              style="width: 100px"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 文字颜色 </NText>
-            <NColorPicker
-              v-model:value="style.color"
-              style="flex: 1"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 背景色 </NText>
-            <NColorPicker
-              v-model:value="style.bgColor"
-              style="flex: 1"
-            />
-          </NFlex>
-          <NFlex align="center">
-            <NText style="width: 70px"> 渐变终色 </NText>
-            <NColorPicker
-              v-model:value="style.bgGradient"
-              style="flex: 1"
-            />
-          </NFlex>
-          <NText
-            depth="3"
-            style="font-size: 12px"
-          >
-            渐变终色留空则使用纯色背景
-          </NText>
-        </NFlex>
-      </div>
-      <div class="preview-panel">
-        <NText
-          depth="3"
-          style="margin-bottom: 8px; display: block"
-        >
-          预览
-        </NText>
-        <div class="preview-scroll">
-          <canvas ref="canvasRef" />
+      </Button>
+    </CardHeader>
+    <CardContent class="pt-0">
+      <div class="text-to-image-layout">
+        <div class="controls-panel">
+          <span class="text-xs text-muted-foreground mb-2 block"> 输入文本 </span>
+          <Textarea
+            v-model="text"
+            placeholder="在此粘贴长文本，将自动渲染为图片..."
+            class="min-h-[140px]"
+          />
+          <div class="flex flex-col mt-4 gap-3">
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 字体 </span>
+              <Select
+                :model-value="style.fontFamily"
+                @update:model-value="onFontChange"
+              >
+                <SelectTrigger class="flex-1">
+                  <SelectValue :placeholder="fontsLoading ? '加载字体中...' : '选择字体'" />
+                </SelectTrigger>
+                <SelectContent class="max-h-60">
+                  <SelectItem
+                    v-for="opt in fontOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 加粗 </span>
+              <Switch
+                :checked="style.bold"
+                @update:checked="(v) => (style.bold = v)"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 水平对齐 </span>
+              <Select v-model="style.textAlign">
+                <SelectTrigger class="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in alignOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 垂直对齐 </span>
+              <Select v-model="style.verticalAlign">
+                <SelectTrigger class="w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in vAlignOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 字号 </span>
+              <Slider
+                :model-value="[style.fontSize]"
+                :min="14"
+                :max="48"
+                :step="1"
+                class="flex-1"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.fontSize = val[0]
+                  }
+                "
+              />
+              <NumberField
+                v-model="style.fontSize"
+                :min="14"
+                :max="48"
+                class="w-20"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 行高 </span>
+              <Slider
+                :model-value="[style.lineHeight]"
+                :min="1.2"
+                :max="2.5"
+                :step="0.1"
+                class="flex-1"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.lineHeight = Number(val[0].toFixed(1))
+                  }
+                "
+              />
+              <NumberField
+                v-model="style.lineHeight"
+                :min="1.2"
+                :max="2.5"
+                :step="0.1"
+                class="w-20"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 内边距 </span>
+              <Slider
+                :model-value="[style.padding]"
+                :min="16"
+                :max="80"
+                :step="4"
+                class="flex-1"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.padding = val[0]
+                  }
+                "
+              />
+              <NumberField
+                v-model="style.padding"
+                :min="16"
+                :max="80"
+                class="w-20"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 最大宽度 </span>
+              <Slider
+                :model-value="[style.maxWidth]"
+                :min="400"
+                :max="1200"
+                :step="50"
+                class="flex-1"
+                @update:model-value="
+                  (val) => {
+                    if (val?.[0] !== undefined) style.maxWidth = val[0]
+                  }
+                "
+              />
+              <NumberField
+                v-model="style.maxWidth"
+                :min="400"
+                :max="1200"
+                :step="50"
+                class="w-24"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 文字颜色 </span>
+              <ColorPicker
+                v-model="style.color"
+                class="flex-1"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 背景色 </span>
+              <ColorPicker
+                v-model="style.bgColor"
+                class="flex-1"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="w-[70px] text-xs text-muted-foreground shrink-0"> 渐变终色 </span>
+              <ColorPicker
+                v-model="style.bgGradient"
+                class="flex-1"
+              />
+            </div>
+            <span class="text-xs text-muted-foreground"> 渐变终色留空则使用纯色背景 </span>
+          </div>
+        </div>
+        <div class="preview-panel">
+          <span class="text-xs text-muted-foreground mb-2 block"> 预览 </span>
+          <div class="preview-scroll">
+            <canvas ref="canvasRef" />
+          </div>
         </div>
       </div>
-    </div>
-  </NCard>
+    </CardContent>
+  </Card>
 </template>
 
 <style scoped>
@@ -332,7 +365,7 @@ async function download() {
 .preview-scroll {
   overflow: auto;
   max-height: 70vh;
-  border: 1px solid var(--vtsuru-border, #e0e0e0);
+  border: 1px solid var(--border, #e0e0e0);
   border-radius: 4px;
   padding: 8px;
   background: #f5f5f5;

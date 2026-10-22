@@ -226,7 +226,8 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
     const now = data.time > 0 ? data.time : Date.now()
     const existing = userActivityMap.value.get(id)
-    const guardLevel = data.guard_level && data.guard_level > 0 ? data.guard_level : existing?.guardLevel ?? GuardLevel.None
+    const guardLevel =
+      data.guard_level && data.guard_level > 0 ? data.guard_level : (existing?.guardLevel ?? GuardLevel.None)
 
     userActivityMap.value.set(id, {
       id,
@@ -332,7 +333,8 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
     const now = data.time > 0 ? data.time : Date.now()
     const activity = userActivityMap.value.get(id)
-    const guardLevel = data.guard_level && data.guard_level > 0 ? data.guard_level : activity?.guardLevel ?? GuardLevel.None
+    const guardLevel =
+      data.guard_level && data.guard_level > 0 ? data.guard_level : (activity?.guardLevel ?? GuardLevel.None)
 
     let entry = rankMap.value.get(id)
     if (!entry) {
@@ -373,7 +375,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const list = Array.from(rankMap.value.values()).map((item) => {
       const act = userActivityMap.value.get(item.id)
       const lastActive = Math.max(item.lastActiveTime || 0, act?.lastActiveTime || 0)
-      const guardLevel = item.guardLevel > 0 ? item.guardLevel : act?.guardLevel ?? GuardLevel.None
+      const guardLevel = item.guardLevel > 0 ? item.guardLevel : (act?.guardLevel ?? GuardLevel.None)
       return {
         ...item,
         guardLevel,
@@ -382,9 +384,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       }
     })
 
-    return list
-      .toSorted((a, b) => b.score - a.score)
-      .slice(0, settings.value.rankDisplayCount || 50)
+    return list.toSorted((a, b) => b.score - a.score).slice(0, settings.value.rankDisplayCount || 50)
   }
 
   function getOnlineGuardList(): OnlineGuardEntry[] {
@@ -650,7 +650,10 @@ export const useGiftWindow = defineStore('giftWindow', () => {
           : t === EventDataTypes.Guard
             ? 198
             : [100, 1000, 5000][Math.floor(Math.random() * 3)],
-      guard_level: t === EventDataTypes.Guard ? [GuardLevel.Zongdu, GuardLevel.Tidu, GuardLevel.Jianzhang][Math.floor(Math.random() * 3)] : GuardLevel.None,
+      guard_level:
+        t === EventDataTypes.Guard
+          ? [GuardLevel.Zongdu, GuardLevel.Tidu, GuardLevel.Jianzhang][Math.floor(Math.random() * 3)]
+          : GuardLevel.None,
       open_id: '',
       time: Date.now(),
       fans_medal_level: 0,

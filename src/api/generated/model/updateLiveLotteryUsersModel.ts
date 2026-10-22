@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LiveLotteryTypes } from './liveLotteryTypes';
-import type { LiveLotteryUserInfo } from './liveLotteryUserInfo';
+import type { LiveLotteryTypes } from './liveLotteryTypes'
+import type { LiveLotteryUserInfo } from './liveLotteryUserInfo'
 
 export interface UpdateLiveLotteryUsersModel {
   /** @nullable */
-  code?: string | null;
-  type: LiveLotteryTypes;
-  users: LiveLotteryUserInfo[];
-  resultUsers: LiveLotteryUserInfo[];
+  code?: string | null
+  type: LiveLotteryTypes
+  users: LiveLotteryUserInfo[]
+  resultUsers: LiveLotteryUserInfo[]
 }

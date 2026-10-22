@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruCoreAIContractsAssistantProposalDto } from './vTsuruCoreAIContractsAssistantProposalDto';
+import type { VTsuruCoreAIContractsAssistantProposalDto } from './vTsuruCoreAIContractsAssistantProposalDto'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto {
-  message: string;
-  code: number;
-  data: VTsuruCoreAIContractsAssistantProposalDto;
+  message: string
+  code: number
+  data: VTsuruCoreAIContractsAssistantProposalDto
 }

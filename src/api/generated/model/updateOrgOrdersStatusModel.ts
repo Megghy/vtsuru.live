@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus';
+import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus'
 
 export interface UpdateOrgOrdersStatusModel {
-  orderIds: number[];
-  status: PointOrderDataPointOrderStatus;
+  orderIds: number[]
+  status: PointOrderDataPointOrderStatus
 }

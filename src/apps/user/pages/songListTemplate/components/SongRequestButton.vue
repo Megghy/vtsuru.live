@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { CloudAdd20Filled } from '@vicons/fluent'
-import { NButton, NIcon, NTooltip } from 'naive-ui'
 import { computed } from 'vue'
 
 import type { Setting_LiveRequest, SongsInfo } from '@/api/api-models'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
-import { getSongRequestButtonType, getSongRequestTooltip } from '../utils/songRequestUtils'
+import { getSongRequestTooltip } from '../utils/songRequestUtils'
 
 const props = withDefaults(
   defineProps<{
@@ -34,41 +35,34 @@ const emit = defineEmits<{
   request: [song: SongsInfo]
 }>()
 
-const buttonType = computed(() =>
-  getSongRequestButtonType(props.song, props.liveRequestSettings, props.authState),
-)
-const tooltip = computed(() =>
-  getSongRequestTooltip(props.song, props.liveRequestSettings, props.authState),
-)
+const tooltip = computed(() => getSongRequestTooltip(props.song, props.liveRequestSettings, props.authState))
 </script>
 
 <template>
-  <NTooltip
-    v-if="!hidden"
-    :disabled="disabled"
-  >
-    <template #trigger>
-      <NButton
-        :circle="circle"
-        :size="size"
-        :secondary="secondary"
-        :type="buttonType"
-        :loading="loading"
-        :disabled="disabled"
-        :aria-label="`点歌《${song.name}》`"
-        @click="emit('request', song)"
-      >
-        <template
-          v-if="circle || !label"
-          #icon
+  <TooltipProvider v-if="!hidden">
+    <Tooltip :disabled="disabled">
+      <TooltipTrigger as-child>
+        <Button
+          :variant="secondary ? 'secondary' : 'default'"
+          :size="circle && !label ? 'icon' : 'sm'"
+          :class="[
+            circle && !label ? 'size-7 rounded-full' : ' px-2.5',
+            size === 'tiny' && circle ? 'size-6' : '',
+            size === 'large' ? 'h-9 px-4 text-sm' : '',
+          ]"
+          :disabled="disabled || loading"
+          :aria-label="`点歌《${song.name}》`"
+          @click="emit('request', song)"
         >
-          <NIcon :component="CloudAdd20Filled" />
-        </template>
-        <template v-if="label">
-          {{ label }}
-        </template>
-      </NButton>
-    </template>
-    {{ tooltip }}
-  </NTooltip>
+          <component
+            :is="CloudAdd20Filled"
+            class="size-3.5"
+            :class="{ 'mr-1': !!label }"
+          />
+          <span v-if="label">{{ label }}</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent class="text-xs">{{ tooltip }}</TooltipContent>
+    </Tooltip>
+  </TooltipProvider>
 </template>

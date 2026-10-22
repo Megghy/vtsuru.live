@@ -164,30 +164,32 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
     :content-style="{ padding: 0 }"
   >
     <div
-      class="layout-container"
+      class="@container w-full min-w-0"
       :style="containerStyle"
     >
       <div
-        class="layout"
+        class="w-full gap-[var(--vtsuru-layout-gap)]"
         :class="{
-          grid: layout === 'grid',
-          row: layout === 'row',
-          column: layout === 'column',
-          wrap: wrap && layout === 'row',
-          'align-stretch': layout !== 'column' && alignKey === 'stretch',
+          'grid grid-cols-[repeat(var(--vtsuru-layout-columns),minmax(0,1fr))] @max-[520px]:grid-cols-1': layout === 'grid',
+          flex: layout !== 'grid',
+          'flex-wrap': wrap && layout === 'row',
+          'flex-col': layout === 'column',
         }"
         :style="layoutStyle"
       >
         <div
           v-for="child in renderedChildren"
           :key="child.id"
-          class="item"
+          class="item relative min-w-0"
           :class="{
+            'flex-[0_1_240px]': layout === 'row',
+            'flex-none': layout === 'column',
+            'self-stretch flex [&>*]:flex-1 [&>*]:min-w-0': layout !== 'column' && alignKey === 'stretch',
             highlight: !!props.highlightBlockId && props.highlightBlockId === child.id,
             selected: selectedBlockIdSet.has(child.id),
             hidden: child.hidden,
             unavailable: props.editorMode && !child.hidden && !isBlockVisible(child, visibilityContext),
-            selectable: props.editorMode === 'select',
+            'cursor-pointer': props.editorMode === 'select',
           }"
           :data-block-overlay="child.hidden ? '已隐藏' : '当前预览条件下不显示'"
           :data-block-id="child.id"
@@ -223,81 +225,15 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 </template>
 
 <style scoped>
-.layout-container {
-  container-type: inline-size;
-  width: 100%;
-  min-width: 0;
-}
-
-.layout {
-  display: flex;
-  width: 100%;
-  gap: var(--vtsuru-layout-gap);
-}
-
-.layout.wrap {
-  flex-wrap: wrap;
-}
-
-.layout.column {
-  flex-direction: column;
-}
-
-.layout.row .item {
-  flex: 0 1 240px;
-  min-width: 0;
-}
-
-.layout.align-stretch .item {
-  align-self: stretch;
-  display: flex;
-}
-
-.layout.align-stretch .item > :deep(*) {
-  flex: 1;
-  min-width: 0;
-}
-
-.layout.column .item {
-  flex: 0 0 auto;
-  min-width: 0;
-}
-
-.layout.grid {
-  display: grid;
-  grid-template-columns: repeat(var(--vtsuru-layout-columns), minmax(0, 1fr));
-}
-
-@container (max-width: 520px) {
-  .layout.grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.item {
-  min-width: 0;
-  position: relative;
-}
-
-.item.highlight {
-  outline: 1px solid transparent;
-}
-
 .item.selected {
-  outline: 2px solid var(--vtsuru-page-primary);
+  outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
-
-.item.selectable {
-  cursor: pointer;
-}
-
 .item.hidden,
 .item.unavailable {
   min-height: 44px;
   opacity: 0.42;
 }
-
 .item.hidden::before,
 .item.unavailable::before {
   content: attr(data-block-overlay);
@@ -306,22 +242,20 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   z-index: 4;
   display: grid;
   place-items: center;
-  border: 1px dashed var(--vtsuru-page-primary);
-  color: var(--vtsuru-page-text);
-  background: color-mix(in srgb, var(--vtsuru-page-bg) 72%, transparent);
+  border: 1px dashed var(--primary);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--background) 72%, transparent);
   pointer-events: none;
 }
-
 .item.highlight::before {
   content: '';
   position: absolute;
   inset: -2px;
-  border-radius: calc(var(--vtsuru-page-radius) + 2px);
-  border: 1px solid var(--vtsuru-page-primary);
+  border-radius: calc(var(--radius) + 2px);
+  border: 1px solid var(--primary);
   opacity: 0.55;
   pointer-events: none;
 }
-
 .item.highlight::after {
   content: attr(data-block-type);
   position: absolute;
@@ -331,9 +265,9 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   font-size: 11px;
   line-height: 16px;
   border-radius: 999px;
-  background: var(--vtsuru-bg-elevated);
-  border: 1px solid var(--vtsuru-page-primary);
-  color: var(--vtsuru-fg);
+  background: var(--popover);
+  border: 1px solid var(--primary);
+  color: var(--foreground);
   pointer-events: none;
   user-select: none;
 }

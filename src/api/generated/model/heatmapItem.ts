@@ -7,6 +7,6 @@
  */
 
 export interface HeatmapItem {
-  date: number;
-  value: number;
+  date: number
+  value: number
 }

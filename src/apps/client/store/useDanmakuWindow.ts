@@ -4,7 +4,7 @@ import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 
 import type { EventModel } from '@/api/api-models'
 import { EventDataTypes, GuardLevel } from '@/api/api-models'
-import { fetchOfficialLiveStats, officialLiveStats } from '@/shared/services/officialLiveStats'
+import { officialLiveStats } from '@/shared/services/officialLiveStats'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
@@ -335,6 +335,17 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。')
       return
     }
+    // 移除窗口默认黑色背景，使其完全透明
+    try {
+      await danmakuWindow.value.setBackgroundColor(null)
+    } catch (err) {
+      console.warn('[danmaku-window] 设置透明背景失败，可能是客户端版本过旧:', err)
+      window.$notification.warning({
+        title: '弹幕窗口透明背景不可用',
+        content: '当前客户端版本不支持透明背景特性，请更新到最新版本以获得更好体验',
+        duration: 8000,
+      })
+    }
     console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value)
 
     danmakuWindow.value.onCloseRequested((event) => {
@@ -378,6 +389,8 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       type: 'danmaku',
       data: {
         type: EventDataTypes.Message,
+        uname: '系统',
+        uid: 0,
         msg: '弹幕窗口已打开',
       } as EventModel,
     } satisfies DanmakuWindowBCData)
@@ -439,12 +452,14 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       }
     } else if (data.type === EventDataTypes.Gift) {
       // 礼物价格转换为元 (B站金瓜子 1000 = 1元，或者直接按元)
-      const giftYuan = (data.price || 0) >= 100 ? (data.price || 0) / 1000 : (data.price || 0)
+      const giftYuan = (data.price || 0) >= 100 ? (data.price || 0) / 1000 : data.price || 0
       liveStats.value.totalIncome = Math.round((liveStats.value.totalIncome + giftYuan) * 100) / 100
     } else if (data.type === EventDataTypes.SC) {
       liveStats.value.totalIncome = Math.round((liveStats.value.totalIncome + (data.price || 0)) * 100) / 100
     } else if (data.type === EventDataTypes.Guard) {
-      const guardPrice = data.price || (data.guard_level === GuardLevel.Zongdu ? 19998 : data.guard_level === GuardLevel.Tidu ? 1998 : 198)
+      const guardPrice =
+        data.price ||
+        (data.guard_level === GuardLevel.Zongdu ? 19998 : data.guard_level === GuardLevel.Tidu ? 1998 : 198)
       liveStats.value.totalIncome = Math.round((liveStats.value.totalIncome + guardPrice) * 100) / 100
     }
 
@@ -498,12 +513,6 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       liveStats.value.likeCount += Math.floor(Math.random() * 3) + 1
     }
     onGetDanmakus(testData)
-
-    postBroadcastMessage(bc, {
-      type: 'test-danmaku',
-      data: testData,
-    } satisfies DanmakuWindowBCData)
-    console.log('[danmaku-window] 发送测试弹幕指令:', testData)
   }
 
   return {

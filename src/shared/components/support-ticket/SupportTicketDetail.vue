@@ -2,27 +2,13 @@
 import {
   ArrowLeft24Regular,
   CheckmarkCircle24Regular,
+  Dismiss16Regular,
   Image24Regular,
   Send24Regular,
   Settings24Regular,
 } from '@vicons/fluent'
-import type { UploadFileInfo } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NEmpty,
-  NIcon,
-  NImage,
-  NImageGroup,
-  NInput,
-  NModal,
-  NPopconfirm,
-  NSpin,
-  NTag,
-  NTime,
-  NUpload,
-  useMessage,
-} from 'naive-ui'
+import { formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, ref, watch } from 'vue'
 
 import type { SupportTicketDetail } from '@/api/api-models'
@@ -40,6 +26,21 @@ import {
   supportTicketStatusMeta,
   supportTicketTypeLabel,
 } from '@/shared/supportTicket'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Spin } from '@/shared/ui/spin'
+import { Textarea } from '@/shared/ui/textarea'
+import { toast } from '@/shared/utils'
+
+interface LocalFileItem {
+  id: string
+  file: File
+  url: string
+}
 
 const props = defineProps<{
   ticket?: SupportTicketDetail
@@ -52,9 +53,9 @@ const emit = defineEmits<{
   refresh: []
 }>()
 
-const message = useMessage()
 const reply = ref('')
-const replyFiles = ref<UploadFileInfo[]>([])
+const replyFiles = ref<LocalFileItem[]>([])
+const fileInputRef = ref<HTMLInputElement>()
 const sending = ref(false)
 const resolving = ref(false)
 const savingPreferences = ref(false)
@@ -85,12 +86,29 @@ function authorLabel(authorType: SupportTicketAuthorType) {
   return props.editable ? '我' : '用户'
 }
 
-function beforeReplyUpload({ file }: { file: UploadFileInfo }) {
-  if (!file.file?.type.startsWith('image/')) {
-    message.error('只能上传图片文件')
-    return false
+function onFileSelect(e: Event) {
+  const target = e.target as HTMLInputElement
+  if (!target.files?.length) return
+  const remaining = remainingImageSlots.value
+  const files = Array.from(target.files).slice(0, remaining)
+  for (const f of files) {
+    if (!f.type.startsWith('image/')) {
+      toast.error('只能上传图片文件')
+      continue
+    }
+    replyFiles.value.push({
+      id: `${f.name}-${Date.now()}-${Math.random()}`,
+      file: f,
+      url: URL.createObjectURL(f),
+    })
   }
-  return true
+  target.value = ''
+}
+
+function removeFile(index: number) {
+  const item = replyFiles.value[index]
+  if (item) URL.revokeObjectURL(item.url)
+  replyFiles.value.splice(index, 1)
 }
 
 async function sendReply() {
@@ -98,7 +116,7 @@ async function sendReply() {
   if (!props.ticket || (!content && !replyFiles.value.length)) return
   sending.value = true
   try {
-    const files = replyFiles.value.map((item) => item.file).filter((file): file is File => Boolean(file))
+    const files = replyFiles.value.map((item) => item.file)
     const uploaded = files.length ? await uploadFiles(files, FileStore.Tickets) : []
     await addSupportTicketMessage(
       props.ticket.id,
@@ -106,10 +124,11 @@ async function sendReply() {
       uploaded.map((file) => file.id),
     )
     reply.value = ''
+    replyFiles.value.forEach((f) => URL.revokeObjectURL(f.url))
     replyFiles.value = []
     emit('refresh')
   } catch (error) {
-    message.error((error as Error).message)
+    toast.error((error as Error).message)
   } finally {
     sending.value = false
   }
@@ -120,10 +139,10 @@ async function resolve() {
   resolving.value = true
   try {
     await resolveSupportTicket(props.ticket.id)
-    message.success('工单已标记为已解决')
+    toast.success('工单已标记为已解决')
     emit('refresh')
   } catch (error) {
-    message.error((error as Error).message)
+    toast.error((error as Error).message)
   } finally {
     resolving.value = false
   }
@@ -138,119 +157,138 @@ async function savePreferences() {
       emailOnStaffReply: emailOnStaffReply.value,
     })
     showPreferences.value = false
-    message.success('工单设置已保存')
+    toast.success('工单设置已保存')
     emit('refresh')
   } catch (error) {
-    message.error((error as Error).message)
+    toast.error((error as Error).message)
   } finally {
     savingPreferences.value = false
   }
+}
+
+function formatRelative(time: number) {
+  return formatDistanceToNow(time, { addSuffix: true, locale: zhCN })
 }
 </script>
 
 <template>
   <section
-    class="ticket-detail"
+    class="ticket-detail flex flex-col min-w-0 min-h-0 h-full border border-border/80 rounded-lg bg-card p-4 gap-3"
     :class="{ 'ticket-detail--editable': editable }"
   >
     <div
       v-if="loading"
-      class="ticket-detail__state"
+      class="ticket-detail__state py-16 flex justify-center"
     >
-      <NSpin size="medium" />
+      <Spin />
     </div>
-    <NEmpty
+    <Empty
       v-else-if="!ticket"
-      class="ticket-detail__state"
+      class="ticket-detail__state py-16"
       description="选择一个工单查看详情"
     />
     <template v-else>
-      <header class="ticket-detail__header">
-        <NButton
-          class="ticket-detail__back"
-          quaternary
-          circle
-          title="返回工单列表"
-          @click="emit('back')"
-        >
-          <template #icon>
-            <NIcon :component="ArrowLeft24Regular" />
-          </template>
-        </NButton>
-        <div class="ticket-detail__heading">
-          <div class="ticket-detail__title-row">
-            <h2>{{ ticket.title }}</h2>
-            <NTag
-              :type="supportTicketStatusMeta[ticket.status].type"
-              :bordered="false"
-              size="small"
-            >
-              {{ supportTicketStatusMeta[ticket.status].label }}
-            </NTag>
-          </div>
-          <div class="ticket-detail__meta">
-            <span>#{{ ticket.id }}</span>
-            <span>{{ supportTicketTypeLabel(ticket.type) }}</span>
-            <span v-if="ticket.isPublic">公开</span>
-            <span>创建于 <NTime :time="ticket.createTime" /></span>
+      <header class="ticket-detail__header flex items-start justify-between gap-3 pb-3 border-b border-border/60">
+        <div class="flex items-start gap-2 min-w-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            class="size-8 -ml-1 text-muted-foreground hover:text-foreground shrink-0 md:hidden"
+            title="返回工单列表"
+            @click="emit('back')"
+          >
+            <component
+              :is="ArrowLeft24Regular"
+              class="size-4"
+            />
+          </Button>
+
+          <div class="ticket-detail__heading min-w-0 space-y-1">
+            <div class="ticket-detail__title-row flex items-center gap-2 flex-wrap">
+              <h2 class="text-sm font-semibold text-foreground truncate m-0">{{ ticket.title }}</h2>
+              <Badge
+                variant="secondary"
+                class="text-[10px] h-4.5 px-1.5 font-normal"
+              >
+                {{ supportTicketStatusMeta[ticket.status].label }}
+              </Badge>
+            </div>
+            <div class="ticket-detail__meta flex items-center gap-2 text-muted-foreground text-[11px] flex-wrap">
+              <span>#{{ ticket.id }}</span>
+              <span>· {{ supportTicketTypeLabel(ticket.type) }}</span>
+              <span v-if="ticket.isPublic">· 公开</span>
+              <span>· 创建于 {{ formatRelative(ticket.createTime) }}</span>
+            </div>
           </div>
         </div>
-        <NButton
+
+        <Button
           v-if="editable"
-          quaternary
-          circle
+          variant="ghost"
+          size="icon"
+          class="size-8 text-muted-foreground hover:text-foreground shrink-0"
           title="工单设置"
           @click="showPreferences = true"
         >
-          <template #icon>
-            <NIcon :component="Settings24Regular" />
-          </template>
-        </NButton>
+          <component
+            :is="Settings24Regular"
+            class="size-4"
+          />
+        </Button>
       </header>
 
       <div
         ref="timeline"
-        class="ticket-detail__timeline"
+        class="ticket-detail__timeline flex-1 min-h-0 overflow-y-auto space-y-3 pr-2 text-xs"
       >
         <div
           v-for="(item, index) in messages"
           :key="item.id"
-          class="ticket-message"
+          class="ticket-message flex flex-col gap-1"
           :class="{
-            'ticket-message--mine': isOwnTicketMessage(editable, item.authorType),
-            'ticket-message--staff': item.authorType === SupportTicketAuthorType.Staff,
-            'ticket-message--system': item.authorType === SupportTicketAuthorType.System,
+            'items-end': isOwnTicketMessage(editable, item.authorType),
+            'items-start':
+              !isOwnTicketMessage(editable, item.authorType) && item.authorType !== SupportTicketAuthorType.System,
+            'items-center py-2 text-muted-foreground text-[11px]': item.authorType === SupportTicketAuthorType.System,
           }"
         >
           <template v-if="item.authorType === SupportTicketAuthorType.System">
-            <span>{{ item.content }}</span>
-            <NTime
-              :time="item.createTime"
-              type="relative"
-            />
+            <div class="flex items-center gap-2">
+              <span>{{ item.content }}</span>
+              <span>{{ formatRelative(item.createTime) }}</span>
+            </div>
           </template>
           <template v-else>
-            <div class="ticket-message__meta">
-              <strong>{{ authorLabel(item.authorType) }}</strong>
-              <NTime
-                :time="item.createTime"
-                type="relative"
-              />
+            <div class="ticket-message__meta flex items-center gap-1.5 text-muted-foreground text-[11px]">
+              <strong class="font-medium text-foreground">{{ authorLabel(item.authorType) }}</strong>
+              <span>{{ formatRelative(item.createTime) }}</span>
             </div>
-            <div class="ticket-message__bubble">
-              <NImageGroup v-if="imagesForMessage(ticket, item, index).length">
-                <div class="ticket-message__images">
-                  <NImage
-                    v-for="image in imagesForMessage(ticket, item, index)"
-                    :key="image.id"
-                    class="ticket-message__image"
-                    object-fit="cover"
-                    :src="image.path"
-                    :alt="image.name"
-                  />
-                </div>
-              </NImageGroup>
-              <p v-if="item.content">{{ item.content }}</p>
+            <div
+              class="ticket-message__bubble p-3 rounded-lg border max-w-[85%] space-y-2 leading-relaxed whitespace-pre-wrap break-words"
+              :class="
+                isOwnTicketMessage(editable, item.authorType)
+                  ? 'bg-primary/10 border-primary/20 text-foreground'
+                  : 'bg-muted/40 border-border text-foreground'
+              "
+            >
+              <div
+                v-if="imagesForMessage(ticket, item, index).length"
+                class="ticket-message__images flex flex-wrap gap-1.5"
+              >
+                <img
+                  v-for="image in imagesForMessage(ticket, item, index)"
+                  :key="image.id"
+                  class="ticket-message__image size-16 rounded object-cover border border-border/60"
+                  :src="image.path"
+                  :alt="image.name"
+                />
+              </div>
+              <p
+                v-if="item.content"
+                class="m-0 text-xs"
+              >
+                {{ item.content }}
+              </p>
             </div>
           </template>
         </div>
@@ -258,265 +296,151 @@ async function savePreferences() {
 
       <footer
         v-if="editable"
-        class="ticket-detail__composer"
+        class="ticket-detail__composer pt-3 border-t border-border/60 space-y-2 text-xs"
       >
-        <NUpload
-          v-if="remainingImageSlots > 0"
-          v-model:file-list="replyFiles"
-          class="ticket-detail__upload"
-          accept="image/*"
-          list-type="image-card"
-          :default-upload="false"
-          :max="remainingImageSlots"
-          multiple
-          :should-use-thumbnail-url="() => true"
-          :on-before-upload="beforeReplyUpload"
-        >
-          <NIcon
-            :component="Image24Regular"
-            size="20"
+        <!-- 图片预览与选择 -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <div
+            v-for="(item, i) in replyFiles"
+            :key="item.id"
+            class="relative size-12 rounded border border-border overflow-hidden group"
+          >
+            <img
+              :src="item.url"
+              class="size-full object-cover"
+              alt=""
+            />
+            <button
+              type="button"
+              class="absolute top-0.5 right-0.5 size-3.5 rounded-full bg-black/60 text-white flex items-center justify-center"
+              @click="removeFile(i)"
+            >
+              <component
+                :is="Dismiss16Regular"
+                class="size-2"
+              />
+            </button>
+          </div>
+
+          <button
+            v-if="remainingImageSlots > 0"
+            type="button"
+            class="size-12 rounded border border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition"
+            title="添加图片"
+            @click="fileInputRef?.click()"
+          >
+            <component
+              :is="Image24Regular"
+              class="size-4"
+            />
+          </button>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept="image/*"
+            multiple
+            class="hidden"
+            @change="onFileSelect"
           />
-        </NUpload>
-        <NInput
-          v-model:value="reply"
-          type="textarea"
-          :autosize="{ minRows: 2, maxRows: 5 }"
+        </div>
+
+        <Textarea
+          v-model="reply"
+          rows="2"
           maxlength="5000"
-          show-count
-          placeholder="继续补充信息或回复站长"
+          placeholder="继续补充信息或回复站长 (Ctrl+Enter 发送)"
+          class="text-xs resize-none"
           @keydown.ctrl.enter.prevent="sendReply"
         />
-        <div class="ticket-detail__actions">
-          <NPopconfirm
+
+        <div class="ticket-detail__actions flex items-center justify-between gap-2">
+          <Popconfirm
             v-if="ticket.status !== SupportTicketStatus.Resolved"
+            title="确认解决?"
             positive-text="确认解决"
             negative-text="取消"
             @positive-click="resolve"
           >
             <template #trigger>
-              <NButton
-                secondary
-                :loading="resolving"
+              <Button
+                variant="outline"
+                class="flex items-center gap-1 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/10"
+                :disabled="resolving"
               >
-                <template #icon>
-                  <NIcon :component="CheckmarkCircle24Regular" />
-                </template>
+                <component
+                  :is="CheckmarkCircle24Regular"
+                  class="size-3.5"
+                />
                 问题已解决
-              </NButton>
+              </Button>
             </template>
             标记后仍可通过回复重新打开工单。
-          </NPopconfirm>
-          <NButton
-            type="primary"
-            :disabled="!canSend"
-            :loading="sending"
+          </Popconfirm>
+          <div v-else />
+
+          <Button
+            class="flex items-center gap-1"
+            :disabled="!canSend || sending"
             @click="sendReply"
           >
-            <template #icon>
-              <NIcon :component="Send24Regular" />
-            </template>
+            <component
+              :is="Send24Regular"
+              class="size-3.5"
+            />
             回复
-          </NButton>
+          </Button>
         </div>
       </footer>
     </template>
 
-    <NModal
-      v-model:show="showPreferences"
-      preset="card"
-      title="工单设置"
-      class="ticket-preferences-modal"
-    >
-      <div class="ticket-preferences">
-        <NCheckbox v-model:checked="isPublic"> 公开此工单 </NCheckbox>
-        <span>其他人可以查看工单内容和处理进度，不会公开你的身份信息。</span>
-        <NCheckbox v-model:checked="emailOnStaffReply"> 站长回复时发送邮件 </NCheckbox>
-        <span>站内通知不受此选项影响。</span>
-      </div>
-      <template #footer>
-        <div class="ticket-preferences__footer">
-          <NButton @click="showPreferences = false"> 取消 </NButton>
-          <NButton
-            type="primary"
-            :loading="savingPreferences"
+    <!-- 设置弹窗 -->
+    <Dialog v-model:open="showPreferences">
+      <DialogContent class="sm:max-w-md p-4 space-y-3">
+        <DialogHeader class="pb-2 border-b border-border/60">
+          <DialogTitle class="text-sm font-semibold">工单设置</DialogTitle>
+        </DialogHeader>
+
+        <div class="space-y-3 text-xs">
+          <label class="flex items-start gap-2 cursor-pointer">
+            <Checkbox
+              v-model:checked="isPublic"
+              class="mt-0.5"
+            />
+            <div class="flex flex-col gap-0.5">
+              <span class="font-medium text-foreground">公开此工单</span>
+              <span class="text-muted-foreground text-[11px]">
+                其他人可以查看工单内容和处理进度，不会公开你的身份信息。
+              </span>
+            </div>
+          </label>
+
+          <label class="flex items-start gap-2 cursor-pointer">
+            <Checkbox
+              v-model:checked="emailOnStaffReply"
+              class="mt-0.5"
+            />
+            <div class="flex flex-col gap-0.5">
+              <span class="font-medium text-foreground">站长回复时发送邮件</span>
+              <span class="text-muted-foreground text-[11px]">站内通知不受此选项影响。</span>
+            </div>
+          </label>
+        </div>
+
+        <DialogFooter class="pt-2 border-t border-border/60">
+          <Button
+            variant="outline"
+            @click="showPreferences = false"
+          >
+            取消
+          </Button>
+          <Button
+            :disabled="savingPreferences"
             @click="savePreferences"
           >
             保存
-          </NButton>
-        </div>
-      </template>
-    </NModal>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </section>
 </template>
-
-<style scoped>
-.ticket-detail {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  min-height: 0;
-  height: 100%;
-}
-.ticket-detail__state {
-  display: grid;
-  flex: 1;
-  place-content: center;
-}
-.ticket-detail__header {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 16px 18px;
-  border-bottom: 1px solid var(--vtsuru-border);
-}
-.ticket-detail__heading {
-  flex: 1;
-  min-width: 0;
-}
-.ticket-detail__title-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.ticket-detail__title-row h2 {
-  overflow-wrap: anywhere;
-  margin: 0;
-  color: var(--vtsuru-fg);
-  font-size: 18px;
-  line-height: 1.4;
-  letter-spacing: 0;
-}
-.ticket-detail__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin-top: 4px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-.ticket-detail__back {
-  display: none;
-}
-.ticket-detail__timeline {
-  flex: 1;
-  overflow-y: auto;
-  padding: 18px;
-}
-.ticket-message {
-  width: fit-content;
-  max-width: min(78%, 660px);
-  margin-bottom: 16px;
-}
-.ticket-message__meta {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 5px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-.ticket-message__bubble {
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
-}
-.ticket-message__bubble p {
-  margin: 0;
-  padding: 10px 13px;
-  color: var(--vtsuru-fg);
-  line-height: 1.65;
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-.ticket-message__images {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 8px;
-}
-.ticket-message__image {
-  width: 72px;
-  height: 72px;
-  overflow: hidden;
-  border-radius: 4px;
-}
-.ticket-message--mine,
-.ticket-detail:not(.ticket-detail--editable) .ticket-message--staff {
-  margin-left: auto;
-}
-.ticket-message--mine .ticket-message__meta,
-.ticket-detail:not(.ticket-detail--editable) .ticket-message--staff .ticket-message__meta {
-  justify-content: flex-end;
-}
-.ticket-message--mine .ticket-message__bubble,
-.ticket-detail:not(.ticket-detail--editable) .ticket-message--staff .ticket-message__bubble {
-  border-color: var(--vtsuru-brand-soft);
-  background: var(--vtsuru-brand-tint);
-}
-.ticket-message--system {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100%;
-  max-width: none;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-.ticket-detail__composer {
-  padding: 12px 16px 14px;
-  border-top: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg);
-}
-.ticket-detail__upload {
-  margin-bottom: 8px;
-}
-.ticket-detail__actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 10px;
-}
-.ticket-preferences {
-  display: grid;
-  gap: 7px;
-}
-.ticket-preferences > span {
-  margin: -3px 0 9px 24px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-.ticket-preferences__footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-:global(.ticket-preferences-modal) {
-  width: min(440px, calc(100vw - 32px));
-}
-
-@media (max-width: 760px) {
-  .ticket-detail {
-    height: 100%;
-  }
-  .ticket-detail__header {
-    padding: 12px;
-  }
-  .ticket-detail__back {
-    display: inline-flex;
-  }
-  .ticket-detail__title-row h2 {
-    font-size: 16px;
-  }
-  .ticket-detail__timeline {
-    padding: 14px 12px;
-  }
-  .ticket-message {
-    max-width: 90%;
-  }
-  .ticket-detail__composer {
-    padding: 10px 12px;
-  }
-}
-</style>

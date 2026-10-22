@@ -1,7 +1,7 @@
-import type { UploadFileInfo } from 'naive-ui'
 import { ref } from 'vue'
 
 import { uploadCover, updateCover } from '@/apps/client/api/live-manage'
+import type { UploadFileInfo } from '@/shared/utils'
 
 // 封面上传校验配置
 const COVER_MAX_SIZE = 5 * 1024 * 1024 // 5MB

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NAvatar } from 'naive-ui'
 import { computed } from 'vue'
 
 import { DEFAULT_AVATAR, withImageSize } from '../utils'
@@ -16,12 +15,12 @@ const src = computed(() => withImageSize(props.faceUrl, `@${props.size}w`))
 </script>
 
 <template>
-  <NAvatar
-    round
-    :size="size"
-    :src="src"
-    :img-props="{ referrerpolicy: 'no-referrer' }"
-    :fallback-src="DEFAULT_AVATAR"
-    style="border: 1px solid var(--vtsuru-border); flex: 0 0 auto"
+  <img
+    :src="src || DEFAULT_AVATAR"
+    referrerpolicy="no-referrer"
+    class="rounded-full object-cover shrink-0 border border-border/80"
+    :style="{ width: `${size}px`, height: `${size}px` }"
+    alt=""
+    @error="(e) => ((e.target as HTMLImageElement).src = DEFAULT_AVATAR)"
   />
 </template>

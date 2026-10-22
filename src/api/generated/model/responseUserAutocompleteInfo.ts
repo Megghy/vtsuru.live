@@ -7,13 +7,13 @@
  */
 
 export interface ResponseUserAutocompleteInfo {
-  id: number;
-  name: string;
+  id: number
+  name: string
   /** @nullable */
-  biliUid?: number | null;
-  isBiliAuthed: boolean;
+  biliUid?: number | null
+  isBiliAuthed: boolean
   /** @nullable */
-  faceUrl?: string | null;
+  faceUrl?: string | null
   /** @nullable */
-  streamerName?: string | null;
+  streamerName?: string | null
 }

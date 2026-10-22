@@ -1,22 +1,6 @@
 <script setup lang="ts">
 import { NotificationsOutline } from '@vicons/ionicons5'
-import {
-  NBadge,
-  NButton,
-  NCard,
-  NEmpty,
-  NIcon,
-  NList,
-  NListItem,
-  NPopover,
-  NScrollbar,
-  NFlex,
-  NSpin,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
+import { format } from 'date-fns'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -28,6 +12,12 @@ import {
   postApiOrgInviteStreamerReject,
 } from '@/api/generated/org/org'
 import { getOrgInviteToken, getOrgInviteType, isOrgInviteNotification } from '@/shared/services/notifications/orgInvite'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card } from '@/shared/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { useMessage } from '@/shared/utils'
 import { NavigateToNewTab } from '@/shared/utils'
 import { useNotificationStore } from '@/store/useNotificationStore'
 
@@ -43,6 +33,16 @@ function resolveOpenUrl(item: any): string | undefined {
   const openUrl = item?.extra?.openUrl
   if (typeof openUrl !== 'string' || !openUrl.trim()) return undefined
   return openUrl
+}
+
+function formatNotificationTime(time: unknown): string {
+  if (!time) return ''
+  const t = typeof time === 'number' && time < 1e11 ? time * 1000 : time
+  try {
+    return format(new Date(t as string | number | Date), 'yyyy-MM-dd HH:mm')
+  } catch {
+    return ''
+  }
 }
 
 async function refreshLatest() {
@@ -164,129 +164,136 @@ watch(
 </script>
 
 <template>
-  <NTooltip>
-    <template #trigger>
-      <NPopover
-        v-model:show="popoverOpen"
-        trigger="click"
-        placement="bottom-end"
-        @update:show="onPopoverUpdate"
+  <Popover
+    :open="popoverOpen"
+    @update:open="onPopoverUpdate"
+  >
+    <PopoverTrigger as-child>
+      <button
+        class="relative h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+        type="button"
+        title="通知中心"
       >
-        <template #trigger>
-          <NBadge
-            :value="notificationStore.unreadCount"
-            :max="99"
-            :show="notificationStore.unreadCount > 0"
-          >
-            <NButton
-              circle
-              tertiary
-            >
-              <template #icon>
-                <NIcon :component="NotificationsOutline" />
-              </template>
-            </NButton>
-          </NBadge>
-        </template>
-
-        <NCard
-          size="small"
-          style="width: 420px"
-          :bordered="false"
-          :segmented="{ content: true }"
+        <component
+          :is="NotificationsOutline"
+          class="h-4 w-4"
+        />
+        <span
+          v-if="notificationStore.unreadCount > 0"
+          class="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-brand text-brand-foreground text-[10px] font-mono font-bold flex items-center justify-center leading-none"
         >
-          <template #header> 通知 </template>
-          <template #header-extra>
-            <NButton
-              size="small"
-              secondary
-              :disabled="notificationStore.unreadCount === 0"
-              @click.stop="markAllRead"
-            >
-              全部已读
-            </NButton>
-          </template>
+          {{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}
+        </span>
+      </button>
+    </PopoverTrigger>
 
-          <NSpin :show="loading">
-            <template v-if="notificationStore.latest.length === 0">
-              <NEmpty description="暂无通知" />
-            </template>
+    <PopoverContent
+      align="end"
+      :side-offset="8"
+      class="w-96 p-0 shadow-2xl border border-border bg-popover/95 backdrop-blur-md rounded-lg overflow-hidden"
+    >
+      <div class="flex items-center justify-between p-3 border-b border-border bg-muted/20">
+        <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
+          <span>通知</span>
+          <Badge
+            v-if="notificationStore.unreadCount > 0"
+            variant="secondary"
+            class="text-[10px] px-1.5 py-0 h-4"
+          >
+            {{ notificationStore.unreadCount }} 未读
+          </Badge>
+        </div>
+        <Button
+          size="xs"
+          variant="ghost"
+          class="h-6 text-[11px] text-muted-foreground hover:text-foreground"
+          :disabled="notificationStore.unreadCount === 0"
+          @click.stop="markAllRead"
+        >
+          全部已读
+        </Button>
+      </div>
 
-            <NScrollbar
-              v-else
-              style="max-height: 420px"
-            >
-              <NList>
-                <NListItem
-                  v-for="item in notificationStore.latest"
-                  :key="item.id"
+      <div
+        v-if="loading"
+        class="p-8 text-center text-xs text-muted-foreground"
+      >
+        加载中...
+      </div>
+
+      <div
+        v-else-if="notificationStore.latest.length === 0"
+        class="p-8 text-center text-xs text-muted-foreground"
+      >
+        暂无通知
+      </div>
+
+      <ScrollArea class="max-h-[380px]">
+        <div class="divide-y divide-border">
+          <div
+            v-for="item in notificationStore.latest"
+            :key="item.id"
+            class="p-3 space-y-1.5 hover:bg-muted/40 transition-colors text-xs"
+            :class="{ 'bg-brand/5': !item.isReaded }"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 font-semibold text-foreground truncate min-w-0">
+                <span
+                  v-if="!item.isReaded"
+                  class="w-1.5 h-1.5 rounded-full bg-brand shrink-0"
+                />
+                <span class="truncate">{{ item.title }}</span>
+              </div>
+              <span class="text-[10px] text-muted-foreground font-mono shrink-0">
+                {{ formatNotificationTime(item.createTime) }}
+              </span>
+            </div>
+
+            <div class="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+              {{ item.message }}
+            </div>
+
+            <div class="flex items-center gap-1.5 pt-1 justify-end flex-wrap">
+              <template v-if="isOrgInviteNotification(item)">
+                <Button
+                  size="xs"
+                  variant="brand"
+                  class="h-6 px-2 text-[11px]"
+                  @click.stop="acceptOrgInvite(item)"
                 >
-                  <div style="display: flex; flex-direction: column; gap: 6px; width: 100%">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
-                      <div style="font-weight: 600">
-                        <NTag
-                          v-if="!item.isReaded"
-                          size="small"
-                          type="info"
-                          :bordered="false"
-                        >
-                          未读
-                        </NTag>
-                        {{ item.title }}
-                      </div>
-                      <NTime
-                        :time="item.createTime"
-                        format="yyyy-MM-dd HH:mm"
-                      />
-                    </div>
-
-                    <div style="white-space: pre-wrap; opacity: 0.85">
-                      {{ item.message }}
-                    </div>
-
-                    <NFlex>
-                      <template v-if="isOrgInviteNotification(item)">
-                        <NButton
-                          size="small"
-                          type="primary"
-                          @click.stop="acceptOrgInvite(item)"
-                        >
-                          接受
-                        </NButton>
-                        <NButton
-                          size="small"
-                          tertiary
-                          @click.stop="rejectOrgInvite(item)"
-                        >
-                          拒绝
-                        </NButton>
-                      </template>
-                      <NButton
-                        v-if="resolveOpenUrl(item)"
-                        size="small"
-                        tertiary
-                        type="primary"
-                        @click.stop="openNotif(item)"
-                      >
-                        打开
-                      </NButton>
-                      <NButton
-                        v-if="!item.isReaded"
-                        size="small"
-                        tertiary
-                        @click.stop="markRead(item.id)"
-                      >
-                        标记已读
-                      </NButton>
-                    </NFlex>
-                  </div>
-                </NListItem>
-              </NList>
-            </NScrollbar>
-          </NSpin>
-        </NCard>
-      </NPopover>
-    </template>
-    通知
-  </NTooltip>
+                  接受
+                </Button>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="h-6 px-2 text-[11px]"
+                  @click.stop="rejectOrgInvite(item)"
+                >
+                  拒绝
+                </Button>
+              </template>
+              <Button
+                v-if="resolveOpenUrl(item)"
+                size="xs"
+                variant="brand"
+                class="h-6 px-2 text-[11px]"
+                @click.stop="openNotif(item)"
+              >
+                打开
+              </Button>
+              <Button
+                v-if="!item.isReaded"
+                size="xs"
+                variant="ghost"
+                class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+                @click.stop="markRead(item.id)"
+              >
+                标为已读
+              </Button>
+            </div>
+          </div>
+        </div>
+      </ScrollArea>
+    </PopoverContent>
+  </Popover>
 </template>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // 可视化截取：播放器 + 时间轴双手柄拖拽，替代手动输入秒数。
-import { NButton, NText } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
+
+import { Button } from '@/shared/ui/button'
 
 const props = defineProps<{
   src: string
@@ -149,32 +150,31 @@ const hasTrim = computed(() => start.value != null || end.value != null)
     </div>
 
     <div class="trim-actions">
-      <NButton
-        size="tiny"
+      <Button
+        variant="outline"
+        class="h-6 px-2"
         @click="setStartHere"
       >
         设为入点
-      </NButton>
-      <NButton
-        size="tiny"
+      </Button>
+      <Button
+        variant="outline"
+        class="h-6 px-2"
         @click="setEndHere"
       >
         设为出点
-      </NButton>
-      <NText
-        depth="3"
-        class="trim-info"
-      >
+      </Button>
+      <span class="trim-info text-xs text-muted-foreground">
         截取 {{ clock(startVal) }} - {{ clock(endVal) }}（{{ clock(endVal - startVal) }}）
-      </NText>
-      <NButton
+      </span>
+      <Button
         v-if="hasTrim"
-        size="tiny"
-        quaternary
+        variant="ghost"
+        class="h-6 px-2 text-muted-foreground hover:text-foreground"
         @click="reset"
       >
         重置
-      </NButton>
+      </Button>
     </div>
   </div>
 </template>
@@ -203,7 +203,7 @@ const hasTrim = computed(() => start.value != null || end.value != null)
   height: 28px;
   margin: 14px 8px 0;
   border-radius: 6px;
-  background: var(--vtsuru-bg-inset, #f0f0f0);
+  background: var(--muted, #f0f0f0);
   cursor: pointer;
   touch-action: none;
 }

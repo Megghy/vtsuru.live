@@ -3,17 +3,22 @@ import { join } from '@tauri-apps/api/path'
 import { open } from '@tauri-apps/plugin-dialog'
 import type { DirEntry } from '@tauri-apps/plugin-fs'
 import { exists, mkdir, readDir, readFile, remove, writeFile } from '@tauri-apps/plugin-fs'
-import { clear, createStore, delMany, entries, keys, setMany } from 'idb-keyval'
 import JSZip from 'jszip'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { parse, stringify } from 'superjson'
 import { ref, watch } from 'vue'
 
 import { isTauri } from '@/shared/config'
+import {
+  AUTO_ACTION_USER_DATA_PREFIX,
+  persistedEntries,
+  persistedFlush,
+  persistedRemoveKeys,
+  persistedSetMany,
+} from '@/shared/storage/persist'
 
 import type { ClientBackupSettings } from './useSettings'
 import { useSettings } from './useSettings'
-import { useTauriStore } from './useTauriStore'
 
 export const CLIENT_BACKUP_MIN_VERSION = '0.1.7'
 
@@ -50,13 +55,13 @@ export const CLIENT_BACKUP_MODULE_OPTIONS: Array<{
 }> = [
   {
     value: 'tauriStore',
-    label: '客户端设置（Tauri Store）',
-    description: '恢复 vtsuru.data.json 中的客户端配置，包括备份设置本身。',
+    label: '客户端设置',
+    description: '恢复直播/B站/VTS/转写等客户端配置，包括备份设置本身。',
   },
   {
     value: 'persistKv',
-    label: '通用本地设置（Persist IDB）',
-    description: '恢复 vtsuru.live / kv 中的通用本地设置。',
+    label: '通用本地设置',
+    description: '恢复弹幕窗、礼物窗、主题等通用本地设置。',
   },
   {
     value: 'autoActionConfig',
@@ -79,10 +84,6 @@ const BACKUP_SCHEMA_VERSION = 1
 const BACKUP_FILE_PREFIX = 'vtsuru-client-backup-'
 const BACKUP_FILE_SUFFIX = '.zip'
 
-const PERSIST_STORE = createStore('vtsuru.live', 'kv')
-const AUTO_ACTION_STORE = createStore('keyval-store', 'keyval')
-const AUTO_ACTION_USER_DATA_STORE = createStore('AutoActionUserDataDB', 'userData')
-
 const MODULE_FILES: Record<ClientBackupModule, string> = {
   tauriStore: 'tauri-store.json',
   persistKv: 'idb-persist-kv.json',
@@ -102,12 +103,12 @@ function compareVersions(left: string, right: string): number {
   return 0
 }
 
-function isAutoActionHistoryKey(key: string): boolean {
-  return key.startsWith('autoAction_history_')
-}
-
-function isAutoActionConfigKey(key: string): boolean {
-  return key.startsWith('autoAction.') && !isAutoActionHistoryKey(key)
+function partitionKey(key: string): ClientBackupModule {
+  if (key.startsWith('autoAction_history_')) return 'autoActionHistory'
+  if (key.startsWith(AUTO_ACTION_USER_DATA_PREFIX)) return 'autoActionUserData'
+  if (key.startsWith('autoAction.')) return 'autoActionConfig'
+  if (key.startsWith('vtsuru:')) return 'persistKv'
+  return 'tauriStore'
 }
 
 function getBackupFilename(timestamp: number): string {
@@ -280,16 +281,24 @@ export const useClientBackup = defineStore('clientBackup', () => {
 
   async function buildBackupArchive() {
     await useSettings().save()
-    const tauriStore = useTauriStore()
-    await tauriStore.store.save()
+    await persistedFlush()
 
     const createdAt = Date.now()
-    const tauriStoreEntries = await tauriStore.store.entries<unknown>()
-    const persistEntries = await entries<string, unknown>(PERSIST_STORE)
-    const autoActionEntries = await entries<string, unknown>(AUTO_ACTION_STORE)
-    const autoActionConfigEntries = autoActionEntries.filter(([key]) => isAutoActionConfigKey(String(key)))
-    const autoActionHistoryEntries = autoActionEntries.filter(([key]) => isAutoActionHistoryKey(String(key)))
-    const autoActionUserDataEntries = await entries<string, unknown>(AUTO_ACTION_USER_DATA_STORE)
+    const grouped: Record<ClientBackupModule, Array<[string, unknown]>> = {
+      tauriStore: [],
+      persistKv: [],
+      autoActionConfig: [],
+      autoActionUserData: [],
+      autoActionHistory: [],
+    }
+    for (const [key, value] of await persistedEntries()) {
+      grouped[partitionKey(String(key))].push([String(key), value])
+    }
+    const tauriStoreEntries = grouped.tauriStore
+    const persistEntries = grouped.persistKv
+    const autoActionConfigEntries = grouped.autoActionConfig
+    const autoActionUserDataEntries = grouped.autoActionUserData
+    const autoActionHistoryEntries = grouped.autoActionHistory
 
     const manifest: ClientBackupManifest = {
       schemaVersion: BACKUP_SCHEMA_VERSION,
@@ -376,49 +385,22 @@ export const useClientBackup = defineStore('clientBackup', () => {
     }
   }
 
-  async function restoreTauriStore(moduleEntries: Array<[string, unknown]>) {
-    const tauriStore = useTauriStore()
-    await tauriStore.store.clear()
-    for (const [key, value] of moduleEntries) {
-      await tauriStore.store.set(key, value)
+  async function restoreModule(module: ClientBackupModule, moduleEntries: Array<[string, unknown]>) {
+    const currentKeys = (await persistedEntries())
+      .map(([key]) => String(key))
+      .filter((key) => partitionKey(key) === module)
+    await persistedRemoveKeys(currentKeys)
+    const normalized = moduleEntries.map(([key, value]) => {
+      const nextKey = String(key)
+      if (module === 'autoActionUserData' && !nextKey.startsWith(AUTO_ACTION_USER_DATA_PREFIX)) {
+        return [`${AUTO_ACTION_USER_DATA_PREFIX}${nextKey}`, value] as [string, unknown]
+      }
+      return [nextKey, value] as [string, unknown]
+    })
+    if (normalized.length > 0) {
+      await persistedSetMany(normalized)
     }
-    await tauriStore.store.save()
-  }
-
-  async function restorePersistKv(moduleEntries: Array<[string, unknown]>) {
-    await clear(PERSIST_STORE)
-    if (moduleEntries.length > 0) {
-      await setMany(moduleEntries, PERSIST_STORE)
-    }
-  }
-
-  async function restoreAutoActionConfig(moduleEntries: Array<[string, unknown]>) {
-    const allKeys = await keys<string>(AUTO_ACTION_STORE)
-    const targetKeys = allKeys.filter((key) => isAutoActionConfigKey(String(key)))
-    if (targetKeys.length > 0) {
-      await delMany(targetKeys, AUTO_ACTION_STORE)
-    }
-    if (moduleEntries.length > 0) {
-      await setMany(moduleEntries, AUTO_ACTION_STORE)
-    }
-  }
-
-  async function restoreAutoActionUserData(moduleEntries: Array<[string, unknown]>) {
-    await clear(AUTO_ACTION_USER_DATA_STORE)
-    if (moduleEntries.length > 0) {
-      await setMany(moduleEntries, AUTO_ACTION_USER_DATA_STORE)
-    }
-  }
-
-  async function restoreAutoActionHistory(moduleEntries: Array<[string, unknown]>) {
-    const allKeys = await keys<string>(AUTO_ACTION_STORE)
-    const targetKeys = allKeys.filter((key) => isAutoActionHistoryKey(String(key)))
-    if (targetKeys.length > 0) {
-      await delMany(targetKeys, AUTO_ACTION_STORE)
-    }
-    if (moduleEntries.length > 0) {
-      await setMany(moduleEntries, AUTO_ACTION_STORE)
-    }
+    await persistedFlush()
   }
 
   async function importBackup(filePath: string, modules: ClientBackupModule[]) {
@@ -433,23 +415,7 @@ export const useClientBackup = defineStore('clientBackup', () => {
 
       for (const module of modules) {
         const payload = await readModulePayload<Array<[string, unknown]>>(zip, manifest, module)
-        switch (module) {
-          case 'tauriStore':
-            await restoreTauriStore(payload)
-            break
-          case 'persistKv':
-            await restorePersistKv(payload)
-            break
-          case 'autoActionConfig':
-            await restoreAutoActionConfig(payload)
-            break
-          case 'autoActionUserData':
-            await restoreAutoActionUserData(payload)
-            break
-          case 'autoActionHistory':
-            await restoreAutoActionHistory(payload)
-            break
-        }
+        await restoreModule(module, payload)
       }
 
       return manifest

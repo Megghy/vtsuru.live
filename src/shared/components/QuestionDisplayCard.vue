@@ -102,8 +102,7 @@ const rootStyle = computed<CSSProperties>(() => {
     '--card-image-max-height': `${Math.max(80, props.setting.imageMaxHeight || 320)}px`,
     '--card-content-max-width': contentMaxWidth.value,
     '--card-content-justify': verticalAlign.value,
-    '--card-text-margin-inline':
-      align.value === 'right' ? 'auto 0' : align.value === 'center' ? 'auto' : '0 auto',
+    '--card-text-margin-inline': align.value === 'right' ? 'auto 0' : align.value === 'center' ? 'auto' : '0 auto',
     '--card-fg': fontColor,
     '--card-background': formatColorWithOpacity(props.setting.backgroundColor, props.setting.backgroundOpacity ?? 100),
     '--card-shadow': formatShadow(props.setting.shadow),

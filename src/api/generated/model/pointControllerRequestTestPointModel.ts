@@ -5,16 +5,16 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventDataTypes } from './eventDataTypes';
+import type { EventDataTypes } from './eventDataTypes'
 
 export interface PointControllerRequestTestPointModel {
-  type: EventDataTypes;
+  type: EventDataTypes
   /** @nullable */
-  giftName?: string | null;
+  giftName?: string | null
   /** @nullable */
-  giftPrice?: number | null;
+  giftPrice?: number | null
   /** @nullable */
-  giftCount?: number | null;
+  giftCount?: number | null
   /** @nullable */
-  guardLevel?: string | null;
+  guardLevel?: string | null
 }

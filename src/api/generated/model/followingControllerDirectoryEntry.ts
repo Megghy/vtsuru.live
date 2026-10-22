@@ -7,14 +7,14 @@
  */
 
 export interface FollowingControllerDirectoryEntry {
-  id: number;
-  name: string;
-  avatar: string;
-  roomId: number;
-  title: string;
-  cover: string;
-  area: string;
-  status: string;
-  updatedAt: number;
-  isFollowing: boolean;
+  id: number
+  name: string
+  avatar: string
+  roomId: number
+  title: string
+  cover: string
+  area: string
+  status: string
+  updatedAt: number
+  isFollowing: boolean
 }

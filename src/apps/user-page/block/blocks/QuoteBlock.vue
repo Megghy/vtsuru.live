@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
-import { NIcon } from 'naive-ui'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'
@@ -42,34 +41,37 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
 
 <template>
   <BlockCard
-    class="quote-card"
+    class="relative"
     :framed="cfg.framed"
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <div class="quote-bg-icon">
-      <NIcon><ChatbubbleEllipsesOutline /></NIcon>
+    <div class="absolute -top-2.5 left-2.5 opacity-5 text-muted-foreground pointer-events-none z-0">
+      <component
+        :is="ChatbubbleEllipsesOutline"
+        class="size-20"
+      />
     </div>
     <div
-      class="quote"
+      class="px-2 py-4 relative z-1 h-full flex flex-col justify-center"
       :style="{ textAlign: cfg.align }"
     >
       <div
         v-if="cfg.text"
-        class="quote-text"
-        :class="fxClass"
+        class="block text-xl font-serif font-bold leading-normal whitespace-pre-wrap italic text-foreground"
+        :class="[fxClass, fxClass.includes('vtsuru-text-fx--typewriter') ? 'whitespace-nowrap' : '']"
       >
         “{{ cfg.text }}”
       </div>
       <div
         v-else
-        class="quote-text placeholder"
+        class="block font-sans not-italic font-normal text-sm text-muted-foreground"
       >
         未设置内容
       </div>
       <div
         v-if="cfg.author"
-        class="quote-author"
+        class="block mt-4 text-sm font-medium text-muted-foreground"
       >
         —— {{ cfg.author }}
       </div>
@@ -77,64 +79,4 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
   </BlockCard>
 </template>
 
-<style scoped>
-.quote-card {
-  position: relative;
-}
 
-.quote-card :deep(.n-card__content) {
-  height: 100%;
-}
-
-.quote-bg-icon {
-  position: absolute;
-  top: -10px;
-  left: 10px;
-  font-size: 80px;
-  opacity: 0.05;
-  color: var(--vtsuru-fg-muted);
-  pointer-events: none;
-  z-index: 0;
-}
-
-.quote {
-  padding: 16px 8px;
-  position: relative;
-  z-index: 1;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.quote-text {
-  display: block;
-  font-size: 20px;
-  font-family: serif;
-  font-weight: 700;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  font-style: italic;
-  color: var(--vtsuru-block-fg);
-}
-
-.quote-text.placeholder {
-  font-family: inherit;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 14px;
-  color: var(--vtsuru-fg-muted);
-}
-
-.quote-author {
-  display: block;
-  margin-top: 16px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--vtsuru-fg-muted);
-}
-
-.quote-text.vtsuru-text-fx--typewriter {
-  white-space: nowrap;
-}
-</style>

@@ -10,7 +10,8 @@ import { isPermissionGranted, onAction, requestPermission, sendNotification } fr
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { check } from '@tauri-apps/plugin-updater'
-import { h, ref } from 'vue'
+import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { isLoggedIn, useAccount } from '@/api/account'
 import {
@@ -26,13 +27,13 @@ import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useLiveEmoji } from '@/store/useLiveEmoji'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
-import { usePngtuberDriver } from '../store/usePngtuberDriver'
 import { useAutoAction } from '../store/useAutoAction'
 import { useBiliAccountManager } from '../store/useBiliAccountManager'
 import { useBiliCookie } from '../store/useBiliCookie'
 import { useBiliFunction } from '../store/useBiliFunction'
 import { useClientBackup } from '../store/useClientBackup'
 import { useDanmakuWindow } from '../store/useDanmakuWindow'
+import { usePngtuberDriver } from '../store/usePngtuberDriver'
 import { useSettings } from '../store/useSettings'
 import { useTranscription } from '../store/useTranscription'
 import { useVtsStore } from '../store/useVtsStore'
@@ -45,7 +46,8 @@ export const clientInited = ref(false)
 export const clientInitStage = ref('')
 let tray: TrayIcon | undefined
 let updateCheckTimer: number | null = null
-let updateNotificationRef: any = null
+const UPDATE_TOAST_ID = 'client-update-available'
+const UPDATE_PROGRESS_ID = 'client-update-progress'
 
 function setInitStageSafely(stage: string) {
   if (clientInitStage.value !== '启动完成') {
@@ -87,7 +89,7 @@ function startDanmakuClientInitFlow() {
       setInitStageSafely('弹幕客户端初始化失败')
     })
     .finally(() => {
-      danmakuInitNoticeRef?.destroy()
+      danmakuInitNoticeRef?.destroy?.()
     })
 }
 
@@ -279,10 +281,8 @@ export function stopUpdateCheck() {
     updateCheckTimer = null
     info('[更新检查] 定时器已停止')
   }
-  if (updateNotificationRef) {
-    updateNotificationRef.destroy()
-    updateNotificationRef = null
-  }
+  toast.dismiss(UPDATE_TOAST_ID)
+  toast.dismiss(UPDATE_PROGRESS_ID)
 }
 
 async function checkUpdatePeriodically() {
@@ -302,38 +302,19 @@ async function checkUpdatePeriodically() {
         })
       }
 
-      // 显示不可关闭的 NaiveUI notification
-      if (!updateNotificationRef) {
-        updateNotificationRef = window.$notification.warning({
-          title: '发现新版本',
-          content: `VTsuru.Client ${update.version} 现已可用`,
-          meta: update.date,
-          action: () => {
-            return h('div', { style: 'display: flex; gap: 8px; margin-top: 8px;' }, [
-              h(
-                'button',
-                {
-                  class: 'n-button n-button--primary-type n-button--small-type',
-                  onClick: () => {
-                    void handleUpdateInstall(update)
-                  },
-                },
-                '立即更新',
-              ),
-              h(
-                'button',
-                {
-                  class: 'n-button n-button--default-type n-button--small-type',
-                  onClick: () => handleUpdateDismiss(),
-                },
-                '稍后提醒',
-              ),
-            ])
-          },
-          closable: false,
-          duration: 0, // 不自动关闭
-        })
-      }
+      toast.warning('发现新版本', {
+        id: UPDATE_TOAST_ID,
+        description: `VTsuru.Client ${update.version} 现已可用${update.date ? `\n${update.date}` : ''}`,
+        duration: Infinity,
+        action: {
+          label: '立即更新',
+          onClick: () => void handleUpdateInstall(update),
+        },
+        cancel: {
+          label: '稍后提醒',
+          onClick: handleUpdateDismiss,
+        },
+      })
     } else {
       info('[更新检查] 当前已是最新版本')
     }
@@ -342,45 +323,20 @@ async function checkUpdatePeriodically() {
   }
 }
 
+function showUpdateProgress(description: string) {
+  toast.loading('正在下载更新', {
+    id: UPDATE_PROGRESS_ID,
+    description,
+    duration: Infinity,
+  })
+}
+
 async function handleUpdateInstall(update: any) {
   try {
-    // 关闭提示
-    if (updateNotificationRef) {
-      updateNotificationRef.destroy()
-      updateNotificationRef = null
-    }
-
-    // 显示下载进度通知
+    toast.dismiss(UPDATE_TOAST_ID)
     let downloaded = 0
     let contentLength = 0
-    const progressPercentage = ref(0)
-    const progressText = ref('准备下载更新...')
-    const progressNotification = window.$notification.info({
-      title: '正在下载更新',
-      content: () =>
-        h('div', { style: 'display: flex; flex-direction: column; gap: 10px; min-width: 240px;' }, [
-          h(
-            'div',
-            {
-              style: 'height: 6px; border-radius: 999px; background: var(--vtsuru-bg-inset); overflow: hidden;',
-            },
-            [
-              h('div', {
-                style: `height: 100%; width: ${progressPercentage.value}%; background: linear-gradient(90deg, var(--vtsuru-primary), var(--vtsuru-primary-hover)); transition: width 0.2s ease;`,
-              }),
-            ],
-          ),
-          h(
-            'div',
-            {
-              style: 'font-size: 12px; color: var(--vtsuru-fg); text-align: center;',
-            },
-            progressText.value,
-          ),
-        ]),
-      closable: false,
-      duration: 0,
-    })
+    showUpdateProgress('准备下载更新...')
 
     info('[更新] 开始下载并安装更新')
     await update.downloadAndInstall((event: any) => {
@@ -388,38 +344,30 @@ async function handleUpdateInstall(update: any) {
         case 'Started':
           contentLength = event.data.contentLength || 0
           info(`[更新] 开始下载 ${contentLength} 字节`)
-          progressPercentage.value = 0
-          progressText.value = '正在连接下载源...'
+          showUpdateProgress('正在连接下载源...')
           break
         case 'Progress': {
           downloaded += event.data.chunkLength
-          const progress = contentLength > 0 ? Math.round((downloaded / contentLength) * 100) : 0
-          progressPercentage.value = Number.isFinite(progress) ? progress : 0
           const downloadedMb = Math.max(downloaded / 1024 / 1024, 0)
           const totalMb = Math.max(contentLength / 1024 / 1024, 0)
           const formatMb = (value: number) =>
             value >= 100 ? Math.round(value).toString() : (Math.round(value * 10) / 10).toString()
-          progressText.value =
-            contentLength > 0 ? `已下载 ${formatMb(downloadedMb)}MB / ${formatMb(totalMb)}MB` : '正在下载更新...'
+          showUpdateProgress(
+            contentLength > 0 ? `已下载 ${formatMb(downloadedMb)}MB / ${formatMb(totalMb)}MB` : '正在下载更新...',
+          )
           info(`[更新] 已下载 ${downloaded} / ${contentLength} 字节`)
           break
         }
         case 'Finished':
           info('[更新] 下载完成')
-          progressPercentage.value = 100
-          progressText.value = '下载完成，正在安装...'
+          showUpdateProgress('下载完成，正在安装...')
           break
       }
     })
 
-    progressNotification.destroy()
+    toast.dismiss(UPDATE_PROGRESS_ID)
     info('[更新] 更新安装完成，准备重启应用')
-
-    window.$notification.success({
-      title: '更新完成',
-      content: '应用将在 3 秒后重启',
-      duration: 3000,
-    })
+    toast.success('更新完成', { description: '应用将在 3 秒后重启', duration: 3000 })
 
     // 延迟 3 秒后重启
     await new Promise((resolve) => setTimeout(resolve, 3000))
@@ -431,19 +379,13 @@ async function handleUpdateInstall(update: any) {
     await relaunch()
   } catch (error) {
     warn(`[更新] 安装更新失败: ${error}`)
-    window.$notification.error({
-      title: '更新失败',
-      content: `更新安装失败: ${error}`,
-      duration: 5000,
-    })
+    toast.dismiss(UPDATE_PROGRESS_ID)
+    toast.error('更新失败', { description: `更新安装失败: ${error}`, duration: 5000 })
   }
 }
 
 function handleUpdateDismiss() {
-  if (updateNotificationRef) {
-    updateNotificationRef.destroy()
-    updateNotificationRef = null
-  }
+  toast.dismiss(UPDATE_TOAST_ID)
   info('[更新] 用户选择稍后更新')
 }
 

@@ -7,16 +7,16 @@
  */
 
 export type GetApiNotificationGetParams = {
-/**
- * 当前页码
- */
-pn?: number;
-/**
- * 每页容量
- */
-ps?: number;
-/**
- * 是否只返回未读通知
- */
-unread?: boolean;
-};
+  /**
+   * 当前页码
+   */
+  pn?: number
+  /**
+   * 每页容量
+   */
+  ps?: number
+  /**
+   * 是否只返回未读通知
+   */
+  unread?: boolean
+}

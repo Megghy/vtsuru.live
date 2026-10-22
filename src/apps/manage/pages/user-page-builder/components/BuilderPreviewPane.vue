@@ -10,38 +10,22 @@ import {
   TabletPortraitOutline,
 } from '@vicons/ionicons5'
 import { useNow } from '@vueuse/core'
-import type { GlobalThemeOverrides } from 'naive-ui'
-import {
-  darkTheme,
-  NAlert,
-  NButton,
-  NButtonGroup,
-  NCard,
-  NConfigProvider,
-  NDatePicker,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NPopover,
-  NSelect,
-  NTooltip,
-} from 'naive-ui'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
 import { fetchBiliProfile } from '@/apps/user-page/api'
-import {
-  getPageBackgroundCssVars,
-  getUserPageNaiveThemeOverrides,
-  getUserPageThemeCssVars,
-  resolvePageBackground,
-} from '@/apps/user-page/background'
+import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { IndexTemplateMap } from '@/shared/config/templates'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
@@ -128,8 +112,6 @@ const previewEffectiveIsDark = computed(() => {
   return resolvePageThemeIsDark(mode, isDarkMode.value)
 })
 
-const previewNaiveTheme = computed(() => (previewEffectiveIsDark.value ? darkTheme : null))
-
 const previewBg = computed(() => {
   const pageOverride = resolvePageBackground((editor.currentPage.value as any)?.background)
   if (pageOverride) return pageOverride
@@ -148,40 +130,6 @@ const previewCanvasColor = usePageCanvasColor(previewBg, previewEffectiveIsDark)
 const previewUiVars = computed(() =>
   getUserPageThemeCssVars(previewMergedTheme.value, previewEffectiveIsDark.value, previewCanvasColor.value),
 )
-
-const previewUserThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  return getUserPageNaiveThemeOverrides(previewMergedTheme.value, previewUiVars.value, previewEffectiveIsDark.value)
-})
-
-const previewSurfaceThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const bg = previewBg.value
-  if (!bg || bg.blurMode === 'none') return {}
-  const vars = previewUiVars.value
-  const borderColor = vars['--vtsuru-card-border-color'] ?? vars['--user-page-border-color']
-  return {
-    common: {
-      borderColor,
-      dividerColor: borderColor,
-    },
-    List: {
-      color: 'transparent',
-      listItemColor: 'transparent',
-      borderColor,
-    },
-  }
-})
-
-const previewThemeOverrides = computed<GlobalThemeOverrides>(() => {
-  const user = previewUserThemeOverrides.value
-  const surface = previewSurfaceThemeOverrides.value
-  return {
-    ...user,
-    ...surface,
-    common: { ...user.common, ...surface.common },
-    Card: { ...user.Card, ...surface.Card },
-    List: { ...user.List, ...surface.List },
-  }
-})
 
 const previewBgClass = computed(() => ({
   'preview-bg-host': true,
@@ -218,279 +166,218 @@ watch(
 </script>
 
 <template>
-  <NCard
-    class="pane-card"
-    :title="`预览 - ${editor.currentLabel.value}`"
-    content-style="display:flex; flex-direction:column; height:100%; min-height:0; overflow:hidden"
-  >
-    <template #header-extra>
-      <NFlex
-        align="center"
-        :wrap="false"
-        size="small"
-      >
-        <NButtonGroup size="small">
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                :type="previewMode === 'select' ? 'primary' : 'default'"
-                :secondary="previewMode === 'select'"
-                aria-label="选择区块"
-                @click="previewMode = 'select'"
-              >
-                <template #icon>
-                  <NIcon><NavigateOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            选择区块
-          </NTooltip>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                :type="previewMode === 'interact' ? 'primary' : 'default'"
-                :secondary="previewMode === 'interact'"
-                aria-label="操作页面"
-                @click="previewMode = 'interact'"
-              >
-                <template #icon>
-                  <NIcon><HandLeftOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            操作页面
-          </NTooltip>
-        </NButtonGroup>
-        <NButtonGroup size="small">
-          <NTooltip
+  <Card class="pane-card w-full h-full flex flex-col border border-border">
+    <CardHeader class="p-3 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
+      <CardTitle class="text-sm font-semibold truncate max-w-[200px]">
+        预览 - {{ editor.currentLabel.value }}
+      </CardTitle>
+
+      <div class="flex items-center gap-1.5">
+        <div class="flex items-center bg-muted p-0.5 rounded-lg">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  :variant="previewMode === 'select' ? 'default' : 'ghost'"
+                  class="size-7 p-0"
+                  aria-label="选择区块"
+                  @click="previewMode = 'select'"
+                >
+                  <component
+                    :is="NavigateOutline"
+                    class="size-3.5"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">选择区块</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  :variant="previewMode === 'interact' ? 'default' : 'ghost'"
+                  class="size-7 p-0"
+                  aria-label="操作页面"
+                  @click="previewMode = 'interact'"
+                >
+                  <component
+                    :is="HandLeftOutline"
+                    class="size-3.5"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">操作页面</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div class="flex items-center bg-muted p-0.5 rounded-lg">
+          <TooltipProvider
             v-for="option in viewportOptions"
             :key="option.value"
           >
-            <template #trigger>
-              <NButton
-                :type="viewport === option.value ? 'primary' : 'default'"
-                :secondary="viewport === option.value"
-                :aria-label="`${option.label}预览`"
-                @click="viewport = option.value"
-              >
-                <template #icon>
-                  <NIcon><component :is="option.icon" /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            {{ option.label }}预览
-          </NTooltip>
-        </NButtonGroup>
-        <NPopover
-          trigger="click"
-          placement="bottom-end"
-        >
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  :variant="viewport === option.value ? 'default' : 'ghost'"
+                  class="size-7 p-0"
+                  :aria-label="`${option.label}预览`"
+                  @click="viewport = option.value"
+                >
+                  <component
+                    :is="option.icon"
+                    class="size-3.5"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">{{ option.label }}预览</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <Popover>
+          <PopoverTrigger as-child>
+            <Button
+              variant="ghost"
+              class="size-7 p-0"
               aria-label="预览条件"
             >
-              <template #icon>
-                <NIcon><OptionsOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          <NForm
-            label-placement="top"
-            size="small"
-            style="width: 260px"
-          >
-            <NFormItem label="直播状态">
-              <NSelect
-                v-model:value="simulatedLiveState"
-                :options="[
-                  { label: '使用真实状态', value: 'actual' },
-                  { label: '模拟直播中', value: 'live' },
-                  { label: '模拟未开播', value: 'offline' },
-                ]"
+              <component
+                :is="OptionsOutline"
+                class="size-3.5"
               />
-            </NFormItem>
-            <NFormItem label="预览时间">
-              <NDatePicker
-                v-model:value="simulatedNow"
-                type="datetime"
-                clearable
-                style="width: 100%"
-              />
-            </NFormItem>
-          </NForm>
-        </NPopover>
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              quaternary
-              circle
-              size="small"
-              aria-label="在真实页面中预览草稿"
-              @click="editor.openPreview"
-            >
-              <template #icon>
-                <NIcon><OpenOutline /></NIcon>
-              </template>
-            </NButton>
-          </template>
-          在真实页面中预览草稿
-        </NTooltip>
-      </NFlex>
-    </template>
-    <div
-      ref="previewRoot"
-      class="preview-pane-content"
-    >
-      <NConfigProvider
-        abstract
-        :theme="null"
-        :theme-overrides="null"
-      >
-        <NConfigProvider
-          abstract
-          :theme="previewNaiveTheme"
-          :theme-overrides="previewThemeOverrides"
-        >
-          <PhonePreview
-            :style="[previewUiVars, previewBgVars]"
-            :is-dark="previewEffectiveIsDark"
-            :transparent="!!previewBg"
-            :viewport="viewport"
-          >
-            <template #background>
-              <div :class="previewBgClass" />
-            </template>
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent class="w-64 p-3 text-xs flex flex-col gap-2.5">
+            <div class="flex flex-col gap-1">
+              <label class="text-muted-foreground font-medium">直播状态</label>
+              <Select v-model="simulatedLiveState">
+                <SelectTrigger size="xs">
+                  <SelectValue placeholder="直播状态" />
+                </SelectTrigger>
+                <SelectContent class="text-xs">
+                  <SelectItem value="actual">使用真实状态</SelectItem>
+                  <SelectItem value="live">模拟直播中</SelectItem>
+                  <SelectItem value="offline">模拟未开播</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </PopoverContent>
+        </Popover>
 
-            <Transition
-              name="fade-slide"
-              mode="out-in"
-            >
-              <div
-                :key="
-                  editor.currentPage.value.mode === 'block' && editor.currentProject.value
-                    ? 'block'
-                    : editor.currentPage.value.mode
-                "
-                class="preview-content"
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                class="size-7 p-0"
+                aria-label="在真实页面中预览草稿"
+                @click="editor.openPreview"
               >
-                <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
-                  <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
-                    <BlockPageRenderer
-                      :project="previewMergedProject"
-                      :user-info="editor.account.value"
-                      :bili-info="biliProfileQuery.data.value"
-                      :bili-status="biliProfileStatus"
-                      :is-dark="previewEffectiveIsDark"
-                      :canvas-color="previewCanvasColor"
-                      :extra-theme-overrides="previewSurfaceThemeOverrides"
-                      :highlight-block-id="previewHighlightBlockId"
-                      :selected-block-ids="editor.selectedBlockIds.value"
-                      :editor-mode="previewMode"
-                      :visibility-context="previewVisibilityContext"
-                      @select-block="selectPreviewBlock"
-                      @hover-block="editor.hoveredBlockId.value = $event"
-                    />
-                  </div>
-                </template>
-                <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-                  <component
-                    :is="legacyIndexTemplate"
-                    :user-info="editor.account.value as any"
-                    :bili-info="biliProfileQuery.data.value"
-                  />
-                </template>
-                <template v-else-if="editor.currentPage.value.mode === 'contrib'">
-                  <div class="contrib-preview-placeholder">
-                    <div class="contrib-placeholder-card">
-                      <NIcon
-                        size="40"
-                        :component="CodeSlashOutline"
-                        style="color: var(--vtsuru-primary); margin-bottom: 8px"
-                      />
-                      <div class="contrib-placeholder-title">
-                        扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
-                      </div>
-                      <div class="contrib-placeholder-desc">
-                        扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId 与相关属性，保存后可在外部预览中查看实际渲染效果。
-                      </div>
-                      <NFlex
-                        justify="center"
-                        style="margin-top: 14px"
-                      >
-                        <NButton
-                          type="primary"
-                          secondary
-                          size="small"
-                          @click="editor.openPreview"
-                        >
-                          <template #icon>
-                            <NIcon><OpenOutline /></NIcon>
-                          </template>
-                          在对外页面中预览
-                        </NButton>
-                      </NFlex>
-                    </div>
-                  </div>
-                </template>
-                <template v-else>
-                  <NAlert
-                    type="info"
-                    :show-icon="true"
-                  >
-                    当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
-                  </NAlert>
-                </template>
+                <component
+                  :is="OpenOutline"
+                  class="size-3.5"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs">在真实页面中预览草稿</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </CardHeader>
+
+    <CardContent
+      ref="previewRoot"
+      class="p-0 flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col"
+    >
+      <PhonePreview
+        :style="[previewUiVars, previewBgVars]"
+        :is-dark="previewEffectiveIsDark"
+        :transparent="!!previewBg"
+        :viewport="viewport"
+      >
+        <template #background>
+          <div :class="previewBgClass" />
+        </template>
+
+        <Transition
+          name="fade-slide"
+          mode="out-in"
+        >
+          <div
+            :key="
+              editor.currentPage.value.mode === 'block' && editor.currentProject.value
+                ? 'block'
+                : editor.currentPage.value.mode
+            "
+            class="preview-content"
+          >
+            <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
+              <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
+                <BlockPageRenderer
+                  :project="previewMergedProject"
+                  :user-info="editor.account.value"
+                  :bili-info="biliProfileQuery.data.value"
+                  :bili-status="biliProfileStatus"
+                  :is-dark="previewEffectiveIsDark"
+                  :canvas-color="previewCanvasColor"
+                  :highlight-block-id="previewHighlightBlockId"
+                  :selected-block-ids="editor.selectedBlockIds.value"
+                  :editor-mode="previewMode"
+                  :visibility-context="previewVisibilityContext"
+                  @select-block="selectPreviewBlock"
+                  @hover-block="editor.hoveredBlockId.value = $event"
+                />
               </div>
-            </Transition>
-          </PhonePreview>
-        </NConfigProvider>
-      </NConfigProvider>
-    </div>
-  </NCard>
+            </template>
+            <template v-else-if="editor.currentPage.value.mode === 'legacy'">
+              <component
+                :is="legacyIndexTemplate"
+                :user-info="editor.account.value as any"
+                :bili-info="biliProfileQuery.data.value"
+              />
+            </template>
+            <template v-else-if="editor.currentPage.value.mode === 'contrib'">
+              <div class="contrib-preview-placeholder flex items-center justify-center min-h-[320px] p-6">
+                <div
+                  class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
+                >
+                  <component
+                    :is="CodeSlashOutline"
+                    class="size-10 text-primary mb-2"
+                  />
+                  <div class="text-sm font-semibold mb-1">
+                    扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
+                  </div>
+                  <div class="text-xs text-muted-foreground leading-relaxed">
+                    扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId
+                    与相关属性，保存后可在外部预览中查看实际渲染效果。
+                  </div>
+                  <div class="flex justify-center mt-3.5">
+                    <Button @click="editor.openPreview">
+                      <component
+                        :is="OpenOutline"
+                        class="size-3.5 mr-1"
+                      />
+                      在对外页面中预览
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <template v-else>
+              <Alert class="text-xs py-2 m-4">
+                <AlertDescription>
+                  当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
+                </AlertDescription>
+              </Alert>
+            </template>
+          </div>
+        </Transition>
+      </PhonePreview>
+    </CardContent>
+  </Card>
 </template>
 
-<style scoped>
-.preview-pane-content {
-  display: flex;
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.contrib-preview-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 320px;
-  padding: 24px;
-}
-
-.contrib-placeholder-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 380px;
-  padding: 24px 20px;
-  border-radius: 12px;
-  border: 1px dashed var(--vtsuru-border);
-  background: var(--vtsuru-bg-muted);
-}
-
-.contrib-placeholder-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  margin-bottom: 6px;
-}
-
-.contrib-placeholder-desc {
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--vtsuru-fg-muted);
-}
-</style>

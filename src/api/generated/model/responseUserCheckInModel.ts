@@ -7,12 +7,12 @@
  */
 
 export interface ResponseUserCheckInModel {
-  ouId?: string;
-  name: string;
-  consecutiveDays: number;
-  points: number;
-  lastCheckInTime: number;
-  isAuthed: boolean;
-  monthlyCheckInCount: number;
-  totalCheckInCount: number;
+  ouId?: string
+  name: string
+  consecutiveDays: number
+  points: number
+  lastCheckInTime: number
+  isAuthed: boolean
+  monthlyCheckInCount: number
+  totalCheckInCount: number
 }

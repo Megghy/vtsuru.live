@@ -27,19 +27,13 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
     :backgrounded="config.backgrounded"
   >
     <div
-      class="rich-text"
+      class="rich-text text-foreground text-sm leading-[1.75] break-words"
       v-html="safeHtml"
     />
   </BlockCard>
 </template>
 
 <style scoped>
-.rich-text {
-  color: var(--vtsuru-block-fg);
-  font-size: 14px;
-  line-height: 1.75;
-  overflow-wrap: anywhere;
-}
 .rich-text :deep(p) {
   margin: 1em 0;
 }
@@ -62,7 +56,7 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
   margin-bottom: 0.25em;
 }
 .rich-text :deep(a) {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--vtsuru-brand)));
+  color: var(--primary);
   border-bottom: 1px solid transparent;
   font-weight: 500;
   text-decoration: none;
@@ -71,11 +65,11 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
     opacity 0.2s ease;
 }
 .rich-text :deep(a:hover) {
-  border-bottom-color: var(--vtsuru-page-primary, var(--vtsuru-brand));
+  border-bottom-color: var(--primary);
   opacity: 0.8;
 }
 .rich-text :deep(a:focus-visible) {
-  outline: 2px solid var(--vtsuru-page-primary, var(--vtsuru-brand));
+  outline: 2px solid var(--primary);
   outline-offset: 2px;
 }
 .rich-text :deep(img) {
@@ -83,16 +77,16 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
   max-width: 100%;
   height: auto;
   margin: 1.5em auto;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  border-radius: var(--vtsuru-page-radius);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 .rich-text :deep(blockquote) {
   margin: 1.5em 0;
   padding: 0.5em 1.25em;
-  border-left: 4px solid var(--vtsuru-block-border);
-  border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-block-fg-muted);
-  background: var(--vtsuru-block-bg-muted);
+  border-left: 4px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
+  background: var(--muted);
 }
 .rich-text :deep(h1),
 .rich-text :deep(h2),
@@ -103,7 +97,6 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
   margin: 1.2em 0 0.6em;
   line-height: 1.25;
   font-weight: 750;
-  letter-spacing: 0;
 }
 .rich-text :deep(h1) {
   font-size: 28px;
@@ -137,9 +130,9 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
 }
 .rich-text :deep(:not(pre) > code) {
   padding: 0.14em 0.4em;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-block-bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
   font-size: 0.92em;
   white-space: break-spaces;
 }
@@ -147,9 +140,9 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
   margin: 1.5em 0;
   padding: 12px 16px;
   overflow: auto;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-block-bg-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--muted);
   font-size: 13px;
 }
 .rich-text :deep(pre > code) {
@@ -162,7 +155,7 @@ const safeHtml = computed(() => sanitizeRichText(config.value.html))
 .rich-text :deep(hr) {
   margin: 2em 0;
   border: 0;
-  border-top: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
+  border-top: 1px solid var(--border);
 }
 @media (prefers-reduced-motion: reduce) {
   .rich-text :deep(a) {

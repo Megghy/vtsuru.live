@@ -2,11 +2,16 @@
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import { NButton, NCard, NFlex, NInputNumber, NSelect, NSlider, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { formatFileSize } from '@/apps/manage/composables/formatters'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 
@@ -139,245 +144,170 @@ function clearAll() {
 </script>
 
 <template>
-  <div class="compress-page">
-    <NCard title="图片压缩与格式转换">
-      <template #header-extra>
-        <NText depth="3"> 批量压缩、调整尺寸、转换格式 </NText>
-      </template>
-
-      <!-- Controls -->
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="16"
-        style="margin-bottom: 16px"
-      >
-        <NFlex
-          align="center"
-          :size="8"
-        >
-          <NText depth="3"> 格式 </NText>
-          <NSelect
-            v-model:value="format"
-            :options="formatOptions"
-            style="width: 140px"
-          />
-        </NFlex>
-        <NFlex
-          v-if="isLossy"
-          align="center"
-          :size="8"
-        >
-          <NText depth="3"> 质量 </NText>
-          <NSlider
-            v-model:value="quality"
-            :min="10"
-            :max="100"
-            :step="5"
-            style="width: 120px"
-          />
-          <NText style="width: 36px; text-align: right"> {{ quality }}% </NText>
-        </NFlex>
-        <NFlex
-          align="center"
-          :size="8"
-        >
-          <NText depth="3"> 最大宽度 </NText>
-          <NInputNumber
-            v-model:value="maxWidth"
-            :min="0"
-            placeholder="不限"
-            clearable
-            style="width: 110px"
-          />
-        </NFlex>
-        <NFlex
-          align="center"
-          :size="8"
-        >
-          <NText depth="3"> 最大高度 </NText>
-          <NInputNumber
-            v-model:value="maxHeight"
-            :min="0"
-            placeholder="不限"
-            clearable
-            style="width: 110px"
-          />
-        </NFlex>
-        <NButton
-          v-if="items.length"
-          size="small"
-          @click="reprocessAll"
-        >
-          重新压缩
-        </NButton>
-      </NFlex>
-
-      <!-- Drop zone -->
-      <div
-        ref="dropZoneRef"
-        class="drop-zone"
-        :class="{ active: isOverDropZone }"
-        @click="() => openFilePicker()"
-      >
-        <NText style="font-size: 15px"> 拖拽图片到此处，或点击选择 </NText>
-        <NText
-          depth="3"
-          style="font-size: 13px"
-        >
-          支持多张图片同时上传
-        </NText>
-      </div>
-
-      <!-- Results -->
-      <template v-if="items.length">
-        <NFlex
-          justify="space-between"
-          align="center"
-          style="margin: 16px 0 8px"
-        >
-          <NText depth="3"> 共 {{ items.length }} 张图片 </NText>
-          <NFlex :size="8">
-            <NButton
-              size="small"
-              type="primary"
-              @click="downloadAll"
-            >
-              打包下载 ZIP
-            </NButton>
-            <NButton
-              size="small"
-              tertiary
-              @click="clearAll"
-            >
-              清空
-            </NButton>
-          </NFlex>
-        </NFlex>
-
-        <div class="image-grid">
-          <div
-            v-for="(item, idx) in items"
-            :key="idx"
-            class="image-card"
-          >
-            <img
-              :src="item.thumbUrl"
-              class="thumb"
-              alt=""
-            />
-            <div class="info">
-              <NText
-                class="filename"
-                :title="item.file.name"
-              >
-                {{ item.file.name }}
-              </NText>
-              <NText
-                v-if="item.compressedBlob"
-                depth="3"
-                style="font-size: 12px"
-              >
-                {{ formatFileSize(item.originalSize) }} → {{ formatFileSize(item.compressedSize) }}
-                <NText
-                  :type="item.compressedSize < item.originalSize ? 'success' : 'warning'"
-                  style="font-size: 12px"
-                >
-                  ({{ item.compressedSize < item.originalSize ? '-' : '+'
-                  }}{{ Math.abs(Math.round((1 - item.compressedSize / item.originalSize) * 100)) }}%)
-                </NText>
-              </NText>
-              <NText
-                v-else-if="item.processing"
-                depth="3"
-                style="font-size: 12px"
-              >
-                处理中...
-              </NText>
+  <div class="max-w-4xl mx-auto space-y-4">
+    <Card>
+      <CardHeader>
+        <CardTitle>图片压缩与格式转换</CardTitle>
+        <CardDescription>批量压缩、调整尺寸、转换格式</CardDescription>
+      </CardHeader>
+      <CardContent class="space-y-4">
+        <!-- Controls -->
+        <div class="flex flex-wrap items-center gap-4 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-muted-foreground">格式</span>
+            <div class="w-28">
+              <Select v-model="format">
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    v-for="opt in formatOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
+                    {{ opt.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            <NFlex
-              :size="4"
-              class="actions"
-            >
-              <NButton
-                size="tiny"
-                :disabled="!item.compressedBlob"
-                @click="downloadOne(item)"
-              >
-                下载
-              </NButton>
-              <NButton
-                size="tiny"
-                tertiary
-                @click="removeItem(idx)"
-              >
-                移除
-              </NButton>
-            </NFlex>
           </div>
+
+          <div
+            v-if="isLossy"
+            class="flex items-center gap-2"
+          >
+            <span class="text-muted-foreground">质量</span>
+            <div class="w-28">
+              <Slider
+                :model-value="[quality]"
+                :min="10"
+                :max="100"
+                :step="5"
+                @update:model-value="quality = $event?.[0] ?? quality"
+              />
+            </div>
+            <span class="w-10 text-right font-mono">{{ quality }}%</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-muted-foreground">最大宽度</span>
+            <div class="w-24">
+              <NumberField
+                v-model="maxWidth"
+                :min="0"
+                placeholder="不限"
+              />
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-muted-foreground">最大高度</span>
+            <div class="w-24">
+              <NumberField
+                v-model="maxHeight"
+                :min="0"
+                placeholder="不限"
+              />
+            </div>
+          </div>
+
+          <Button
+            v-if="items.length"
+            variant="outline"
+            @click="reprocessAll"
+          >
+            重新压缩
+          </Button>
         </div>
-      </template>
-    </NCard>
+
+        <!-- Drop zone -->
+        <div
+          ref="dropZoneRef"
+          class="flex flex-col items-center justify-center gap-1 p-8 rounded-lg border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 cursor-pointer transition-colors"
+          :class="{ 'border-primary bg-primary/5': isOverDropZone }"
+          @click="() => openFilePicker()"
+        >
+          <span class="text-sm font-medium text-foreground">拖拽图片到此处，或点击选择</span>
+          <span class="text-xs text-muted-foreground">支持多张图片同时上传</span>
+        </div>
+
+        <!-- Results -->
+        <template v-if="items.length">
+          <div class="flex justify-between items-center pt-2">
+            <span class="text-xs text-muted-foreground">共 {{ items.length }} 张图片</span>
+            <div class="flex gap-2">
+              <Button @click="downloadAll"> 打包下载 ZIP </Button>
+              <Button
+                variant="outline"
+                @click="clearAll"
+              >
+                清空
+              </Button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+            <div
+              v-for="(item, idx) in items"
+              :key="idx"
+              class="border border-border rounded-lg p-2 flex flex-col gap-2 bg-card text-xs"
+            >
+              <div class="w-full h-28 bg-muted/40 rounded flex items-center justify-center overflow-hidden">
+                <img
+                  :src="item.thumbUrl"
+                  class="max-h-full max-w-full object-contain"
+                  alt=""
+                />
+              </div>
+              <div class="flex flex-col gap-0.5 min-w-0">
+                <span
+                  class="font-medium truncate"
+                  :title="item.file.name"
+                  >{{ item.file.name }}</span
+                >
+                <span
+                  v-if="item.compressedBlob"
+                  class="text-[11px] text-muted-foreground"
+                >
+                  {{ formatFileSize(item.originalSize) }} → {{ formatFileSize(item.compressedSize) }}
+                  <span
+                    :class="
+                      item.compressedSize < item.originalSize ? 'text-emerald-500 font-semibold' : 'text-amber-500'
+                    "
+                  >
+                    ({{ item.compressedSize < item.originalSize ? '-' : '+'
+                    }}{{ Math.abs(Math.round((1 - item.compressedSize / item.originalSize) * 100)) }}%)
+                  </span>
+                </span>
+                <span
+                  v-else-if="item.processing"
+                  class="text-[11px] text-muted-foreground"
+                  >处理中...</span
+                >
+              </div>
+              <div class="flex justify-between items-center mt-auto pt-1">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  :disabled="!item.compressedBlob"
+                  @click="downloadOne(item)"
+                >
+                  下载
+                </Button>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="text-destructive"
+                  @click="removeItem(idx)"
+                >
+                  移除
+                </Button>
+              </div>
+            </div>
+          </div>
+        </template>
+      </CardContent>
+    </Card>
   </div>
 </template>
-
-<style scoped>
-.compress-page {
-  max-width: 960px;
-  margin: 0 auto;
-}
-.drop-zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 32px;
-  border: 2px dashed var(--vtsuru-border, #e0e0e0);
-  border-radius: 8px;
-  cursor: pointer;
-  transition:
-    border-color 0.2s,
-    background 0.2s;
-}
-.drop-zone:hover,
-.drop-zone.active {
-  border-color: var(--vtsuru-bg-muted, #18a058);
-  background: rgba(24, 160, 88, 0.04);
-}
-.image-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 12px;
-}
-.image-card {
-  border: 1px solid var(--vtsuru-border, #e0e0e0);
-  border-radius: 6px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.thumb {
-  width: 100%;
-  height: 120px;
-  object-fit: contain;
-  border-radius: 4px;
-  background: #f5f5f5;
-}
-.info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.filename {
-  font-size: 13px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.actions {
-  margin-top: auto;
-}
-</style>

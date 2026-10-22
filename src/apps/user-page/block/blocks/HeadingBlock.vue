@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import BlockCard from '../BlockCard.vue'
 import { getHeadingAnchorId } from '../sectionNavigation'
 import { normalizeTextAppearance, textAppearanceClass } from '../textAppearance'
+
 import '../textAppearance.css'
 
 const props = defineProps<{ blockProps: unknown; blockId?: string; userInfo?: unknown; biliInfo?: unknown }>()
@@ -38,16 +39,16 @@ const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockI
     :framed="model.framed"
     :backgrounded="model.backgrounded"
   >
-    <div class="heading-container">
+    <div class="@container min-w-0">
       <div
-        class="heading-wrapper"
-        :class="`level-${model.level}`"
+        class="heading-accent relative"
+        :class="model.level === 1 ? 'pl-3.5' : 'pl-3'"
       >
         <component
           :is="headingTag"
           :id="anchorId"
           data-user-page-section="true"
-          class="heading-text"
+          class="block m-0 text-foreground font-bold leading-tight scroll-mt-6"
           :class="fxClass"
           :style="{ fontSize: model.fontSize }"
         >
@@ -59,46 +60,19 @@ const anchorId = computed(() => (props.blockId ? getHeadingAnchorId(props.blockI
 </template>
 
 <style scoped>
-.heading-container {
-  container-type: inline-size;
-  min-width: 0;
-}
-
-.heading-wrapper {
-  position: relative;
-  padding-left: 12px;
-}
-
-.heading-wrapper.level-1 {
-  padding-left: 14px;
-}
-
-.heading-text {
-  display: block;
-  margin: 0;
-  color: var(--vtsuru-fg);
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0;
-  scroll-margin-top: 24px;
-}
-
-.level-1::before,
-.level-2::before {
+.heading-accent::before {
   content: '';
   position: absolute;
   left: 0;
   top: 4px;
   bottom: 4px;
   width: 4px;
-  background: var(--vtsuru-page-primary-soft, var(--vtsuru-brand-soft));
+  background: var(--primary);
+  opacity: 0.35;
   border-radius: 99px;
-  opacity: 0.8;
 }
-
 @container (max-width: 600px) {
-  .level-1::before,
-  .level-2::before {
+  .heading-accent::before {
     left: -8px;
   }
 }

@@ -6,11 +6,10 @@
  * OpenAPI spec version: v1
  */
 
-export type LiveLotteryTypes = typeof LiveLotteryTypes[keyof typeof LiveLotteryTypes];
-
+export type LiveLotteryTypes = (typeof LiveLotteryTypes)[keyof typeof LiveLotteryTypes]
 
 export const LiveLotteryTypes = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

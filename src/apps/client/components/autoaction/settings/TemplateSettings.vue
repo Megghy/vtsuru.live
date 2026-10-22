@@ -56,7 +56,7 @@ function handleTemplateUpdate(payload: { index: number; value: string }) {
 </script>
 
 <template>
-  <div class="template-settings">
+  <div class="relative">
     <TemplateEditor
       :template="props.action"
       :template-index="0"
@@ -69,9 +69,3 @@ function handleTemplateUpdate(payload: { index: number; value: string }) {
     />
   </div>
 </template>
-
-<style scoped>
-.template-settings {
-  position: relative;
-}
-</style>

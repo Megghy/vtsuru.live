@@ -7,6 +7,6 @@
  */
 
 export interface UpdateSupportTicketPreferencesModel {
-  isPublic: boolean;
-  emailOnStaffReply: boolean;
+  isPublic: boolean
+  emailOnStaffReply: boolean
 }

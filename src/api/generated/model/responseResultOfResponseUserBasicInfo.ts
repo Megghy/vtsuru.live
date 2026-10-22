@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseUserBasicInfo {
-  message: string;
-  code: number;
-  data: ResponseUserBasicInfo;
+  message: string
+  code: number
+  data: ResponseUserBasicInfo
 }

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Sparkle24Filled } from '@vicons/fluent'
-import { NIcon } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { UploadFileResponse } from '@/api/api-models'
@@ -140,152 +139,155 @@ defineExpose({ Config, DefaultConfig })
         ]"
         :style="boardStyle"
       >
-      <div
-        class="doodle-field"
-        aria-hidden="true"
-      >
-        <span class="doodle-heart">♡</span>
-        <span class="doodle-star">✦</span>
-        <span class="doodle-line" />
-      </div>
-
-      <div
-        v-for="image in effectiveConfig.decorativeFile"
-        :key="image.id"
-        class="free-decoration"
-        :style="{
-          left: `${image.x}%`,
-          top: `${image.y}%`,
-          width: `${image.width}%`,
-          transform: `translate(-50%, -50%) rotate(${image.rotation}deg)`,
-          opacity: image.opacity,
-          zIndex: image.zIndex,
-        }"
-      >
-        <img
-          :src="image.path"
-          alt=""
-        />
-      </div>
-
-      <header class="kawaii-head">
-        <span
-          class="washi-tape tape-head"
+        <div
+          class="doodle-field"
           aria-hidden="true"
-        />
-        <div class="head-mark">
-          <NIcon size="13"><Sparkle24Filled /></NIcon>
-          <span>MY WEEKLY SCRAPBOOK</span>
+        >
+          <span class="doodle-heart">♡</span>
+          <span class="doodle-star">✦</span>
+          <span class="doodle-line" />
         </div>
-        <h2>{{ effectiveConfig.heading }}</h2>
-        <div class="week-meta">
-          <span>{{ weekLabel }}</span>
-          <span>{{ eventCount }} 条记录</span>
+
+        <div
+          v-for="image in effectiveConfig.decorativeFile"
+          :key="image.id"
+          class="free-decoration"
+          :style="{
+            left: `${image.x}%`,
+            top: `${image.y}%`,
+            width: `${image.width}%`,
+            transform: `translate(-50%, -50%) rotate(${image.rotation}deg)`,
+            opacity: image.opacity,
+            zIndex: image.zIndex,
+          }"
+        >
+          <img
+            :src="image.path"
+            alt=""
+          />
         </div>
-      </header>
 
-      <figure
-        v-if="portraitUrl"
-        class="character-art"
-      >
-        <span
-          class="washi-tape tape-art"
-          aria-hidden="true"
-        />
-        <img
-          :src="portraitUrl"
-          :alt="`${props.userInfo?.name || '主播'}的贴纸形象`"
-          referrerpolicy="no-referrer"
-        />
-        <figcaption>@{{ props.userInfo?.name || 'VTUBER' }}</figcaption>
-      </figure>
+        <header class="kawaii-head">
+          <span
+            class="washi-tape tape-head"
+            aria-hidden="true"
+          />
+          <div class="head-mark">
+            <component
+              :is="Sparkle24Filled"
+              class="size-3.5 inline"
+            />
+            <span>MY WEEKLY SCRAPBOOK</span>
+          </div>
+          <h2>{{ effectiveConfig.heading }}</h2>
+          <div class="week-meta">
+            <span>{{ weekLabel }}</span>
+            <span>{{ eventCount }} 条记录</span>
+          </div>
+        </header>
 
-      <div class="scrapbook-layout schedule-day-stagger">
-        <article
-          v-for="(day, dayIndex) in days"
-          :key="day.english"
-          class="day-note"
-          :class="[`note-${dayIndex + 1}`, { 'is-today': day.isToday }]"
-          :style="{ '--day-index': dayIndex }"
+        <figure
+          v-if="portraitUrl"
+          class="character-art"
         >
           <span
-            class="washi-tape"
+            class="washi-tape tape-art"
             aria-hidden="true"
           />
-          <header class="day-head">
-            <span class="day-number">{{ day.shortLabel }}</span>
-            <div>
-              <strong>{{ day.label }}</strong>
-              <small>{{ day.english }} · {{ day.date }}</small>
-            </div>
-            <span
-              v-if="day.isToday"
-              class="today-mark"
-              >今天</span
-            >
-          </header>
+          <img
+            :src="portraitUrl"
+            :alt="`${props.userInfo?.name || '主播'}的贴纸形象`"
+            referrerpolicy="no-referrer"
+          />
+          <figcaption>@{{ props.userInfo?.name || 'VTUBER' }}</figcaption>
+        </figure>
 
-          <div
-            v-if="day.items.length"
-            class="event-list"
+        <div class="scrapbook-layout schedule-day-stagger">
+          <article
+            v-for="(day, dayIndex) in days"
+            :key="day.english"
+            class="day-note"
+            :class="[`note-${dayIndex + 1}`, { 'is-today': day.isToday }]"
+            :style="{ '--day-index': dayIndex }"
           >
+            <span
+              class="washi-tape"
+              aria-hidden="true"
+            />
+            <header class="day-head">
+              <span class="day-number">{{ day.shortLabel }}</span>
+              <div>
+                <strong>{{ day.label }}</strong>
+                <small>{{ day.english }} · {{ day.date }}</small>
+              </div>
+              <span
+                v-if="day.isToday"
+                class="today-mark"
+                >今天</span
+              >
+            </header>
+
             <div
-              v-for="(item, itemIndex) in day.items"
-              :key="item.id || itemIndex"
-              class="event-row"
-              :style="{ '--event-tag-color': resolveEventColor(item.tag) }"
+              v-if="day.items.length"
+              class="event-list"
             >
-              <time>{{ item.time || '待定' }}</time>
-              <div class="event-copy">
-                <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
-                <span v-if="item.tag"># {{ item.tag }}</span>
+              <div
+                v-for="(item, itemIndex) in day.items"
+                :key="item.id || itemIndex"
+                class="event-row"
+                :style="{ '--event-tag-color': resolveEventColor(item.tag) }"
+              >
+                <time>{{ item.time || '待定' }}</time>
+                <div class="event-copy">
+                  <strong>{{ item.title || item.tag || '未命名直播' }}</strong>
+                  <span v-if="item.tag"># {{ item.tag }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <p
-            v-else
-            class="schedule-empty-copy rest-note"
-          >
-            留白日 · 好好休息
-          </p>
-        </article>
-
-        <aside class="week-note">
-          <span
-            class="washi-tape"
-            aria-hidden="true"
-          />
-          <p>WEEK NOTES</p>
-          <strong>{{ eventCount }} LIVE ENTRIES</strong>
-          <dl>
-            <div>
-              <dt>ON AIR</dt>
-              <dd>{{ activeDayCount }} DAYS</dd>
-            </div>
-            <div>
-              <dt>OFF</dt>
-              <dd>{{ days.length - activeDayCount }} DAYS</dd>
-            </div>
-          </dl>
-          <div
-            v-if="weeklyTags.length"
-            class="week-note__tags"
-          >
-            <span
-              v-for="tag in weeklyTags"
-              :key="tag"
-              ># {{ tag }}</span
+            <p
+              v-else
+              class="schedule-empty-copy rest-note"
             >
-          </div>
-        </aside>
-      </div>
+              留白日 · 好好休息
+            </p>
+          </article>
 
-      <div
-        class="rubber-stamp"
-        aria-hidden="true"
-      >
-        LIVE<br />NOTES
-      </div>
+          <aside class="week-note">
+            <span
+              class="washi-tape"
+              aria-hidden="true"
+            />
+            <p>WEEK NOTES</p>
+            <strong>{{ eventCount }} LIVE ENTRIES</strong>
+            <dl>
+              <div>
+                <dt>ON AIR</dt>
+                <dd>{{ activeDayCount }} DAYS</dd>
+              </div>
+              <div>
+                <dt>OFF</dt>
+                <dd>{{ days.length - activeDayCount }} DAYS</dd>
+              </div>
+            </dl>
+            <div
+              v-if="weeklyTags.length"
+              class="week-note__tags"
+            >
+              <span
+                v-for="tag in weeklyTags"
+                :key="tag"
+                ># {{ tag }}</span
+              >
+            </div>
+          </aside>
+        </div>
+
+        <div
+          class="rubber-stamp"
+          aria-hidden="true"
+        >
+          LIVE<br />NOTES
+        </div>
       </div>
     </Transition>
   </section>

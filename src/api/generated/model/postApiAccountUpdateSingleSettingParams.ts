@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountUpdateSingleSettingParams = {
-name?: string;
-};
+  name?: string
+}

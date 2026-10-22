@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { ViolationTypes } from '@/api/api-models'
 import * as queryApi from '@/api/query'
-import { QUESTION_API_URL } from '@/shared/config'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { createMockQuestion } from '@/test/testUtils'
 
@@ -101,7 +100,9 @@ describe('useQuestionBox store', () => {
 
   describe('话题与标签 API 契约', () => {
     it('addTag 正确调用 POST add-tag', async () => {
-      const postSpy = vi.spyOn(queryApi, 'QueryPostAPIWithParams').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      const postSpy = vi
+        .spyOn(queryApi, 'QueryPostAPIWithParams')
+        .mockResolvedValue({ code: 200, message: 'ok', data: [] })
       await store.addTag('新话题')
       expect(postSpy).toHaveBeenCalledWith(
         expect.stringContaining('add-tag'),
@@ -114,7 +115,9 @@ describe('useQuestionBox store', () => {
     })
 
     it('delTag 正确调用 POST delete-tag', async () => {
-      const postSpy = vi.spyOn(queryApi, 'QueryPostAPIWithParams').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      const postSpy = vi
+        .spyOn(queryApi, 'QueryPostAPIWithParams')
+        .mockResolvedValue({ code: 200, message: 'ok', data: [] })
       await store.delTag('旧话题')
       expect(postSpy).toHaveBeenCalledWith(
         expect.stringContaining('delete-tag'),
@@ -127,7 +130,9 @@ describe('useQuestionBox store', () => {
     })
 
     it('changeTagVisiable 正确调用 POST update-tag-visible', async () => {
-      const postSpy = vi.spyOn(queryApi, 'QueryPostAPIWithParams').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      const postSpy = vi
+        .spyOn(queryApi, 'QueryPostAPIWithParams')
+        .mockResolvedValue({ code: 200, message: 'ok', data: [] })
       await store.changeTagVisiable('话题A', false)
       expect(postSpy).toHaveBeenCalledWith(
         expect.stringContaining('update-tag-visible'),
@@ -140,7 +145,9 @@ describe('useQuestionBox store', () => {
     })
 
     it('reply 正确调用 POST reply 且字段为 message', async () => {
-      const postSpy = vi.spyOn(queryApi, 'QueryPostAPIWithParams').mockResolvedValue({ code: 200, message: 'ok', data: {} })
+      const postSpy = vi
+        .spyOn(queryApi, 'QueryPostAPIWithParams')
+        .mockResolvedValue({ code: 200, message: 'ok', data: {} })
       store.recieveQuestions = [createMockQuestion({ id: 101, answer: undefined })]
       await store.reply(101, '感谢提问！')
       expect(postSpy).toHaveBeenCalledTimes(1)
@@ -154,7 +161,9 @@ describe('useQuestionBox store', () => {
 
   describe('公开状态', () => {
     it('批量公开跳过提问者未同意的条目', async () => {
-      const postSpy = vi.spyOn(queryApi, 'QueryPostAPIWithParams').mockResolvedValue({ code: 200, message: 'ok', data: [] })
+      const postSpy = vi
+        .spyOn(queryApi, 'QueryPostAPIWithParams')
+        .mockResolvedValue({ code: 200, message: 'ok', data: [] })
       store.recieveQuestions = [
         createMockQuestion({ id: 1, isPublic: false, senderAllowsPublic: true }),
         createMockQuestion({ id: 2, isPublic: false, senderAllowsPublic: false }),

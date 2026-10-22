@@ -5,18 +5,18 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseNotifaction } from './responseNotifaction';
+import type { ResponseNotifaction } from './responseNotifaction'
 
 /**
  * 分页响应信封：code / message / data / pn / ps / total / more
  */
 export interface PaginationResponseOfListOfResponseNotifaction {
-  ps: number;
-  pn: number;
-  total: number;
-  more: boolean;
-  message: string;
-  code: number;
+  ps: number
+  pn: number
+  total: number
+  more: boolean
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseNotifaction[] | null;
+  data: ResponseNotifaction[] | null
 }

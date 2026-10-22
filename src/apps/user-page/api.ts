@@ -111,9 +111,7 @@ export async function clearMyUserPagesDraft() {
 }
 
 export async function publishMyUserPagesSettings(settings: UserPagesSettings) {
-  return parseUserPagesSettings(
-    unwrapOk(await postApiUserPagesPublish({ json: JSON.stringify(settings) }), '发布失败'),
-  )
+  return parseUserPagesSettings(unwrapOk(await postApiUserPagesPublish({ json: JSON.stringify(settings) }), '发布失败'))
 }
 
 export async function rollbackMyUserPagesPublished() {

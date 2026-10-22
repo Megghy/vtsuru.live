@@ -10,7 +10,7 @@
   --schedule-toolbar-action-bg: #211c17;
   --schedule-toolbar-action-fg: #f2eadb;
   --schedule-toolbar-label: 'ISSUE SELECTOR';
-  --schedule-toolbar-radius: min(var(--vtsuru-page-radius, 8px), 8px);
+  --schedule-toolbar-radius: min(var(--radius), 8px);
   --schedule-toolbar-shadow: 0 12px 26px -20px rgb(33 28 23 / 52%);
   --schedule-toolbar-max-width: 820px;
 
@@ -73,9 +73,9 @@
   background-color: var(--magazine-paper);
   background-position: center;
   background-size: cover;
-  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--schedule-border);
-  border-radius: min(var(--vtsuru-page-radius, 8px), 8px);
-  box-shadow: var(--vtsuru-page-shadow);
+  border: var(--ui-border-width) var(--ui-border-style) var(--schedule-border);
+  border-radius: min(var(--radius), 8px);
+  box-shadow: var(--ui-shadow);
 }
 
 .magazine-poster.has-background::before {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Bot24Regular } from '@vicons/fluent'
-import { NButton, NConfigProvider, NIcon, useMessage } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -9,35 +8,38 @@ import { BiliAuthCodeStatusType } from '@/api/api-models'
 import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import ManageAuthGate from '@/apps/manage/components/layout/ManageAuthGate.vue'
+import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
 
 import '@/apps/manage/styles/manage-page.css'
-import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
 import ManageMusicPlayer from '@/apps/manage/components/layout/ManageMusicPlayer.vue'
 import ManageSider from '@/apps/manage/components/layout/ManageSider.vue'
 import ManageTopBar from '@/apps/manage/components/layout/ManageTopBar.vue'
 import ManageUserGate from '@/apps/manage/components/layout/ManageUserGate.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { currentAPIKey } from '@/shared/config'
-import { buildManageTokens, getThemeCssVars, getThemeOverrides } from '@/shared/config/theme'
-import { isDarkMode } from '@/shared/utils'
+import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
+import { provideThemeScope } from '@/shared/config/theme/scope'
+import { Button } from '@/shared/ui/button'
+import { isDarkMode, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
+const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
+const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
+provideThemeScope(manageCssVars)
+
 const accountInfo = useAccount()
-const message = useMessage()
 const route = useRoute()
 const router = useRouter()
 const assistant = useAssistantStore()
 const biliAuth = useBiliAuth()
 const { workspace } = useManageWorkspace()
+
 const showShell = computed(() => {
   if (isLoadingAccount.value) return false
   if (workspace.value === 'user' && !biliAuth.sessionLoaded) return false
   if (workspace.value === 'user') return accountInfo.value.id > 0 || biliAuth.isAuthed
   return accountInfo.value.id > 0
 })
-const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
-const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
-const manageThemeOverrides = computed(() => getThemeOverrides(manageTokens.value))
 
 watch(
   () => accountInfo.value.id,
@@ -65,132 +67,62 @@ function openAssistant() {
 
 onMounted(() => {
   if (currentAPIKey.value !== 'main') {
-    message.warning('你当前使用的是备用API节点, 可能会速度比较慢')
+    toast.warning('你当前使用的是备用API节点, 可能会速度比较慢')
   }
 
   setTimeout(() => {
     if (accountInfo.value?.biliAuthCodeStatus == BiliAuthCodeStatusType.Inactive) {
-      message.error('你的身份码已失效, 请及时更新', { duration: 5000, closable: true })
+      toast.error('你的身份码已失效, 请及时更新')
     }
   }, 500)
 })
 </script>
 
 <template>
-  <NConfigProvider :theme-overrides="manageThemeOverrides">
+  <div
+    class="manage-theme bg-background text-foreground h-screen w-full flex flex-col overflow-hidden"
+    :style="manageCssVars"
+  >
     <div
-      class="manage-theme"
-      :style="manageCssVars"
+      v-if="showShell"
+      class="manage-shell flex-1 min-h-0 flex flex-col overflow-hidden"
     >
-      <div
-        v-if="showShell"
-        class="manage-shell"
-      >
-        <div class="manage-shell__body">
-          <ManageSider :account-info="accountInfo" />
+      <div class="manage-shell__body flex-1 min-h-0 flex overflow-hidden">
+        <ManageSider :account-info="accountInfo" />
 
-          <div class="manage-shell__main">
-            <ManageTopBar :account-name="workspace === 'user' ? biliAuth.biliAuth.name : accountInfo?.name" />
-            <div class="manage-shell__scroll">
-              <div class="manage-shell__content">
-                <ManageUserGate v-if="workspace === 'user'" />
-                <ManageContentGate
-                  v-else
-                  :account-info="accountInfo"
-                />
-              </div>
+        <div class="manage-shell__main flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
+          <ManageTopBar :account-name="workspace === 'user' ? biliAuth.biliAuth.name : accountInfo?.name" />
+          <div class="manage-shell__scroll flex-1 min-h-0 overflow-y-auto flex flex-col">
+            <div class="manage-shell__content flex-1 w-full min-w-[370px] max-[600px]:min-w-0 flex flex-col p-0 box-border">
+              <ManageUserGate v-if="workspace === 'user'" />
+              <ManageContentGate
+                v-else
+                :account-info="accountInfo"
+              />
             </div>
-
-            <ManageMusicPlayer />
           </div>
+
+          <ManageMusicPlayer />
         </div>
-
-        <NButton
-          circle
-          type="primary"
-          size="large"
-          class="assistant-fab"
-          title="VTsuru 助手"
-          @click="openAssistant"
-        >
-          <template #icon>
-            <NIcon :component="Bot24Regular" />
-          </template>
-        </NButton>
-
-        <AssistantModal />
       </div>
 
-      <ManageAuthGate v-else />
+      <Button
+        variant="brand"
+        size="icon"
+        class="assistant-fab fixed right-5 max-[600px]:right-3 bottom-[84px] max-[600px]:bottom-[72px] z-[1500] h-11 w-11 rounded-full shadow-lg"
+        title="VTsuru 助手"
+        @click="openAssistant"
+      >
+        <component
+          :is="Bot24Regular"
+          class="h-6 w-6"
+        />
+      </Button>
+
+      <AssistantModal />
     </div>
-  </NConfigProvider>
+
+    <ManageAuthGate v-else />
+  </div>
 </template>
 
-<style scoped>
-.assistant-fab {
-  position: fixed;
-  right: 20px;
-  bottom: 84px;
-  z-index: 1500;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-}
-
-.manage-theme,
-.manage-shell {
-  height: 100vh;
-  background: var(--vtsuru-bg);
-  color: var(--vtsuru-fg);
-}
-
-.manage-shell {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.manage-shell__body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  overflow: hidden;
-}
-
-.manage-shell__main {
-  flex: 1;
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.manage-shell__scroll {
-  display: flex;
-  flex: 1 1 0;
-  min-height: 0;
-  overflow: auto;
-  flex-direction: column;
-  -webkit-overflow-scrolling: touch;
-}
-
-.manage-shell__content {
-  display: flex;
-  flex: 1 0 auto;
-  width: 100%;
-  min-width: 370px;
-  padding: 0;
-  flex-direction: column;
-  box-sizing: border-box;
-}
-
-@media (max-width: 600px) {
-  .manage-shell__content {
-    min-width: 0;
-  }
-
-  .assistant-fab {
-    right: 12px;
-    bottom: 72px;
-  }
-}
-</style>

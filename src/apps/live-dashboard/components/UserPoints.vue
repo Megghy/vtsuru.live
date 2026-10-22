@@ -1,9 +1,15 @@
 <script setup lang="ts">
 import { Add16Regular, Subtract16Regular } from '@vicons/fluent'
-import { NButton, NIcon, NInput, NInputNumber, NSpin } from 'naive-ui'
 import { ref, watch } from 'vue'
 
 import { getUserPointHistories, giveUserPoint } from '@/api/point-user'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Spin } from '@/shared/ui/spin'
+import { useMessage } from '@/shared/utils'
+
+const message = useMessage()
 
 import type { DashboardEvent } from '../core/types'
 
@@ -29,17 +35,21 @@ async function load() {
   }
 }
 
-watch(() => props.event.ouid, () => void load(), { immediate: true })
+watch(
+  () => props.event.ouid,
+  () => void load(),
+  { immediate: true },
+)
 
 async function give(sign: 1 | -1) {
   submitting.value = true
   try {
     const result = await giveUserPoint(props.event, sign * count.value, reason.value.trim() || '中控台手动调整')
     total.value = result.totalPoint
-    window.$message.success(`${sign > 0 ? '已增加' : '已扣除'} ${count.value} 积分`)
+    message.success(`${sign > 0 ? '已增加' : '已扣除'} ${count.value} 积分`)
     reason.value = ''
   } catch (err) {
-    window.$message.error(err instanceof Error ? err.message : String(err))
+    message.error(err instanceof Error ? err.message : String(err))
   } finally {
     submitting.value = false
   }
@@ -50,99 +60,64 @@ async function give(sign: 1 | -1) {
   <div class="user-points">
     <div class="user-points__head">
       <span class="user-points__label">积分</span>
-      <NSpin
+      <Spin
         v-if="loading"
-        :size="12"
+        class="h-3 w-3"
       />
       <span
         v-else-if="error"
         class="user-points__error"
         :title="error"
-      >{{ error }}</span>
+        >{{ error }}</span
+      >
       <span
         v-else
         class="user-points__value"
-      >{{ Number((total ?? 0).toFixed(1)) }}</span>
+        >{{ Number((total ?? 0).toFixed(1)) }}</span
+      >
     </div>
-    <div class="user-points__form">
-      <NInputNumber
-        v-model:value="count"
-        size="tiny"
+    <div class="user-points__form flex items-center gap-1.5">
+      <NumberField
+        v-model="count"
+        size="xs"
         :min="0.1"
-        :precision="1"
-        :show-button="false"
-        style="width: 64px"
+        :show-buttons="false"
+        class="w-16"
       />
-      <NInput
-        v-model:value="reason"
-        size="tiny"
+      <Input
+        size="xs"
+        v-model="reason"
+        class="flex-1"
         placeholder="原因（可选）"
         :maxlength="100"
       />
-      <NButton
-        size="tiny"
-        secondary
-        type="primary"
-        :disabled="!count || !!error"
-        :loading="submitting"
+      <Button
+        size="icon"
+        variant="secondary"
+        class="w-7 shrink-0 text-primary"
+        :disabled="!count || !!error || submitting"
         aria-label="增加积分"
         @click="give(1)"
       >
-        <template #icon>
-          <NIcon :component="Add16Regular" />
-        </template>
-      </NButton>
-      <NButton
-        size="tiny"
-        secondary
-        :disabled="!count || !!error || !total"
-        :loading="submitting"
+        <component
+          :is="Add16Regular"
+          class="h-4 w-4"
+        />
+      </Button>
+      <Button
+        size="icon"
+        variant="secondary"
+        class="w-7 shrink-0"
+        :disabled="!count || !!error || !total || submitting"
         aria-label="扣除积分"
         @click="give(-1)"
       >
-        <template #icon>
-          <NIcon :component="Subtract16Regular" />
-        </template>
-      </NButton>
+        <component
+          :is="Subtract16Regular"
+          class="h-4 w-4"
+        />
+      </Button>
     </div>
   </div>
 </template>
 
-<style scoped>
-.user-points {
-  display: grid;
-  gap: 6px;
-  padding: 8px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-}
-
-.user-points__head {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.user-points__label {
-  color: var(--vtsuru-fg-muted);
-}
-
-.user-points__value {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-}
-
-.user-points__error {
-  color: var(--vtsuru-error);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.user-points__form {
-  display: flex;
-  gap: 4px;
-  align-items: center;
-}
-</style>

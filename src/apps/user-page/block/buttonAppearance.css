@@ -1,12 +1,11 @@
 .vtsuru-btn {
-  --btn-radius: var(--vtsuru-page-radius, 8px);
+  --btn-radius: var(--radius);
   --btn-border-width: 0px;
-  --btn-border-color: var(--vtsuru-page-primary-border, var(--vtsuru-brand));
+  --btn-border-color: color-mix(in srgb, var(--primary) 28%, transparent);
   --btn-opacity: 1;
   --btn-effect-scale: 1.03;
   --btn-effect-glow: 0.42;
   --btn-effect-duration: 1.8s;
-  /* NButton 默认 content-box；全宽 + 自定义 padding 时会超出容器被 BlockCard 裁切 */
   box-sizing: border-box;
   max-width: 100%;
   border-radius: var(--btn-radius);
@@ -24,27 +23,12 @@
 }
 
 .vtsuru-btn.vtsuru-btn--custom {
-  --n-color: var(--btn-bg, var(--n-color)) !important;
-  --n-color-hover: color-mix(in srgb, var(--btn-bg, currentColor) 88%, #fff) !important;
-  --n-color-pressed: color-mix(in srgb, var(--btn-bg, currentColor) 82%, #000) !important;
-  --n-color-focus: var(--btn-bg, var(--n-color-focus)) !important;
-  --n-text-color: var(--btn-fg, var(--n-text-color)) !important;
-  --n-text-color-hover: var(--btn-fg, var(--n-text-color-hover)) !important;
-  --n-text-color-pressed: var(--btn-fg, var(--n-text-color-pressed)) !important;
-  --n-text-color-focus: var(--btn-fg, var(--n-text-color-focus)) !important;
-  --n-border: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
-  --n-border-hover: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
-  --n-border-pressed: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
-  --n-border-focus: var(--btn-border-width, 1px) solid var(--btn-border-color, var(--btn-bg, transparent)) !important;
   color: var(--btn-fg, inherit) !important;
   background: var(--btn-bg, inherit) !important;
   border-color: var(--btn-border-color, var(--btn-bg, transparent)) !important;
 }
 
 .vtsuru-btn--size-sm {
-  --n-height: 28px !important;
-  --n-font-size: 12px !important;
-  --n-padding: 0 12px !important;
   height: 28px !important;
   min-height: 28px !important;
   padding: 0 12px !important;
@@ -53,9 +37,6 @@
 }
 
 .vtsuru-btn--size-md {
-  --n-height: 38px !important;
-  --n-font-size: 14px !important;
-  --n-padding: 0 18px !important;
   height: 38px !important;
   min-height: 38px !important;
   padding: 0 18px !important;
@@ -64,9 +45,6 @@
 }
 
 .vtsuru-btn--size-lg {
-  --n-height: 50px !important;
-  --n-font-size: 16px !important;
-  --n-padding: 0 26px !important;
   height: 50px !important;
   min-height: 50px !important;
   padding: 0 26px !important;
@@ -86,7 +64,7 @@
 }
 
 .vtsuru-btn--radius-default {
-  --btn-radius: var(--vtsuru-page-radius, 8px);
+  --btn-radius: var(--radius);
 }
 
 .vtsuru-btn--radius-pill {
@@ -184,12 +162,12 @@
 @keyframes vtsuru-btn-breathe {
   0%,
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 0%, transparent);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--brand)) 0%, transparent);
     filter: brightness(1);
   }
   50% {
     box-shadow: 0 0 0 8px
-      color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) calc(var(--btn-effect-glow) * 100%), transparent);
+      color-mix(in srgb, var(--btn-border-color, var(--brand)) calc(var(--btn-effect-glow) * 100%), transparent);
     filter: brightness(1.05);
   }
 }
@@ -230,13 +208,13 @@
   0%,
   100% {
     box-shadow:
-      0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 0%, transparent),
-      0 0 12px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 18%, transparent);
+      0 0 0 0 color-mix(in srgb, var(--btn-border-color, var(--brand)) 0%, transparent),
+      0 0 12px color-mix(in srgb, var(--btn-border-color, var(--brand)) 18%, transparent);
   }
   50% {
     box-shadow:
-      0 0 0 4px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 16%, transparent),
-      0 0 22px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) calc(var(--btn-effect-glow) * 90%), transparent);
+      0 0 0 4px color-mix(in srgb, var(--btn-border-color, var(--brand)) 16%, transparent),
+      0 0 22px color-mix(in srgb, var(--btn-border-color, var(--brand)) calc(var(--btn-effect-glow) * 90%), transparent);
   }
 }
 
@@ -272,6 +250,6 @@
 
   .vtsuru-btn--effect-glow,
   .vtsuru-btn--effect-breathe {
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-border-color, var(--vtsuru-brand)) 22%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--btn-border-color, var(--brand)) 22%, transparent);
   }
 }

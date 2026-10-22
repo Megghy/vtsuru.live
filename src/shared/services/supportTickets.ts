@@ -27,10 +27,7 @@ export async function createSupportTicket(request: CreateSupportTicketRequest) {
 }
 
 export async function addSupportTicketMessage(id: number, content: string, imageFileIds: number[] = []) {
-  return unwrapOk(
-    await postApiSupportTicketsIdMessages(id, { content, imageFileIds }),
-    '回复失败',
-  )
+  return unwrapOk(await postApiSupportTicketsIdMessages(id, { content, imageFileIds }), '回复失败')
 }
 
 export async function updateSupportTicketPreferences(

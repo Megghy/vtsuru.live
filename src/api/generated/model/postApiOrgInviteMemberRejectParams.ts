@@ -7,5 +7,5 @@
  */
 
 export type PostApiOrgInviteMemberRejectParams = {
-token?: string;
-};
+  token?: string
+}

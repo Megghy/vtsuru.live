@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { OpenOutline, RefreshOutline, TimerOutline, VideocamOutline } from '@vicons/ionicons5'
 import { useNow } from '@vueuse/core'
-import { NAlert, NButton, NEmpty, NIcon, NProgress, NSpin, NTime } from 'naive-ui'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -10,6 +9,11 @@ import { FunctionTypes } from '@/api/api-models'
 import { fetchPublicActiveVideoCollect } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
+import { Progress } from '@/shared/ui/progress'
+import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 
@@ -38,6 +42,16 @@ const activities = computed(() =>
 
 function progress(videoCount: number, maxVideoCount: number) {
   return maxVideoCount > 0 ? Math.min(100, Math.round((videoCount / maxVideoCount) * 100)) : 0
+}
+
+function formatEndTime(time: number) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(time)
 }
 
 async function load(force = false) {
@@ -69,189 +83,118 @@ watch(
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="collect-header">
-        <span class="collect-heading"
-          ><NIcon><VideocamOutline /></NIcon>当前视频征集</span
-        >
+      <div class="collect-header flex items-center justify-between w-full">
+        <span class="collect-heading flex items-center gap-1.5 font-semibold text-sm">
+          <component
+            :is="VideocamOutline"
+            class="size-4"
+          />
+          当前视频征集
+        </span>
         <RouterLink
           v-if="props.userInfo?.name"
           v-slot="{ navigate }"
           :to="{ name: 'user-video-collect', params: { id: props.userInfo.name } }"
           custom
         >
-          <NButton
-            text
-            type="primary"
-            size="small"
+          <Button
+            variant="ghost"
+            class="text-primary font-medium p-0"
             @click="navigate"
           >
-            全部活动<template #icon>
-              <NIcon><OpenOutline /></NIcon>
-            </template>
-          </NButton>
+            全部活动
+            <component
+              :is="OpenOutline"
+              class="size-3.5 ml-1"
+            />
+          </Button>
         </RouterLink>
       </div>
     </template>
 
-    <NAlert
+    <Alert
       v-if="!enabled"
-      type="info"
-      :show-icon="false"
+      class="text-xs py-2"
     >
-      视频征集未开放
-    </NAlert>
-    <NAlert
+      <AlertDescription> 视频征集未开放 </AlertDescription>
+    </Alert>
+    <Alert
       v-else-if="query.status.value === 'error'"
-      type="error"
-      :show-icon="true"
+      variant="destructive"
+      class="text-xs py-2"
     >
-      <div class="error-row">
-        <span>视频征集加载失败</span
-        ><NButton
-          size="small"
-          secondary
+      <AlertDescription class="flex items-center justify-between w-full">
+        <span>视频征集加载失败</span>
+        <Button
+          variant="outline"
+          size="xs"
+          class="gap-1"
           @click="load(true)"
         >
-          <template #icon>
-            <NIcon><RefreshOutline /></NIcon> </template
-          >重试
-        </NButton>
-      </div>
-    </NAlert>
-    <NSpin
-      v-else
-      :show="query.status.value === 'loading' || query.status.value === 'idle'"
-      size="small"
+          <component
+            :is="RefreshOutline"
+            class="size-3"
+          />
+          重试
+        </Button>
+      </AlertDescription>
+    </Alert>
+    <div
+      v-else-if="query.status.value === 'loading' || query.status.value === 'idle'"
+      class="py-6 flex justify-center"
     >
-      <NEmpty
+      <Spin />
+    </div>
+    <div v-else>
+      <Empty
         v-if="query.status.value === 'success' && !activities.length"
-        size="small"
         description="暂无正在进行的征集"
+        class="py-4 text-xs"
       />
       <div
         v-else
-        class="collect-list"
+        class="@container grid gap-2"
       >
         <RouterLink
           v-for="item in activities"
           :key="item.id"
           :to="{ name: 'video-collect', params: { id: item.shortId } }"
-          class="collect-item"
+          class="flex items-center gap-3.5 p-3 rounded-lg border border-border bg-muted/40 text-foreground no-underline hover:border-primary hover:bg-card transition @max-[520px]:items-start @max-[520px]:flex-wrap"
         >
-          <div class="collect-copy">
-            <strong>{{ item.name }}</strong>
-            <p v-if="showDescription && item.description">
+          <div class="collect-copy flex-1 min-w-0 grid gap-1">
+            <strong class="text-xs font-semibold truncate">{{ item.name }}</strong>
+            <p
+              v-if="showDescription && item.description"
+              class="text-[11px] text-muted-foreground truncate m-0"
+            >
               {{ item.description }}
             </p>
-            <span class="deadline"
-              ><NIcon><TimerOutline /></NIcon>截止 <NTime :time="item.endAt"
-            /></span>
+            <span class="deadline flex items-center gap-1 text-[11px] text-muted-foreground">
+              <component
+                :is="TimerOutline"
+                class="size-3.5"
+              />
+              截止 {{ formatEndTime(item.endAt) }}
+            </span>
           </div>
           <div
             v-if="showProgress"
-            class="collect-progress"
+            class="flex flex-col gap-1 w-28 text-right text-[11px] text-muted-foreground shrink-0 @max-[520px]:basis-[calc(100%-28px)] @max-[520px]:order-3 @max-[520px]:ml-0 @max-[520px]:text-left"
           >
             <span>{{ item.videoCount }} / {{ item.maxVideoCount }}</span>
-            <NProgress
-              type="line"
-              :percentage="progress(item.videoCount, item.maxVideoCount)"
-              :show-indicator="false"
-              :height="6"
+            <Progress
+              :model-value="progress(item.videoCount, item.maxVideoCount)"
+              class="h-1.5"
             />
           </div>
-          <NIcon class="open-icon">
-            <OpenOutline />
-          </NIcon>
+          <component
+            :is="OpenOutline"
+            class="size-4 text-muted-foreground shrink-0"
+          />
         </RouterLink>
       </div>
-    </NSpin>
+    </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.collect-header,
-.collect-heading,
-.error-row,
-.collect-item,
-.deadline {
-  display: flex;
-  align-items: center;
-}
-.collect-header,
-.error-row {
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-}
-.collect-heading,
-.deadline {
-  gap: 7px;
-}
-.collect-heading {
-  font-weight: 600;
-}
-.collect-list {
-  container-type: inline-size;
-  display: grid;
-  gap: 8px;
-}
-.collect-item {
-  gap: 14px;
-  min-width: 0;
-  padding: 11px 12px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-border);
-  border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-fg);
-  background: var(--vtsuru-bg-muted);
-  text-decoration: none;
-}
-.collect-item:hover {
-  border-color: var(--vtsuru-primary, #18a058);
-  background: var(--vtsuru-bg-elevated);
-}
-.collect-copy {
-  display: grid;
-  flex: 1;
-  gap: 5px;
-  min-width: 0;
-}
-.collect-copy strong,
-.collect-copy p {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.collect-copy p {
-  margin: 0;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-.deadline {
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-.collect-progress {
-  display: grid;
-  flex: 0 0 120px;
-  gap: 5px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 11px;
-  text-align: right;
-}
-.open-icon {
-  flex: none;
-  color: var(--vtsuru-fg-muted);
-}
-@container (max-width: 520px) {
-  .collect-item {
-    align-items: start;
-    flex-wrap: wrap;
-  }
-  .collect-progress {
-    flex-basis: calc(100% - 28px);
-    order: 3;
-    margin-left: 0;
-    text-align: left;
-  }
-}
-</style>
+

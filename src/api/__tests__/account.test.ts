@@ -36,9 +36,7 @@ vi.mock('@/shared/storage/persist', () => {
 })
 
 vi.mock('@/shared/utils', () => ({
-  createNaiveUIApi: () => ({
-    message: { error: vi.fn(), success: vi.fn() },
-  }),
+  message: { error: vi.fn(), success: vi.fn() },
 }))
 
 import { ACCOUNT, GetSelfAccount, Self } from '../account'

@@ -1,6 +1,6 @@
-import type { App } from 'vue'
 import { load as loadFingerprint } from '@fingerprintjs/fingerprintjs'
 import * as Sentry from '@sentry/vue'
+import type { App } from 'vue'
 
 export const BUGSINK_DSN = 'https://cc64380340634181a0dc73f6c453b60d@bugsink.suki.club/1'
 

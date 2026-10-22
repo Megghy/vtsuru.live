@@ -1,5 +1,4 @@
 import EasySpeech from 'easy-speech'
-import { useMessage } from 'naive-ui'
 import { nextTick, reactive, ref, watch } from 'vue'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
 
@@ -16,6 +15,7 @@ import {
   hasVoiceProvider,
 } from '@/apps/open-live/voice-providers'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { useMessage } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export interface SpeechInfo {

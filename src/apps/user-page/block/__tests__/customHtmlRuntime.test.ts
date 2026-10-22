@@ -25,7 +25,7 @@ describe('customHtmlRuntime', () => {
   it('生成隔离文档并解析受控图片资源', () => {
     const props = normalizeCustomHtmlProps({
       html: '<section class="hero"><img data-vtsuru-asset="cover" alt="封面"></section>',
-      css: '.hero{background-image:var(--vtsuru-asset-cover);color:var(--vtsuru-fg)}',
+      css: '.hero{background-image:var(--vtsuru-asset-cover);color:var(--foreground)}',
       assets: [{ key: 'cover', file }],
     })
     const result = buildCustomHtmlDocument(props, theme)

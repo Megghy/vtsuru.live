@@ -5,18 +5,18 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseForumCommentBaseModel } from './responseForumCommentBaseModel';
+import type { ResponseForumCommentBaseModel } from './responseForumCommentBaseModel'
 
 /**
  * 分页响应信封：code / message / data / pn / ps / total / more
  */
 export interface PaginationResponseOfListOfResponseForumCommentBaseModel {
-  ps: number;
-  pn: number;
-  total: number;
-  more: boolean;
-  message: string;
-  code: number;
+  ps: number
+  pn: number
+  total: number
+  more: boolean
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseForumCommentBaseModel[] | null;
+  data: ResponseForumCommentBaseModel[] | null
 }

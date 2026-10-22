@@ -7,5 +7,5 @@
  */
 
 export interface PrepareAccountBiliAuthRequest {
-  key: string;
+  key: string
 }

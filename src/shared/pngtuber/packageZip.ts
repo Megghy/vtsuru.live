@@ -13,15 +13,20 @@ export interface ZipEntry {
   directory: boolean
 }
 export function safePackagePath(name: string) {
-  return (
-    !!name &&
-    !/[\\:\x00-\x1F\x7F]/.test(name) &&
-    !name.startsWith('/') &&
-    name
-      .replace(/\/$/, '')
-      .split('/')
-      .every((p) => p !== '' && p !== '.' && p !== '..')
-  )
+  if (!name) return false
+  // 检查非法字符：反斜杠、冒号、控制字符(0x00-0x1F)、DEL(0x7F)
+  for (let i = 0; i < name.length; i++) {
+    const code = name.charCodeAt(i)
+    if (code < 0x20 || code === 0x7f || name[i] === '\\' || name[i] === ':') {
+      return false
+    }
+  }
+  if (name.startsWith('/')) return false
+
+  return name
+    .replace(/\/$/, '')
+    .split('/')
+    .every((p) => p !== '' && p !== '.' && p !== '..')
 }
 /** Inspect raw names before JSZip sanitizes traversal paths or overwrites duplicate entries. */
 export function inspectPackageZip(bytes: Uint8Array): ZipEntry[] {

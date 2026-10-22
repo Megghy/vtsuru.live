@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SettingIndexLinks } from './settingIndexLinks';
+import type { SettingIndexLinks } from './settingIndexLinks'
 
 export interface SettingIndex {
   /** @nullable */
-  notification?: string | null;
-  videos: string[];
-  links: SettingIndexLinks;
-  linkOrder: string[];
+  notification?: string | null
+  videos: string[]
+  links: SettingIndexLinks
+  linkOrder: string[]
   /** @nullable */
-  allowDisplayInIndex?: boolean | null;
+  allowDisplayInIndex?: boolean | null
 }

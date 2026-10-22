@@ -7,5 +7,5 @@
  */
 
 export type PostApiForumManageDeleteCommentParams = {
-comment?: number;
-};
+  comment?: number
+}

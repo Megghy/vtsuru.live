@@ -2,11 +2,19 @@
 import './tool-page.css'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NProgress, NSelect, NSlider, NSpin, NSwitch, NText, NTooltip } from 'naive-ui'
 import { computed, onMounted, ref } from 'vue'
 
 import { useRemoveBg } from '@/composables/useRemoveBg'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Progress } from '@/shared/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Spin } from '@/shared/ui/spin'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 const { options, supported, webgpuSupported, progress, checkSupport, preloadModel, processRemoveBg } = useRemoveBg()
@@ -111,220 +119,213 @@ function download() {
 </script>
 
 <template>
-  <NCard title="AI 图像分割">
-    <template #header-extra>
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NTooltip>
-          <template #trigger>
-            <NButton
-              size="small"
-              tertiary
-              :loading="preloading"
-              @click="handlePreload"
-            >
-              预加载模型
-            </NButton>
-          </template>
-          提前下载模型文件，避免首次处理时等待
-        </NTooltip>
-        <NButton
+  <Card>
+    <CardHeader class="flex flex-row items-center justify-between pb-4">
+      <CardTitle class="text-base font-semibold">AI 图像分割</CardTitle>
+      <div class="flex items-center gap-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="outline"
+                :loading="preloading"
+                @click="handlePreload"
+              >
+                预加载模型
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>提前下载模型文件，避免首次处理时等待</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <Button
           :disabled="!resultUrl"
-          type="primary"
-          size="small"
           @click="download"
         >
           下载结果
-        </NButton>
-      </NFlex>
-    </template>
-
-    <NFlex
-      vertical
-      :size="16"
-    >
-      <NText
-        v-if="supported === false"
-        type="error"
-      >
-        当前浏览器不支持（需要 WebAssembly）
-      </NText>
-
-      <!-- Settings row -->
-      <div class="settings-grid">
-        <div class="setting-item">
-          <NText
-            depth="3"
-            style="font-size: 11px"
-          >
-            处理模式
-          </NText>
-          <NSelect
-            v-model:value="options.mode"
-            :options="modeOptions"
-            size="small"
-          />
-        </div>
-        <div class="setting-item">
-          <NText
-            depth="3"
-            style="font-size: 11px"
-          >
-            模型精度（首次使用需下载）
-          </NText>
-          <NSelect
-            v-model:value="options.model"
-            :options="modelOptions"
-            size="small"
-          />
-        </div>
-        <div class="setting-item">
-          <NText
-            depth="3"
-            style="font-size: 11px"
-          >
-            计算设备
-          </NText>
-          <NSelect
-            v-model:value="options.device"
-            :options="deviceOptions"
-            size="small"
-          />
-          <NText
-            v-if="webgpuSupported === false"
-            depth="3"
-            style="font-size: 10px; line-height: 1.3"
-          >
-            当前浏览器不支持 WebGPU。Chrome 113+ 默认启用；Edge/Firefox 需在
-            <code>chrome://flags</code> 或 <code>about:config</code> 中开启 WebGPU 标志
-          </NText>
-        </div>
-        <div class="setting-item">
-          <NText
-            depth="3"
-            style="font-size: 11px"
-          >
-            输出格式
-          </NText>
-          <NSelect
-            v-model:value="options.format"
-            :options="formatOptions"
-            size="small"
-          />
-        </div>
-        <div class="setting-item">
-          <NText
-            depth="3"
-            style="font-size: 11px"
-          >
-            输出质量 {{ Math.round(options.quality * 100) }}%
-          </NText>
-          <NSlider
-            v-model:value="options.quality"
-            :min="0.1"
-            :max="1"
-            :step="0.05"
-          />
-        </div>
-        <div class="setting-item">
-          <NText
-            depth="3"
-            style="font-size: 11px"
-          >
-            后台处理 (Web Worker)
-          </NText>
-          <NSwitch v-model:value="options.proxyToWorker" />
-          <NText
-            depth="3"
-            style="font-size: 10px; line-height: 1.3"
-          >
-            开启后处理不会阻塞页面操作
-          </NText>
-        </div>
+        </Button>
       </div>
+    </CardHeader>
 
-      <!-- Upload -->
-      <div
-        v-if="!originalUrl"
-        ref="dropZoneRef"
-        class="upload-zone"
-        @click="openFileDialog()"
-      >
-        <NText depth="3"> 拖拽图片到此处，或点击选择文件 </NText>
-      </div>
-
-      <!-- Working area -->
-      <template v-else>
-        <NFlex
-          :size="8"
-          align="center"
+    <CardContent class="pt-0">
+      <div class="flex flex-col gap-4">
+        <span
+          v-if="supported === false"
+          class="text-xs text-destructive"
         >
-          <NButton
-            size="small"
-            secondary
-            @click="openFileDialog()"
-          >
-            重新选择
-          </NButton>
-          <NButton
-            size="small"
-            type="primary"
-            :loading="processing"
-            :disabled="processing || supported === false"
-            @click="process"
-          >
-            {{ modeOptions.find((m) => m.value === options.mode)?.label ?? '处理' }}
-          </NButton>
-        </NFlex>
+          当前浏览器不支持（需要 WebAssembly）
+        </span>
 
-        <NProgress
-          v-if="progress && progress.total"
-          :percentage="progressPercent"
-          :show-indicator="true"
-          status="info"
-        >
-          <NText style="font-size: 11px"> {{ progress.key }} {{ progressPercent }}% </NText>
-        </NProgress>
-
-        <NSpin
-          :show="processing"
-          :description="progress ? undefined : '正在处理...'"
-        >
-          <div class="preview-row">
-            <div class="preview-item">
-              <NText
-                depth="3"
-                style="font-size: 12px"
-              >
-                原图
-              </NText>
-              <img
-                :src="originalUrl"
-                class="preview-img"
-              />
-            </div>
-            <div
-              v-if="resultUrl"
-              class="preview-item"
-            >
-              <NText
-                depth="3"
-                style="font-size: 12px"
-              >
-                结果
-              </NText>
-              <img
-                :src="resultUrl"
-                class="preview-img tool-checkerboard"
-              />
-            </div>
+        <!-- Settings row -->
+        <div class="settings-grid">
+          <div class="setting-item">
+            <span class="text-[11px] text-muted-foreground">处理模式</span>
+            <Select v-model="options.mode">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="item in modeOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </NSpin>
-      </template>
-    </NFlex>
-  </NCard>
+          <div class="setting-item">
+            <span class="text-[11px] text-muted-foreground">模型精度（首次使用需下载）</span>
+            <Select v-model="options.model">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="item in modelOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="setting-item">
+            <span class="text-[11px] text-muted-foreground">计算设备</span>
+            <Select v-model="options.device">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="item in deviceOptions"
+                  :key="item.value"
+                  :value="item.value"
+                  :disabled="item.disabled"
+                >
+                  {{ item.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <span
+              v-if="webgpuSupported === false"
+              class="text-[10px] text-muted-foreground leading-tight"
+            >
+              当前浏览器不支持 WebGPU。Chrome 113+ 默认启用；Edge/Firefox 需在
+              <code>chrome://flags</code> 或 <code>about:config</code> 中开启 WebGPU 标志
+            </span>
+          </div>
+          <div class="setting-item">
+            <span class="text-[11px] text-muted-foreground">输出格式</span>
+            <Select v-model="options.format">
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="item in formatOptions"
+                  :key="item.value"
+                  :value="item.value"
+                >
+                  {{ item.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div class="setting-item">
+            <span class="text-[11px] text-muted-foreground">输出质量 {{ Math.round(options.quality * 100) }}%</span>
+            <Slider
+              :model-value="[options.quality]"
+              :min="0.1"
+              :max="1"
+              :step="0.05"
+              @update:model-value="
+                (val) => {
+                  if (val?.[0] !== undefined) options.quality = val[0]
+                }
+              "
+            />
+          </div>
+          <div class="setting-item">
+            <span class="text-[11px] text-muted-foreground">后台处理 (Web Worker)</span>
+            <div class="pt-1">
+              <Switch
+                :checked="options.proxyToWorker"
+                @update:checked="(v) => (options.proxyToWorker = v)"
+              />
+            </div>
+            <span class="text-[10px] text-muted-foreground leading-tight"> 开启后处理不会阻塞页面操作 </span>
+          </div>
+        </div>
+
+        <!-- Upload -->
+        <div
+          v-if="!originalUrl"
+          ref="dropZoneRef"
+          class="upload-zone"
+          @click="openFileDialog()"
+        >
+          <span class="text-xs text-muted-foreground"> 拖拽图片到此处，或点击选择文件 </span>
+        </div>
+
+        <!-- Working area -->
+        <template v-else>
+          <div class="flex items-center gap-2">
+            <Button
+              variant="outline"
+              @click="openFileDialog()"
+            >
+              重新选择
+            </Button>
+            <Button
+              :loading="processing"
+              :disabled="processing || supported === false"
+              @click="process"
+            >
+              {{ modeOptions.find((m) => m.value === options.mode)?.label ?? '处理' }}
+            </Button>
+          </div>
+
+          <div
+            v-if="progress && progress.total"
+            class="flex flex-col gap-1"
+          >
+            <div class="flex justify-between text-xs text-muted-foreground">
+              <span>{{ progress.key }}</span>
+              <span>{{ progressPercent }}%</span>
+            </div>
+            <Progress :model-value="progressPercent" />
+          </div>
+
+          <Spin
+            :show="processing"
+            :description="progress ? undefined : '正在处理...'"
+          >
+            <div class="preview-row">
+              <div class="preview-item">
+                <span class="text-xs text-muted-foreground">原图</span>
+                <img
+                  :src="originalUrl"
+                  class="preview-img"
+                />
+              </div>
+              <div
+                v-if="resultUrl"
+                class="preview-item"
+              >
+                <span class="text-xs text-muted-foreground">结果</span>
+                <img
+                  :src="resultUrl"
+                  class="preview-img tool-checkerboard"
+                />
+              </div>
+            </div>
+          </Spin>
+        </template>
+      </div>
+    </CardContent>
+  </Card>
 </template>
 
 <style scoped>
@@ -333,9 +334,9 @@ function download() {
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: 12px;
   padding: 12px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
   border-radius: 8px;
-  background: var(--vtsuru-bg-inset);
+  background: var(--muted);
 }
 .setting-item {
   display: flex;
@@ -347,7 +348,7 @@ function download() {
   justify-content: center;
   align-items: center;
   height: 200px;
-  border: 2px dashed var(--vtsuru-border);
+  border: 2px dashed var(--border);
   border-radius: 8px;
   cursor: pointer;
   transition: border-color 0.2s;
@@ -372,6 +373,6 @@ function download() {
   max-height: 400px;
   object-fit: contain;
   border-radius: 6px;
-  border: 1px solid var(--vtsuru-border);
+  border: 1px solid var(--border);
 }
 </style>

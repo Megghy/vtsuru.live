@@ -1,6 +1,11 @@
 <script setup lang="ts">
-import { NButton, NEmpty, NInput, NSelect, NTag, NText } from 'naive-ui'
 import { computed } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Textarea } from '@/shared/ui/textarea'
 
 import type { AssistantPreviewItem, EditableField, ProposalEditItem } from '../../api/assistant'
 
@@ -9,10 +14,10 @@ const props = defineProps<{ preview: AssistantPreviewItem[]; editable?: boolean 
 /** 编辑草稿: 按预览下标承载各字段新值, 双向绑定 */
 const draft = defineModel<ProposalEditItem[]>('draft')
 
-const OP_META: Record<string, { label: string; type: 'success' | 'warning' | 'error' | 'default' }> = {
-  add: { label: '新增', type: 'success' },
-  modify: { label: '修改', type: 'warning' },
-  delete: { label: '删除', type: 'error' },
+const OP_META: Record<string, { label: string; variant: 'default' | 'secondary' | 'outline' | 'destructive' }> = {
+  add: { label: '新增', variant: 'default' },
+  modify: { label: '修改', variant: 'outline' },
+  delete: { label: '删除', variant: 'destructive' },
 }
 
 /** field 带 before(原值)时, 用结构化字段对比展示 (编辑后不过期); 否则回退 before/after 整串 diff */
@@ -56,9 +61,9 @@ function fieldValue(index: number, key: string) {
   return draft.value?.find((d) => d.index === index)?.values[key] ?? ''
 }
 
-function setFieldValue(index: number, key: string, value: string) {
+function setFieldValue(index: number, key: string, value: string | number) {
   const entry = draft.value?.find((d) => d.index === index)
-  if (entry) entry.values[key] = value
+  if (entry) entry.values[key] = String(value)
 }
 
 function setSelectValue(index: number, key: string, value: unknown) {
@@ -72,65 +77,78 @@ function displayValue(f: EditableField) {
 </script>
 
 <template>
-  <div class="generic-card">
+  <div class="w-full flex flex-col gap-1.5">
     <div
       v-if="preview.length"
-      class="generic-card__list"
+      class="flex flex-col gap-1.5"
     >
       <div
         v-for="(item, i) in preview"
         :key="i"
-        class="generic-item"
+        class="generic-item flex flex-col gap-1 p-2 rounded-md bg-muted/40 border border-border/50 text-xs"
       >
-        <div class="generic-item__head">
-          <NTag
-            size="small"
-            :type="OP_META[item.op]?.type ?? 'default'"
-            :bordered="false"
+        <div class="generic-item__head flex items-center gap-1.5">
+          <Badge
+            :variant="OP_META[item.op]?.variant ?? 'secondary'"
+            class="text-[10px] h-4.5 px-1 font-normal"
           >
             {{ OP_META[item.op]?.label ?? item.op }}
-          </NTag>
-          <span class="generic-item__title">{{ item.title }}</span>
-          <NText
+          </Badge>
+          <span class="generic-item__title font-medium truncate flex-1 min-w-0 text-foreground">{{ item.title }}</span>
+          <span
             v-if="item.time"
-            depth="3"
-            class="generic-item__time"
+            class="generic-item__time text-[11px] text-muted-foreground font-mono"
           >
             {{ item.time }}
-          </NText>
+          </span>
         </div>
 
         <!-- 编辑态: 该项有可编辑字段时渲染输入框 -->
         <div
           v-if="editable && item.fields?.length"
-          class="generic-item__edit"
+          class="generic-item__edit flex flex-col gap-2 mt-1 pt-1 border-t border-border/40"
         >
           <div
             v-for="f in item.fields"
             :key="f.key"
-            class="edit-field"
+            class="edit-field flex flex-col gap-1"
           >
-            <NText
-              depth="3"
-              class="edit-field__label"
-            >
+            <span class="edit-field__label text-[11px] text-muted-foreground font-medium">
               {{ f.label }}
-            </NText>
-            <NSelect
+            </span>
+            <Select
               v-if="f.type === 'select'"
-              :value="fieldValue(i, f.key)"
-              :options="f.options"
-              size="small"
-              @update:value="setSelectValue(i, f.key, $event)"
+              :model-value="fieldValue(i, f.key)"
+              @update:model-value="setSelectValue(i, f.key, $event)"
+            >
+              <SelectTrigger size="xs">
+                <SelectValue :placeholder="f.label" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in f.options"
+                  :key="opt.value"
+                  :value="String(opt.value)"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <Textarea
+              v-else-if="f.type === 'textarea'"
+              :model-value="fieldValue(i, f.key)"
+              rows="2"
+              class="text-xs resize-none"
+              :placeholder="f.label"
+              @update:model-value="setFieldValue(i, f.key, $event)"
             />
-            <NInput
+            <Input
+              size="xs"
               v-else
-              :value="fieldValue(i, f.key)"
-              :type="f.type === 'textarea' ? 'textarea' : 'text'"
-              :autosize="f.type === 'textarea' ? { minRows: 2, maxRows: 6 } : undefined"
+              :model-value="fieldValue(i, f.key)"
               :placeholder="f.type === 'tags' ? '逗号分隔' : f.label"
-              size="small"
-              @update:value="setFieldValue(i, f.key, $event)"
+              @update:model-value="setFieldValue(i, f.key, $event)"
             />
           </div>
         </div>
@@ -138,42 +156,34 @@ function displayValue(f: EditableField) {
         <!-- 只读态: 结构化字段对比 (field 带 before, 编辑后不过期) -->
         <div
           v-else-if="hasFieldDiff(item)"
-          class="generic-item__struct"
+          class="generic-item__struct flex flex-col gap-1 mt-0.5 text-xs"
         >
           <div
             v-for="f in item.fields"
             :key="f.key"
-            class="struct-field"
+            class="struct-field flex items-baseline gap-1.5"
           >
-            <NText
-              depth="3"
-              class="struct-field__label"
-            >
-              {{ f.label }}
-            </NText>
+            <span class="struct-field__label text-muted-foreground shrink-0 text-[11px] min-w-12">
+              {{ f.label }}:
+            </span>
             <span
               v-if="fieldChanged(f)"
-              class="struct-field__val struct-field__val--changed"
+              class="struct-field__val struct-field__val--changed inline-flex items-center gap-1 flex-wrap px-1.5 py-0.5 rounded bg-emerald-500/10"
             >
-              <NText
-                delete
-                depth="3"
-                >{{ f.before || (f.type === 'tags' ? '无' : '空') }}</NText
-              >
-              <span class="struct-field__arrow">→</span>
-              <NText
-                type="success"
-                class="struct-field__after"
-                >{{ displayValue(f) }}</NText
-              >
+              <span class="line-through text-muted-foreground">{{
+                f.before || (f.type === 'tags' ? '无' : '空')
+              }}</span>
+              <span class="struct-field__arrow text-muted-foreground">→</span>
+              <span class="struct-field__after text-emerald-600 dark:text-emerald-400 font-medium">{{
+                displayValue(f)
+              }}</span>
             </span>
-            <NText
+            <span
               v-else
-              depth="3"
-              class="struct-field__val"
+              class="struct-field__val text-muted-foreground"
             >
               {{ displayValue(f) }}
-            </NText>
+            </span>
           </div>
         </div>
 
@@ -181,7 +191,7 @@ function displayValue(f: EditableField) {
         <template v-else>
           <div
             v-if="diffs[i]"
-            class="generic-item__fields"
+            class="generic-item__fields flex items-center gap-2 flex-wrap text-xs"
           >
             <template
               v-for="(f, fi) in diffs[i]!"
@@ -189,206 +199,67 @@ function displayValue(f: EditableField) {
             >
               <span
                 v-if="f.changed"
-                class="field field--changed"
+                class="field field--changed inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium"
               >
-                <NText
-                  delete
-                  depth="3"
-                  class="field__before"
-                  >{{ f.before }}</NText
-                >
-                <span class="field__arrow">→</span>
-                <NText
-                  type="success"
-                  class="field__after"
-                  >{{ f.after }}</NText
-                >
+                <span class="line-through text-muted-foreground font-normal">{{ f.before }}</span>
+                <span class="field__arrow text-muted-foreground font-normal">→</span>
+                <span>{{ f.after }}</span>
               </span>
-              <NText
+              <span
                 v-else
-                depth="3"
-                class="field field--same"
+                class="field field--same text-muted-foreground"
               >
                 {{ f.after }}
-              </NText>
+              </span>
             </template>
           </div>
           <div
             v-else-if="item.before || item.after"
-            class="generic-item__diff"
+            class="generic-item__diff flex items-center gap-1.5 flex-wrap text-xs"
           >
-            <NText
+            <span
               v-if="item.before"
-              delete
-              depth="3"
+              class="line-through text-muted-foreground"
             >
               {{ item.before }}
-            </NText>
+            </span>
             <span
               v-if="item.before && item.after"
-              class="diff-arrow"
-              >→</span
+              class="diff-arrow text-muted-foreground"
             >
-            <NText
+              →
+            </span>
+            <span
               v-if="item.after"
-              type="success"
+              class="text-emerald-600 dark:text-emerald-400 font-medium"
             >
               {{ item.after }}
-            </NText>
+            </span>
           </div>
         </template>
 
-        <NText
+        <p
           v-if="item.note"
-          depth="3"
-          class="generic-item__note"
+          class="generic-item__note text-muted-foreground text-[11px] mt-0.5"
         >
           {{ item.note }}
-        </NText>
-        <NButton
+        </p>
+        <a
           v-if="item.url"
-          text
-          type="primary"
-          tag="a"
           :href="item.url"
-          class="generic-item__link"
+          target="_blank"
+          rel="noreferrer"
+          class="generic-item__link text-primary hover:underline text-xs self-start"
         >
           查看工单
-        </NButton>
+        </a>
       </div>
     </div>
-    <NEmpty
+    <Empty
       v-else
-      size="small"
       description="暂无可预览的字段"
+      class="py-4 text-xs"
     />
   </div>
 </template>
 
-<style scoped>
-.generic-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.generic-card__list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.generic-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 6px 8px;
-  border-radius: 6px;
-  background: var(--vtsuru-bg-elevated, rgba(128, 128, 128, 0.06));
-}
-.generic-item__head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-}
-.generic-item__title {
-  font-weight: 500;
-  min-width: 0;
-  word-break: break-word;
-}
-.generic-item__time {
-  font-size: 12px;
-}
-
-/* 整串逐字段 diff */
-.generic-item__fields {
-  display: flex;
-  align-items: center;
-  gap: 4px 10px;
-  flex-wrap: wrap;
-  font-size: 12px;
-}
-.field {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.field--changed {
-  padding: 0 6px;
-  border-radius: 4px;
-  background: var(--vtsuru-success-soft, rgba(24, 160, 88, 0.12));
-}
-.field__arrow {
-  color: var(--vtsuru-fg-muted);
-}
-.field__after {
-  font-weight: 600;
-}
-
-/* 结构化字段对比 */
-.generic-item__struct {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-top: 2px;
-}
-.struct-field {
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-  font-size: 12px;
-}
-.struct-field__label {
-  flex-shrink: 0;
-  min-width: 48px;
-}
-.struct-field__val {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  flex-wrap: wrap;
-  word-break: break-word;
-}
-.struct-field__val--changed {
-  padding: 0 6px;
-  border-radius: 4px;
-  background: var(--vtsuru-success-soft, rgba(24, 160, 88, 0.12));
-}
-.struct-field__arrow {
-  color: var(--vtsuru-fg-muted);
-}
-.struct-field__after {
-  font-weight: 600;
-}
-
-.generic-item__diff {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  font-size: 12px;
-}
-.diff-arrow {
-  color: var(--vtsuru-fg-muted);
-}
-.generic-item__note {
-  font-size: 12px;
-}
-.generic-item__link {
-  align-self: flex-start;
-  font-size: 12px;
-}
-.generic-item__edit {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: 4px;
-}
-.edit-field {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.edit-field__label {
-  font-size: 12px;
-}
-</style>

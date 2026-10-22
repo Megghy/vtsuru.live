@@ -12,23 +12,6 @@ import {
   Speaker224Regular,
   SpeakerSettings24Regular,
 } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NFlex,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NPopconfirm,
-  NSpin,
-  NStatistic,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-  useMessage,
-} from 'naive-ui'
 import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -40,6 +23,22 @@ import QueueList from '@/apps/open-live/components/read-danmaku/QueueList.vue'
 import SpokenHistoryPanel from '@/apps/open-live/components/read-danmaku/SpokenHistoryPanel.vue'
 import TemplateSettingsPanel from '@/apps/open-live/components/read-danmaku/TemplateSettingsPanel.vue'
 import VoiceSettingsPanel from '@/apps/open-live/components/read-danmaku/VoiceSettingsPanel.vue'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/shared/ui/alert-dialog'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useSpeechService } from '@/store/useSpeechService'
 
@@ -55,7 +54,6 @@ const props = withDefaults(
   },
 )
 
-const message = useMessage()
 const accountInfo = useAccount()
 const client = useDanmakuClient()
 const speechService = useSpeechService()
@@ -67,6 +65,9 @@ const audioOutputDevicesLoading = ref(false)
 let mounted = false
 let keydownBound = false
 
+const activeConfigTab = ref('voice')
+const activeQueueTab = ref('queue')
+
 const queueStats = computed(() => {
   const total = speakQueue.value.length
   const gifts = speakQueue.value.filter((i) => i.data.type === EventDataTypes.Gift).length
@@ -74,7 +75,6 @@ const queueStats = computed(() => {
   return { total, gifts, messages }
 })
 
-const lastEventTime = computed(() => (client.lastEventAt ? new Date(client.lastEventAt).toLocaleTimeString() : ''))
 const supportsFollow = computed(() => {
   const sourceType = client.danmakuClient?.type
   return sourceType ? sourceType !== 'openlive' : !props.autoConnect
@@ -148,271 +148,296 @@ onBeforeUnmount(() => {
 })
 
 onActivated(bindKeydown)
-
 onDeactivated(unbindKeydown)
 </script>
 
 <template>
-  <div class="read-danmaku-manage-view">
+  <div class="space-y-4 w-full">
     <ManagePageHeader
       title="弹幕朗读与语音播报"
-      description="实时将直播间弹幕、礼物、舰长及关注事件转换为自然语音播报，支持多引擎驱动与精细化过滤"
+      subtitle="实时将直播间弹幕、礼物、舰长及关注事件转换为自然语音播报，支持多引擎驱动与精细化过滤"
     >
-      <template #actions>
-        <NFlex align="center" :size="8">
-          <NButton
-            :type="speechState.canSpeech ? 'error' : 'primary'"
-            size="small"
+      <template #action>
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <Button
+            :variant="speechState.canSpeech ? 'destructive' : 'default'"
             :loading="speechState.isApiAudioLoading"
             @click="speechState.canSpeech ? speechService.stopSpeech() : speechService.startSpeech()"
           >
-            <template #icon>
-              <NIcon :component="speechState.canSpeech ? MicOff24Filled : Mic24Filled" />
-            </template>
+            <component
+              :is="speechState.canSpeech ? MicOff24Filled : Mic24Filled"
+              class="h-3.5 w-3.5 mr-1"
+            />
             {{ speechState.canSpeech ? '停止朗读' : '开启朗读' }}
-          </NButton>
+          </Button>
 
-          <NButton
+          <Button
             v-if="speechState.canSpeech"
-            :type="isPaused ? 'warning' : 'default'"
-            size="small"
-            secondary
+            :variant="isPaused ? 'outline' : 'secondary'"
+            :class="{ 'border-amber-500/40 text-amber-500': isPaused }"
             @click="speechService.togglePause()"
           >
-            <template #icon>
-              <NIcon :component="isPaused ? Play20Filled : Pause20Filled" />
-            </template>
+            <component
+              :is="isPaused ? Play20Filled : Pause20Filled"
+              class="h-3.5 w-3.5 mr-1"
+            />
             {{ isPaused ? '恢复播报' : '暂停' }}
-          </NButton>
+          </Button>
 
-          <NButton
+          <Button
             v-if="speechState.isSpeaking"
-            size="small"
-            secondary
+            variant="outline"
             @click="speechService.skipCurrent()"
           >
-            <template #icon>
-              <NIcon :component="Next20Filled" />
-            </template>
+            <component
+              :is="Next20Filled"
+              class="h-3.5 w-3.5 mr-1"
+            />
             跳过当前
-          </NButton>
+          </Button>
 
-          <NPopconfirm @positive-click="speechService.downloadConfig()">
-            <template #trigger>
-              <NButton
-                size="small"
-                secondary
+          <AlertDialog>
+            <AlertDialogTrigger as-child>
+              <Button
+                variant="outline"
                 :disabled="!accountInfo?.id"
               >
-                <template #icon>
-                  <NIcon :component="CloudArrowDown20Filled" />
-                </template>
+                <component
+                  :is="CloudArrowDown20Filled"
+                  class="h-3.5 w-3.5 mr-1"
+                />
                 云端同步
-              </NButton>
-            </template>
-            这将从云端拉取配置覆盖当前本地设置，确定继续吗？
-          </NPopconfirm>
-        </NFlex>
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent class="sm:max-w-md">
+              <AlertDialogHeader>
+                <AlertDialogTitle>拉取云端配置？</AlertDialogTitle>
+                <AlertDialogDescription class="text-xs">
+                  这将从云端拉取配置覆盖当前本地设置，确定继续吗？
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>取消</AlertDialogCancel>
+                <AlertDialogAction @click="speechService.downloadConfig()"> 确定拉取 </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
       </template>
     </ManagePageHeader>
 
     <!-- 异常状态提示 -->
-    <NAlert
+    <Alert
       v-if="!speechSynthesisInfo || !speechSynthesisInfo.speechSynthesis"
-      type="error"
-      title="浏览器不支持语音能力"
-      style="margin-bottom: 16px"
+      variant="destructive"
     >
-      当前浏览器环境不支持 Web Speech API，请使用 Chrome、Edge 或最新版现代浏览器。
-    </NAlert>
+      <AlertTitle>浏览器不支持语音能力</AlertTitle>
+      <AlertDescription class="text-xs">
+        当前浏览器环境不支持 Web Speech API，请使用 Chrome、Edge 或最新版现代浏览器。
+      </AlertDescription>
+    </Alert>
 
-    <!-- 主布局网格 -->
-    <NGrid :x-gap="16" :y-gap="16" :cols="12" responsive="screen">
-      <!-- 左侧：参数与规则配置 (占 7 列) -->
-      <NGridItem :span="7">
-        <NCard size="small" style="height: 100%">
-          <NTabs type="line" animated size="small">
-            <NTabPane name="voice">
-              <template #tab>
-                <NFlex align="center" :size="4">
-                  <NIcon :component="Speaker224Regular" />
-                  <span>语音引擎</span>
-                </NFlex>
-              </template>
-              <div class="tab-pane-box">
-                <VoiceSettingsPanel />
-              </div>
-            </NTabPane>
-            <NTabPane name="template">
-              <template #tab>
-                <NFlex align="center" :size="4">
-                  <NIcon :component="DocumentText24Regular" />
-                  <span>消息模板</span>
-                </NFlex>
-              </template>
-              <div class="tab-pane-box">
-                <TemplateSettingsPanel :supports-follow="supportsFollow" />
-              </div>
-            </NTabPane>
-            <NTabPane name="filter">
-              <template #tab>
-                <NFlex align="center" :size="4">
-                  <NIcon :component="ShieldCheckmark24Regular" />
-                  <span>过滤与防刷</span>
-                </NFlex>
-              </template>
-              <div class="tab-pane-box">
-                <FilterSettingsPanel />
-              </div>
-            </NTabPane>
-            <NTabPane name="advanced">
-              <template #tab>
-                <NFlex align="center" :size="4">
-                  <NIcon :component="SpeakerSettings24Regular" />
-                  <span>声卡与高级</span>
-                </NFlex>
-              </template>
-              <div class="tab-pane-box">
-                <AdvancedSettingsPanel
-                  :audio-output-devices="audioOutputDevices"
-                  :audio-output-devices-loading="audioOutputDevicesLoading"
-                  @device-change="speechService.setAudioOutputDevice"
+    <!-- 主布局网格 (7 : 5) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <!-- 左侧：参数与规则配置 -->
+      <Card class="lg:col-span-7">
+        <CardContent class="p-4">
+          <Tabs
+            v-model="activeConfigTab"
+            class="w-full"
+          >
+            <TabsList class="grid grid-cols-4 w-full mb-4">
+              <TabsTrigger value="voice">
+                <component
+                  :is="Speaker224Regular"
+                  class="h-3.5 w-3.5"
                 />
-              </div>
-            </NTabPane>
-          </NTabs>
-        </NCard>
-      </NGridItem>
+                语音引擎
+              </TabsTrigger>
+              <TabsTrigger value="template">
+                <component
+                  :is="DocumentText24Regular"
+                  class="h-3.5 w-3.5"
+                />
+                消息模板
+              </TabsTrigger>
+              <TabsTrigger value="filter">
+                <component
+                  :is="ShieldCheckmark24Regular"
+                  class="h-3.5 w-3.5"
+                />
+                过滤防刷
+              </TabsTrigger>
+              <TabsTrigger value="advanced">
+                <component
+                  :is="SpeakerSettings24Regular"
+                  class="h-3.5 w-3.5"
+                />
+                声卡高级
+              </TabsTrigger>
+            </TabsList>
 
-      <!-- 右侧：实时播报状态与待播队列 (占 5 列) -->
-      <NGridItem :span="5">
-        <NFlex vertical :size="16">
-          <!-- 运行监控卡片 -->
-          <NCard size="small">
-            <template #header>
-              <NFlex align="center" :size="6">
-                <NIcon :component="ChartMultiple24Regular" />
+            <TabsContent
+              value="voice"
+              class="mt-0"
+            >
+              <VoiceSettingsPanel />
+            </TabsContent>
+
+            <TabsContent
+              value="template"
+              class="mt-0"
+            >
+              <TemplateSettingsPanel :supports-follow="supportsFollow" />
+            </TabsContent>
+
+            <TabsContent
+              value="filter"
+              class="mt-0"
+            >
+              <FilterSettingsPanel />
+            </TabsContent>
+
+            <TabsContent
+              value="advanced"
+              class="mt-0"
+            >
+              <AdvancedSettingsPanel
+                :audio-output-devices="audioOutputDevices"
+                :audio-output-devices-loading="audioOutputDevicesLoading"
+                @device-change="speechService.setAudioOutputDevice"
+              />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <!-- 右侧：运行监控与待播队列 -->
+      <div class="lg:col-span-5 space-y-4">
+        <!-- 运行监控卡片 -->
+        <Card>
+          <CardHeader class="p-3.5 pb-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5 text-xs font-semibold">
+                <component
+                  :is="ChartMultiple24Regular"
+                  class="h-4 w-4 text-brand"
+                />
                 <span>运行状态与统计</span>
-              </NFlex>
-            </template>
-            <template #header-extra>
-              <NTag :type="speechState.canSpeech ? 'success' : 'default'" size="tiny" round>
+              </div>
+
+              <Badge
+                :variant="speechState.canSpeech ? (isPaused ? 'warning' : 'brand') : 'secondary'"
+                class="text-[10px] px-1.5 py-0 h-4"
+              >
                 {{ speechState.canSpeech ? (isPaused ? '已暂停' : '监听中') : '未启动' }}
-              </NTag>
-            </template>
+              </Badge>
+            </div>
+          </CardHeader>
 
-            <NFlex vertical :size="12">
-              <div class="stat-grid">
-                <NStatistic label="朗读状态">
-                  <template #prefix>
-                    <NSpin v-if="speechState.isApiAudioLoading" :size="14" />
-                    <NIcon
-                      v-else
-                      :component="Mic24Filled"
-                      :size="16"
-                      :color="speechState.isSpeaking ? 'var(--vtsuru-success)' : 'var(--vtsuru-fg-muted)'"
-                    />
-                  </template>
-                  <NText :type="speechState.isSpeaking ? 'success' : isPaused ? 'warning' : 'default'" style="font-size: 14px">
-                    {{ isPaused ? '已暂停' : speechState.isSpeaking ? '正在朗读' : '空闲待机' }}
-                  </NText>
-                </NStatistic>
-
-                <NStatistic label="待播积压" :value="queueStats.total" />
-                <NStatistic label="累计已读" :value="readedDanmaku" />
+          <CardContent class="p-3.5 pt-0 space-y-3">
+            <div class="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-muted/40 border border-border text-center">
+              <div>
+                <span class="text-[11px] text-muted-foreground block">朗读状态</span>
+                <span
+                  class="text-xs font-semibold mt-0.5 block"
+                  :class="{
+                    'text-brand': speechState.isSpeaking,
+                    'text-amber-500': isPaused,
+                    'text-muted-foreground': !speechState.isSpeaking && !isPaused,
+                  }"
+                >
+                  {{ isPaused ? '已暂停' : speechState.isSpeaking ? '正在朗读' : '空闲待机' }}
+                </span>
               </div>
-
-              <!-- 当前正在朗读的文本 -->
-              <div v-if="speechState.isSpeaking && speechState.speakingText" class="current-speech-bubble">
-                <span class="bubble-label">正在播报：</span>
-                <span class="bubble-content">{{ speechState.speakingText }}</span>
+              <div>
+                <span class="text-[11px] text-muted-foreground block">待播积压</span>
+                <span class="text-sm font-semibold font-mono mt-0.5 block text-foreground">
+                  {{ queueStats.total }}
+                </span>
               </div>
-
-              <!-- 快捷控制提示 -->
-              <div class="shortcut-tip">
-                快捷键：<code>Ctrl + 空格</code> 暂停/恢复 ｜ <code>Ctrl + N</code> 跳过 ｜ <code>Ctrl + Q</code> 清空队列
+              <div>
+                <span class="text-[11px] text-muted-foreground block">累计已读</span>
+                <span class="text-sm font-semibold font-mono mt-0.5 block text-foreground">
+                  {{ readedDanmaku }}
+                </span>
               </div>
-            </NFlex>
-          </NCard>
+            </div>
 
-          <!-- 待读队列与历史卡片 -->
-          <NCard size="small" style="flex: 1">
-            <NTabs type="segment" size="small" animated>
-              <NTabPane name="queue" :tab="`待读队列 (${queueStats.total})`">
-                <div class="list-container">
+            <!-- 当前正在朗读的文本 -->
+            <div
+              v-if="speechState.isSpeaking && speechState.speakingText"
+              class="p-2.5 rounded-md bg-brand/10 border border-brand/20 text-xs flex items-baseline gap-1.5"
+            >
+              <span class="font-bold text-brand shrink-0">正在播报:</span>
+              <span class="text-foreground break-all">{{ speechState.speakingText }}</span>
+            </div>
+
+            <!-- 快捷键提示 -->
+            <div class="text-[11px] text-muted-foreground text-center space-x-1.5">
+              <span>快捷键:</span>
+              <kbd class="px-1 py-0.5 rounded bg-muted font-mono text-[10px] border border-border">Ctrl + 空格</kbd>
+              <span>暂停</span>
+              <span class="text-muted-foreground/40">|</span>
+              <kbd class="px-1 py-0.5 rounded bg-muted font-mono text-[10px] border border-border">Ctrl + N</kbd>
+              <span>跳过</span>
+              <span class="text-muted-foreground/40">|</span>
+              <kbd class="px-1 py-0.5 rounded bg-muted font-mono text-[10px] border border-border">Ctrl + Q</kbd>
+              <span>清空</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        <!-- 待读队列与历史卡片 -->
+        <Card>
+          <CardContent class="p-3.5">
+            <Tabs
+              v-model="activeQueueTab"
+              class="w-full"
+            >
+              <TabsList class="grid grid-cols-2 w-full p-0.5 bg-muted mb-3">
+                <TabsTrigger
+                  value="queue"
+                  class="text-xs h-7 gap-1"
+                >
+                  待读队列
+                  <Badge
+                    v-if="queueStats.total > 0"
+                    variant="brand"
+                    class="text-[10px] px-1 py-0 h-4 ml-1"
+                  >
+                    {{ queueStats.total }}
+                  </Badge>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="history"
+                  class="text-xs h-7"
+                >
+                  已读历史
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent
+                value="queue"
+                class="mt-0"
+              >
+                <div class="max-h-[380px] overflow-y-auto pr-1">
                   <QueueList />
                 </div>
-              </NTabPane>
-              <NTabPane name="history" tab="已读历史">
-                <div class="list-container">
+              </TabsContent>
+
+              <TabsContent
+                value="history"
+                class="mt-0"
+              >
+                <div class="max-h-[380px] overflow-y-auto pr-1">
                   <SpokenHistoryPanel />
                 </div>
-              </NTabPane>
-            </NTabs>
-          </NCard>
-        </NFlex>
-      </NGridItem>
-    </NGrid>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   </div>
 </template>
-
-<style scoped>
-.read-danmaku-manage-view {
-  width: 100%;
-}
-
-.tab-pane-box {
-  padding-top: 16px;
-}
-
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.current-speech-bubble {
-  padding: 8px 12px;
-  border-radius: 6px;
-  background: var(--vtsuru-brand-tint);
-  border: 1px solid var(--vtsuru-brand-soft);
-  font-size: 13px;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.bubble-label {
-  font-weight: 700;
-  color: var(--vtsuru-brand);
-  flex-shrink: 0;
-}
-
-.bubble-content {
-  color: var(--vtsuru-fg);
-  word-break: break-all;
-}
-
-.shortcut-tip {
-  font-size: 11px;
-  color: var(--vtsuru-fg-muted);
-  text-align: center;
-}
-
-.shortcut-tip code {
-  background: var(--vtsuru-bg-muted);
-  padding: 1px 4px;
-  border-radius: 4px;
-  font-family: monospace;
-}
-
-.list-container {
-  max-height: 420px;
-  overflow-y: auto;
-  padding-top: 8px;
-}
-</style>

@@ -18,7 +18,7 @@ export function mixinKey(source: string) {
 export function signWbi(params: Record<string, string>, imgKey: string, subKey: string, nowSeconds: number) {
   const values: Record<string, string> = { ...params, wts: String(nowSeconds) }
   const query = Object.keys(values)
-    .sort()
+    .toSorted()
     .map((key) => [key, values[key].replace(forbidden, '')])
   const encoded = new URLSearchParams(query).toString()
   const rid = createHash('md5')

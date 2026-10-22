@@ -111,15 +111,6 @@ export function getCapabilityMeta(id: TemplateCapability): TemplateCapabilityMet
   return TemplateCapabilities[id]
 }
 
-/**
- * 生成能力标签的 NTag color 配置.
- * 背景用主题色低透明度 + 同色边框勾边, 保证暗色模式下标签也能与页面背景区分开.
- */
-export function getCategoryTagColor(category: CapabilityCategory) {
-  const c = CapabilityCategories[category].color
-  return { color: `${c}26`, textColor: c, borderColor: `${c}66` }
-}
-
 /** 把能力 id 列表按分类分组, 返回 [分类, 该分类下的能力项[]] 的有序数组 (空分类省略) */
 export function groupCapabilities(
   ids: readonly TemplateCapability[] = [],

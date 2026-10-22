@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { HistoryControllerGuardStatsModel } from './historyControllerGuardStatsModel';
+import type { HistoryControllerGuardStatsModel } from './historyControllerGuardStatsModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfHistoryControllerGuardStatsModel {
-  message: string;
-  code: number;
-  data: HistoryControllerGuardStatsModel;
+  message: string
+  code: number
+  data: HistoryControllerGuardStatsModel
 }

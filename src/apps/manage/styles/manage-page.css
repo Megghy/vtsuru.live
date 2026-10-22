@@ -43,21 +43,8 @@
   }
 }
 
-/* shadcn-like card rhythm */
-.manage-page .n-card {
-  border-radius: var(--vtsuru-radius);
-}
-
-.manage-page .n-card .n-card-header {
-  padding: 12px 14px;
-}
-
-.manage-page .n-card .n-card__content {
-  padding: 14px;
-}
-
 .manage-muted {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .manage-kicker {
@@ -65,11 +52,23 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
-/* Manage modals: subtle shadcn-like border */
-.n-modal > .n-card {
-  box-sizing: border-box;
-  border: 1px solid var(--vtsuru-border);
+/* 页面路由切换平滑微淡入动效 (140ms / GPU加速 / 避免重排) */
+.page-fade-enter-active,
+.page-fade-leave-active {
+  transition:
+    opacity 140ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 140ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page-fade-enter-from {
+  opacity: 0;
+  transform: translateY(3px);
+}
+
+.page-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-3px);
 }

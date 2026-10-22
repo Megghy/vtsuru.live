@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { NSpin, useDialog, useLoadingBar, useMessage, useModal, useNotification } from 'naive-ui'
 import { onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
+import { useDialog, useLoadingBar, useMessage, useNotification } from '@/shared/utils'
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 const accountInfo = useAccount()
@@ -14,7 +14,6 @@ onMounted(() => {
   window.$loadingBar = useLoadingBar()
   window.$message = useMessage()
   window.$route = useRoute()
-  window.$modal = useModal()
   window.$notification = useNotification()
   window.$dialog = useDialog()
   const providerStore = useLoadingBarStore()
@@ -23,14 +22,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <NSpin
-    v-if="($route.query.token || cookie) && accountInfo.id < 1"
-    style="margin: 0 auto"
-  />
   <div
-    v-else
-    style="height: 100vh"
+    v-if="($route.query.token || cookie) && accountInfo.id < 1"
+    class="flex items-center justify-center min-h-screen w-full"
   >
-    <slot />
+    <div class="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
   </div>
+  <slot v-else />
 </template>

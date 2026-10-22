@@ -7,11 +7,11 @@
  */
 
 export interface OrgAnalyzePeriodSummary {
-  totalIncome: number;
-  totalInteractions: number;
-  totalDanmakuCount: number;
-  totalLiveMinutes: number;
-  incomeTrend: number;
-  interactionTrend: number;
-  danmakuTrend: number;
+  totalIncome: number
+  totalInteractions: number
+  totalDanmakuCount: number
+  totalLiveMinutes: number
+  incomeTrend: number
+  interactionTrend: number
+  danmakuTrend: number
 }

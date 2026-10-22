@@ -7,6 +7,6 @@
  */
 
 export type GetApiVoteObsHashParams = {
-user?: string;
-id?: number;
-};
+  user?: string
+  id?: number
+}

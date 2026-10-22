@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInputNumber, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { NumberField } from '@/shared/ui/number-field'
+import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -11,36 +11,23 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 </script>
 
 <template>
-  <NForm
-    label-placement="top"
-    size="small"
-  >
-    <PropsGrid>
-      <NFormItem label="最多展示">
-        <NInputNumber
-          v-model:value="blockProps.count"
-          :min="1"
-          :max="6"
-          :precision="0"
-          style="width: 100%"
-        />
-      </NFormItem>
-      <NFormItem label="显示活动说明">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showDescription"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
-      <NFormItem label="显示投稿进度">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showProgress"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
-    </PropsGrid>
-  </NForm>
+  <PropsGrid>
+    <div class="space-y-1">
+      <label class="text-xs text-muted-foreground">最多展示</label>
+      <NumberField
+        v-model="blockProps.count"
+        :min="1"
+        :max="6"
+        class="w-full"
+      />
+    </div>
+    <div class="flex items-center justify-between py-1">
+      <label class="text-xs text-muted-foreground">显示活动说明</label>
+      <Switch v-model:checked="blockProps.showDescription" />
+    </div>
+    <div class="flex items-center justify-between py-1">
+      <label class="text-xs text-muted-foreground">显示投稿进度</label>
+      <Switch v-model:checked="blockProps.showProgress" />
+    </div>
+  </PropsGrid>
 </template>

@@ -1,5 +1,5 @@
-import { reactive } from 'vue'
 import { describe, expect, it } from 'vitest'
+import { reactive } from 'vue'
 
 import { postBroadcastMessage, toCloneable } from '../broadcastChannel'
 

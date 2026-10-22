@@ -1,26 +1,18 @@
 <script setup lang="ts">
 import { Add24Filled, Delete24Filled, Info24Filled } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCheckbox,
-  NEmpty,
-  NFlex,
-  NFormItem,
-  NGrid,
-  NGridItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NSwitch,
-  NText,
-  NTooltip,
-} from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { ServiceFieldType, type ServiceConfig, type ServiceField } from '@/api/point-service'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{ modelValue?: ServiceConfig }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: ServiceConfig): void }>()
@@ -145,247 +137,267 @@ function normalizeField(field: ServiceField) {
   if (field.type !== ServiceFieldType.Select && field.type !== ServiceFieldType.MultiSelect) field.options = []
 }
 
-function normalizeOptions(value: string[] | null): string[] {
-  return [...new Set((value ?? []).map((item) => item.trim()).filter(Boolean))]
+const optionInputs = ref<Record<string, string>>({})
+
+function addOption(field: ServiceField) {
+  const text = (optionInputs.value[field.id] || '').trim()
+  if (!text) return
+  field.options = [...new Set([...(field.options ?? []), text])]
+  optionInputs.value[field.id] = ''
 }
 
-function updateFieldOptions(field: ServiceField, value: string[] | null) {
-  field.options = normalizeOptions(value)
+function removeOption(field: ServiceField, optIndex: number) {
+  field.options?.splice(optIndex, 1)
 }
 </script>
 
 <template>
-  <div class="service-config">
-    <NAlert
-      type="info"
-      :bordered="false"
-      class="service-intro"
+  <div class="space-y-4 pb-2">
+    <Alert
+      variant="default"
+      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
     >
-      服务兑换会先收集需求，再由你在订单中安排和交付
-    </NAlert>
+      <AlertDescription class="text-xs"> 服务兑换会先收集需求，再由你在订单中安排和交付 </AlertDescription>
+    </Alert>
 
-    <NCard
-      size="small"
-      :bordered="true"
-      class="service-status-card"
-    >
-      <NFlex
-        justify="space-between"
-        align="center"
-        :gap="16"
-        wrap
-      >
+    <!-- 接单状态卡片 -->
+    <Card class="border border-border">
+      <CardContent class="p-3.5 flex items-center justify-between">
         <div>
-          <NText strong>接单状态</NText>
-          <NText
-            depth="3"
-            style="display: block; margin-top: 4px; font-size: 12px"
-          >
+          <span class="text-xs font-semibold text-foreground block">接单状态</span>
+          <span class="text-[11px] text-muted-foreground mt-0.5 block">
             暂停后不会接受新的兑换，已有订单仍可继续处理。
-          </NText>
+          </span>
         </div>
-        <NSwitch
-          v-model:value="draft.paused"
-          :checked-value="false"
-          :unchecked-value="true"
-        >
-          <template #checked> 接单中 </template>
-          <template #unchecked> 已暂停 </template>
-        </NSwitch>
-      </NFlex>
-    </NCard>
-
-    <div class="form-section-title">履约边界</div>
-    <NGrid
-      cols="1 s:2"
-      :x-gap="16"
-      :y-gap="0"
-    >
-      <NGridItem>
-        <NFormItem label="预计完成周期">
-          <NInput
-            v-model:value="estimatedDaysInput"
-            :input-props="{ type: 'number', min: 1, step: 1 }"
-            clearable
-            placeholder="可选，例如 7"
-            style="width: 100%"
-            @update:value="updateNumber('estimatedDays', $event)"
+        <div class="flex items-center gap-2">
+          <span
+            class="text-xs font-medium"
+            :class="!draft.paused ? 'text-primary' : 'text-muted-foreground'"
           >
-            <template #suffix>天</template>
-          </NInput>
-        </NFormItem>
-      </NGridItem>
-      <NGridItem>
-        <NFormItem label="最大未完成订单数">
-          <NInput
-            v-model:value="maxActiveOrdersInput"
-            :input-props="{ type: 'number', min: 1, step: 1 }"
-            clearable
+            {{ !draft.paused ? '接单中' : '已暂停' }}
+          </span>
+          <Switch
+            :checked="!draft.paused"
+            @update:checked="draft.paused = !$event"
+          />
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- 履约边界 -->
+    <div class="space-y-3">
+      <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">履约边界</h4>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-foreground">预计完成周期</label>
+          <div class="relative">
+            <Input
+              v-model="estimatedDaysInput"
+              type="number"
+              min="1"
+              step="1"
+              placeholder="可选，例如 7"
+              class="pr-7"
+              @update:model-value="updateNumber('estimatedDays', String($event))"
+            />
+            <span class="absolute right-2.5 top-2 text-[11px] text-muted-foreground">天</span>
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label class="text-xs font-medium text-foreground">最大未完成订单数</label>
+          <Input
+            v-model="maxActiveOrdersInput"
+            type="number"
+            min="1"
+            step="1"
             placeholder="不限制"
-            style="width: 100%"
-            @update:value="updateNumber('maxActiveOrders', $event)"
+            @update:model-value="updateNumber('maxActiveOrders', String($event))"
           />
-        </NFormItem>
-      </NGridItem>
-    </NGrid>
-
-    <NFormItem label="服务规则与交付说明">
-      <NInput
-        v-model:value="draft.rules"
-        type="textarea"
-        :rows="4"
-        maxlength="3000"
-        show-count
-        placeholder="例如：包含几次修改、如何确认时间、哪些需求无法承接，以及成品交付方式。"
-      />
-    </NFormItem>
-
-    <div class="form-section-title service-fields-heading">
-      <span>兑换时收集的需求</span>
-      <NTooltip>
-        <template #trigger>
-          <NIcon
-            :component="Info24Filled"
-            class="muted-icon"
-          />
-        </template>
-        字段会保存到订单快照，系统会自动生成内部标识，修改字段标题不会影响已有订单。
-      </NTooltip>
-      <NFlex
-        align="center"
-        :gap="8"
-        style="margin-left: auto"
-      >
-        <NSelect
-          size="small"
-          clearable
-          placeholder="套用轻量模板"
-          :options="presetOptions"
-          style="width: 170px"
-          @update:value="applyPreset"
-        />
-        <NButton
-          size="small"
-          type="primary"
-          secondary
-          @click="addField"
-        >
-          <template #icon><NIcon :component="Add24Filled" /></template>
-          添加字段
-        </NButton>
-      </NFlex>
+        </div>
+      </div>
     </div>
 
-    <NEmpty
-      v-if="draft.fields.length === 0"
-      description="暂不收集额外需求，兑换后可通过订单留言沟通"
-      style="margin: 24px 0"
-    />
-    <div
-      v-for="(field, index) in draft.fields"
-      :key="field.id || index"
-      class="service-field-card"
-    >
-      <NGrid
-        cols="1 s:2"
-        :x-gap="12"
-        :y-gap="0"
-      >
-        <NGridItem>
-          <NFormItem
-            label="字段名称"
-            required
+    <!-- 规则说明 -->
+    <div class="space-y-1">
+      <label class="text-xs font-medium text-foreground">服务规则与交付说明</label>
+      <Textarea
+        v-model="draft.rules"
+        :rows="3"
+        maxlength="3000"
+        placeholder="例如：包含几次修改、如何确认时间、哪些需求无法承接，以及成品交付方式。"
+        class="text-xs"
+      />
+    </div>
+
+    <!-- 需求收集字段配置 -->
+    <div class="space-y-3 pt-2">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">兑换时收集的需求</h4>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p class="text-xs">字段会保存到订单快照，系统会自动生成内部标识，修改字段标题不会影响已有订单。</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div class="w-36">
+            <Select @update:model-value="applyPreset(String($event))">
+              <SelectTrigger size="xs">
+                <SelectValue placeholder="套用轻量模板" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in presetOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            size="xs"
+            variant="outline"
+            class="gap-1"
+            @click="addField"
           >
-            <NInput
-              v-model:value="field.label"
-              placeholder="例如：需求描述"
-              maxlength="100"
-              @blur="normalizeField(field)"
-            />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem>
-          <NFormItem label="字段类型">
-            <NFlex
-              align="center"
-              :gap="8"
-            >
-              <NSelect
-                v-model:value="field.type"
-                :options="fieldTypes"
-                style="flex: 1"
-                :consistent-menu-width="false"
-                @update:value="normalizeField(field)"
-              />
-              <NButton
-                type="error"
-                secondary
-                size="small"
-                @click="removeField(index)"
-              >
-                <template #icon><NIcon :component="Delete24Filled" /></template>
-                删除
-              </NButton>
-            </NFlex>
-          </NFormItem>
-        </NGridItem>
-        <NGridItem
-          v-if="field.type === ServiceFieldType.Select || field.type === ServiceFieldType.MultiSelect"
-          :span="2"
+            <Add24Filled class="size-3.5" />
+            添加字段
+          </Button>
+        </div>
+      </div>
+
+      <Empty
+        v-if="draft.fields.length === 0"
+        description="暂不收集额外需求，兑换后可通过订单留言沟通"
+        class="py-6 border rounded-lg border-dashed"
+      />
+
+      <div class="space-y-2.5">
+        <Card
+          v-for="(field, index) in draft.fields"
+          :key="field.id || index"
+          class="border border-border p-3 space-y-3"
         >
-          <NFormItem label="可选项">
-            <NSelect
-              :value="field.options"
-              multiple
-              tag
-              filterable
-              clearable
-              :consistent-menu-width="false"
-              :placeholder="`输入后按 Enter 添加${field.type === ServiceFieldType.MultiSelect ? '，可多选' : ''}，例如：标准、加急`"
-              @update:value="updateFieldOptions(field, $event)"
-            />
-          </NFormItem>
-        </NGridItem>
-        <NGridItem :span="2">
-          <NCheckbox v-model:checked="field.required">兑换时必须填写</NCheckbox>
-        </NGridItem>
-      </NGrid>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-foreground"
+                >字段名称 <span class="text-destructive">*</span></label
+              >
+              <Input
+                v-model="field.label"
+                placeholder="例如：需求描述"
+                maxlength="100"
+                @blur="normalizeField(field)"
+              />
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-medium text-foreground">字段类型</label>
+              <div class="flex items-center gap-2">
+                <div class="flex-1">
+                  <Select
+                    :model-value="field.type"
+                    @update:model-value="
+                      (val) => {
+                        field.type = val as ServiceFieldType
+                        normalizeField(field)
+                      }
+                    "
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem
+                        v-for="ft in fieldTypes"
+                        :key="ft.value"
+                        :value="ft.value"
+                      >
+                        {{ ft.label }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  class="text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                  @click="removeField(index)"
+                >
+                  <Delete24Filled class="size-3.5" />
+                </Button>
+              </div>
+            </div>
+
+            <!-- 可选项编辑 -->
+            <div
+              v-if="field.type === ServiceFieldType.Select || field.type === ServiceFieldType.MultiSelect"
+              class="col-span-full space-y-1.5"
+            >
+              <label class="text-xs font-medium text-foreground">可选项配置</label>
+              <div class="flex items-center gap-2">
+                <Input
+                  size="xs"
+                  v-model="optionInputs[field.id]"
+                  placeholder="输入选项名称后按回车或点击添加"
+                  class="flex-1"
+                  @keyup.enter="addOption(field)"
+                />
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="addOption(field)"
+                >
+                  添加选项
+                </Button>
+              </div>
+              <div
+                v-if="field.options && field.options.length > 0"
+                class="flex flex-wrap gap-1.5 pt-1"
+              >
+                <span
+                  v-for="(opt, optIdx) in field.options"
+                  :key="optIdx"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-muted text-foreground border border-border"
+                >
+                  {{ opt }}
+                  <button
+                    type="button"
+                    class="hover:text-destructive"
+                    @click="removeOption(field, optIdx)"
+                  >
+                    ×
+                  </button>
+                </span>
+              </div>
+            </div>
+
+            <div class="col-span-full flex items-center gap-2 pt-1">
+              <Checkbox
+                :checked="field.required"
+                @update:checked="field.required = $event"
+              />
+              <span
+                class="text-xs text-foreground cursor-pointer"
+                @click="field.required = !field.required"
+              >
+                兑换时必须填写
+              </span>
+            </div>
+          </div>
+        </Card>
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.service-config {
-  padding-bottom: 8px;
-}
-.service-intro {
-  margin-bottom: 16px;
-}
-.service-status-card {
-  margin-bottom: 16px;
-  background: var(--vtsuru-bg-surface);
-}
-.form-section-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 16px 0 8px;
-  color: var(--vtsuru-fg-muted);
-  font-size: 13px;
-  font-weight: 600;
-}
-.service-fields-heading {
-  margin-top: 20px;
-}
-.muted-icon {
-  color: var(--vtsuru-fg-muted);
-  cursor: help;
-}
-.service-field-card {
-  margin-bottom: 12px;
-  padding: 12px 14px 4px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
-}
-</style>

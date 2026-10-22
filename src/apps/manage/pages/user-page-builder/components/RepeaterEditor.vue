@@ -8,9 +8,12 @@ import {
   ReorderThreeOutline,
   TrashOutline,
 } from '@vicons/ionicons5'
-import { NButton, NFlex, NIcon, NPopconfirm, NText, NTooltip } from 'naive-ui'
 import { computed, ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
+
+import { Button } from '@/shared/ui/button'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { createId, deepCloneJson } from '../editorHelpers'
 
@@ -18,6 +21,11 @@ const props = defineProps<{
   items: Array<Record<string, any>>
   createItem: () => Record<string, any>
   addText?: string
+}>()
+
+defineSlots<{
+  title?: (props: { item: Record<string, any>; index: number }) => any
+  default?: (props: { item: Record<string, any>; index: number }) => any
 }>()
 
 const expandedIds = ref(new Set<string>())
@@ -61,47 +69,43 @@ function duplicateItem(index: number) {
 </script>
 
 <template>
-  <div class="repeater-editor">
+  <div class="grid gap-2 w-full">
     <div
       v-if="itemsModel.length >= 2"
-      class="repeater-bulk-actions"
+      class="repeater-bulk-actions flex justify-between items-center w-full mb-1"
     >
-      <NFlex
-        justify="space-between"
-        align="center"
-        style="width: 100%"
-      >
-        <span style="font-size: 11px; color: var(--vtsuru-fg-muted)"> 共 {{ itemsModel.length }} 项 </span>
-        <NFlex :size="4">
-          <NButton
-            size="tiny"
-            quaternary
-            @click="expandAll"
-          >
-            <template #icon>
-              <NIcon><ExpandOutline /></NIcon>
-            </template>
-            全部展开
-          </NButton>
-          <NButton
-            size="tiny"
-            quaternary
-            @click="collapseAll"
-          >
-            <template #icon>
-              <NIcon><ContractOutline /></NIcon>
-            </template>
-            全部折叠
-          </NButton>
-        </NFlex>
-      </NFlex>
+      <span class="text-[11px] text-muted-foreground">共 {{ itemsModel.length }} 项</span>
+      <div class="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          class="h-6 px-2"
+          @click="expandAll"
+        >
+          <component
+            :is="ExpandOutline"
+            class="size-3.5 mr-1"
+          />
+          全部展开
+        </Button>
+        <Button
+          variant="ghost"
+          class="h-6 px-2"
+          @click="collapseAll"
+        >
+          <component
+            :is="ContractOutline"
+            class="size-3.5 mr-1"
+          />
+          全部折叠
+        </Button>
+      </div>
     </div>
 
     <div
       v-if="itemsModel.length === 0"
-      class="repeater-empty"
+      class="flex-center py-3.5 border border-dashed border-border rounded-md bg-muted"
     >
-      <span style="font-size: 12px; color: var(--vtsuru-fg-muted)"> 暂无列表项，点击下方按钮添加 </span>
+      <span class="text-xs text-muted-foreground">暂无列表项，点击下方按钮添加</span>
     </div>
 
     <VueDraggable
@@ -113,25 +117,25 @@ function duplicateItem(index: number) {
       <section
         v-for="(item, index) in itemsModel"
         :key="item._id"
-        class="repeater-item"
+        class="mb-2 overflow-hidden border border-border rounded-md bg-popover"
       >
-        <header class="repeater-header">
-          <NIcon
-            class="repeater-drag-handle"
-            size="18"
+        <header class="flex items-center gap-1.5 min-h-[38px] py-1 px-1.5">
+          <component
+            :is="ReorderThreeOutline"
+            class="repeater-drag-handle size-4.5 cursor-grab text-muted-foreground"
             title="拖拽排序"
-          >
-            <ReorderThreeOutline />
-          </NIcon>
+          />
           <button
-            class="repeater-toggle"
+            class="flex flex-1 gap-1.5 items-center min-w-0 p-1 border-0 text-inherit bg-transparent text-left cursor-pointer"
             type="button"
             @click="toggle(item._id)"
           >
-            <NIcon :class="{ expanded: expandedIds.has(item._id) }">
-              <ChevronDownOutline />
-            </NIcon>
-            <NText strong>
+            <component
+              :is="ChevronDownOutline"
+              class="repeater-chevron size-3.5 transition-transform"
+              :class="{ 'rotate-0': expandedIds.has(item._id), '-rotate-90': !expandedIds.has(item._id) }"
+            />
+            <span class="font-medium truncate text-xs">
               <slot
                 name="title"
                 :item="item"
@@ -139,48 +143,48 @@ function duplicateItem(index: number) {
               >
                 项目 {{ index + 1 }}
               </slot>
-            </NText>
+            </span>
           </button>
-          <NTooltip>
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                aria-label="复制项目"
-                @click="duplicateItem(index)"
-              >
-                <template #icon>
-                  <NIcon><CopyOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            复制项目
-          </NTooltip>
-          <NPopconfirm
-            positive-text="删除"
-            negative-text="取消"
-            @positive-click="itemsModel.splice(index, 1)"
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  class="size-6 p-0"
+                  aria-label="复制项目"
+                  @click="duplicateItem(index)"
+                >
+                  <component
+                    :is="CopyOutline"
+                    class="size-3.5"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>复制项目</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <Popconfirm
+            title="确定删除这个项目吗？"
+            ok-text="删除"
+            cancel-text="取消"
+            @confirm="itemsModel.splice(index, 1)"
           >
-            <template #trigger>
-              <NButton
-                quaternary
-                circle
-                size="tiny"
-                type="error"
-                aria-label="删除项目"
-              >
-                <template #icon>
-                  <NIcon><TrashOutline /></NIcon>
-                </template>
-              </NButton>
-            </template>
-            确定删除这个项目吗？
-          </NPopconfirm>
+            <Button
+              variant="ghost"
+              class="size-6 p-0 text-destructive hover:text-destructive"
+              aria-label="删除项目"
+            >
+              <component
+                :is="TrashOutline"
+                class="size-3.5"
+              />
+            </Button>
+          </Popconfirm>
         </header>
         <div
           v-show="expandedIds.has(item._id)"
-          class="repeater-content"
+          class="repeater-content p-2.5 border-t border-border"
         >
           <slot
             :item="item"
@@ -189,90 +193,22 @@ function duplicateItem(index: number) {
         </div>
       </section>
     </VueDraggable>
-    <NButton
-      block
-      secondary
-      type="primary"
+
+    <Button
+      variant="outline"
+      class="w-full"
       @click="addItem"
     >
-      <template #icon>
-        <NIcon><AddOutline /></NIcon>
-      </template>
+      <component
+        :is="AddOutline"
+        class="size-4 mr-1"
+      />
       {{ addText || '添加项目' }}
-    </NButton>
+    </Button>
   </div>
 </template>
 
 <style scoped>
-.repeater-editor {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-}
-.repeater-bulk-actions {
-  display: flex;
-  align-items: center;
-  margin-bottom: 2px;
-}
-.repeater-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px;
-  border: 1px dashed var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
-}
-.repeater-item {
-  margin-bottom: 8px;
-  overflow: hidden;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-elevated);
-}
-.repeater-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 4px 6px;
-}
-.repeater-drag-handle {
-  flex: none;
-  cursor: grab;
-  color: var(--vtsuru-fg-muted);
-}
-.repeater-toggle {
-  display: flex;
-  flex: 1;
-  gap: 6px;
-  align-items: center;
-  min-width: 0;
-  padding: 4px;
-  border: 0;
-  color: inherit;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.repeater-toggle .n-icon {
-  flex: none;
-  transform: rotate(-90deg);
-  transition: transform 140ms ease;
-}
-.repeater-toggle .n-icon.expanded {
-  transform: rotate(0);
-}
-.repeater-toggle .n-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.repeater-content {
-  padding: 10px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
 @media (max-width: 520px) {
   .repeater-content :deep(.props-grid) {
     grid-template-columns: minmax(0, 1fr);

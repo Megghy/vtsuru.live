@@ -7,8 +7,8 @@
  */
 
 export type GetApiOrgOrgIdPointsOrdersParams = {
-streamerId?: number;
-customerId?: number;
-page?: number;
-pageSize?: number;
-};
+  streamerId?: number
+  customerId?: number
+  page?: number
+  pageSize?: number
+}

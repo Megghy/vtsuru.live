@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { NResult, NSpin } from 'naive-ui'
+import { AlertCircleOutline } from '@vicons/ionicons5'
 import { computed, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 
 import type { UserInfo } from '@/api/api-models'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Spin } from '@/shared/ui/spin'
 
 import type { ContribPageRef } from '../types'
 import { getContribPageImporter } from './registry'
@@ -42,13 +44,26 @@ watch(
 </script>
 
 <template>
-  <NSpin :show="isLoading">
-    <NResult
-      v-if="error"
-      status="error"
-      title="页面加载失败"
-      :description="error"
-    />
+  <div class="relative min-h-[120px]">
+    <div
+      v-if="isLoading"
+      class="py-12 flex justify-center items-center"
+    >
+      <Spin />
+    </div>
+    <div
+      v-else-if="error"
+      class="p-6 max-w-md mx-auto"
+    >
+      <Alert variant="destructive">
+        <component
+          :is="AlertCircleOutline"
+          class="size-4"
+        />
+        <AlertTitle>页面加载失败</AlertTitle>
+        <AlertDescription>{{ error }}</AlertDescription>
+      </Alert>
+    </div>
     <component
       :is="componentRef"
       v-else-if="componentRef"
@@ -56,5 +71,5 @@ watch(
       :bili-info="biliInfo"
       :page-config="pageConfig"
     />
-  </NSpin>
+  </div>
 </template>

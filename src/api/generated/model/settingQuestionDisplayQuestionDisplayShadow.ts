@@ -6,11 +6,11 @@
  * OpenAPI spec version: v1
  */
 
-export type SettingQuestionDisplayQuestionDisplayShadow = typeof SettingQuestionDisplayQuestionDisplayShadow[keyof typeof SettingQuestionDisplayQuestionDisplayShadow];
-
+export type SettingQuestionDisplayQuestionDisplayShadow =
+  (typeof SettingQuestionDisplayQuestionDisplayShadow)[keyof typeof SettingQuestionDisplayQuestionDisplayShadow]
 
 export const SettingQuestionDisplayQuestionDisplayShadow = {
   NUMBER_0: 0,
   NUMBER_1: 1,
   NUMBER_2: 2,
-} as const;
+} as const

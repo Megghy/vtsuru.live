@@ -63,7 +63,15 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
     errorMessage.value = error instanceof Error ? error.message : String(error)
   }
   async function poll(epoch = generation) {
-    if (!active || !userId.value || !isObsSyncChannel(channelId.value) || writeTask || destroyed || Object.keys(pending).length) return
+    if (
+      !active ||
+      !userId.value ||
+      !isObsSyncChannel(channelId.value) ||
+      writeTask ||
+      destroyed ||
+      Object.keys(pending).length
+    )
+      return
     const requestedRevision = revision
     try {
       const snapshot = await getObsSyncState(options.componentId, channelId.value, currentHash.value, userId.value)
@@ -84,6 +92,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
         apply(snapshot)
       }
       let conflicts = 0
+      // epoch/generation 在循环内未修改是有意为之，通过 return 语句跳出循环
       while (epoch === generation && Object.keys(pending).length) {
         const patch = pending
         pending = {}

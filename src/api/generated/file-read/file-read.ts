@@ -5,25 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import { vtsuruMutator } from '../../orval-mutator';
+import { vtsuruMutator } from '../../orval-mutator'
 
-export const getGetFileAccessIdUrl = (id: number,) => {
-
-
-
-
+export const getGetFileAccessIdUrl = (id: number) => {
   return `/file-access/${id}`
 }
 
 export const getFileAccessId = async (id: number, options?: Parameters<typeof vtsuruMutator>[1]): Promise<void> => {
-
-  return vtsuruMutator<void>(getGetFileAccessIdUrl(id),
-  {
+  return vtsuruMutator<void>(getGetFileAccessIdUrl(id), {
     ...options,
-    method: 'GET'
-
-
-  }
-);}
-
-
+    method: 'GET',
+  })
+}

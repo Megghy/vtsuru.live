@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AnalyzeAllResponse } from './analyzeAllResponse';
+import type { AnalyzeAllResponse } from './analyzeAllResponse'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfAnalyzeAllResponse {
-  message: string;
-  code: number;
-  data: AnalyzeAllResponse;
+  message: string
+  code: number
+  data: AnalyzeAllResponse
 }

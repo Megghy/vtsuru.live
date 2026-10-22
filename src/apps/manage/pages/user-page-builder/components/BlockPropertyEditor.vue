@@ -7,33 +7,32 @@ import {
   OpenOutline,
   SparklesOutline,
 } from '@vicons/ionicons5'
-import {
-  NAlert,
-  NAutoComplete,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NDivider,
-  NDropdown,
-  NFlex,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NProgress,
-  NSelect,
-  NSwitch,
-  NTag,
-  NText,
-  NTooltip,
-} from 'naive-ui'
 import { computed, inject, ref, watch } from 'vue'
 
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
 import { getUserPageNavIconLabel, resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import type { UserPageConfig } from '@/apps/user-page/types'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Progress } from '@/shared/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import { UserPageEditorKey } from '../context'
 import { PAGE_MODE_OPTIONS, createDefaultProject } from '../editorPageConfig'
@@ -50,12 +49,6 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const uploadInput = editor.uploadInput
-
-const capacityStatus = computed(() => {
-  if (editor.configBytes.value > editor.MAX_CONFIG_BYTES) return 'error'
-  if (editor.configBytes.value > editor.MAX_CONFIG_BYTES * 0.9) return 'warning'
-  return 'success'
-})
 
 const { expandedPageSections } = useBlockPropertyFocus()
 const { templateOptions, addBlockOptions, insertTemplate, handleAddBlockMenuSelect } = useBlockManagerLibrary()
@@ -121,645 +114,539 @@ function groupSelection() {
 </script>
 
 <template>
-  <NCard
-    class="block-property-editor"
-    :title="isSelectingBlock ? '区块属性' : '页面配置'"
-    style="width: 100%; height: 100%"
-    content-style="padding: 12px; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto"
-  >
-    <template #header-extra>
-      <NFlex
-        align="center"
-        :wrap="false"
-        style="gap: 6px; min-width: 0"
-      >
-        <NTooltip
+  <Card class="block-property-editor w-full h-full flex flex-col border border-border">
+    <CardHeader class="p-3 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
+      <CardTitle class="text-sm font-semibold">
+        {{ isSelectingBlock ? '区块属性' : '页面配置' }}
+      </CardTitle>
+
+      <div class="flex items-center gap-2">
+        <TooltipProvider
           v-if="
             editor.currentKey.value !== 'home' &&
             editor.currentPage.value.mode === 'block' &&
             editor.currentProject.value
           "
         >
-          <template #trigger>
-            <NButton
-              type="primary"
-              secondary
-              size="tiny"
-              aria-label="编辑当前页面主题"
-              @click="editor.pageThemeModal.value = true"
-            >
-              <template #icon>
-                <NIcon><ColorPaletteOutline /></NIcon>
-              </template>
-              页面主题
-            </NButton>
-          </template>
-          编辑当前子页面的背景与主题（未设置时继承全局主题）
-        </NTooltip>
-        <NText
-          depth="3"
-          style="font-size: 12px; white-space: nowrap"
-        >
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="outline"
+                class="h-6 px-2"
+                @click="editor.pageThemeModal.value = true"
+              >
+                <component
+                  :is="ColorPaletteOutline"
+                  class="size-3.5 mr-1"
+                />
+                页面主题
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs"> 编辑当前子页面的背景与主题（未设置时继承全局主题） </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <span class="text-xs text-muted-foreground whitespace-nowrap">
           容量 {{ editor.configBytesPercent.value }}%
-        </NText>
-        <NProgress
-          type="line"
-          :percentage="editor.configBytesPercent.value"
-          :status="capacityStatus as any"
-          :show-indicator="false"
-          :height="6"
-          style="width: 64px"
+        </span>
+        <Progress
+          :model-value="editor.configBytesPercent.value"
+          class="w-16 h-1.5"
         />
-      </NFlex>
-    </template>
-
-    <!-- 当处于具体区块选中状态时，顶部提供返回页面配置入口 -->
-    <div
-      v-if="isSelectingBlock"
-      class="editing-block-banner"
-    >
-      <NFlex
-        justify="space-between"
-        align="center"
-      >
-        <NFlex
-          align="center"
-          :size="6"
-        >
-          <NIcon
-            :component="ConstructOutline"
-            style="color: var(--vtsuru-primary)"
-          />
-          <NText strong>
-            {{
-              editor.selectedBlock.value
-                ? `编辑区块 · ${editor.selectedBlock.value.type}`
-                : `已选中 ${editor.selectedBlocks.value.length} 个区块`
-            }}
-          </NText>
-        </NFlex>
-        <NButton
-          size="tiny"
-          secondary
-          @click="deselectBlock"
-        >
-          返回页面配置
-        </NButton>
-      </NFlex>
-    </div>
-
-    <!-- 页面级基础信息（非单区块编辑时完整呈现） -->
-    <div
-      v-if="!isSelectingBlock"
-      class="page-mode-section"
-    >
-      <div class="section-title">
-        <NText
-          depth="2"
-          style="font-size: 13px; font-weight: 600"
-        >
-          页面搭建模式
-        </NText>
       </div>
-      <div class="mode-cards-grid">
-        <div
-          v-for="opt in PAGE_MODE_OPTIONS"
-          :key="opt.value"
-          class="mode-card"
-          :class="{ 'is-active': editor.currentPage.value.mode === opt.value }"
-          @click="handleModeChange(opt.value)"
-        >
-          <div class="mode-card__header">
-            <span class="mode-card__title">{{ opt.label }}</span>
-            <NTag
-              v-if="opt.tag"
-              size="tiny"
-              type="success"
-              :bordered="false"
-            >
-              {{ opt.tag }}
-            </NTag>
+    </CardHeader>
+
+    <CardContent class="p-3 flex-1 flex flex-col gap-3 min-h-0 overflow-y-auto">
+      <!-- 当处于具体区块选中状态时，顶部提供返回页面配置入口 -->
+      <div
+        v-if="isSelectingBlock"
+        class="py-2 px-2.5 rounded-md bg-[var(--brand-tint,rgba(0,150,255,0.08))] border border-[var(--brand-soft,rgba(0,150,255,0.2))]"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-1.5 text-xs font-semibold">
+            <component
+              :is="ConstructOutline"
+              class="size-4 text-primary"
+            />
+            <span>
+              {{
+                editor.selectedBlock.value
+                  ? `编辑区块 · ${editor.selectedBlock.value.type}`
+                  : `已选中 ${editor.selectedBlocks.value.length} 个区块`
+              }}
+            </span>
           </div>
-          <div class="mode-card__desc">
-            {{ opt.description }}
+          <Button
+            variant="outline"
+            class="h-6 px-2"
+            @click="deselectBlock"
+          >
+            返回页面配置
+          </Button>
+        </div>
+      </div>
+
+      <!-- 页面级基础信息（非单区块编辑时完整呈现） -->
+      <div
+        v-if="!isSelectingBlock"
+        class="flex flex-col gap-2"
+      >
+        <div>
+          <span class="text-xs font-semibold text-foreground">页面搭建模式</span>
+        </div>
+        <div class="flex flex-col gap-2">
+          <div
+            v-for="opt in PAGE_MODE_OPTIONS"
+            :key="opt.value"
+            class="py-2.5 px-3 rounded-lg border border-border bg-muted cursor-pointer transition flex flex-col gap-1 hover:border-primary hover:bg-popover"
+            :class="{ 'border-primary bg-[var(--brand-tint,rgba(0,150,255,0.08))] shadow-[0_0_0_1px_var(--primary)]': editor.currentPage.value.mode === opt.value }"
+            @click="handleModeChange(opt.value)"
+          >
+            <div class="flex-between">
+              <span class="text-[13px] font-semibold text-foreground">{{ opt.label }}</span>
+              <Tag
+                v-if="opt.tag"
+                variant="outline"
+                class="text-[10px] h-4.5 px-1.5"
+              >
+                {{ opt.tag }}
+              </Tag>
+            </div>
+            <div class="text-xs leading-snug text-muted-foreground">
+              {{ opt.description }}
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 子页面基本设置 (名称、导航图标、排序、Slug) -->
-    <NCollapse
-      v-if="!isSelectingBlock && editor.currentKey.value !== 'home'"
-      v-model:expanded-names="expandedPageSections"
-    >
-      <NCollapseItem
-        class="page-info-section"
-        title="页面基本信息 (子页面属性)"
-        name="page-info"
+      <!-- 子页面基本设置 (名称、导航图标、排序、Slug) -->
+      <Accordion
+        v-if="!isSelectingBlock && editor.currentKey.value !== 'home'"
+        v-model="expandedPageSections"
+        type="multiple"
+        class="w-full border rounded-lg p-2 bg-card"
       >
-        <NForm
-          label-placement="top"
-          size="small"
+        <AccordionItem
+          value="page-info"
+          class="border-b-0"
         >
-          <PropsGrid>
-            <NFormItem label="页面名称">
-              <NInput
-                v-model:value="editor.currentPage.value.title"
-                placeholder="例如：我的作品 / 赞助支持"
-              />
-            </NFormItem>
-            <NFormItem label="导航图标">
-              <NButton
-                style="width: 100%; justify-content: flex-start"
-                @click="pageIconPickerShown = true"
-              >
-                <template #icon>
-                  <NIcon :component="resolveUserPageNavIcon(editor.currentPage.value.navIcon)" />
-                </template>
-                {{ getUserPageNavIconLabel(editor.currentPage.value.navIcon) }}
-              </NButton>
-              <PageIconPickerModal
-                v-model:show="pageIconPickerShown"
-                :value="editor.currentPage.value.navIcon"
-                @select="setCurrentPageNavIcon"
-              />
-            </NFormItem>
-            <NFormItem label="在导航菜单中显示">
-              <NFlex justify="end">
-                <NSwitch
-                  v-model:value="editor.currentPage.value.navVisible"
-                  size="small"
-                />
-              </NFlex>
-            </NFormItem>
-            <NFormItem
-              class="span-full"
-              label="页面描述"
-            >
-              <NInput
-                v-model:value="editor.currentPage.value.description"
-                type="textarea"
-                placeholder="可选描述，用于 SEO 和展示"
-                :autosize="{ minRows: 2, maxRows: 4 }"
-              />
-            </NFormItem>
-            <NFormItem label="排序权重">
-              <NInputNumber
-                v-model:value="editor.currentPage.value.navOrder"
-                style="width: 100%"
-                placeholder="数字越小越靠前"
-              />
-            </NFormItem>
-            <NFormItem label="链接路径 (Slug)">
-              <NFlex
-                :wrap="false"
-                style="width: 100%"
-              >
-                <NInput
-                  v-model:value="pageSlug"
-                  placeholder="例如 links / sponsor"
-                  @keyup.enter="renameCurrentPage"
-                />
-                <NButton
-                  :disabled="pageSlug === editor.currentKey.value"
-                  @click="renameCurrentPage"
-                >
-                  修改
-                </NButton>
-              </NFlex>
-            </NFormItem>
-          </PropsGrid>
-        </NForm>
-      </NCollapseItem>
-
-      <PageAppearanceOverrides />
-    </NCollapse>
-
-    <!-- 模式对应的主体内容区 -->
-    <Transition
-      name="fade-slide"
-      mode="out-in"
-    >
-      <div :key="`${editor.currentPage.value.mode}:${!!editor.currentProject.value}:${isSelectingBlock}`">
-        <!-- 1. 经典模板模式 -->
-        <template v-if="editor.currentPage.value.mode === 'legacy'">
-          <NDivider
-            style="margin: 4px 0 12px"
-            title-placement="left"
-          >
-            经典模板配置
-          </NDivider>
-          <LegacyIndexSettings />
-        </template>
-
-        <!-- 2. 扩展组件页模式 -->
-        <template v-else-if="editor.currentPage.value.mode === 'contrib'">
-          <NDivider
-            style="margin: 4px 0 12px"
-            title-placement="left"
-          >
-            扩展组件参数
-          </NDivider>
-          <NForm
-            label-placement="top"
-            size="small"
-          >
+          <AccordionTrigger class="text-xs font-semibold py-2"> 页面基本信息 (子页面属性) </AccordionTrigger>
+          <AccordionContent class="pt-2 pb-1">
             <PropsGrid>
-              <NFormItem label="作用域">
-                <NSelect
-                  v-model:value="editor.currentContrib.value!.scope"
-                  :options="[
-                    { label: '全局扩展', value: 'global' },
-                    { label: '主播专属扩展', value: 'streamer' },
-                  ]"
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">页面名称</label>
+                <Input
+                  v-model="editor.currentPage.value.title"
+                  placeholder="例如：我的作品 / 赞助支持"
                 />
-              </NFormItem>
-              <NFormItem label="页面组件 ID (pageId)">
-                <NAutoComplete
-                  v-model:value="editor.currentContrib.value!.pageId"
-                  :options="editor.contribPageIdOptions.value"
-                  placeholder="选择或输入 pageId"
-                  clearable
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">导航图标</label>
+                <Button
+                  variant="outline"
+                  class="justify-start"
+                  @click="pageIconPickerShown = true"
+                >
+                  <component
+                    :is="resolveUserPageNavIcon(editor.currentPage.value.navIcon)"
+                    class="size-3.5 mr-1.5"
+                  />
+                  {{ getUserPageNavIconLabel(editor.currentPage.value.navIcon) }}
+                </Button>
+                <PageIconPickerModal
+                  v-model:show="pageIconPickerShown"
+                  :value="editor.currentPage.value.navIcon"
+                  @select="setCurrentPageNavIcon"
                 />
-              </NFormItem>
-              <NFormItem
-                v-if="editor.currentContrib.value!.scope === 'streamer'"
-                label="关联主播 ID"
-              >
-                <NInputNumber
-                  :value="editor.account.value.id"
-                  :disabled="true"
-                  style="width: 100%"
+              </div>
+
+              <div class="flex items-center justify-between pt-4">
+                <label class="text-xs text-muted-foreground">在导航菜单中显示</label>
+                <Switch
+                  :checked="editor.currentPage.value.navVisible"
+                  @update:checked="editor.currentPage.value.navVisible = $event"
                 />
-              </NFormItem>
+              </div>
+
+              <div class="span-full flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">页面描述</label>
+                <Textarea
+                  v-model="editor.currentPage.value.description"
+                  placeholder="可选描述，用于 SEO 和展示"
+                  rows="2"
+                  class="text-xs"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">排序权重</label>
+                <NumberField
+                  v-model="editor.currentPage.value.navOrder"
+                  placeholder="数字越小越靠前"
+                />
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">链接路径 (Slug)</label>
+                <div class="flex items-center gap-1.5">
+                  <Input
+                    v-model="pageSlug"
+                    placeholder="例如 links / sponsor"
+                    class="flex-1"
+                    @keyup.enter="renameCurrentPage"
+                  />
+                  <Button
+                    variant="outline"
+                    class="px-2"
+                    :disabled="pageSlug === editor.currentKey.value"
+                    @click="renameCurrentPage"
+                  >
+                    修改
+                  </Button>
+                </div>
+              </div>
             </PropsGrid>
-          </NForm>
+          </AccordionContent>
+        </AccordionItem>
 
-          <NAlert
-            v-if="editor.contribConfigError.value"
-            type="error"
-            :show-icon="true"
-            style="margin-top: 12px"
-          >
-            {{ editor.contribConfigError.value }}
-          </NAlert>
-          <NAlert
-            v-else-if="editor.contribConfigLoading.value"
-            type="info"
-            :show-icon="true"
-            style="margin-top: 12px"
-          >
-            扩展页配置加载中...
-          </NAlert>
-          <template v-else-if="editor.contribConfigItems.value">
-            <NFlex
-              justify="space-between"
-              align="center"
-              style="margin-top: 12px"
-            >
-              <NText strong> 页面配置 </NText>
-              <NButton
-                size="small"
-                secondary
-                @click="editor.resetContribConfigToDefault"
-              >
-                重置为默认
-              </NButton>
-            </NFlex>
-            <ErrorBoundary title="配置面板渲染失败">
-              <ContribConfigEditor
-                :config="editor.contribConfigItems.value"
-                :config-data="editor.currentContrib.value!.config as any"
-              />
-            </ErrorBoundary>
-          </template>
-          <NAlert
-            v-else
-            type="info"
-            :show-icon="true"
-            style="margin-top: 12px"
-          >
-            该扩展组件无需额外属性配置，保存并发布后可在对外页面中查看运行效果。
-          </NAlert>
-        </template>
+        <PageAppearanceOverrides />
+      </Accordion>
 
-        <!-- 3. 可视化自由搭建 (区块模式) -->
-        <template v-else-if="isBlockMode && editor.currentProject.value">
-          <Transition
-            name="fade-slide"
-            mode="out-in"
-          >
-            <!-- 3.1 单区块属性编辑 -->
-            <div
-              v-if="editor.selectedBlock.value"
-              :key="`selected:${editor.selectedBlock.value.id}`"
-              data-block-property-editor
-              class="block-editor-wrapper"
-            >
-              <ErrorBoundary title="区块属性面板渲染失败">
-                <BlockTypeEditor :block="editor.selectedBlock.value" />
-              </ErrorBoundary>
-            </div>
-
-            <!-- 3.2 多区块批量操作面板 -->
-            <div
-              v-else-if="editor.selectedBlocks.value.length > 1"
-              key="multi"
-              class="multi-selection-panel"
-            >
-              <NText strong> 已选择 {{ editor.selectedBlocks.value.length }} 个区块 </NText>
-              <NFlex size="small">
-                <NButton
-                  size="small"
-                  secondary
-                  @click="batchSetHidden(false)"
-                >
-                  显示
-                </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="batchSetHidden(true)"
-                >
-                  隐藏
-                </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="batchSetChrome('framed', true)"
-                >
-                  显示边框
-                </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="batchSetChrome('framed', false)"
-                >
-                  隐藏边框
-                </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="batchSetChrome('backgrounded', true)"
-                >
-                  显示背景
-                </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="batchSetChrome('backgrounded', false)"
-                >
-                  透明背景
-                </NButton>
-              </NFlex>
-              <NFlex size="small">
-                <NButton
-                  size="small"
-                  type="primary"
-                  secondary
-                  @click="groupSelection"
-                >
-                  成组
-                </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="duplicateSelection"
-                >
-                  创建副本
-                </NButton>
-                <NButton
-                  size="small"
-                  secondary
-                  @click="editor.copyBlocksToClipboard(editor.selectedBlockIds.value)"
-                >
-                  复制
-                </NButton>
-                <NButton
-                  size="small"
-                  type="error"
-                  secondary
-                  @click="editor.removeBlocks(editor.selectedBlockIds.value)"
-                >
-                  删除
-                </NButton>
-              </NFlex>
-            </div>
-
-            <!-- 3.3 未选中区块时的页面工作台/概览卡片 -->
-            <div
-              v-else
-              key="overview-workbench"
-              class="page-overview-workbench"
-            >
-              <div class="workbench-stats">
-                <NFlex
-                  justify="space-between"
-                  align="center"
-                >
-                  <NFlex
-                    align="center"
-                    :size="6"
-                  >
-                    <NIcon
-                      :component="LayersOutline"
-                      style="color: var(--vtsuru-primary)"
-                    />
-                    <NText strong> 页面区块概览 </NText>
-                  </NFlex>
-                  <NTag
-                    size="small"
-                    :bordered="false"
-                    type="primary"
-                  >
-                    已添加 {{ blocksCount }} 个区块
-                  </NTag>
-                </NFlex>
-                <div class="workbench-hint">点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。</div>
-              </div>
-
-              <NDivider style="margin: 8px 0" />
-
-              <div class="workbench-actions">
-                <NText
-                  depth="3"
-                  style="font-size: 12px; margin-bottom: 8px; display: block"
-                >
-                  快速搭建操作
-                </NText>
-                <NFlex
-                  vertical
-                  :size="8"
-                >
-                  <NFlex
-                    :size="8"
-                    :wrap="false"
-                  >
-                    <NDropdown
-                      :options="addBlockOptions"
-                      trigger="click"
-                      @select="(key) => handleAddBlockMenuSelect(String(key))"
-                    >
-                      <NButton
-                        type="primary"
-                        secondary
-                        style="flex: 1"
-                      >
-                        <template #icon>
-                          <NIcon><GridOutline /></NIcon>
-                        </template>
-                        添加区块
-                      </NButton>
-                    </NDropdown>
-
-                    <NDropdown
-                      :options="templateOptions"
-                      trigger="click"
-                      @select="(key) => insertTemplate(String(key))"
-                    >
-                      <NButton
-                        secondary
-                        style="flex: 1"
-                      >
-                        <template #icon>
-                          <NIcon><SparklesOutline /></NIcon>
-                        </template>
-                        起始模板
-                      </NButton>
-                    </NDropdown>
-                  </NFlex>
-
-                  <NButton
-                    secondary
-                    block
-                    @click="editor.pageThemeModal.value = true"
-                  >
-                    <template #icon>
-                      <NIcon><ColorPaletteOutline /></NIcon>
-                    </template>
-                    {{ editor.currentKey.value === 'home' ? '设置主页外观与全局主题' : '设置本页专属主题与背景' }}
-                  </NButton>
-                </NFlex>
-              </div>
-            </div>
-          </Transition>
-        </template>
-      </div>
-    </Transition>
-
-    <div style="margin-top: auto; padding-top: 8px">
-      <NButton
-        block
-        secondary
-        @click="editor.openPreview"
+      <!-- 模式对应的主体内容区 -->
+      <Transition
+        name="fade-slide"
+        mode="out-in"
       >
-        <template #icon>
-          <NIcon><OpenOutline /></NIcon>
-        </template>
-        在新标签页打开对外预览
-      </NButton>
-    </div>
+        <div :key="`${editor.currentPage.value.mode}:${!!editor.currentProject.value}:${isSelectingBlock}`">
+          <!-- 1. 经典模板模式 -->
+          <template v-if="editor.currentPage.value.mode === 'legacy'">
+            <div class="text-xs font-semibold text-muted-foreground uppercase pt-2 pb-1 border-t border-border">
+              经典模板配置
+            </div>
+            <LegacyIndexSettings />
+          </template>
 
-    <input
-      ref="uploadInput"
-      type="file"
-      accept="image/*"
-      multiple
-      style="display: none"
-      @change="editor.onUploadChange"
-    />
-  </NCard>
+          <!-- 2. 扩展组件页模式 -->
+          <template v-else-if="editor.currentPage.value.mode === 'contrib'">
+            <div class="text-xs font-semibold text-muted-foreground uppercase pt-2 pb-1 border-t border-border">
+              扩展组件参数
+            </div>
+            <PropsGrid>
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">作用域</label>
+                <Select v-model="editor.currentContrib.value!.scope">
+                  <SelectTrigger>
+                    <SelectValue placeholder="作用域" />
+                  </SelectTrigger>
+                  <SelectContent class="text-xs">
+                    <SelectItem value="global">全局扩展</SelectItem>
+                    <SelectItem value="streamer">主播专属扩展</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div class="flex flex-col gap-1">
+                <label class="text-xs text-muted-foreground">页面组件 ID (pageId)</label>
+                <Input
+                  v-model="editor.currentContrib.value!.pageId"
+                  placeholder="选择或输入 pageId"
+                />
+              </div>
+
+              <div
+                v-if="editor.currentContrib.value!.scope === 'streamer'"
+                class="flex flex-col gap-1"
+              >
+                <label class="text-xs text-muted-foreground">关联主播 ID</label>
+                <Input
+                  :model-value="String(editor.account.value.id ?? '')"
+                  disabled
+                />
+              </div>
+            </PropsGrid>
+
+            <Alert
+              v-if="editor.contribConfigError.value"
+              variant="destructive"
+              class="mt-3 py-2 text-xs"
+            >
+              <AlertDescription>
+                {{ editor.contribConfigError.value }}
+              </AlertDescription>
+            </Alert>
+            <Alert
+              v-else-if="editor.contribConfigLoading.value"
+              class="mt-3 py-2 text-xs"
+            >
+              <AlertDescription> 扩展页配置加载中... </AlertDescription>
+            </Alert>
+            <template v-else-if="editor.contribConfigItems.value">
+              <div class="flex items-center justify-between mt-3 mb-2">
+                <span class="text-xs font-semibold">页面配置</span>
+                <Button
+                  variant="outline"
+                  class="h-6 px-2"
+                  @click="editor.resetContribConfigToDefault"
+                >
+                  重置为默认
+                </Button>
+              </div>
+              <ErrorBoundary title="配置面板渲染失败">
+                <ContribConfigEditor
+                  :config="editor.contribConfigItems.value"
+                  :config-data="editor.currentContrib.value!.config as any"
+                />
+              </ErrorBoundary>
+            </template>
+            <Alert
+              v-else
+              class="mt-3 py-2 text-xs"
+            >
+              <AlertDescription>
+                该扩展组件无需额外属性配置，保存并发布后可在对外页面中查看运行效果。
+              </AlertDescription>
+            </Alert>
+          </template>
+
+          <!-- 3. 可视化自由搭建 (区块模式) -->
+          <template v-else-if="isBlockMode && editor.currentProject.value">
+            <Transition
+              name="fade-slide"
+              mode="out-in"
+            >
+              <!-- 3.1 单区块属性编辑 -->
+              <div
+                v-if="editor.selectedBlock.value"
+                :key="`selected:${editor.selectedBlock.value.id}`"
+                data-block-property-editor
+                class="block-editor-wrapper"
+              >
+                <ErrorBoundary title="区块属性面板渲染失败">
+                  <BlockTypeEditor :block="editor.selectedBlock.value" />
+                </ErrorBoundary>
+              </div>
+
+              <!-- 3.2 多区块批量操作面板 -->
+              <div
+                v-else-if="editor.selectedBlocks.value.length > 1"
+                key="multi"
+                class="grid gap-2 mt-2 p-2.5 border border-border rounded-md bg-muted"
+              >
+                <span class="text-xs font-semibold">已选择 {{ editor.selectedBlocks.value.length }} 个区块</span>
+                <div class="flex flex-wrap gap-1.5">
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="batchSetHidden(false)"
+                  >
+                    显示
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="batchSetHidden(true)"
+                  >
+                    隐藏
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="batchSetChrome('framed', true)"
+                  >
+                    显示边框
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="batchSetChrome('framed', false)"
+                  >
+                    隐藏边框
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="batchSetChrome('backgrounded', true)"
+                  >
+                    显示背景
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="batchSetChrome('backgrounded', false)"
+                  >
+                    透明背景
+                  </Button>
+                </div>
+                <div class="flex flex-wrap gap-1.5 pt-1 border-t border-border">
+                  <Button
+                    class="h-6 px-2"
+                    @click="groupSelection"
+                  >
+                    成组
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="duplicateSelection"
+                  >
+                    创建副本
+                  </Button>
+                  <Button
+                    variant="outline"
+                    class="h-6 px-2"
+                    @click="editor.copyBlocksToClipboard(editor.selectedBlockIds.value)"
+                  >
+                    复制
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    class="h-6 px-2"
+                    @click="editor.removeBlocks(editor.selectedBlockIds.value)"
+                  >
+                    删除
+                  </Button>
+                </div>
+              </div>
+
+              <!-- 3.3 未选中区块时的页面工作台/概览卡片 -->
+              <div
+                v-else
+                key="overview-workbench"
+                class="p-3 border border-border rounded-lg bg-muted"
+              >
+                <div class="flex flex-col gap-1.5">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-1.5 text-xs font-semibold">
+                      <component
+                        :is="LayersOutline"
+                        class="size-4 text-primary"
+                      />
+                      <span>页面区块概览</span>
+                    </div>
+                    <Badge
+                      variant="secondary"
+                      class="text-[10px] h-4.5 px-1.5"
+                    >
+                      已添加 {{ blocksCount }} 个区块
+                    </Badge>
+                  </div>
+                  <div class="text-xs text-muted-foreground leading-normal">点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。</div>
+                </div>
+
+                <div class="h-px bg-border my-2" />
+
+                <div class="workbench-actions">
+                  <span class="text-xs text-muted-foreground mb-2 block font-medium">快速搭建操作</span>
+                  <div class="flex flex-col gap-2">
+                    <div class="grid grid-cols-2 gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                          <Button>
+                            <component
+                              :is="GridOutline"
+                              class="size-3.5 mr-1"
+                            />
+                            添加区块
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent class="w-56 max-h-72 overflow-y-auto text-xs">
+                          <template
+                            v-for="opt in addBlockOptions"
+                            :key="opt.key"
+                          >
+                            <DropdownMenuSeparator
+                              v-if="opt.type === 'divider' || String(opt.key).startsWith('divider:')"
+                            />
+                            <DropdownMenuLabel
+                              v-if="opt.disabled"
+                              class="text-xs font-bold text-muted-foreground"
+                            >
+                              {{ typeof opt.label === 'function' ? '分组' : opt.label }}
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem
+                              v-else
+                              class="text-xs"
+                              @click="handleAddBlockMenuSelect(String(opt.key))"
+                            >
+                              <component
+                                :is="opt.icon"
+                                v-if="opt.icon"
+                                class="size-3.5 mr-2"
+                              />
+                              {{ typeof opt.label === 'function' ? '' : opt.label }}
+                            </DropdownMenuItem>
+                          </template>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+                      <DropdownMenu>
+                        <DropdownMenuTrigger as-child>
+                          <Button variant="outline">
+                            <component
+                              :is="SparklesOutline"
+                              class="size-3.5 mr-1"
+                            />
+                            起始模板
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent class="w-48 text-xs">
+                          <DropdownMenuItem
+                            v-for="opt in templateOptions"
+                            :key="opt.key"
+                            class="text-xs"
+                            @click="insertTemplate(String(opt.key))"
+                          >
+                            {{ opt.label }}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      class="w-full"
+                      @click="editor.pageThemeModal.value = true"
+                    >
+                      <component
+                        :is="ColorPaletteOutline"
+                        class="size-3.5 mr-1"
+                      />
+                      {{ editor.currentKey.value === 'home' ? '设置主页外观与全局主题' : '设置本页专属主题与背景' }}
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </Transition>
+          </template>
+        </div>
+      </Transition>
+
+      <div class="mt-auto pt-2">
+        <Button
+          variant="outline"
+          class="w-full"
+          @click="editor.openPreview"
+        >
+          <component
+            :is="OpenOutline"
+            class="size-3.5 mr-1"
+          />
+          在新标签页打开对外预览
+        </Button>
+      </div>
+
+      <input
+        ref="uploadInput"
+        type="file"
+        accept="image/*"
+        multiple
+        style="display: none"
+        @change="editor.onUploadChange"
+      />
+    </CardContent>
+  </Card>
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
 
-<style scoped>
-.editing-block-banner {
-  padding: 8px 10px;
-  border-radius: 6px;
-  background: var(--vtsuru-brand-tint, rgba(0, 150, 255, 0.08));
-  border: 1px solid var(--vtsuru-brand-soft, rgba(0, 150, 255, 0.2));
-}
-
-.page-mode-section {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mode-cards-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.mode-card {
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.mode-card:hover {
-  border-color: var(--vtsuru-primary);
-  background: var(--vtsuru-bg-elevated);
-}
-
-.mode-card.is-active {
-  border-color: var(--vtsuru-primary);
-  background: var(--vtsuru-brand-tint, rgba(0, 150, 255, 0.08));
-  box-shadow: 0 0 0 1px var(--vtsuru-primary);
-}
-
-.mode-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.mode-card__title {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.mode-card__desc {
-  font-size: 12px;
-  line-height: 1.45;
-  color: var(--vtsuru-fg-muted);
-}
-
-.page-overview-workbench {
-  padding: 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  background: var(--vtsuru-bg-muted);
-}
-
-.workbench-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.workbench-hint {
-  font-size: 12px;
-  color: var(--vtsuru-fg-muted);
-  line-height: 1.5;
-}
-
-.multi-selection-panel {
-  display: grid;
-  gap: 8px;
-  margin-top: 8px;
-  padding: 10px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 6px;
-  background: var(--vtsuru-bg-muted);
-}
-</style>

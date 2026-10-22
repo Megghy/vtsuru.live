@@ -1,5 +1,4 @@
-import { NButton, NFlex, NText } from 'naive-ui'
-import { h } from 'vue'
+import { toast } from 'vue-sonner'
 
 import {
   GetSelfAccount,
@@ -15,14 +14,11 @@ import { getApiVtsuruVersion } from '@/api/generated/vtsuru/vtsuru'
 import { isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
 import { setSentryUser } from '@/shared/services/sentry'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
-import { createNaiveUIApi } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import { useNotificationStore } from '@/store/useNotificationStore'
 
 let currentVersion: string
 let isHaveNewVersion = false
-
-const { notification } = createNaiveUIApi(['notification'])
 
 function isObsOverlay() {
   const path = window.location.pathname
@@ -50,11 +46,9 @@ async function loadVersionAndStart() {
           location.reload()
         }, 1000)
         if (!isObsOverlay()) {
-          notification.info({
-            title: '发现新的版本更新',
-            content: '将自动刷新页面',
+          toast.info('发现新的版本更新，将自动刷新页面', {
             duration: 5000,
-            meta: () => h(NText, { depth: 3 }, () => currentVersion),
+            description: currentVersion,
           })
         }
       } else {
@@ -77,32 +71,25 @@ function showAPIFailoverNotification() {
   if (!isAutomaticAPIFailover.value || isObsOverlay()) return
 
   let switching = false
-  const notificationRef = notification.warning({
-    title: '当前使用备用 API',
-    content: '上次启动时主 API 无法访问，点击按钮可切回主 API。',
-    duration: 0,
-    action: () =>
-      h(
-        NButton,
-        {
-          type: 'primary',
-          size: 'small',
-          onClick: async () => {
-            if (switching) return
-            switching = true
-            notificationRef.content = '正在切回主 API...'
-            try {
-              await setSelectedAPIKey('main')
-              location.reload()
-            } catch (error) {
-              console.warn('[vtsuru] 切回主 API 失败', error)
-              switching = false
-              notificationRef.content = '切回失败，请到管理页「API 设置」中手动切换。'
-            }
-          },
-        },
-        { default: () => '切回主 API' },
-      ),
+  toast.warning('当前使用备用 API', {
+    description: '上次启动时主 API 无法访问，点击按钮可切回主 API。',
+    duration: 10000,
+    action: {
+      label: '切回主 API',
+      onClick: async () => {
+        if (switching) return
+        switching = true
+        toast.info('正在切回主 API...')
+        try {
+          await setSelectedAPIKey('main')
+          location.reload()
+        } catch (error) {
+          console.warn('[vtsuru] 切回主 API 失败', error)
+          switching = false
+          toast.error('切回失败，请到管理页「API 设置」中手动切换。')
+        }
+      },
+    },
   })
 }
 
@@ -208,32 +195,13 @@ function InitVersionCheck() {
         if (window.$route?.meta.forceReload || isTauri() || isObsOverlay()) {
           location.reload()
         } else {
-          const n = notification.info({
-            title: '发现新的版本更新',
-            content: '是否现在刷新?',
-            meta: () => h(NText, { depth: 3 }, () => currentVersion),
-            action: () =>
-              h(NFlex, null, () => [
-                h(
-                  NButton,
-                  {
-                    text: true,
-                    type: 'primary',
-                    onClick: () => location.reload(),
-                    size: 'small',
-                  },
-                  { default: () => '刷新' },
-                ),
-                h(
-                  NButton,
-                  {
-                    text: true,
-                    onClick: () => n.destroy(),
-                    size: 'small',
-                  },
-                  { default: () => '稍后' },
-                ),
-              ]),
+          toast.info('发现新的版本更新', {
+            description: `版本: ${currentVersion}，是否现在刷新?`,
+            duration: 15000,
+            action: {
+              label: '刷新',
+              onClick: () => location.reload(),
+            },
           })
         }
       }

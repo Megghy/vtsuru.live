@@ -7,8 +7,8 @@
  */
 
 export interface OpenBLiveClientDataAppStartAnchorInfo {
-  room_id?: number;
-  uname?: string;
-  uface?: string;
-  uid?: number;
+  room_id?: number
+  uname?: string
+  uface?: string
+  uid?: number
 }

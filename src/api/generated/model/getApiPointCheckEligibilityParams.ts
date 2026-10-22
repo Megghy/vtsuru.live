@@ -7,9 +7,9 @@
  */
 
 export type GetApiPointCheckEligibilityParams = {
-goodsId?: number;
-authId?: number;
-oId?: string;
-uId?: number;
-count?: number;
-};
+  goodsId?: number
+  authId?: number
+  oId?: string
+  uId?: number
+  count?: number
+}

@@ -1,24 +1,17 @@
 <script setup lang="ts">
 import { Info16Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NInput,
-  NInputNumber,
-  NSelect,
-  NFlex,
-  NSwitch,
-  NTag,
-  useMessage,
-  NForm,
-  NFormItem,
-  NText,
-  NTooltip,
-  NIcon,
-} from 'naive-ui'
 import { ref } from 'vue'
+import { toast } from 'vue-sonner'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
   action: {
@@ -26,8 +19,6 @@ const props = defineProps({
     required: true,
   },
 })
-
-const message = useMessage()
 
 // 礼物过滤模式选项
 const giftFilterModeOptions = [
@@ -54,7 +45,7 @@ function addGiftName() {
     props.action.triggerConfig.filterGiftNames.push(name)
     tempGiftName.value = ''
   } else {
-    message.warning('此礼物名称已存在')
+    toast.warning('此礼物名称已存在')
   }
 }
 
@@ -69,212 +60,146 @@ function removeGiftName(index: number) {
 <template>
   <div
     v-if="action.triggerType === TriggerType.GIFT"
-    class="gift-trigger-settings"
+    class="gift-trigger-settings space-y-3"
   >
-    <NForm
-      label-placement="left"
-      :label-width="140"
-      size="small"
-      :show-feedback="false"
+    <div class="space-y-1">
+      <span class="text-xs text-muted-foreground">礼物过滤模式</span>
+      <Select v-model="action.triggerConfig.filterMode">
+        <SelectTrigger class="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="opt in giftFilterModeOptions"
+            :key="opt.value"
+            :value="opt.value"
+            class="text-xs"
+          >
+            {{ opt.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div
+      v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'"
+      class="filter-group space-y-2 p-3 rounded-md border bg-card"
     >
-      <NFlex
-        vertical
-        :size="16"
-      >
-        <NFormItem label="礼物过滤模式">
-          <NSelect
-            v-model:value="action.triggerConfig.filterMode"
-            style="width: 220px"
-            :options="giftFilterModeOptions"
-          />
-        </NFormItem>
+      <span class="text-xs text-muted-foreground block">
+        {{
+          action.triggerConfig.filterMode === 'blacklist'
+            ? '以下列表中的礼物将不会触发感谢'
+            : '仅当礼物在以下列表中时才会触发感谢'
+        }}
+      </span>
+      <div class="flex items-center gap-2">
+        <Input
+          v-model="tempGiftName"
+          placeholder="输入礼物名称..."
+          class="flex-1"
+          @keyup.enter="addGiftName"
+        />
+        <Button @click="addGiftName"> 添加 </Button>
+      </div>
 
-        <transition name="fade">
-          <div
-            v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'"
-            class="filter-group"
+      <div class="tag-container flex flex-wrap items-center gap-1.5 p-2 rounded border bg-muted/20 min-h-[36px]">
+        <template v-if="action.triggerConfig.filterGiftNames && action.triggerConfig.filterGiftNames.length > 0">
+          <Badge
+            v-for="(giftName, index) in action.triggerConfig.filterGiftNames"
+            :key="index"
+            variant="secondary"
+            class="text-xs h-6 px-2 gap-1.5 font-normal"
           >
-            <NText
-              depth="3"
-              style="font-size: 12px; margin-bottom: 8px; display: block"
+            <span>{{ giftName }}</span>
+            <button
+              type="button"
+              class="hover:text-destructive transition-colors text-muted-foreground"
+              @click="removeGiftName(index)"
             >
-              {{
-                action.triggerConfig.filterMode === 'blacklist'
-                  ? '以下列表中的礼物将不会触发感谢'
-                  : '仅当礼物在以下列表中时才会触发感谢'
-              }}
-            </NText>
-            <NFlex
-              vertical
-              :size="12"
-            >
-              <NFlex :wrap="false">
-                <NInput
-                  v-model:value="tempGiftName"
-                  placeholder="输入礼物名称..."
-                  size="small"
-                  @keyup.enter="addGiftName"
-                />
-                <NButton
-                  size="small"
-                  type="primary"
-                  secondary
-                  @click="addGiftName"
-                >
-                  添加
-                </NButton>
-              </NFlex>
-
-              <NFlex
-                :size="8"
-                class="tag-container"
-              >
-                <template
-                  v-if="action.triggerConfig.filterGiftNames && action.triggerConfig.filterGiftNames.length > 0"
-                >
-                  <NTag
-                    v-for="(giftName, index) in action.triggerConfig.filterGiftNames"
-                    :key="index"
-                    closable
-                    size="small"
-                    @close="removeGiftName(index)"
-                  >
-                    {{ giftName }}
-                  </NTag>
-                </template>
-                <NText
-                  v-else
-                  depth="3"
-                  italic
-                  style="font-size: 12px"
-                >
-                  列表为空
-                </NText>
-              </NFlex>
-            </NFlex>
-          </div>
-        </transition>
-
-        <transition name="fade">
-          <NFormItem
-            v-if="action.triggerConfig.filterMode === 'value'"
-            label="最低价值 (元)"
-          >
-            <NInputNumber
-              v-model:value="action.triggerConfig.minValue"
-              :min="0"
-              style="width: 140px"
-              placeholder="0"
-            >
-              <template #suffix> 元 </template>
-            </NInputNumber>
-          </NFormItem>
-        </transition>
-
-        <NDivider style="margin: 0" />
-
-        <NFlex :size="24">
-          <NFormItem>
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >包含数量
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量
-              </NTooltip>
-            </template>
-            <NSwitch
-              v-model:value="action.triggerConfig.includeQuantity"
-              size="small"
-            />
-          </NFormItem>
-        </NFlex>
-
-        <NFlex
-          vertical
-          :size="12"
+              ✕
+            </button>
+          </Badge>
+        </template>
+        <span
+          v-else
+          class="text-xs italic text-muted-foreground"
         >
-          <NFormItem label="单次合并上限">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单次合并上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单条感谢弹幕中最多合并展示的用户数量
-              </NTooltip>
-            </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxUsersPerMsg"
-              :min="1"
-              :max="50"
-              style="width: 140px"
-            />
-          </NFormItem>
+          列表为空
+        </span>
+      </div>
+    </div>
 
-          <NFormItem label="单人礼物上限">
-            <template #label>
-              <NTooltip trigger="hover">
-                <template #trigger>
-                  <span
-                    >单人礼物上限
-                    <NIcon
-                      :component="Info16Regular"
-                      style="vertical-align: -2px"
-                  /></span>
-                </template>
-                单个用户在同一次感谢中最多显示的礼物种类数
-              </NTooltip>
-            </template>
-            <NInputNumber
-              v-model:value="action.actionConfig.maxItemsPerUser"
-              :min="1"
-              :max="20"
-              style="width: 140px"
-            />
-          </NFormItem>
-        </NFlex>
-      </NFlex>
-    </NForm>
+    <div
+      v-if="action.triggerConfig.filterMode === 'value'"
+      class="flex items-center justify-between p-2.5 rounded border bg-muted/20"
+    >
+      <span class="text-xs font-medium text-foreground">最低价值 (元)</span>
+      <NumberField
+        :model-value="action.triggerConfig.minValue"
+        :min="0"
+        placeholder="0"
+        class="w-32"
+        @update:model-value="action.triggerConfig.minValue = $event || 0"
+      />
+    </div>
+
+    <div class="h-px bg-border my-1" />
+
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">包含数量</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <Switch v-model:checked="action.triggerConfig.includeQuantity" />
+    </div>
+
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">单次合并上限</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <NumberField
+        :model-value="action.actionConfig.maxUsersPerMsg"
+        :min="1"
+        :max="50"
+        class="w-32"
+        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
+      />
+    </div>
+
+    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <div class="flex items-center gap-1 cursor-help">
+              <span class="text-xs font-medium text-foreground">单人礼物上限</span>
+              <Info16Regular class="size-3.5 text-muted-foreground" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent class="text-xs"> 单个用户在同一次感谢中最多显示的礼物种类数 </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      <NumberField
+        :model-value="action.actionConfig.maxItemsPerUser"
+        :min="1"
+        :max="20"
+        class="w-32"
+        @update:model-value="action.actionConfig.maxItemsPerUser = $event || 1"
+      />
+    </div>
   </div>
 </template>
-
-<style scoped>
-.gift-trigger-settings {
-  width: 100%;
-}
-
-.filter-group {
-  padding: 12px;
-  background-color: var(--vtsuru-bg-elevated);
-  border-radius: var(--vtsuru-radius);
-  border: 1px solid var(--vtsuru-border);
-}
-
-.tag-container {
-  min-height: 28px;
-  padding: 4px 8px;
-  background-color: var(--vtsuru-bg-muted);
-  border-radius: var(--vtsuru-radius);
-}
-
-/* Transitions */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

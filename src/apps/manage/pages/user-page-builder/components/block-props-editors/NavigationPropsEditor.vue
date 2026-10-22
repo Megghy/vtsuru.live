@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { NFlex, NForm, NFormItem, NInput, NSelect, NSwitch, NText } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { SOCIAL_PLATFORM_OPTIONS } from '@/apps/user-page/block/socialPlatforms'
+import { Input } from '@/shared/ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 import PropsGrid from '../PropsGrid.vue'
 import RepeaterEditor from '../RepeaterEditor.vue'
@@ -12,21 +13,19 @@ import { useBlockPropsEditor } from './useBlockPropsEditor'
 
 const props = defineProps<{ block: BlockNode }>()
 const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor(() => props.block)
+const linkItems = ensureArrayProp<Record<string, any>>('items')
 </script>
 
 <template>
-  <NForm
+  <div
     v-if="props.block.type === 'links'"
-    label-placement="top"
-    size="small"
+    class="space-y-3"
   >
     <PropsGrid>
-      <NFormItem
-        class="span-full"
-        label="链接项"
-      >
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">链接项</label>
         <RepeaterEditor
-          :items="ensureArrayProp('items')"
+          :items="linkItems"
           :create-item="() => ({ label: '', url: 'https://' })"
           add-text="添加链接"
         >
@@ -35,113 +34,123 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="标题">
-                <NInput v-model:value="item.label" />
-              </NFormItem>
-              <NFormItem label="链接">
-                <NInput
-                  v-model:value="item.url"
-                  placeholder="https://..."
+              <div class="space-y-1">
+                <label class="text-xs text-muted-foreground">标题</label>
+                <Input v-model="item.label" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs text-muted-foreground">链接</label>
+                <Input
+                  v-model="item.url"
+                  placeholder="链接地址"
                 />
-              </NFormItem>
+              </div>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
     v-else-if="props.block.type === 'button'"
-    label-placement="top"
-    size="small"
+    class="space-y-3"
   >
     <PropsGrid>
       <ButtonAppearanceFields :block="props.block" />
-      <NFormItem
-        class="span-full"
-        label="按钮文本"
-      >
-        <NInput
-          v-model:value="blockProps.label"
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">按钮文本</label>
+        <Input
+          v-model="blockProps.label"
           placeholder="例如：衣柜"
         />
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="跳转类型"
-      >
-        <NSelect
-          :value="getNavigationTargetType(blockProps)"
-          :options="[
-            { label: '页面', value: 'page' },
-            { label: '外链', value: 'external' },
-            { label: '返回', value: 'back' },
-          ]"
-          @update:value="(value) => setNavigationTargetType(blockProps, value)"
-        />
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="目标"
-      >
-        <NSelect
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">跳转类型</label>
+        <Select
+          :model-value="getNavigationTargetType(blockProps)"
+          @update:model-value="(value) => setNavigationTargetType(blockProps, value as any)"
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="跳转类型" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="page">页面</SelectItem>
+            <SelectItem value="external">外链</SelectItem>
+            <SelectItem value="back">返回</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">目标</label>
+        <Select
           v-if="blockProps.page"
-          v-model:value="blockProps.page"
-          :options="internalPageOptions"
-        />
-        <NInput
+          v-model="blockProps.page"
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="选择目标页面" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in internalPageOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
           v-else-if="!blockProps.back"
-          v-model:value="blockProps.url"
+          v-model="blockProps.url"
           placeholder="链接 https://..."
         />
-        <NText
+        <div
           v-else
-          depth="3"
+          class="text-xs text-muted-foreground py-1"
         >
           点击后返回上一页
-        </NText>
-      </NFormItem>
+        </div>
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 
-  <NForm
+  <div
     v-else-if="props.block.type === 'socialLinks'"
-    label-placement="top"
-    size="small"
+    class="space-y-3"
   >
     <PropsGrid>
-      <NFormItem label="大小">
-        <NSelect
-          v-model:value="blockProps.size"
-          :options="[
-            { label: 'sm', value: 'sm' },
-            { label: 'md', value: 'md' },
-            { label: 'lg', value: 'lg' },
-          ]"
-        />
-      </NFormItem>
-      <NFormItem label="形状">
-        <NSelect
-          v-model:value="blockProps.variant"
-          :options="[
-            { label: 'round', value: 'round' },
-            { label: 'square', value: 'square' },
-          ]"
-        />
-      </NFormItem>
-      <NFormItem label="显示文字">
-        <NFlex justify="end">
-          <NSwitch
-            v-model:value="blockProps.showLabel"
-            size="small"
-          />
-        </NFlex>
-      </NFormItem>
-      <NFormItem
-        class="span-full"
-        label="链接项"
-      >
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">大小</label>
+        <Select v-model="blockProps.size">
+          <SelectTrigger>
+            <SelectValue placeholder="大小" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="sm">sm</SelectItem>
+            <SelectItem value="md">md</SelectItem>
+            <SelectItem value="lg">lg</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div class="space-y-1">
+        <label class="text-xs text-muted-foreground">形状</label>
+        <Select v-model="blockProps.variant">
+          <SelectTrigger>
+            <SelectValue placeholder="形状" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="round">round</SelectItem>
+            <SelectItem value="square">square</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div class="flex items-center justify-between py-1">
+        <label class="text-xs text-muted-foreground">显示文字</label>
+        <Switch v-model:checked="blockProps.showLabel" />
+      </div>
+      <div class="span-full space-y-1">
+        <label class="text-xs text-muted-foreground">链接项</label>
         <RepeaterEditor
           :items="ensureArrayProp('items')"
           :create-item="() => ({ platform: 'bilibili', url: 'https://', label: '' })"
@@ -152,31 +161,41 @@ const { blockProps, ensureArrayProp, internalPageOptions } = useBlockPropsEditor
           </template>
           <template #default="{ item }">
             <PropsGrid>
-              <NFormItem label="平台">
-                <NSelect
-                  v-model:value="item.platform"
-                  :options="SOCIAL_PLATFORM_OPTIONS"
-                />
-              </NFormItem>
-              <NFormItem label="显示名 / 无障碍名称">
-                <NInput
-                  v-model:value="item.label"
+              <div class="space-y-1">
+                <label class="text-xs text-muted-foreground">平台</label>
+                <Select v-model="item.platform">
+                  <SelectTrigger>
+                    <SelectValue placeholder="平台" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem
+                      v-for="opt in SOCIAL_PLATFORM_OPTIONS"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
+                      {{ opt.label }}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div class="space-y-1">
+                <label class="text-xs text-muted-foreground">显示名 / 无障碍名称</label>
+                <Input
+                  v-model="item.label"
                   placeholder="可选"
                 />
-              </NFormItem>
-              <NFormItem
-                class="span-full"
-                label="链接"
-              >
-                <NInput
-                  v-model:value="item.url"
-                  placeholder="https://..."
+              </div>
+              <div class="span-full space-y-1">
+                <label class="text-xs text-muted-foreground">链接</label>
+                <Input
+                  v-model="item.url"
+                  placeholder="链接地址"
                 />
-              </NFormItem>
+              </div>
             </PropsGrid>
           </template>
         </RepeaterEditor>
-      </NFormItem>
+      </div>
     </PropsGrid>
-  </NForm>
+  </div>
 </template>

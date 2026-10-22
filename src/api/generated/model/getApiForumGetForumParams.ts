@@ -7,5 +7,5 @@
  */
 
 export type GetApiForumGetForumParams = {
-owner?: string;
-};
+  owner?: string
+}

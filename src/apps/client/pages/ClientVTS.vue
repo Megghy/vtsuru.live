@@ -7,20 +7,6 @@ import {
   Settings24Filled,
   VideoPerson24Filled,
 } from '@vicons/fluent'
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NCollapse,
-  NCollapseItem,
-  NFlex,
-  NIcon,
-  NProgress,
-  NTabPane,
-  NTabs,
-  NTag,
-  NText,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -42,6 +28,13 @@ import { ActionType } from '@/apps/client/store/autoAction/types'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { isTauri } from '@/shared/config'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent } from '@/shared/ui/card'
+import { Progress } from '@/shared/ui/progress'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const vts = useVtsStore()
 const autoAction = useAutoAction()
@@ -50,9 +43,13 @@ const router = useRouter()
 const tab = ref<'deck' | 'actions' | 'items' | 'settings'>('deck')
 
 const status = computed(() => {
-  if (vts.connected) return { type: 'success' as const, text: '已连接' }
-  if (vts.connecting) return { type: 'info' as const, text: '等待 VTS / 授权中' }
-  return { type: 'error' as const, text: '未连接' }
+  if (vts.connected) {
+    return { class: 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10', text: '已连接' }
+  }
+  if (vts.connecting) {
+    return { class: 'border-sky-500/40 text-sky-600 bg-sky-500/10', text: '等待 VTS / 授权中' }
+  }
+  return { class: 'border-destructive/40 text-destructive bg-destructive/10', text: '未连接' }
 })
 
 const VTS_ACTION_TYPES = new Set([
@@ -79,321 +76,268 @@ const macroProgress = computed(() => {
 </script>
 
 <template>
-  <div class="vts-page">
-    <NFlex
-      vertical
-      :size="14"
+  <div class="w-full flex flex-col gap-3.5">
+    <ClientPageHeader
+      title="VTube Studio 控制中心"
+      description="通过 VTS 插件 API 在本地控制表情、热键、机位、道具与动作宏，可配合自动操作与 OBS 场景联动"
     >
-      <ClientPageHeader
-        title="VTube Studio 控制中心"
-        description="通过 VTS 插件 API 在本地控制表情、热键、机位、道具与动作宏，可配合自动操作与 OBS 场景联动"
-      >
-        <template #actions>
-          <NFlex
-            align="center"
-            :size="8"
+      <template #actions>
+        <div class="flex items-center gap-2">
+          <Badge
+            variant="outline"
+            class="text-xs h-6 px-2.5"
+            :class="status.class"
           >
-            <NTag
-              :type="status.type"
-              round
-              :bordered="false"
-            >
-              {{ status.text }}
-            </NTag>
-            <NButton
-              v-if="!vts.connected && !vts.connecting"
-              size="small"
-              type="primary"
-              secondary
-              @click="run(() => vts.connect())"
-            >
-              <template #icon>
-                <NIcon :component="PlugConnected24Filled" />
-              </template>
-              连接
-            </NButton>
-            <NButton
-              v-else
-              size="small"
-              secondary
-              @click="run(() => vts.disconnect())"
-            >
-              <template #icon>
-                <NIcon :component="PlugDisconnected24Filled" />
-              </template>
-              {{ vts.connecting ? '取消' : '断开' }}
-            </NButton>
-          </NFlex>
-        </template>
-      </ClientPageHeader>
+            {{ status.text }}
+          </Badge>
+          <Button
+            v-if="!vts.connected && !vts.connecting"
+            variant="secondary"
+            class="gap-1.5"
+            @click="run(() => vts.connect())"
+          >
+            <PlugConnected24Filled class="size-3.5" />
+            连接
+          </Button>
+          <Button
+            v-else
+            variant="secondary"
+            class="gap-1.5"
+            @click="run(() => vts.disconnect())"
+          >
+            <PlugDisconnected24Filled class="size-3.5" />
+            {{ vts.connecting ? '取消' : '断开' }}
+          </Button>
+        </div>
+      </template>
+    </ClientPageHeader>
 
-      <NAlert
-        v-if="!isTauri()"
-        type="error"
+    <Alert
+      v-if="!isTauri()"
+      class="border-destructive/20 bg-destructive/10 text-destructive py-2.5 px-3"
+    >
+      <AlertDescription class="text-xs m-0"> 当前不是桌面客户端环境，无法连接本地 VTube Studio。 </AlertDescription>
+    </Alert>
+
+    <template v-else>
+      <Alert
+        v-if="vts.connecting"
+        class="border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400 py-2.5 px-3"
       >
-        当前不是桌面客户端环境，无法连接本地 VTube Studio。
-      </NAlert>
-
-      <template v-else>
-        <NAlert
-          v-if="vts.connecting"
-          type="info"
-          :show-icon="false"
-        >
+        <AlertDescription class="text-xs m-0">
           正在等待 VTube Studio：请确认 VTS 已启动并开启「启动 API」；首次连接需在 VTS 弹窗中点击「允许」。
-        </NAlert>
+        </AlertDescription>
+      </Alert>
 
-        <NCard
-          v-else-if="vts.connected"
-          size="small"
-          bordered
-        >
-          <NFlex
-            align="center"
-            :size="10"
-            wrap
-          >
-            <span class="model-badge">
-              <span class="label">当前模型</span>
-              <NText strong>{{ vts.currentModelName || '未加载模型' }}</NText>
+      <Card
+        v-else-if="vts.connected"
+        class="border bg-card"
+      >
+        <CardContent class="p-3">
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="model-badge flex items-center gap-1.5 text-xs">
+              <span class="text-muted-foreground">当前模型</span>
+              <span class="font-semibold text-foreground">{{ vts.currentModelName || '未加载模型' }}</span>
             </span>
-            <NTag
+            <Badge
               v-if="vts.statistics?.framerate"
-              size="small"
-              :bordered="false"
-              type="info"
+              variant="secondary"
+              class="text-xs h-5 px-1.5"
             >
               {{ vts.statistics.framerate }} FPS
-            </NTag>
-            <NTag
+            </Badge>
+            <Badge
               v-if="vts.lastRttMs != null"
-              size="small"
-              :bordered="false"
-              :type="vts.lastRttMs < 50 ? 'success' : 'warning'"
+              variant="outline"
+              class="text-xs h-5 px-1.5"
+              :class="
+                vts.lastRttMs < 50
+                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                  : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
+              "
             >
               延迟 {{ vts.lastRttMs }}ms
-            </NTag>
-            <NTag
+            </Badge>
+            <Badge
               v-if="vts.faceFound === false"
-              size="small"
-              :bordered="false"
-              type="warning"
+              variant="outline"
+              class="text-xs h-5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
             >
               面部丢失
-            </NTag>
-          </NFlex>
-        </NCard>
+            </Badge>
+          </div>
+        </CardContent>
+      </Card>
 
-        <NAlert
-          v-if="vts.lastError"
-          type="error"
-          closable
-          @close="vts.lastError = null"
-        >
+      <Alert
+        v-if="vts.lastError"
+        class="border-destructive/20 bg-destructive/10 text-destructive py-2.5 px-3 flex items-center justify-between"
+      >
+        <AlertDescription class="text-xs m-0">
           {{ vts.lastError }}
-        </NAlert>
-
-        <Transition name="vts-slide">
-          <NCard
-            v-if="macroProgress"
-            size="small"
-            bordered
-          >
-            <NFlex
-              align="center"
-              :size="12"
-            >
-              <NText strong>{{ macroProgress.name }}</NText>
-              <NTag
-                size="tiny"
-                type="info"
-                round
-              >
-                {{ macroProgress.step }} / {{ macroProgress.total }}
-              </NTag>
-              <NProgress
-                type="line"
-                :percentage="macroProgress.percent"
-                :show-indicator="false"
-                style="flex: 1; min-width: 120px"
-              />
-            </NFlex>
-          </NCard>
-        </Transition>
-
-        <NTabs
-          v-model:value="tab"
-          type="segment"
-          animated
-          class="vts-tabs"
+        </AlertDescription>
+        <button
+          type="button"
+          class="text-xs ml-2 hover:opacity-80"
+          @click="vts.lastError = null"
         >
-          <NTabPane name="deck">
-            <template #tab>
-              <NFlex
-                align="center"
-                :size="6"
-              >
-                <NIcon :component="Grid24Regular" />
-                <span>操作台</span>
-              </NFlex>
-            </template>
-            <VtsDeck />
-          </NTabPane>
+          ✕
+        </button>
+      </Alert>
 
-          <NTabPane name="actions">
-            <template #tab>
-              <NFlex
-                align="center"
-                :size="6"
-              >
-                <NIcon :component="VideoPerson24Filled" />
-                <span>热键与宏</span>
-              </NFlex>
-            </template>
-            <NFlex
-              vertical
-              :size="12"
-              class="client-readable"
+      <Transition name="vts-slide">
+        <Card
+          v-if="macroProgress"
+          class="border bg-card"
+        >
+          <CardContent class="p-3 flex items-center gap-3">
+            <span class="font-semibold text-xs text-foreground">{{ macroProgress.name }}</span>
+            <Badge
+              variant="secondary"
+              class="text-[10px] h-4.5 px-1.5"
             >
-              <VtsHotkeyBoard
-                :hotkeys="vts.hotkeys"
-                :model-name="vts.currentModelName"
-                :disabled="!vts.connected"
-                @refresh="run(() => vts.refreshModelState())"
-                @trigger="(id) => run(() => vts.triggerHotkey(id))"
-              />
-              <VtsMacroPanel />
-              <VtsPresetPanel />
-              <VtsPanicPanel />
-            </NFlex>
-          </NTabPane>
+              {{ macroProgress.step }} / {{ macroProgress.total }}
+            </Badge>
+            <Progress
+              :model-value="macroProgress.percent"
+              class="flex-1 min-w-[120px] h-1.5"
+            />
+          </CardContent>
+        </Card>
+      </Transition>
 
-          <NTabPane name="items">
-            <template #tab>
-              <NFlex
-                align="center"
-                :size="6"
-              >
-                <NIcon :component="Flash24Filled" />
-                <span>道具与参数</span>
-              </NFlex>
-            </template>
-            <NFlex
-              vertical
-              :size="12"
-              class="client-readable"
-            >
-              <VtsItemPanel />
-              <VtsParameterPanel />
-            </NFlex>
-          </NTabPane>
+      <Tabs
+        v-model="tab"
+        class="w-full vts-tabs"
+      >
+        <TabsList class="grid w-full max-w-lg grid-cols-4">
+          <TabsTrigger
+            value="deck"
+            class="text-xs gap-1.5"
+          >
+            <Grid24Regular class="size-3.5" />
+            操作台
+          </TabsTrigger>
+          <TabsTrigger
+            value="actions"
+            class="text-xs gap-1.5"
+          >
+            <VideoPerson24Filled class="size-3.5" />
+            热键与宏
+          </TabsTrigger>
+          <TabsTrigger
+            value="items"
+            class="text-xs gap-1.5"
+          >
+            <Flash24Filled class="size-3.5" />
+            道具与参数
+          </TabsTrigger>
+          <TabsTrigger
+            value="settings"
+            class="text-xs gap-1.5"
+          >
+            <Settings24Filled class="size-3.5" />
+            设置
+          </TabsTrigger>
+        </TabsList>
 
-          <NTabPane name="settings">
-            <template #tab>
-              <NFlex
-                align="center"
-                :size="6"
-              >
-                <NIcon :component="Settings24Filled" />
-                <span>设置</span>
-              </NFlex>
-            </template>
-            <NFlex
-              vertical
-              :size="12"
-              class="client-readable"
-            >
-              <VtsConnectionCard />
-              <VtsObsLinkPanel />
-              <NCollapse arrow-placement="right">
-                <NCollapseItem
-                  title="配置方案与备份"
-                  name="profiles"
+        <TabsContent
+          value="deck"
+          class="pt-3"
+        >
+          <VtsDeck />
+        </TabsContent>
+
+        <TabsContent
+          value="actions"
+          class="pt-3 space-y-3 client-readable"
+        >
+          <VtsHotkeyBoard
+            :hotkeys="vts.hotkeys"
+            :model-name="vts.currentModelName"
+            :disabled="!vts.connected"
+            @refresh="run(() => vts.refreshModelState())"
+            @trigger="(id) => run(() => vts.triggerHotkey(id))"
+          />
+          <VtsMacroPanel />
+          <VtsPresetPanel />
+          <VtsPanicPanel />
+        </TabsContent>
+
+        <TabsContent
+          value="items"
+          class="pt-3 space-y-3 client-readable"
+        >
+          <VtsItemPanel />
+          <VtsParameterPanel />
+        </TabsContent>
+
+        <TabsContent
+          value="settings"
+          class="pt-3 space-y-3 client-readable"
+        >
+          <VtsConnectionCard />
+          <VtsObsLinkPanel />
+
+          <Accordion
+            type="multiple"
+            class="border rounded-md px-3 bg-card"
+          >
+            <AccordionItem value="profiles">
+              <AccordionTrigger class="text-xs font-semibold py-2.5"> 配置方案与备份 </AccordionTrigger>
+              <AccordionContent class="pt-2 pb-3 space-y-3">
+                <VtsProfilePanel />
+                <VtsImportExportCard />
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="rules">
+              <AccordionTrigger class="text-xs font-semibold py-2.5">
+                {{ `关联的自动操作规则 (${linkedAutoActions.length})` }}
+              </AccordionTrigger>
+              <AccordionContent class="pt-2 pb-3 space-y-2">
+                <span class="text-xs text-muted-foreground block">
+                  在「自动操作」中可以让礼物、弹幕、上舰等事件自动触发 VTS 动作
+                </span>
+                <div
+                  v-for="a in linkedAutoActions"
+                  :key="a.id"
+                  class="flex items-center gap-2 p-2 rounded border bg-muted/20"
                 >
-                  <NFlex
-                    vertical
-                    :size="12"
+                  <Badge
+                    variant="outline"
+                    class="text-[10px] h-4.5 px-1.5"
+                    :class="
+                      a.enabled ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'
+                    "
                   >
-                    <VtsProfilePanel />
-                    <VtsImportExportCard />
-                  </NFlex>
-                </NCollapseItem>
-                <NCollapseItem
-                  :title="`关联的自动操作规则 (${linkedAutoActions.length})`"
-                  name="rules"
+                    {{ a.enabled ? '启用' : '禁用' }}
+                  </Badge>
+                  <span class="font-medium text-xs text-foreground">{{ a.name || '未命名操作' }}</span>
+                </div>
+                <Button
+                  variant="secondary"
+                  @click="router.push({ name: 'client-auto-action-manage' })"
                 >
-                  <NFlex
-                    vertical
-                    :size="8"
-                  >
-                    <NText depth="3"> 在「自动操作」中可以让礼物、弹幕、上舰等事件自动触发 VTS 动作 </NText>
-                    <NFlex
-                      v-for="a in linkedAutoActions"
-                      :key="a.id"
-                      align="center"
-                      :size="8"
-                      class="linked-action-row"
-                    >
-                      <NTag
-                        :type="a.enabled ? 'success' : 'default'"
-                        size="small"
-                      >
-                        {{ a.enabled ? '启用' : '禁用' }}
-                      </NTag>
-                      <NText strong>{{ a.name || '未命名操作' }}</NText>
-                    </NFlex>
-                    <NButton
-                      size="small"
-                      secondary
-                      style="align-self: flex-start"
-                      @click="router.push({ name: 'client-auto-action-manage' })"
-                    >
-                      前往自动操作
-                    </NButton>
-                  </NFlex>
-                </NCollapseItem>
-                <NCollapseItem
-                  title="操作记录"
-                  name="history"
-                >
-                  <VtsHistoryPanel />
-                </NCollapseItem>
-              </NCollapse>
-            </NFlex>
-          </NTabPane>
-        </NTabs>
-      </template>
-    </NFlex>
+                  前往自动操作
+                </Button>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="history">
+              <AccordionTrigger class="text-xs font-semibold py-2.5"> 操作记录 </AccordionTrigger>
+              <AccordionContent class="pt-2 pb-3">
+                <VtsHistoryPanel />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </TabsContent>
+      </Tabs>
+    </template>
   </div>
 </template>
 
 <style scoped>
-.vts-page {
-  width: 100%;
-}
-
-.vts-tabs :deep(.n-tabs-rail) {
-  max-width: 520px;
-}
-
-.model-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-}
-
-.model-badge .label {
-  color: var(--vtsuru-fg-muted);
-}
-
-.linked-action-row {
-  padding: 8px 12px;
-  background: var(--vtsuru-bg-elevated);
-  border-radius: var(--vtsuru-radius, 6px);
-  border: 1px solid var(--vtsuru-border);
-}
-
 .vts-slide-enter-active,
 .vts-slide-leave-active {
   transition: all 0.25s ease;

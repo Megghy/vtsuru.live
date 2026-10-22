@@ -17,9 +17,13 @@ const { typeClass } = useDanmakuUtils(props, emojiData)
 
 <template>
   <div
-    class="danmaku-item-content"
+    class="flex w-full p-0 bg-transparent"
     :class="[typeClass]"
     :data-disappear="item.disappearAt"
+    :style="{
+      fontSize: 'var(--dw-font-size)',
+      color: 'var(--dw-text-color)',
+    }"
   >
     <!-- 根据设置选择显示风格 -->
     <CardStyleDanmakuItem
@@ -35,21 +39,3 @@ const { typeClass } = useDanmakuUtils(props, emojiData)
     />
   </div>
 </template>
-
-<style scoped>
-/* 基础布局 */
-.danmaku-item-content {
-  display: flex;
-  width: 100%;
-  overflow: hidden;
-  will-change: transform, opacity;
-  margin-bottom: var(--dw-item-spacing, 4px);
-  padding: 0;
-  background: none;
-  border-radius: 0;
-  box-shadow: none;
-  min-height: 0;
-  font-size: var(--dw-font-size);
-  color: var(--dw-text-color);
-}
-</style>

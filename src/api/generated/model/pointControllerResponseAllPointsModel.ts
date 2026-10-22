@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 export interface PointControllerResponseAllPointsModel {
-  owner: ResponseUserBasicInfo;
-  points: number;
+  owner: ResponseUserBasicInfo
+  points: number
 }

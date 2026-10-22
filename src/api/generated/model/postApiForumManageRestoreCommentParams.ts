@@ -7,5 +7,5 @@
  */
 
 export type PostApiForumManageRestoreCommentParams = {
-comment?: number;
-};
+  comment?: number
+}

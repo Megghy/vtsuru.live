@@ -7,21 +7,21 @@
  */
 
 export interface TtsSynthesizeRequest {
-  provider: string;
-  text: string;
+  provider: string
+  text: string
   /** @nullable */
-  voice?: string | null;
-  rate: number;
-  pitch: number;
+  voice?: string | null
+  rate: number
+  pitch: number
   /** @nullable */
-  language?: string | null;
+  language?: string | null
   /** @nullable */
-  model?: string | null;
+  model?: string | null
   /** @nullable */
-  styleTag?: string | null;
+  styleTag?: string | null
   /** @nullable */
-  apiKey?: string | null;
+  apiKey?: string | null
   /** @nullable */
-  languageHints?: string[] | null;
-  streaming: boolean;
+  languageHints?: string[] | null
+  streaming: boolean
 }

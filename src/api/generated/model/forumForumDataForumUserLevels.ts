@@ -6,8 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type ForumForumDataForumUserLevels = typeof ForumForumDataForumUserLevels[keyof typeof ForumForumDataForumUserLevels];
-
+export type ForumForumDataForumUserLevels =
+  (typeof ForumForumDataForumUserLevels)[keyof typeof ForumForumDataForumUserLevels]
 
 export const ForumForumDataForumUserLevels = {
   NUMBER_0: 0,
@@ -16,4 +16,4 @@ export const ForumForumDataForumUserLevels = {
   NUMBER_3: 3,
   NUMBER_4: 4,
   NUMBER_5: 5,
-} as const;
+} as const

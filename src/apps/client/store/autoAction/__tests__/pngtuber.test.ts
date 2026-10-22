@@ -47,33 +47,40 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers())
 
 describe('PNGtuber existing event engine integration', () => {
-  it.each([TriggerType.DANMAKU, TriggerType.GIFT, TriggerType.GUARD, TriggerType.SUPER_CHAT, TriggerType.FOLLOW, TriggerType.ENTER, TriggerType.SCHEDULED])(
-    'executes %s with channel/duration and records history without Bili cookie',
-    async (type) => {
-      const item = action(type),
-        state = createDefaultRuntimeState(),
-        room = ref(100)
-      if (type === TriggerType.DANMAKU) useAutoReply(ref(true), room, send).onDanmaku(event, [item], state)
-      if (type === TriggerType.GIFT) useGiftThank(ref(true), room, ref(false), send).processGift(event, [item], state)
-      if (type === TriggerType.GUARD) useGuardPm(room, send, send).handleGuardBuy([item], event, state)
-      if (type === TriggerType.SUPER_CHAT)
-        useSuperChatThank(ref(true), room, ref(false), send).processSuperChat(event, [item], state)
-      if (type === TriggerType.FOLLOW) useFollowThank(ref(true), room, ref(false), send).processFollow(event, [item], state)
-      if (type === TriggerType.ENTER) useEntryWelcome(ref(true), room, ref(false), send).processEnter(event, [item], state)
-      if (type === TriggerType.SCHEDULED) executeActions([item], null, type, room.value, state, {})
-      await vi.dynamicImportSettled()
-      expect(mocks.switchExpression).toHaveBeenCalledWith('happy', 1200, 'main')
-      expect(mocks.history).toHaveBeenCalledWith(
-        item.id,
-        expect.any(String),
-        expect.stringContaining('main'),
-        true,
-        undefined,
-        ActionType.PNGTUBER_EXPRESSION,
-      )
-      expect(send).not.toHaveBeenCalled()
-    },
-  )
+  it.each([
+    TriggerType.DANMAKU,
+    TriggerType.GIFT,
+    TriggerType.GUARD,
+    TriggerType.SUPER_CHAT,
+    TriggerType.FOLLOW,
+    TriggerType.ENTER,
+    TriggerType.SCHEDULED,
+  ])('executes %s with channel/duration and records history without Bili cookie', async (type) => {
+    const item = action(type),
+      state = createDefaultRuntimeState(),
+      room = ref(100)
+    if (type === TriggerType.DANMAKU) useAutoReply(ref(true), room, send).onDanmaku(event, [item], state)
+    if (type === TriggerType.GIFT) useGiftThank(ref(true), room, ref(false), send).processGift(event, [item], state)
+    if (type === TriggerType.GUARD) useGuardPm(room, send, send).handleGuardBuy([item], event, state)
+    if (type === TriggerType.SUPER_CHAT)
+      useSuperChatThank(ref(true), room, ref(false), send).processSuperChat(event, [item], state)
+    if (type === TriggerType.FOLLOW)
+      useFollowThank(ref(true), room, ref(false), send).processFollow(event, [item], state)
+    if (type === TriggerType.ENTER)
+      useEntryWelcome(ref(true), room, ref(false), send).processEnter(event, [item], state)
+    if (type === TriggerType.SCHEDULED) executeActions([item], null, type, room.value, state, {})
+    await vi.dynamicImportSettled()
+    expect(mocks.switchExpression).toHaveBeenCalledWith('happy', 1200, 'main')
+    expect(mocks.history).toHaveBeenCalledWith(
+      item.id,
+      expect.any(String),
+      expect.stringContaining('main'),
+      true,
+      undefined,
+      ActionType.PNGTUBER_EXPRESSION,
+    )
+    expect(send).not.toHaveBeenCalled()
+  })
   it('applies conditions and reserves cooldown during delay', async () => {
     const item = action(TriggerType.GIFT),
       state = createDefaultRuntimeState()

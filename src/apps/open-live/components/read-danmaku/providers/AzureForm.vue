@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { NText } from 'naive-ui'
 import { ref, watch } from 'vue'
 
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
@@ -51,11 +50,6 @@ watch(
       placeholder="zh-CN-XiaoxiaoNeural"
       @focus="loadVoices"
     />
-    <NText
-      depth="3"
-      style="font-size: 11px"
-    >
-      使用本站提供的 Microsoft Azure 语音合成服务
-    </NText>
+    <span class="text-[11px] text-muted-foreground"> 使用本站提供的 Microsoft Azure 语音合成服务 </span>
   </SectionField>
 </template>

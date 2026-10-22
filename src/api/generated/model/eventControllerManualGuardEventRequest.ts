@@ -8,15 +8,15 @@
 
 export interface EventControllerManualGuardEventRequest {
   /** @nullable */
-  ouid?: string | null;
+  ouid?: string | null
   /** @nullable */
-  uid?: number | null;
-  uname: string;
-  msg: string;
+  uid?: number | null
+  uname: string
+  msg: string
   /** @nullable */
-  time?: number | null;
+  time?: number | null
   /** @nullable */
-  num?: number | null;
+  num?: number | null
   /** @nullable */
-  price?: number | null;
+  price?: number | null
 }

@@ -6,24 +6,18 @@ import {
   DismissCircle16Filled,
   History16Regular,
 } from '@vicons/fluent'
-import {
-  NButton,
-  NCard,
-  NDataTable,
-  NEmpty,
-  NIcon,
-  NPopconfirm,
-  NFlex,
-  NSpin,
-  NTabPane,
-  NTabs,
-  NTag,
-  NTime,
-  NTooltip,
-  useMessage,
-} from 'naive-ui'
-import type { DataTableColumns } from 'naive-ui'
-import { h, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { toast } from 'vue-sonner'
+
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Empty } from '@/shared/ui/empty'
+import { Pagination } from '@/shared/ui/pagination'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import type { HistoryItem } from '../../store/autoAction/utils/historyLogger'
 import {
@@ -33,7 +27,6 @@ import {
   HistoryType,
 } from '../../store/autoAction/utils/historyLogger'
 
-const message = useMessage()
 const loading = ref(true)
 const activeTab = ref(HistoryType.DANMAKU)
 const historyData = ref<Record<HistoryType, HistoryItem[]>>({
@@ -42,7 +35,13 @@ const historyData = ref<Record<HistoryType, HistoryItem[]>>({
   [HistoryType.COMMAND]: [],
 })
 
-// 类型名称映射
+const page = ref<Record<HistoryType, number>>({
+  [HistoryType.DANMAKU]: 1,
+  [HistoryType.PRIVATE_MSG]: 1,
+  [HistoryType.COMMAND]: 1,
+})
+const pageSize = ref(10)
+
 const typeNameMap = {
   [HistoryType.DANMAKU]: '弹幕发送',
   [HistoryType.PRIVATE_MSG]: '私信发送',
@@ -52,87 +51,16 @@ const typeNameMap = {
 const refreshInterval = 30000
 let refreshTimer: number | null = null
 
-// 列定义
-const columns: DataTableColumns<HistoryItem> = [
-  {
-    title: '时间',
-    key: 'timestamp',
-    width: 160,
-    sorter: (a: HistoryItem, b: HistoryItem) => a.timestamp - b.timestamp,
-    render: (row: HistoryItem) => {
-      return h(
-        NTooltip,
-        {},
-        {
-          trigger: () =>
-            h(NTime, {
-              time: row.timestamp,
-              type: 'relative',
-            }),
-          default: () => new Date(row.timestamp).toLocaleString(),
-        },
-      )
-    },
-  },
-  {
-    title: '操作名称',
-    key: 'actionName',
-    width: 140,
-    ellipsis: { tooltip: true },
-    render: (row: HistoryItem) =>
-      h(NTag, { size: 'small', bordered: false }, { default: () => row.actionName || '未命名' }),
-  },
-  {
-    title: '内容',
-    key: 'content',
-    ellipsis: {
-      tooltip: true,
-    } as const,
-  },
-  {
-    title: '目标',
-    key: 'target',
-    width: 120,
-    ellipsis: { tooltip: true },
-    render: (row: HistoryItem) =>
-      row.target ? h(NTag, { size: 'small', type: 'info', bordered: false }, { default: () => row.target }) : '-',
-  },
-  {
-    title: '状态',
-    key: 'success',
-    width: 100,
-    align: 'center',
-    render: (row: HistoryItem) => {
-      if (row.success) {
-        return h(
-          NTooltip,
-          { trigger: 'hover' },
-          {
-            trigger: () =>
-              h(NIcon, { color: 'var(--vtsuru-success)', size: 20 }, { default: () => h(CheckmarkCircle16Filled) }),
-            default: () => '执行成功',
-          },
-        )
-      } else {
-        return h(
-          NTooltip,
-          { trigger: 'hover' },
-          {
-            trigger: () =>
-              h(NIcon, { color: 'var(--vtsuru-error)', size: 20 }, { default: () => h(DismissCircle16Filled) }),
-            default: () => row.error || '执行失败',
-          },
-        )
-      }
-    },
-  },
-]
+const currentList = computed(() => historyData.value[activeTab.value] || [])
+const paginatedList = computed(() => {
+  const p = page.value[activeTab.value] || 1
+  const start = (p - 1) * pageSize.value
+  return currentList.value.slice(start, start + pageSize.value)
+})
 
-// 加载历史数据
 async function loadHistory() {
   loading.value = true
   try {
-    // 并行加载所有类型的历史
     const [danmakuHistory, privateMsgHistory, commandHistory] = await Promise.all([
       getHistoryByType(HistoryType.DANMAKU),
       getHistoryByType(HistoryType.PRIVATE_MSG),
@@ -146,39 +74,38 @@ async function loadHistory() {
     }
   } catch (error) {
     console.error('加载历史数据失败:', error)
-    message.error('加载历史数据失败')
+    toast.error('加载历史数据失败')
   } finally {
     loading.value = false
   }
 }
 
-// 清除历史
 async function handleClearHistory(type: HistoryType) {
   try {
     await clearHistory(type)
     historyData.value[type] = []
-    message.success(`已清空${typeNameMap[type]}历史`)
+    page.value[type] = 1
+    toast.success(`已清空${typeNameMap[type]}历史`)
   } catch (error) {
     console.error('清除历史失败:', error)
-    message.error('清除历史失败')
+    toast.error('清除历史失败')
   }
 }
 
-// 清除所有历史
 async function handleClearAllHistory() {
   try {
     await clearAllHistory()
     Object.keys(historyData.value).forEach((type) => {
       historyData.value[type as HistoryType] = []
+      page.value[type as HistoryType] = 1
     })
-    message.success('已清空所有历史记录')
+    toast.success('已清空所有历史记录')
   } catch (error) {
     console.error('清除所有历史失败:', error)
-    message.error('清除所有历史失败')
+    toast.error('清除所有历史失败')
   }
 }
 
-// 开始定时刷新
 function startRefreshTimer() {
   stopRefreshTimer()
   refreshTimer = window.setInterval(() => {
@@ -186,7 +113,6 @@ function startRefreshTimer() {
   }, refreshInterval)
 }
 
-// 停止定时刷新
 function stopRefreshTimer() {
   if (refreshTimer !== null) {
     clearInterval(refreshTimer)
@@ -205,149 +131,191 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    :segmented="{ content: true }"
-    class="history-viewer-card"
-  >
-    <template #header>
-      <NFlex align="center">
-        <NIcon :component="History16Regular" />
-        <span>执行历史记录</span>
-      </NFlex>
-    </template>
+  <Card class="border bg-card">
+    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+      <div class="flex items-center gap-2">
+        <History16Regular class="size-4 text-primary" />
+        <CardTitle class="text-sm font-semibold">执行历史记录</CardTitle>
+      </div>
 
-    <template #header-extra>
-      <NFlex size="small">
-        <NButton
-          size="small"
-          quaternary
-          :loading="loading"
+      <div class="flex items-center gap-2">
+        <Button
+          variant="secondary"
+          class="gap-1"
+          :disabled="loading"
           @click="loadHistory"
         >
-          <template #icon>
-            <NIcon :component="ArrowClockwise16Filled" />
-          </template>
+          <ArrowClockwise16Filled
+            class="size-3.5"
+            :class="{ 'animate-spin': loading }"
+          />
           刷新
-        </NButton>
-        <NPopconfirm
-          placement="bottom"
+        </Button>
+        <Popconfirm
+          title="清空所有历史"
           @positive-click="handleClearAllHistory"
         >
           <template #trigger>
-            <NButton
-              size="small"
-              type="error"
-              quaternary
+            <Button
+              variant="outline"
+              class="border-destructive/40 text-destructive hover:bg-destructive/10 gap-1"
             >
-              <template #icon>
-                <NIcon :component="Delete16Filled" />
-              </template>
+              <Delete16Filled class="size-3.5" />
               清空所有
-            </NButton>
+            </Button>
           </template>
           确定要清空所有类型的历史记录吗？此操作不可恢复。
-        </NPopconfirm>
-      </NFlex>
-    </template>
+        </Popconfirm>
+      </div>
+    </CardHeader>
 
-    <NTabs
-      v-model:value="activeTab"
-      type="line"
-      animated
-      pane-style="padding: 12px 0 0 0;"
-    >
-      <NTabPane
-        v-for="(label, type) in typeNameMap"
-        :key="type"
-        :name="type"
-        :tab="label"
+    <CardContent class="p-3">
+      <Tabs
+        v-model="activeTab"
+        class="w-full"
       >
-        <NSpin :show="loading">
-          <NFlex
-            vertical
-            :size="12"
+        <TabsList class="grid w-full grid-cols-3 max-w-[360px]">
+          <TabsTrigger
+            v-for="(label, type) in typeNameMap"
+            :key="type"
+            :value="type"
+            class="text-xs"
           >
-            <NDataTable
-              :columns="columns"
-              :data="historyData[type as HistoryType]"
-              :bordered="false"
-              :pagination="{
-                pageSize: 10,
-                showSizePicker: true,
-                pageSizes: [10, 20, 50],
-              }"
-              :row-key="(row) => row.id"
-              default-sort-order="descend"
-              size="small"
-              scroll-x="800"
-            >
-              <template #empty>
-                <NEmpty description="暂无历史记录" />
-              </template>
-            </NDataTable>
+            {{ label }}
+          </TabsTrigger>
+        </TabsList>
 
-            <NFlex
-              v-if="historyData[type as HistoryType].length > 0"
-              justify="end"
-            >
-              <NPopconfirm
-                placement="bottom"
-                @positive-click="() => handleClearHistory(type as HistoryType)"
-              >
-                <template #trigger>
-                  <NButton
-                    size="tiny"
-                    type="warning"
-                    quaternary
+        <TabsContent
+          v-for="(label, type) in typeNameMap"
+          :key="type"
+          :value="type"
+          class="pt-3 space-y-3"
+        >
+          <div class="border rounded-md overflow-hidden bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead class="text-xs w-[160px]">时间</TableHead>
+                  <TableHead class="text-xs w-[140px]">操作名称</TableHead>
+                  <TableHead class="text-xs">内容</TableHead>
+                  <TableHead class="text-xs w-[120px]">目标</TableHead>
+                  <TableHead class="text-xs text-center w-[80px]">状态</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                <template v-if="paginatedList.length > 0">
+                  <TableRow
+                    v-for="row in paginatedList"
+                    :key="row.id"
                   >
-                    <template #icon>
-                      <NIcon :component="Delete16Filled" />
-                    </template>
-                    清空{{ label }}历史
-                  </NButton>
+                    <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger class="cursor-help underline decoration-dotted">
+                            {{ new Date(row.timestamp).toLocaleTimeString() }}
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            {{ new Date(row.timestamp).toLocaleString() }}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+
+                    <TableCell class="text-xs">
+                      <Badge
+                        variant="secondary"
+                        class="text-[10px] h-5 px-1.5 font-normal max-w-[130px] truncate"
+                      >
+                        {{ row.actionName || '未命名' }}
+                      </Badge>
+                    </TableCell>
+
+                    <TableCell
+                      class="text-xs font-mono max-w-[300px] truncate"
+                      :title="row.content"
+                    >
+                      {{ row.content }}
+                    </TableCell>
+
+                    <TableCell class="text-xs">
+                      <Badge
+                        v-if="row.target"
+                        variant="outline"
+                        class="text-[10px] h-5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10"
+                      >
+                        {{ row.target }}
+                      </Badge>
+                      <span
+                        v-else
+                        class="text-muted-foreground"
+                        >-</span
+                      >
+                    </TableCell>
+
+                    <TableCell class="text-center">
+                      <TooltipProvider>
+                        <Tooltip v-if="row.success">
+                          <TooltipTrigger>
+                            <CheckmarkCircle16Filled class="size-4 text-emerald-500 mx-auto" />
+                          </TooltipTrigger>
+                          <TooltipContent>执行成功</TooltipContent>
+                        </Tooltip>
+                        <Tooltip v-else>
+                          <TooltipTrigger>
+                            <DismissCircle16Filled class="size-4 text-destructive mx-auto" />
+                          </TooltipTrigger>
+                          <TooltipContent>{{ row.error || '执行失败' }}</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </TableCell>
+                  </TableRow>
                 </template>
-                确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
-              </NPopconfirm>
-            </NFlex>
-          </NFlex>
-        </NSpin>
-      </NTabPane>
-    </NTabs>
-  </NCard>
+                <template v-else>
+                  <TableRow>
+                    <TableCell
+                      colspan="5"
+                      class="text-center py-8"
+                    >
+                      <Empty description="暂无历史记录" />
+                    </TableCell>
+                  </TableRow>
+                </template>
+              </TableBody>
+            </Table>
+          </div>
+
+          <div
+            v-if="currentList.length > 0"
+            class="flex items-center justify-between pt-1"
+          >
+            <Popconfirm
+              title="确认清空"
+              @positive-click="handleClearHistory(type as HistoryType)"
+            >
+              <template #trigger>
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="h-6 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1"
+                >
+                  <Delete16Filled class="size-3" />
+                  清空{{ label }}历史
+                </Button>
+              </template>
+              确定要清空所有{{ label }}历史记录吗？此操作不可恢复。
+            </Popconfirm>
+
+            <Pagination
+              v-if="currentList.length > pageSize"
+              :page="page[type as HistoryType]"
+              :page-size="pageSize"
+              :total="currentList.length"
+              size="small"
+              @update:page="page[type as HistoryType] = $event"
+            />
+          </div>
+        </TabsContent>
+      </Tabs>
+    </CardContent>
+  </Card>
 </template>
-
-<style scoped>
-.history-viewer-card {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.n-card__content) {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-:deep(.n-tabs) {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.n-tab-pane) {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.n-spin-container),
-:deep(.n-spin-content) {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-</style>

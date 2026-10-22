@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { NCheckbox, NFormItem, NInputNumber, NSelect } from 'naive-ui'
 import type { DanmujiStyle } from '@/shared/danmujiStyle'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 
 const style = defineModel<DanmujiStyle>({ required: true })
 const presets = [
@@ -11,17 +13,97 @@ const presets = [
 </script>
 
 <template>
-  <div class="style-fields">
-    <NFormItem label="外观预设" :show-feedback="false"><NSelect v-model:value="style.preset" :options="presets" size="small" /></NFormItem>
-    <NFormItem label="字号" :show-feedback="false"><NInputNumber :value="style.fontSize" :min="10" :max="72" size="small" @update:value="value => { if (value !== null) style.fontSize = value }" /></NFormItem>
-    <NFormItem label="不透明度" :show-feedback="false"><NInputNumber :value="style.opacity" :min="0" :max="1" :step="0.1" size="small" @update:value="value => { if (value !== null) style.opacity = value }" /></NFormItem>
-    <NFormItem label="消息保留秒数（0 为不隐藏）" :show-feedback="false"><NInputNumber :value="style.autoHide" :min="0" :max="3600" size="small" @update:value="value => { if (value !== null) style.autoHide = value }" /></NFormItem>
-    <NCheckbox v-model:checked="style.reverse">新消息在底部</NCheckbox>
-    <NCheckbox v-model:checked="style.pinned">显示 SC / 礼物置顶栏</NCheckbox>
-    <NFormItem v-if="style.pinned" label="置顶礼物最低金额（元）" :show-feedback="false"><NInputNumber :value="style.pinnedMinPrice" :min="0" :max="100000" size="small" @update:value="value => { if (value !== null) style.pinnedMinPrice = value }" /></NFormItem>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+    <div class="space-y-1">
+      <label class="text-xs text-muted-foreground">外观预设</label>
+      <Select v-model="style.preset">
+        <SelectTrigger>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem
+            v-for="p in presets"
+            :key="p.value"
+            :value="p.value"
+          >
+            {{ p.label }}
+          </SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+
+    <div class="space-y-1">
+      <label class="text-xs text-muted-foreground">字号</label>
+      <NumberField
+        :model-value="style.fontSize"
+        :min="10"
+        :max="72"
+        @update:model-value="
+          (value) => {
+            if (value !== null) style.fontSize = value
+          }
+        "
+      />
+    </div>
+
+    <div class="space-y-1">
+      <label class="text-xs text-muted-foreground">不透明度</label>
+      <NumberField
+        :model-value="style.opacity"
+        :min="0"
+        :max="1"
+        :step="0.1"
+        @update:model-value="
+          (value) => {
+            if (value !== null) style.opacity = value
+          }
+        "
+      />
+    </div>
+
+    <div class="space-y-1">
+      <label class="text-xs text-muted-foreground">消息保留秒数（0 为不隐藏）</label>
+      <NumberField
+        :model-value="style.autoHide"
+        :min="0"
+        :max="3600"
+        @update:model-value="
+          (value) => {
+            if (value !== null) style.autoHide = value
+          }
+        "
+      />
+    </div>
+
+    <div class="flex items-center gap-2 pt-1">
+      <label class="flex items-center gap-1.5 cursor-pointer select-none">
+        <Checkbox v-model:checked="style.reverse" />
+        <span>新消息在底部</span>
+      </label>
+    </div>
+
+    <div class="flex items-center gap-2 pt-1">
+      <label class="flex items-center gap-1.5 cursor-pointer select-none">
+        <Checkbox v-model:checked="style.pinned" />
+        <span>显示 SC / 礼物置顶栏</span>
+      </label>
+    </div>
+
+    <div
+      v-if="style.pinned"
+      class="col-span-full space-y-1 pt-1"
+    >
+      <label class="text-xs text-muted-foreground">置顶礼物最低金额（元）</label>
+      <NumberField
+        :model-value="style.pinnedMinPrice"
+        :min="0"
+        :max="100000"
+        @update:model-value="
+          (value) => {
+            if (value !== null) style.pinnedMinPrice = value
+          }
+        "
+      />
+    </div>
   </div>
 </template>
-
-<style scoped>
-.style-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-</style>

@@ -7,13 +7,13 @@
  */
 
 export interface VTsuruCorePointGuardDuplicateApplyResult {
-  batchId: string;
-  selectedUserCount: number;
-  fixRowsInserted: number;
-  pointHistoryInserted: number;
-  totalPointsDeducted: number;
-  eventRowsDeleted: number;
-  tempEventRowsDeleted: number;
-  liveRowsUpdated: number;
-  liveDuplicateRowsRemoved: number;
+  batchId: string
+  selectedUserCount: number
+  fixRowsInserted: number
+  pointHistoryInserted: number
+  totalPointsDeducted: number
+  eventRowsDeleted: number
+  tempEventRowsDeleted: number
+  liveRowsUpdated: number
+  liveDuplicateRowsRemoved: number
 }

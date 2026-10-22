@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bot24Regular } from '@vicons/fluent'
+import { ArrowLeft24Regular, Bot24Regular } from '@vicons/fluent'
 import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -54,294 +54,86 @@ async function goToUserPage(accountName?: string) {
 </script>
 
 <template>
-  <header class="manage-header">
-    <div class="manage-header__left">
+  <header
+    class="h-[var(--vtsuru-header-height)] px-3 max-[600px]:px-2 flex items-center justify-between gap-3 max-[600px]:gap-2 bg-card border-b border-border box-border"
+  >
+    <div class="min-w-0 flex items-center gap-2.5 max-[600px]:gap-1.5">
       <button
-        class="manage-header__icon-button manage-header__sider-toggle"
+        class="size-7 p-0 rounded-lg border border-[rgba(127,127,127,0.18)] bg-[rgba(127,127,127,0.06)] text-foreground inline-flex-center cursor-pointer transition-colors hover:bg-[rgba(127,127,127,0.08)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
         type="button"
         :title="siderCollapsed ? '展开侧栏' : '收起侧栏'"
         @click="siderCollapsed = !siderCollapsed"
       >
         <component
           :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
-          class="manage-header__icon"
+          class="size-[18px] block"
         />
       </button>
       <img
-        class="manage-header__logo"
+        class="size-[22px] rounded-md shrink-0"
         :src="logoUrl"
         alt="VTSURU"
         decoding="async"
       />
-      <div class="manage-header__brand">VTSURU CENTER</div>
-      <div class="manage-header__workspace">{{ WORKSPACE_LABELS[workspace] }}</div>
+      <div class="text-[15px] font-bold tracking-tight text-foreground whitespace-nowrap max-[600px]:hidden">
+        VTSURU CENTER
+      </div>
+      <div class="py-0.5 px-1.5 rounded-md bg-[var(--brand-soft)] text-[var(--brand)] text-[11px] font-bold whitespace-nowrap">
+        {{ WORKSPACE_LABELS[workspace] }}
+      </div>
       <div
         v-if="accountName"
-        class="manage-header__account"
+        class="text-xs leading-tight text-muted-foreground whitespace-nowrap truncate max-[600px]:hidden"
       >
         / {{ accountName }}
       </div>
       <div
         v-if="pageTitle"
-        class="manage-header__page-title"
+        class="min-w-0 text-xs leading-tight font-semibold text-foreground whitespace-nowrap truncate max-[600px]:hidden"
       >
-        <span class="manage-header__page-sep">·</span>
+        <span class="mr-1.5 text-muted-foreground font-normal">·</span>
         {{ pageTitle }}
       </div>
     </div>
 
-    <div class="manage-header__right">
+    <div class="flex items-center gap-2.5 max-[600px]:gap-1.5 shrink-0">
       <button
-        class="manage-header__assistant"
+        class="h-[26px] px-2.5 rounded-lg border border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)] text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-[filter,transform] duration-150 hover:brightness-110 active:translate-y-px"
         type="button"
         title="VTsuru 助手"
         @click="openAssistant"
       >
         <component
           :is="Bot24Regular"
-          class="manage-header__icon"
+          class="size-[15px]"
         />
-        <span class="manage-header__assistant-text">助手</span>
+        <span class="max-[600px]:hidden">助手</span>
       </button>
 
       <NotificationsPopover v-if="workspace === 'streamer'" />
 
       <button
-        class="manage-header__icon-button"
+        class="size-7 p-0 rounded-lg border border-border bg-transparent text-foreground inline-flex-center cursor-pointer transition-colors hover:bg-[rgba(127,127,127,0.08)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
         type="button"
         :title="themeToggleTitle"
         @click="toggleTheme"
       >
         <component
           :is="themeToggleIcon"
-          class="manage-header__icon"
+          class="size-[18px] block"
         />
       </button>
 
       <button
-        v-if="workspace === 'streamer'"
-        class="manage-header__button"
+        v-if="workspace === 'streamer' && accountName"
+        class="h-7 px-2.5 max-[600px]:p-0 max-[600px]:size-7 rounded-lg border border-input bg-muted text-foreground text-xs font-semibold cursor-pointer transition-colors hover:bg-[rgba(127,127,127,0.08)] active:scale-[0.98] inline-flex-center"
         type="button"
-        :disabled="!accountName"
+        title="回到展示页"
         @click="goToUserPage(accountName)"
       >
-        回到展示页
+        <ArrowLeft24Regular class="size-4 hidden max-[600px]:block" />
+        <span class="max-[600px]:hidden">回到展示页</span>
       </button>
     </div>
   </header>
 </template>
-
-<style scoped>
-.manage-header {
-  height: var(--vtsuru-header-height);
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  background-color: var(--vtsuru-bg-surface);
-  border-bottom: 1px solid var(--vtsuru-border);
-  box-sizing: border-box;
-}
-
-.manage-header__left {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.manage-header__logo {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  flex: 0 0 auto;
-}
-
-.manage-header__brand {
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--vtsuru-fg);
-  white-space: nowrap;
-}
-
-.manage-header__account {
-  font-size: 12px;
-  line-height: 1.2;
-  color: var(--vtsuru-fg-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.manage-header__workspace {
-  padding: 3px 7px;
-  border-radius: 6px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
-  font-size: 11px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-.manage-header__page-title {
-  min-width: 0;
-  font-size: 12px;
-  line-height: 1.2;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.manage-header__page-sep {
-  margin-right: 6px;
-  color: var(--vtsuru-fg-muted);
-  font-weight: 400;
-}
-
-.manage-header__right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 0 0 auto;
-}
-
-.manage-header__assistant {
-  height: 26px;
-  padding: 0 10px;
-  border-radius: 8px;
-  border: 1px solid var(--vtsuru-brand);
-  background: var(--vtsuru-brand);
-  color: var(--vtsuru-brand-fg);
-  font-size: 12px;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
-  transition:
-    filter 120ms ease,
-    transform 120ms ease;
-}
-
-.manage-header__assistant:hover {
-  filter: brightness(1.08);
-}
-
-.manage-header__assistant:active {
-  transform: translateY(0.5px);
-}
-
-.manage-header__assistant .manage-header__icon {
-  width: 15px;
-  height: 15px;
-}
-
-.manage-header__icon-button {
-  height: 32px;
-  width: 32px;
-  padding: 0;
-  border-radius: 10px;
-  border: 1px solid var(--vtsuru-border);
-  background: transparent;
-  color: var(--vtsuru-fg);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    transform 120ms ease;
-}
-
-.manage-header__sider-toggle {
-  background: rgba(127, 127, 127, 0.06);
-  border-color: rgba(127, 127, 127, 0.18);
-}
-
-.manage-header__icon-button:hover {
-  background: rgba(127, 127, 127, 0.08);
-}
-
-.manage-header__icon-button:active {
-  transform: translateY(0.5px);
-}
-
-.manage-header__icon-button:focus-visible {
-  outline: 2px solid rgba(127, 127, 127, 0.28);
-  outline-offset: 2px;
-}
-
-.manage-header__icon {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.manage-header__button {
-  height: 32px;
-  padding: 0 10px;
-  border-radius: 10px;
-  border: 1px solid var(--vtsuru-border-hover);
-  background: var(--vtsuru-bg-muted);
-  color: var(--vtsuru-fg);
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    transform 120ms ease;
-}
-
-.manage-header__button:hover {
-  background: rgba(127, 127, 127, 0.08);
-}
-
-.manage-header__button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.manage-header__button:active {
-  transform: translateY(0.5px);
-}
-
-/* 移动端: 收紧间距, 隐藏次要文字, 给助手按钮留出空间 */
-@media (max-width: 600px) {
-  .manage-header {
-    padding: 0 8px;
-    gap: 8px;
-  }
-
-  .manage-header__left {
-    gap: 6px;
-  }
-
-  .manage-header__right {
-    gap: 6px;
-  }
-
-  .manage-header__brand {
-    display: none;
-  }
-
-  .manage-header__account {
-    display: none;
-  }
-
-  .manage-header__page-sep {
-    display: none;
-  }
-
-  .manage-header__page-title,
-  .manage-header__assistant,
-  .manage-header__button {
-    display: none;
-  }
-}
-</style>

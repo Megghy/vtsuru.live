@@ -7,18 +7,16 @@ import {
   PeopleCommunity20Regular,
   ThumbLike20Regular,
 } from '@vicons/fluent'
-import { NIcon, NSpin } from 'naive-ui'
 import { nanoid } from 'nanoid'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import type { EventModel } from '@/api/api-models'
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { EventDataTypes } from '@/api/api-models'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
 import type { DanmakuWindowBCData, DanmakuWindowSettings, LiveStatsData } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { getDanmakuWindowFilterType, removeDeletedSuperChats } from '@/shared/utils/danmakuWindowEvents'
-// 添加TransitionGroup导入
 
 type TempDanmakuType = EventModel & {
   randomId: string
@@ -98,7 +96,6 @@ const pendingDanmakuQueue = ref<TempDanmakuType[]>([]) // 新增：待处理弹�
 const isUpdateScheduled = ref(false) // 新增：是否已安排更新
 const maxItems = computed(() => setting.value?.maxDanmakuCount || 50)
 const hasItems = computed(() => danmakuList.value.length > 0)
-const isInBatchUpdate = ref(false) // 添加批量更新状态标志
 
 // 实时统计状态
 const liveStats = ref<LiveStatsData>({
@@ -132,10 +129,7 @@ const hasVisibleStats = computed(() => {
   if (!setting.value) return false
   const s = setting.value
   return (
-    s.showWatchedCount !== false ||
-    s.showLikeCount !== false ||
-    s.showIncome !== false ||
-    s.showOnlineCount !== false
+    s.showWatchedCount !== false || s.showLikeCount !== false || s.showIncome !== false || s.showOnlineCount !== false
   )
 })
 
@@ -176,11 +170,10 @@ function updateCssVariables() {
   root.style.setProperty('--dw-animation-duration', `${setting.value.animationDuration || 300}ms`)
   root.style.setProperty('--dw-shadow', setting.value.enableShadow ? `0 0 10px ${setting.value.shadowColor}` : 'none')
 
-  // 根据 enableAnimation 设置 data-animation-disabled 属性
-  if (setting.value.enableAnimation) {
-    root.removeAttribute('data-animation-disabled')
-  } else {
+  if (setting.value.enableAnimation === false) {
     root.setAttribute('data-animation-disabled', 'true')
+  } else {
+    root.removeAttribute('data-animation-disabled')
   }
 }
 
@@ -191,27 +184,13 @@ function processBatchUpdate() {
     return
   }
 
-  isInBatchUpdate.value = true // 开始批量更新
-
-  try {
-    const itemsToAdd = pendingDanmakuQueue.value.slice() // 复制队列
-    pendingDanmakuQueue.value = [] // 清空队列
-
-    // 将新弹幕添加到列表开头
-    danmakuList.value.unshift(...itemsToAdd)
-
-    // 优化超出长度的弹幕处理
-    if (danmakuList.value.length > maxItems.value) {
-      danmakuList.value.splice(maxItems.value, danmakuList.value.length - maxItems.value)
-    }
-  } finally {
-    isUpdateScheduled.value = false
-
-    // 在下一帧 DOM 更新后结束批量更新状态
-    nextTick(() => {
-      isInBatchUpdate.value = false
-    })
+  const itemsToAdd = pendingDanmakuQueue.value.slice()
+  pendingDanmakuQueue.value = []
+  danmakuList.value.unshift(...itemsToAdd)
+  if (danmakuList.value.length > maxItems.value) {
+    danmakuList.value.splice(maxItems.value)
   }
+  isUpdateScheduled.value = false
 }
 
 // 新增：安排批量更新
@@ -255,8 +234,6 @@ function addDanmaku(data: EventModel) {
   // 将弹幕添加到待处理队列，并安排批量更新
   pendingDanmakuQueue.value.push(dataWithId)
   scheduleBatchUpdate()
-
-  // console.log('[DanmakuWindow] 添加弹幕到队列:', dataWithId);
 }
 
 // 检查和移除过期弹幕 - 优化为 filter
@@ -269,14 +246,6 @@ function checkAndRemoveExpiredDanmaku() {
     // 如果没有 disappearAt 或 disappearAt 在未来，则保留
     return !item.disappearAt || item.disappearAt > now
   })
-
-  // 如果有弹幕被移除，可以考虑触发一次批量状态（可选，取决于是否需要移除动画也加速）
-  // if (danmakuList.value.length < originalLength) {
-  //   isInBatchUpdate.value = true;
-  //   nextTick(() => {
-  //     isInBatchUpdate.value = false;
-  //   });
-  // }
 }
 
 onMounted(() => {
@@ -289,9 +258,7 @@ onMounted(() => {
     const data = event.data as DanmakuWindowBCData
     switch (data.type) {
       case 'danmaku':
-        addDanmaku(data.data)
-        break
-      case 'test-danmaku': // 处理测试弹幕
+      case 'test-danmaku':
         addDanmaku(data.data)
         break
       case 'update-setting':
@@ -338,10 +305,12 @@ watch(
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="!setting"
-    show
-  />
+    class="flex items-center justify-center w-full h-full"
+  >
+    <div class="size-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+  </div>
 
   <div
     v-else
@@ -349,7 +318,6 @@ watch(
     :class="{
       'has-items': hasItems,
       'has-status-bar': setting.showStatusBar !== false && hasVisibleStats,
-      'batch-update': isInBatchUpdate,
     }"
   >
     <div class="danmaku-window-bg" />
@@ -366,10 +334,7 @@ watch(
           class="status-pill"
           title="累计观看人次"
         >
-          <NIcon
-            :component="Eye20Regular"
-            class="status-icon"
-          />
+          <Eye20Regular class="status-icon size-4" />
           <span class="status-value">{{ liveStats.watchedText || formatStatCount(liveStats.watchedCount) }}</span>
         </div>
 
@@ -379,10 +344,7 @@ watch(
           class="status-pill"
           title="本场累计点赞数"
         >
-          <NIcon
-            :component="ThumbLike20Regular"
-            class="status-icon"
-          />
+          <ThumbLike20Regular class="status-icon size-4" />
           <span class="status-value">{{ formatStatCount(liveStats.likeCount) }}</span>
         </div>
 
@@ -390,13 +352,14 @@ watch(
         <div
           v-if="setting.showIncome !== false"
           class="status-pill"
-          :title="setting.hideIncomeAmount ? '本场收益（已脱敏隐藏）' : `本场收益：¥${liveStats.totalIncome.toFixed(1)}`"
+          :title="
+            setting.hideIncomeAmount ? '本场收益（已脱敏隐藏）' : `本场收益：¥${liveStats.totalIncome.toFixed(1)}`
+          "
         >
-          <NIcon
-            :component="Payment20Regular"
-            class="status-icon"
-          />
-          <span class="status-value">¥ {{ setting.hideIncomeAmount ? '***' : formatIncomeDisplay(liveStats.totalIncome) }}</span>
+          <Payment20Regular class="status-icon size-4" />
+          <span class="status-value"
+            >¥ {{ setting.hideIncomeAmount ? '***' : formatIncomeDisplay(liveStats.totalIncome) }}</span
+          >
         </div>
 
         <!-- 在线人数 -->
@@ -405,10 +368,7 @@ watch(
           class="status-pill"
           title="在线观众人数"
         >
-          <NIcon
-            :component="PeopleCommunity20Regular"
-            class="status-icon"
-          />
+          <PeopleCommunity20Regular class="status-icon size-4" />
           <span class="status-value">{{ formatStatCount(liveStats.onlineCount) }} 在线</span>
         </div>
       </div>
@@ -421,29 +381,35 @@ watch(
         :title="setting.interactive ? '鼠标穿透：已开启（点击关闭穿透）' : '鼠标穿透：已关闭（点击开启穿透）'"
         @click="toggleInteractive"
       >
-        <NIcon
-          :component="setting.interactive ? LockClosed20Regular : LockOpen20Regular"
-          class="mini-btn-icon"
+        <LockClosed20Regular
+          v-if="setting.interactive"
+          class="mini-btn-icon size-3.5"
+        />
+        <LockOpen20Regular
+          v-else
+          class="mini-btn-icon size-3.5"
         />
       </button>
     </div>
 
     <div class="danmaku-list">
-      <!-- 使用TransitionGroup替代普通div -->
       <TransitionGroup
         name="danmaku-list"
+        appear
         tag="div"
         class="danmaku-list-container"
       >
-        <ClientDanmakuItem
+        <div
           v-for="item in danmakuList"
           :key="item.randomId"
-          :item="item"
-          :setting="setting"
-          :data-type="item.type"
           class="danmaku-item"
-          :class="[{ 'batch-item': isInBatchUpdate }]"
-        />
+          :data-type="item.type"
+        >
+          <ClientDanmakuItem
+            :item="item"
+            :setting="setting"
+          />
+        </div>
       </TransitionGroup>
     </div>
   </div>
@@ -452,12 +418,8 @@ watch(
 <style>
 html,
 body {
-  background: transparent;
+  height: 100%;
   overflow: hidden;
-}
-
-.n-layout {
-  background: transparent;
 }
 
 :root {
@@ -482,6 +444,8 @@ body {
 
 .danmaku-window {
   position: relative;
+  display: flex;
+  flex-direction: column;
   -webkit-app-region: drag;
   overflow: hidden;
   width: 100%;
@@ -490,8 +454,6 @@ body {
   color: var(--dw-text-color);
   font-size: var(--dw-font-size);
   box-shadow: var(--dw-shadow);
-  overflow-x: hidden;
-  transition: opacity 0.3s ease;
 }
 
 .danmaku-window-bg {
@@ -592,7 +554,8 @@ body {
 
 .danmaku-list {
   padding: 8px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: var(--dw-direction);
@@ -625,17 +588,6 @@ body {
   border-radius: 4px;
 }
 
-/* 批量更新模式下的优化 */
-.batch-update .danmaku-list-move {
-  transition-duration: 160ms !important;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-.batch-item {
-  transition-duration: 160ms !important;
-}
-
-/* 动画相关样式 - 根据 enableAnimation 设置应用 */
 .danmaku-list-move {
   transition: transform var(--dw-animation-duration) cubic-bezier(0.2, 0, 0, 1);
 }
@@ -695,7 +647,8 @@ body {
 }
 
 .danmaku-item {
-  /* 添加 will-change 提示浏览器进行优化 */
+  width: 100%;
+  flex-shrink: 0;
   will-change: transform, opacity;
 }
 

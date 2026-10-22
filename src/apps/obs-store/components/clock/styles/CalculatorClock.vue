@@ -75,7 +75,8 @@ onMounted(() => {
           <span
             v-if="props.state.title"
             class="calc-title-tag"
-          >{{ props.state.title }}</span>
+            >{{ props.state.title }}</span
+          >
         </div>
 
         <!-- LCD 数值显示区 (带 88:88:88 暗底) -->
@@ -84,9 +85,7 @@ onMounted(() => {
             <template v-if="props.state.mode === 'clock'">
               88:88<span v-if="props.state.showSeconds">:88</span>
             </template>
-            <template v-else>
-              88:88
-            </template>
+            <template v-else> 88:88 </template>
           </div>
 
           <div class="calc-real-layer">
@@ -134,15 +133,18 @@ onMounted(() => {
           <span
             v-if="props.state.showDate"
             class="calc-meta"
-          >{{ props.clockData.dateStr }}</span>
+            >{{ props.clockData.dateStr }}</span
+          >
           <span
             v-if="props.state.showDayOfWeek"
             class="calc-meta"
-          >{{ props.clockData.dayOfWeekEn }}</span>
+            >{{ props.clockData.dayOfWeekEn }}</span
+          >
           <span
             v-if="!props.state.is24Hour && props.clockData.ampm"
             class="calc-meta ampm"
-          >{{ props.clockData.ampm }}</span>
+            >{{ props.clockData.ampm }}</span
+          >
         </div>
       </div>
     </div>

@@ -141,7 +141,7 @@ const AsyncBlockLoading = () =>
     'div',
     {
       class: 'block-load-state',
-      style: 'min-height:48px;display:grid;place-items:center;color:var(--vtsuru-fg-muted)',
+      style: 'min-height:48px;display:grid;place-items:center;color:var(--muted-foreground)',
     },
     '正在加载区块',
   )

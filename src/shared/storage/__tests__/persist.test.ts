@@ -9,5 +9,6 @@ describe('canonicalizePersistKey', () => {
 
   it('仍将现有调用定位到已迁移的数据 key', () => {
     expect(canonicalizePersistKey('Settings.Theme')).toBe('vtsuru:settings:theme')
+    expect(canonicalizePersistKey('Setting.DanmakuWindow')).toBe('vtsuru:setting:danmaku-window')
   })
 })

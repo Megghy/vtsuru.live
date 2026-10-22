@@ -31,18 +31,6 @@
   margin: 0;
 }
 
-/* shadcn-like card rhythm */
-.open-live-page-inner .n-card {
-  border-radius: var(--vtsuru-radius);
-}
-
-.open-live-page-inner .n-card .n-card-header {
-  padding: 12px 14px;
-}
-
-.open-live-page-inner .n-card .n-card__content {
-  padding: 14px;
-}
 
 .open-live-action-btn {
   max-width: 220px;

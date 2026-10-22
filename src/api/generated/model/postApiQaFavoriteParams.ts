@@ -7,6 +7,6 @@
  */
 
 export type PostApiQaFavoriteParams = {
-id?: number;
-favorite?: boolean;
-};
+  id?: number
+  favorite?: boolean
+}

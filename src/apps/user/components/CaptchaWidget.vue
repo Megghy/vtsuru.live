@@ -269,7 +269,7 @@ defineExpose({
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
   font-weight: 500;
   line-height: 1.2;
@@ -280,7 +280,7 @@ defineExpose({
 }
 
 .captcha-status--verifying {
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
 }
 
 .captcha-status--passed {

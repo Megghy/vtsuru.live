@@ -1,41 +1,31 @@
 <script setup lang="ts">
 import { ArrowCircleLeft12Regular, Comment24Regular, Eye24Regular } from '@vicons/fluent'
 import { Heart, HeartOutline } from '@vicons/ionicons5'
-import {
-  NAvatar,
-  NAvatarGroup,
-  NBackTop,
-  NButton,
-  NCard,
-  NDivider,
-  NEllipsis,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NList,
-  NListItem,
-  NModal,
-  NPagination,
-  NTag,
-  NText,
-  NTime,
-  NTooltip,
-  useMessage,
-  useThemeVars,
-} from 'naive-ui'
+import { format, formatDistanceToNow } from 'date-fns'
+import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import type { PaginationResponse, UserInfo } from '@/api/api-models'
+import type { PaginationResponseOfListOfResponseForumCommentBaseModel } from '@/api/generated/model'
 import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
 import { ForumCommentSortTypes } from '@/api/models/forum'
 import router from '@/app/router'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { refreshCaptcha } from '@/shared/captcha'
-import { getUserAvatarUrl } from '@/shared/utils'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Pagination } from '@/shared/ui/pagination'
+import { Separator } from '@/shared/ui/separator'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { getUserAvatarUrl, toast } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
 import ForumActionBar from './ForumActionBar.vue'
@@ -59,11 +49,7 @@ const { userInfo } = defineProps<{
 }>()
 
 const route = useRoute()
-const message = useMessage()
 const accountInfo = useAccount()
-const themeVars = useThemeVars()
-
-const accentColor = computed(() => themeVars.value.errorColor)
 
 const topicId = ref(-1)
 const useForum = useForumStore()
@@ -76,73 +62,74 @@ const editorRef = ref()
 
 const showCommentModal = ref(false)
 const currentCommentContent = ref<PostCommentModel>({} as PostCommentModel)
-
 const currentReplyContent = ref<PostReplyModel>({} as PostReplyModel)
 
-const topic = ref<ForumTopicModel>({ id: -1 } as ForumTopicModel)
-const comments = ref<PaginationResponse<ForumCommentModel[]>>()
-const ps = ref(20)
+const comments = ref<PaginationResponseOfListOfResponseForumCommentBaseModel>()
+const topic = ref<ForumTopicModel>({} as ForumTopicModel)
+
+const sort = ref<ForumCommentSortTypes>(ForumCommentSortTypes.Time)
+const isAsc = ref(false)
 const pn = ref(1)
-const sort = ref(ForumCommentSortTypes.Time)
-const commentTotal = computed(() => comments.value?.total ?? 0)
+const ps = ref(10)
+
+const commentTotal = computed(() => {
+  return comments.value?.total ?? 0
+})
 
 const canOprate = computed(() => {
   return !topic.value.isLocked && accountInfo.value.id > 0
 })
 
-async function postComment() {
-  if (!topic.value.id) return
-  if (!currentCommentContent.value.content) {
-    message.error('评论内容不能为空')
-    return
-  }
-  currentCommentContent.value.topic = topic.value.id
-  useForum
-    .PostComment(currentCommentContent.value, commentToken.value, () => refreshCaptcha(commentCaptcha.value))
-    .then(async (comment) => {
-      if (comment) {
-        setTimeout(async () => {
-          refreshComments()
-        }, 1000)
-        currentCommentContent.value = {} as PostCommentModel
-        showCommentModal.value = false
-      }
-    })
-    .finally(() => {
-      commentToken.value = ''
-      commentCaptcha.value?.reset()
-    })
-}
-async function postReply() {
-  if (!topic.value.id) return
-  if (!currentReplyContent.value.content) {
-    message.error('回复内容不能为空')
-    return
-  }
-  currentReplyContent.value.comment = useForum.replyingComment?.id ?? -1
-  currentReplyContent.value.replyTo = useForum.replyingReply?.id
-  useForum
-    .PostReply(currentReplyContent.value, replyToken.value, () => refreshCaptcha(replyCaptcha.value))
-    .then(async (comment) => {
-      if (comment) {
-        refreshComments()
-        currentReplyContent.value = {} as PostReplyModel
-        useForum.SetReplyingComment()
-      }
-    })
-    .finally(() => {
-      replyToken.value = ''
-      replyCaptcha.value?.reset()
-    })
-}
 async function refreshComments() {
-  comments.value = await useForum.GetComments(topic.value.id, pn.value, ps.value, sort.value)
+  if (topicId.value === -1) return
+  comments.value = await useForum.GetComments(topicId.value, pn.value, ps.value, sort.value)
 }
+
+async function postComment() {
+  if (!commentToken.value) {
+    toast.error('请先完成人机验证')
+    return
+  }
+
+  currentCommentContent.value.topic = topicId.value
+  useForum.PostComment(currentCommentContent.value, commentToken.value).then((success) => {
+    if (success) {
+      showCommentModal.value = false
+      currentCommentContent.value = {} as PostCommentModel
+      commentToken.value = ''
+      refreshComments()
+    } else {
+      refreshCaptcha(commentCaptcha.value)
+    }
+  })
+}
+
+async function postReply() {
+  if (!replyToken.value) {
+    toast.error('请先完成人机验证')
+    return
+  }
+
+  currentReplyContent.value.comment = useForum.replyingComment!.id
+  currentReplyContent.value.replyTo = useForum.replyingReply?.id
+  useForum.PostReply(currentReplyContent.value, replyToken.value).then((success) => {
+    if (success) {
+      useForum.showReplyModal = false
+      currentReplyContent.value = {} as PostReplyModel
+      replyToken.value = ''
+      refreshComments()
+    } else {
+      refreshCaptcha(replyCaptcha.value)
+    }
+  })
+}
+
 function onDeleteComment(id: number) {
-  if (comments.value) {
+  if (comments.value?.data) {
     comments.value.data = comments.value.data.filter((c) => c.id !== id)
   }
 }
+
 async function delTopic(id: number) {
   useForum.DelTopic(id).then((success) => {
     if (success) {
@@ -152,6 +139,7 @@ async function delTopic(id: number) {
     }
   })
 }
+
 async function restoreTopic(id: number) {
   useForum.RestoreTopic(id).then((success) => {
     if (success) {
@@ -160,6 +148,22 @@ async function restoreTopic(id: number) {
       })
     }
   })
+}
+
+function formatRelativeTime(time: number) {
+  try {
+    return formatDistanceToNow(new Date(time), { addSuffix: true, locale: zhCN })
+  } catch {
+    return String(time)
+  }
+}
+
+function formatFullTime(time: number) {
+  try {
+    return format(new Date(time), 'yyyy-MM-dd HH:mm:ss')
+  } catch {
+    return String(time)
+  }
 }
 
 onMounted(async () => {
@@ -172,108 +176,113 @@ onMounted(async () => {
 </script>
 
 <template>
-  <template v-if="!topic.id" />
-  <template v-else>
-    <div class="forum-topic-detail">
-      <NBackTop />
-      <NCard
-        size="small"
-        bordered
-      >
-        <template #header>
-          <NFlex
-            align="center"
-            :wrap="false"
-            :size="8"
-          >
-            <NButton
-              text
-              size="small"
-              @click="() => $router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
+  <TooltipProvider>
+    <div
+      v-if="topic.id"
+      class="forum-topic-detail max-w-4xl mx-auto space-y-4 py-4 px-2"
+    >
+      <Card class="shadow-xs">
+        <CardHeader class="p-3">
+          <div class="flex items-center gap-2 text-xs flex-wrap">
+            <Button
+              variant="ghost"
+              class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              @click="$router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
             >
-              <template #icon>
-                <NIcon :component="ArrowCircleLeft12Regular" />
-              </template>
+              <component
+                :is="ArrowCircleLeft12Regular"
+                class="size-4"
+              />
               返回讨论区
-            </NButton>
-            <NDivider vertical />
-            <NTag
+            </Button>
+            <Separator
+              orientation="vertical"
+              class="h-4"
+            />
+            <Badge
               v-if="topic.isDeleted"
-              type="warning"
-              :bordered="false"
+              variant="destructive"
+              class="text-[10px] h-4.5 px-1.5 font-normal"
             >
               已删除
-            </NTag>
-            <NText class="topic-title">
-              <NEllipsis style="max-width: 100%">
-                {{ topic.title }}
-              </NEllipsis>
-            </NText>
-          </NFlex>
-        </template>
-      </NCard>
-      <NCard
-        size="small"
-        bordered
-      >
-        <template #header>
-          <NFlex
-            align="center"
-            :size="5"
-          >
-            <NAvatar
-              :src="getUserAvatarUrl(topic?.user?.id)"
-              :img-props="{ referrerpolicy: 'no-referrer' }"
-            />
-            <NDivider vertical />
-            {{ topic.user?.name }}
-          </NFlex>
-        </template>
-        <template #header-extra>
-          <NTooltip>
-            <template #trigger>
-              <NText depth="3">
-                <NTime
-                  :time="topic.createAt"
-                  type="relative"
-                />
-              </NText>
-            </template>
-            <NTime :time="topic.createAt" />
-          </NTooltip>
-        </template>
-        <template #footer>
-          <NAvatarGroup
-            :size="30"
-            :options="topic.sampleLikedBy?.map((u) => ({ src: getUserAvatarUrl(u) })) ?? []"
-            :img-props="{ referrerpolicy: 'no-referrer' }"
+            </Badge>
+            <h1 class="text-sm font-semibold text-foreground truncate max-w-xl">
+              {{ topic.title }}
+            </h1>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Card class="shadow-xs">
+        <CardHeader class="p-4 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
+          <div class="flex items-center gap-2.5">
+            <Avatar class="size-8 rounded-full">
+              <AvatarImage
+                :src="getUserAvatarUrl(topic?.user?.id)"
+                referrerpolicy="no-referrer"
+              />
+              <AvatarFallback>{{ topic.user?.name?.charAt(0) }}</AvatarFallback>
+            </Avatar>
+            <strong class="text-xs font-medium text-foreground">{{ topic.user?.name }}</strong>
+          </div>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="text-[11px] text-muted-foreground cursor-help">
+                {{ formatRelativeTime(topic.createAt) }}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent class="text-xs">
+              {{ formatFullTime(topic.createAt) }}
+            </TooltipContent>
+          </Tooltip>
+        </CardHeader>
+
+        <CardContent class="p-4 pt-3 space-y-4 text-xs">
+          <div
+            class="editor-content-view leading-relaxed text-foreground break-words min-h-24"
+            v-html="topic.content"
           />
-          <NDivider style="margin: 5px 0 10px 0" />
-          <NFlex>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="small"
-                  :bordered="topic.isLiked"
-                  text
-                >
-                  <template #icon>
-                    <NIcon :component="Eye24Regular" />
-                  </template>
-                  {{ topic.viewCount }}
-                </NButton>
-              </template>
-              浏览
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="small"
-                  :bordered="topic.isLiked"
-                  secondary
-                  :type="topic.isLiked ? 'primary' : 'default'"
-                  :loading="useForum.isLikeLoading"
-                  :disabled="!canOprate"
+
+          <div
+            v-if="topic.sampleLikedBy?.length"
+            class="flex items-center -space-x-1.5 pt-2"
+          >
+            <Avatar
+              v-for="uid in topic.sampleLikedBy.slice(0, 8)"
+              :key="uid"
+              class="size-6 rounded-full border border-background ring-1 ring-border"
+            >
+              <AvatarImage
+                :src="getUserAvatarUrl(uid)"
+                referrerpolicy="no-referrer"
+              />
+              <AvatarFallback class="text-[9px]">U</AvatarFallback>
+            </Avatar>
+          </div>
+        </CardContent>
+
+        <CardFooter class="p-3 pt-2 border-t border-border/50 flex items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <div class="inline-flex items-center gap-1 text-muted-foreground px-2 py-1 text-xs">
+                  <component
+                    :is="Eye24Regular"
+                    class="size-3.5"
+                  />
+                  <span>{{ topic.viewCount }}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">浏览量</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  class="flex items-center gap-1"
+                  :class="{ 'text-destructive border-destructive/30': topic.isLiked }"
+                  :disabled="!canOprate || useForum.isLikeLoading"
                   @click="
                     useForum.LikeTopic(topic.id, !topic.isLiked).then((success) => {
                       if (success) {
@@ -283,233 +292,189 @@ onMounted(async () => {
                     })
                   "
                 >
-                  <template #icon>
-                    <NIcon
-                      :component="topic.isLiked ? Heart : HeartOutline"
-                      :color="topic.isLiked ? accentColor : undefined"
-                    />
-                  </template>
-                  {{ topic.likeCount }}
-                </NButton>
-              </template>
-              点赞
-            </NTooltip>
-            <NTooltip>
-              <template #trigger>
-                <NButton
-                  size="small"
-                  secondary
+                  <component
+                    :is="topic.isLiked ? Heart : HeartOutline"
+                    class="size-3.5"
+                  />
+                  <span>{{ topic.likeCount }}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">点赞</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  class="flex items-center gap-1"
                   :disabled="!canOprate"
                   @click="showCommentModal = true"
                 >
-                  <template #icon>
-                    <NIcon :component="Comment24Regular" />
-                  </template>
-                  {{ topic.commentCount }}
-                </NButton>
-              </template>
-              评论
-            </NTooltip>
-            <NFlex
-              style="flex: 1"
-              justify="end"
-            >
-              <ForumActionBar
-                :can-operate="canOprate"
-                :can-manage="topic?.user?.id === accountInfo.id || topic.isAdmin"
-                :is-deleted="topic.isDeleted"
-                :is-admin="topic.isAdmin"
-                delete-confirm="确定删除这个话题吗"
-                hard-delete-confirm="确定完全删除这个话题吗? 这将无法恢复"
-                restore-confirm="要恢复这个话题吗?"
-                @delete="delTopic(topic.id)"
-                @restore="restoreTopic(topic.id)"
-              />
-            </NFlex>
-          </NFlex>
-        </template>
-        <div
-          class="editor-content-view"
-          v-html="topic.content"
-        />
-      </NCard>
-      <NCard
-        size="small"
-        bordered
-      >
-        <template #header> 评论 </template>
-        <template #header-extra>
-          <NButton
-            type="primary"
-            size="small"
+                  <component
+                    :is="Comment24Regular"
+                    class="size-3.5"
+                  />
+                  <span>{{ topic.commentCount }}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent class="text-xs">评论</TooltipContent>
+            </Tooltip>
+          </div>
+
+          <ForumActionBar
+            :can-operate="canOprate"
+            :can-manage="topic?.user?.id === accountInfo.id || topic.isAdmin"
+            :is-deleted="topic.isDeleted"
+            :is-admin="topic.isAdmin"
+            delete-confirm="确定删除这个话题吗"
+            hard-delete-confirm="确定完全删除这个话题吗? 这将无法恢复"
+            restore-confirm="要恢复这个话题吗?"
+            @delete="delTopic(topic.id)"
+            @restore="restoreTopic(topic.id)"
+          />
+        </CardFooter>
+      </Card>
+
+      <Card class="shadow-xs">
+        <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
+          <strong class="text-xs font-semibold">评论</strong>
+          <Button
             :disabled="!canOprate"
             @click="showCommentModal = true"
           >
             发送评论
-          </NButton>
-        </template>
-        <NFlex
-          align="center"
-          justify="center"
-          style="padding-top: 6px"
-        >
-          <NPagination
+          </Button>
+        </CardHeader>
+
+        <CardContent class="p-4 space-y-3 text-xs">
+          <div
             v-if="commentTotal > ps"
-            v-model:page="pn"
-            :item-count="commentTotal"
-            :page-size="ps"
-            show-quick-jumper
-            @update:page="refreshComments"
+            class="flex justify-center pb-2"
+          >
+            <Pagination
+              :total="commentTotal"
+              :items-per-page="ps"
+              :page="pn"
+              @update:page="
+                pn = $event;
+                refreshComments()
+              "
+            />
+          </div>
+
+          <Empty
+            v-if="!comments || !comments.data || comments.data.length === 0"
+            description="暂无评论"
+            class="py-10"
           />
-        </NFlex>
-        <div style="height: 12px" />
-        <NEmpty
-          v-if="!comments || !comments.data || comments.data.length === 0"
-          description="暂无评论"
-        />
-        <NList
-          v-else
-          hoverable
-          size="small"
-        >
-          <NListItem
-            v-for="item in comments.data"
-            :key="item.id"
+
+          <div
+            v-else
+            class="space-y-1"
           >
             <ForumCommentItem
-              :item="item"
+              v-for="item in comments.data"
+              :key="item.id"
+              :item="item as any"
               :topic="topic"
               @delete="onDeleteComment"
             />
-          </NListItem>
-        </NList>
-        <div style="height: 12px" />
-        <NFlex
-          v-if="commentTotal > ps"
-          align="center"
-          justify="center"
-        >
-          <NPagination
-            v-model:page="pn"
-            :item-count="commentTotal"
-            :page-size="ps"
-            show-quick-jumper
-            @update:page="refreshComments"
-          />
-        </NFlex>
-      </NCard>
+          </div>
+
+          <div
+            v-if="commentTotal > ps"
+            class="flex justify-center pt-3"
+          >
+            <Pagination
+              :total="commentTotal"
+              :items-per-page="ps"
+              :page="pn"
+              @update:page="
+                pn = $event;
+                refreshComments()
+              "
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <!-- 评论弹窗 -->
+      <Dialog v-model:open="showCommentModal">
+        <DialogContent class="sm:max-w-3xl max-h-[90vh] flex flex-col p-4 gap-3">
+          <DialogHeader>
+            <DialogTitle class="text-sm font-semibold">发送评论</DialogTitle>
+          </DialogHeader>
+
+          <div class="flex-1 min-h-0 overflow-y-auto space-y-3">
+            <VEditor
+              ref="editorRef"
+              v-model:value="currentCommentContent.content"
+              :max-length="1111"
+            />
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <CaptchaWidget
+                v-if="showCommentModal"
+                ref="commentCaptcha"
+                v-model="commentToken"
+                class="forum-captcha"
+              />
+              <Button
+                :disabled="!commentToken || useForum.isLoading"
+                @click="postComment"
+              >
+                发布
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <!-- 回复弹窗 -->
+      <Dialog v-model:open="useForum.showReplyModal">
+        <DialogContent class="sm:max-w-xl flex flex-col p-4 gap-3">
+          <DialogHeader>
+            <DialogTitle class="text-sm font-semibold">发送回复</DialogTitle>
+          </DialogHeader>
+
+          <div class="space-y-3 text-xs">
+            <div
+              v-if="useForum.replyingReply && useForum.replyingComment"
+              class="p-2.5 rounded-lg border border-border/80 bg-muted/30"
+            >
+              <small class="text-[10px] text-muted-foreground block mb-1">正在回复:</small>
+              <ForumReplyItem
+                :item="useForum.replyingReply"
+                :comment="useForum.replyingComment"
+                :topic="topic"
+                :show-reply-button="false"
+              />
+            </div>
+
+            <Textarea
+              v-model="currentReplyContent.content"
+              placeholder="回复内容..."
+              maxlength="233"
+              rows="3"
+              class="text-xs resize-none"
+            />
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+              <CaptchaWidget
+                v-if="useForum.showReplyModal"
+                ref="replyCaptcha"
+                v-model="replyToken"
+                class="forum-captcha"
+              />
+              <Button
+                :disabled="!replyToken || useForum.isLoading"
+                @click="postReply"
+              >
+                发布
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
-  </template>
-  <NModal
-    v-model:show="showCommentModal"
-    preset="card"
-    style="width: 1000px; max-width: 90vw; height: auto"
-  >
-    <template #header> 发送评论 </template>
-    <VEditor
-      ref="editorRef"
-      v-model:value="currentCommentContent.content"
-      :max-length="1111"
-    />
-    <div class="forum-submit-row">
-      <CaptchaWidget
-        v-if="showCommentModal"
-        ref="commentCaptcha"
-        v-model="commentToken"
-        class="forum-captcha"
-      />
-      <NButton
-        type="primary"
-        :disabled="!commentToken"
-        :loading="useForum.isLoading"
-        @click="postComment"
-      >
-        发布
-      </NButton>
-    </div>
-  </NModal>
-  <NModal
-    v-model:show="useForum.showReplyModal"
-    preset="card"
-    style="width: 1000px; max-width: 90vw; height: auto"
-  >
-    <template #header> 发送回复 </template>
-    <template v-if="useForum.replyingReply">
-      <NCard
-        size="small"
-        title="正在回复"
-        embedded
-      >
-        <ForumReplyItem
-          v-if="useForum.replyingReply && useForum.replyingComment"
-          :item="useForum.replyingReply"
-          :comment="useForum.replyingComment"
-          :topic="topic"
-          :show-reply-button="false"
-        />
-      </NCard>
-      <NDivider />
-    </template>
-    <NInput
-      v-model:value="currentReplyContent.content"
-      type="textarea"
-      placeholder="回复内容"
-      maxlength="233"
-      show-count
-    />
-    <NDivider />
-    <div class="forum-submit-row">
-      <CaptchaWidget
-        v-if="useForum.showReplyModal"
-        ref="replyCaptcha"
-        v-model="replyToken"
-        class="forum-captcha"
-      />
-      <NButton
-        type="primary"
-        :disabled="!replyToken"
-        :loading="useForum.isLoading"
-        @click="postReply"
-      >
-        发布
-      </NButton>
-    </div>
-  </NModal>
+  </TooltipProvider>
 </template>
-
-<style scoped>
-.forum-topic-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.topic-title {
-  width: 100%;
-  font-size: 16px;
-  font-weight: 700;
-}
-
-.forum-submit-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-  width: 100%;
-  margin-top: 16px;
-}
-
-.forum-captcha {
-  min-width: 0;
-}
-
-@media (max-width: 560px) {
-  .forum-submit-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .forum-submit-row :deep(.n-button) {
-    width: 100%;
-  }
-}
-</style>

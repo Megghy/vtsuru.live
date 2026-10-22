@@ -1,14 +1,16 @@
 <script setup lang="ts">
-import { NTabPane, NTabs, NAlert, NCard, NDivider, NText } from 'naive-ui'
 import { defineComponent, h, onMounted, shallowRef } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { ConsumptionTypes } from '@/api/models/consumption'
 import { isDev } from '@/shared/config'
+import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const DanmakuStorageView = defineComponent({
   setup() {
-    return () => h('div', [h(NDivider), h('div', 'WIP...')])
+    return () => h('div', { class: 'pt-3 border-t border-border text-xs text-muted-foreground' }, 'WIP...')
   },
 })
 
@@ -29,35 +31,37 @@ onMounted(() => {
 </script>
 
 <template>
-  <NCard
-    title="增值"
-    size="small"
-    bordered
-    :segmented="{ content: true }"
-  >
-    <NAlert
+  <Card class="p-4 space-y-3">
+    <div class="flex items-center justify-between">
+      <h3 class="text-sm font-semibold text-foreground">增值服务</h3>
+    </div>
+
+    <Alert
       v-if="!isDev"
-      type="info"
-      size="small"
-      :bordered="false"
+      variant="default"
     >
-      增值服务面板正在开发中（WIP）
-    </NAlert>
+      <AlertTitle>开发中</AlertTitle>
+      <AlertDescription class="text-xs"> 增值服务面板正在开发中（WIP） </AlertDescription>
+    </Alert>
 
     <template v-else>
-      <NTabs
-        type="line"
-        animated
-        size="small"
+      <Tabs
+        default-value="overview"
+        class="w-full space-y-3"
       >
-        <NTabPane
-          name="overview"
-          tab="概览"
+        <TabsList>
+          <TabsTrigger value="overview"> 概览 </TabsTrigger>
+        </TabsList>
+        <TabsContent
+          value="overview"
+          class="space-y-3"
         >
-          <NText depth="3"> 当前积分：{{ accountInfo.point }} </NText>
-        </NTabPane>
-      </NTabs>
-      <component :is="tabDisplay(ConsumptionTypes.DanmakuStorage)" />
+          <div class="text-xs text-muted-foreground">
+            当前积分：<strong class="text-foreground font-mono">{{ accountInfo.point }}</strong>
+          </div>
+          <component :is="tabDisplay(ConsumptionTypes.DanmakuStorage)" />
+        </TabsContent>
+      </Tabs>
     </template>
-  </NCard>
+  </Card>
 </template>

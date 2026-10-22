@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import { NDivider, NEmpty, NMessageProvider } from 'naive-ui'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
@@ -9,6 +8,8 @@ import { Vue3Marquee } from 'vue3-marquee'
 import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
 import { QueueSortType, SongRequestFrom } from '@/api/api-models'
 import { getApiLiveRequestGetToday } from '@/api/generated/live-request/live-request'
+import { Empty } from '@/shared/ui/empty'
+import { Separator } from '@/shared/ui/separator'
 
 const props = defineProps<{
   id?: number
@@ -107,7 +108,6 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NMessageProvider :to="cardRef" />
   <div
     ref="cardRef"
     class="live-request-background"
@@ -116,9 +116,11 @@ onUnmounted(() => {
     <p class="live-request-header">
       {{ settings.obsTitleToday ?? '今日已唱' }}
     </p>
-    <NDivider class="live-request-divider">
-      <p class="live-request-header-count">{{ songs.length ?? 0 }} 条</p>
-    </NDivider>
+    <div class="live-request-divider flex items-center justify-center">
+      <div class="flex-1 h-px bg-white/20" />
+      <p class="live-request-header-count px-3">{{ songs.length ?? 0 }} 条</p>
+      <div class="flex-1 h-px bg-white/20" />
+    </div>
     <div
       ref="listContainerRef"
       class="live-request-content"
@@ -163,7 +165,7 @@ onUnmounted(() => {
               {{ `${song.user?.fans_medal_name} ${song.user?.fans_medal_level}` }}
             </div>
           </div>
-          <NDivider
+          <Separator
             v-if="isMoreThanContainer"
             class="live-request-footer-divider"
             style="margin: 10px 0 10px 0"
@@ -174,7 +176,7 @@ onUnmounted(() => {
         v-else
         style="position: relative; top: 20%"
       >
-        <NEmpty
+        <Empty
           class="live-request-empty"
           description="今日暂无"
         />
@@ -198,10 +200,12 @@ onUnmounted(() => {
 
 .live-request-header {
   margin: 0;
+  padding-top: 4px;
   color: #fff;
   text-align: center;
   font-size: 20px;
   font-weight: bold;
+  line-height: 1.2;
   text-shadow:
     0 0 10px #ca7b7b6e,
     0 0 20px #ffffff8e,
@@ -216,9 +220,7 @@ onUnmounted(() => {
 }
 
 .live-request-divider {
-  margin: 0 auto;
-  margin-top: -15px;
-  margin-bottom: -15px;
+  margin: 2px auto 6px;
   width: 90%;
 }
 
@@ -232,9 +234,6 @@ onUnmounted(() => {
   }
 }
 
-.n-divider__line {
-  background-color: #ffffffd5;
-}
 
 .live-request-content {
   background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));

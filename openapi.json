@@ -27725,6 +27725,7 @@
           "allowUnregistedUser",
           "allowAnonymous",
           "saftyLevel",
+          "reviewImages",
           "allowImageUpload",
           "showPublicReplies",
           "publishByDefault"
@@ -27739,6 +27740,16 @@
           },
           "saftyLevel": {
             "$ref": "#/components/schemas/Setting_QuestionBox_SaftyLevels"
+          },
+          "reviewImages": {
+            "type": "boolean"
+          },
+          "blockedTags": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VTsuru_Core_AICenter_AITextReviewResult_ViolationTypes"
+            },
+            "nullable": true
           },
           "allowImageUpload": {
             "type": "boolean"
@@ -29208,7 +29219,10 @@
           3,
           4,
           5,
-          6
+          6,
+          7,
+          8,
+          9
         ],
         "type": "integer",
         "format": "int32"

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { NEmpty, NList, NListItem, NFlex, NTime } from 'naive-ui'
+import { format } from 'date-fns'
+
+import { Empty } from '@/shared/ui/empty'
 
 interface AuditLog {
   id: number
@@ -39,38 +41,39 @@ defineProps<{ logs: AuditLog[] }>()
 </script>
 
 <template>
-  <NEmpty
+  <div
     v-if="logs.length === 0"
-    description="暂无操作记录"
-  />
-  <NList v-else>
-    <NListItem
+    class="py-8"
+  >
+    <Empty description="暂无操作记录" />
+  </div>
+  <div
+    v-else
+    class="divide-y divide-border/60 border border-border/80 rounded-lg bg-card text-xs"
+  >
+    <div
       v-for="log in logs"
       :key="log.id"
+      class="p-3 flex items-start justify-between gap-3 hover:bg-muted/30 transition-colors"
     >
-      <NFlex
-        justify="space-between"
-        :wrap="false"
-        style="gap: 12px"
-      >
-        <div style="min-width: 0">
-          <div style="font-weight: 600">
-            {{ actionLabel(log.action) }}
-          </div>
-          <div style="font-size: 12px; opacity: 0.7; word-break: break-all">
-            {{ log.detail }}
-            <span v-if="log.action !== actionLabel(log.action)" style="opacity: 0.5"> · {{ log.action }}</span>
-          </div>
-        </div>
-        <div style="font-size: 12px; opacity: 0.7; white-space: nowrap">
-          {{ log.userName || `用户${log.userId}` }}
-          ·
-          <NTime
-            :time="log.createdAt"
-            format="yyyy-MM-dd HH:mm"
-          />
-        </div>
-      </NFlex>
-    </NListItem>
-  </NList>
+      <div class="min-w-0 flex-1 space-y-0.5">
+        <strong class="font-medium text-foreground text-xs block">
+          {{ actionLabel(log.action) }}
+        </strong>
+        <p class="text-[11px] text-muted-foreground break-all m-0">
+          {{ log.detail }}
+          <span
+            v-if="log.action !== actionLabel(log.action)"
+            class="opacity-60"
+          >
+            · {{ log.action }}</span
+          >
+        </p>
+      </div>
+
+      <div class="text-[11px] text-muted-foreground whitespace-nowrap shrink-0">
+        {{ log.userName || `用户${log.userId}` }} · {{ format(log.createdAt, 'yyyy-MM-dd HH:mm') }}
+      </div>
+    </div>
+  </div>
 </template>

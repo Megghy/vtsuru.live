@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { NCard, NEllipsis, NImage, NText } from 'naive-ui'
-
 import type { VideoCollectVideo } from '@/api/api-models'
+import { Card, CardContent } from '@/shared/ui/card'
+
 defineProps<{
   video: VideoCollectVideo
   width?: number
@@ -9,39 +9,36 @@ defineProps<{
 </script>
 
 <template>
-  <NCard
-    size="small"
-    hoverable
+  <Card
+    class="overflow-hidden hover:shadow-md transition-shadow group flex flex-col"
     :style="`max-width: ${width ?? 300}px;`"
   >
-    <template #cover>
-      <NImage
+    <div class="aspect-video w-full overflow-hidden bg-muted">
+      <img
         :src="video.cover"
-        :img-props="{ referrerpolicy: 'no-referrer' }"
+        referrerpolicy="no-referrer"
+        class="size-full object-cover group-hover:scale-105 transition-transform duration-200"
+        alt=""
       />
-    </template>
-    <template #header>
+    </div>
+
+    <CardContent class="p-3 space-y-1.5 flex-1 min-w-0">
       <a
         :href="`https://bilibili.com/video/${video.id}`"
         target="_blank"
+        rel="noopener noreferrer"
+        class="font-medium text-xs text-foreground hover:text-primary transition line-clamp-2 block leading-snug"
+        :title="video.title"
       >
-        <NText>
-          <NEllipsis>{{ video.title }}</NEllipsis>
-        </NText>
+        {{ video.title }}
       </a>
-    </template>
-    <NText
-      depth="3"
-      style="white-space: pre-line"
-    >
-      <NEllipsis>
+      <p
+        v-if="video.description"
+        class="text-muted-foreground text-[11px] line-clamp-2 leading-relaxed m-0"
+        :title="video.description"
+      >
         {{ video.description }}
-        <template #tooltip>
-          <div style="white-space: pre-line; max-width: 300px">
-            {{ video.description }}
-          </div>
-        </template>
-      </NEllipsis>
-    </NText>
-  </NCard>
+      </p>
+    </CardContent>
+  </Card>
 </template>

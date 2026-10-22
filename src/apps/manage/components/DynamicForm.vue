@@ -1,34 +1,31 @@
 <script setup lang="ts">
 import { Image24Regular, Info24Filled } from '@vicons/fluent'
-import type { SelectOption, UploadFileInfo } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NColorPicker,
-  NEmpty,
-  NFlex,
-  NForm,
-  NGrid,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NProgress,
-  NScrollbar,
-  NSelect,
-  NSlider,
-  NText,
-  NTooltip,
-  NUpload,
-  useMessage,
-} from 'naive-ui'
+import { X } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { UploadConfig } from '@/api/account'
 import type { UploadFileResponse } from '@/api/api-models'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
-import type { ConfigItemDefinition, DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
+import type { UploadFileInfo } from '@/shared/types/upload'
+import type {
+  ConfigItemDefinition,
+  DecorativeImageProperties,
+  RGBAColor,
+  SelectOption,
+} from '@/shared/types/VTsuruConfigTypes'
 import { rgbaToString } from '@/shared/types/VTsuruConfigTypes'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
+import { Progress } from '@/shared/ui/progress'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useMessage } from '@/shared/utils'
 import { toImageUploadFileList } from '@/shared/utils/uploadFileHelper'
 
 import DecorativeImageEditor from './DecorativeImageEditor.vue'
@@ -38,7 +35,6 @@ const props = defineProps<{
   configData: any
   config: ConfigItemDefinition[] | undefined
   isPublic?: boolean
-  // 撑满父容器高度: 表单区滚动, 提交按钮固定底部 (用于分栏布局)
   fillHeight?: boolean
 }>()
 
@@ -67,30 +63,53 @@ const uploadedFilesCount = ref(0)
 const isUploading = ref(false)
 let isActive = true
 
-// 检查配置项是否应该显示
 function isItemVisible(item: ConfigItemDefinition): boolean {
   if (!item.visibleWhen) return true
   try {
     return item.visibleWhen(props.configData)
   } catch (err) {
     console.error(`执行条件显示判断出错: ${err}`)
-    return true // 错误时默认显示
+    return true
   }
 }
 
-// 计算属性：过滤出应该显示的配置项
 const visibleItems = computed(() => {
   if (!props.config) return []
   return props.config.filter((item) => isItemVisible(item))
 })
 
-// 获取select组件的选项
 function getSelectOptions(item: ConfigItemDefinition): SelectOption[] {
   if (item.type !== 'select') return []
-
   const options = typeof item.options === 'function' ? item.options(props.configData) : item.options
-
   return options || []
+}
+
+const SELECT_CLEAR_VALUE = '__vtsuru_select_clear__'
+
+function getSelectValue(item: ConfigItemDefinition): string {
+  const val = props.configData[item.key]
+  if (val === undefined || val === null || val === '') {
+    return SELECT_CLEAR_VALUE
+  }
+  return String(val)
+}
+
+function setSelectValue(item: ConfigItemDefinition, value: unknown) {
+  const strVal = String(value ?? '')
+  if (strVal === SELECT_CLEAR_VALUE) {
+    props.configData[item.key] = undefined
+    return
+  }
+  const options = getSelectOptions(item)
+  const match = options.find((opt) => String(opt.value) === strVal)
+  props.configData[item.key] = match ? match.value : strVal
+}
+
+function getOptionSafeValue(val: unknown): string {
+  if (val === undefined || val === null || val === '') {
+    return SELECT_CLEAR_VALUE
+  }
+  return String(val)
 }
 
 function getUploadedFiles(key: string): UploadFileResponse[] {
@@ -120,23 +139,16 @@ function releasePreview(preview: UploadFileResponse) {
   URL.revokeObjectURL(preview.path)
 }
 
-function releaseUnusedPreviews<T extends { key: string; data: UploadFileResponse }>(
-  previews: Map<File, T>,
-  key: string,
-  activeFiles: Set<File>,
-) {
-  for (const [file, preview] of previews) {
-    if (preview.key !== key || activeFiles.has(file)) continue
-    releasePreview(preview.data)
-    previews.delete(file)
-  }
-}
-
 function releaseAllPreviews() {
   for (const preview of filePreviews.values()) releasePreview(preview.data)
   for (const preview of decorativePreviews.values()) releasePreview(preview.data)
   filePreviews.clear()
   decorativePreviews.clear()
+}
+
+function getFileAccept(item: ConfigItemDefinition): string {
+  if (item.type !== 'file' || !item.fileType?.length) return IMAGE_ACCEPT
+  return item.fileType.join(',')
 }
 
 function onFileListChange(item: ConfigItemDefinition, files: UploadFileInfo[]) {
@@ -152,78 +164,57 @@ function onFileListChange(item: ConfigItemDefinition, files: UploadFileInfo[]) {
     fingerprints.add(fingerprint)
     return file.file.size <= MAX_FILE_SIZE && !!extension && allowedExtensions.has(extension)
   })
-  if (acceptedFiles.length !== files.length) message.error('仅支持指定格式且不超过 10MB 的文件')
 
-  const uploadedFiles = new Map(
-    getUploadedFiles(item.key)
-      .filter((file) => file.id >= 0)
-      .map((file) => [String(file.id), file]),
-  )
-  const activeLocalFiles = new Set(acceptedFiles.flatMap((file) => (file.file ? [file.file] : [])))
-  releaseUnusedPreviews(filePreviews, item.key, activeLocalFiles)
-  const previewFiles = acceptedFiles.map((file) => {
-    if (!file.file) return file
-    let preview = filePreviews.get(file.file)
+  if (acceptedFiles.length !== files.length) {
+    message.error(`部分文件不符合限制（仅支持 ${extensions.join(' / ')} 且不超过 10MB）`)
+  }
+
+  const limit = item.type === 'file' ? item.fileLimit : undefined
+  const limitedFiles = limit ? acceptedFiles.slice(0, limit) : acceptedFiles
+  fileList.value[item.key] = limitedFiles
+
+  const existingUploaded = limitedFiles
+    .filter((file) => !file.file)
+    .map((file) => getUploadedFiles(item.key).find((itemFile) => String(itemFile.id) === file.id))
+    .filter((file): file is UploadFileResponse => !!file)
+
+  const pendingFiles = limitedFiles.filter((file): file is UploadFileInfo & { file: File } => !!file.file)
+  const previewItems: UploadFileResponse[] = []
+  for (const fileInfo of pendingFiles) {
+    let preview = filePreviews.get(fileInfo.file)
     if (!preview) {
-      preview = { key: item.key, data: createPreviewFile(file.file) }
-      filePreviews.set(file.file, preview)
+      preview = { key: item.key, data: createPreviewFile(fileInfo.file) }
+      filePreviews.set(fileInfo.file, preview)
     }
-    return { ...file, url: preview.data.path, thumbnailUrl: preview.data.path }
-  })
-  fileList.value[item.key] = previewFiles
-  props.configData[item.key] = previewFiles.flatMap((file) => {
-    if (!file.file) {
-      const uploaded = uploadedFiles.get(String(file.id))
-      return uploaded ? [uploaded] : []
-    }
-    return [filePreviews.get(file.file)!.data]
-  })
+    previewItems.push(preview.data)
+  }
+
+  props.configData[item.key] = [...existingUploaded, ...previewItems]
 }
 
-function updateDecorativeFiles(key: string, files: UploadFileInfo[]) {
-  if (isUploading.value) return
-  const activeLocalFiles = new Set(files.flatMap((file) => (file.file ? [file.file] : [])))
-  releaseUnusedPreviews(decorativePreviews, key, activeLocalFiles)
-  const savedImages = getDecorativeImages(key).filter((image) => image.id >= 0)
-  const localImages = files.flatMap((item, index) => {
-    if (!item.file) return []
-    let preview = decorativePreviews.get(item.file)
-    if (!preview) {
-      preview = {
-        key,
-        data: {
-          ...createPreviewFile(item.file),
-          x: 10 + (savedImages.length + index) * 5,
-          y: 10 + (savedImages.length + index) * 5,
-          width: 20,
-          rotation: 0,
-          opacity: 1,
-          zIndex: savedImages.length + index + 1,
-        },
-      }
-      decorativePreviews.set(item.file, preview)
-    }
-    return [getDecorativeImages(key).find((image) => image.id === preview.data.id) ?? preview.data]
-  })
-  decorativeFileList.value[key] = files.map((item) => {
-    if (!item.file) return item
-    const path = decorativePreviews.get(item.file)!.data.path
-    return { ...item, url: path, thumbnailUrl: path }
-  })
-  props.configData[key] = [...savedImages, ...localImages]
+function onFileInput(item: ConfigItemDefinition, e: Event) {
+  const target = e.target as HTMLInputElement
+  if (!target.files || target.files.length === 0) return
+  const current = fileList.value[item.key] || []
+  const newFiles: UploadFileInfo[] = []
+  for (let i = 0; i < target.files.length; i++) {
+    const f = target.files[i]
+    newFiles.push({
+      id: `${Date.now()}_${i}`,
+      name: f.name,
+      file: f,
+      status: 'finished',
+      url: URL.createObjectURL(f),
+    })
+  }
+  target.value = ''
+  onFileListChange(item, [...current, ...newFiles])
 }
 
-function updateDecorativeImages(key: string, images: DecorativeImageProperties[]) {
-  props.configData[key] = images
-  const retainedIds = new Set(images.map((image) => image.id))
-  decorativeFileList.value[key] = (decorativeFileList.value[key] ?? []).filter((item) => {
-    if (!item.file) return false
-    const preview = decorativePreviews.get(item.file)
-    if (!preview || retainedIds.has(preview.data.id)) return true
-    releasePreview(preview.data)
-    decorativePreviews.delete(item.file)
-    return false
-  })
+function removeUploadedFile(item: ConfigItemDefinition, index: number) {
+  const next = [...(fileList.value[item.key] || [])]
+  next.splice(index, 1)
+  onFileListChange(item, next)
 }
 
 function getDecorativeImages(key: string): DecorativeImageProperties[] {
@@ -231,22 +222,23 @@ function getDecorativeImages(key: string): DecorativeImageProperties[] {
   return Array.isArray(images) ? images : []
 }
 
-function getPendingFiles(files: UploadFileInfo[]) {
-  return files.flatMap((item) => (item.file ? [item.file] : []))
+function updateDecorativeImages(key: string, images: DecorativeImageProperties[]) {
+  props.configData[key] = images
 }
 
-function getFileAccept(item: ConfigItemDefinition) {
-  if (item.type !== 'file' || !item.fileType?.length) return IMAGE_ACCEPT
-  return item.fileType.map((extension) => (extension.startsWith('.') ? extension : `.${extension}`)).join(',')
+function updateDecorativeFiles(key: string, files: UploadFileInfo[]) {
+  decorativeFileList.value[key] = files
 }
 
-// 更新上传进度
+function getPendingFiles(files: UploadFileInfo[]): File[] {
+  return files.map((item) => item.file).filter((file): file is File => file instanceof File)
+}
+
 function updateUploadProgress(stage: string, done?: number, total?: number) {
   uploadStage.value = stage
-  if (total !== undefined) totalFilesToUpload.value = total
-  if (done !== undefined) {
+  if (done !== undefined && total !== undefined && total > 0) {
     uploadedFilesCount.value = done
-    uploadProgress.value = totalFilesToUpload.value ? Math.floor((done / totalFilesToUpload.value) * 100) : 0
+    uploadProgress.value = Math.round((done / total) * 100)
   }
 }
 
@@ -365,8 +357,6 @@ async function onSubmit() {
   }
 }
 
-// --- 颜色转换 ---
-// NColorPicker 统一输出 rgba()/hex 字符串, 这里解析回 RGBAColor 对象存储
 function stringToRgba(colorString: string | null | undefined): RGBAColor {
   const fallback: RGBAColor = { r: 0, g: 0, b: 0, a: 1 }
   if (!colorString) return fallback
@@ -376,7 +366,6 @@ function stringToRgba(colorString: string | null | undefined): RGBAColor {
     return { r: +rgba[1], g: +rgba[2], b: +rgba[3], a: rgba[4] !== undefined ? +rgba[4] : 1 }
   }
 
-  // #RGB / #RGBA / #RRGGBB / #RRGGBBAA
   const hex = colorString.replace('#', '')
   const expand = (s: string) => (s.length <= 4 ? [...s].map((c) => c + c).join('') : s)
   const full = expand(hex)
@@ -422,44 +411,55 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <NEmpty
+  <Empty
     v-if="!config || config.length === 0"
     description="此模板不支持配置"
   />
-  <NForm
+  <form
     v-else
-    :disabled="isUploading"
-    :class="{ 'dynamic-form--fill': fillHeight }"
+    class="flex flex-col w-full min-w-0"
+    :class="{ 'h-full min-h-0': fillHeight }"
+    @submit.prevent="onSubmit"
   >
-    <div class="dynamic-form__footer">
-      <NButton
-        type="primary"
-        :loading="isUploading"
-        @click="onSubmit"
+    <!-- 分栏模式下置顶操作条 -->
+    <div
+      v-if="fillHeight"
+      class="dynamic-form__header flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0"
+    >
+      <span class="text-xs font-semibold text-foreground">模板配置</span>
+      <Button
+        type="submit"
+        :disabled="isUploading"
+        class="h-7 text-xs px-3"
       >
-        提交
-      </NButton>
+        {{ isUploading ? '保存中...' : '提交' }}
+      </Button>
     </div>
 
-    <NScrollbar
-      class="dynamic-form__scroll"
-      :inert="isUploading"
+    <!-- 表单字段内容区 -->
+    <div
+      class="flex-1 overflow-y-auto overflow-x-hidden min-h-0 scrollbar-thin"
+      :class="fillHeight ? 'p-4' : 'pr-1'"
     >
-      <NGrid
-        x-gap="12"
-        y-gap="16"
-        cols="1 600:2 1200:3 1600:4"
+      <div
+        class="grid gap-4"
+        :class="fillHeight ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'"
       >
-        <NFormItemGi
+        <div
           v-for="item in visibleItems"
           :key="item.name.toString()"
-          :label="item.name.toString()"
-          class="dynamic-form__item"
+          class="space-y-1.5 min-w-0"
+          :class="item.type === 'decorativeImages' || item.type === 'file' || fillHeight ? 'col-span-full' : ''"
         >
+          <label class="text-xs font-medium text-foreground block">
+            {{ item.name.toString() }}
+          </label>
+
           <component
             :is="item.render(configData)"
             v-if="item.type === 'render'"
           />
+
           <DecorativeImageEditor
             v-else-if="item.type === 'decorativeImages'"
             :images="getDecorativeImages(item.key)"
@@ -469,179 +469,190 @@ onBeforeUnmount(() => {
             @update:images="updateDecorativeImages(item.key, $event)"
             @update:pending-files="updateDecorativeFiles(item.key, $event)"
           />
-          <NInput
+
+          <Input
             v-else-if="item.type === 'string'"
-            :value="configData[item.key]"
+            v-model="configData[item.key]"
             :placeholder="item.placeholder"
-            :type="item.inputType"
-            @update:value="configData[item.key] = $event"
+            :type="item.inputType || 'text'"
           />
-          <NSelect
+
+          <Select
             v-else-if="item.type === 'select'"
-            :value="configData[item.key]"
-            :options="getSelectOptions(item)"
-            :placeholder="item.placeholder"
-            :clearable="item.clearable"
-            @update:value="configData[item.key] = $event"
-          />
-          <NColorPicker
-            v-else-if="item.type === 'color'"
-            :value="safeRgbaToString(configData[item.key])"
-            :show-alpha="item.showAlpha ?? false"
-            @update:value="configData[item.key] = stringToRgba($event)"
-          />
-          <NInputNumber
-            v-else-if="item.type === 'number'"
-            :value="configData[item.key]"
-            :min="item.min"
-            style="width: 100%"
-            @update:value="configData[item.key] = $event"
-          />
-          <NSlider
-            v-else-if="item.type === 'sliderNumber'"
-            :value="configData[item.key]"
-            :min="item.min"
-            :max="item.max"
-            :step="item.step"
-            @update:value="configData[item.key] = $event"
-          />
-          <NFlex
-            v-else-if="item.type === 'boolean'"
-            align="center"
-            :size="6"
+            :model-value="getSelectValue(item)"
+            @update:model-value="setSelectValue(item, $event)"
           >
-            <NCheckbox
+            <SelectTrigger>
+              <SelectValue :placeholder="item.placeholder || '请选择'" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-if="item.clearable"
+                :value="SELECT_CLEAR_VALUE"
+              >
+                请选择
+              </SelectItem>
+              <SelectItem
+                v-for="opt in getSelectOptions(item)"
+                :key="String(opt.value)"
+                :value="getOptionSafeValue(opt.value)"
+                :disabled="opt.disabled"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <ColorPicker
+            v-else-if="item.type === 'color'"
+            :model-value="safeRgbaToString(configData[item.key])"
+            :show-alpha="item.showAlpha ?? false"
+            @update:model-value="configData[item.key] = stringToRgba($event)"
+          />
+
+          <NumberField
+            v-else-if="item.type === 'number'"
+            :model-value="configData[item.key]"
+            :min="item.min"
+            class="w-full"
+            @update:model-value="configData[item.key] = $event"
+          />
+
+          <div
+            v-else-if="item.type === 'sliderNumber'"
+            class="space-y-1.5 pt-1"
+          >
+            <div class="flex justify-between text-[11px] text-muted-foreground">
+              <span>数值</span>
+              <span>{{ configData[item.key] ?? 0 }}</span>
+            </div>
+            <Slider
+              :model-value="[configData[item.key] ?? 0]"
+              :min="item.min ?? 0"
+              :max="item.max ?? 100"
+              :step="item.step ?? 1"
+              @update:model-value="configData[item.key] = $event?.[0] ?? 0"
+            />
+          </div>
+
+          <div
+            v-else-if="item.type === 'boolean'"
+            class="flex items-center gap-2 pt-1"
+          >
+            <Checkbox
               :checked="configData[item.key]"
               @update:checked="configData[item.key] = $event"
+            />
+            <span
+              class="text-xs text-foreground cursor-pointer"
+              @click="configData[item.key] = !configData[item.key]"
             >
               启用
-            </NCheckbox>
-            <NTooltip
-              v-if="item.description"
-              placement="top"
-            >
-              <template #trigger>
-                <NIcon
-                  :component="Info24Filled"
-                  :depth="3"
-                />
-              </template>
-              {{ item.description }}
-            </NTooltip>
-          </NFlex>
-          <NUpload
+            </span>
+            <TooltipProvider v-if="item.description">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p class="text-xs">{{ item.description }}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          <!-- 文件上传区 -->
+          <div
             v-else-if="item.type === 'file'"
-            v-model:file-list="fileList[item.key]"
-            :accept="getFileAccept(item)"
-            list-type="image-card"
-            :default-upload="false"
-            :max="item.fileLimit"
-            :should-use-thumbnail-url="() => true"
-            @update:file-list="(files) => onFileListChange(item, files)"
+            class="space-y-2"
           >
-            <NFlex
-              vertical
-              align="center"
-              justify="center"
-              style="width: 100%; height: 100%"
+            <div
+              class="grid gap-2"
+              :class="fillHeight ? 'grid-cols-3' : 'grid-cols-4 sm:grid-cols-6'"
             >
-              <NIcon
-                size="24"
-                :depth="3"
-                :component="Image24Regular"
-              />
-              <span style="font-size: 12px">上传文件</span>
-            </NFlex>
-          </NUpload>
-        </NFormItemGi>
-      </NGrid>
-    </NScrollbar>
+              <div
+                v-for="(f, fIdx) in fileList[item.key] ?? []"
+                :key="f.id"
+                class="relative aspect-square rounded-md border border-border overflow-hidden group bg-muted/20"
+              >
+                <img
+                  :src="f.url"
+                  :alt="f.name"
+                  class="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                  @click.stop="removeUploadedFile(item, fIdx)"
+                >
+                  <X class="size-3" />
+                </button>
+              </div>
+
+              <label
+                v-if="!item.fileLimit || (fileList[item.key]?.length ?? 0) < item.fileLimit"
+                class="aspect-square flex flex-col items-center justify-center rounded-md border border-dashed border-input hover:border-primary bg-background/50 hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-all cursor-pointer p-2"
+              >
+                <Image24Regular class="size-6 mb-1 text-muted-foreground/60" />
+                <span class="text-[11px]">上传文件</span>
+                <input
+                  type="file"
+                  class="hidden"
+                  :accept="getFileAccept(item)"
+                  :multiple="(item.fileLimit ?? 2) > 1"
+                  @change="onFileInput(item, $event)"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 弹窗模式下置底操作条 -->
+    <div
+      v-if="!fillHeight"
+      class="dynamic-form__footer flex justify-end pt-4 border-t border-border mt-4"
+    >
+      <Button
+        type="submit"
+        :disabled="isUploading"
+      >
+        {{ isUploading ? '保存中...' : '提交' }}
+      </Button>
+    </div>
 
     <!-- 上传进度模态框 -->
-    <NModal
-      v-model:show="showUploadModal"
-      preset="card"
-      title="文件上传进度"
-      :mask-closable="false"
-      :closable="false"
-      style="width: 400px"
-    >
-      <NFlex
-        vertical
-        size="large"
-      >
-        <NText>{{ uploadStage }}</NText>
-        <NProgress
-          type="line"
-          :percentage="uploadProgress"
-          indicator-placement="inside"
-          :show-indicator="true"
-          :status="uploadStage === UploadStage.Failed ? 'error' : undefined"
-        />
-        <NText v-if="totalFilesToUpload > 0"> {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件 </NText>
-        <NButton
-          v-if="uploadStage === UploadStage.Failed"
-          @click="showUploadModal = false"
-        >
-          关闭
-        </NButton>
-      </NFlex>
-    </NModal>
-  </NForm>
+    <Dialog :open="showUploadModal">
+      <DialogContent class="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle class="text-sm font-semibold">文件上传进度</DialogTitle>
+        </DialogHeader>
+        <div class="space-y-3 py-2">
+          <p class="text-xs text-muted-foreground">{{ uploadStage }}</p>
+          <Progress
+            :model-value="uploadProgress"
+            class="h-2"
+          />
+          <p
+            v-if="totalFilesToUpload > 0"
+            class="text-xs text-muted-foreground"
+          >
+            {{ uploadedFilesCount }} / {{ totalFilesToUpload }} 个文件
+          </p>
+          <div
+            v-if="uploadStage === UploadStage.Failed"
+            class="flex justify-end pt-2"
+          >
+            <Button
+              variant="outline"
+              @click="showUploadModal = false"
+            >
+              关闭
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </form>
 </template>
-
-<style scoped>
-/* 表单整体用 flex column, 便于用 order 控制提交栏位置 */
-.n-form {
-  display: flex;
-  flex-direction: column;
-}
-
-/* 非 fill: 提交栏在底部 */
-.dynamic-form__footer {
-  order: 1;
-  margin-top: 12px;
-}
-
-.dynamic-form__scroll {
-  order: 0;
-}
-
-.dynamic-form__item :deep(.n-form-item-blank) {
-  min-height: unset;
-}
-
-/* fill 模式: 撑满父高, 提交栏置顶, 下方表单滚动 */
-.dynamic-form--fill {
-  height: 100%;
-  min-height: 0;
-}
-
-.dynamic-form--fill .dynamic-form__footer {
-  flex-shrink: 0;
-  order: -1;
-  margin-top: 0;
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--vtsuru-border, rgba(148, 163, 184, 0.22));
-}
-
-.dynamic-form--fill .dynamic-form__footer :deep(.n-button) {
-  width: 100%;
-}
-
-.dynamic-form--fill .dynamic-form__scroll {
-  flex: 1 1 0;
-  min-height: 0;
-}
-
-.dynamic-form--fill .dynamic-form__scroll :deep(.n-scrollbar-content) {
-  padding-right: 8px;
-}
-
-:deep(.n-upload-file.n-upload-file--image-card-type .n-upload-file-info__thumbnail img) {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-</style>

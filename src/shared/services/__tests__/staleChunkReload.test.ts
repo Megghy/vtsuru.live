@@ -12,9 +12,9 @@ describe('staleChunkReload', () => {
   it('识别发版后的旧 chunk 错误', () => {
     expect(isStaleChunkMessage('Failed to fetch dynamically imported module: https://x/bootstrap.js')).toBe(true)
     expect(isStaleChunkMessage('Importing a module script failed.')).toBe(true)
-    expect(isStaleChunkMessage("'text/html' is not a valid JavaScript MIME type for module script 'https://x.js'.")).toBe(
-      true,
-    )
+    expect(
+      isStaleChunkMessage("'text/html' is not a valid JavaScript MIME type for module script 'https://x.js'."),
+    ).toBe(true)
     expect(isStaleChunkMessage('Unable to preload CSS for https://x.css')).toBe(true)
     expect(isStaleChunkMessage('网络请求失败')).toBe(false)
   })

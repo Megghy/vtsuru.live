@@ -1,4 +1,3 @@
-import { useMessage } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import {
@@ -8,12 +7,12 @@ import {
   postApiOrgOrgIdTransferOwner,
 } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
+import { toast } from '@/shared/utils'
 
 import type { OrgMemberItem } from '../types'
 import type { OrgContext } from './useOrgContext'
 
 export function useOrgMembers(ctx: OrgContext) {
-  const message = useMessage()
   const members = ref<OrgMemberItem[]>([])
   const loading = ref(false)
   const search = ref('')
@@ -28,12 +27,9 @@ export function useOrgMembers(ctx: OrgContext) {
     if (!ctx.orgId.value) return
     loading.value = true
     try {
-      members.value = unwrapOk(
-        (await getApiOrgOrgIdMembers(ctx.orgId.value)) as any,
-        '加载成员失败',
-      )
+      members.value = unwrapOk((await getApiOrgOrgIdMembers(ctx.orgId.value)) as any, '加载成员失败')
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载成员失败')
+      toast.error(err instanceof Error ? err.message : '加载成员失败')
     } finally {
       loading.value = false
     }
@@ -42,14 +38,11 @@ export function useOrgMembers(ctx: OrgContext) {
   async function remove(userId: number) {
     if (!ctx.isOrgAdmin.value || userId <= 0) return
     try {
-      unwrapOk(
-        (await postApiOrgOrgIdMemberRemove(ctx.orgId.value, { targetUserId: userId })) as any,
-        '移除失败',
-      )
-      message.success('移除成功')
+      unwrapOk((await postApiOrgOrgIdMemberRemove(ctx.orgId.value, { targetUserId: userId })) as any, '移除失败')
+      toast.success('移除成功')
       await load()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '移除失败')
+      toast.error(err instanceof Error ? err.message : '移除失败')
     }
   }
 
@@ -60,25 +53,22 @@ export function useOrgMembers(ctx: OrgContext) {
         (await postApiOrgOrgIdMemberRole(ctx.orgId.value, { targetUserId: userId, role: role as never })) as any,
         '更新角色失败',
       )
-      message.success('已更新角色')
+      toast.success('已更新角色')
       await load()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '更新角色失败')
+      toast.error(err instanceof Error ? err.message : '更新角色失败')
     }
   }
 
   async function transferOwner(userId: number) {
     if (ctx.myRole.value !== 0 || userId <= 0) return
     try {
-      unwrapOk(
-        (await postApiOrgOrgIdTransferOwner(ctx.orgId.value, { targetUserId: userId })) as any,
-        '移交失败',
-      )
-      message.success('已移交所有权')
+      unwrapOk((await postApiOrgOrgIdTransferOwner(ctx.orgId.value, { targetUserId: userId })) as any, '移交失败')
+      toast.success('已移交所有权')
       await load()
       await ctx.loadOrgInfo()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '移交失败')
+      toast.error(err instanceof Error ? err.message : '移交失败')
     }
   }
 

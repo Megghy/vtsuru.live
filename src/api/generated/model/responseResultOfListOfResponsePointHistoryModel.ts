@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointHistoryModel } from './responsePointHistoryModel';
+import type { ResponsePointHistoryModel } from './responsePointHistoryModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponsePointHistoryModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponsePointHistoryModel[] | null;
+  data: ResponsePointHistoryModel[] | null
 }

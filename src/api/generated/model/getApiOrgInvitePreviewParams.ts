@@ -7,6 +7,6 @@
  */
 
 export type GetApiOrgInvitePreviewParams = {
-type?: string;
-token?: string;
-};
+  type?: string
+  token?: string
+}

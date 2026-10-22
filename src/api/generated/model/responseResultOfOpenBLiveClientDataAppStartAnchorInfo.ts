@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OpenBLiveClientDataAppStartAnchorInfo } from './openBLiveClientDataAppStartAnchorInfo';
+import type { OpenBLiveClientDataAppStartAnchorInfo } from './openBLiveClientDataAppStartAnchorInfo'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfOpenBLiveClientDataAppStartAnchorInfo {
-  message: string;
-  code: number;
-  data: OpenBLiveClientDataAppStartAnchorInfo;
+  message: string
+  code: number
+  data: OpenBLiveClientDataAppStartAnchorInfo
 }

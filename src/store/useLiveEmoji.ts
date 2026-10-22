@@ -17,7 +17,10 @@ export const useLiveEmoji = defineStore('LiveEmoji', () => {
     updateAt: 0,
     data: { inline: {}, plain: {} },
   })
-  const merged = computed<Record<string, string>>(() => ({ ...emojiData.value.data.plain, ...emojiData.value.data.inline }))
+  const merged = computed<Record<string, string>>(() => ({
+    ...emojiData.value.data.plain,
+    ...emojiData.value.data.inline,
+  }))
 
   async function refresh() {
     const resp = (await getApiVtsuruClientLiveEmoji()) as unknown as {

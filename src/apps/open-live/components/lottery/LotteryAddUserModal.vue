@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { NButton, NForm, NFormItem, NInput, NInputNumber, NModal, NFlex } from 'naive-ui'
 import { computed, reactive, watch } from 'vue'
 
 import type { ManualUserFormModel } from '@/apps/open-live/components/lottery/lotteryTypes'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 
 const props = defineProps<{
   show: boolean
@@ -45,102 +48,85 @@ function submit() {
 </script>
 
 <template>
-  <NModal
-    v-model:show="showModel"
-    preset="card"
-    title="手动添加用户"
-    style="width: 520px; max-width: 90vw"
-    closable
-  >
-    <NForm
-      size="small"
-      label-placement="left"
-      label-width="80"
-    >
-      <NFormItem
-        label="用户名"
-        required
-      >
-        <NInput
-          v-model:value="form.name"
-          size="small"
-          :disabled="disabled"
-          placeholder="请输入用户名"
-        />
-      </NFormItem>
-      <NFormItem label="头像链接">
-        <NInput
-          v-model:value="form.avatar"
-          size="small"
-          :disabled="disabled"
-          placeholder="可选，留空则使用内置默认头像"
-        />
-      </NFormItem>
-      <NFlex
-        :wrap="true"
-        :size="12"
-      >
-        <NFormItem label="粉丝牌等级">
-          <NInputNumber
-            v-model:value="form.fans_medal_level"
-            size="small"
+  <Dialog v-model:open="showModel">
+    <DialogContent class="max-w-[520px]">
+      <DialogHeader>
+        <DialogTitle class="text-base font-semibold">手动添加用户</DialogTitle>
+      </DialogHeader>
+
+      <div class="flex flex-col gap-3 py-2 text-xs">
+        <div class="flex items-center gap-3">
+          <span class="w-20 text-muted-foreground shrink-0 text-right">
+            <span class="text-destructive mr-0.5">*</span>用户名
+          </span>
+          <Input
+            v-model="form.name"
             :disabled="disabled"
-            :min="0"
-            :max="50"
-            class="lottery-add-user__narrow"
+            placeholder="请输入用户名"
+            class="flex-1"
           />
-        </NFormItem>
-        <NFormItem label="粉丝牌名称">
-          <NInput
-            v-model:value="form.fans_medal_name"
-            size="small"
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="w-20 text-muted-foreground shrink-0 text-right">头像链接</span>
+          <Input
+            v-model="form.avatar"
+            :disabled="disabled"
+            placeholder="可选，留空则使用内置默认头像"
+            class="flex-1"
+          />
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="w-20 text-muted-foreground shrink-0 text-right">粉丝牌等级</span>
+          <div class="w-[140px]">
+            <NumberField
+              v-model="form.fans_medal_level"
+              :disabled="disabled"
+              :min="0"
+              :max="50"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="w-20 text-muted-foreground shrink-0 text-right">粉丝牌名称</span>
+          <Input
+            v-model="form.fans_medal_name"
             :disabled="disabled"
             placeholder="粉丝牌名称"
-            class="lottery-add-user__medium"
+            class="flex-1"
           />
-        </NFormItem>
-      </NFlex>
-      <NFormItem label="舰长等级">
-        <NInputNumber
-          v-model:value="form.guard_level"
-          size="small"
-          :disabled="disabled"
-          :min="0"
-          :max="3"
-          class="lottery-add-user__narrow"
-        />
-      </NFormItem>
-    </NForm>
+        </div>
 
-    <template #footer>
-      <NFlex justify="end">
-        <NButton
-          size="small"
+        <div class="flex items-center gap-3">
+          <span class="w-20 text-muted-foreground shrink-0 text-right">舰长等级</span>
+          <div class="w-[140px]">
+            <NumberField
+              v-model="form.guard_level"
+              :disabled="disabled"
+              :min="0"
+              :max="3"
+            />
+          </div>
+        </div>
+      </div>
+
+      <DialogFooter class="flex justify-end gap-2 pt-2">
+        <Button
+          variant="outline"
           :disabled="disabled"
           @click="showModel = false"
         >
           取消
-        </NButton>
-        <NButton
-          type="primary"
-          size="small"
-          :disabled="disabled"
+        </Button>
+        <Button
+          :disabled="disabled || !form.name"
           @click="submit"
         >
           添加用户
-        </NButton>
-      </NFlex>
-    </template>
-  </NModal>
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>
-
-<style scoped>
-.lottery-add-user__narrow {
-  width: 140px;
-}
-
-.lottery-add-user__medium {
-  width: 220px;
-  max-width: 100%;
-}
-</style>

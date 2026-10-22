@@ -32,16 +32,16 @@ let cssViewState: monaco.editor.ICodeEditorViewState | null = null
 let completions: monaco.IDisposable[] = []
 
 const THEME_VARIABLES = [
-  '--vtsuru-fg',
-  '--vtsuru-fg-muted',
-  '--vtsuru-bg',
-  '--vtsuru-bg-elevated',
-  '--vtsuru-border',
-  '--vtsuru-primary',
-  '--vtsuru-radius',
-  '--vtsuru-border-width',
-  '--vtsuru-border-style',
-  '--vtsuru-shadow',
+  '--foreground',
+  '--muted-foreground',
+  '--background',
+  '--popover',
+  '--border',
+  '--primary',
+  '--radius',
+  '--border-width',
+  '--border-style',
+  '--ui-shadow',
 ]
 
 function currentAssetEntries() {

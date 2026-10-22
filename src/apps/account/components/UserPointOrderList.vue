@@ -8,30 +8,23 @@ import {
   Timer24Regular,
   VehicleTruck24Regular,
 } from '@vicons/fluent'
-import type { DataTableColumns } from 'naive-ui'
-import {
-  NButton,
-  NDataTable,
-  NDivider,
-  NEmpty,
-  NFlex,
-  NIcon,
-  NInput,
-  NModal,
-  NPagination,
-  NScrollbar,
-  NTag,
-  NText,
-  NTime,
-} from 'naive-ui'
 import type { Component } from 'vue'
-import { computed, h, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/api-models'
 import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import ServiceOrderPanel from '@/shared/components/points/ServiceOrderPanel.vue'
+import { Button } from '@/shared/ui/button'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Pagination } from '@/shared/ui/pagination'
+import { ScrollArea } from '@/shared/ui/scroll-area'
+import { Separator } from '@/shared/ui/separator'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
 
 const props = defineProps<{
   orders: ResponsePointOrder2UserModel[]
@@ -42,7 +35,7 @@ const showDetail = ref(false)
 const serviceDetail = ref<ResponsePointOrder2UserModel>()
 const showServiceDetail = ref(false)
 const page = ref(1)
-const pageSize = 10
+const pageSize = ref(10)
 
 const statusMeta: Record<
   PointOrderStatus,
@@ -56,7 +49,7 @@ const statusMeta: Record<
   [PointOrderStatus.Cancelled]: { label: '已取消', type: 'default', icon: DismissCircle24Regular },
 }
 
-const pagedOrders = computed(() => props.orders.slice((page.value - 1) * pageSize, page.value * pageSize))
+const pagedOrders = computed(() => props.orders.slice((page.value - 1) * pageSize.value, page.value * pageSize.value))
 
 watch(
   () => props.orders,
@@ -79,265 +72,331 @@ function statusLabel(order: ResponsePointOrder2UserModel) {
     : statusMeta[order.status].label
 }
 
-const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
-  { title: '订单号', key: 'id', width: 84 },
-  {
-    title: '礼物',
-    key: 'goods',
-    minWidth: 220,
-    render: (row) =>
-      h('div', { class: 'order-goods-cell' }, [
-        h('strong', `${row.type === GoodsTypes.Service ? '服务 · ' : ''}${row.goods.name}`),
-        row.selectedSubItems?.length
-          ? h('span', row.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / '))
-          : null,
-      ]),
-  },
-  {
-    title: '时间',
-    key: 'createAt',
-    width: 130,
-    sorter: (left, right) => left.createAt - right.createAt,
-    render: (row) => h(NTime, { time: row.createAt, type: 'relative' }),
-  },
-  {
-    title: '积分',
-    key: 'point',
-    width: 90,
-    sorter: (left, right) => left.point - right.point,
-    render: (row) => Number(row.point.toFixed(1)),
-  },
-  {
-    title: '状态',
-    key: 'status',
-    width: 116,
-    render: (row) => {
-      const meta = statusMeta[row.status]
-      return h(
-        NTag,
-        { type: meta.type, size: 'small', bordered: false },
-        {
-          default: () => statusLabel(row),
-          icon: () => h(NIcon, { component: meta.icon }),
-        },
-      )
-    },
-  },
-  {
-    title: '',
-    key: 'action',
-    width: 70,
-    render: (row) => h(NButton, { size: 'small', secondary: true, onClick: () => openDetail(row) }, () => '详情'),
-  },
-]
+function formatRelativeTime(ts: number) {
+  const diff = Date.now() - ts
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)} 分钟前`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)} 小时前`
+  return `${Math.floor(diff / 86400000)} 天前`
+}
+
+function formatDateTime(ts: number) {
+  return new Date(ts).toLocaleString('zh-CN', { hour12: false })
+}
 </script>
 
 <template>
   <div
     v-if="orders.length === 0"
-    class="orders-empty-state"
+    class="py-12 px-4 border border-dashed border-border rounded-[var(--radius)] bg-card"
   >
-    <NEmpty
+    <Empty
       description="暂无符合条件的订单记录"
       size="medium"
     >
       <template #extra>
-        <span class="empty-tip">在主播频道使用积分兑换礼物或互动服务后，相关进度将在此展示。</span>
+        <span class="text-muted-foreground text-xs">在主播频道使用积分兑换礼物或互动服务后，相关进度将在此展示。</span>
       </template>
-    </NEmpty>
+    </Empty>
   </div>
 
   <template v-else>
-    <NDataTable
-      class="desktop-order-table"
-      :columns="columns"
-      :data="orders"
-      :row-key="(row) => row.id"
-      :pagination="{ defaultPageSize: 10, showSizePicker: true, pageSizes: [10, 25, 50] }"
-      size="small"
-    />
+    <div class="max-md:hidden overflow-x-auto rounded-md border border-border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead class="w-[84px]">订单号</TableHead>
+            <TableHead class="min-w-[220px]">礼物</TableHead>
+            <TableHead class="w-[130px]">时间</TableHead>
+            <TableHead class="w-[90px]">积分</TableHead>
+            <TableHead class="w-[116px]">状态</TableHead>
+            <TableHead class="w-[70px] text-right">操作</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <TableRow
+            v-for="row in pagedOrders"
+            :key="row.id"
+          >
+            <TableCell class="font-mono text-xs text-muted-foreground">#{{ row.id }}</TableCell>
+            <TableCell>
+              <div class="flex flex-col gap-0.5">
+                <strong class="text-xs"
+                  >{{ row.type === GoodsTypes.Service ? '服务 · ' : '' }}{{ row.goods.name }}</strong
+                >
+                <span
+                  v-if="row.selectedSubItems?.length"
+                  class="text-[11px] text-muted-foreground truncate"
+                >
+                  {{ row.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / ') }}
+                </span>
+              </div>
+            </TableCell>
+            <TableCell class="text-xs text-muted-foreground">
+              {{ formatRelativeTime(row.createAt) }}
+            </TableCell>
+            <TableCell class="text-xs font-medium">
+              {{ Number(row.point.toFixed(1)) }}
+            </TableCell>
+            <TableCell>
+              <Tag
+                :type="statusMeta[row.status].type"
+                size="small"
+                :bordered="false"
+                class="inline-flex items-center gap-1"
+              >
+                <component
+                  :is="statusMeta[row.status].icon"
+                  class="size-3.5"
+                />
+                {{ statusLabel(row) }}
+              </Tag>
+            </TableCell>
+            <TableCell class="text-right">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="openDetail(row)"
+              >
+                详情
+              </Button>
+            </TableCell>
+          </TableRow>
+        </TableBody>
+      </Table>
+      <div
+        v-if="orders.length > pageSize"
+        class="p-2 border-t border-border flex justify-end"
+      >
+        <Pagination
+          v-model:page="page"
+          v-model:page-size="pageSize"
+          :total="orders.length"
+          :item-count="orders.length"
+          :page-sizes="[10, 25, 50]"
+          show-size-picker
+        />
+      </div>
+    </div>
 
-    <div class="mobile-order-list">
+    <div class="hidden max-md:flex flex-col gap-2.5">
       <button
         v-for="order in pagedOrders"
         :key="order.id"
-        class="mobile-order-card"
+        class="mobile-order-card text-left p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
         type="button"
         @click="openDetail(order)"
       >
-        <span class="mobile-order-card__topline">
-          <span>#{{ order.id }}</span>
-          <NTag
+        <span class="flex items-center justify-between mb-1.5 text-xs">
+          <span class="font-mono text-muted-foreground">#{{ order.id }}</span>
+          <Tag
             :type="statusMeta[order.status].type"
             size="small"
             :bordered="false"
+            class="inline-flex items-center gap-1"
           >
-            <template #icon>
-              <NIcon :component="statusMeta[order.status].icon" />
-            </template>
+            <component
+              :is="statusMeta[order.status].icon"
+              class="size-3"
+            />
             {{ statusLabel(order) }}
-          </NTag>
+          </Tag>
         </span>
-        <strong>{{ order.goods.name }}</strong>
+        <strong class="text-sm block">{{ order.goods.name }}</strong>
         <span
           v-if="order.selectedSubItems?.length"
-          class="mobile-order-card__variants"
+          class="text-xs text-muted-foreground block mt-0.5 truncate"
         >
           {{ order.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / ') }}
         </span>
-        <span class="mobile-order-card__meta">
-          <NTime
-            :time="order.createAt"
-            type="relative"
-          />
-          <b>{{ Number(order.point.toFixed(1)) }} 积分</b>
+        <span
+          class="flex items-center justify-between mt-2 pt-1.5 border-t border-border/50 text-xs text-muted-foreground"
+        >
+          <span>{{ formatRelativeTime(order.createAt) }}</span>
+          <b class="text-foreground font-semibold">{{ Number(order.point.toFixed(1)) }} 积分</b>
         </span>
       </button>
 
-      <NPagination
+      <Pagination
         v-if="orders.length > pageSize"
         v-model:page="page"
-        :page-size="pageSize"
+        v-model:page-size="pageSize"
+        :total="orders.length"
         :item-count="orders.length"
-        simple
       />
     </div>
   </template>
 
-  <NModal
+  <Dialog
     v-if="detail"
-    v-model:show="showDetail"
-    preset="card"
-    title="订单详情"
-    class="order-detail-modal"
+    v-model:open="showDetail"
   >
-    <NScrollbar class="order-detail-scrollbar">
-      <div class="order-detail">
-        <div class="order-summary">
-          <div>
-            <span>订单号</span>
-            <strong>#{{ detail.id }}</strong>
-          </div>
-          <div>
-            <span>兑换时间</span>
-            <NTime :time="detail.createAt" />
-          </div>
-          <div>
-            <span>使用积分</span>
-            <strong>{{ Number(detail.point.toFixed(1)) }}</strong>
-          </div>
-          <div>
-            <span>当前状态</span>
-            <NTag
-              :type="statusMeta[detail.status].type"
-              size="small"
-              :bordered="false"
-            >
-              {{ statusLabel(detail) }}
-            </NTag>
-          </div>
-        </div>
-
-        <NDivider>礼物快照</NDivider>
-        <PointGoodsItem
-          class="detail-goods"
-          :goods="detail.goods"
-        />
-
-        <template v-if="detail.selectedSubItems?.length">
-          <NDivider>已选款式</NDivider>
-          <div class="variant-grid">
-            <div
-              v-for="item in detail.selectedSubItems"
-              :key="item.subItemId"
-              class="variant-item"
-            >
-              <div>
-                <strong>{{ item.nameSnapshot }}</strong>
-                <span>x {{ item.quantity }}</span>
-              </div>
-              <NTag
-                size="tiny"
-                type="info"
-                :bordered="false"
-              >
-                {{ item.priceSnapshot }} 积分
-              </NTag>
-              <NText
-                v-if="item.assignedVirtualKeys.length"
-                type="success"
-                depth="3"
-              >
-                已分配 {{ item.assignedVirtualKeys.length }} 个密钥
-              </NText>
+    <DialogContent class="max-w-2xl max-h-[85vh] flex flex-col p-6">
+      <DialogHeader>
+        <DialogTitle>订单详情</DialogTitle>
+      </DialogHeader>
+      <ScrollArea class="flex-1 max-h-[70vh] pr-4">
+        <div class="order-detail space-y-4">
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-lg bg-muted/40 text-xs">
+            <div>
+              <span class="text-muted-foreground block mb-0.5">订单号</span>
+              <strong class="font-mono text-foreground text-sm">#{{ detail.id }}</strong>
             </div>
-          </div>
-        </template>
-
-        <template v-if="detail.remark">
-          <NDivider>订单备注</NDivider>
-          <div class="detail-note">{{ detail.remark }}</div>
-        </template>
-
-        <template v-if="detail.type === GoodsTypes.Virtual">
-          <NDivider>虚拟礼物内容</NDivider>
-          <NInput
-            :value="detail.goods.content"
-            type="textarea"
-            readonly
-            placeholder="暂无内容"
-            :autosize="{ minRows: 2, maxRows: 8 }"
-          />
-        </template>
-
-        <template v-else>
-          <NDivider>收货与物流</NDivider>
-          <div class="delivery-panel">
-            <AddressDisplay :address="detail.address" />
-            <NFlex
-              v-if="detail.trackingNumber"
-              align="center"
-              wrap
-            >
-              <NTag
+            <div>
+              <span class="text-muted-foreground block mb-0.5">兑换时间</span>
+              <span class="text-foreground">{{ formatDateTime(detail.createAt) }}</span>
+            </div>
+            <div>
+              <span class="text-muted-foreground block mb-0.5">使用积分</span>
+              <strong class="text-foreground text-sm">{{ Number(detail.point.toFixed(1)) }}</strong>
+            </div>
+            <div>
+              <span class="text-muted-foreground block mb-0.5">当前状态</span>
+              <Tag
+                :type="statusMeta[detail.status].type"
                 size="small"
                 :bordered="false"
               >
-                {{ detail.expressCompany || '物流单号' }}
-              </NTag>
-              <NText>{{ detail.trackingNumber }}</NText>
-            </NFlex>
-            <NText
-              v-else
-              depth="3"
-            >
-              暂无物流信息
-            </NText>
+                {{ statusLabel(detail) }}
+              </Tag>
+            </div>
           </div>
 
-          <template v-if="detail.status === PointOrderStatus.Pending && detail.goods.collectUrl">
-            <NDivider>填写收货信息</NDivider>
-            <NButton
-              tag="a"
-              :href="detail.goods.collectUrl"
-              target="_blank"
-              type="primary"
-            >
-              <template #icon><NIcon :component="Open24Regular" /></template>
-              打开地址填写页面
-            </NButton>
-            <iframe
-              v-if="detail.goods.embedCollectUrl"
-              class="collect-frame"
-              :src="detail.goods.collectUrl"
-              title="收货地址填写"
-              sandbox="allow-same-origin allow-scripts allow-modals allow-downloads allow-forms allow-popups"
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-muted-foreground">礼物快照</span>
+              <Separator class="flex-1" />
+            </div>
+            <PointGoodsItem
+              class="detail-goods"
+              :goods="detail.goods"
             />
+          </div>
+
+          <template v-if="detail.selectedSubItems?.length">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-muted-foreground">已选款式</span>
+                <Separator class="flex-1" />
+              </div>
+              <div class="grid gap-2">
+                <div
+                  v-for="item in detail.selectedSubItems"
+                  :key="item.subItemId"
+                  class="flex items-center justify-between p-2.5 rounded border border-border bg-card text-xs"
+                >
+                  <div class="flex items-center gap-2">
+                    <strong class="text-foreground">{{ item.nameSnapshot }}</strong>
+                    <span class="text-muted-foreground">x {{ item.quantity }}</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <Tag
+                      size="tiny"
+                      type="info"
+                      :bordered="false"
+                    >
+                      {{ item.priceSnapshot }} 积分
+                    </Tag>
+                    <span
+                      v-if="item.assignedVirtualKeys.length"
+                      class="text-emerald-600 dark:text-emerald-400 text-[11px]"
+                    >
+                      已分配 {{ item.assignedVirtualKeys.length }} 个密钥
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </template>
-        </template>
-      </div>
-    </NScrollbar>
-  </NModal>
+
+          <template v-if="detail.remark">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-muted-foreground">订单备注</span>
+                <Separator class="flex-1" />
+              </div>
+              <div class="p-3 rounded bg-muted/40 text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                {{ detail.remark }}
+              </div>
+            </div>
+          </template>
+
+          <template v-if="detail.type === GoodsTypes.Virtual">
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-muted-foreground">虚拟礼物内容</span>
+                <Separator class="flex-1" />
+              </div>
+              <Textarea
+                :model-value="detail.goods.content"
+                readonly
+                placeholder="暂无内容"
+                rows="4"
+              />
+            </div>
+          </template>
+
+          <template v-else>
+            <div class="space-y-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-muted-foreground">收货与物流</span>
+                <Separator class="flex-1" />
+              </div>
+              <div class="delivery-panel space-y-2 text-xs">
+                <AddressDisplay :address="detail.address" />
+                <div
+                  v-if="detail.trackingNumber"
+                  class="flex items-center gap-2 pt-2"
+                >
+                  <Tag
+                    size="small"
+                    :bordered="false"
+                  >
+                    {{ detail.expressCompany || '物流单号' }}
+                  </Tag>
+                  <span class="font-mono text-foreground">{{ detail.trackingNumber }}</span>
+                </div>
+                <span
+                  v-else
+                  class="text-muted-foreground block pt-1"
+                >
+                  暂无物流信息
+                </span>
+              </div>
+            </div>
+
+            <template v-if="detail.status === PointOrderStatus.Pending && detail.goods.collectUrl">
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-semibold text-muted-foreground">填写收货信息</span>
+                  <Separator class="flex-1" />
+                </div>
+                <a
+                  :href="detail.goods.collectUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs hover:bg-primary/90 transition-colors"
+                >
+                  <component
+                    :is="Open24Regular"
+                    class="size-4"
+                  />
+                  打开地址填写页面
+                </a>
+                <iframe
+                  v-if="detail.goods.embedCollectUrl"
+                  class="w-full h-80 rounded-lg border border-border mt-2"
+                  :src="detail.goods.collectUrl"
+                  title="收货地址填写"
+                  sandbox="allow-same-origin allow-scripts allow-modals allow-downloads allow-forms allow-popups"
+                />
+              </div>
+            </template>
+          </template>
+        </div>
+      </ScrollArea>
+    </DialogContent>
+  </Dialog>
 
   <ServiceOrderPanel
     v-if="serviceDetail"
@@ -348,181 +407,3 @@ const columns: DataTableColumns<ResponsePointOrder2UserModel> = [
   />
 </template>
 
-<style scoped>
-.orders-empty-state {
-  padding: 48px 16px;
-  border: 1px dashed var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-surface);
-}
-
-.empty-tip {
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-:deep(.order-goods-cell) {
-  display: grid;
-  gap: 2px;
-}
-
-:deep(.order-goods-cell span) {
-  overflow: hidden;
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mobile-order-list {
-  display: none;
-}
-
-:global(.order-detail-modal) {
-  width: min(760px, calc(100vw - 24px));
-  max-width: calc(100vw - 24px);
-}
-
-:global(.order-detail-scrollbar) {
-  max-height: min(78vh, 760px);
-}
-
-.order-detail {
-  padding-right: 10px;
-}
-
-.order-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.order-summary > div,
-.variant-item,
-.delivery-panel,
-.detail-note {
-  padding: 10px 12px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-  background: var(--vtsuru-bg-elevated);
-}
-
-.order-summary > div {
-  display: grid;
-  gap: 3px;
-}
-
-.order-summary span,
-.variant-item span {
-  color: var(--vtsuru-fg-muted);
-  font-size: 12px;
-}
-
-.detail-goods {
-  width: min(100%, 320px);
-  margin: 0 auto;
-}
-
-.variant-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.variant-item {
-  display: grid;
-  gap: 8px;
-}
-
-.variant-item > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.delivery-panel {
-  display: grid;
-  gap: 10px;
-}
-
-.collect-frame {
-  width: 100%;
-  height: min(560px, 65vh);
-  margin-top: 10px;
-  border: 1px solid var(--vtsuru-border);
-  border-radius: var(--vtsuru-radius);
-}
-
-@media (max-width: 768px) {
-  .desktop-order-table {
-    display: none;
-  }
-
-  .mobile-order-list {
-    display: grid;
-    gap: 8px;
-  }
-
-  .mobile-order-card {
-    display: grid;
-    width: 100%;
-    min-width: 0;
-    gap: 8px;
-    padding: 12px;
-    color: var(--vtsuru-fg);
-    text-align: left;
-    border: 1px solid var(--vtsuru-border);
-    border-radius: var(--vtsuru-radius);
-    background: var(--vtsuru-bg-surface);
-    cursor: pointer;
-    transition:
-      border-color 160ms var(--vtsuru-bezier),
-      background-color 160ms var(--vtsuru-bezier);
-  }
-
-  .mobile-order-card:hover,
-  .mobile-order-card:focus-visible {
-    border-color: var(--vtsuru-border-hover);
-    background: var(--vtsuru-bg-muted);
-    outline: none;
-  }
-
-  .mobile-order-card__topline,
-  .mobile-order-card__meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    color: var(--vtsuru-fg-muted);
-    font-size: 12px;
-  }
-
-  .mobile-order-card__variants {
-    overflow-wrap: anywhere;
-    color: var(--vtsuru-fg-muted);
-    font-size: 12px;
-  }
-
-  .mobile-order-card__meta b {
-    color: var(--vtsuru-primary);
-  }
-
-  :global(.order-detail-modal) {
-    width: calc(100vw - 16px);
-    max-width: calc(100vw - 16px);
-  }
-
-  .order-detail {
-    padding-right: 4px;
-  }
-
-  .order-summary,
-  .variant-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .collect-frame {
-    height: 420px;
-  }
-}
-</style>

@@ -7,7 +7,7 @@
  */
 
 export interface EventControllerResponseEventModelV3 {
-  code: string;
-  dotnetVersion: string;
-  eventCount: number;
+  code: string
+  dotnetVersion: string
+  eventCount: number
 }

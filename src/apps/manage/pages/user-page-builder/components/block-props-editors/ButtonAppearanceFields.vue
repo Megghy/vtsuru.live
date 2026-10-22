@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { NColorPicker, NFlex, NFormItem, NInputNumber, NSelect, NSwitch } from 'naive-ui'
-
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import ColorPicker from '@/shared/ui/color-picker/ColorPicker.vue'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Switch } from '@/shared/ui/switch'
 
 import { useBlockPropsEditor } from './useBlockPropsEditor'
 
@@ -65,115 +67,204 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
 </script>
 
 <template>
-  <NFormItem
+  <div
     v-if="propertyAvailable('align')"
-    label="对齐方式"
+    class="space-y-1"
   >
-    <NSelect
-      v-model:value="blockProps.align"
-      :options="alignOptions"
-    />
-  </NFormItem>
-  <NFormItem
+    <label class="text-xs text-muted-foreground">对齐方式</label>
+    <Select v-model="blockProps.align">
+      <SelectTrigger>
+        <SelectValue placeholder="对齐方式" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          v-for="opt in alignOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div
     v-if="propertyAvailable('fullWidth')"
-    label="按钮铺满宽度"
+    class="flex items-center justify-between py-1"
   >
-    <NFlex justify="end">
-      <NSwitch
-        v-model:value="blockProps.fullWidth"
-        size="small"
-      />
-    </NFlex>
-  </NFormItem>
-  <NFormItem label="按钮类型">
-    <NSelect
-      v-model:value="blockProps.type"
-      :options="typeOptions"
-    />
-  </NFormItem>
-  <NFormItem label="样式变体">
-    <NSelect
-      v-model:value="blockProps.variant"
-      :options="variantOptions"
-    />
-  </NFormItem>
-  <NFormItem label="尺寸">
-    <NSelect
-      v-model:value="blockProps.size"
-      :options="sizeOptions"
-    />
-  </NFormItem>
-  <NFormItem label="形态">
-    <NSelect
-      v-model:value="blockProps.radius"
-      :options="radiusOptions"
-    />
-  </NFormItem>
-  <NFormItem
+    <label class="text-xs text-muted-foreground">按钮铺满宽度</label>
+    <Switch v-model:checked="blockProps.fullWidth" />
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">按钮类型</label>
+    <Select v-model="blockProps.type">
+      <SelectTrigger>
+        <SelectValue placeholder="按钮类型" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          v-for="opt in typeOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">样式变体</label>
+    <Select v-model="blockProps.variant">
+      <SelectTrigger>
+        <SelectValue placeholder="样式变体" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          v-for="opt in variantOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">尺寸</label>
+    <Select v-model="blockProps.size">
+      <SelectTrigger>
+        <SelectValue placeholder="尺寸" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          v-for="opt in sizeOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">形态</label>
+    <Select v-model="blockProps.radius">
+      <SelectTrigger>
+        <SelectValue placeholder="形态" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          v-for="opt in radiusOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div
     v-if="propertyAvailable('radiusPx')"
-    label="圆角 px"
+    class="space-y-1"
   >
-    <NInputNumber
-      v-model:value="blockProps.radiusPx"
+    <label class="text-xs text-muted-foreground">圆角 px</label>
+    <NumberField
+      v-model="blockProps.radiusPx"
       :min="0"
       :max="48"
-      style="width: 100%"
+      class="w-full"
     />
-  </NFormItem>
-  <NFormItem label="背景色">
-    <NColorPicker
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">背景色</label>
+    <ColorPicker
       :value="colorValue('color')"
       :show-alpha="true"
-      :modes="['hex']"
       @update:value="(value) => setColor('color', value)"
     />
-  </NFormItem>
-  <NFormItem label="文字色">
-    <NColorPicker
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">文字色</label>
+    <ColorPicker
       :value="colorValue('textColor')"
       :show-alpha="true"
-      :modes="['hex']"
       @update:value="(value) => setColor('textColor', value)"
     />
-  </NFormItem>
-  <NFormItem label="边框粗细">
-    <NInputNumber
-      v-model:value="blockProps.borderWidth"
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">边框粗细</label>
+    <NumberField
+      v-model="blockProps.borderWidth"
       :min="0"
       :max="8"
-      style="width: 100%"
+      class="w-full"
     />
-  </NFormItem>
-  <NFormItem label="边框颜色">
-    <NColorPicker
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">边框颜色</label>
+    <ColorPicker
       :value="colorValue('borderColor')"
       :show-alpha="true"
-      :modes="['hex']"
       @update:value="(value) => setColor('borderColor', value)"
     />
-  </NFormItem>
-  <NFormItem label="透明度">
-    <NInputNumber
-      v-model:value="blockProps.opacity"
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">透明度</label>
+    <NumberField
+      v-model="blockProps.opacity"
       :min="0.15"
       :max="1"
       :step="0.05"
-      style="width: 100%"
+      class="w-full"
     />
-  </NFormItem>
-  <NFormItem label="特效">
-    <NSelect
-      v-model:value="blockProps.effect"
-      :options="effectOptions"
-    />
-  </NFormItem>
-  <NFormItem
+  </div>
+
+  <div class="space-y-1">
+    <label class="text-xs text-muted-foreground">特效</label>
+    <Select v-model="blockProps.effect">
+      <SelectTrigger>
+        <SelectValue placeholder="选择特效" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          v-for="opt in effectOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
+
+  <div
     v-if="blockProps.effect && blockProps.effect !== 'none'"
-    label="特效强度"
+    class="space-y-1"
   >
-    <NSelect
-      v-model:value="blockProps.effectIntensity"
-      :options="intensityOptions"
-    />
-  </NFormItem>
+    <label class="text-xs text-muted-foreground">特效强度</label>
+    <Select v-model="blockProps.effectIntensity">
+      <SelectTrigger>
+        <SelectValue placeholder="特效强度" />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem
+          v-for="opt in intensityOptions"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  </div>
 </template>

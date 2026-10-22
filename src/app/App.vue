@@ -1,22 +1,13 @@
 <script setup lang="ts">
-import {
-  dateZhCN,
-  NConfigProvider,
-  NDialogProvider,
-  NElement,
-  NLoadingBarProvider,
-  NMessageProvider,
-  NModalProvider,
-  NNotificationProvider,
-  NSpin,
-  zhCN,
-} from 'naive-ui'
-import { computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 
+import AppDialogHost from '@/app/components/AppDialogHost.vue'
 import TempComponent from '@/app/components/TempComponent.vue'
-import { applyThemeCssVars, buildSiteTokens, getThemeOverrides } from '@/shared/config/theme'
-import { isDarkMode, theme } from '@/shared/utils'
+import { applyThemeCssVars, buildSiteTokens, getThemeCssVars } from '@/shared/config/theme'
+import { provideThemeScope } from '@/shared/config/theme/scope'
+import { Toaster } from '@/shared/ui/sonner'
+import { isDarkMode } from '@/shared/utils'
 
 // 将大型布局组件改为异步组件，避免打入入口包
 const ManageLayout = defineAsyncComponent(() => import('@/apps/layouts/ManageLayout.vue'))
@@ -28,7 +19,7 @@ const OpenLiveLayout = defineAsyncComponent(() => import('@/apps/layouts/OpenLiv
 const route = useRoute()
 
 const layout = computed(() => {
-  if (route.path.startsWith('/user') || route.name == 'user' || route.path.startsWith('/@')) {
+  if (route.path.startsWith('/user') || route.name === 'user' || route.path.startsWith('/@')) {
     document.title = `${route.meta.title} · ${route.params.id} · VTsuru`
     return 'user'
   } else if (route.path.startsWith('/manage')) {
@@ -48,64 +39,58 @@ const layout = computed(() => {
     return ''
   }
 })
+
+const isTransparentShell = computed(() => layout.value === 'obs' || Boolean(route.meta.transparent))
 const siteTokens = computed(() => buildSiteTokens(isDarkMode.value))
-const themeOverrides = computed(() => getThemeOverrides(siteTokens.value))
-const shellStyle = computed(() =>
-  layout.value === 'user' || layout.value === '' ? { minHeight: '100dvh' } : { height: '100dvh' },
-)
+provideThemeScope(computed(() => getThemeCssVars(siteTokens.value)))
+const shellStyle = computed(() => {
+  if (isTransparentShell.value) return { height: '100%' }
+  if (layout.value === 'user' || layout.value === '') return { minHeight: '100dvh' }
+  return { height: '100dvh' }
+})
 
 watchEffect(() => {
-  if (isDarkMode.value) {
-    document.documentElement.classList.add('dark')
-  } else {
-    document.documentElement.classList.remove('dark')
-  }
+  const root = document.documentElement
+  root.classList.toggle('dark', isDarkMode.value)
+  root.classList.toggle('transparent-shell', isTransparentShell.value)
   applyThemeCssVars(siteTokens.value)
 })
 </script>
 
 <template>
-  <NConfigProvider
-    :theme-overrides="themeOverrides"
-    :theme="theme"
+  <div
     :style="shellStyle"
-    :locale="zhCN"
-    :date-locale="dateZhCN"
+    :class="['app-root text-foreground antialiased', { 'bg-background': !isTransparentShell }]"
   >
-    <NMessageProvider>
-      <NNotificationProvider>
-        <NDialogProvider>
-          <NLoadingBarProvider>
-            <NModalProvider>
-              <Suspense>
-                <TempComponent>
-                  <NElement
-                    :style="shellStyle"
-                    :theme-overrides="themeOverrides"
-                  >
-                    <UserLayout v-if="layout === 'user'" />
-                    <ManageLayout v-else-if="layout === 'manage'" />
-                    <OpenLiveLayout v-else-if="layout === 'open-live'" />
-                    <OBSLayout v-else-if="layout === 'obs'" />
-                    <ClientLayout v-else-if="layout === 'client'" />
-                    <template v-else>
-                      <RouterView />
-                    </template>
-                  </NElement>
-                </TempComponent>
-                <template #fallback>
-                  <NSpin
-                    size="large"
-                    show
-                  />
-                </template>
-              </Suspense>
-            </NModalProvider>
-          </NLoadingBarProvider>
-        </NDialogProvider>
-      </NNotificationProvider>
-    </NMessageProvider>
-  </NConfigProvider>
+    <Suspense>
+      <TempComponent>
+        <div
+          :style="shellStyle"
+          class="app-shell w-full h-full"
+        >
+          <UserLayout v-if="layout === 'user'" />
+          <ManageLayout v-else-if="layout === 'manage'" />
+          <OpenLiveLayout v-else-if="layout === 'open-live'" />
+          <OBSLayout v-else-if="layout === 'obs'" />
+          <ClientLayout v-else-if="layout === 'client'" />
+          <template v-else>
+            <RouterView />
+          </template>
+        </div>
+      </TempComponent>
+      <template #fallback>
+        <div class="flex items-center justify-center min-h-screen">
+          <div class="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+        </div>
+      </template>
+    </Suspense>
+    <AppDialogHost />
+    <Toaster
+      richColors
+      position="top-right"
+      :theme="isDarkMode ? 'dark' : 'light'"
+    />
+  </div>
 </template>
 
 <style>
@@ -113,8 +98,17 @@ watchEffect(() => {
 html,
 body {
   margin: 0;
-  color: var(--vtsuru-fg);
-  background-color: var(--vtsuru-bg);
+  color: var(--foreground);
+  background-color: var(--background);
+}
+html.transparent-shell,
+html.transparent-shell body {
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent;
+}
+html.transparent-shell #app {
+  height: 100%;
 }
 
 :root {
@@ -127,7 +121,7 @@ body {
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--vtsuru-fg) 22%, transparent) transparent;
+  scrollbar-color: color-mix(in srgb, var(--foreground) 22%, transparent) transparent;
 }
 
 ::-webkit-scrollbar {
@@ -147,63 +141,32 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--vtsuru-fg) 22%, transparent);
+  background-color: color-mix(in srgb, var(--foreground) 22%, transparent);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--vtsuru-fg) 40%, transparent);
+  background-color: color-mix(in srgb, var(--foreground) 40%, transparent);
 }
 
 /* 全局选区与文本链接：使用品牌色作低饱和度 tint */
 ::selection {
-  background: var(--vtsuru-brand-tint);
-  color: var(--vtsuru-fg);
+  background: var(--brand-tint);
+  color: var(--foreground);
 }
 
 a {
-  color: var(--vtsuru-brand);
+  color: var(--brand);
   text-decoration: none;
   transition: color 0.15s ease;
 }
 a:hover {
-  color: var(--vtsuru-brand-hover);
-}
-
-/* Workaround: tooltip is popover-based, force readable contrast.
-   合并明暗两套规则到同一选择器，使用 CSS 变量统一管理。 */
-.n-popover.n-tooltip:not(.n-popover--raw) {
-  background-color: rgba(9, 9, 11, 0.92) !important;
-  color: #fafafa !important;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-:root.dark .n-popover.n-tooltip:not(.n-popover--raw) {
-  background-color: rgba(24, 24, 27, 0.92) !important;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-}
-.n-popover.n-tooltip:not(.n-popover--raw) .n-popover-arrow {
-  background-color: rgba(9, 9, 11, 0.92) !important;
-}
-:root.dark .n-popover.n-tooltip:not(.n-popover--raw) .n-popover-arrow {
-  background-color: rgba(24, 24, 27, 0.92) !important;
-}
-
-:root .n-notification {
-  border: 1px solid var(--vtsuru-border);
-}
-
-:root.dark .n-tabs.n-tabs--segment-type .n-tabs-capsule {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-:root.dark .n-tabs.n-tabs--card-type .n-tabs-tab.n-tabs-tab--active {
-  background-color: var(--vtsuru-bg-muted);
+  color: var(--brand);
 }
 
 @supports (font-variation-settings: normal) {
   :root {
-    font-family: InterVariable, sans-serif;
+    font-family: InterVariable, 'Noto Sans SC', sans-serif;
   }
 }
 

@@ -235,6 +235,7 @@ export async function importPngtuberPackage(file: File | Blob): Promise<Pngtuber
       } catch (error) {
         throw new Error(
           `上传素材 ${path} 失败：${error instanceof Error ? error.message : String(error)}；未应用模型配置`,
+          { cause: error },
         )
       }
       if (!/^https?:\/\//i.test(url)) throw new Error('上传接口返回了无效的素材地址；未应用模型配置')

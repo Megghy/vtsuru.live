@@ -7,5 +7,5 @@
  */
 
 export type GetApiHistoryGuardsListParams = {
-activeOnly?: boolean;
-};
+  activeOnly?: boolean
+}

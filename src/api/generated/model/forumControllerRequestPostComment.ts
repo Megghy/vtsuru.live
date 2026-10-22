@@ -7,6 +7,6 @@
  */
 
 export interface ForumControllerRequestPostComment {
-  topic: number;
-  content: string;
+  topic: number
+  content: string
 }

@@ -5,49 +5,49 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QueueGiftFilterType } from './queueGiftFilterType';
-import type { QueueSortType } from './queueSortType';
+import type { QueueGiftFilterType } from './queueGiftFilterType'
+import type { QueueSortType } from './queueSortType'
 
 export interface SettingSongRequest {
-  orderPrefix: string;
-  sortType: QueueSortType;
-  enableOnStreaming: boolean;
-  onlyAllowSongList: boolean;
-  queueMaxSize: number;
-  allowAllDanmaku: boolean;
-  allowFromWeb: boolean;
-  allowAnonymousFromWeb: boolean;
-  needWearFanMedal: boolean;
-  needJianzhang: boolean;
-  needTidu: boolean;
-  needZongdu: boolean;
-  allowSC: boolean;
-  scIgnoreLimit?: boolean;
+  orderPrefix: string
+  sortType: QueueSortType
+  enableOnStreaming: boolean
+  onlyAllowSongList: boolean
+  queueMaxSize: number
+  allowAllDanmaku: boolean
+  allowFromWeb: boolean
+  allowAnonymousFromWeb: boolean
+  needWearFanMedal: boolean
+  needJianzhang: boolean
+  needTidu: boolean
+  needZongdu: boolean
+  allowSC: boolean
+  scIgnoreLimit?: boolean
   /** @nullable */
-  scMinPrice?: number | null;
-  fanMedalMinLevel: number;
-  allowReorderSong: boolean;
-  allowGift: boolean;
+  scMinPrice?: number | null
+  fanMedalMinLevel: number
+  allowReorderSong: boolean
+  allowGift: boolean
   /** @nullable */
-  giftNames?: string[] | null;
+  giftNames?: string[] | null
   /** @nullable */
-  minGiftPrice?: number | null;
-  giftFilterType: QueueGiftFilterType;
-  allowIncreasePaymentBySendGift: boolean;
-  allowIncreaseByAnyPayment: boolean;
-  enableCooldown: boolean;
-  cooldownSecond: number;
-  zongduCooldownSecond: number;
-  tiduCooldownSecond: number;
-  jianzhangCooldownSecond: number;
-  enableWebCooldown: boolean;
-  webCooldownSecond: number;
-  showRequireInfo: boolean;
-  showUserName: boolean;
-  showFanMadelInfo: boolean;
+  minGiftPrice?: number | null
+  giftFilterType: QueueGiftFilterType
+  allowIncreasePaymentBySendGift: boolean
+  allowIncreaseByAnyPayment: boolean
+  enableCooldown: boolean
+  cooldownSecond: number
+  zongduCooldownSecond: number
+  tiduCooldownSecond: number
+  jianzhangCooldownSecond: number
+  enableWebCooldown: boolean
+  webCooldownSecond: number
+  showRequireInfo: boolean
+  showUserName: boolean
+  showFanMadelInfo: boolean
   /** @nullable */
-  obsTitle?: string | null;
+  obsTitle?: string | null
   /** @nullable */
-  obsTitleToday?: string | null;
-  isReverse: boolean;
+  obsTitleToday?: string | null
+  isReverse: boolean
 }

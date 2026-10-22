@@ -5,17 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LotteryUserCardInfo } from './lotteryUserCardInfo';
+import type { LotteryUserCardInfo } from './lotteryUserCardInfo'
 
 export interface LotteryUserInfo {
-  name: string;
-  uId: number;
+  name: string
+  uId: number
   /** @nullable */
-  level?: number | null;
-  avatar: string;
+  level?: number | null
+  avatar: string
   /** @nullable */
-  location?: string | null;
+  location?: string | null
   /** @nullable */
-  isVIP?: boolean | null;
-  card?: LotteryUserCardInfo;
+  isVIP?: boolean | null
+  card?: LotteryUserCardInfo
 }

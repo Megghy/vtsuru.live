@@ -7,8 +7,8 @@
  */
 
 export type GetApiLotteryForwardParams = {
-/**
- * 动态Id
- */
-id?: number;
-};
+  /**
+   * 动态Id
+   */
+  id?: number
+}

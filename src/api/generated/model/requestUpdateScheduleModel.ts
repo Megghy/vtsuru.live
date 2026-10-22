@@ -5,26 +5,26 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseScheduleDayModel } from './responseScheduleDayModel';
+import type { ResponseScheduleDayModel } from './responseScheduleDayModel'
 
 export interface RequestUpdateScheduleModel {
   /**
-     * @minimum 1
-     * @maximum 9999
-     */
-  year: number;
+   * @minimum 1
+   * @maximum 9999
+   */
+  year: number
   /**
-     * @minimum 1
-     * @maximum 53
-     */
-  week: number;
+   * @minimum 1
+   * @maximum 53
+   */
+  week: number
   /**
-     * @minimum 0
-     * @maximum 6
-     * @nullable
-     */
-  day?: number | null;
+   * @minimum 0
+   * @maximum 6
+   * @nullable
+   */
+  day?: number | null
   /** @nullable */
-  days?: ResponseScheduleDayModel[][] | null;
-  expectedVersion: string;
+  days?: ResponseScheduleDayModel[][] | null
+  expectedVersion: string
 }

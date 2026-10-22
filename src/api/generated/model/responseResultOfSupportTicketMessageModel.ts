@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SupportTicketMessageModel } from './supportTicketMessageModel';
+import type { SupportTicketMessageModel } from './supportTicketMessageModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfSupportTicketMessageModel {
-  message: string;
-  code: number;
-  data: SupportTicketMessageModel;
+  message: string
+  code: number
+  data: SupportTicketMessageModel
 }

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMessage } from 'naive-ui'
 import { computed, ref, toRef, watch } from 'vue'
 
 import type { QAInfo, UserInfo } from '@/api/api-models'
@@ -8,6 +7,7 @@ import LocalQuestionDrawer from '@/apps/user/components/question-box/LocalQuesti
 import PublicQuestionFeed from '@/apps/user/components/question-box/PublicQuestionFeed.vue'
 import { useQuestionBoxHistory } from '@/apps/user/components/question-box/questionBoxHistory'
 import QuestionComposer from '@/apps/user/components/question-box/QuestionComposer.vue'
+import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   userInfo?: UserInfo
@@ -97,10 +97,7 @@ function clearHistory() {
 </script>
 
 <template>
-  <main
-    class="question-box-page"
-    :class="{ 'is-embedded': embedded }"
-  >
+  <main class="grid w-full min-w-0 mx-auto max-w-[var(--vtsuru-page-max-width,880px)] gap-[clamp(28px,5vw,52px)] pb-6 max-[600px]:gap-[30px] max-[600px]:pb-2.5">
     <QuestionComposer
       :user-info="userInfo"
       :tags="tags"
@@ -125,20 +122,4 @@ function clearHistory() {
   </main>
 </template>
 
-<style scoped>
-.question-box-page {
-  display: grid;
-  gap: clamp(28px, 5vw, 52px);
-  width: min(100%, var(--vtsuru-page-max-width, 880px));
-  min-width: 0;
-  margin: 0 auto;
-  padding-bottom: 24px;
-}
 
-@media (max-width: 600px) {
-  .question-box-page {
-    gap: 30px;
-    padding-bottom: 10px;
-  }
-}
-</style>

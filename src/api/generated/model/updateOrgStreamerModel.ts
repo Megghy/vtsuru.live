@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgStreamerDataOrgStreamerStatuses } from './orgStreamerDataOrgStreamerStatuses';
+import type { OrgStreamerDataOrgStreamerStatuses } from './orgStreamerDataOrgStreamerStatuses'
 
 export interface UpdateOrgStreamerModel {
-  targetStreamerUserId: number;
-  status?: OrgStreamerDataOrgStreamerStatuses;
+  targetStreamerUserId: number
+  status?: OrgStreamerDataOrgStreamerStatuses
   /** @nullable */
-  note?: string | null;
+  note?: string | null
 }

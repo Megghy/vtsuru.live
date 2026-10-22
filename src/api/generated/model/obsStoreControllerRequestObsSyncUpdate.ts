@@ -8,17 +8,17 @@
 
 export interface ObsStoreControllerRequestObsSyncUpdate {
   /**
-     * @minLength 1
-     * @maxLength 64
-     */
-  component: string;
+   * @minLength 1
+   * @maxLength 64
+   */
+  component: string
   /** @maxLength 64 */
-  channel: string;
+  channel: string
   /**
-     * @minLength 1
-     * @maxLength 65536
-     */
-  data: string;
+   * @minLength 1
+   * @maxLength 65536
+   */
+  data: string
   /** @maxLength 64 */
-  expectedHash: string;
+  expectedHash: string
 }

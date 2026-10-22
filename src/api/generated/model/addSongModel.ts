@@ -5,41 +5,41 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SongDataSongRequestOption } from './songDataSongRequestOption';
-import type { VTsuruInterfacesSongPlatform } from './vTsuruInterfacesSongPlatform';
+import type { SongDataSongRequestOption } from './songDataSongRequestOption'
+import type { VTsuruInterfacesSongPlatform } from './vTsuruInterfacesSongPlatform'
 
 export interface AddSongModel {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
-  name: string;
+   * @minLength 0
+   * @maxLength 100
+   */
+  name: string
   /**
-     * @minLength 0
-     * @maxLength 100
-     * @nullable
-     */
-  translateName?: string | null;
-  id: number;
-  from: VTsuruInterfacesSongPlatform;
-  author: string[];
+   * @minLength 0
+   * @maxLength 100
+   * @nullable
+   */
+  translateName?: string | null
+  id: number
+  from: VTsuruInterfacesSongPlatform
+  author: string[]
   /**
-     * @minLength 0
-     * @maxLength 200
-     * @nullable
-     */
-  url?: string | null;
+   * @minLength 0
+   * @maxLength 200
+   * @nullable
+   */
+  url?: string | null
   /**
-     * @minLength 0
-     * @maxLength 100
-     * @nullable
-     */
-  description?: string | null;
+   * @minLength 0
+   * @maxLength 100
+   * @nullable
+   */
+  description?: string | null
   /** @nullable */
-  language?: string[] | null;
+  language?: string[] | null
   /** @nullable */
-  tags?: string[] | null;
-  options?: SongDataSongRequestOption;
+  tags?: string[] | null
+  options?: SongDataSongRequestOption
   /** @nullable */
-  cover?: string | null;
+  cover?: string | null
 }

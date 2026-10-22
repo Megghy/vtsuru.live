@@ -1,18 +1,5 @@
 <script setup lang="ts">
-import {
-  NAlert,
-  NButton,
-  NCard,
-  NDivider,
-  NFlex,
-  NInput,
-  NList,
-  NListItem,
-  NModal,
-  NSpin,
-  NText,
-  NTime,
-} from 'naive-ui'
+import { format } from 'date-fns'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -23,6 +10,15 @@ import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { refreshCaptcha } from '@/shared/captcha'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
 import { useForumStore } from '@/store/useForumStore'
 
 import ForumPreviewItem from './ForumPreviewItem.vue'
@@ -112,276 +108,182 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <NSpin
+  <div
     v-if="forumLoading"
-    show
-  />
-  <NCard
-    v-else-if="!forumInfo"
-    size="small"
-    bordered
+    class="py-24 flex justify-center"
   >
-    <NAlert
-      type="error"
-      size="small"
-      :bordered="false"
-    >
-      用户未创建粉丝讨论区
-    </NAlert>
-  </NCard>
-  <NCard
+    <Spin />
+  </div>
+
+  <Card
+    v-else-if="!forumInfo"
+    class="max-w-2xl mx-auto shadow-xs"
+  >
+    <CardContent class="p-6">
+      <Alert variant="destructive">
+        <AlertDescription class="text-xs"> 用户未创建粉丝讨论区 </AlertDescription>
+      </Alert>
+    </CardContent>
+  </Card>
+
+  <Card
     v-else-if="
       (forumInfo.level < ForumUserLevels.Member && forumInfo.settings.requireApply) ||
       forumInfo.settings.allowedViewerLevel > forumInfo.level
     "
-    size="small"
-    bordered
+    class="max-w-2xl mx-auto shadow-xs"
   >
-    <NAlert
-      type="warning"
-      size="small"
-      :bordered="false"
-    >
-      你需要成为成员才能访问 {{ forumInfo.name }}
-    </NAlert>
-    <div style="height: 12px" />
-    <NAlert
-      v-if="forumInfo.isApplied"
-      type="success"
-      size="small"
-      :bordered="false"
-    >
-      已申请, 正在等待管理员审核
-    </NAlert>
-    <NCard
-      v-else
-      title="加入该讨论区"
-      size="small"
-      bordered
-    >
-      <NAlert
-        v-if="!accountInfo.id"
-        type="error"
-        size="small"
-        :bordered="false"
+    <CardContent class="p-6 space-y-4">
+      <Alert>
+        <AlertDescription class="text-xs"> 你需要成为成员才能访问 {{ forumInfo.name }} </AlertDescription>
+      </Alert>
+
+      <Alert
+        v-if="forumInfo.isApplied"
+        class="bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
       >
-        需要登录后才能够加入
-      </NAlert>
-      <NAlert
-        v-else-if="forumInfo.settings.requireApply"
-        type="warning"
-        size="small"
-        :bordered="false"
-      >
-        申请需要审核
-      </NAlert>
-      <NAlert
+        <AlertDescription class="text-xs"> 已申请, 正在等待管理员审核 </AlertDescription>
+      </Alert>
+
+      <Card
         v-else
-        type="success"
-        size="small"
-        :bordered="false"
+        class="border border-border/80 shadow-none"
       >
-        该讨论区可直接加入
-      </NAlert>
-      <NDivider />
-      <NButton
-        type="primary"
-        :loading="useForum.isLoading"
-        :disabled="!accountInfo.id"
-        @click="ApplyToForum"
-      >
-        {{ forumInfo.settings.requireApply ? '申请' : '' }}加入
-      </NButton>
-    </NCard>
-  </NCard>
-  <template v-else>
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NCard
-        size="small"
-        bordered
-        :title="forumInfo.name"
-      />
-      <div class="forum-grid">
-        <NCard
-          class="forum-sidebar"
-          size="small"
-          bordered
-        >
-          <NFlex
-            vertical
-            :size="8"
+        <CardHeader class="p-4 pb-2">
+          <CardTitle class="text-sm font-semibold">加入该讨论区</CardTitle>
+        </CardHeader>
+        <CardContent class="p-4 pt-2 space-y-3">
+          <Alert
+            v-if="!accountInfo.id"
+            variant="destructive"
           >
-            <NButton
-              type="primary"
-              secondary
+            <AlertDescription class="text-xs"> 需要登录后才能够加入 </AlertDescription>
+          </Alert>
+          <Alert v-else-if="forumInfo.settings.requireApply">
+            <AlertDescription class="text-xs"> 申请需要审核 </AlertDescription>
+          </Alert>
+          <Alert
+            v-else
+            class="bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
+          >
+            <AlertDescription class="text-xs"> 该讨论区可直接加入 </AlertDescription>
+          </Alert>
+          <Separator />
+          <Button
+            :disabled="!accountInfo.id || useForum.isLoading"
+            @click="ApplyToForum"
+          >
+            {{ forumInfo.settings.requireApply ? '申请' : '' }}加入
+          </Button>
+        </CardContent>
+      </Card>
+    </CardContent>
+  </Card>
+
+  <template v-else>
+    <div class="forum-container max-w-5xl mx-auto space-y-4 py-4 px-2">
+      <Card class="shadow-xs">
+        <CardHeader class="p-4">
+          <CardTitle class="text-base font-bold text-foreground">{{ forumInfo.name }}</CardTitle>
+        </CardHeader>
+      </Card>
+
+      <div class="forum-grid grid grid-cols-1 md:grid-cols-[240px_1fr] gap-4 items-start">
+        <Card class="forum-sidebar shadow-xs">
+          <CardContent class="p-4 space-y-3">
+            <Button
+              class="w-full"
               @click="showPostTopicModal = true"
             >
               发布话题
-            </NButton>
-            <NAlert
+            </Button>
+            <Badge
               v-if="forumInfo.isAdmin"
-              type="info"
-              size="small"
-              :bordered="false"
+              variant="secondary"
+              class="w-full justify-center py-1 text-[11px] font-normal"
             >
               你是管理员
-            </NAlert>
-          </NFlex>
-        </NCard>
-        <NCard
-          class="forum-topics"
-          size="small"
-          bordered
-          content-style="padding: 0;"
-        >
-          <NList
-            style="width: 100%"
-            size="small"
-            hoverable
-            clickable
-          >
-            <NListItem
-              v-for="(item, index) in topics?.data ?? []"
-              :key="item.id"
-              :style="{ '--topic-index': index }"
+            </Badge>
+          </CardContent>
+        </Card>
+
+        <Card class="forum-topics shadow-xs">
+          <CardContent class="p-0">
+            <Empty
+              v-if="!topics?.data?.length"
+              description="讨论区暂无话题"
+              class="py-16"
+            />
+            <div
+              v-else
+              class="divide-y divide-border/50"
             >
-              <a
-                class="topic-link"
-                :href="`${$route.path}/topic/${item.id}`"
-                target="_blank"
+              <div
+                v-for="item in topics?.data ?? []"
+                :key="item.id"
+                class="topic-row p-3 hover:bg-muted/30 transition"
               >
-                <ForumPreviewItem
-                  :item="item"
-                  :forum="forumInfo"
-                />
-              </a>
-            </NListItem>
-          </NList>
-        </NCard>
+                <a
+                  class="block text-inherit no-underline"
+                  :href="`${$route.path}/topic/${item.id}`"
+                  target="_blank"
+                >
+                  <ForumPreviewItem
+                    :item="item"
+                    :forum="forumInfo"
+                  />
+                </a>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </NFlex>
-    <NModal
-      v-model:show="showPostTopicModal"
-      preset="card"
-      style="width: 800px; max-width: 95%"
-    >
-      <template #header>
-        发布话题
-        <NDivider vertical />
-        <NText
-          depth="3"
-          style="font-size: small"
-        >
-          保存于
-          <NTime
-            :time="lastBackupTopic"
-            format="HH:mm:ss"
+    </div>
+
+    <!-- 发帖弹窗 -->
+    <Dialog v-model:open="showPostTopicModal">
+      <DialogContent class="sm:max-w-3xl max-h-[90vh] flex flex-col p-4 gap-3">
+        <DialogHeader class="pb-2 border-b border-border/60">
+          <div class="flex items-center gap-2">
+            <DialogTitle class="text-sm font-semibold">发布话题</DialogTitle>
+            <Separator
+              orientation="vertical"
+              class="h-3.5"
+            />
+            <span class="text-[11px] text-muted-foreground font-mono">
+              保存于 {{ format(lastBackupTopic, 'HH:mm:ss') }}
+            </span>
+          </div>
+        </DialogHeader>
+
+        <div class="flex-1 min-h-0 overflow-y-auto space-y-3">
+          <Input
+            v-model="currentPostTopicModel.title"
+            placeholder="话题标题"
           />
-        </NText>
-      </template>
-      <NFlex vertical>
-        <NInput
-          v-model:value="currentPostTopicModel.title"
-          placeholder="标题"
-        />
-        <VEditor
-          ref="editor"
-          v-model:value="currentPostTopicModel.content"
-          :max-length="2333"
-        />
-        <div class="forum-submit-row">
-          <CaptchaWidget
-            v-if="showPostTopicModal"
-            ref="turnstile"
-            v-model="token"
-            class="forum-captcha"
+          <VEditor
+            ref="editor"
+            v-model:value="currentPostTopicModel.content"
+            :max-length="2333"
           />
-          <NButton
-            type="primary"
-            :disabled="!token"
-            :loading="useForum.isLoading"
-            @click="postTopic"
-          >
-            发布
-          </NButton>
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <CaptchaWidget
+              v-if="showPostTopicModal"
+              ref="turnstile"
+              v-model="token"
+              class="forum-captcha"
+            />
+            <Button
+              :disabled="!token || useForum.isLoading"
+              @click="postTopic"
+            >
+              发布
+            </Button>
+          </div>
         </div>
-      </NFlex>
-    </NModal>
+      </DialogContent>
+    </Dialog>
   </template>
 </template>
 
-<style scoped>
-.forum-grid {
-  display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 12px;
-  align-items: start;
-}
 
-.topic-link {
-  display: block;
-  color: inherit;
-  text-decoration: none;
-  transition: transform 0.18s ease;
-}
-
-.topic-link:hover {
-  transform: translateX(3px);
-}
-
-.forum-topics :deep(.n-list-item) {
-  animation: forum-topic-enter 0.4s calc(var(--topic-index, 0) * 40ms) cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.forum-submit-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: end;
-  width: 100%;
-}
-
-.forum-captcha {
-  min-width: 0;
-}
-
-@keyframes forum-topic-enter {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-}
-
-@media (max-width: 900px) {
-  .forum-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 560px) {
-  .forum-submit-row {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .forum-submit-row :deep(.n-button) {
-    width: 100%;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .topic-link {
-    transition: none;
-  }
-
-  .forum-topics :deep(.n-list-item) {
-    animation: none;
-  }
-
-  .topic-link:hover {
-    transform: none;
-  }
-}
-</style>

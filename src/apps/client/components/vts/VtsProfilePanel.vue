@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { saveAs } from 'file-saver'
-import { NButton, NCard, NFlex, NInput, NPopconfirm, NTag, NText } from 'naive-ui'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsProfile } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Tag } from '@/shared/ui/tag'
 
 import { useVtsAction } from './useVtsAction'
 
@@ -55,107 +59,82 @@ async function onImportFileChange(ev: Event) {
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="配置包 (Profile)"
-  >
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="8"
-      >
-        <NButton
-          size="small"
+  <Card>
+    <CardHeader class="py-3 px-4">
+      <CardTitle class="text-sm font-semibold">配置包 (Profile)</CardTitle>
+    </CardHeader>
+    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+      <div class="flex items-center gap-2 flex-wrap text-xs">
+        <Button
+          variant="outline"
           @click="addProfile"
         >
           从当前创建
-        </NButton>
-        <NButton
-          size="small"
-          tag="label"
-        >
-          导入
+        </Button>
+        <label class="cursor-pointer">
+          <Button
+            variant="outline"
+            as-child
+          >
+            <span>导入</span>
+          </Button>
           <input
             type="file"
             accept="application/json"
             style="display: none"
             @change="onImportFileChange"
           />
-        </NButton>
-        <NText depth="3"> 保存/恢复 VTS 控制配置 (不含连接信息) </NText>
-      </NFlex>
+        </label>
+        <span class="text-[var(--muted-foreground)]">保存/恢复 VTS 控制配置 (不含连接信息)</span>
+      </div>
 
-      <NFlex
-        v-for="p in vts.profiles"
-        :key="p.id"
-        align="center"
-        justify="space-between"
-        :wrap="true"
-        :size="12"
-      >
-        <NFlex
-          align="center"
-          :wrap="true"
-          :size="12"
+      <div class="flex flex-col gap-2">
+        <div
+          v-for="p in vts.profiles"
+          :key="p.id"
+          class="flex items-center justify-between gap-3 flex-wrap py-1.5 border-b border-[var(--border)] last:border-0"
         >
-          <NTag
-            v-if="vts.currentProfileId === p.id"
-            type="success"
-            size="small"
-          >
-            当前
-          </NTag>
-          <NInput
-            v-model:value="p.name"
-            placeholder="名称"
-            style="width: 200px"
-            @blur="renameProfile({ ...p })"
-          />
-          <NText depth="3">
-            预设={{ p.data.presets.length }} 宏={{ p.data.macros.length }} 参数={{ p.data.paramSlots.length }}
-          </NText>
-        </NFlex>
-        <NFlex
-          :wrap="true"
-          :size="8"
-        >
-          <NButton
-            size="small"
-            type="primary"
-            @click="applyProfile(p.id)"
-          >
-            应用
-          </NButton>
-          <NButton
-            size="small"
-            @click="exportProfile(p)"
-          >
-            导出
-          </NButton>
-          <NPopconfirm @positive-click="captureToProfile(p.id)">
-            <template #trigger>
-              <NButton size="small"> 覆盖保存 </NButton>
-            </template>
-            用当前配置覆盖此 Profile?
-          </NPopconfirm>
-          <NPopconfirm @positive-click="vts.deleteProfile(p.id)">
-            <template #trigger>
-              <NButton
-                size="small"
-                type="error"
-              >
-                删除
-              </NButton>
-            </template>
-            确认删除?
-          </NPopconfirm>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NCard>
+          <div class="flex items-center gap-2 flex-wrap">
+            <Tag
+              v-if="vts.currentProfileId === p.id"
+              variant="default"
+            >
+              当前
+            </Tag>
+            <Input
+              v-model="p.name"
+              placeholder="名称"
+              class="w-48"
+              @blur="renameProfile({ ...p })"
+            />
+            <span class="text-xs text-[var(--muted-foreground)]">
+              预设={{ p.data.presets.length }} 宏={{ p.data.macros.length }} 参数={{ p.data.paramSlots.length }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <Button @click="applyProfile(p.id)"> 应用 </Button>
+            <Button
+              variant="outline"
+              @click="exportProfile(p)"
+            >
+              导出
+            </Button>
+            <Popconfirm
+              title="用当前配置覆盖此 Profile?"
+              @confirm="captureToProfile(p.id)"
+            >
+              <Button variant="outline"> 覆盖保存 </Button>
+            </Popconfirm>
+            <Popconfirm
+              title="确认删除此 Profile?"
+              @confirm="vts.deleteProfile(p.id)"
+            >
+              <Button variant="destructive"> 删除 </Button>
+            </Popconfirm>
+          </div>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 </template>

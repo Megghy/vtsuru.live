@@ -5,48 +5,48 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
-import type { GuardLevel } from './guardLevel';
-import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus';
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes';
-import type { PointGoodsDataServiceConfigData } from './pointGoodsDataServiceConfigData';
-import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode';
-import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting';
-import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel';
+import type { APIFileModel } from './aPIFileModel'
+import type { GuardLevel } from './guardLevel'
+import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus'
+import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
+import type { PointGoodsDataServiceConfigData } from './pointGoodsDataServiceConfigData'
+import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode'
+import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting'
+import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel'
 
 export interface ResponsePointGoodsModel {
-  content: string;
-  collectUrl: string;
-  embedCollectUrl: boolean;
-  setting: RequestPointGoodsModelTempRequestGoodsSetting;
-  serviceConfig?: PointGoodsDataServiceConfigData;
-  virtualKeys: string[];
-  keySelectionMode: PointGoodsDataVirtualKeySelectionMode;
-  id: number;
-  name: string;
-  description: string;
+  content: string
+  collectUrl: string
+  embedCollectUrl: boolean
+  setting: RequestPointGoodsModelTempRequestGoodsSetting
+  serviceConfig?: PointGoodsDataServiceConfigData
+  virtualKeys: string[]
+  keySelectionMode: PointGoodsDataVirtualKeySelectionMode
+  id: number
+  name: string
+  description: string
   /** @nullable */
-  count?: number | null;
-  price: number;
-  tags: string[];
-  images: number[];
-  status: PointGoodsDataGoodsStatus;
-  type: PointGoodsDataGoodsTypes;
-  isPinned: boolean;
-  isAllowRebuy: boolean;
-  maxBuyCount: number;
+  count?: number | null
+  price: number
+  tags: string[]
+  images: number[]
+  status: PointGoodsDataGoodsStatus
+  type: PointGoodsDataGoodsTypes
+  isPinned: boolean
+  isAllowRebuy: boolean
+  maxBuyCount: number
   /** @nullable */
-  maxSubItemSelections?: number | null;
-  createAt: number;
-  canFreeBuy: boolean;
-  allowGuardLevel: GuardLevel;
-  cover?: APIFileModel;
-  purchasedCount: number;
-  soldCount: number;
-  hasPurchased: boolean;
-  canPurchase: boolean;
+  maxSubItemSelections?: number | null
+  createAt: number
+  canFreeBuy: boolean
+  allowGuardLevel: GuardLevel
+  cover?: APIFileModel
+  purchasedCount: number
+  soldCount: number
+  hasPurchased: boolean
+  canPurchase: boolean
   /** @nullable */
-  cannotPurchaseReason?: string | null;
+  cannotPurchaseReason?: string | null
   /** @nullable */
-  subItems?: ResponseSubPointGoodsModel[] | null;
+  subItems?: ResponseSubPointGoodsModel[] | null
 }

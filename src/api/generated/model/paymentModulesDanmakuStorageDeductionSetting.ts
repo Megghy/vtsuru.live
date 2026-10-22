@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PaymentModulesDanmakuStorageDeductionSettingStorageTypes } from './paymentModulesDanmakuStorageDeductionSettingStorageTypes';
+import type { PaymentModulesDanmakuStorageDeductionSettingStorageTypes } from './paymentModulesDanmakuStorageDeductionSettingStorageTypes'
 
 export interface PaymentModulesDanmakuStorageDeductionSetting {
-  storageType?: PaymentModulesDanmakuStorageDeductionSettingStorageTypes;
-  isUnlimited?: boolean;
-  limitDays?: number;
-  limitCount?: number;
-  isEnabled: boolean;
+  storageType?: PaymentModulesDanmakuStorageDeductionSettingStorageTypes
+  isUnlimited?: boolean
+  limitDays?: number
+  limitCount?: number
+  isEnabled: boolean
 }

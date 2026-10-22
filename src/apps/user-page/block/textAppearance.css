@@ -3,9 +3,9 @@
   --text-fx-duration: 2.4s;
   --text-fx-gradient: linear-gradient(
     120deg,
-    var(--vtsuru-page-primary, var(--vtsuru-brand)) 0%,
-    color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) 45%, #fff) 45%,
-    var(--vtsuru-page-primary, var(--vtsuru-brand)) 100%
+    var(--primary) 0%,
+    color-mix(in srgb, var(--primary) 45%, #fff) 45%,
+    var(--primary) 100%
   );
 }
 
@@ -34,8 +34,8 @@
 
 .vtsuru-text-fx--glow {
   text-shadow:
-    0 0 8px color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) calc(var(--text-fx-glow) * 80%), transparent),
-    0 0 18px color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) calc(var(--text-fx-glow) * 50%), transparent);
+    0 0 8px color-mix(in srgb, var(--primary) calc(var(--text-fx-glow) * 80%), transparent),
+    0 0 18px color-mix(in srgb, var(--primary) calc(var(--text-fx-glow) * 50%), transparent);
 }
 
 .vtsuru-text-fx--shine {
@@ -60,15 +60,7 @@
 }
 
 .vtsuru-text-fx--rainbow {
-  background-image: linear-gradient(
-    90deg,
-    #ff4d6d,
-    #ffd166,
-    #06d6a0,
-    #4cc9f0,
-    #b5179e,
-    #ff4d6d
-  );
+  background-image: linear-gradient(90deg, #ff4d6d, #ffd166, #06d6a0, #4cc9f0, #b5179e, #ff4d6d);
   background-size: 220% 100%;
   color: transparent !important;
   -webkit-background-clip: text;
@@ -105,7 +97,7 @@
   50% {
     opacity: 1;
     text-shadow: 0 0 12px
-      color-mix(in srgb, var(--vtsuru-page-primary, var(--vtsuru-brand)) calc(var(--text-fx-glow) * 70%), transparent);
+      color-mix(in srgb, var(--primary) calc(var(--text-fx-glow) * 70%), transparent);
   }
 }
 

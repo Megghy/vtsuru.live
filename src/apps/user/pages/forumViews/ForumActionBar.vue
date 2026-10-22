@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { Delete24Filled } from '@vicons/fluent'
 import { SyncCircleSharp } from '@vicons/ionicons5'
-import { NButton, NIcon, NPopconfirm, NTooltip, useThemeVars } from 'naive-ui'
 import { computed } from 'vue'
+
+import { Button } from '@/shared/ui/button'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = withDefaults(
   defineProps<{
@@ -28,65 +31,68 @@ const emit = defineEmits<{
   restore: []
 }>()
 
-const themeVars = useThemeVars()
-const accentColor = computed(() => themeVars.value.errorColor)
-const mutedIconColor = computed(() => themeVars.value.textColor3)
 const hardDelete = computed(() => props.isDeleted || props.isAdmin)
 </script>
 
 <template>
-  <div class="forum-action-bar">
-    <NTooltip v-if="canManage">
-      <template #trigger>
-        <NPopconfirm @positive-click="emit('delete')">
-          <template #trigger>
-            <NButton
-              size="small"
-              text
-              :disabled="!canOperate"
-            >
-              <template #icon>
-                <NIcon
-                  :component="Delete24Filled"
-                  :color="hardDelete ? accentColor : mutedIconColor"
+  <TooltipProvider>
+    <div class="flex items-center gap-1">
+      <Tooltip v-if="canManage">
+        <TooltipTrigger as-child>
+          <Popconfirm
+            :title="hardDelete ? hardDeleteConfirm : deleteConfirm"
+            positive-text="确认删除"
+            negative-text="取消"
+            @positive-click="emit('delete')"
+          >
+            <template #trigger>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                :class="{ 'text-destructive': hardDelete }"
+                :disabled="!canOperate"
+              >
+                <component
+                  :is="Delete24Filled"
+                  class="size-3.5"
                 />
-              </template>
-            </NButton>
-          </template>
-          {{ hardDelete ? hardDeleteConfirm : deleteConfirm }}
-        </NPopconfirm>
-      </template>
-      {{ hardDelete ? '完全' : '' }}删除
-    </NTooltip>
-    <NTooltip v-if="isDeleted && isAdmin">
-      <template #trigger>
-        <NPopconfirm @positive-click="emit('restore')">
-          <template #trigger>
-            <NButton
-              size="small"
-              text
-              :disabled="!canOperate"
-            >
-              <template #icon>
-                <NIcon
-                  :component="SyncCircleSharp"
-                  :color="mutedIconColor"
+              </Button>
+            </template>
+            {{ hardDelete ? hardDeleteConfirm : deleteConfirm }}
+          </Popconfirm>
+        </TooltipTrigger>
+        <TooltipContent class="text-xs">{{ hardDelete ? '完全' : '' }}删除</TooltipContent>
+      </Tooltip>
+
+      <Tooltip v-if="isDeleted && isAdmin">
+        <TooltipTrigger as-child>
+          <Popconfirm
+            :title="restoreConfirm"
+            positive-text="确认恢复"
+            negative-text="取消"
+            @positive-click="emit('restore')"
+          >
+            <template #trigger>
+              <Button
+                variant="ghost"
+                size="icon"
+                class="size-7 rounded-full text-muted-foreground hover:text-foreground"
+                :disabled="!canOperate"
+              >
+                <component
+                  :is="SyncCircleSharp"
+                  class="size-3.5"
                 />
-              </template>
-            </NButton>
-          </template>
-          {{ restoreConfirm }}
-        </NPopconfirm>
-      </template>
-      恢复
-    </NTooltip>
-  </div>
+              </Button>
+            </template>
+            {{ restoreConfirm }}
+          </Popconfirm>
+        </TooltipTrigger>
+        <TooltipContent class="text-xs">恢复</TooltipContent>
+      </Tooltip>
+    </div>
+  </TooltipProvider>
 </template>
 
-<style scoped>
-.forum-action-bar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-</style>
+

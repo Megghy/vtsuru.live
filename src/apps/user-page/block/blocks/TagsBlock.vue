@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { NFlex, NTag } from 'naive-ui'
 import { computed } from 'vue'
+
+import { Badge } from '@/shared/ui/badge'
 
 import BlockCard from '../BlockCard.vue'
 import { isBlockPropertyAvailable } from '../propertyCapabilities'
@@ -65,7 +66,7 @@ const items = computed(() => {
 
 function getContrastColor(color: string) {
   const value = color.match(/^#([\da-f]{3}|[\da-f]{6})$/i)?.[1]
-  if (!value) return 'var(--vtsuru-fg)'
+  if (!value) return 'var(--foreground)'
   const hex = value.length === 3 ? [...value].map((char) => char + char).join('') : value
   const [red, green, blue] = [0, 2, 4].map((offset) => Number.parseInt(hex.slice(offset, offset + 2), 16))
   const luminance = (red * 299 + green * 587 + blue * 114) / 1000
@@ -80,59 +81,22 @@ function getContrastColor(color: string) {
     :border-title="cfg.framed ? cfg.borderTitle : ''"
     :border-title-align="cfg.borderTitleAlign"
   >
-    <NFlex
-      justify="center"
-      wrap
-      style="gap: 8px"
-    >
-      <NTag
+    <div class="flex justify-center flex-wrap gap-2">
+      <Badge
         v-for="(it, idx) in items"
         :key="idx"
-        :type="it.type"
-        :round="cfg.rounded"
-        :size="cfg.size"
-        :bordered="false"
-        class="vtsuru-tag"
-        :color="
-          it.color ? { color: it.color, textColor: getContrastColor(it.color), borderColor: 'transparent' } : undefined
-        "
+        variant="secondary"
+        class="cursor-default font-medium transition-all hover:brightness-95 hover:-translate-y-px motion-reduce:transition-none motion-reduce:hover:translate-y-0"
+        :class="[
+          cfg.rounded ? 'rounded-full' : 'rounded-md',
+          cfg.size === 'small' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1',
+        ]"
+        :style="it.color ? { backgroundColor: it.color, color: getContrastColor(it.color) } : undefined"
       >
         {{ it.text }}
-      </NTag>
-    </NFlex>
+      </Badge>
+    </div>
   </BlockCard>
 </template>
 
-<style scoped>
-.vtsuru-tag {
-  font-weight: 500;
-  transition:
-    filter 0.2s ease,
-    transform 0.2s ease;
-  cursor: default;
-}
 
-/* Semi-transparent background for typed tags */
-:deep(.n-tag--default-type) {
-  background: var(--vtsuru-bg-muted) !important;
-  color: var(--vtsuru-fg-muted) !important;
-}
-
-.vtsuru-tag:not(.n-tag--round) {
-  border-radius: var(--vtsuru-page-radius);
-}
-
-.vtsuru-tag:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .vtsuru-tag {
-    transition: none;
-  }
-  .vtsuru-tag:hover {
-    transform: none;
-  }
-}
-</style>

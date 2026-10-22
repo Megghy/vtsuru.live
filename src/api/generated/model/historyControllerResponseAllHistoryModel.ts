@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { HistoryControllerResponseAllHistorySingleModel } from './historyControllerResponseAllHistorySingleModel';
-import type { HistoryControllerResponseAllHistoryUpstatSingleModel } from './historyControllerResponseAllHistoryUpstatSingleModel';
+import type { HistoryControllerResponseAllHistorySingleModel } from './historyControllerResponseAllHistorySingleModel'
+import type { HistoryControllerResponseAllHistoryUpstatSingleModel } from './historyControllerResponseAllHistoryUpstatSingleModel'
 
 export interface HistoryControllerResponseAllHistoryModel {
-  fan: HistoryControllerResponseAllHistorySingleModel;
-  guard: HistoryControllerResponseAllHistorySingleModel;
-  upstat: HistoryControllerResponseAllHistoryUpstatSingleModel;
-  like: HistoryControllerResponseAllHistorySingleModel;
+  fan: HistoryControllerResponseAllHistorySingleModel
+  guard: HistoryControllerResponseAllHistorySingleModel
+  upstat: HistoryControllerResponseAllHistoryUpstatSingleModel
+  like: HistoryControllerResponseAllHistorySingleModel
 }

@@ -1,18 +1,6 @@
-import type { MessageApiInjection } from 'naive-ui/es/message/src/MessageProvider'
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import type {
-  ForumCommentModel,
-  ForumCommentSortTypes,
-  ForumModel,
-  ForumPostTopicModel,
-  ForumReplyModel,
-  ForumTopicBaseModel,
-  ForumTopicModel,
-  ForumTopicSortTypes,
-} from '@/api/models/forum'
-import type { APIRoot, PaginationResponse } from '@/api/api-models'
 import {
   getApiForumGetComments,
   getApiForumGetForum,
@@ -33,12 +21,17 @@ import {
   postApiForumPostReply,
   postApiForumPostTopic,
 } from '@/api/generated/forum/forum'
+import type {
+  ForumCommentModel,
+  ForumCommentSortTypes,
+  ForumPostTopicModel,
+  ForumReplyModel,
+  ForumTopicSortTypes,
+} from '@/api/models/forum'
 import { requestWithCaptchaRetry } from '@/shared/captcha'
-import { createNaiveUIApi } from '@/shared/utils'
+import { message } from '@/shared/utils'
 
 export const useForumStore = defineStore('forum', () => {
-  const { message } = createNaiveUIApi(['message'])
-
   const isLoading = ref(false)
   const isLikeLoading = ref(false)
 
@@ -86,7 +79,7 @@ export const useForumStore = defineStore('forum', () => {
     ps: number,
     sort: ForumTopicSortTypes,
     section?: number,
-    messageApi?: MessageApiInjection,
+    messageApi?: any,
   ) {
     try {
       isLoading.value = true
@@ -221,11 +214,7 @@ export const useForumStore = defineStore('forum', () => {
       '发布失败',
     )
   }
-  function PostComment(
-    model: { topic: number; content: string },
-    token: string,
-    refresh?: () => Promise<string>,
-  ) {
+  function PostComment(model: { topic: number; content: string }, token: string, refresh?: () => Promise<string>) {
     return postWithCaptcha(
       (captchaToken) =>
         postApiForumPostComment(model, {

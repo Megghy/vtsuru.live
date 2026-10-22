@@ -7,5 +7,5 @@
  */
 
 export interface CreateOrgModel {
-  name: string;
+  name: string
 }

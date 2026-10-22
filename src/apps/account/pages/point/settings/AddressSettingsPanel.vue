@@ -1,30 +1,21 @@
 <script setup lang="ts">
 import { Add24Regular, Delete24Regular, Edit24Regular, Location24Regular } from '@vicons/fluent'
-import type { FormInst, FormRules } from 'naive-ui'
-import {
-  NButton,
-  NCheckbox,
-  NEmpty,
-  NForm,
-  NFormItem,
-  NIcon,
-  NInput,
-  NInputNumber,
-  NModal,
-  NPopconfirm,
-  NSelect,
-  NSpin,
-  useMessage,
-} from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import type { AddressInfo } from '@/api/api-models'
-import {
-  postApiPointUserDeleteAddress,
-  postApiPointUserUpdateAddress,
-} from '@/api/generated/point/point'
+import { postApiPointUserDeleteAddress, postApiPointUserUpdateAddress } from '@/api/generated/point/point'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
+import { Input } from '@/shared/ui/input'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spin } from '@/shared/ui/spin'
+import { Textarea } from '@/shared/ui/textarea'
+import { toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 interface AreaData {
@@ -41,8 +32,6 @@ interface AddressDraft extends Omit<AddressInfo, 'phone'> {
 
 const emit = defineEmits<{ showAgreement: [] }>()
 const auth = useBiliAuth()
-const message = useMessage()
-const formRef = ref<FormInst>()
 const editing = ref(false)
 const saving = ref(false)
 const loadingArea = ref(false)
@@ -62,15 +51,6 @@ const districtOptions = computed(() =>
 const streetOptions = computed(() =>
   toOptions(areas.value.data[draft.value.province]?.[draft.value.city ?? '']?.[draft.value.district ?? ''] ?? []),
 )
-
-const rules: FormRules = {
-  province: { required: true, message: '请选择省份', trigger: ['blur', 'change'] },
-  city: { required: true, message: '请选择城市', trigger: ['blur', 'change'] },
-  district: { required: true, message: '请选择区县', trigger: ['blur', 'change'] },
-  address: { required: true, message: '请输入详细地址', trigger: ['input', 'blur'] },
-  phone: { required: true, type: 'number', message: '请输入联系电话', trigger: ['input', 'blur'] },
-  name: { required: true, message: '请输入收件人姓名', trigger: ['input', 'blur'] },
-}
 
 function createAddressDraft(address?: AddressInfo): AddressDraft {
   return {
@@ -102,7 +82,7 @@ async function loadAreas() {
     if (!response.ok) throw new Error(`HTTP ${response.status}`)
     areas.value = { createAt: Date.now(), data: (await response.json()) as AreaData }
   } catch (error) {
-    message.error(`地区数据加载失败：${errorText(error)}`)
+    toast.error(`地区数据加载失败：${errorText(error)}`)
   } finally {
     loadingArea.value = false
   }
@@ -115,30 +95,43 @@ async function openEditor(address?: AddressInfo) {
   await loadAreas()
 }
 
-function changeProvince() {
+function changeProvince(val: string) {
+  draft.value.province = val
   draft.value.city = undefined
   draft.value.district = undefined
   draft.value.street = undefined
 }
 
-function changeCity() {
+function changeCity(val: string) {
+  draft.value.city = val
   draft.value.district = undefined
   draft.value.street = undefined
 }
 
-function changeDistrict() {
+function changeDistrict(val: string) {
+  draft.value.district = val
   draft.value.street = undefined
 }
 
 async function saveAddress() {
-  try {
-    await formRef.value?.validate()
-  } catch {
-    message.warning('请完整填写收货信息')
+  if (!draft.value.province || !draft.value.city || !draft.value.district) {
+    toast.warning('请选择完整的省市区')
+    return
+  }
+  if (!draft.value.address.trim()) {
+    toast.warning('请输入详细地址')
+    return
+  }
+  if (!draft.value.name.trim()) {
+    toast.warning('请输入收件人姓名')
+    return
+  }
+  if (!draft.value.phone) {
+    toast.warning('请输入有效的联系电话')
     return
   }
   if (!agreed.value) {
-    message.warning('请先阅读并同意用户协议')
+    toast.warning('请先阅读并同意用户协议')
     return
   }
 
@@ -158,9 +151,9 @@ async function saveAddress() {
     const index = current.findIndex((item) => item.id === response.data.id)
     auth.biliAuth.address = index < 0 ? [...current, response.data] : current.toSpliced(index, 1, response.data)
     editing.value = false
-    message.success('收货地址已保存')
+    toast.success('收货地址已保存')
   } catch (error) {
-    message.error(`保存失败：${errorText(error)}`)
+    toast.error(`保存失败：${errorText(error)}`)
   } finally {
     saving.value = false
   }
@@ -168,7 +161,7 @@ async function saveAddress() {
 
 async function deleteAddress(address: AddressInfo) {
   if (!address.id) {
-    message.error('该地址缺少标识，无法删除')
+    toast.error('该地址缺少标识，无法删除')
     return
   }
 
@@ -180,9 +173,9 @@ async function deleteAddress(address: AddressInfo) {
     )
     if (response.code !== 200) throw new Error(response.message)
     auth.biliAuth.address = addresses.value.filter((item) => item.id !== address.id)
-    message.success('收货地址已删除')
+    toast.success('收货地址已删除')
   } catch (error) {
-    message.error(`删除失败：${errorText(error)}`)
+    toast.error(`删除失败：${errorText(error)}`)
   } finally {
     saving.value = false
   }
@@ -198,201 +191,277 @@ defineExpose({ reset })
 </script>
 
 <template>
-  <section class="point-settings__panel">
-    <div class="point-settings__panel-header">
-      <div class="point-settings__panel-title">
-        <span class="point-settings__panel-icon"><NIcon :component="Location24Regular" /></span>
+  <section class="point-settings__panel rounded-lg border border-border bg-card p-4 space-y-4">
+    <div class="point-settings__panel-header flex items-center justify-between pb-3 border-b border-border/60">
+      <div class="point-settings__panel-title flex items-center gap-2.5">
+        <span
+          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"
+        >
+          <component
+            :is="Location24Regular"
+            class="size-4"
+          />
+        </span>
         <div>
-          <h2>收货地址</h2>
-          <span>{{ addresses.length }} 个地址</span>
+          <h2 class="text-sm font-semibold text-foreground">收货地址</h2>
+          <span class="text-xs text-muted-foreground">{{ addresses.length }} 个地址</span>
         </div>
       </div>
-      <NButton
-        type="primary"
-        secondary
-        size="small"
+      <Button
+        variant="outline"
+        class="flex items-center gap-1"
         @click="openEditor()"
       >
-        <template #icon><NIcon :component="Add24Regular" /></template>
+        <component
+          :is="Add24Regular"
+          class="size-3.5"
+        />
         添加地址
-      </NButton>
+      </Button>
     </div>
 
-    <NSpin :show="saving">
-      <NEmpty
-        v-if="addresses.length === 0"
-        size="small"
-        class="point-settings__empty"
+    <div
+      v-if="saving"
+      class="py-10 flex justify-center"
+    >
+      <Spin />
+    </div>
+
+    <Empty
+      v-else-if="addresses.length === 0"
+      description="暂无收货地址"
+      class="py-8"
+    >
+      <template #extra>
+        <Button
+          class="mt-2"
+          @click="openEditor()"
+        >
+          添加第一个地址
+        </Button>
+      </template>
+    </Empty>
+
+    <div
+      v-else
+      class="point-settings__address-grid grid grid-cols-1 sm:grid-cols-2 gap-3"
+    >
+      <article
+        v-for="address in addresses"
+        :key="address.id"
+        class="point-settings__address p-3 rounded-lg border border-border/80 bg-background flex flex-col justify-between gap-2.5"
       >
-        <template #extra>
-          <NButton
-            size="small"
-            @click="openEditor()"
+        <AddressDisplay :address="address" />
+        <div class="point-settings__row-actions flex items-center justify-end gap-1 pt-2 border-t border-border/50">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="px-2 text-muted-foreground hover:text-foreground flex items-center gap-1"
+            @click="openEditor(address)"
           >
-            添加第一个地址
-          </NButton>
-        </template>
-      </NEmpty>
+            <component
+              :is="Edit24Regular"
+              class="size-3.5"
+            />
+            编辑
+          </Button>
+          <Popconfirm
+            title="确认删除这个收货地址？"
+            positive-text="删除"
+            negative-text="取消"
+            @positive-click="deleteAddress(address)"
+          >
+            <template #trigger>
+              <Button
+                size="xs"
+                variant="ghost"
+                class="px-2 text-destructive hover:bg-destructive/10 flex items-center gap-1"
+              >
+                <component
+                  :is="Delete24Regular"
+                  class="size-3.5"
+                />
+                删除
+              </Button>
+            </template>
+            确认删除这个收货地址？
+          </Popconfirm>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <Dialog v-model:open="editing">
+    <DialogContent class="sm:max-w-md">
+      <DialogHeader>
+        <DialogTitle class="text-base font-semibold">
+          {{ draft.id ? '编辑收货地址' : '添加收货地址' }}
+        </DialogTitle>
+      </DialogHeader>
+
+      <div
+        v-if="loadingArea"
+        class="py-12 flex justify-center"
+      >
+        <Spin />
+      </div>
 
       <div
         v-else
-        class="point-settings__address-grid"
+        class="space-y-3.5 py-2 text-xs"
       >
-        <article
-          v-for="address in addresses"
-          :key="address.id"
-          class="point-settings__address"
-        >
-          <AddressDisplay :address="address" />
-          <div class="point-settings__row-actions">
-            <NButton
-              quaternary
-              size="tiny"
-              @click="openEditor(address)"
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="space-y-1">
+            <label class="font-medium text-foreground">省份</label>
+            <Select
+              :model-value="draft.province"
+              @update:model-value="changeProvince"
             >
-              <template #icon><NIcon :component="Edit24Regular" /></template>
-              编辑
-            </NButton>
-            <NPopconfirm @positive-click="deleteAddress(address)">
-              <template #trigger>
-                <NButton
-                  quaternary
-                  type="error"
-                  size="tiny"
+              <SelectTrigger>
+                <SelectValue placeholder="选择省份" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in provinceOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
                 >
-                  <template #icon><NIcon :component="Delete24Regular" /></template>
-                  删除
-                </NButton>
-              </template>
-              确认删除这个收货地址？
-            </NPopconfirm>
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-        </article>
-      </div>
-    </NSpin>
-  </section>
 
-  <NModal
-    v-model:show="editing"
-    preset="card"
-    :title="draft.id ? '编辑收货地址' : '添加收货地址'"
-    class="point-settings__address-modal"
-  >
-    <NSpin :show="loadingArea">
-      <NForm
-        ref="formRef"
-        :model="draft"
-        :rules="rules"
-        label-placement="top"
-      >
-        <div class="point-settings__area-fields">
-          <NFormItem
-            label="省份"
-            path="province"
-          >
-            <NSelect
-              v-model:value="draft.province"
-              :options="provinceOptions"
-              filterable
-              placeholder="选择省份"
-              @update:value="changeProvince"
-            />
-          </NFormItem>
-          <NFormItem
-            label="城市"
-            path="city"
-          >
-            <NSelect
-              v-model:value="draft.city"
-              :options="cityOptions"
+          <div class="space-y-1">
+            <label class="font-medium text-foreground">城市</label>
+            <Select
+              :model-value="draft.city"
               :disabled="!draft.province"
-              filterable
-              placeholder="选择城市"
-              @update:value="changeCity"
-            />
-          </NFormItem>
-          <NFormItem
-            label="区县"
-            path="district"
-          >
-            <NSelect
-              v-model:value="draft.district"
-              :options="districtOptions"
+              @update:model-value="changeCity"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择城市" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in cityOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-medium text-foreground">区县</label>
+            <Select
+              :model-value="draft.district"
               :disabled="!draft.city"
-              filterable
-              placeholder="选择区县"
-              @update:value="changeDistrict"
-            />
-          </NFormItem>
-          <NFormItem label="街道">
-            <NSelect
-              v-model:value="draft.street"
-              :options="streetOptions"
+              @update:model-value="changeDistrict"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择区县" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in districtOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-medium text-foreground">街道 (选填)</label>
+            <Select
+              :model-value="draft.street"
               :disabled="!draft.district"
-              filterable
-              clearable
-              placeholder="选择街道"
-            />
-          </NFormItem>
+              @update:model-value="draft.street = $event ? String($event) : undefined"
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择街道" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem
+                  v-for="opt in streetOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                  class="text-xs"
+                >
+                  {{ opt.label }}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <NFormItem
-          label="详细地址"
-          path="address"
-        >
-          <NInput
-            v-model:value="draft.address"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 4 }"
+        <div class="space-y-1">
+          <label class="font-medium text-foreground">详细地址</label>
+          <Textarea
+            v-model="draft.address"
+            rows="2"
             placeholder="楼栋、单元和门牌号"
+            class="text-xs resize-none"
           />
-        </NFormItem>
+        </div>
 
-        <div class="point-settings__contact-fields">
-          <NFormItem
-            label="收件人"
-            path="name"
-          >
-            <NInput
-              v-model:value="draft.name"
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="space-y-1">
+            <label class="font-medium text-foreground">收件人</label>
+            <Input
+              v-model="draft.name"
               placeholder="收件人姓名"
             />
-          </NFormItem>
-          <NFormItem
-            label="联系电话"
-            path="phone"
-          >
-            <NInputNumber
-              v-model:value="draft.phone"
-              :show-button="false"
+          </div>
+          <div class="space-y-1">
+            <label class="font-medium text-foreground">联系电话</label>
+            <Input
+              :model-value="draft.phone ? String(draft.phone) : ''"
+              type="tel"
               placeholder="联系电话"
-              class="point-settings__phone"
+              class="font-mono"
+              @update:model-value="draft.phone = Number($event) || null"
             />
-          </NFormItem>
+          </div>
         </div>
 
-        <NCheckbox v-model:checked="agreed">
-          我已阅读并同意
-          <NButton
-            text
-            type="primary"
-            @click.prevent="emit('showAgreement')"
-          >
-            用户协议
-          </NButton>
-        </NCheckbox>
+        <label class="flex items-center gap-2 pt-2 cursor-pointer text-xs">
+          <Checkbox v-model:checked="agreed" />
+          <span>
+            我已阅读并同意
+            <button
+              type="button"
+              class="text-primary hover:underline font-medium inline"
+              @click.prevent="emit('showAgreement')"
+            >
+              用户协议
+            </button>
+          </span>
+        </label>
+      </div>
 
-        <div class="point-settings__modal-actions">
-          <NButton @click="editing = false">取消</NButton>
-          <NButton
-            type="primary"
-            :loading="saving"
-            @click="saveAddress"
-          >
-            保存地址
-          </NButton>
-        </div>
-      </NForm>
-    </NSpin>
-  </NModal>
+      <DialogFooter class="pt-2">
+        <Button
+          variant="outline"
+          @click="editing = false"
+        >
+          取消
+        </Button>
+        <Button
+          :disabled="saving"
+          @click="saveAddress"
+        >
+          保存地址
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
 </template>

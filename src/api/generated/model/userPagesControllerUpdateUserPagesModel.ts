@@ -7,5 +7,5 @@
  */
 
 export interface UserPagesControllerUpdateUserPagesModel {
-  json: string;
+  json: string
 }

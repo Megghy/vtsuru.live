@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseSongRequestModel } from './responseSongRequestModel';
-import type { SettingSongRequest } from './settingSongRequest';
+import type { ResponseSongRequestModel } from './responseSongRequestModel'
+import type { SettingSongRequest } from './settingSongRequest'
 
 export interface LiveRequestControllerResponseSongrequestResponseAndSettings {
-  setting: SettingSongRequest;
-  songs: ResponseSongRequestModel[];
+  setting: SettingSongRequest
+  songs: ResponseSongRequestModel[]
 }

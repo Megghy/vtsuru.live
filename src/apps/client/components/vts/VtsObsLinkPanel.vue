@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { NButton, NCard, NDivider, NFlex, NInputNumber, NSelect, NSwitch, NText } from 'naive-ui'
 import { computed } from 'vue'
 
 import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { Switch } from '@/shared/ui/switch'
 
 const obs = useOBSStore()
 const vts = useVtsStore()
@@ -31,100 +36,96 @@ function removeMapping(scene: string) {
   delete next[scene]
   void vts.setObsLinkConfig({ ...vts.obsLinkConfig, sceneToPresetId: next })
 }
-
 </script>
 
 <template>
-  <NCard
-    size="small"
-    bordered
-    title="OBS 场景联动"
-  >
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NFlex
-        align="center"
-        :wrap="true"
-        :size="12"
-      >
-        <NSwitch
-          :value="vts.obsLinkConfig.enabled"
-          @update:value="setEnabled"
-        >
-          <template #checked> 已启用 </template>
-          <template #unchecked> 未启用 </template>
-        </NSwitch>
-        <NInputNumber
-          :value="vts.obsLinkConfig.debounceMs"
-          :min="0"
-          :step="50"
-          style="width: 140px"
-          @update:value="(val) => setDebounceMs((val ?? 0) as number)"
-        />
-        <NText depth="3"> 防抖 (ms) </NText>
-        <NButton
-          size="small"
+  <Card>
+    <CardHeader class="py-3 px-4">
+      <CardTitle class="text-sm font-semibold">OBS 场景联动</CardTitle>
+    </CardHeader>
+    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+      <div class="flex items-center gap-3 flex-wrap text-xs">
+        <div class="flex items-center gap-2">
+          <Switch
+            :checked="vts.obsLinkConfig.enabled"
+            @update:checked="setEnabled"
+          />
+          <span>{{ vts.obsLinkConfig.enabled ? '已启用' : '未启用' }}</span>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <NumberField
+            :model-value="vts.obsLinkConfig.debounceMs"
+            :min="0"
+            :step="50"
+            class="w-24"
+            @update:model-value="(val) => setDebounceMs((val ?? 0) as number)"
+          />
+          <span class="text-[var(--muted-foreground)]">防抖 (ms)</span>
+        </div>
+
+        <Button
+          variant="outline"
           :disabled="!obs.obsConnected"
           @click="obs.fetchObsScenes"
         >
           刷新场景
-        </NButton>
-        <NText depth="3"> 当前: {{ obs.currentObsScene || '未知' }} </NText>
-      </NFlex>
+        </Button>
+        <span class="text-[var(--muted-foreground)]">当前: {{ obs.currentObsScene || '未知' }}</span>
+      </div>
 
-      <NDivider style="margin: 4px 0" />
+      <Separator />
 
-      <NText
+      <p
         v-if="sceneOptions.length === 0"
-        depth="3"
+        class="text-xs text-[var(--muted-foreground)]"
       >
         未获取到 OBS 场景列表，请先连接 OBS 后点击"刷新场景"
-      </NText>
+      </p>
 
-      <NFlex
+      <div
         v-else
-        vertical
-        :size="8"
+        class="flex flex-col gap-2"
       >
-        <NFlex
+        <div
           v-for="scene in obs.obsScenes"
           :key="scene"
-          align="center"
-          justify="space-between"
-          :wrap="true"
-          :size="12"
+          class="flex items-center justify-between gap-3 flex-wrap"
         >
-          <NFlex
-            align="center"
-            :wrap="true"
-            :size="12"
-          >
-            <NText
-              strong
-              style="min-width: 120px"
-            >
-              {{ scene }}
-            </NText>
-            <NSelect
-              style="width: 280px"
-              :options="presetOptions"
-              :value="vts.obsLinkConfig.sceneToPresetId[scene]"
-              placeholder="映射到 VTS 机位预设"
-              clearable
-              @update:value="(val) => (val ? setMapping(scene, val as string) : removeMapping(scene))"
-            />
-          </NFlex>
-          <NButton
-            size="small"
+          <div class="flex items-center gap-3 flex-wrap flex-1">
+            <span class="font-bold text-xs min-w-[120px]">{{ scene }}</span>
+            <div class="w-64">
+              <Select
+                :model-value="vts.obsLinkConfig.sceneToPresetId[scene] || '__none__'"
+                @update:model-value="
+                  (val) => (val && val !== '__none__' ? setMapping(scene, String(val)) : removeMapping(scene))
+                "
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="映射到 VTS 机位预设" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">无映射</SelectItem>
+                  <SelectItem
+                    v-for="p in presetOptions"
+                    :key="p.value"
+                    :value="p.value"
+                  >
+                    {{ p.label }}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <Button
+            variant="ghost"
             :disabled="!vts.obsLinkConfig.sceneToPresetId[scene]"
             @click="removeMapping(scene)"
           >
             清除
-          </NButton>
-        </NFlex>
-      </NFlex>
-    </NFlex>
-  </NCard>
+          </Button>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
 </template>

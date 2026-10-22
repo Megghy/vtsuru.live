@@ -33,6 +33,7 @@ export default [
       title: '弹幕窗口',
       ignoreLogin: true,
       forceReload: true,
+      transparent: true,
     },
   },
   {
@@ -43,6 +44,7 @@ export default [
       title: '礼物窗口',
       ignoreLogin: true,
       forceReload: true,
+      transparent: true,
     },
   },
 ] satisfies RouteRecordRaw[]

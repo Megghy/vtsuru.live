@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { NTabPane, NTabs } from 'naive-ui'
 import { computed, ref, watch } from 'vue'
 
 import { EventDataTypes } from '@/api/api-models'
+import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { queryUserHistory } from '../core/archive'
 import { formatPrice, paidSummary } from '../core/format'
@@ -63,74 +63,84 @@ function describe(e: DashboardEvent) {
 </script>
 
 <template>
-  <div class="history">
+  <div class="grid gap-1.5 text-xs">
     <div
       v-if="history"
-      class="history__summary"
+      class="flex-between text-muted-foreground"
     >
       <span>本地记录 {{ history.length }} 条</span>
       <span v-if="summary.spent > 0">累计消费 {{ formatPrice(summary.spent) }}</span>
     </div>
     <div
       v-if="summary.names.length > 1"
-      class="history__meta"
+      class="text-muted-foreground wrap-anywhere"
     >
       曾用名：{{ summary.names.join('、') }}
     </div>
     <div
       v-if="summary.medals.length"
-      class="history__meta"
+      class="text-muted-foreground wrap-anywhere"
     >
       勋章：
       <span
         v-for="[name, m] in summary.medals"
         :key="name"
         class="history__medal"
-      >{{ name }} {{ m.first === m.current ? m.current : `${m.first}→${m.current}` }}<template v-if="m.max > m.current">（最高 {{ m.max }}）</template></span>
+        >{{ name }} {{ m.first === m.current ? m.current : `${m.first}→${m.current}`
+        }}<template v-if="m.max > m.current">（最高 {{ m.max }}）</template></span
+      >
     </div>
-    <NTabs
-      v-model:value="tab"
-      size="small"
-      type="segment"
+    <Tabs
+      v-model="tab"
+      class="w-full"
     >
-      <NTabPane
-        name="all"
-        tab="全部"
-      />
-      <NTabPane
-        name="message"
-        tab="弹幕"
-      />
-      <NTabPane
-        name="sc"
-        tab="SC"
-      />
-      <NTabPane
-        name="gift"
-        tab="礼物"
-      />
-      <NTabPane
-        name="interaction"
-        tab="互动"
-      />
-    </NTabs>
-    <div class="history__list">
+      <TabsList
+        size="xs"
+        class="grid w-full grid-cols-5"
+      >
+        <TabsTrigger value="all"> 全部 </TabsTrigger>
+        <TabsTrigger value="message"> 弹幕 </TabsTrigger>
+        <TabsTrigger value="sc"> SC </TabsTrigger>
+        <TabsTrigger
+          value="gift"
+          class="text-xs py-1"
+        >
+          礼物
+        </TabsTrigger>
+        <TabsTrigger
+          value="interaction"
+          class="text-xs py-1"
+        >
+          互动
+        </TabsTrigger>
+      </TabsList>
+    </Tabs>
+    <div class="max-h-[240px] overflow-y-auto grid gap-0.5 content-start">
       <div
         v-for="e in list"
         :key="e.key"
-        class="history__row"
+        class="flex gap-1.5 items-baseline"
       >
-        <span class="history__time">{{ new Date(e.time).toLocaleString('zh-CN', { hour12: false, month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) }}</span>
-        <span class="history__type">{{ EVENT_TYPE_LABELS[e.type] }}</span>
-        <span class="history__text">{{ describe(e) }}</span>
+        <span class="text-muted-foreground shrink-0 tabular-nums">{{
+          new Date(e.time).toLocaleString('zh-CN', {
+            hour12: false,
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+          })
+        }}</span>
+        <span class="text-muted-foreground shrink-0 tabular-nums">{{ EVENT_TYPE_LABELS[e.type] }}</span>
+        <span class="flex-1 min-w-0 wrap-anywhere">{{ describe(e) }}</span>
         <span
           v-if="PAID_TYPES.has(e.type) && e.price > 0"
-          class="history__price"
-        >{{ formatPrice(e.price) }}</span>
+          class="shrink-0 font-semibold"
+          >{{ formatPrice(e.price) }}</span
+        >
       </div>
       <div
         v-if="history && !list.length"
-        class="history__empty"
+        class="text-muted-foreground text-center py-2"
       >
         没有记录
       </div>
@@ -139,62 +149,7 @@ function describe(e: DashboardEvent) {
 </template>
 
 <style scoped>
-.history {
-  display: grid;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.history__summary {
-  display: flex;
-  justify-content: space-between;
-  color: var(--vtsuru-fg-muted);
-}
-
-.history__meta {
-  color: var(--vtsuru-fg-muted);
-  overflow-wrap: anywhere;
-}
-
 .history__medal + .history__medal::before {
   content: '、';
-}
-
-.history__list {
-  max-height: 240px;
-  overflow-y: auto;
-  display: grid;
-  gap: 2px;
-  align-content: start;
-}
-
-.history__row {
-  display: flex;
-  gap: 6px;
-  align-items: baseline;
-}
-
-.history__time,
-.history__type {
-  color: var(--vtsuru-fg-muted);
-  flex-shrink: 0;
-  font-variant-numeric: tabular-nums;
-}
-
-.history__text {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-
-.history__price {
-  flex-shrink: 0;
-  font-weight: 600;
-}
-
-.history__empty {
-  color: var(--vtsuru-fg-disabled);
-  text-align: center;
-  padding: 8px 0;
 }
 </style>

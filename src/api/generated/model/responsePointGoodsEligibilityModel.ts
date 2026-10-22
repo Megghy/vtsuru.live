@@ -5,16 +5,16 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GuardLevel } from './guardLevel';
+import type { GuardLevel } from './guardLevel'
 
 export interface ResponsePointGoodsEligibilityModel {
-  eligible: boolean;
+  eligible: boolean
   /** @nullable */
-  reason?: string | null;
-  userPoint: number;
-  purchasedCount: number;
-  canFreeBuy: boolean;
-  currentGuardLevel: GuardLevel;
-  requestCount: number;
-  needPoint: number;
+  reason?: string | null
+  userPoint: number
+  purchasedCount: number
+  canFreeBuy: boolean
+  currentGuardLevel: GuardLevel
+  requestCount: number
+  needPoint: number
 }

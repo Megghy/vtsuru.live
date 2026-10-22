@@ -1,11 +1,8 @@
-import { ref } from 'vue'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 
 import * as queryApi from '@/api/query'
-import {
-  QUESTION_DISPLAY_OBS_ENDPOINTS,
-  useQuestionDisplayOBS,
-} from '@/apps/obs/composables/useQuestionDisplayOBS'
+import { QUESTION_DISPLAY_OBS_ENDPOINTS, useQuestionDisplayOBS } from '@/apps/obs/composables/useQuestionDisplayOBS'
 import { createMockQuestion, createMockQuestionDisplaySetting } from '@/test/testUtils'
 
 describe('useQuestionDisplayOBS', () => {

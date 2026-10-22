@@ -1,18 +1,5 @@
 <script setup lang="ts">
 import { ArrowReset24Regular, Checkmark16Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NColorPicker,
-  NFormItem,
-  NIcon,
-  NInputNumber,
-  NPopconfirm,
-  NRadioButton,
-  NRadioGroup,
-  NSelect,
-  NSlider,
-  NSwitch,
-} from 'naive-ui'
 import { computed } from 'vue'
 
 import type { Setting_QuestionDisplay } from '@/api/api-models'
@@ -30,6 +17,13 @@ import {
   type QuestionDisplayVisualPreset,
   SYSTEM_CHINESE_FONT_OPTIONS,
 } from '@/shared/questionDisplayPresets'
+import { Button } from '@/shared/ui/button'
+import { ColorPicker } from '@/shared/ui/color-picker'
+import { NumberField } from '@/shared/ui/number-field'
+import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
+import { Switch } from '@/shared/ui/switch'
 
 const setting = defineModel<Setting_QuestionDisplay>({ required: true })
 
@@ -106,37 +100,51 @@ function resetToDefault() {
 </script>
 
 <template>
-  <div class="style-panel">
-    <div class="preset-section">
-      <div class="preset-header">
-        <span class="preset-title">视觉预设</span>
-        <NPopconfirm @positive-click="resetToDefault">
+  <div class="w-full min-w-0 space-y-5 text-xs">
+    <!-- 预设 -->
+    <div class="preset-section space-y-2.5">
+      <div class="preset-header flex items-center justify-between">
+        <span class="preset-title text-xs font-semibold text-foreground">视觉预设</span>
+        <Popconfirm
+          title="重置样式？"
+          positive-text="重置"
+          negative-text="取消"
+          @positive-click="resetToDefault"
+        >
           <template #trigger>
-            <NButton
-              text
-              size="tiny"
-              type="default"
+            <Button
+              variant="ghost"
+              class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
             >
-              <template #icon><NIcon :component="ArrowReset24Regular" /></template>
+              <component
+                :is="ArrowReset24Regular"
+                class="size-3.5"
+              />
               重置
-            </NButton>
+            </Button>
           </template>
           确定要将全部外观样式重置为默认配置吗？
-        </NPopconfirm>
+        </Popconfirm>
       </div>
 
-      <div class="preset-grid">
+      <div class="preset-grid grid grid-cols-2 gap-2">
         <button
           v-for="preset in QUESTION_DISPLAY_PRESETS"
           :key="preset.name"
           type="button"
-          class="preset-card"
-          :class="{ 'is-selected': isPresetSelected(preset.value) }"
+          class="preset-card p-2 rounded-lg border text-left flex flex-col gap-1 transition cursor-pointer"
+          :class="[
+            isPresetSelected(preset.value)
+              ? 'border-primary bg-primary/5 shadow-xs'
+              : 'border-border/80 bg-muted/30 hover:border-border hover:bg-muted/50',
+          ]"
           @click="applyPreset(preset.value)"
         >
-          <div class="preset-preview-wrap">
+          <div
+            class="preset-preview-wrap relative w-full h-12 rounded overflow-hidden flex items-center justify-center border border-border/50"
+          >
             <div
-              class="preset-preview"
+              class="preset-preview w-full h-full p-1.5 flex flex-col justify-center items-center text-center transition"
               :style="{
                 color: `#${preset.value.fontColor}`,
                 backgroundColor:
@@ -149,37 +157,44 @@ function resetToDefault() {
             >
               <span
                 v-if="preset.value.showUserName"
-                class="preview-name"
+                class="preview-name text-[9px] truncate"
                 :style="{ color: `#${preset.value.nameFontColor}` }"
-                >提问者</span
               >
-              <span class="preview-text">正文 Aa</span>
+                提问者
+              </span>
+              <span class="preview-text text-[10px] font-bold">正文 Aa</span>
             </div>
             <span
               v-if="isPresetSelected(preset.value)"
-              class="selected-badge"
+              class="selected-badge absolute top-1 right-1 size-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xs"
             >
-              <NIcon :component="Checkmark16Regular" />
+              <component
+                :is="Checkmark16Regular"
+                class="size-2.5"
+              />
             </span>
           </div>
-          <strong class="preset-name">{{ preset.name }}</strong>
-          <small class="preset-desc">{{ preset.description }}</small>
+          <strong class="preset-name text-xs text-foreground mt-0.5">{{ preset.name }}</strong>
+          <small class="preset-desc text-[10px] text-muted-foreground line-clamp-1">{{ preset.description }}</small>
         </button>
       </div>
     </div>
 
-    <section class="setting-section">
-      <h3>文字排版</h3>
-      <div class="font-columns">
-        <NFormItem label="内容字体">
+    <!-- 文字排版 -->
+    <section class="setting-section space-y-3 pt-3 border-t border-border/60">
+      <h3 class="text-xs font-semibold text-foreground uppercase tracking-wider">文字排版</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">内容字体</label>
           <GoogleFontPicker
             v-model="contentFont"
             :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
             :show-preview="false"
             placeholder="选择内容字体"
           />
-        </NFormItem>
-        <NFormItem label="昵称字体">
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">昵称字体</label>
           <GoogleFontPicker
             v-model="nameFont"
             :extra-options="SYSTEM_CHINESE_FONT_OPTIONS"
@@ -187,388 +202,374 @@ function resetToDefault() {
             :show-preview="false"
             placeholder="选择昵称字体"
           />
-        </NFormItem>
+        </div>
       </div>
 
-      <div class="two-columns">
-        <NFormItem label="内容字号">
-          <NInputNumber
-            v-model:value="setting.fontSize"
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">内容字号</label>
+          <NumberField
+            v-model="setting.fontSize"
             :min="12"
             :max="160"
           />
-        </NFormItem>
-        <NFormItem label="内容字重">
-          <NSelect
-            v-model:value="setting.fontWeight"
-            :options="fontWeightOptions"
-          />
-        </NFormItem>
-        <NFormItem label="昵称字号">
-          <NInputNumber
-            v-model:value="setting.nameFontSize"
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">内容字重</label>
+          <Select
+            :model-value="String(setting.fontWeight ?? 400)"
+            @update:model-value="setting.fontWeight = Number($event)"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in fontWeightOptions"
+                :key="opt.value"
+                :value="String(opt.value)"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">昵称字号</label>
+          <NumberField
+            v-model="setting.nameFontSize"
             :min="12"
             :max="120"
           />
-        </NFormItem>
-        <NFormItem label="昵称字重">
-          <NSelect
-            v-model:value="setting.nameFontWeight"
-            :options="fontWeightOptions"
-          />
-        </NFormItem>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">昵称字重</label>
+          <Select
+            :model-value="String(setting.nameFontWeight ?? 400)"
+            @update:model-value="setting.nameFontWeight = Number($event)"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in fontWeightOptions"
+                :key="opt.value"
+                :value="String(opt.value)"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <NFormItem label="行高倍数">
-        <div class="slider-field">
-          <NSlider
-            v-model:value="setting.lineHeight"
+      <div class="space-y-1">
+        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+          <span class="font-medium">行高倍数</span>
+          <span class="font-mono">{{ setting.lineHeight }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Slider
+            :model-value="[setting.lineHeight ?? 1.5]"
             :min="1"
             :max="3"
             :step="0.05"
+            class="flex-1"
+            @update:model-value="setting.lineHeight = $event?.[0] ?? 1.5"
           />
-          <NInputNumber
-            v-model:value="setting.lineHeight"
+          <NumberField
+            v-model="setting.lineHeight"
             :min="1"
             :max="3"
             :step="0.05"
+            class="w-20"
           />
         </div>
-      </NFormItem>
-
-      <div class="two-columns">
-        <NFormItem label="水平对齐">
-          <NRadioGroup v-model:value="setting.align">
-            <NRadioButton :value="QuestionDisplayAlign.Left">左</NRadioButton>
-            <NRadioButton :value="QuestionDisplayAlign.Center">中</NRadioButton>
-            <NRadioButton :value="QuestionDisplayAlign.Right">右</NRadioButton>
-          </NRadioGroup>
-        </NFormItem>
-        <NFormItem label="垂直对齐">
-          <NRadioGroup v-model:value="setting.verticalAlign">
-            <NRadioButton :value="QuestionDisplayVerticalAlign.Top">上</NRadioButton>
-            <NRadioButton :value="QuestionDisplayVerticalAlign.Center">中</NRadioButton>
-            <NRadioButton :value="QuestionDisplayVerticalAlign.Bottom">下</NRadioButton>
-          </NRadioGroup>
-        </NFormItem>
       </div>
 
-      <NFormItem label="内容最大宽度 (0 为不限)">
-        <div class="slider-field">
-          <NSlider
-            v-model:value="setting.contentMaxWidth"
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">水平对齐</label>
+          <div class="flex items-center bg-muted/60 p-0.5 rounded-md">
+            <button
+              v-for="al in [
+                { label: '左', value: QuestionDisplayAlign.Left },
+                { label: '中', value: QuestionDisplayAlign.Center },
+                { label: '右', value: QuestionDisplayAlign.Right },
+              ]"
+              :key="al.value"
+              type="button"
+              class="flex-1 py-1 text-center rounded transition"
+              :class="
+                setting.align === al.value
+                  ? 'bg-background shadow-xs text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
+              @click="setting.align = al.value"
+            >
+              {{ al.label }}
+            </button>
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">垂直对齐</label>
+          <div class="flex items-center bg-muted/60 p-0.5 rounded-md">
+            <button
+              v-for="val in [
+                { label: '上', value: QuestionDisplayVerticalAlign.Top },
+                { label: '中', value: QuestionDisplayVerticalAlign.Center },
+                { label: '下', value: QuestionDisplayVerticalAlign.Bottom },
+              ]"
+              :key="val.value"
+              type="button"
+              class="flex-1 py-1 text-center rounded transition"
+              :class="
+                setting.verticalAlign === val.value
+                  ? 'bg-background shadow-xs text-foreground font-medium'
+                  : 'text-muted-foreground hover:text-foreground'
+              "
+              @click="setting.verticalAlign = val.value"
+            >
+              {{ val.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+          <span class="font-medium">内容最大宽度 (0 为不限)</span>
+          <span class="font-mono">{{ setting.contentMaxWidth || 0 }}</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Slider
+            :model-value="[setting.contentMaxWidth ?? 0]"
             :min="0"
             :max="80"
             :step="1"
+            class="flex-1"
+            @update:model-value="setting.contentMaxWidth = $event?.[0] ?? 0"
           />
-          <NInputNumber
-            v-model:value="setting.contentMaxWidth"
+          <NumberField
+            v-model="setting.contentMaxWidth"
             :min="0"
             :max="80"
             :step="1"
+            class="w-20"
           />
         </div>
-      </NFormItem>
+      </div>
 
-      <NFormItem label="文字阴影">
-        <NSelect
-          v-model:value="setting.textShadow"
-          :options="textShadowOptions"
-        />
-      </NFormItem>
+      <div class="space-y-1">
+        <label class="text-[11px] text-muted-foreground font-medium">文字阴影</label>
+        <Select
+          :model-value="setting.textShadow ?? QuestionDisplayShadow.None"
+          @update:model-value="setting.textShadow = $event as any"
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in textShadowOptions"
+              :key="opt.value"
+              :value="opt.value"
+              class="text-xs"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-      <div class="color-grid">
-        <NFormItem label="内容文字颜色">
-          <NColorPicker
-            :value="colorValue(setting.fontColor)"
-            :modes="['hex']"
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">内容文字颜色</label>
+          <ColorPicker
+            :model-value="colorValue(setting.fontColor)"
             :show-alpha="false"
-            @update:value="updateColor('fontColor', $event)"
+            @update:model-value="updateColor('fontColor', $event)"
           />
-        </NFormItem>
-        <NFormItem label="昵称文字颜色">
-          <NColorPicker
-            :value="colorValue(setting.nameFontColor)"
-            :modes="['hex']"
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">昵称文字颜色</label>
+          <ColorPicker
+            :model-value="colorValue(setting.nameFontColor)"
             :show-alpha="false"
-            @update:value="updateColor('nameFontColor', $event)"
+            @update:model-value="updateColor('nameFontColor', $event)"
           />
-        </NFormItem>
+        </div>
       </div>
     </section>
 
-    <section class="setting-section">
-      <h3>卡片外观</h3>
-      <div class="color-grid">
-        <NFormItem label="背景颜色">
-          <NColorPicker
-            :value="colorValue(setting.backgroundColor)"
-            :modes="['hex']"
+    <!-- 卡片外观 -->
+    <section class="setting-section space-y-3 pt-3 border-t border-border/60">
+      <h3 class="text-xs font-semibold text-foreground uppercase tracking-wider">卡片外观</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">背景颜色</label>
+          <ColorPicker
+            :model-value="colorValue(setting.backgroundColor)"
             :show-alpha="false"
-            @update:value="updateColor('backgroundColor', $event)"
-          />
-        </NFormItem>
-        <NFormItem label="边框颜色">
-          <NColorPicker
-            :value="colorValue(setting.borderColor)"
-            :modes="['hex']"
-            :show-alpha="false"
-            @update:value="updateColor('borderColor', $event)"
-          />
-        </NFormItem>
-      </div>
-
-      <NFormItem label="背景不透明度 (%)">
-        <div class="slider-field">
-          <NSlider
-            v-model:value="setting.backgroundOpacity"
-            :min="0"
-            :max="100"
-          />
-          <NInputNumber
-            v-model:value="setting.backgroundOpacity"
-            :min="0"
-            :max="100"
+            @update:model-value="updateColor('backgroundColor', $event)"
           />
         </div>
-      </NFormItem>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">边框颜色</label>
+          <ColorPicker
+            :model-value="colorValue(setting.borderColor)"
+            :show-alpha="false"
+            @update:model-value="updateColor('borderColor', $event)"
+          />
+        </div>
+      </div>
 
-      <div class="two-columns">
-        <NFormItem label="内边距 (px)">
-          <NInputNumber
-            v-model:value="setting.contentPadding"
+      <div class="space-y-1">
+        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+          <span class="font-medium">背景不透明度 (%)</span>
+          <span class="font-mono">{{ setting.backgroundOpacity ?? 100 }}%</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <Slider
+            :model-value="[setting.backgroundOpacity ?? 100]"
+            :min="0"
+            :max="100"
+            class="flex-1"
+            @update:model-value="setting.backgroundOpacity = $event?.[0] ?? 100"
+          />
+          <NumberField
+            v-model="setting.backgroundOpacity"
+            :min="0"
+            :max="100"
+            class="w-20"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">内边距 (px)</label>
+          <NumberField
+            v-model="setting.contentPadding"
             :min="0"
             :max="96"
           />
-        </NFormItem>
-        <NFormItem label="卡片圆角 (px)">
-          <NInputNumber
-            v-model:value="setting.borderRadius"
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">卡片圆角 (px)</label>
+          <NumberField
+            v-model="setting.borderRadius"
             :min="0"
             :max="64"
           />
-        </NFormItem>
-        <NFormItem label="边框宽度 (px)">
-          <NInputNumber
-            v-model:value="setting.borderWidth"
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">边框宽度 (px)</label>
+          <NumberField
+            v-model="setting.borderWidth"
             :min="0"
             :max="32"
           />
-        </NFormItem>
-        <NFormItem label="卡片阴影">
-          <NSelect
-            v-model:value="setting.shadow"
-            :options="shadowOptions"
-          />
-        </NFormItem>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">卡片阴影</label>
+          <Select
+            :model-value="setting.shadow ?? QuestionDisplayShadow.None"
+            @update:model-value="setting.shadow = $event as any"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in shadowOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </section>
 
-    <section class="setting-section">
-      <h3>显示与动画</h3>
-      <div class="switch-row">
-        <span>显示提问者昵称</span>
-        <NSwitch v-model:value="setting.showUserName" />
-      </div>
-      <div class="switch-row">
-        <span>显示提问附图</span>
-        <NSwitch v-model:value="setting.showImage" />
-      </div>
-      <div class="switch-row">
-        <span>显示 VTsuru 标识</span>
-        <NSwitch v-model:value="setting.showBrand" />
-      </div>
-
-      <div class="two-columns">
-        <NFormItem label="附图排列">
-          <NSelect
-            v-model:value="setting.imageLayout"
-            :options="imageLayoutOptions"
-          />
-        </NFormItem>
-        <NFormItem label="切换动画">
-          <NSelect
-            v-model:value="setting.transition"
-            :options="transitionOptions"
-          />
-        </NFormItem>
+    <!-- 显示与动画 -->
+    <section class="setting-section space-y-3 pt-3 border-t border-border/60">
+      <h3 class="text-xs font-semibold text-foreground uppercase tracking-wider">显示与动画</h3>
+      <div class="space-y-2">
+        <div class="switch-row flex items-center justify-between py-1">
+          <span class="text-xs text-foreground">显示提问者昵称</span>
+          <Switch v-model:checked="setting.showUserName" />
+        </div>
+        <div class="switch-row flex items-center justify-between py-1">
+          <span class="text-xs text-foreground">显示提问附图</span>
+          <Switch v-model:checked="setting.showImage" />
+        </div>
+        <div class="switch-row flex items-center justify-between py-1">
+          <span class="text-xs text-foreground">显示 VTsuru 标识</span>
+          <Switch v-model:checked="setting.showBrand" />
+        </div>
       </div>
 
-      <NFormItem label="单图最大高度 (px)">
-        <NInputNumber
-          v-model:value="setting.imageMaxHeight"
+      <div class="grid grid-cols-2 gap-3 pt-1">
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">附图排列</label>
+          <Select
+            :model-value="setting.imageLayout ?? QuestionDisplayImageLayout.Contain"
+            @update:model-value="setting.imageLayout = $event as any"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in imageLayoutOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div class="space-y-1">
+          <label class="text-[11px] text-muted-foreground font-medium">切换动画</label>
+          <Select
+            :model-value="setting.transition ?? QuestionDisplayTransition.Fade"
+            @update:model-value="setting.transition = $event as any"
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in transitionOptions"
+                :key="opt.value"
+                :value="opt.value"
+                class="text-xs"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div class="space-y-1">
+        <label class="text-[11px] text-muted-foreground font-medium">单图最大高度 (px)</label>
+        <NumberField
+          v-model="setting.imageMaxHeight"
           :min="80"
           :max="1080"
         />
-      </NFormItem>
+      </div>
     </section>
   </div>
 </template>
-
-<style scoped>
-.style-panel {
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
-
-.preset-section {
-  display: grid;
-  gap: 8px;
-}
-
-.preset-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.preset-title {
-  color: var(--vtsuru-fg);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.preset-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.preset-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 8px;
-  text-align: left;
-  background: var(--vtsuru-bg-muted);
-  border: 1px solid var(--vtsuru-border);
-  border-radius: 8px;
-  cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    background-color 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.preset-card:hover {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-brand);
-}
-
-.preset-card.is-selected {
-  background: var(--vtsuru-bg-elevated);
-  border-color: var(--vtsuru-brand);
-  box-shadow: 0 0 0 1px var(--vtsuru-brand);
-}
-
-.preset-preview-wrap {
-  position: relative;
-  width: 100%;
-  height: 48px;
-  margin-bottom: 6px;
-  overflow: hidden;
-  background-image: linear-gradient(45deg, #2b2f36 25%, transparent 25%),
-    linear-gradient(-45deg, #2b2f36 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #2b2f36 75%),
-    linear-gradient(-45deg, transparent 75%, #2b2f36 75%);
-  background-size: 12px 12px;
-  background-position: 0 0, 0 6px, 6px -6px, -6px 0;
-  background-color: #1e2227;
-  border-radius: 4px;
-}
-
-.selected-badge {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 16px;
-  height: 16px;
-  color: #ffffff;
-  background: var(--vtsuru-brand);
-  border-radius: 50%;
-  box-shadow: 0 2px 4px rgb(0 0 0 / 25%);
-}
-
-.preset-preview {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 4px 6px;
-  box-sizing: border-box;
-  border-style: solid;
-}
-
-.preview-name {
-  font-size: 9px;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.preview-text {
-  font-size: 10px;
-  line-height: 1.2;
-}
-
-.preset-name {
-  color: var(--vtsuru-fg);
-  font-size: 12px;
-}
-
-.preset-desc {
-  display: -webkit-box;
-  margin-top: 2px;
-  overflow: hidden;
-  color: var(--vtsuru-fg-muted);
-  font-size: 10px;
-  line-height: 1.3;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.setting-section {
-  display: grid;
-  gap: 2px;
-  padding-top: 14px;
-  border-top: 1px solid var(--vtsuru-border);
-}
-
-.setting-section h3 {
-  margin: 0 0 8px;
-  color: var(--vtsuru-fg);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.font-columns,
-.two-columns,
-.color-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0 10px;
-  min-width: 0;
-}
-
-.slider-field {
-  display: grid;
-  grid-template-columns: 1fr 72px;
-  gap: 12px;
-  align-items: center;
-  width: 100%;
-}
-
-.switch-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 13px;
-  color: var(--vtsuru-fg);
-}
-</style>

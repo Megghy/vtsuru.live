@@ -7,5 +7,5 @@
  */
 
 export type PostApiObsStorePngtuberAssetsBody = {
-  file?: Blob | File;
-};
+  file?: Blob | File
+}

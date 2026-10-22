@@ -1,18 +1,12 @@
 <script setup lang="ts">
 import { Open24Regular } from '@vicons/fluent'
-import {
-  NButton,
-  NDrawer,
-  NDrawerContent,
-  NFlex,
-  NIcon,
-  NSpin,
-  NTag,
-  NText,
-} from 'naive-ui'
 import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
 
 import type { ObsComponentDefinition } from '@/apps/obs-store/registry'
+import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
+import { Sheet, SheetContent, SheetHeader } from '@/shared/ui/sheet'
+import { Spin } from '@/shared/ui/spin'
 
 const props = defineProps<{
   show: boolean
@@ -55,154 +49,92 @@ watch(
 )
 
 const isReady = computed(() => props.component?.status === 'ready')
-
-const statusLabel = computed(() => props.component?.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中')
+const statusLabel = computed(() => (props.component?.status === 'beta' ? '内测' : isReady.value ? '已就绪' : '规划中'))
 </script>
 
 <template>
-  <NDrawer
-    :show="props.show"
-    :width="960"
-    placement="right"
-    :mask-closable="true"
-    @update:show="emit('update:show', $event)"
+  <Sheet
+    :open="props.show"
+    @update:open="emit('update:show', $event)"
   >
-    <NDrawerContent
-      closable
-      :native-scrollbar="false"
-      class="obs-drawer-content"
+    <SheetContent
+      side="right"
+      class="w-full sm:max-w-[960px] p-6 overflow-y-auto"
     >
-      <template #header>
-        <NFlex
-          v-if="props.component"
-          justify="space-between"
-          align="center"
-          class="w-full"
-        >
-          <div class="drawer-header-left">
-            <div class="icon-wrap">
-              <NIcon
-                :component="props.component.icon"
-                class="header-icon"
+      <SheetHeader
+        v-if="props.component"
+        class="border-b pb-4 mb-4"
+      >
+        <div class="flex items-center justify-between gap-4 w-full pr-6">
+          <div class="flex items-center gap-3">
+            <div class="flex-center size-9 bg-[var(--brand-soft)] text-[var(--brand)] rounded-lg shrink-0">
+              <component
+                :is="props.component.icon"
+                class="size-5"
               />
             </div>
             <div>
-              <NFlex
-                align="center"
-                :size="8"
-              >
-                <span class="header-title">{{ props.component.name }}</span>
-                <NTag
-                  size="tiny"
-                  :type="props.component?.status === 'beta' ? 'warning' : isReady ? 'success' : 'default'"
-                  :bordered="false"
+              <div class="flex items-center gap-2">
+                <span class="text-[15px] font-semibold text-foreground">{{ props.component.name }}</span>
+                <Badge
+                  variant="outline"
+                  :class="[
+                    'text-[10px] h-4.5 px-1.5',
+                    props.component?.status === 'beta'
+                      ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
+                      : isReady
+                        ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
+                        : 'text-muted-foreground',
+                  ]"
                 >
                   {{ statusLabel }}
-                </NTag>
-              </NFlex>
-              <NText
-                depth="3"
-                class="header-desc"
-              >
+                </Badge>
+              </div>
+              <div class="block mt-0.5 text-xs text-muted-foreground">
                 {{ props.component.shortDescription }}
-              </NText>
+              </div>
             </div>
           </div>
 
-          <NFlex
+          <div
             v-if="props.component?.managePath"
-            align="center"
-            :size="8"
+            class="flex items-center gap-2"
           >
-            <NButton
-              size="small"
-              secondary
-              tag="a"
-              :href="props.component.managePath"
-              target="_blank"
+            <Button
+              variant="secondary"
+              class="gap-1.5"
+              as-child
             >
-              <template #icon>
-                <NIcon :component="Open24Regular" />
-              </template>
-              独立窗口打开
-            </NButton>
-          </NFlex>
-        </NFlex>
-      </template>
+              <a
+                :href="props.component.managePath"
+                target="_blank"
+              >
+                <Open24Regular class="size-4" />
+                独立窗口打开
+              </a>
+            </Button>
+          </div>
+        </div>
+      </SheetHeader>
 
       <!-- 抽屉主体区域 -->
       <div
         v-if="props.component"
-        class="drawer-body-inner"
+        class="py-1 pb-6"
       >
-        <NSpin :show="isLoading">
+        <Spin :show="isLoading">
           <component
             :is="activeComponentLoader"
             v-if="activeComponentLoader"
           />
           <div
             v-else-if="!isLoading"
-            class="placeholder-wrap"
+            class="flex-center min-h-[240px]"
           >
-            <NText depth="3">
-              该组件尚在开发规划中，暂无可用的配置控制台。
-            </NText>
+            <span class="text-sm text-muted-foreground"> 该组件尚在开发规划中，暂无可用的配置控制台。 </span>
           </div>
-        </NSpin>
+        </Spin>
       </div>
-    </NDrawerContent>
-  </NDrawer>
+    </SheetContent>
+  </Sheet>
 </template>
-
-<style scoped>
-.drawer-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.drawer-header-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.icon-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  background: var(--vtsuru-brand-soft);
-  color: var(--vtsuru-brand);
-  border-radius: 8px;
-  flex-shrink: 0;
-}
-
-.header-icon {
-  font-size: 20px;
-}
-
-.header-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--vtsuru-fg);
-}
-
-.header-desc {
-  font-size: 12px;
-  display: block;
-  margin-top: 2px;
-}
-
-.drawer-body-inner {
-  padding: 4px 0 24px;
-}
-
-.placeholder-wrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 240px;
-}
-</style>

@@ -6,8 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type VTsuruCoreAICenterAITextReviewResultViolationTypes = typeof VTsuruCoreAICenterAITextReviewResultViolationTypes[keyof typeof VTsuruCoreAICenterAITextReviewResultViolationTypes];
-
+export type VTsuruCoreAICenterAITextReviewResultViolationTypes =
+  (typeof VTsuruCoreAICenterAITextReviewResultViolationTypes)[keyof typeof VTsuruCoreAICenterAITextReviewResultViolationTypes]
 
 export const VTsuruCoreAICenterAITextReviewResultViolationTypes = {
   NUMBER_0: 0,
@@ -17,4 +17,4 @@ export const VTsuruCoreAICenterAITextReviewResultViolationTypes = {
   NUMBER_4: 4,
   NUMBER_5: 5,
   NUMBER_6: 6,
-} as const;
+} as const

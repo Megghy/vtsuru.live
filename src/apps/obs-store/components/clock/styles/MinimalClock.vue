@@ -66,22 +66,26 @@ onMounted(() => {
         <span
           v-if="props.state.showMilliseconds"
           class="minimal-ms"
-        >.{{ props.clockData.milliseconds }}</span>
+          >.{{ props.clockData.milliseconds }}</span
+        >
         <span
           v-if="!props.state.is24Hour && props.clockData.ampm"
           class="minimal-ampm"
-        >{{ props.clockData.ampm }}</span>
+          >{{ props.clockData.ampm }}</span
+        >
       </template>
 
       <template v-else-if="props.state.mode === 'countdown'">
         <span
           v-if="props.countdownData.isFinished"
           class="minimal-finished"
-        >{{ props.state.timerEndText || 'LIVE NOW' }}</span>
+          >{{ props.state.timerEndText || 'LIVE NOW' }}</span
+        >
         <span
           v-else
           class="minimal-timer"
-        >{{ props.countdownData.displayTime }}</span>
+          >{{ props.countdownData.displayTime }}</span
+        >
       </template>
 
       <template v-else-if="props.state.mode === 'stopwatch'">
@@ -97,11 +101,13 @@ onMounted(() => {
       <span
         v-if="props.state.showDate"
         class="footer-item"
-      >{{ props.clockData.dateStr }}</span>
+        >{{ props.clockData.dateStr }}</span
+      >
       <span
         v-if="props.state.showDayOfWeek"
         class="footer-item highlight"
-      >{{ props.clockData.dayOfWeekEn }}</span>
+        >{{ props.clockData.dayOfWeekEn }}</span
+      >
     </div>
   </div>
 </template>
@@ -114,7 +120,11 @@ onMounted(() => {
   background: transparent;
   padding: 4px;
   user-select: none;
-  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family:
+    'Space Grotesk',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
   color: var(--user-text);
   text-shadow:
     0 2px 6px rgba(0, 0, 0, 0.9),

@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DanmakuUserInfo } from './danmakuUserInfo';
-import type { ResponseSongModel } from './responseSongModel';
+import type { DanmakuUserInfo } from './danmakuUserInfo'
+import type { ResponseSongModel } from './responseSongModel'
 
 export interface MusicRequestControllerWaitingMusicModel {
-  from: DanmakuUserInfo;
-  music: ResponseSongModel;
+  from: DanmakuUserInfo
+  music: ResponseSongModel
 }

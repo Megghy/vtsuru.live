@@ -5,18 +5,18 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseBiliAuthModelGuardInfo } from './responseBiliAuthModelGuardInfo';
-import type { ShippingAddressInfo } from './shippingAddressInfo';
+import type { ResponseBiliAuthModelGuardInfo } from './responseBiliAuthModelGuardInfo'
+import type { ShippingAddressInfo } from './shippingAddressInfo'
 
 export interface ResponseBiliAuthModel {
-  address: ShippingAddressInfo[];
-  guardInfo: ResponseBiliAuthModelGuardInfo;
-  id: number;
-  userId: number;
-  openId: string;
+  address: ShippingAddressInfo[]
+  guardInfo: ResponseBiliAuthModelGuardInfo
+  id: number
+  userId: number
+  openId: string
   /** @nullable */
-  avatar?: string | null;
+  avatar?: string | null
   /** @nullable */
-  name?: string | null;
-  createAt: number;
+  name?: string | null
+  createAt: number
 }

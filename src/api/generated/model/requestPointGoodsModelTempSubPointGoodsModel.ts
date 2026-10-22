@@ -5,54 +5,54 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes';
-import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode';
-import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting';
+import type { APIFileModel } from './aPIFileModel'
+import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
+import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode'
+import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting'
 
 export interface RequestPointGoodsModelTempSubPointGoodsModel {
   /** @nullable */
-  id?: number | null;
+  id?: number | null
   /**
-     * @minLength 0
-     * @maxLength 200
-     */
-  name: string;
-  price: number;
+   * @minLength 0
+   * @maxLength 200
+   */
+  name: string
+  price: number
   /** @nullable */
-  stock?: number | null;
+  stock?: number | null
   /**
-     * @minLength 0
-     * @maxLength 500
-     * @nullable
-     */
-  description?: string | null;
-  type?: PointGoodsDataGoodsTypes;
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
+  description?: string | null
+  type?: PointGoodsDataGoodsTypes
   /** @nullable */
-  tags?: string[] | null;
-  cover?: APIFileModel;
+  tags?: string[] | null
+  cover?: APIFileModel
   /**
-     * @minLength 0
-     * @maxLength 300
-     * @nullable
-     */
-  collectUrl?: string | null;
+   * @minLength 0
+   * @maxLength 300
+   * @nullable
+   */
+  collectUrl?: string | null
   /** @nullable */
-  embedCollectUrl?: boolean | null;
+  embedCollectUrl?: boolean | null
   /** @nullable */
-  isAllowRebuy?: boolean | null;
+  isAllowRebuy?: boolean | null
   /** @nullable */
-  maxBuyCount?: number | null;
+  maxBuyCount?: number | null
   /**
-     * @minLength 0
-     * @maxLength 10000
-     * @nullable
-     */
-  content?: string | null;
+   * @minLength 0
+   * @maxLength 10000
+   * @nullable
+   */
+  content?: string | null
   /** @nullable */
-  virtualKeys?: string[] | null;
-  keySelectionMode?: PointGoodsDataVirtualKeySelectionMode;
-  setting?: RequestPointGoodsModelTempRequestGoodsSetting;
+  virtualKeys?: string[] | null
+  keySelectionMode?: PointGoodsDataVirtualKeySelectionMode
+  setting?: RequestPointGoodsModelTempRequestGoodsSetting
   /** @nullable */
-  defaultQuantity?: number | null;
+  defaultQuantity?: number | null
 }

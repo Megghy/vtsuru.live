@@ -1,4 +1,3 @@
-import { useMessage } from 'naive-ui'
 import { computed, inject, provide, ref } from 'vue'
 import type { InjectionKey } from 'vue'
 
@@ -9,12 +8,12 @@ import {
   postApiOrgOrgIdStreamerUpdate,
 } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
+import { toast } from '@/shared/utils'
 
 import type { OrgStreamerDetailModel, OrgStreamerItem, StreamerOption } from '../types'
 import type { OrgContext } from './useOrgContext'
 
 export function useOrgStreamers(ctx: OrgContext) {
-  const message = useMessage()
   const streamers = ref<OrgStreamerItem[]>([])
   const loading = ref(false)
   const includeAll = ref(false)
@@ -42,7 +41,7 @@ export function useOrgStreamers(ctx: OrgContext) {
         '加载主播失败',
       )
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载主播失败')
+      toast.error(err instanceof Error ? err.message : '加载主播失败')
     } finally {
       loading.value = false
     }
@@ -56,10 +55,10 @@ export function useOrgStreamers(ctx: OrgContext) {
         })) as any,
         '移除失败',
       )
-      message.success('移除成功')
+      toast.success('移除成功')
       await load()
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '移除失败')
+      toast.error(err instanceof Error ? err.message : '移除失败')
     }
   }
 
@@ -83,7 +82,6 @@ export function injectOrgStreamers(): OrgStreamersStore {
 }
 
 export function useStreamerDetail(ctx: OrgContext) {
-  const message = useMessage()
   const show = ref(false)
   const selectedId = ref<number | null>(null)
   const loading = ref(false)
@@ -114,11 +112,10 @@ export function useStreamerDetail(ctx: OrgContext) {
     loading.value = true
     try {
       const data = unwrapOk(
-        await getApiOrgOrgIdStreamersStreamerUserIdDetail(
-          ctx.orgId.value,
-          selectedId.value,
-          { page: page.value, pageSize: pageSize.value },
-        ),
+        await getApiOrgOrgIdStreamersStreamerUserIdDetail(ctx.orgId.value, selectedId.value, {
+          page: page.value,
+          pageSize: pageSize.value,
+        }),
         '加载失败',
       )
       detail.value = data
@@ -127,7 +124,7 @@ export function useStreamerDetail(ctx: OrgContext) {
       editStatus.value = data.status
       editNote.value = data.note || ''
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '加载失败')
+      toast.error(err instanceof Error ? err.message : '加载失败')
     } finally {
       loading.value = false
     }
@@ -151,11 +148,11 @@ export function useStreamerDetail(ctx: OrgContext) {
         })) as any,
         '保存失败',
       )
-      message.success('已保存')
+      toast.success('已保存')
       await onSaved?.()
       await load(true)
     } catch (err) {
-      message.error(err instanceof Error ? err.message : '保存失败')
+      toast.error(err instanceof Error ? err.message : '保存失败')
     } finally {
       saving.value = false
     }
@@ -167,6 +164,7 @@ export function useStreamerDetail(ctx: OrgContext) {
     loading,
     detail,
     lives,
+    page,
     hasMore,
     editStatus,
     editNote,

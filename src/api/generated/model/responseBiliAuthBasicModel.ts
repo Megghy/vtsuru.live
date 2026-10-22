@@ -7,12 +7,12 @@
  */
 
 export interface ResponseBiliAuthBasicModel {
-  id: number;
-  userId: number;
-  openId: string;
+  id: number
+  userId: number
+  openId: string
   /** @nullable */
-  avatar?: string | null;
+  avatar?: string | null
   /** @nullable */
-  name?: string | null;
-  createAt: number;
+  name?: string | null
+  createAt: number
 }

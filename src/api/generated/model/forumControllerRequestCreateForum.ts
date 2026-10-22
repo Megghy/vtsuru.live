@@ -7,7 +7,7 @@
  */
 
 export interface ForumControllerRequestCreateForum {
-  name: string;
+  name: string
   /** @nullable */
-  description?: string | null;
+  description?: string | null
 }

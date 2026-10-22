@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { NButton, NCard, NFlex, NSelect, NText } from 'naive-ui'
 import { computed, ref } from 'vue'
 
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { Button } from '@/shared/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
 
@@ -47,186 +50,129 @@ async function copyResult() {
 </script>
 
 <template>
-  <NCard title="翻译工具">
-    <template #header-extra>
-      <NFlex
-        :size="8"
-        align="center"
-      >
-        <NSelect
-          v-model:value="mode"
-          :options="modeOptions"
-          size="small"
-          style="width: 130px"
-        />
-        <NButton
-          size="small"
-          type="primary"
+  <Card>
+    <CardHeader class="flex flex-row items-center justify-between pb-4">
+      <CardTitle class="text-base font-semibold">翻译工具</CardTitle>
+      <div class="flex items-center gap-2">
+        <Select v-model="mode">
+          <SelectTrigger class="w-[130px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem
+              v-for="opt in modeOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
+              {{ opt.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
           :loading="translating"
           @click="doTranslate"
         >
           翻译
-        </NButton>
-      </NFlex>
-    </template>
-
-    <NFlex
-      vertical
-      :size="12"
-    >
-      <NText
-        v-if="!browserApiAvailable"
-        depth="3"
-        style="font-size: 12px"
-      >
-        当前浏览器不支持内置翻译 API (需要 Chrome 138+)，已自动切换到云端翻译
-      </NText>
-      <NText
-        depth="3"
-        style="font-size: 12px"
-      >
-        浏览器翻译：使用 Chrome 内置翻译引擎，速度快且无字数限制，需要 Chrome 138+；云端翻译：使用本站提供的
-        DeepSeek-V4-Flash 模型，限制 5000 字
-      </NText>
-
-      <div class="lang-bar">
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          源语言
-        </NText>
-        <NSelect
-          v-model:value="sourceLang"
-          :options="sourceLangOptions"
-          size="small"
-          style="width: 150px"
-        />
-        <NButton
-          quaternary
-          circle
-          size="small"
-          title="交换原文和译文"
-          @click="swapTexts"
-        >
-          ⇄
-        </NButton>
-        <NText
-          depth="3"
-          style="font-size: 12px"
-        >
-          目标语言
-        </NText>
-        <NSelect
-          v-model:value="targetLang"
-          :options="LANG_OPTIONS"
-          size="small"
-          style="width: 150px"
-        />
+        </Button>
       </div>
+    </CardHeader>
 
-      <div class="translate-layout">
-        <div class="translate-column">
-          <div class="panel-header">
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              原文
-            </NText>
-            <NText
-              depth="3"
-              style="font-size: 11px"
-              :type="charLimitExceeded ? 'error' : undefined"
-            >
-              {{ charCount }}{{ mode === 'cloud' ? ' / 5000' : '' }}
-            </NText>
-          </div>
-          <textarea
-            v-model="sourceText"
-            class="translate-textarea"
-            placeholder="输入要翻译的文本..."
-          />
+    <CardContent class="pt-0">
+      <div class="flex flex-col gap-3">
+        <span
+          v-if="!browserApiAvailable"
+          class="text-xs text-muted-foreground"
+        >
+          当前浏览器不支持内置翻译 API (需要 Chrome 138+)，已自动切换到云端翻译
+        </span>
+        <span class="text-xs text-muted-foreground">
+          浏览器翻译：使用 Chrome 内置翻译引擎，速度快且无字数限制，需要 Chrome 138+；云端翻译：使用本站提供的
+          DeepSeek-V4-Flash 模型，限制 5000 字
+        </span>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs text-muted-foreground"> 源语言 </span>
+          <Select v-model="sourceLang">
+            <SelectTrigger class="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in sourceLangOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            class="w-8 rounded-full"
+            title="交换原文和译文"
+            @click="swapTexts"
+          >
+            ⇄
+          </Button>
+
+          <span class="text-xs text-muted-foreground"> 目标语言 </span>
+          <Select v-model="targetLang">
+            <SelectTrigger class="w-[150px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in LANG_OPTIONS"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
-        <div class="translate-column">
-          <div class="panel-header">
-            <NText
-              depth="3"
-              style="font-size: 12px"
-            >
-              译文
-            </NText>
-            <NButton
-              v-if="resultText"
-              text
-              size="tiny"
-              @click="copyResult"
-            >
-              复制
-            </NButton>
+        <div class="flex gap-3 items-stretch max-md:flex-col">
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <div class="flex-between px-0.5">
+              <span class="text-xs text-muted-foreground"> 原文 </span>
+              <span
+                class="text-[11px]"
+                :class="charLimitExceeded ? 'text-destructive font-medium' : 'text-muted-foreground'"
+              >
+                {{ charCount }}{{ mode === 'cloud' ? ' / 5000' : '' }}
+              </span>
+            </div>
+            <textarea
+              v-model="sourceText"
+              class="w-full flex-1 min-h-[300px] resize-y p-3 rounded-md text-sm leading-[1.7] border border-border bg-muted font-inherit outline-none box-border focus:border-primary"
+              placeholder="输入要翻译的文本..."
+            />
           </div>
-          <textarea
-            v-model="resultText"
-            class="translate-textarea"
-            placeholder="翻译结果..."
-            readonly
-          />
+
+          <div class="flex-1 min-w-0 flex flex-col gap-1.5">
+            <div class="flex-between px-0.5">
+              <span class="text-xs text-muted-foreground"> 译文 </span>
+              <Button
+                v-if="resultText"
+                variant="link"
+                class="h-auto p-0 text-primary"
+                @click="copyResult"
+              >
+                复制
+              </Button>
+            </div>
+            <textarea
+              v-model="resultText"
+              class="w-full flex-1 min-h-[300px] resize-y p-3 rounded-md text-sm leading-[1.7] border border-border bg-muted font-inherit outline-none box-border focus:border-primary"
+              placeholder="翻译结果..."
+              readonly
+            />
+          </div>
         </div>
       </div>
-    </NFlex>
-  </NCard>
+    </CardContent>
+  </Card>
 </template>
-<style scoped>
-.lang-bar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.translate-layout {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-}
-@media (max-width: 768px) {
-  .translate-layout {
-    flex-direction: column;
-  }
-}
-
-.translate-column {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 2px;
-}
-
-.translate-textarea {
-  width: 100%;
-  flex: 1;
-  min-height: 300px;
-  resize: vertical;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.7;
-  border: 1px solid var(--vtsuru-border);
-  background: var(--vtsuru-bg-inset);
-  font-family: inherit;
-  color: inherit;
-  outline: none;
-  box-sizing: border-box;
-}
-.translate-textarea:focus {
-  border-color: var(--primary-color, #18a058);
-}
-</style>

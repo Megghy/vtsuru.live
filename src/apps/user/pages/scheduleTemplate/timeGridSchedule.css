@@ -27,10 +27,10 @@
    -------------------------------------------------------------------------- */
 .timegrid-board {
   position: relative;
-  border-radius: var(--vtsuru-page-radius, 16px);
+  border-radius: var(--radius);
   background: var(--schedule-panel);
   border: 1px solid var(--schedule-border);
-  box-shadow: var(--vtsuru-page-shadow, 0 8px 30px rgba(0, 0, 0, 0.06));
+  box-shadow: var(--ui-shadow, 0 8px 30px rgba(0, 0, 0, 0.06));
   overflow: hidden;
   backdrop-filter: blur(16px);
   padding: 24px;
@@ -79,8 +79,7 @@
   color: var(--timegrid-accent);
 }
 
-.timegrid-header__eyebrow svg,
-.timegrid-header__eyebrow .n-icon {
+.timegrid-header__eyebrow svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -122,8 +121,7 @@
   line-height: 1.2;
 }
 
-.timegrid-badge svg,
-.timegrid-badge .n-icon {
+.timegrid-badge svg {
   width: 13px;
   height: 13px;
   flex-shrink: 0;
@@ -188,8 +186,7 @@
   color: var(--timegrid-accent);
 }
 
-.timegrid-ctrl-btn svg,
-.timegrid-ctrl-btn .n-icon {
+.timegrid-ctrl-btn svg {
   width: 14px;
   height: 14px;
   flex-shrink: 0;
@@ -744,7 +741,7 @@
   margin: 0;
   font-size: 0.98rem;
   font-weight: 700;
-  color: var(--vtsuru-fg);
+  color: var(--foreground);
   line-height: 1.35;
   word-break: break-word;
 }
@@ -755,7 +752,7 @@
   gap: 6px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--vtsuru-fg-muted);
+  color: var(--muted-foreground);
   font-variant-numeric: tabular-nums;
 }
 
@@ -775,5 +772,5 @@
   align-items: center;
   gap: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--vtsuru-border);
+  border-top: 1px solid var(--border);
 }

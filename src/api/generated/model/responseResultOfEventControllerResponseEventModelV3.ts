@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventControllerResponseEventModelV3 } from './eventControllerResponseEventModelV3';
+import type { EventControllerResponseEventModelV3 } from './eventControllerResponseEventModelV3'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfEventControllerResponseEventModelV3 {
-  message: string;
-  code: number;
-  data: EventControllerResponseEventModelV3;
+  message: string
+  code: number
+  data: EventControllerResponseEventModelV3
 }

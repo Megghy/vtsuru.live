@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type VTsuruCoreAIContractsProposalEditItemValues = {[key: string]: string};
+export type VTsuruCoreAIContractsProposalEditItemValues = { [key: string]: string }
