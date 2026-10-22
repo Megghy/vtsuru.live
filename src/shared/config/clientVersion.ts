@@ -8,7 +8,7 @@ import { ref } from 'vue'
 import { isTauri } from './api'
 
 // 前端所需的最低 client 版本。提升某项原生能力的依赖时, 把这里抬到对应发布版本。
-export const REQUIRED_CLIENT_VERSION = '0.1.9'
+export const REQUIRED_CLIENT_VERSION = '0.1.13'
 // 开放 RPC 接口 (含 /health CORS + PNA 预检) 起始可用的 client 版本
 export const RPC_MIN_CLIENT_VERSION = '0.1.9'
 // 全局快捷键 (VTS 操作台格子快捷键) 起始可用版本

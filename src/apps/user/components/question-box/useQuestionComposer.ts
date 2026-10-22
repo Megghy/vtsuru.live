@@ -1,4 +1,4 @@
-import { useNow } from '@vueuse/core'
+import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -60,7 +60,7 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
   const isDragging = ref(false)
   const isSent = ref(false)
   const nextSendAt = ref(Date.now())
-  const { now, pause, resume } = useNow({ interval: 1000, controls: true })
+  const { now, pause, resume } = useNow({ controls: true, scheduler: (cb) => useIntervalFn(cb, 1000) })
   pause()
 
   const isUserLoggedIn = computed(() => Boolean(accountInfo.value?.id))

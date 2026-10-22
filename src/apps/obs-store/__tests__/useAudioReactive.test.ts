@@ -459,6 +459,7 @@ describe('audio regression cases', () => {
     expect(engine.rawVolume.value).toBe(65)
     expect(engine.smoothedVolume.value).toBe(65)
     await expect(engine.calibrateNoise()).rejects.toThrow('模拟')
+    amplitude = 0
     await vi.advanceTimersByTimeAsync(25)
     expect(engine.isSpeaking.value).toBe(false)
     expect(engine.rawVolume.value).toBe(0)

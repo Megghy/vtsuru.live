@@ -35,7 +35,7 @@ provideThemeScope(userThemeVars)
 
 const blockComponents = BLOCK_COMPONENTS
 const isMobile = useMediaQuery('(max-width: 767px)')
-const now = useNow({ interval: 30_000 })
+const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) })
 const activeVisibilityContext = computed<BlockVisibilityContext>(
   () =>
     props.visibilityContext ?? {

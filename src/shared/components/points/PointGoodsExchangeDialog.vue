@@ -148,6 +148,7 @@ const canDoBuy = computed(() => {
   }
 
   if ((goods.value.purchasedCount ?? 0) + buyCount.value > (goods.value.maxBuyCount ?? Number.MAX_VALUE)) return false
+  if (goods.value.count != null && buyCount.value > goods.value.count) return false
   return pointsOk && (!needAddress.value || !!selectedAddress.value)
 })
 
@@ -325,13 +326,13 @@ function validateForm(): string {
       if (!sub) return '款式数据异常,请刷新后重试'
       if (s.quantity < 1) return '款式数量不能小于1'
       if (!Number.isInteger(s.quantity)) return '款式数量必须为整数'
-      if (sub.type === GoodsTypes.Virtual && s.quantity !== 1) return `${sub.name} 为虚拟礼物,数量固定为 1`
     }
   } else {
     if (buyCount.value < 1) return '兑换数量不能小于1'
     if (!Number.isInteger(buyCount.value)) return '兑换数量必须为整数'
     if ((good.purchasedCount ?? 0) + buyCount.value > (good.maxBuyCount ?? Number.MAX_VALUE))
       return `超出最大兑换次数限制(${good.maxBuyCount})`
+    if (good.count != null && buyCount.value > good.count) return '库存不足'
   }
 
   if (needAddress.value && !selectedAddress.value) return '请选择收货地址'
@@ -622,7 +623,7 @@ const requestClose = () => {
                 </div>
 
                 <div
-                  v-if="isSubItemChecked(sub.id)"
+                  v-if="isSubItemChecked(sub.id) && !isService"
                   class="w-20 shrink-0"
                   @click.stop
                 >
@@ -639,7 +640,7 @@ const requestClose = () => {
 
           <!-- 单商品数量 -->
           <div
-            v-else
+            v-else-if="!isService"
             class="space-y-1.5"
           >
             <div class="flex items-center justify-between">
@@ -657,7 +658,11 @@ const requestClose = () => {
                 v-model="buyCount"
                 :min="1"
                 :max="
-                  Math.min(goods.maxBuyCount ?? 100000, (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0))
+                  Math.min(
+                    goods.maxBuyCount ?? 100000,
+                    (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0),
+                    goods.count ?? 100000,
+                  )
                 "
               />
             </div>

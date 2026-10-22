@@ -1,4 +1,4 @@
-import { useNow } from '@vueuse/core'
+import { useIntervalFn, useNow } from '@vueuse/core'
 import { format, getISOWeek, getISOWeekYear } from 'date-fns'
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
@@ -73,7 +73,7 @@ export function getCurrentWeekOrder(now: Date) {
 
 /** 分钟级刷新的当前时间, 跨零点后"今日/本周"随之更新 */
 export function useScheduleNow() {
-  return useNow({ interval: 60_000 })
+  return useNow({ scheduler: (cb) => useIntervalFn(cb, 60_000) })
 }
 
 const BILI_RESERVE_TAG = '预约'

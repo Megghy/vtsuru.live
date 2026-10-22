@@ -165,7 +165,7 @@ export function inspectCustomCss(css: string, assets?: CustomHtmlAsset[]) {
       parseCustomProperty: true,
       onParseError(error, fallbackNode) {
         const position = locationOf(fallbackNode)
-        issues.push(issue('css', error.rawMessage, position.line, position.column))
+        issues.push(issue('css', error.message, position.line, position.column))
       },
     })
   } catch (error) {

@@ -18,7 +18,7 @@ const props = defineProps<{
   bordered?: boolean
 }>()
 
-const now = useNow({ interval: 1000 })
+const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 1000) })
 const isUpcoming = computed(() => !props.item.isFinish && props.item.startAt > now.value.getTime())
 
 const countdownText = computed(() => {

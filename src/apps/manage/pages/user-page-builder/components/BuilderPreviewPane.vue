@@ -47,7 +47,7 @@ const legacyIndexTemplate = computed(
     IndexTemplateMap[editor.account.value?.settings.indexTemplate || 'default']?.component ??
     IndexTemplateMap.default.component,
 )
-const actualNow = useNow({ interval: 30_000 })
+const actualNow = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) })
 const viewportOptions: Array<{ value: PreviewViewport; label: string; icon: typeof PhonePortraitOutline }> = [
   { value: 'phone', label: '手机', icon: PhonePortraitOutline },
   { value: 'tablet', label: '平板', icon: TabletPortraitOutline },

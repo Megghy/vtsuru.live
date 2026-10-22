@@ -26,7 +26,7 @@ defineProps<{ blurred?: boolean }>()
 const { session, loaded, busy, pollError, options, standings, ...vote } = useDashboardVote()
 const templates = useVoteTemplates()
 const presets = computed(() => [...VOTE_QUICK_PRESETS, ...templates.value])
-const now = useNow({ interval: 1000 })
+const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 1000) })
 
 const active = computed(() => !!session.value?.isActive)
 const timeLeft = computed(() => remainingMs(session.value?.endTime, now.value.getTime()))

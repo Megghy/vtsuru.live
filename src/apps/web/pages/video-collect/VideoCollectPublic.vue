@@ -31,7 +31,7 @@ interface AddVideoModel {
 const route = useRoute()
 const router = useRouter()
 const biliAuth = useBiliAuth()
-const now = useNow({ interval: 1000 })
+const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 1000) })
 
 const table = ref<VideoCollectTable | null>()
 const turnstile = ref<InstanceType<typeof CaptchaWidget>>()

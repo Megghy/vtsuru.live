@@ -27,7 +27,7 @@ const count = computed(() => Math.min(6, Math.max(1, Number(values.value.count) 
 const showDescription = computed(() => values.value.showDescription !== false)
 const showProgress = computed(() => values.value.showProgress !== false)
 const enabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.VideoCollect))
-const now = useNow({ interval: 30_000 })
+const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) })
 const query = useUserPageRuntimeQuery({
   key: () => `video-collect:${props.userInfo?.id ?? 0}`,
   ttlMs: 60_000,

@@ -226,7 +226,7 @@ async function initSystemTray(appWindow: ReturnType<typeof getCurrentWindow>) {
           id: 'quit',
           text: '退出程序',
           action: () => {
-            void invoke('quit_app')
+            void invoke('quit_app').catch((err) => warn(`[tray] 退出失败: ${err}`))
           },
         },
       ],
@@ -627,7 +627,7 @@ export async function initOpenLive() {
 }
 function initNotificationHandler() {
   void onAction((event) => {
-    if (event.extra?.type === 'question-box') {
+    if (event.notification?.extra?.type === 'question-box') {
       void openUrl(`${CN_HOST}/manage/question-box`)
     }
   }).catch((err) => {

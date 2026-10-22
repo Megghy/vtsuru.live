@@ -15,7 +15,7 @@ import EventMessage from './EventMessage.vue'
 const props = defineProps<{ event: DashboardEvent; ignoreRead?: boolean }>()
 const dashboard = useLiveDashboard()
 const ui = useDashboardUi()
-const now = useNow({ interval: 30_000 })
+const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) })
 
 const read = computed(() => !props.ignoreRead && dashboard.readKeys.has(props.event.key))
 const isSc = computed(() => props.event.type === EventDataTypes.SC)
