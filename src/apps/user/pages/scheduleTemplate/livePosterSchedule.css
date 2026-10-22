@@ -10,7 +10,7 @@
   --schedule-toolbar-action-bg: #bd282b;
   --schedule-toolbar-action-fg: #fff8e8;
   --schedule-toolbar-label: 'TOUR DATE / 週次';
-  --schedule-toolbar-radius: min(var(--vtsuru-page-radius, 8px), 8px);
+  --schedule-toolbar-radius: min(var(--radius), 8px);
   --schedule-toolbar-shadow: 4px 4px 0 color-mix(in srgb, #201512 26%, transparent);
 
   container: live-poster / inline-size;
@@ -63,9 +63,9 @@
   background-color: var(--poster-paper);
   background-position: center;
   background-size: cover;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--poster-ink);
-  border-radius: min(var(--vtsuru-page-radius, 8px), 8px);
-  box-shadow: var(--vtsuru-page-shadow);
+  border: var(--ui-border-width) var(--ui-border-style) var(--poster-ink);
+  border-radius: min(var(--radius), 8px);
+  box-shadow: var(--ui-shadow);
 }
 
 .live-poster::before {

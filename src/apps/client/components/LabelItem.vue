@@ -12,51 +12,21 @@ withDefaults(
 
 <template>
   <span
-    class="label-item"
-    :class="`label-item--${labelPlacement}`"
+    class="flex gap-3 py-1.5 min-w-0"
+    :class="
+      labelPlacement === 'top'
+        ? 'flex-col items-stretch gap-1'
+        : 'flex-row items-center justify-between flex-wrap'
+    "
   >
-    <span class="label-item__label">
+    <span class="text-xs text-foreground">
       {{ label }}
     </span>
-    <span class="label-item__value">
+    <span
+      class="inline-flex items-center min-w-0"
+      :class="labelPlacement === 'left' ? 'justify-end' : ''"
+    >
       <slot />
     </span>
   </span>
 </template>
-
-<style scoped>
-.label-item {
-  display: flex;
-  gap: 12px;
-  padding: 6px 0;
-  min-width: 0;
-}
-
-.label-item--left {
-  flex-direction: row;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-}
-
-.label-item--top {
-  flex-direction: column;
-  align-items: stretch;
-  gap: 4px;
-}
-
-.label-item__label {
-  font-size: 12px;
-  color: var(--foreground);
-}
-
-.label-item--left .label-item__value {
-  justify-content: flex-end;
-}
-
-.label-item__value {
-  display: inline-flex;
-  align-items: center;
-  min-width: 0;
-}
-</style>

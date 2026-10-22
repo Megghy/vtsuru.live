@@ -60,15 +60,15 @@ function requestSong(song: SongsInfo) {
 
 <template>
   <TooltipProvider>
-    <div class="gallery-template">
-      <header class="gallery-heading">
+    <div class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto p-[clamp(12px,2vw,24px)]">
+      <header class="flex items-end justify-between mb-3.5 gap-3.5">
         <div>
-          <span class="heading-kicker">COVER ARCHIVE</span>
-          <h2>封面曲库</h2>
+          <span class="block mb-0.5 text-primary text-[10px] font-bold">COVER ARCHIVE</span>
+          <h2 class="m-0 text-card-foreground text-[clamp(20px,3vw,28px)] leading-[1.15]">封面曲库</h2>
         </div>
         <span
           :key="listKey"
-          class="count is-pulsing"
+          class="text-xs font-mono text-muted-foreground"
         >
           {{ filteredSongs.length }} 首
         </span>
@@ -258,40 +258,3 @@ function requestSong(song: SongsInfo) {
   </TooltipProvider>
 </template>
 
-<style scoped>
-.gallery-template {
-  width: 100%;
-  max-width: var(--vtsuru-page-max-width, 1180px);
-  margin: 0 auto;
-  padding: clamp(12px, 2vw, 24px);
-}
-
-.gallery-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 14px;
-  gap: 14px;
-}
-
-.heading-kicker {
-  display: block;
-  margin-bottom: 3px;
-  color: var(--song-accent, #23ade5);
-  font-size: 10px;
-  font-weight: 750;
-}
-
-.gallery-heading h2 {
-  margin: 0;
-  color: var(--song-fg);
-  font-size: clamp(20px, 3vw, 28px);
-  line-height: 1.15;
-}
-
-.count {
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--song-muted, #888);
-}
-</style>

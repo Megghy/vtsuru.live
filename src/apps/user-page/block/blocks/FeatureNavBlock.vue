@@ -79,58 +79,23 @@ const availableFeatures = computed(() =>
     :backgrounded="values.backgrounded !== false"
   >
     <nav
-      class="feature-nav"
+      class="grid grid-cols-[repeat(auto-fit,minmax(min(180px,100%),1fr))] gap-2"
       aria-label="用户功能"
     >
       <RouterLink
         v-for="feature in availableFeatures"
         :key="feature.key"
         :to="{ name: feature.routeName, params: { id: props.userInfo?.name } }"
-        class="feature-link"
+        class="flex items-center gap-2.5 min-w-0 min-h-11 px-3 py-2.25 border border-border rounded-[var(--radius)] text-foreground bg-muted no-underline transition-colors duration-140 hover:border-primary hover:bg-primary/10"
       >
         <component
           :is="feature.icon"
           class="size-5.5 shrink-0"
         />
-        <span>{{ feature.label }}</span>
+        <span class="min-w-0 truncate">{{ feature.label }}</span>
       </RouterLink>
     </nav>
   </BlockCard>
 </template>
 
-<style scoped>
-.feature-nav {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
-  gap: 8px;
-}
 
-.feature-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  min-height: 44px;
-  padding: 9px 12px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
-  border-radius: var(--vtsuru-page-radius);
-  color: var(--foreground);
-  background: var(--muted);
-  text-decoration: none;
-  transition:
-    border-color 140ms ease,
-    background-color 140ms ease;
-}
-
-.feature-link:hover {
-  border-color: var(--vtsuru-page-primary);
-  background: var(--vtsuru-page-primary-soft, var(--brand-tint));
-}
-
-.feature-link span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-</style>

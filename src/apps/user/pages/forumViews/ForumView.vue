@@ -224,7 +224,7 @@ onUnmounted(() => {
                 class="topic-row p-3 hover:bg-muted/30 transition"
               >
                 <a
-                  class="topic-link block"
+                  class="block text-inherit no-underline"
                   :href="`${$route.path}/topic/${item.id}`"
                   target="_blank"
                 >
@@ -286,9 +286,4 @@ onUnmounted(() => {
   </template>
 </template>
 
-<style scoped>
-.topic-link {
-  color: inherit;
-  text-decoration: none;
-}
-</style>
+

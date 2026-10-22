@@ -10,7 +10,7 @@
   --schedule-toolbar-action-bg: #d98196;
   --schedule-toolbar-action-fg: #fff;
   --schedule-toolbar-label: 'SWEET WEEK ♡';
-  --schedule-toolbar-radius: calc(var(--vtsuru-page-radius, 14px) + 8px);
+  --schedule-toolbar-radius: calc(var(--radius) + 8px);
   --schedule-toolbar-shadow:
     0 12px 28px -18px rgb(128 93 103 / 40%), 0 0 0 4px color-mix(in srgb, #f4b7ca 12%, transparent);
 
@@ -81,7 +81,7 @@
     22px 22px,
     22px 22px;
   border: 2px solid color-mix(in srgb, var(--pinky-accent) 42%, #fff 58%);
-  border-radius: calc(var(--vtsuru-page-radius, 14px) + 8px);
+  border-radius: calc(var(--radius) + 8px);
   box-shadow:
     0 12px 32px -8px color-mix(in srgb, var(--pinky-accent) 30%, transparent),
     0 0 0 6px color-mix(in srgb, var(--pinky-accent-2) 12%, transparent);

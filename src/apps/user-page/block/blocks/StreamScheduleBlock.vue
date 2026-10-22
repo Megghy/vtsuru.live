@@ -145,7 +145,7 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
     :content-style="{ padding: 0 }"
   >
     <section
-      class="schedule"
+      class="@container"
       aria-labelledby="schedule-title"
     >
       <header class="schedule-header flex items-center justify-between gap-3 p-4 border-b border-border bg-muted/40">
@@ -308,8 +308,4 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
   </BlockCard>
 </template>
 
-<style scoped>
-.schedule {
-  container-type: inline-size;
-}
-</style>
+

@@ -52,7 +52,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
-import '@/apps/user/styles/user-page.css'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 // --- 响应式状态和常量 ---
@@ -900,8 +899,11 @@ function scrollToTop() {
               <KeepAlive :max="4">
                 <div
                   v-if="viewRoute.meta.pageContainer !== 'none'"
-                  class="user-page"
-                  :class="viewRoute.meta.pageWidth ? `user-page--${viewRoute.meta.pageWidth}` : undefined"
+                  class="w-full max-w-[var(--vtsuru-page-max-width,820px)] mx-auto flex flex-col gap-[var(--vtsuru-page-spacing,16px)]"
+                  :class="{
+                    '[--vtsuru-page-max-width:880px]': viewRoute.meta.pageWidth === 'md',
+                    '[--vtsuru-page-max-width:1440px]': viewRoute.meta.pageWidth === 'xl',
+                  }"
                 >
                   <component
                     :is="Component"
@@ -1003,7 +1005,7 @@ function scrollToTop() {
 
 .page-root {
   min-height: 100vh;
-  background-color: var(--vtsuru-page-bg, #f7f8fa);
+  background-color: var(--background);
   transition: background-color 0.3s ease;
 }
 
@@ -1051,7 +1053,7 @@ function scrollToTop() {
 
 .page-root.bg-host .layout-header,
 .page-root.bg-host .user-sider {
-  background-color: var(--user-page-theme-surface-bg, var(--popover));
+  background-color: var(--card);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }

@@ -133,10 +133,10 @@ useIntervalFn(() => {
     <div v-else>
       <div
         v-if="current"
-        class="playing-content flex items-center gap-3 p-1"
+        class="@container flex items-center gap-3 p-1"
       >
         <div
-          class="playing-icon size-10 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary"
+          class="size-10 @max-[340px]:size-9 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary"
         >
           <component
             :is="MusicalNotesOutline"
@@ -153,7 +153,7 @@ useIntervalFn(() => {
             由 {{ current.user.name }} 点播
           </span>
         </div>
-        <div class="queue-count text-center shrink-0 min-w-[54px]">
+        <div class="text-center shrink-0 min-w-[54px] @max-[340px]:min-w-[42px]">
           <strong class="text-lg font-bold text-primary block leading-tight">{{ waitingCount }}</strong>
           <span class="text-xs text-muted-foreground">首等待</span>
         </div>
@@ -177,17 +177,4 @@ useIntervalFn(() => {
   </BlockCard>
 </template>
 
-<style scoped>
-.playing-content {
-  container-type: inline-size;
-}
-@container (max-width: 340px) {
-  .playing-icon {
-    width: 36px;
-    height: 36px;
-  }
-  .queue-count {
-    min-width: 42px;
-  }
-}
-</style>
+

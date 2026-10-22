@@ -30,7 +30,7 @@ function test() {
 </script>
 
 <template>
-  <div class="form">
+  <div class="flex flex-col gap-2.5">
     <details class="group border rounded-md p-2.5 text-xs bg-muted/20">
       <summary class="font-medium cursor-pointer list-none flex items-center justify-between text-foreground">
         <span>使用说明</span>
@@ -133,11 +133,3 @@ function test() {
     </label>
   </div>
 </template>
-
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-</style>

@@ -333,13 +333,13 @@ function handleVariableInsert(text: string) {
 
             <div
               v-if="showLivePreview"
-              class="live-preview-container"
+              class="mt-2 bg-muted rounded-md border border-border overflow-hidden"
             >
-              <div class="live-preview-label flex items-center gap-1 text-xs">
+              <div class="py-1 px-2 bg-muted text-foreground border-b border-border flex items-center gap-1 text-xs">
                 <AppsListDetail24Regular class="h-3.5 w-3.5" />
                 <span>效果预览</span>
               </div>
-              <div class="live-preview-content">
+              <div class="p-2 px-3 break-all min-h-[40px]">
                 <span
                   v-if="previewResult"
                   class="text-sm font-sans"
@@ -459,7 +459,7 @@ function handleVariableInsert(text: string) {
                     <strong>运行时数据</strong>仅在本次运行有效, 重启后失效，且操作是<strong>同步</strong>的。
                   </AlertDescription>
                 </Alert>
-                <ul class="function-list space-y-1">
+                <ul class="space-y-1 [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:mr-1">
                   <li><code>getData(key, defaultValue?)</code>: 获取运行时数据。</li>
                   <li><code>setData(key, value)</code>: 设置运行时数据。</li>
                   <li><code>containsData(key)</code>: 检查运行时数据是否存在。</li>
@@ -477,7 +477,7 @@ function handleVariableInsert(text: string) {
                     在 <code>js+</code> 中使用 <code>await</code> 或 <code>.then()</code>。
                   </AlertDescription>
                 </Alert>
-                <ul class="function-list space-y-1">
+                <ul class="space-y-1 [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:mr-1">
                   <li><code>getStorageData(key, defaultValue?)</code>: 获取持久化数据 (异步)。</li>
                   <li><code>setStorageData(key, value)</code>: 设置持久化数据 (异步)。</li>
                   <li><code>hasStorageData(key)</code>: 检查持久化数据是否存在 (异步)。</li>
@@ -504,34 +504,3 @@ function handleVariableInsert(text: string) {
     </Dialog>
   </Card>
 </template>
-
-<style scoped>
-.live-preview-container {
-  margin-top: 8px;
-  background-color: var(--muted);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  overflow: hidden;
-}
-
-.live-preview-label {
-  padding: 4px 8px;
-  background-color: var(--muted);
-  color: var(--foreground);
-  border-bottom: 1px solid var(--border);
-}
-
-.live-preview-content {
-  padding: 8px 12px;
-  word-break: break-all;
-  min-height: 40px;
-}
-
-.function-list code {
-  background-color: var(--muted);
-  padding: 1px 4px;
-  border-radius: var(--radius);
-  font-family: monospace;
-  margin-right: 4px;
-}
-</style>

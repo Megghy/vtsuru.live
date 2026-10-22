@@ -86,7 +86,7 @@ function getContrastColor(color: string) {
         v-for="(it, idx) in items"
         :key="idx"
         variant="secondary"
-        class="vtsuru-tag font-medium transition-all"
+        class="cursor-default font-medium transition-all hover:brightness-95 hover:-translate-y-px motion-reduce:transition-none motion-reduce:hover:translate-y-0"
         :class="[
           cfg.rounded ? 'rounded-full' : 'rounded-md',
           cfg.size === 'small' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1',
@@ -99,22 +99,4 @@ function getContrastColor(color: string) {
   </BlockCard>
 </template>
 
-<style scoped>
-.vtsuru-tag {
-  cursor: default;
-}
 
-.vtsuru-tag:hover {
-  filter: brightness(0.95);
-  transform: translateY(-1px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .vtsuru-tag {
-    transition: none;
-  }
-  .vtsuru-tag:hover {
-    transform: none;
-  }
-}
-</style>

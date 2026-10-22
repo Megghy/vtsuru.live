@@ -43,7 +43,7 @@ async function onPreview() {
 </script>
 
 <template>
-  <div class="voice-select-row">
+  <div class="flex gap-1.5 items-stretch">
     <div class="flex-1 min-w-0">
       <Select
         :model-value="modelValue"
@@ -75,11 +75,3 @@ async function onPreview() {
     </Button>
   </div>
 </template>
-
-<style scoped>
-.voice-select-row {
-  display: flex;
-  gap: 6px;
-  align-items: stretch;
-}
-</style>

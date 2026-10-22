@@ -135,7 +135,7 @@ const isCountingDown = computed(() => {
         <TooltipTrigger as-child>
           <Badge
             :variant="isCountingDown ? 'default' : 'secondary'"
-            class="countdown-tag h-6 px-2 text-xs font-mono rounded-full flex items-center justify-center gap-1 cursor-default"
+            class="min-w-[80px] h-6 px-2 text-xs font-mono rounded-full flex items-center justify-center gap-1 cursor-default"
           >
             <Clock16Regular class="h-3.5 w-3.5" />
             <span class="timer-text font-bold">{{ remainingSecondsDisplay }}</span>
@@ -151,9 +151,3 @@ const isCountingDown = computed(() => {
     </TooltipProvider>
   </div>
 </template>
-
-<style scoped>
-.countdown-tag {
-  min-width: 80px;
-}
-</style>

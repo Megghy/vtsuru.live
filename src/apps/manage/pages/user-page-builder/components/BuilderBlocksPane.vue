@@ -33,7 +33,7 @@ const {
 </script>
 
 <template>
-  <Card class="pane-card blocks-pane h-full flex flex-col overflow-hidden">
+  <Card class="pane-card min-w-0 h-full flex flex-col overflow-hidden">
     <CardHeader class="p-2 border-b border-border flex flex-row items-center justify-between space-y-0">
       <CardTitle class="text-xs font-semibold">区块</CardTitle>
 
@@ -161,9 +161,3 @@ const {
     </div>
   </Card>
 </template>
-
-<style scoped>
-.blocks-pane {
-  min-width: 0;
-}
-</style>

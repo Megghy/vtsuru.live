@@ -38,7 +38,7 @@ async function navigateCheck(target: CheckTarget) {
 </script>
 
 <template>
-  <div class="live-manage-page flex flex-col gap-3.5">
+  <div class="w-full flex flex-col gap-3.5">
     <!-- 标准页面标头 -->
     <ClientPageHeader
       title="直播管理"
@@ -115,9 +115,3 @@ async function navigateCheck(target: CheckTarget) {
     <FaceAuthModal :control="control" />
   </div>
 </template>
-
-<style scoped>
-.live-manage-page {
-  width: 100%;
-}
-</style>

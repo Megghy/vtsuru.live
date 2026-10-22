@@ -34,20 +34,24 @@ const topSubtitle = computed(() => {
 </script>
 
 <template>
-  <div class="obs-transparent-card">
+  <div class="size-full flex flex-col bg-transparent p-1 box-border text-white overflow-hidden tabular-nums [text-shadow:0_2px_4px_rgba(0,0,0,0.95),0_0_8px_rgba(0,0,0,0.8),-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000]">
     <!-- 头部当前处理中提示 -->
-    <div class="obs-trans-header">
-      <div class="obs-trans-current-row">
+    <div class="mb-1.5">
+      <div class="flex items-center gap-1.5">
         <span
-          class="obs-trans-dot"
-          :class="{ 'is-active': current.active }"
+          class="size-2 rounded-full transition-all"
+          :class="
+            current.active
+              ? 'bg-emerald-500 shadow-[0_0_8px_#22c55e]'
+              : 'bg-slate-400 shadow-[0_0_6px_rgba(0,0,0,0.8)]'
+          "
         />
-        <span class="obs-trans-status-tag">{{ current.active ? 'NOW' : 'IDLE' }}</span>
-        <span class="obs-trans-current-title">{{ current.active ? current.title : current.emptyText }}</span>
+        <span class="text-[11px] font-black text-cyan-300 tracking-wide">{{ current.active ? 'NOW' : 'IDLE' }}</span>
+        <span class="text-[15px] font-extrabold text-white truncate">{{ current.active ? current.title : current.emptyText }}</span>
       </div>
       <div
         v-if="topSubtitle && current.active"
-        class="obs-trans-current-sub"
+        class="text-[11px] text-yellow-300 ml-3.5 mt-0.25"
       >
         {{ topSubtitle }}
       </div>
@@ -56,46 +60,45 @@ const topSubtitle = computed(() => {
     <!-- 列表容器 -->
     <div
       ref="listContainerRef"
-      class="obs-trans-list-container"
+      class="flex-1 relative overflow-hidden min-h-0"
     >
       <template v-if="items.length > 0">
         <div
           ref="listInnerRef"
-          class="obs-trans-list-inner"
+          class="flex flex-col gap-1"
           :class="{ animating: isMoreThanContainer }"
         >
           <TransitionGroup
             name="obs-trans-item-anim"
             tag="div"
-            class="obs-trans-list"
+            class="flex flex-col gap-1"
           >
             <div
               v-for="(item, index) in items"
               :key="item.id"
-              class="obs-trans-item"
+              class="flex items-center gap-1.5 py-0.5"
             >
               <span
-                class="obs-trans-num"
-                :class="{ 'rank-1': index === 0 }"
+                class="text-xs font-extrabold w-6 shrink-0"
+                :class="index === 0 ? 'text-amber-500' : 'text-slate-400'"
               >
                 #{{ index + 1 }}
               </span>
-              <div class="obs-trans-content">
-                <span class="obs-trans-primary">{{ item.primary }}</span>
+              <div class="flex-1 min-w-0 flex items-baseline gap-1.5">
+                <span class="text-sm font-bold text-white truncate">{{ item.primary }}</span>
                 <span
                   v-if="item.secondary"
-                  class="obs-trans-secondary"
-                  >{{ item.secondary }}</span
-                >
+                  class="text-[11px] text-slate-300"
+                >{{ item.secondary }}</span>
               </div>
               <div
                 v-if="(item.badges?.length ?? 0) > 0"
-                class="obs-trans-badges"
+                class="flex gap-1 shrink-0"
               >
                 <span
                   v-for="(badge, bIdx) in item.badges ?? []"
                   :key="`${item.id}-${bIdx}-${badge.text}`"
-                  class="obs-trans-badge"
+                  class="text-[10px] font-bold text-cyan-300"
                 >
                   {{ badge.text }}
                 </span>
@@ -106,7 +109,7 @@ const topSubtitle = computed(() => {
       </template>
       <Empty
         v-else
-        class="obs-trans-empty"
+        class="mt-7.5"
         :description="emptyText"
       />
     </div>
@@ -114,86 +117,7 @@ const topSubtitle = computed(() => {
 </template>
 
 <style scoped>
-.obs-transparent-card {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: transparent;
-  padding: 4px;
-  box-sizing: border-box;
-  color: #fff;
-  text-shadow:
-    0 2px 4px rgba(0, 0, 0, 0.95),
-    0 0 8px rgba(0, 0, 0, 0.8),
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
-  overflow: hidden;
-  font-variant-numeric: tabular-nums;
-}
-
-.obs-trans-header {
-  margin-bottom: 6px;
-}
-
-.obs-trans-current-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.obs-trans-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #94a3b8;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
-}
-
-.obs-trans-dot.is-active {
-  background: #22c55e;
-  box-shadow: 0 0 8px #22c55e;
-}
-
-.obs-trans-status-tag {
-  font-size: 11px;
-  font-weight: 900;
-  color: #67e8f9;
-  letter-spacing: 0.5px;
-}
-
-.obs-trans-current-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.obs-trans-current-sub {
-  font-size: 11px;
-  color: #fde047;
-  margin-left: 14px;
-  margin-top: 1px;
-}
-
-.obs-trans-list-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.obs-trans-list-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.obs-trans-list-inner.animating {
+.animating {
   animation: obs-trans-scroll v-bind(animationDurationCss) linear infinite;
 }
 
@@ -204,68 +128,5 @@ const topSubtitle = computed(() => {
   100% {
     transform: translateY(v-bind(animationTranslateYCss));
   }
-}
-
-.obs-trans-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.obs-trans-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 0;
-}
-
-.obs-trans-num {
-  font-size: 12px;
-  font-weight: 800;
-  color: #94a3b8;
-  width: 24px;
-  flex-shrink: 0;
-}
-
-.obs-trans-num.rank-1 {
-  color: #f59e0b;
-}
-
-.obs-trans-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 6px;
-}
-
-.obs-trans-primary {
-  font-size: 14px;
-  font-weight: 700;
-  color: #ffffff;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.obs-trans-secondary {
-  font-size: 11px;
-  color: #cbd5e1;
-}
-
-.obs-trans-badges {
-  display: flex;
-  gap: 4px;
-  flex-shrink: 0;
-}
-
-.obs-trans-badge {
-  font-size: 10px;
-  font-weight: 700;
-  color: #67e8f9;
-}
-
-.obs-trans-empty {
-  margin-top: 30px;
 }
 </style>

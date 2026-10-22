@@ -208,7 +208,7 @@ onUnmounted(() => turnstile.value?.remove())
 <template>
   <VideoCollectPageShell :table="table">
     <template #default>
-      <main class="collect-submit-page">
+      <main class="grid min-h-screen min-h-[100svh] py-10 px-4 box-border place-items-center">
         <div
           v-if="table === null && !isPageLoading"
           class="text-center py-20 space-y-3"
@@ -219,9 +219,9 @@ onUnmounted(() => turnstile.value?.remove())
 
         <div
           v-else-if="table"
-          class="collect-submit-layout"
+          class="grid grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)] max-[768px]:grid-cols-1 max-[768px]:gap-8 gap-[clamp(28px,6vw,72px)] items-center w-[min(100%,1040px)] max-w-[var(--vtsuru-page-max-width,1040px)] min-w-0"
         >
-          <section class="collect-intro">
+          <section class="min-w-0">
             <button
               type="button"
               class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
@@ -304,7 +304,7 @@ onUnmounted(() => turnstile.value?.remove())
             />
           </section>
 
-          <Card class="submit-panel collect-on-surface shadow-sm">
+          <Card class="min-w-0 collect-on-surface shadow-sm">
             <CardContent class="p-6">
               <div
                 v-if="submitted"
@@ -468,35 +468,3 @@ onUnmounted(() => turnstile.value?.remove())
   </VideoCollectPageShell>
 </template>
 
-<style scoped>
-.collect-submit-page {
-  display: grid;
-  min-height: 100vh;
-  min-height: 100svh;
-  padding: 40px 16px;
-  box-sizing: border-box;
-  place-items: center;
-}
-
-.collect-submit-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(340px, 0.9fr);
-  gap: clamp(28px, 6vw, 72px);
-  align-items: center;
-  width: min(100%, 1040px);
-  max-width: var(--vtsuru-page-max-width, 1040px);
-  min-width: 0;
-}
-
-.collect-intro,
-.submit-panel {
-  min-width: 0;
-}
-
-@media (max-width: 768px) {
-  .collect-submit-layout {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
-}
-</style>

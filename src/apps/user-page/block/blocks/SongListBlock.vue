@@ -183,13 +183,12 @@ function requestStatus(song: SongsInfo) {
       />
       <div
         v-else
-        class="song-list grid gap-1.5"
-        :class="`song-list--${variant}`"
+        class="@container grid gap-1.5"
       >
         <article
           v-for="song in filteredSongs"
           :key="song.key"
-          class="song-item grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center p-2 rounded-lg border border-border bg-muted/40"
+          class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-center p-2 rounded-lg border border-border bg-muted/40 @max-[420px]:grid-cols-1"
         >
           <div class="song-main min-w-0">
             <strong class="text-xs font-semibold truncate block">{{ song.name }}</strong>
@@ -225,7 +224,7 @@ function requestStatus(song: SongsInfo) {
           <Badge
             v-if="showRequestStatus"
             :variant="requestStatus(song).variant"
-            class="request-status text-[10px] h-4 px-1.5"
+            class="text-[10px] h-4 px-1.5 @max-[420px]:col-start-1 @max-[420px]:row-auto @max-[420px]:justify-self-start"
           >
             {{ requestStatus(song).label }}
           </Badge>
@@ -235,18 +234,4 @@ function requestStatus(song: SongsInfo) {
   </BlockCard>
 </template>
 
-<style scoped>
-.song-list {
-  container-type: inline-size;
-}
-@container (max-width: 420px) {
-  .song-item {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .request-status {
-    grid-column: 1;
-    grid-row: auto;
-    justify-self: start;
-  }
-}
-</style>
+

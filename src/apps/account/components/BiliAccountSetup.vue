@@ -61,7 +61,7 @@ async function submit() {
 </script>
 
 <template>
-  <section class="account-setup space-y-4">
+  <section class="my-5 text-foreground space-y-4 [&_p]:text-muted-foreground [&_p]:leading-relaxed">
     <template v-if="proof?.linked && !account.id && !resetting">
       <p>这个 B 站账号已经设置过本站密码，直接登录即可。登录 UID：{{ proof.userId }}</p>
       <div class="space-y-2">
@@ -141,18 +141,3 @@ async function submit() {
     </template>
   </section>
 </template>
-
-<style scoped>
-.account-setup {
-  margin-block: 20px;
-  color: var(--foreground);
-}
-.account-setup h3 {
-  font-size: 16px;
-  margin: 0 0 12px;
-}
-.account-setup p {
-  color: var(--muted-foreground);
-  line-height: 1.6;
-}
-</style>

@@ -133,7 +133,7 @@ function addExpressions() {
       <VueDraggable
         v-else
         v-model="tiles"
-        class="deck-grid"
+        class="grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-2.5"
         :animation="150"
         :disabled="!editing"
         force-fallback
@@ -144,38 +144,48 @@ function addExpressions() {
           :key="tile.id"
           role="button"
           :tabindex="tileDisabled ? -1 : 0"
-          class="deck-tile"
-          :class="{
-            'is-disabled': tileDisabled,
-            'is-active': vts.isDeckTileActive(tile),
-            'is-missing': isTargetMissing(tile.type, tile.targetId),
-            'is-editing': editing,
+          class="relative flex flex-col items-center justify-center gap-1 min-w-0 aspect-[5/4] p-2 border border-border rounded-md bg-popover select-none transition-all duration-150"
+          :class="[
+            tileDisabled
+              ? 'cursor-not-allowed opacity-50'
+              : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:scale-[0.97]',
+            vts.isDeckTileActive(tile)
+              ? 'bg-primary/15 shadow-[0_0_0_2px_var(--primary)]'
+              : '',
+            isTargetMissing(tile.type, tile.targetId)
+              ? 'border-dashed opacity-60'
+              : '',
+            editing ? 'cursor-grab' : '',
+          ]"
+          :style="{
+            borderTopWidth: '3px',
+            borderTopColor: tile.color || 'var(--primary)',
           }"
-          :style="tile.color ? { '--tile-color': tile.color } : undefined"
           @click="onTileClick(tile)"
           @keydown.enter.space.prevent="onTileClick(tile)"
         >
           <component
             :is="DECK_TYPE_META[tile.type].icon"
-            class="deck-tile-icon size-5"
+            class="size-5 flex"
+            :style="{ color: tile.color || 'var(--primary)' }"
           />
-          <span class="deck-tile-label">{{ tile.label }}</span>
-          <span class="deck-tile-sub">
+          <span class="max-w-full overflow-hidden text-[13px] font-semibold text-ellipsis whitespace-nowrap">{{ tile.label }}</span>
+          <span class="text-[11px] text-muted-foreground">
             {{ isTargetMissing(tile.type, tile.targetId) ? '目标不存在' : DECK_TYPE_META[tile.type].label }}
           </span>
           <div
             v-if="running.has(tile.id)"
-            class="deck-tile-spin size-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+            class="absolute top-1.5 left-1.5 size-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
           />
           <kbd
             v-if="tile.shortcut"
-            class="deck-tile-kbd"
+            class="absolute right-1 bottom-1 px-1 border border-border rounded font-inherit text-[10px] text-muted-foreground"
             >{{ tile.shortcut.replaceAll('Digit', '').replaceAll('Key', '') }}</kbd
           >
           <button
             v-if="editing"
             type="button"
-            class="deck-tile-delete size-5 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
+            class="absolute top-1 right-1 size-5 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
             @click.stop="run(() => vts.removeDeckTile(tile.id))"
           >
             <Delete24Regular class="size-3" />
@@ -190,105 +200,3 @@ function addExpressions() {
     />
   </Card>
 </template>
-
-<style scoped>
-.deck-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
-  gap: 10px;
-}
-
-.deck-tile {
-  --tile-color: var(--primary, #18a058);
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-width: 0;
-  aspect-ratio: 5 / 4;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-top: 3px solid var(--tile-color);
-  border-radius: var(--radius, 6px);
-  background: var(--popover);
-  cursor: pointer;
-  user-select: none;
-  transition:
-    transform 0.12s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
-}
-
-.deck-tile:hover:not(.is-disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
-}
-
-.deck-tile:active:not(.is-disabled) {
-  transform: scale(0.97);
-}
-
-.deck-tile.is-disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-.deck-tile.is-active {
-  background: color-mix(in srgb, var(--tile-color) 18%, var(--popover));
-  box-shadow: 0 0 0 2px var(--tile-color);
-}
-
-.deck-tile.is-missing {
-  border-style: dashed;
-  opacity: 0.6;
-}
-
-.deck-tile.is-editing {
-  cursor: grab;
-}
-
-.deck-tile-spin {
-  position: absolute;
-  top: 6px;
-  left: 6px;
-}
-
-.deck-tile-icon {
-  display: flex;
-  color: var(--tile-color);
-}
-
-.deck-tile-label {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 13px;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.deck-tile-sub {
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
-
-.deck-tile-kbd {
-  position: absolute;
-  right: 4px;
-  bottom: 4px;
-  padding: 0 4px;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  font-family: inherit;
-  font-size: 10px;
-  color: var(--muted-foreground);
-}
-
-.deck-tile-delete {
-  position: absolute;
-  top: 4px;
-  right: 4px;
-}
-</style>

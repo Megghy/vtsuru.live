@@ -90,9 +90,9 @@ function getStyle(p: Platform) {
     youtube: { bg: '#ff0000', fg: '#ffffff' },
     fanbox: { bg: '#fff015', fg: '#000000' },
     other: {
-      bg: 'var(--vtsuru-page-primary)',
-      fg: 'var(--vtsuru-page-primary-readable)',
-      readable: 'var(--vtsuru-page-primary-readable)',
+      bg: 'var(--primary)',
+      fg: 'var(--primary-foreground)',
+      readable: 'var(--primary)',
     },
   }
   return presets[p]
@@ -106,32 +106,32 @@ function getStyle(p: Platform) {
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <div class="supporter-block">
-      <div class="block-header">
-        <div class="header-icon">
+    <div class="relative text-foreground">
+      <div class="flex items-center gap-3 px-6 py-5 border-b border-border bg-secondary/50">
+        <div class="size-8 rounded-[var(--radius)] bg-primary/12 text-primary flex items-center justify-center text-lg">
           <component
             :is="HeartIcon"
             class="size-4.5"
           />
         </div>
-        <span class="header-title">{{ cfg.title }}</span>
+        <span class="text-sm font-extrabold uppercase tracking-normal opacity-80 text-foreground">{{ cfg.title }}</span>
       </div>
 
       <div
         v-if="cfg.description"
-        class="block-desc"
+        class="px-6 pt-4 text-sm text-muted-foreground whitespace-pre-wrap"
       >
         {{ cfg.description }}
       </div>
 
       <div
         v-if="items.length > 0"
-        class="links-grid"
+        class="grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-3 p-3 sm:p-6"
       >
         <a
           v-for="(it, idx) in items"
           :key="idx"
-          class="support-card"
+          class="group relative flex items-center gap-4 p-4 rounded-[var(--radius)] bg-secondary/50 text-foreground no-underline border border-transparent overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:border-[var(--accent-color)] hover:shadow-md focus-visible:outline-2 focus-visible:outline-primary"
           :href="it.url"
           target="_blank"
           rel="noopener noreferrer"
@@ -142,18 +142,18 @@ function getStyle(p: Platform) {
             '--accent-readable': getStyle(it.platform).readable ?? getStyle(it.platform).bg,
           }"
         >
-          <div class="card-glow" />
-          <div class="icon-box">
+          <div class="absolute inset-0 bg-[var(--accent-color)] opacity-0 transition-opacity duration-300 group-hover:opacity-5 pointer-events-none" />
+          <div class="relative z-1 size-12 rounded-[var(--radius)] bg-secondary flex items-center justify-center text-2xl text-[var(--accent-readable)] transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--accent-color)] group-hover:text-[var(--accent-text)]">
             <component
               :is="getIcon(it.platform)"
               class="size-6"
             />
           </div>
-          <div class="card-content">
-            <span class="platform-name">{{ it.label || platformLabel(it.platform) }}</span>
-            <span class="action-text">前往 {{ platformLabel(it.platform) }} 支持</span>
+          <div class="relative z-1 flex-1 flex flex-col">
+            <span class="font-bold text-base leading-snug">{{ it.label || platformLabel(it.platform) }}</span>
+            <span class="text-xs text-muted-foreground mt-0.5">前往 {{ platformLabel(it.platform) }} 支持</span>
           </div>
-          <div class="arrow-icon">
+          <div class="relative z-1 text-xl opacity-30 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1 group-hover:text-[var(--accent-readable)]">
             <component
               :is="ArrowForwardOutline"
               class="size-5"
@@ -163,184 +163,10 @@ function getStyle(p: Platform) {
       </div>
       <div
         v-else
-        class="empty-state text-xs"
+        class="p-6 text-center text-muted-foreground text-xs"
       >
         暂无支持链接
       </div>
     </div>
   </BlockCard>
 </template>
-
-<style scoped>
-.supporter-block {
-  position: relative;
-  color: var(--vtsuru-block-fg);
-}
-
-.block-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 20px 24px;
-  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  background: var(--vtsuru-block-bg-muted);
-}
-
-.header-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--vtsuru-page-radius);
-  background: color-mix(in srgb, var(--vtsuru-page-primary) 12%, transparent);
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-}
-
-.header-title {
-  color: var(--vtsuru-block-fg);
-  font-weight: 800;
-  font-size: 14px;
-  text-transform: uppercase;
-  letter-spacing: 0;
-  opacity: 0.8;
-}
-
-.block-desc {
-  padding: 16px 24px 0;
-  font-size: 14px;
-  color: var(--vtsuru-block-fg-muted);
-  white-space: pre-wrap;
-}
-
-.links-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
-  gap: 12px;
-  padding: clamp(12px, 3vw, 24px);
-}
-
-.support-card {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  background: var(--vtsuru-block-bg-muted);
-  border-radius: var(--vtsuru-page-radius);
-  text-decoration: none;
-  color: var(--vtsuru-block-fg);
-  transition:
-    border-color 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) transparent;
-  position: relative;
-  overflow: hidden;
-}
-
-.card-glow {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--accent-color);
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 0;
-}
-
-.support-card:hover {
-  transform: translateY(-2px);
-  border-color: var(--accent-color);
-  box-shadow: var(--vtsuru-page-shadow);
-}
-
-.support-card:hover .card-glow {
-  opacity: 0.05;
-}
-
-.icon-box {
-  width: 48px;
-  height: 48px;
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--vtsuru-block-bg-muted);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  color: var(--accent-readable);
-  position: relative;
-  z-index: 1;
-  transition: transform 0.3s;
-}
-
-.support-card:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary);
-  outline-offset: 2px;
-}
-
-.support-card:hover .icon-box {
-  transform: scale(1.1);
-  background: var(--accent-color);
-  color: var(--accent-text);
-}
-
-.card-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  z-index: 1;
-}
-
-.platform-name {
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 1.2;
-}
-
-.action-text {
-  font-size: 12px;
-  color: var(--vtsuru-block-fg-muted);
-  margin-top: 2px;
-}
-
-.arrow-icon {
-  font-size: 20px;
-  opacity: 0.3;
-  position: relative;
-  z-index: 1;
-  transition:
-    color 0.2s ease,
-    opacity 0.2s ease,
-    transform 0.2s ease;
-}
-
-.support-card:hover .arrow-icon {
-  opacity: 1;
-  transform: translateX(4px);
-  color: var(--accent-readable);
-}
-
-.empty-state {
-  padding: 24px;
-  text-align: center;
-  color: var(--vtsuru-block-fg-muted);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .support-card,
-  .card-glow,
-  .icon-box,
-  .arrow-icon {
-    transition: none;
-  }
-  .support-card:hover,
-  .support-card:hover .icon-box,
-  .support-card:hover .arrow-icon {
-    transform: none;
-  }
-}
-</style>

@@ -7,9 +7,9 @@
 }
 
 .retro-template :deep(.schedule-week-toolbar) {
-  --vtsuru-page-radius: 0px;
-  --vtsuru-page-border-width: 1px;
-  --vtsuru-page-border-style: solid;
+  --radius: 0px;
+  --ui-border-width: 1px;
+  --ui-border-style: solid;
   --schedule-toolbar-fg: #000;
   --schedule-toolbar-muted: #666;
   --schedule-toolbar-bg: #c0c0c0;
@@ -97,7 +97,7 @@
   background-color: var(--retro-teal);
   border: 0;
   border-radius: 0;
-  box-shadow: var(--vtsuru-page-shadow, 8px 8px 0 rgb(0 0 0 / 30%));
+  box-shadow: var(--ui-shadow, 8px 8px 0 rgb(0 0 0 / 30%));
   -webkit-font-smoothing: none;
   font-smooth: never;
   image-rendering: pixelated;

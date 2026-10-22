@@ -37,19 +37,19 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
 </script>
 
 <template>
-  <Card class="preflight-panel p-3 border bg-card">
+  <Card class="p-3 border bg-card">
     <CardContent class="p-0">
-      <div class="preflight-heading">
+      <div class="flex items-center justify-between gap-3 max-[480px]:items-start">
         <div>
-          <h2>
+          <h2 class="flex items-center gap-1.5 m-0 text-sm font-semibold text-foreground">
             <CheckmarkCircle24Regular class="size-4.5 text-primary" />
             开播前检查
           </h2>
-          <p>连接状态实时更新；登录与 OBS 配置可手动刷新。</p>
+          <p class="mt-0.5 text-xs text-muted-foreground">连接状态实时更新；登录与 OBS 配置可手动刷新。</p>
         </div>
         <Button
           variant="secondary"
-          class="gap-1.5"
+          class="gap-1.5 max-[480px]:shrink-0"
           :disabled="refreshing"
           @click="$emit('refresh')"
         >
@@ -62,7 +62,7 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
       </div>
 
       <div
-        class="preflight-summary"
+        class="flex flex-wrap gap-x-4 gap-y-1 my-2 text-xs text-foreground [&>span]:text-muted-foreground"
         aria-live="polite"
       >
         <template v-if="refreshing">正在检查…</template>
@@ -79,13 +79,14 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
       </Alert>
 
       <ul
-        class="preflight-list"
+        class="list-none p-0 m-0 divide-y divide-border"
         :aria-busy="refreshing"
       >
         <li
           v-for="check in checks"
           :key="check.id"
           :data-check="check.id"
+          class="flex items-center gap-3 py-2.5 max-[480px]:gap-2 max-[480px]:flex-wrap"
         >
           <Badge
             variant="outline"
@@ -94,15 +95,15 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
           >
             {{ labels[check.status] }}
           </Badge>
-          <div class="preflight-copy">
-            <strong>{{ check.title }}</strong>
-            <p>{{ check.detail }}</p>
+          <div class="flex-1 min-w-0 break-words max-[480px]:basis-[calc(100%-60px)]">
+            <strong class="text-xs font-medium text-foreground block">{{ check.title }}</strong>
+            <p class="text-xs text-muted-foreground mt-0.5">{{ check.detail }}</p>
           </div>
           <Button
             v-if="check.status !== 'success'"
             size="xs"
             variant="ghost"
-            class="h-6 text-[11px] shrink-0"
+            class="h-6 text-[11px] shrink-0 max-[480px]:ml-auto"
             @click="$emit('navigate', check.target)"
           >
             {{ targets[check.target] }}
@@ -112,81 +113,3 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
     </CardContent>
   </Card>
 </template>
-
-<style scoped>
-.preflight-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-h2 {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--foreground);
-}
-p {
-  margin: 3px 0 0;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-.preflight-summary {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 16px;
-  margin: 12px 0 6px;
-  font-size: 12px;
-  color: var(--foreground);
-}
-.preflight-summary span {
-  color: var(--muted-foreground);
-}
-.preflight-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-.preflight-list li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--border);
-}
-.preflight-list li:last-child {
-  border: 0;
-  padding-bottom: 0;
-}
-.preflight-copy {
-  flex: 1;
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.preflight-copy strong {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-@media (max-width: 480px) {
-  .preflight-heading {
-    align-items: flex-start;
-  }
-  .preflight-heading > :last-child {
-    flex-shrink: 0;
-  }
-  .preflight-list li {
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  .preflight-copy {
-    flex-basis: calc(100% - 60px);
-  }
-  .preflight-list li > :last-child:not(.preflight-copy) {
-    margin-left: auto;
-  }
-}
-</style>

@@ -10,12 +10,16 @@ const { workspace, switchWorkspace } = useManageWorkspace()
 
 <template>
   <div
-    class="workspace-switch"
-    :class="{ 'workspace-switch--collapsed': collapsed, 'workspace-switch--block': block }"
+    class="grid grid-cols-2 gap-0.5 w-[148px] p-0.5 border border-border rounded-[9px] bg-muted box-border"
+    :class="{ 'w-full': block, 'w-auto grid-cols-1 p-0.5': collapsed }"
   >
     <button
       type="button"
-      :class="{ active: workspace === 'streamer' }"
+      class="min-w-0 h-7 px-2 border-0 rounded-md bg-transparent text-muted-foreground inline-flex-center gap-1.5 font-inherit text-xs font-semibold cursor-pointer transition-colors"
+      :class="{
+        'bg-popover text-foreground shadow-sm': workspace === 'streamer',
+        'size-7 p-0': collapsed,
+      }"
       :title="collapsed ? '主播后台' : undefined"
       @click="switchWorkspace('streamer')"
     >
@@ -27,7 +31,11 @@ const { workspace, switchWorkspace } = useManageWorkspace()
     </button>
     <button
       type="button"
-      :class="{ active: workspace === 'user' }"
+      class="min-w-0 h-7 px-2 border-0 rounded-md bg-transparent text-muted-foreground inline-flex-center gap-1.5 font-inherit text-xs font-semibold cursor-pointer transition-colors"
+      :class="{
+        'bg-popover text-foreground shadow-sm': workspace === 'user',
+        'size-7 p-0': collapsed,
+      }"
       :title="collapsed ? '观众' : undefined"
       @click="switchWorkspace('user')"
     >
@@ -39,57 +47,3 @@ const { workspace, switchWorkspace } = useManageWorkspace()
     </button>
   </div>
 </template>
-
-<style scoped>
-.workspace-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3px;
-  width: 148px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--muted);
-  box-sizing: border-box;
-}
-
-.workspace-switch button {
-  min-width: 0;
-  height: 28px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted-foreground);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.workspace-switch button.active {
-  background: var(--popover);
-  color: var(--foreground);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--foreground) 12%, transparent);
-}
-
-.workspace-switch--block {
-  width: 100%;
-}
-
-.workspace-switch--collapsed {
-  width: auto;
-  grid-template-columns: 1fr;
-  padding: 2px;
-}
-
-.workspace-switch--collapsed button {
-  width: 28px;
-  padding: 0;
-}
-</style>

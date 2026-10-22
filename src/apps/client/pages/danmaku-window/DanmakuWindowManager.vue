@@ -122,7 +122,7 @@ function toggleFilterType(val: string, checked: boolean) {
 </script>
 
 <template>
-  <div class="danmaku-manage-view flex flex-col gap-3.5">
+  <div class="w-full flex flex-col gap-3.5">
     <!-- 标准管理页标头 -->
     <ClientPageHeader
       title="弹幕机浮窗管理"
@@ -179,7 +179,7 @@ function toggleFilterType(val: string, checked: boolean) {
     <!-- 统一 Segmented Tabs 导航 -->
     <Tabs
       default-value="appearance"
-      class="w-full danmaku-tabs"
+      class="w-full"
     >
       <TabsList class="grid w-full max-w-sm grid-cols-3">
         <TabsTrigger
@@ -218,25 +218,25 @@ function toggleFilterType(val: string, checked: boolean) {
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div
-                class="preset-card preset-card--dark"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-[#18181b] text-[#fafafa]"
                 @click="applyPreset('dark')"
               >
-                <div class="preset-name">暗黑</div>
-                <div class="preset-desc">高对比暗色气泡，适合各类游戏背景</div>
+                <div class="text-[13px] font-semibold">暗黑</div>
+                <div class="text-[11px] opacity-75 leading-relaxed">高对比暗色气泡，适合各类游戏背景</div>
               </div>
               <div
-                class="preset-card preset-card--light"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-white text-[#18181b]"
                 @click="applyPreset('light')"
               >
-                <div class="preset-name">明亮</div>
-                <div class="preset-desc">温润浅底灰字，高清晰度可读性</div>
+                <div class="text-[13px] font-semibold">明亮</div>
+                <div class="text-[11px] opacity-75 leading-relaxed">温润浅底灰字，高清晰度可读性</div>
               </div>
               <div
-                class="preset-card preset-card--transparent"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-gradient-to-br from-white/8 to-white/2 backdrop-blur-sm text-foreground"
                 @click="applyPreset('transparent')"
               >
-                <div class="preset-name">透明</div>
-                <div class="preset-desc">超低透明背景，零视觉遮挡</div>
+                <div class="text-[13px] font-semibold">透明</div>
+                <div class="text-[11px] opacity-75 leading-relaxed">超低透明背景，零视觉遮挡</div>
               </div>
             </div>
           </CardContent>
@@ -770,56 +770,3 @@ function toggleFilterType(val: string, checked: boolean) {
     </Tabs>
   </div>
 </template>
-
-<style scoped>
-.danmaku-manage-view {
-  width: 100%;
-}
-
-/* 预设卡片 */
-.preset-card {
-  padding: 14px;
-  border-radius: var(--radius, 6px);
-  cursor: pointer;
-  border: 1px solid var(--border);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.preset-card:hover {
-  border-color: var(--brand);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.preset-card--dark {
-  background-color: #18181b;
-  color: #fafafa;
-}
-
-.preset-card--light {
-  background-color: #ffffff;
-  color: #18181b;
-}
-
-.preset-card--transparent {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
-  backdrop-filter: blur(4px);
-  color: var(--foreground);
-}
-
-.preset-name {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.preset-desc {
-  font-size: 11px;
-  opacity: 0.75;
-  line-height: 1.4;
-}
-</style>

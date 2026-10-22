@@ -228,8 +228,8 @@ function toggleActionOnlyLive(row: AutoActionItem) {
 </script>
 
 <template>
-  <div class="action-list flex flex-col h-full">
-    <div class="action-list-header flex items-center justify-between gap-3 flex-wrap">
+  <div class="flex flex-col h-full">
+    <div class="py-2.5 px-3.5 bg-muted rounded-md border border-border flex items-center justify-between gap-3 flex-wrap">
       <div class="flex items-center gap-4 flex-wrap">
         <div class="flex items-center gap-2 cursor-pointer select-none">
           <Switch v-model:checked="typeEnabled" />
@@ -243,7 +243,7 @@ function toggleActionOnlyLive(row: AutoActionItem) {
 
         <div
           v-if="filteredActions.length > 0"
-          class="batch-actions flex items-center gap-1.5"
+          class="border-l border-border pl-3 flex items-center gap-1.5"
         >
           <Button
             size="xs"
@@ -500,21 +500,3 @@ function toggleActionOnlyLive(row: AutoActionItem) {
     </div>
   </div>
 </template>
-
-<style scoped>
-.action-list {
-  height: 100%;
-}
-
-.action-list-header {
-  padding: 10px 14px;
-  background-color: var(--muted, var(--muted));
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-}
-
-.batch-actions {
-  border-left: 1px solid var(--border);
-  padding-left: 12px;
-}
-</style>

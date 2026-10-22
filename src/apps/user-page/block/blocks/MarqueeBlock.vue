@@ -75,22 +75,24 @@ watch(
     :backgrounded="cfg.backgrounded"
   >
     <div
-      class="row"
-      :class="{ 'row--bare': !cfg.backgrounded }"
+      class="flex items-center gap-2.5 text-card-foreground"
+      :class="{
+        '-my-1 -mx-2 px-2 py-1 rounded-[var(--radius)] bg-card/62 backdrop-blur-sm': !cfg.backgrounded,
+      }"
     >
       <component
         :is="MegaphoneOutline"
-        class="icon size-4.5"
+        class="shrink-0 text-muted-foreground size-4.5"
       />
       <div
         ref="hostRef"
-        class="marquee-host"
-        :class="{ 'marquee-host--vertical': vertical }"
+        class="flex-1 min-w-0 relative overflow-hidden"
+        :class="{ 'h-6': vertical }"
       >
         <span
           ref="measureRef"
-          class="text measure"
-          :class="{ 'text--vertical': vertical }"
+          class="absolute left-0 top-0 invisible pointer-events-none block text-[15px] leading-6"
+          :class="vertical ? 'w-full break-words whitespace-normal' : 'w-max whitespace-nowrap'"
           aria-hidden="true"
         >
           {{ displayText }}
@@ -98,7 +100,7 @@ watch(
         <Vue3Marquee
           v-if="shouldAnimate"
           :key="`${cfg.direction}:${displayText}`"
-          class="marquee"
+          class="w-full"
           :vertical="vertical"
           :direction="animationDirection"
           :duration="cfg.durationSec"
@@ -107,94 +109,18 @@ watch(
           clone
         >
           <span
-            class="text"
-            :class="{ 'text--vertical': vertical }"
+            class="block text-[15px] leading-6"
+            :class="vertical ? 'w-full break-words whitespace-normal' : 'whitespace-nowrap'"
             >{{ displayText }}</span
           >
         </Vue3Marquee>
         <span
           v-else
-          class="text"
-          :class="{ 'text--vertical': vertical }"
+          class="block text-[15px] leading-6"
+          :class="vertical ? 'w-full break-words whitespace-normal' : 'whitespace-nowrap'"
           >{{ displayText }}</span
         >
       </div>
     </div>
   </BlockCard>
 </template>
-
-<style scoped>
-.row {
-  --marquee-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))));
-  --marquee-fg-muted: var(
-    --vtsuru-block-fg-muted,
-    var(--vtsuru-surface-fg-muted, var(--vtsuru-page-text-muted, var(--muted-foreground)))
-  );
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: var(--marquee-fg);
-}
-
-.row--bare {
-  --marquee-fg: var(--vtsuru-surface-fg, var(--vtsuru-block-fg));
-  --marquee-fg-muted: var(--vtsuru-surface-fg-muted, var(--vtsuru-block-fg-muted));
-  --marquee-surface: color-mix(
-    in srgb,
-    var(--vtsuru-page-content-color, var(--user-page-ui-surface-bg)) 62%,
-    transparent
-  );
-  margin: -4px -8px;
-  padding: 4px 8px;
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--marquee-surface);
-  backdrop-filter: blur(var(--user-page-bg-blur, 4px));
-  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 4px));
-}
-
-.icon {
-  flex-shrink: 0;
-  color: var(--marquee-fg-muted);
-}
-
-.marquee-host {
-  flex: 1;
-  min-width: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.marquee-host--vertical {
-  height: 24px;
-}
-
-.marquee {
-  width: 100%;
-}
-
-.text {
-  display: block;
-  font-size: 15px;
-  line-height: 24px;
-  white-space: nowrap;
-}
-
-.text--vertical {
-  width: 100%;
-  overflow-wrap: anywhere;
-  white-space: normal;
-}
-
-.measure {
-  position: absolute;
-  left: 0;
-  top: 0;
-  visibility: hidden;
-  pointer-events: none;
-  width: max-content;
-}
-
-.measure.text--vertical {
-  width: 100%;
-}
-</style>

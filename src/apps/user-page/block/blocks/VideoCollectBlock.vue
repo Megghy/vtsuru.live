@@ -153,13 +153,13 @@ watch(
       />
       <div
         v-else
-        class="collect-list grid gap-2"
+        class="@container grid gap-2"
       >
         <RouterLink
           v-for="item in activities"
           :key="item.id"
           :to="{ name: 'video-collect', params: { id: item.shortId } }"
-          class="collect-item flex items-center gap-3.5 p-3 rounded-lg border border-border bg-muted/40 text-foreground no-underline hover:border-primary hover:bg-card transition"
+          class="flex items-center gap-3.5 p-3 rounded-lg border border-border bg-muted/40 text-foreground no-underline hover:border-primary hover:bg-card transition @max-[520px]:items-start @max-[520px]:flex-wrap"
         >
           <div class="collect-copy flex-1 min-w-0 grid gap-1">
             <strong class="text-xs font-semibold truncate">{{ item.name }}</strong>
@@ -179,7 +179,7 @@ watch(
           </div>
           <div
             v-if="showProgress"
-            class="collect-progress flex flex-col gap-1 w-28 text-right text-[11px] text-muted-foreground shrink-0"
+            class="flex flex-col gap-1 w-28 text-right text-[11px] text-muted-foreground shrink-0 @max-[520px]:basis-[calc(100%-28px)] @max-[520px]:order-3 @max-[520px]:ml-0 @max-[520px]:text-left"
           >
             <span>{{ item.videoCount }} / {{ item.maxVideoCount }}</span>
             <Progress
@@ -197,20 +197,4 @@ watch(
   </BlockCard>
 </template>
 
-<style scoped>
-.collect-list {
-  container-type: inline-size;
-}
-@container (max-width: 520px) {
-  .collect-item {
-    align-items: start;
-    flex-wrap: wrap;
-  }
-  .collect-progress {
-    flex-basis: calc(100% - 28px);
-    order: 3;
-    margin-left: 0;
-    text-align: left;
-  }
-}
-</style>
+

@@ -53,7 +53,7 @@ const items = computed(() => {
     :backgrounded="cfg.backgrounded"
   >
     <template #header>
-      <div class="header">
+      <div class="flex items-center gap-2 font-bold text-foreground">
         <component
           :is="FlagOutline"
           class="size-4.5 text-muted-foreground"
@@ -64,7 +64,7 @@ const items = computed(() => {
 
     <div
       v-if="items.length === 0"
-      class="empty text-xs"
+      class="text-xs text-muted-foreground"
     >
       暂无里程碑
     </div>
@@ -72,32 +72,32 @@ const items = computed(() => {
     <template v-else>
       <div
         v-if="cfg.mode !== 'list'"
-        class="timeline"
+        class="grid"
       >
         <div
           v-for="(it, idx) in items"
           :key="idx"
-          class="timeline-item"
+          class="timeline-item relative min-h-12 pl-6 pb-[18px]"
         >
           <span
-            class="timeline-marker"
+            class="absolute top-1.25 left-0 size-[11px] rounded-full border-2 border-primary bg-popover"
             aria-hidden="true"
           />
           <div
             v-if="it.date"
-            class="date"
+            class="text-xs text-muted-foreground"
           >
             {{ it.date }}
           </div>
           <div
             v-if="it.title"
-            class="title"
+            class="font-bold text-sm text-foreground"
           >
             {{ it.title }}
           </div>
           <div
             v-if="it.description"
-            class="desc"
+            class="mt-1.5 text-[13px] leading-relaxed text-muted-foreground whitespace-pre-wrap"
           >
             {{ it.description }}
           </div>
@@ -106,24 +106,24 @@ const items = computed(() => {
 
       <div
         v-else
-        class="list"
+        class="flex flex-col gap-3"
       >
         <div
           v-for="(it, idx) in items"
           :key="idx"
-          class="list-item"
+          class="px-3.5 py-3 border border-border rounded-[calc(var(--radius)-2px)] bg-muted"
         >
-          <div class="meta">
-            <span class="date">{{ it.date || '—' }}</span>
+          <div class="flex gap-2.5 items-baseline flex-wrap">
+            <span class="text-xs text-muted-foreground">{{ it.date || '—' }}</span>
             <span
               v-if="it.title"
-              class="title"
+              class="font-bold text-sm text-foreground"
               >{{ it.title }}</span
             >
           </div>
           <div
             v-if="it.description"
-            class="desc"
+            class="mt-1.5 text-[13px] leading-relaxed text-muted-foreground whitespace-pre-wrap"
           >
             {{ it.description }}
           </div>
@@ -134,29 +134,6 @@ const items = computed(() => {
 </template>
 
 <style scoped>
-.header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  color: var(--vtsuru-block-fg);
-}
-
-.empty {
-  color: var(--muted-foreground);
-}
-
-.timeline {
-  display: grid;
-  gap: 0;
-}
-
-.timeline-item {
-  position: relative;
-  min-height: 48px;
-  padding: 0 0 18px 24px;
-}
-
 .timeline-item:not(:last-child)::before {
   content: '';
   position: absolute;
@@ -165,55 +142,5 @@ const items = computed(() => {
   left: 5px;
   width: 1px;
   background: var(--border);
-}
-
-.timeline-marker {
-  position: absolute;
-  top: 5px;
-  left: 0;
-  width: 11px;
-  height: 11px;
-  border: 2px solid var(--vtsuru-page-primary, var(--brand));
-  border-radius: 50%;
-  background: var(--popover);
-}
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.list-item {
-  padding: 12px 14px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
-  border-radius: max(0px, calc(var(--vtsuru-page-radius) - 2px));
-  background: var(--muted);
-}
-
-.meta {
-  display: flex;
-  gap: 10px;
-  align-items: baseline;
-  flex-wrap: wrap;
-}
-
-.date {
-  font-size: 12px;
-  color: var(--muted-foreground);
-}
-
-.title {
-  font-weight: 700;
-  font-size: 14px;
-  color: var(--vtsuru-block-fg);
-}
-
-.desc {
-  margin-top: 6px;
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--muted-foreground);
-  white-space: pre-wrap;
 }
 </style>

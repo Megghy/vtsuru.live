@@ -76,43 +76,45 @@ const breakdown = computed(() => {
 
 <template>
   <BlockCard
-    class="countdown-card bold-mode"
-    :class="{ 'has-bg': cfg.backgrounded }"
+    class="@container relative overflow-hidden rounded-[var(--radius)]"
+    :class="{ 'bg-popover': cfg.backgrounded }"
     :framed="cfg.framed"
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
     <div
-      class="countdown-inner"
-      :class="{ 'countdown-inner--bare': !cfg.backgrounded }"
+      class="flex flex-col items-center justify-center p-5 min-h-[140px] @max-[420px]:px-2.5 @max-[420px]:py-4"
+      :class="{
+        'rounded-[var(--radius)] bg-card/54 backdrop-blur-md': !cfg.backgrounded,
+      }"
     >
       <!-- 集成式标题区 -->
-      <div class="cd-header-integrated">
+      <div class="flex items-center gap-1.5 mb-5 px-2 pb-1 border-b border-border text-muted-foreground">
         <component
           :is="TimerOutline"
-          class="cd-icon size-3.5"
+          class="size-3.5"
         />
-        <span class="cd-title">{{ cfg.title || '倒计时' }}</span>
+        <span class="text-xs font-bold uppercase tracking-normal">{{ cfg.title || '倒计时' }}</span>
       </div>
 
       <div
         v-if="!targetMs"
-        class="cd-placeholder text-xs"
+        class="p-5 text-xs text-muted-foreground"
       >
         未设置目标时间
       </div>
 
       <div
         v-else-if="breakdown?.done"
-        class="done-display"
+        class="flex flex-col items-center gap-3"
       >
-        <div class="done-icon-wrapper">
+        <div>
           <component
             :is="HourglassOutline"
             class="size-8 text-primary"
           />
         </div>
-        <div class="done-text">
+        <div class="text-lg font-extrabold tracking-normal">
           {{ cfg.doneText || '已到达' }}
         </div>
       </div>
@@ -121,48 +123,52 @@ const breakdown = computed(() => {
         <!-- 数字展示区 -->
         <div
           v-if="cfg.style === 'cards'"
-          class="cd-digits-wrapper"
-          :class="{ 'without-seconds': !cfg.showSeconds }"
+          class="grid items-start gap-1 w-full @max-[420px]:gap-0.5"
+          :class="
+            cfg.showSeconds
+              ? 'max-w-[340px] grid-cols-[minmax(44px,1fr)_auto_minmax(44px,1fr)_auto_minmax(44px,1fr)_auto_minmax(44px,1fr)] @max-[420px]:grid-cols-[minmax(38px,1fr)_auto_minmax(38px,1fr)_auto_minmax(38px,1fr)_auto_minmax(38px,1fr)]'
+              : 'max-w-[250px] grid-cols-[minmax(44px,1fr)_auto_minmax(44px,1fr)_auto_minmax(44px,1fr)] @max-[420px]:grid-cols-[minmax(38px,1fr)_auto_minmax(38px,1fr)_auto_minmax(38px,1fr)]'
+          "
         >
-          <div class="digit-box">
-            <div class="val">
+          <div class="flex flex-col items-center min-w-0">
+            <div class="font-mono text-[38px] font-extrabold leading-none tabular-nums @max-[420px]:text-[30px]">
               {{ breakdown?.days ?? 0 }}
             </div>
-            <div class="lbl">天</div>
+            <div class="text-[10px] font-semibold text-muted-foreground mt-1.5">天</div>
           </div>
 
-          <div class="sep">:</div>
+          <div class="text-[28px] font-light text-muted-foreground mt-0.5 select-none @max-[420px]:text-[22px]">:</div>
 
-          <div class="digit-box">
-            <div class="val">
+          <div class="flex flex-col items-center min-w-0">
+            <div class="font-mono text-[38px] font-extrabold leading-none tabular-nums @max-[420px]:text-[30px]">
               {{ breakdown?.hours?.toString().padStart(2, '0') ?? '00' }}
             </div>
-            <div class="lbl">时</div>
+            <div class="text-[10px] font-semibold text-muted-foreground mt-1.5">时</div>
           </div>
 
-          <div class="sep">:</div>
+          <div class="text-[28px] font-light text-muted-foreground mt-0.5 select-none @max-[420px]:text-[22px]">:</div>
 
-          <div class="digit-box">
-            <div class="val">
+          <div class="flex flex-col items-center min-w-0">
+            <div class="font-mono text-[38px] font-extrabold leading-none tabular-nums @max-[420px]:text-[30px]">
               {{ breakdown?.minutes?.toString().padStart(2, '0') ?? '00' }}
             </div>
-            <div class="lbl">分</div>
+            <div class="text-[10px] font-semibold text-muted-foreground mt-1.5">分</div>
           </div>
 
           <template v-if="cfg.showSeconds">
-            <div class="sep">:</div>
-            <div class="digit-box highlight">
-              <div class="val">
+            <div class="text-[28px] font-light text-muted-foreground mt-0.5 select-none @max-[420px]:text-[22px]">:</div>
+            <div class="flex flex-col items-center min-w-0">
+              <div class="font-mono text-[38px] font-extrabold leading-none tabular-nums text-primary @max-[420px]:text-[30px]">
                 {{ breakdown?.seconds?.toString().padStart(2, '0') ?? '00' }}
               </div>
-              <div class="lbl">秒</div>
+              <div class="text-[10px] font-semibold text-muted-foreground mt-1.5">秒</div>
             </div>
           </template>
         </div>
 
         <div
           v-else
-          class="inline-time bold"
+          class="text-2xl font-bold tabular-nums text-foreground flex flex-wrap justify-center gap-x-1 gap-y-0.5 [&>small]:text-xs [&>small]:text-muted-foreground [&>small]:mr-2 [&>small]:uppercase"
         >
           <span>{{ breakdown?.days ?? 0 }}</span> <small>天</small>
           <span>{{ breakdown?.hours?.toString().padStart(2, '0') }}</span> <small>时</small>
@@ -175,156 +181,3 @@ const breakdown = computed(() => {
     </div>
   </BlockCard>
 </template>
-
-<style scoped>
-.countdown-card.bold-mode {
-  container-type: inline-size;
-  border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
-  position: relative;
-}
-
-.countdown-card.bold-mode.has-bg {
-  background: var(--popover);
-}
-
-.countdown-inner {
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 140px;
-}
-
-.countdown-inner--bare {
-  border-radius: var(--vtsuru-page-radius);
-  background: color-mix(in srgb, var(--vtsuru-page-content-color, var(--user-page-ui-surface-bg)) 54%, transparent);
-  backdrop-filter: blur(var(--user-page-bg-blur, 6px));
-  -webkit-backdrop-filter: blur(var(--user-page-bg-blur, 6px));
-}
-
-.cd-header-integrated {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 20px;
-  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
-  padding-bottom: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
-  color: var(--muted-foreground);
-}
-
-.cd-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0;
-  text-transform: uppercase;
-}
-
-.cd-placeholder {
-  padding: 20px;
-  color: var(--muted-foreground);
-}
-
-.cd-digits-wrapper {
-  display: grid;
-  grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr) auto minmax(44px, 1fr) auto minmax(44px, 1fr);
-  align-items: flex-start;
-  gap: 4px;
-  width: min(100%, 340px);
-}
-
-.cd-digits-wrapper.without-seconds {
-  grid-template-columns: minmax(44px, 1fr) auto minmax(44px, 1fr) auto minmax(44px, 1fr);
-  width: min(100%, 250px);
-}
-
-.digit-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 0;
-}
-
-.digit-box .val {
-  font-size: 38px;
-  font-weight: 800;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0;
-  font-family: ui-monospace, 'Menlo', 'Monaco', monospace;
-}
-
-.digit-box .lbl {
-  color: var(--muted-foreground);
-  font-size: 10px;
-  font-weight: 600;
-  margin-top: 6px;
-  letter-spacing: 0;
-}
-
-.sep {
-  font-size: 28px;
-  font-weight: 300;
-  color: var(--muted-foreground);
-  margin-top: 2px;
-  user-select: none;
-}
-
-.digit-box.highlight .val {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand)));
-}
-
-.done-display {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-}
-
-.done-text {
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 0;
-}
-
-@container (max-width: 420px) {
-  .countdown-inner {
-    padding: 16px 10px;
-  }
-  .cd-digits-wrapper {
-    gap: 2px;
-    grid-template-columns: minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr);
-  }
-  .cd-digits-wrapper.without-seconds {
-    grid-template-columns: minmax(38px, 1fr) auto minmax(38px, 1fr) auto minmax(38px, 1fr);
-  }
-  .digit-box .val {
-    font-size: 30px;
-  }
-  .sep {
-    font-size: 22px;
-  }
-  .inline-time.bold {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 2px 4px;
-  }
-}
-
-.inline-time.bold {
-  font-size: 24px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--vtsuru-block-fg);
-}
-.inline-time.bold small {
-  color: var(--muted-foreground);
-  font-size: 12px;
-  margin-right: 8px;
-  text-transform: uppercase;
-}
-</style>

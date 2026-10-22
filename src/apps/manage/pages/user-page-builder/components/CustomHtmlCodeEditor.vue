@@ -41,7 +41,7 @@ const THEME_VARIABLES = [
   '--radius',
   '--border-width',
   '--border-style',
-  '--vtsuru-shadow',
+  '--ui-shadow',
 ]
 
 function currentAssetEntries() {

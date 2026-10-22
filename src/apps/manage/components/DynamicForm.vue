@@ -389,26 +389,39 @@ onBeforeUnmount(() => {
   />
   <form
     v-else
-    class="flex flex-col w-full"
-    :class="{ 'h-full': fillHeight }"
+    class="flex flex-col w-full min-w-0"
+    :class="{ 'h-full min-h-0': fillHeight }"
     @submit.prevent="onSubmit"
   >
-    <div class="dynamic-form__footer flex justify-end mb-4">
+    <!-- 分栏模式下置顶操作条 -->
+    <div
+      v-if="fillHeight"
+      class="dynamic-form__header flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0"
+    >
+      <span class="text-xs font-semibold text-foreground">模板配置</span>
       <Button
         type="submit"
         :disabled="isUploading"
+        class="h-7 text-xs px-3"
       >
         {{ isUploading ? '保存中...' : '提交' }}
       </Button>
     </div>
 
-    <div class="flex-1 overflow-y-auto pr-1">
-      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <!-- 表单字段内容区 -->
+    <div
+      class="flex-1 overflow-y-auto overflow-x-hidden min-h-0 scrollbar-thin"
+      :class="fillHeight ? 'p-4' : 'pr-1'"
+    >
+      <div
+        class="grid gap-4"
+        :class="fillHeight ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'"
+      >
         <div
           v-for="item in visibleItems"
           :key="item.name.toString()"
-          class="space-y-1.5"
-          :class="item.type === 'decorativeImages' || item.type === 'file' ? 'col-span-full' : ''"
+          class="space-y-1.5 min-w-0"
+          :class="item.type === 'decorativeImages' || item.type === 'file' || fillHeight ? 'col-span-full' : ''"
         >
           <label class="text-xs font-medium text-foreground block">
             {{ item.name.toString() }}
@@ -523,7 +536,10 @@ onBeforeUnmount(() => {
             v-else-if="item.type === 'file'"
             class="space-y-2"
           >
-            <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
+            <div
+              class="grid gap-2"
+              :class="fillHeight ? 'grid-cols-3' : 'grid-cols-4 sm:grid-cols-6'"
+            >
               <div
                 v-for="(f, fIdx) in fileList[item.key] ?? []"
                 :key="f.id"
@@ -561,6 +577,19 @@ onBeforeUnmount(() => {
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- 弹窗模式下置底操作条 -->
+    <div
+      v-if="!fillHeight"
+      class="dynamic-form__footer flex justify-end pt-4 border-t border-border mt-4"
+    >
+      <Button
+        type="submit"
+        :disabled="isUploading"
+      >
+        {{ isUploading ? '保存中...' : '提交' }}
+      </Button>
     </div>
 
     <!-- 上传进度模态框 -->

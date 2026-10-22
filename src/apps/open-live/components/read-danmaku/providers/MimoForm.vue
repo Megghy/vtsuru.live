@@ -138,7 +138,7 @@ watch(
 </script>
 
 <template>
-  <div class="form">
+  <div class="flex flex-col gap-3">
     <SectionField label="音色选择">
       <VoiceSelectWithPreview
         v-model="settings.providers.mimo.mimoVoice"
@@ -238,13 +238,13 @@ watch(
 
       <div
         v-else
-        class="voice-list"
+        class="flex flex-col gap-1"
       >
         <div
           v-for="v in customVoices"
           :key="v.id"
-          class="voice-item"
-          :class="{ active: isCustomSelected(v) }"
+          class="flex items-center gap-2 py-1.5 px-2 border border-border rounded-md text-xs transition-colors"
+          :class="{ 'border-primary bg-primary/5': isCustomSelected(v) }"
         >
           <Mic20Filled
             v-if="v.type === 'clone'"
@@ -255,7 +255,7 @@ watch(
             class="size-3.5 shrink-0 text-muted-foreground"
           />
 
-          <span class="voice-name">{{ v.name }}</span>
+          <span class="flex-1 font-medium overflow-hidden text-ellipsis whitespace-nowrap">{{ v.name }}</span>
 
           <Badge
             variant="outline"
@@ -269,7 +269,7 @@ watch(
             {{ v.type === 'clone' ? '克隆' : '描述' }}
           </Badge>
 
-          <div class="voice-actions">
+          <div class="flex items-center gap-0.5 shrink-0">
             <Button
               size="xs"
               :variant="isCustomSelected(v) ? 'default' : 'ghost'"
@@ -319,42 +319,3 @@ watch(
   </div>
 </template>
 
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.voice-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.voice-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border: 1px solid var(--border, #e5e5e5);
-  border-radius: 6px;
-  font-size: 12px;
-  transition: border-color 120ms ease;
-}
-.voice-item.active {
-  border-color: var(--primary, #18a058);
-  background: rgba(24, 160, 88, 0.05);
-}
-.voice-name {
-  flex: 1;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.voice-actions {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-}
-</style>

@@ -531,7 +531,7 @@ async function setAsDisplayTemplate() {
 }
 
 .template-config-pane {
-  width: 380px;
+  width: 320px;
   flex-shrink: 0;
   border-radius: 8px;
   border: 1px solid var(--border);

@@ -69,7 +69,7 @@ function duplicateItem(index: number) {
 </script>
 
 <template>
-  <div class="repeater-editor">
+  <div class="grid gap-2 w-full">
     <div
       v-if="itemsModel.length >= 2"
       class="repeater-bulk-actions flex justify-between items-center w-full mb-1"
@@ -103,7 +103,7 @@ function duplicateItem(index: number) {
 
     <div
       v-if="itemsModel.length === 0"
-      class="repeater-empty"
+      class="flex-center py-3.5 border border-dashed border-border rounded-md bg-muted"
     >
       <span class="text-xs text-muted-foreground">暂无列表项，点击下方按钮添加</span>
     </div>
@@ -117,16 +117,16 @@ function duplicateItem(index: number) {
       <section
         v-for="(item, index) in itemsModel"
         :key="item._id"
-        class="repeater-item"
+        class="mb-2 overflow-hidden border border-border rounded-md bg-popover"
       >
-        <header class="repeater-header">
+        <header class="flex items-center gap-1.5 min-h-[38px] py-1 px-1.5">
           <component
             :is="ReorderThreeOutline"
             class="repeater-drag-handle size-4.5 cursor-grab text-muted-foreground"
             title="拖拽排序"
           />
           <button
-            class="repeater-toggle"
+            class="flex flex-1 gap-1.5 items-center min-w-0 p-1 border-0 text-inherit bg-transparent text-left cursor-pointer"
             type="button"
             @click="toggle(item._id)"
           >
@@ -184,7 +184,7 @@ function duplicateItem(index: number) {
         </header>
         <div
           v-show="expandedIds.has(item._id)"
-          class="repeater-content"
+          class="repeater-content p-2.5 border-t border-border"
         >
           <slot
             :item="item"
@@ -209,52 +209,6 @@ function duplicateItem(index: number) {
 </template>
 
 <style scoped>
-.repeater-editor {
-  display: grid;
-  gap: 8px;
-  width: 100%;
-}
-.repeater-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 14px;
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  background: var(--muted);
-}
-.repeater-item {
-  margin-bottom: 8px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--popover);
-}
-.repeater-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 4px 6px;
-}
-.repeater-toggle {
-  display: flex;
-  flex: 1;
-  gap: 6px;
-  align-items: center;
-  min-width: 0;
-  padding: 4px;
-  border: 0;
-  color: inherit;
-  background: transparent;
-  text-align: left;
-  cursor: pointer;
-}
-.repeater-content {
-  padding: 10px;
-  border-top: 1px solid var(--border);
-}
-
 @media (max-width: 520px) {
   .repeater-content :deep(.props-grid) {
     grid-template-columns: minmax(0, 1fr);

@@ -138,7 +138,7 @@ const itemsClass = computed(() => {
     :border-title-align="borderTitleAlign"
   >
     <div
-      class="buttons-container flex"
+      class="w-full max-w-full box-border p-1.5 flex"
       :class="[direction === 'vertical' ? 'flex-col' : 'flex-row flex-wrap', justifyClass, itemsClass]"
       :style="{ gap: `${gap}px` }"
     >
@@ -172,11 +172,4 @@ const itemsClass = computed(() => {
   </BlockCard>
 </template>
 
-<style scoped>
-.buttons-container {
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  padding: 6px;
-}
-</style>
+

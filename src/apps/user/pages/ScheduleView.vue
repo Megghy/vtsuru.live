@@ -131,7 +131,7 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
   />
   <div
     v-else
-    class="schedule-page"
+    class="grid grid-cols-[minmax(0,1fr)] gap-[var(--vtsuru-page-spacing)] min-w-0 pb-5 max-[520px]:pb-3"
   >
     <BiliLiveReservePanel
       v-if="biliReserve.items.length"
@@ -155,18 +155,4 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
   </div>
 </template>
 
-<style scoped>
-.schedule-page {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--vtsuru-page-spacing);
-  min-width: 0;
-  padding-bottom: 20px;
-}
 
-@media (max-width: 520px) {
-  .schedule-page {
-    padding-bottom: 12px;
-  }
-}
-</style>

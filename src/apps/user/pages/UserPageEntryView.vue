@@ -113,7 +113,7 @@ const contentClass = computed(() => ({
 
 <template>
   <main
-    class="user-page-entry"
+    class="min-h-screen font-[family-name:var(--vtsuru-page-font-family,inherit)]"
     :class="[contentBackgroundClass, contentClass]"
     :style="[contentThemeVars, contentBackgroundVars]"
   >
@@ -163,11 +163,6 @@ const contentClass = computed(() => ({
 </template>
 
 <style scoped>
-.user-page-entry {
-  min-height: 100vh;
-  font-family: var(--vtsuru-page-font-family);
-}
-
 .bg-host {
   position: relative;
   overflow: hidden;

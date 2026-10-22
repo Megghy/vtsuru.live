@@ -356,7 +356,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 <template>
   <VideoCollectPageShell :table="table">
-    <main class="result-page">
+    <main class="w-[min(calc(100%-32px),1200px)] max-w-[var(--vtsuru-page-max-width,1200px)] min-w-0 min-h-screen min-h-[100svh] mx-auto pt-9 pb-16 box-border">
       <div
         v-if="isLoading && !videoDetail"
         class="py-24 flex justify-center"
@@ -1042,15 +1042,3 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
   </VideoCollectPageShell>
 </template>
 
-<style scoped>
-.result-page {
-  width: min(calc(100% - 32px), 1200px);
-  max-width: var(--vtsuru-page-max-width, 1200px);
-  min-width: 0;
-  min-height: 100vh;
-  min-height: 100svh;
-  margin: 0 auto;
-  padding: 36px 0 64px;
-  box-sizing: border-box;
-}
-</style>

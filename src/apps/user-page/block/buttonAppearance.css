@@ -1,7 +1,7 @@
 .vtsuru-btn {
-  --btn-radius: var(--vtsuru-page-radius, 8px);
+  --btn-radius: var(--radius);
   --btn-border-width: 0px;
-  --btn-border-color: var(--vtsuru-page-primary-border, var(--brand));
+  --btn-border-color: color-mix(in srgb, var(--primary) 28%, transparent);
   --btn-opacity: 1;
   --btn-effect-scale: 1.03;
   --btn-effect-glow: 0.42;
@@ -64,7 +64,7 @@
 }
 
 .vtsuru-btn--radius-default {
-  --btn-radius: var(--vtsuru-page-radius, 8px);
+  --btn-radius: var(--radius);
 }
 
 .vtsuru-btn--radius-pill {

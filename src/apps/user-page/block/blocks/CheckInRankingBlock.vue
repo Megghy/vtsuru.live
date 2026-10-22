@@ -142,8 +142,16 @@ watch(
           class="ranking-item flex items-center gap-2.5 p-2 rounded-lg border border-border bg-muted text-xs"
         >
           <span
-            class="rank size-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
-            :class="`rank--${index + 1}`"
+            class="size-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+            :class="
+              index === 0
+                ? 'text-[#6b4d00] bg-[#f8d66d]'
+                : index === 1
+                  ? 'text-[#40464d] bg-[#d9e0e7]'
+                  : index === 2
+                    ? 'text-[#5e351c] bg-[#e9b58f]'
+                    : 'text-muted-foreground bg-popover'
+            "
           >
             {{ index + 1 }}
           </span>
@@ -167,21 +175,4 @@ watch(
   </BlockCard>
 </template>
 
-<style scoped>
-.rank {
-  color: var(--muted-foreground);
-  background: var(--popover);
-}
-.rank--1 {
-  color: #6b4d00;
-  background: #f8d66d;
-}
-.rank--2 {
-  color: #40464d;
-  background: #d9e0e7;
-}
-.rank--3 {
-  color: #5e351c;
-  background: #e9b58f;
-}
-</style>
+

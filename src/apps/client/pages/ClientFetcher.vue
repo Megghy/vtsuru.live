@@ -31,7 +31,7 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
 
     <Tabs
       v-model="activeTab"
-      class="w-full fetcher-tabs"
+      class="w-full mt-0.5"
     >
       <TabsList class="grid w-full max-w-md grid-cols-3">
         <TabsTrigger
@@ -60,7 +60,7 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       <!-- 连接与凭据 -->
       <TabsContent
         value="connection"
-        class="pt-3 space-y-3 fetcher-tab-content"
+        class="pt-3 space-y-3 mt-3 pb-6"
       >
         <FetcherSettingsCard class="client-readable" />
 
@@ -80,7 +80,7 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       <!-- 实时监控与统计 -->
       <TabsContent
         value="stats"
-        class="pt-3 space-y-3 fetcher-tab-content"
+        class="pt-3 space-y-3 mt-3 pb-6"
       >
         <FetcherStatisticsCard v-if="settings.settings.enableEventFetcher" />
         <FetcherDailyStatsCard v-if="settings.settings.enableEventFetcher" />
@@ -89,21 +89,10 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       <!-- 系统与诊断 -->
       <TabsContent
         value="system"
-        class="pt-3 space-y-3 fetcher-tab-content"
+        class="pt-3 space-y-3 mt-3 pb-6"
       >
         <FetcherSystemCard class="client-readable" />
       </TabsContent>
     </Tabs>
   </div>
 </template>
-
-<style scoped>
-.fetcher-tabs {
-  margin-top: 2px;
-}
-
-.fetcher-tab-content {
-  margin-top: 12px;
-  padding-bottom: 24px;
-}
-</style>

@@ -83,36 +83,34 @@ function goBindBili() {
 
 <template>
   <div
-    class="fetcher-card"
+    class="relative rounded-[10px] border border-border bg-card p-3 sm:px-3.5 sm:py-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 transition-all duration-200"
     :class="{
-      'fetcher-card--not-bound': status === 'not-bound',
-      'fetcher-card--offline': status === 'offline',
+      'border-amber-500/30 bg-amber-500/5': status === 'not-bound' || status === 'offline',
     }"
   >
-    <div class="fetcher-card__status">
+    <div class="flex-1 min-w-0 flex items-center gap-2.5">
       <component
         :is="statusIcon"
-        class="fetcher-card__icon"
+        class="size-6 shrink-0 transition-all duration-200"
         :class="{
-          'fetcher-card__icon--success': status === 'success',
-          'fetcher-card__icon--warning': status === 'warning',
-          'fetcher-card__icon--offline': status === 'offline',
-          'fetcher-card__icon--not-bound': status === 'not-bound',
+          'text-emerald-500': status === 'success',
+          'text-amber-500': status === 'warning' || status === 'not-bound',
+          'text-muted-foreground': status === 'offline',
         }"
       />
-      <div class="fetcher-card__info">
-        <div class="fetcher-card__title">
+      <div class="flex-1 min-w-0 flex flex-col gap-0.75">
+        <div class="flex items-center gap-1.25 text-xs font-semibold text-foreground leading-tight">
           <span>Event Fetcher</span>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
                 <button
                   type="button"
-                  class="fetcher-card__help"
+                  class="inline-flex items-center justify-center bg-transparent border-0 p-0 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <component
                     :is="Info24Filled"
-                    class="w-3.5 h-3.5"
+                    class="size-3.5"
                   />
                 </button>
               </TooltipTrigger>
@@ -130,15 +128,15 @@ function goBindBili() {
             </Tooltip>
           </TooltipProvider>
         </div>
-        <div class="fetcher-card__status-text">
+        <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground leading-snug">
           {{ statusText }}
           <TooltipProvider v-if="status === 'success' && !accountInfo?.isServerFetcherOnline">
             <Tooltip>
               <TooltipTrigger as-child>
-                <span class="fetcher-card__version">
+                <span class="inline-flex items-center gap-0.75 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] font-medium cursor-help hover:bg-accent transition-all">
                   <component
                     :is="FlashCheckmark16Filled"
-                    class="w-3 h-3"
+                    class="size-3"
                   />
                   {{ eventFetcherVersionName }}
                 </span>
@@ -154,13 +152,13 @@ function goBindBili() {
 
     <div
       v-if="status === 'success'"
-      class="fetcher-card__stats"
+      class="flex flex-col items-start sm:items-end gap-0.5 shrink-0 pl-8.5 sm:px-2"
     >
-      <div class="fetcher-card__stat-label">今日接收</div>
-      <div class="fetcher-card__stat-value">{{ todayReceive }}</div>
+      <div class="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">今日接收</div>
+      <div class="text-lg font-bold text-emerald-500 leading-none tabular-nums">{{ todayReceive }}</div>
     </div>
 
-    <div class="fetcher-card__actions">
+    <div class="flex gap-2 shrink-0 pl-8.5 sm:pl-0">
       <Button
         v-if="status === 'not-bound'"
         variant="outline"
@@ -182,165 +180,3 @@ function goBindBili() {
     </div>
   </div>
 </template>
-
-<style scoped>
-.fetcher-card {
-  position: relative;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--card);
-  padding: 12px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  transition: all 0.2s ease;
-}
-
-.fetcher-card--not-bound,
-.fetcher-card--offline {
-  border-color: rgb(245 158 11 / 0.3);
-  background: rgb(245 158 11 / 0.05);
-}
-
-.fetcher-card__status {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.fetcher-card__icon {
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  transition: all 0.2s ease;
-}
-
-.fetcher-card__icon--success {
-  color: #10b981;
-}
-
-.fetcher-card__icon--warning {
-  color: #f59e0b;
-}
-
-.fetcher-card__icon--offline {
-  color: var(--muted-foreground);
-}
-
-.fetcher-card__icon--not-bound {
-  color: #f59e0b;
-}
-
-.fetcher-card__info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.fetcher-card__title {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--foreground);
-  line-height: 1.2;
-}
-
-.fetcher-card__help {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  color: var(--muted-foreground);
-  transition: color 0.15s ease;
-}
-
-.fetcher-card__help:hover {
-  color: var(--foreground);
-}
-
-.fetcher-card__status-text {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-  line-height: 1.3;
-}
-
-.fetcher-card__version {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  background: var(--muted);
-  color: var(--muted-foreground);
-  font-size: 10px;
-  font-weight: 500;
-  cursor: help;
-  transition: all 0.15s ease;
-}
-
-.fetcher-card__version:hover {
-  background: var(--accent);
-}
-
-.fetcher-card__stats {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 2px;
-  flex-shrink: 0;
-  padding: 0 8px;
-}
-
-.fetcher-card__stat-label {
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--muted-foreground);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.fetcher-card__stat-value {
-  font-size: 18px;
-  font-weight: 700;
-  color: #10b981;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.fetcher-card__actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .fetcher-card {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 10px;
-    gap: 10px;
-  }
-
-  .fetcher-card__stats {
-    align-items: flex-start;
-    padding: 0 0 0 34px;
-  }
-
-  .fetcher-card__actions {
-    padding-left: 34px;
-  }
-}
-</style>

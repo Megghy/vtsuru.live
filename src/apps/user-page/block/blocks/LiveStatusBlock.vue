@@ -144,12 +144,15 @@ const hasCover = computed(
 
     <article
       v-else
-      class="live-card"
-      :class="{ compact: cfg.variant === 'compact', immersive: hasCover }"
+      class="@container relative overflow-hidden rounded-[var(--radius)] text-foreground bg-transparent"
+      :class="[
+        hasCover ? 'bg-[#111] text-white min-h-[220px]' : '',
+        hasCover && cfg.variant === 'compact' ? '!min-h-[156px]' : '',
+      ]"
     >
       <img
         v-if="hasCover"
-        class="cover"
+        class="absolute inset-0 size-full object-cover"
         :src="model.coverUrl"
         alt=""
         loading="lazy"
@@ -159,12 +162,22 @@ const hasCover = computed(
       />
       <div
         v-if="hasCover"
-        class="cover-shade"
+        class="absolute inset-0 size-full bg-black/68"
       />
 
-      <div class="content">
-        <header class="header">
-          <div class="identity">
+      <div
+        class="relative grid gap-4 p-4 @max-[520px]:p-3.5 @max-[520px]:!grid-cols-1"
+        :class="[
+          hasCover ? 'min-h-[220px] content-between' : '',
+          cfg.variant === 'compact' ? 'grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-2.5' : '',
+          hasCover && cfg.variant === 'compact' ? '!min-h-[156px]' : '',
+        ]"
+      >
+        <header
+          class="flex items-center justify-between gap-3 min-w-0 @max-[520px]:items-start"
+          :class="cfg.variant === 'compact' ? 'col-span-full @max-[520px]:col-span-1' : ''"
+        >
+          <div class="flex items-center gap-2.5 min-w-0">
             <Avatar
               v-if="model.avatarUrl"
               class="border border-border shrink-0"
@@ -178,32 +191,49 @@ const hasCover = computed(
               />
               <AvatarFallback>{{ model.displayName.slice(0, 1) }}</AvatarFallback>
             </Avatar>
-            <div class="identity-text">
-              <strong class="name">{{ model.displayName }}</strong>
-              <span class="platform">哔哩哔哩直播</span>
+            <div class="min-w-0">
+              <strong class="block truncate text-[15px] leading-snug font-semibold">{{ model.displayName }}</strong>
+              <span
+                class="block truncate text-xs mt-0.5"
+                :class="hasCover ? 'text-white/80' : 'text-muted-foreground'"
+              >哔哩哔哩直播</span>
             </div>
           </div>
 
           <div
-            class="status"
-            :class="{ online: model.isStreaming, reserve: !model.isStreaming && model.liveReserve }"
+            class="flex-none inline-flex items-center gap-1.5 px-2.25 py-1 rounded-full text-xs font-semibold border transition-colors"
+            :class="[
+              hasCover
+                ? 'bg-black/42 text-white/85 border-white/28'
+                : 'bg-secondary text-muted-foreground border-border',
+              model.isStreaming
+                ? hasCover
+                  ? '!text-[#ff8a9c] !border-[#ff8a9c]/40'
+                  : '!text-primary !border-primary/30'
+                : !model.isStreaming && model.liveReserve
+                  ? '!text-[#fb7299] !border-[#fb7299]/30'
+                  : '',
+            ]"
             aria-live="polite"
             aria-atomic="true"
           >
-            <span class="status-dot" />
+            <span class="size-1.75 rounded-full bg-current" />
             {{ model.isStreaming ? '直播中' : model.liveReserve ? '预告' : '未开播' }}
           </div>
         </header>
 
-        <div class="body">
+        <div
+          class="grid gap-2 min-w-0"
+          :class="cfg.variant === 'compact' ? 'self-center @max-[520px]:col-span-1' : ''"
+        >
           <strong
             v-if="cfg.showTitle && model.title"
-            class="title"
-            >{{ model.title }}</strong
-          >
+            class="text-base leading-snug font-bold break-words"
+          >{{ model.title }}</strong>
           <div
             v-if="cfg.showArea && model.area"
-            class="meta"
+            class="flex items-center gap-1.75 text-[13px] leading-relaxed"
+            :class="hasCover ? 'text-white/80' : 'text-muted-foreground'"
           >
             <component
               :is="GameControllerOutline"
@@ -213,7 +243,8 @@ const hasCover = computed(
           </div>
           <div
             v-if="durationText"
-            class="meta"
+            class="flex items-center gap-1.75 text-[13px] leading-relaxed"
+            :class="hasCover ? 'text-white/80' : 'text-muted-foreground'"
             aria-live="polite"
           >
             <component
@@ -224,7 +255,8 @@ const hasCover = computed(
           </div>
           <a
             v-else-if="!model.isStreaming && model.liveReserve && model.liveRoomUrl"
-            class="meta meta-link"
+            class="flex items-center gap-1.75 text-[13px] leading-relaxed transition-colors hover:text-[#fb7299]"
+            :class="hasCover ? 'text-white/80' : 'text-muted-foreground'"
             :href="model.liveRoomUrl"
             target="_blank"
             rel="noopener noreferrer"
@@ -240,7 +272,8 @@ const hasCover = computed(
           </a>
           <div
             v-else-if="!model.isStreaming && model.liveReserve"
-            class="meta"
+            class="flex items-center gap-1.75 text-[13px] leading-relaxed"
+            :class="hasCover ? 'text-white/80' : 'text-muted-foreground'"
           >
             <component
               :is="CalendarOutline"
@@ -253,7 +286,8 @@ const hasCover = computed(
           </div>
           <div
             v-else-if="model.lastStreamAt"
-            class="meta"
+            class="flex items-center gap-1.75 text-[13px] leading-relaxed"
+            :class="hasCover ? 'text-white/80' : 'text-muted-foreground'"
           >
             <component
               :is="CalendarOutline"
@@ -265,7 +299,8 @@ const hasCover = computed(
 
         <div
           v-if="cfg.showButtons && (model.spaceUrl || model.liveRoomUrl)"
-          class="actions"
+          class="flex items-center gap-2.5 @max-[520px]:grid @max-[520px]:grid-cols-[repeat(auto-fit,minmax(120px,1fr))] @max-[520px]:col-span-1"
+          :class="cfg.variant === 'compact' ? 'justify-end [&>*]:flex-none @max-[520px]:[&>*]:w-full' : '[&>*]:flex-1'"
         >
           <Button
             v-if="model.spaceUrl"
@@ -306,206 +341,3 @@ const hasCover = computed(
     </article>
   </BlockCard>
 </template>
-
-<style scoped>
-:scope {
-  --livestatus-brand-color: #fb7299;
-  --livestatus-status-online-light: #ff8a9c;
-  --livestatus-status-reserve-light: #ffb1c7;
-  --livestatus-immersive-bg: #111111;
-  --livestatus-immersive-fg: #ffffff;
-  --livestatus-immersive-fg-muted: rgba(255, 255, 255, 0.78);
-  --livestatus-immersive-status-fg: rgba(255, 255, 255, 0.82);
-  --livestatus-immersive-status-border: rgba(255, 255, 255, 0.28);
-  --livestatus-immersive-status-bg: rgba(0, 0, 0, 0.42);
-}
-
-.live-card {
-  container-type: inline-size;
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-block-fg);
-  background: transparent;
-}
-.cover,
-.cover-shade {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-.cover {
-  object-fit: cover;
-}
-.cover-shade {
-  background: rgba(0, 0, 0, 0.68);
-}
-.content {
-  position: relative;
-  display: grid;
-  gap: 16px;
-  padding: 16px;
-}
-.header,
-.identity,
-.status,
-.meta,
-.actions {
-  display: flex;
-  align-items: center;
-}
-.header {
-  justify-content: space-between;
-  gap: 12px;
-  min-width: 0;
-}
-.identity {
-  gap: 10px;
-  min-width: 0;
-}
-.identity-text {
-  min-width: 0;
-}
-.name,
-.platform {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.name {
-  font-size: 15px;
-  line-height: 1.3;
-}
-.platform {
-  margin-top: 2px;
-  color: var(--vtsuru-block-fg-muted);
-  font-size: 12px;
-}
-.status {
-  flex: none;
-  gap: 6px;
-  padding: 4px 9px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-  border-radius: 999px;
-  color: var(--vtsuru-block-fg-muted);
-  background: var(--vtsuru-block-bg-muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-.status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: currentcolor;
-}
-.status.online {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand)));
-}
-.status.reserve {
-  color: var(--livestatus-brand-color);
-}
-.body {
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-.title {
-  font-size: 16px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-.meta {
-  gap: 7px;
-  color: var(--vtsuru-block-fg-muted);
-  font-size: 13px;
-  line-height: 1.4;
-}
-.meta-link {
-  color: inherit;
-  text-decoration: none;
-}
-.meta-link:hover {
-  color: var(--livestatus-brand-color);
-}
-.actions {
-  gap: 10px;
-}
-.actions > * {
-  flex: 1;
-}
-
-.immersive {
-  min-height: 220px;
-  color: var(--livestatus-immersive-fg);
-  background: var(--livestatus-immersive-bg);
-}
-.immersive .content {
-  min-height: 220px;
-  align-content: space-between;
-}
-.immersive .platform,
-.immersive .meta {
-  color: var(--livestatus-immersive-fg-muted);
-}
-.immersive .status {
-  color: var(--livestatus-immersive-status-fg);
-  border-color: var(--livestatus-immersive-status-border);
-  background: var(--livestatus-immersive-status-bg);
-}
-.immersive .status.online {
-  color: var(--livestatus-status-online-light);
-}
-.immersive .status.reserve {
-  color: var(--livestatus-status-reserve-light);
-}
-
-.compact .content {
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 10px 12px;
-}
-.compact .header {
-  grid-column: 1 / -1;
-}
-.compact .body {
-  align-self: center;
-}
-.compact .actions {
-  justify-content: flex-end;
-}
-.compact .actions > * {
-  flex: none;
-}
-.compact.immersive {
-  min-height: 156px;
-}
-.compact.immersive .content {
-  min-height: 156px;
-}
-
-@container (max-width: 520px) {
-  .content,
-  .compact .content {
-    grid-template-columns: 1fr;
-    padding: 14px;
-  }
-  .compact .header,
-  .compact .body,
-  .compact .actions {
-    grid-column: 1;
-  }
-  .header {
-    align-items: flex-start;
-  }
-  .actions,
-  .compact .actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  }
-  .actions > *,
-  .compact .actions > * {
-    width: 100%;
-  }
-}
-</style>

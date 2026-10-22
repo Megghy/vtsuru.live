@@ -188,7 +188,7 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
     :backgrounded="model.backgrounded"
   >
     <div
-      class="gallery"
+      class="@container w-full"
       :style="containerStyle"
     >
       <Empty
@@ -199,7 +199,7 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
 
       <template v-else-if="model.layout === 'carousel'">
         <div
-          class="relative w-full overflow-hidden rounded-[var(--vtsuru-page-radius)] bg-muted/40 group select-none"
+          class="relative w-full overflow-hidden rounded-[var(--radius)] bg-muted/40 group select-none"
           :style="carouselStyle"
           @mouseenter="stopAutoplay"
           @mouseleave="startAutoplay"
@@ -214,8 +214,8 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
             }"
           >
             <div
-              class="image-state"
-              :class="{ hidden: loadedSources.has(item.src) && !failedSources.has(item.src) }"
+              class="absolute inset-0 z-[1] grid place-items-center min-h-[120px] p-4 text-muted-foreground bg-muted text-[13px] text-center"
+              :class="{ invisible: loadedSources.has(item.src) && !failedSources.has(item.src) }"
               role="status"
             >
               {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
@@ -226,8 +226,8 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
               :loading="index === 0 ? 'eager' : 'lazy'"
               decoding="async"
               referrerpolicy="no-referrer"
-              class="image"
-              :class="{ loaded: loadedSources.has(item.src), failed: failedSources.has(item.src) }"
+              class="block size-full motion-reduce:transition-none transition-opacity duration-180"
+              :class="failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0'"
               :style="{ objectFit: model.fit }"
               @load="markLoaded(item.src)"
               @error="markFailed(item.src)"
@@ -289,7 +289,7 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
         </div>
         <p
           v-if="activeCaption"
-          class="carousel-caption"
+          class="mt-2 min-h-5 px-2 text-muted-foreground text-[13px] leading-normal text-center break-words"
         >
           {{ activeCaption }}
         </p>
@@ -297,21 +297,25 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
 
       <div
         v-else
-        class="list"
-        :class="model.layout"
+        :class="
+          model.layout === 'masonry'
+            ? 'gallery-masonry'
+            : 'grid grid-cols-[repeat(var(--vtsuru-gallery-cols),minmax(0,1fr))] gap-[var(--vtsuru-gallery-gap)] @max-[640px]:grid-cols-[repeat(auto-fit,minmax(min(100%,140px),1fr))]'
+        "
       >
         <figure
           v-for="(item, index) in model.items"
           :key="`${item.src}-${index}`"
-          class="item"
+          class="min-w-0 m-0"
+          :class="model.layout === 'masonry' ? 'gallery-masonry-item' : ''"
         >
           <div
-            class="media"
-            :class="{ masonry: model.layout === 'masonry' }"
+            class="relative overflow-hidden border border-border rounded-[var(--radius)] bg-muted"
+            :class="model.layout === 'masonry' ? 'aspect-auto min-h-[120px]' : 'aspect-[4/3]'"
           >
             <div
-              class="image-state"
-              :class="{ hidden: loadedSources.has(item.src) && !failedSources.has(item.src) }"
+              class="absolute inset-0 z-[1] grid place-items-center min-h-[120px] p-4 text-muted-foreground bg-muted text-[13px] text-center"
+              :class="{ invisible: loadedSources.has(item.src) && !failedSources.has(item.src) }"
               role="status"
             >
               {{ failedSources.has(item.src) ? '图片加载失败' : loadedSources.has(item.src) ? '' : '图片加载中' }}
@@ -322,8 +326,11 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
               :loading="index === 0 ? 'eager' : 'lazy'"
               decoding="async"
               referrerpolicy="no-referrer"
-              class="image"
-              :class="{ loaded: loadedSources.has(item.src), failed: failedSources.has(item.src) }"
+              class="block w-full motion-reduce:transition-none transition-opacity duration-180"
+              :class="[
+                failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0',
+                model.layout === 'masonry' ? 'h-auto min-h-[120px]' : 'h-full',
+              ]"
               :style="{ objectFit: model.fit, maxHeight: model.maxHeight || undefined }"
               @load="markLoaded(item.src)"
               @error="markFailed(item.src)"
@@ -331,7 +338,7 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
           </div>
           <figcaption
             v-if="item.desc"
-            class="caption"
+            class="mt-2 text-muted-foreground text-[13px] leading-normal text-center break-words"
           >
             {{ item.desc }}
           </figcaption>
@@ -342,104 +349,22 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
 </template>
 
 <style scoped>
-.gallery {
-  container-type: inline-size;
-  width: 100%;
-}
-.image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  transition: opacity 180ms ease;
-}
-.image.loaded {
-  opacity: 1;
-}
-.image.failed {
-  visibility: hidden;
-}
-.list.grid {
-  display: grid;
-  grid-template-columns: repeat(var(--vtsuru-gallery-cols), minmax(0, 1fr));
-  gap: var(--vtsuru-gallery-gap);
-}
-.list.masonry {
+.gallery-masonry {
   columns: var(--vtsuru-gallery-cols);
   column-gap: var(--vtsuru-gallery-gap);
 }
-.item {
-  min-width: 0;
-  margin: 0;
-}
-.list.masonry .item {
+.gallery-masonry-item {
   break-inside: avoid;
   margin-bottom: var(--vtsuru-gallery-gap);
 }
-.media {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--muted);
-}
-.media.masonry {
-  aspect-ratio: auto;
-  min-height: 120px;
-}
-.media.masonry .image {
-  height: auto;
-  min-height: 120px;
-}
-.image-state {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  min-height: 120px;
-  padding: 16px;
-  color: var(--muted-foreground);
-  background: var(--muted);
-  font-size: 13px;
-  text-align: center;
-}
-.image-state.hidden {
-  visibility: hidden;
-}
-.caption,
-.carousel-caption {
-  margin: 8px 0 0;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  line-height: 1.5;
-  text-align: center;
-  overflow-wrap: anywhere;
-}
-.carousel-caption {
-  min-height: 20px;
-  padding-inline: 8px;
-}
-
 @container (max-width: 640px) {
-  .list.grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr));
-  }
-  .list.masonry {
+  .gallery-masonry {
     columns: min(var(--vtsuru-gallery-cols), 2);
   }
 }
-
 @container (max-width: 380px) {
-  .list.masonry {
+  .gallery-masonry {
     columns: 1;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .image {
-    transition: none;
   }
 }
 </style>

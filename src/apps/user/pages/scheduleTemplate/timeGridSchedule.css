@@ -27,10 +27,10 @@
    -------------------------------------------------------------------------- */
 .timegrid-board {
   position: relative;
-  border-radius: var(--vtsuru-page-radius, 16px);
+  border-radius: var(--radius);
   background: var(--schedule-panel);
   border: 1px solid var(--schedule-border);
-  box-shadow: var(--vtsuru-page-shadow, 0 8px 30px rgba(0, 0, 0, 0.06));
+  box-shadow: var(--ui-shadow, 0 8px 30px rgba(0, 0, 0, 0.06));
   overflow: hidden;
   backdrop-filter: blur(16px);
   padding: 24px;

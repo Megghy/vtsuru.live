@@ -76,7 +76,7 @@ const availableBlockTags: BlockTagOption[] = [
     type: ViolationTypes.PASSIVE_AGGRESSIVE,
     label: '阴阳怪气',
     desc: '无脏字软刀子、恶意拉踩对比、戳人痛处',
-    defaultChecked: false,
+    defaultChecked: true,
   },
   {
     type: ViolationTypes.TEASING,

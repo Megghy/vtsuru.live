@@ -253,7 +253,7 @@ async function handleRemoveAccount(id: string) {
 </script>
 
 <template>
-  <div class="flex flex-col gap-3.5 bili-account-manager-card">
+  <div class="w-full flex flex-col gap-3.5">
     <!-- 顶部操作与角色分配栏 -->
     <Card class="border bg-card">
       <CardHeader class="p-3 pb-2 border-b">
@@ -300,10 +300,10 @@ async function handleRemoveAccount(id: string) {
 
       <CardContent class="p-3">
         <!-- 快速身份路由配置 -->
-        <div class="routing-control-panel">
+        <div class="p-3 bg-muted rounded-md border border-border">
           <div class="flex flex-wrap items-center gap-4">
             <div class="flex-1 min-w-[240px]">
-              <div class="routing-label flex items-center gap-1">
+              <div class="text-xs font-medium text-foreground mb-1 flex items-center gap-1">
                 <StarOutline class="size-3.5 text-amber-500" />
                 <span>主播管理账号（主管开播/关播/改分区/房管禁言）</span>
               </div>
@@ -329,7 +329,7 @@ async function handleRemoveAccount(id: string) {
             </div>
 
             <div class="flex-1 min-w-[240px]">
-              <div class="routing-label flex items-center gap-1">
+              <div class="text-xs font-medium text-foreground mb-1 flex items-center gap-1">
                 <ChatbubbleEllipsesOutline class="size-3.5 text-primary" />
                 <span>自动操作发弹幕/私信账号（入场/礼物/SC/回复/定时）</span>
               </div>
@@ -379,7 +379,7 @@ async function handleRemoveAccount(id: string) {
     <!-- 账号列表 -->
     <div
       v-if="accountManager.accounts.length === 0"
-      class="empty-box"
+      class="py-10 text-center bg-popover rounded-lg border border-dashed border-border"
     >
       <Empty description="账号池中暂无 B 站账号">
         <Button
@@ -398,15 +398,15 @@ async function handleRemoveAccount(id: string) {
 
     <div
       v-else
-      class="accounts-grid"
+      class="flex flex-col gap-2.5"
     >
       <Card
         v-for="acc in accountManager.accounts"
         :key="acc.id"
-        class="border bg-card account-card"
+        class="border bg-card transition-[border-color,box-shadow] duration-200"
         :class="{
-          'is-main': acc.id === accountManager.routing.mainAccountId,
-          'is-danmaku':
+          'border-l-[3px] border-l-amber-500': acc.id === accountManager.routing.mainAccountId,
+          'border-r-[3px] border-r-primary':
             acc.id === accountManager.routing.danmakuAccountId ||
             (accountManager.routing.danmakuAccountId === 'main' && acc.id === accountManager.routing.mainAccountId),
         }"
@@ -611,7 +611,7 @@ async function handleRemoveAccount(id: string) {
             <div class="flex flex-col items-center gap-3.5 py-2">
               <div
                 v-if="isQRCodeLogining"
-                class="qrcode-wrapper"
+                class="p-3 bg-white rounded-lg shadow-sm"
               >
                 <QrcodeVue
                   :value="loginUrl"
@@ -725,58 +725,3 @@ async function handleRemoveAccount(id: string) {
     </Dialog>
   </div>
 </template>
-
-<style scoped>
-.bili-account-manager-card {
-  width: 100%;
-}
-
-.routing-control-panel {
-  padding: 12px 14px;
-  background: var(--muted);
-  border-radius: 6px;
-  border: 1px solid var(--border);
-}
-
-.routing-label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--foreground);
-  margin-bottom: 4px;
-}
-
-.accounts-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.account-card {
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.account-card.is-main {
-  border-left: 3px solid var(--vtsuru-warning, #f59e0b);
-}
-
-.account-card.is-danmaku {
-  border-right: 3px solid var(--primary, #10b981);
-}
-
-.empty-box {
-  padding: 40px 0;
-  text-align: center;
-  background: var(--popover);
-  border-radius: 8px;
-  border: 1px dashed var(--border);
-}
-
-.qrcode-wrapper {
-  padding: 12px;
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-</style>

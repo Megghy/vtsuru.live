@@ -264,11 +264,11 @@ function removeHotword(index: number) {
 
 <template>
   <div class="flex flex-col gap-4">
-    <section class="setting-section">
+    <section class="flex flex-col gap-3">
       <div class="flex justify-between items-center">
         <div>
           <span class="font-semibold text-sm text-foreground">运行状态</span>
-          <div class="section-description">最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。</div>
+          <div class="mt-0.5 text-xs text-muted-foreground">最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。</div>
         </div>
         <Badge
           variant="outline"
@@ -281,16 +281,16 @@ function removeHotword(index: number) {
 
       <div
         v-if="!isRunning"
-        class="readiness"
+        class="flex flex-col gap-1.5"
       >
         <div
           v-for="item in readiness"
           :key="item.label"
-          class="readiness-item"
+          class="flex items-center gap-2 text-[13px]"
         >
           <span
-            class="readiness-dot"
-            :data-state="item.state"
+            class="size-1.5 rounded-full shrink-0"
+            :class="item.state === 'ok' ? 'bg-emerald-500' : 'bg-destructive'"
           />
           <span :class="item.state === 'ok' ? 'text-foreground' : 'text-muted-foreground'">
             {{ item.label }}
@@ -298,7 +298,7 @@ function removeHotword(index: number) {
         </div>
       </div>
 
-      <div class="runtime-actions flex items-center gap-3">
+      <div class="min-h-8 flex items-center gap-3">
         <Button
           v-if="!isRunning"
           :disabled="startBlocked || isBusy"
@@ -333,27 +333,27 @@ function removeHotword(index: number) {
 
       <div
         ref="transcriptEl"
-        class="transcript"
+        class="max-h-80 overflow-auto p-2.5 px-3 border border-border rounded-md bg-muted"
       >
         <div
           v-if="!transcription.lines.length && !transcription.partialText"
-          class="transcript-empty"
+          class="text-muted-foreground text-[13px]"
         >
           开始后在这里显示本场字幕
         </div>
         <div
           v-for="(line, index) in transcription.lines"
           :key="`${line.startMs}-${index}`"
-          class="transcript-line"
+          class="flex gap-2.5 py-0.5 text-[13px] leading-relaxed"
         >
-          <span class="transcript-time">{{ formatOffset(line.startMs) }}</span>
+          <span class="shrink-0 w-10 text-muted-foreground tabular-nums">{{ formatOffset(line.startMs) }}</span>
           <span>{{ line.text }}</span>
         </div>
         <div
           v-if="transcription.partialText"
-          class="transcript-line transcript-line--partial"
+          class="flex gap-2.5 py-0.5 text-[13px] leading-relaxed text-muted-foreground"
         >
-          <span class="transcript-time">…</span>
+          <span class="shrink-0 w-10 text-muted-foreground tabular-nums">…</span>
           <span>{{ transcription.partialText }}</span>
         </div>
       </div>
@@ -361,11 +361,11 @@ function removeHotword(index: number) {
 
     <div class="h-px bg-border my-1" />
 
-    <section class="setting-section">
+    <section class="flex flex-col gap-3">
       <div class="flex justify-between items-center">
         <div>
           <span class="font-semibold text-sm text-foreground">识别服务</span>
-          <div class="section-description">可保存多个本地配置，启动时使用当前选中的配置。</div>
+          <div class="mt-0.5 text-xs text-muted-foreground">可保存多个本地配置，启动时使用当前选中的配置。</div>
         </div>
         <div class="flex items-center gap-2">
           <Button
@@ -389,7 +389,7 @@ function removeHotword(index: number) {
         </div>
       </div>
 
-      <div class="profile-picker flex items-center gap-2">
+      <div class="min-h-8 flex items-center gap-2">
         <div class="flex-1 min-w-[260px]">
           <Select
             v-model="settingsStore.settings.activeProfileId"
@@ -624,84 +624,3 @@ function removeHotword(index: number) {
     </section>
   </div>
 </template>
-
-<style scoped>
-.setting-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.section-description {
-  margin-top: 2px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-
-.runtime-actions,
-.profile-picker {
-  min-height: 32px;
-}
-
-.readiness {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.readiness-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.readiness-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--muted-foreground);
-  flex: none;
-}
-
-.readiness-dot[data-state='ok'] {
-  background: var(--vtsuru-success, #18a058);
-}
-
-.readiness-dot[data-state='bad'] {
-  background: var(--vtsuru-error, #d03050);
-}
-
-.transcript {
-  max-height: 320px;
-  overflow: auto;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--muted);
-}
-
-.transcript-empty {
-  color: var(--muted-foreground);
-  font-size: 13px;
-}
-
-.transcript-line {
-  display: flex;
-  gap: 10px;
-  padding: 3px 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.transcript-line--partial {
-  color: var(--muted-foreground);
-}
-
-.transcript-time {
-  flex: none;
-  width: 42px;
-  color: var(--muted-foreground);
-  font-variant-numeric: tabular-nums;
-}
-</style>

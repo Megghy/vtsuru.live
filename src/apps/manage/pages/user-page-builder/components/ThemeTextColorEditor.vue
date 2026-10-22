@@ -67,7 +67,7 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
 </script>
 
 <template>
-  <div class="text-color-editor flex flex-col gap-3">
+  <div class="w-full flex flex-col gap-3">
     <div class="flex flex-col gap-1.5">
       <label class="text-xs text-muted-foreground">字体</label>
       <GoogleFontPicker
@@ -143,9 +143,3 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
     </div>
   </div>
 </template>
-
-<style scoped>
-.text-color-editor {
-  width: 100%;
-}
-</style>

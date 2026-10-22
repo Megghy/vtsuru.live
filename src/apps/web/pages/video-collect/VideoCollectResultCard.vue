@@ -261,27 +261,11 @@ function handleCardClick() {
 
 <style scoped>
 .video-result-card {
-  --result-card-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))));
-  --result-card-muted: var(
-    --vtsuru-block-fg-muted,
-    --vtsuru-surface-fg-muted,
-    var(--text-color-2, var(--muted-foreground))
-  );
-  --result-card-bg: var(
-    --vtsuru-block-bg-muted,
-    var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted)))
-  );
-  --result-card-border: var(
-    --vtsuru-block-border,
-    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)))
-  );
-  --result-card-accent: var(--vtsuru-page-primary, var(--brand));
-
   display: flex;
   flex-direction: column;
   width: 100%;
   min-width: 0;
-  color: var(--result-card-fg);
+  color: var(--foreground);
   font: inherit;
   perspective: 1200px;
 }
@@ -293,7 +277,7 @@ function handleCardClick() {
   flex: 1;
   min-width: 0;
   height: 100%;
-  border-radius: var(--vtsuru-page-radius, 10px);
+  border-radius: var(--radius);
   transform-style: preserve-3d;
 }
 
@@ -305,10 +289,10 @@ function handleCardClick() {
   min-width: 0;
   height: 100%;
   overflow: hidden;
-  background: var(--result-card-bg);
-  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--result-card-border);
-  border-radius: var(--vtsuru-page-radius, 10px);
-  box-shadow: var(--vtsuru-page-shadow);
+  background: var(--muted);
+  border: var(--ui-border-width) var(--ui-border-style) var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--ui-shadow);
   backface-visibility: hidden;
   transition:
     transform 0.5s cubic-bezier(0.2, 0.8, 0.25, 1),
@@ -321,12 +305,12 @@ function handleCardClick() {
 }
 
 .video-result-card:hover .video-result-card__content {
-  border-color: color-mix(in srgb, var(--result-card-accent) 60%, var(--result-card-border));
+  border-color: color-mix(in srgb, var(--primary) 60%, var(--border));
   transform: translateY(-2px);
 }
 
 .is-featured .video-result-card__content {
-  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--result-card-accent) 25%, transparent);
+  box-shadow: 0 10px 30px -10px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
 .video-result-card__media {
@@ -335,7 +319,7 @@ function handleCardClick() {
   aspect-ratio: 16 / 9;
   flex: 0 0 auto;
   overflow: hidden;
-  background: var(--vtsuru-page-card-bg-embedded, var(--result-card-bg));
+  background: var(--muted);
 }
 
 .video-result-card__media img {
@@ -468,7 +452,7 @@ function handleCardClick() {
 }
 
 .video-result-card:hover .video-title {
-  color: var(--result-card-accent);
+  color: var(--primary);
 }
 
 .open-link-btn {
@@ -476,7 +460,7 @@ function handleCardClick() {
   align-items: center;
   justify-content: center;
   padding: 3px;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
   background: transparent;
   border: 0;
   border-radius: 4px;
@@ -485,8 +469,8 @@ function handleCardClick() {
 }
 
 .open-link-btn:hover {
-  color: var(--result-card-accent);
-  background: color-mix(in srgb, var(--result-card-accent) 12%, transparent);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
 }
 
 .meta-row {
@@ -495,7 +479,7 @@ function handleCardClick() {
   justify-content: space-between;
   gap: 8px;
   font-size: 12px;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
 }
 
 .owner {
@@ -515,7 +499,7 @@ function handleCardClick() {
 .bvid-code {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 11px;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
   opacity: 0.75;
 }
 
@@ -525,8 +509,8 @@ function handleCardClick() {
   gap: 4px;
   margin-top: auto;
   padding: 6px 10px;
-  background: color-mix(in srgb, var(--result-card-accent) 7%, transparent);
-  border-left: 3px solid var(--result-card-accent);
+  background: color-mix(in srgb, var(--primary) 7%, transparent);
+  border-left: 3px solid var(--primary);
   border-radius: 0 6px 6px 0;
 }
 
@@ -542,7 +526,7 @@ function handleCardClick() {
   display: inline-flex;
   gap: 4px;
   align-items: center;
-  color: var(--result-card-accent);
+  color: var(--primary);
   font-weight: 600;
   min-width: 0;
 }
@@ -563,7 +547,7 @@ function handleCardClick() {
   display: -webkit-box;
   margin: 0;
   overflow: hidden;
-  color: var(--result-card-fg);
+  color: var(--foreground);
   font-size: 12px;
   line-height: 1.4;
   font-style: italic;
@@ -574,21 +558,21 @@ function handleCardClick() {
 
 .recommend-empty-note {
   font-size: 11px;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
 }
 
 .quote-icon {
   margin-right: 4px;
   font-size: 12px;
   vertical-align: -1px;
-  color: var(--result-card-accent);
+  color: var(--primary);
 }
 
 .video-desc {
   display: -webkit-box;
   margin: auto 0 0;
   overflow: hidden;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
   font-size: 12px;
   line-height: 1.4;
   -webkit-box-orient: vertical;
@@ -600,9 +584,9 @@ function handleCardClick() {
   align-items: center;
   margin: auto 0 0;
   padding: 4px 8px;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
   font-size: 11px;
-  background: color-mix(in srgb, var(--result-card-border) 20%, transparent);
+  background: color-mix(in srgb, var(--border) 20%, transparent);
   border-radius: 4px;
 }
 
@@ -626,15 +610,15 @@ function handleCardClick() {
   align-items: center;
   justify-content: space-between;
   padding: 6px 12px;
-  border-top: 1px dashed var(--result-card-border);
-  background: color-mix(in srgb, var(--result-card-bg) 80%, transparent);
+  border-top: 1px dashed var(--border);
+  background: color-mix(in srgb, var(--muted) 80%, transparent);
 }
 
 .flip-order {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 11px;
   font-weight: 700;
-  color: var(--result-card-accent);
+  color: var(--primary);
 }
 
 .flip-back-btn {
@@ -643,17 +627,17 @@ function handleCardClick() {
   align-items: center;
   padding: 3px 8px;
   font-size: 11px;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
   background: transparent;
-  border: 1px solid var(--result-card-border);
+  border: 1px solid var(--border);
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .flip-back-btn:hover {
-  color: var(--result-card-accent);
-  border-color: var(--result-card-accent);
+  color: var(--primary);
+  border-color: var(--primary);
 }
 
 /* 背面样式（神秘盲盒面） */
@@ -665,27 +649,27 @@ function handleCardClick() {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  color: var(--result-card-accent);
+  color: var(--primary);
   background:
-    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--result-card-accent) 18%, transparent), transparent 70%),
-    var(--result-card-bg);
-  border: 1px solid color-mix(in srgb, var(--result-card-accent) 30%, var(--result-card-border));
+    radial-gradient(circle at 50% 30%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 70%),
+    var(--muted);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, var(--border));
   cursor: pointer;
   text-align: center;
   box-sizing: border-box;
 }
 
 .mystery-face:hover {
-  border-color: var(--result-card-accent);
+  border-color: var(--primary);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--result-card-accent) 25%, transparent);
+  box-shadow: 0 8px 24px -6px color-mix(in srgb, var(--primary) 25%, transparent);
 }
 
 .mystery-pattern {
   position: absolute;
   inset: 8px;
-  border: 1px dashed color-mix(in srgb, var(--result-card-accent) 30%, transparent);
-  border-radius: calc(var(--vtsuru-page-radius, 10px) - 4px);
+  border: 1px dashed color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: calc(var(--radius) - 4px);
   pointer-events: none;
 }
 
@@ -696,7 +680,7 @@ function handleCardClick() {
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 13px;
   font-weight: 700;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
   opacity: 0.8;
 }
 
@@ -715,9 +699,9 @@ function handleCardClick() {
   width: 52px;
   height: 52px;
   font-size: 26px;
-  color: var(--result-card-accent);
-  background: color-mix(in srgb, var(--result-card-accent) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--result-card-accent) 25%, transparent);
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent);
   border-radius: 50%;
   transition: transform 0.25s ease;
 }
@@ -734,7 +718,7 @@ function handleCardClick() {
 .mystery-hint {
   font-size: 10px;
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
-  color: var(--result-card-muted);
+  color: var(--muted-foreground);
   letter-spacing: 1.5px;
   opacity: 0.7;
 }

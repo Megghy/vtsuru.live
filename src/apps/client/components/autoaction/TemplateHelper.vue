@@ -9,12 +9,12 @@ import { useMessage } from '@/shared/utils'
 const props = defineProps({
   placeholders: {
     type: Array as () => { name: string; description: string }[],
-    required: true,
+    default: () => [],
   },
 })
 
 const emit = defineEmits<{
-  (e: 'insert', value: string): void
+  (e: 'insert', text: string): void
 }>()
 
 const message = useMessage()
@@ -22,21 +22,15 @@ const searchText = ref('')
 
 const filteredPlaceholders = computed(() => {
   if (!searchText.value) return props.placeholders
-  const lower = searchText.value.toLowerCase()
+  const query = searchText.value.toLowerCase()
   return props.placeholders.filter(
-    (p) => p.name.toLowerCase().includes(lower) || p.description.toLowerCase().includes(lower),
+    (item) => item.name.toLowerCase().includes(query) || item.description.toLowerCase().includes(query),
   )
 })
 
 function copyToClipboard(text: string) {
-  navigator.clipboard
-    .writeText(text)
-    .then(() => {
-      message.success('已复制')
-    })
-    .catch(() => {
-      message.error('复制失败')
-    })
+  navigator.clipboard.writeText(text)
+  message.success('已复制到剪贴板')
 }
 
 function handleInsert(text: string) {
@@ -45,7 +39,7 @@ function handleInsert(text: string) {
 </script>
 
 <template>
-  <div class="template-helper flex flex-col gap-2">
+  <div class="flex flex-col gap-2 p-2 bg-muted rounded-md border border-border">
     <div class="relative">
       <Search16Regular
         class="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
@@ -62,21 +56,21 @@ function handleInsert(text: string) {
         <div
           v-for="item in filteredPlaceholders"
           :key="item.name"
-          class="variable-item flex items-center justify-between"
+          class="group flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer transition-colors hover:bg-muted/80"
           @click="handleInsert(item.name)"
         >
-          <div class="variable-info min-w-0 pr-2">
-            <div class="variable-code truncate">
+          <div class="min-w-0 pr-2">
+            <div class="font-mono text-xs font-bold text-primary truncate">
               {{ item.name }}
             </div>
-            <div class="variable-desc truncate">
+            <div class="text-xs text-muted-foreground mt-0.5 truncate">
               {{ item.description }}
             </div>
           </div>
-          <div class="variable-actions flex items-center gap-1 shrink-0">
+          <div class="flex items-center gap-1 shrink-0 opacity-40 transition-opacity group-hover:opacity-100">
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-card hover:text-foreground"
               title="复制"
               @click.stop="copyToClipboard(item.name)"
             >
@@ -84,7 +78,7 @@ function handleInsert(text: string) {
             </button>
             <button
               type="button"
-              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-card hover:text-foreground"
               title="插入"
               @click.stop="handleInsert(item.name)"
             >
@@ -94,7 +88,7 @@ function handleInsert(text: string) {
         </div>
         <div
           v-if="filteredPlaceholders.length === 0"
-          class="no-results"
+          class="text-center text-xs text-muted-foreground py-3"
         >
           无匹配变量
         </div>
@@ -102,52 +96,3 @@ function handleInsert(text: string) {
     </ScrollArea>
   </div>
 </template>
-
-<style scoped>
-.template-helper {
-  background-color: var(--muted);
-  border-radius: var(--radius);
-  padding: 8px;
-  border: 1px solid var(--border);
-}
-
-.variable-item {
-  padding: 6px 8px;
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.variable-item:hover {
-  background-color: var(--muted);
-}
-
-.variable-code {
-  font-family: monospace;
-  font-size: 12px;
-  font-weight: bold;
-  color: var(--primary);
-}
-
-.variable-desc {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  margin-top: 2px;
-}
-
-.variable-actions {
-  opacity: 0.35;
-  transition: opacity 0.2s;
-}
-
-.variable-item:hover .variable-actions {
-  opacity: 1;
-}
-
-.no-results {
-  text-align: center;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  padding: 12px 0;
-}
-</style>

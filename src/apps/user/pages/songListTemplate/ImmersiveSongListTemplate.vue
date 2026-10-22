@@ -74,24 +74,23 @@ const stageRequestLabel = computed(() => {
 
 <template>
   <div
-    class="immersive-template"
-    :style="{ '--immersive-cover': selectedSong?.cover ? `url(${selectedSong.cover})` : 'none' }"
+    class="relative grid grid-cols-[minmax(280px,380px)_minmax(320px,1fr)] max-[768px]:grid-cols-1 gap-[clamp(16px,3vw,40px)] w-full max-w-[var(--vtsuru-page-max-width,1280px)] min-w-0 mx-auto p-[clamp(16px,3vw,36px)]"
   >
-    <aside class="stage">
-      <span class="stage-kicker">NOW SELECTED</span>
+    <aside class="flex flex-col gap-3">
+      <span class="text-[10px] font-bold tracking-widest text-primary">NOW SELECTED</span>
       <Transition
         name="stage-cover"
         mode="out-in"
       >
         <div
           :key="selectedSong?.key ?? 'empty'"
-          class="stage-cover"
-          :class="{ 'is-empty': !selectedSong?.cover }"
+          class="w-full aspect-square rounded-xl overflow-hidden bg-muted flex-center"
         >
           <img
             v-if="selectedSong?.cover"
             :src="selectedSong.cover"
             :alt="selectedSong.name"
+            class="size-full object-cover"
             referrerpolicy="no-referrer"
           />
           <component
@@ -111,18 +110,18 @@ const stageRequestLabel = computed(() => {
           :key="`${selectedSong.key}-${stageEpoch}`"
           class="stage-meta"
         >
-          <div class="stage-title">
+          <div class="text-lg font-bold text-card-foreground">
             {{ selectedSong.name }}
           </div>
           <div
             v-if="selectedSong.translateName"
-            class="stage-subtitle"
+            class="text-xs text-muted-foreground"
           >
             {{ selectedSong.translateName }}
           </div>
           <div
             v-if="selectedSong.author?.length"
-            class="stage-author"
+            class="text-[13px] text-muted-foreground"
           >
             {{ selectedSong.author.join(' / ') }}
           </div>
@@ -179,13 +178,13 @@ const stageRequestLabel = computed(() => {
       </Transition>
     </aside>
 
-    <section class="library">
-      <header class="library-heading">
+    <section>
+      <header class="flex items-end justify-between mb-3">
         <div>
-          <span class="library-kicker">LIBRARY</span>
-          <h2>选择一首歌</h2>
+          <span class="text-[10px] font-bold tracking-widest text-primary">LIBRARY</span>
+          <h2 class="m-0 text-xl text-card-foreground">选择一首歌</h2>
         </div>
-        <span class="library-count">{{ filteredSongs.length }} 首</span>
+        <span class="text-xs font-mono text-muted-foreground">{{ filteredSongs.length }} 首</span>
       </header>
 
       <div class="search-shell mb-3">
@@ -211,44 +210,41 @@ const stageRequestLabel = computed(() => {
       <div
         v-else
         v-bind="containerProps"
-        class="library-list"
+        class="h-[clamp(400px,65vh,760px)] overflow-y-auto"
       >
         <div v-bind="wrapperProps">
           <div
             v-for="{ data: song } in list"
             :key="song.key"
-            class="lib-row"
-            :class="{
-              active: selectedSong?.key === song.key,
-              'is-singing': singingSongKeySet.has(song.key),
-              'is-queued': queuedSongKeySet.has(song.key),
-            }"
+            class="flex items-center gap-2 h-[52px] px-2 rounded-lg transition-colors hover:bg-muted"
+            :class="{ 'bg-muted': selectedSong?.key === song.key }"
           >
             <button
               type="button"
-              class="lib-select"
+              class="flex items-center gap-2.5 flex-1 min-w-0 bg-transparent border-0 p-0 cursor-pointer text-left"
               :aria-current="selectedSong?.key === song.key ? 'true' : undefined"
               @click="selectSong(song)"
             >
-              <span class="lib-cover">
+              <span class="size-9 rounded-md overflow-hidden bg-muted flex-center text-xs font-semibold text-muted-foreground shrink-0">
                 <img
                   v-if="song.cover"
                   :src="song.cover"
                   :alt="song.name"
+                  class="size-full object-cover"
                   loading="lazy"
                   referrerpolicy="no-referrer"
                 />
                 <span v-else>{{ song.name.charAt(0) }}</span>
               </span>
-              <span class="lib-main">
+              <span class="flex flex-col min-w-0">
                 <span
-                  class="lib-name"
+                  class="text-[13px] font-medium text-card-foreground truncate"
                   :title="song.name"
                   >{{ song.name }}</span
                 >
                 <span
                   v-if="song.author?.length"
-                  class="lib-author"
+                  class="text-[11px] text-muted-foreground truncate"
                   >{{ song.author.join(' / ') }}</span
                 >
               </span>
@@ -273,166 +269,3 @@ const stageRequestLabel = computed(() => {
     </section>
   </div>
 </template>
-
-<style scoped>
-.immersive-template {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(280px, 380px) minmax(320px, 1fr);
-  gap: clamp(16px, 3vw, 40px);
-  width: 100%;
-  max-width: var(--vtsuru-page-max-width, 1280px);
-  min-width: 0;
-  margin: 0 auto;
-  padding: clamp(16px, 3vw, 36px);
-}
-
-@media (max-width: 768px) {
-  .immersive-template {
-    grid-template-columns: 1fr;
-  }
-}
-
-.stage {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.stage-kicker,
-.library-kicker {
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: 0.1em;
-  color: var(--song-accent, #23ade5);
-}
-
-.stage-cover {
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--muted, rgba(128, 128, 128, 0.08));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stage-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.stage-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--song-fg);
-}
-
-.stage-subtitle {
-  font-size: 12px;
-  color: var(--song-muted, #888);
-}
-
-.stage-author {
-  font-size: 13px;
-  color: var(--song-muted, #888);
-}
-
-.library-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.library-heading h2 {
-  margin: 0;
-  font-size: 20px;
-  color: var(--song-fg);
-}
-
-.library-count {
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--song-muted, #888);
-}
-
-.library-list {
-  height: clamp(400px, 65vh, 760px);
-  overflow-y: auto;
-}
-
-.lib-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 52px;
-  padding: 0 8px;
-  border-radius: 8px;
-  transition: background-color 0.15s ease;
-}
-
-.lib-row:hover,
-.lib-row.active {
-  background: var(--muted, rgba(128, 128, 128, 0.06));
-}
-
-.lib-select {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  text-align: left;
-}
-
-.lib-cover {
-  width: 36px;
-  height: 36px;
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--muted, rgba(128, 128, 128, 0.08));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--song-muted);
-  flex-shrink: 0;
-}
-
-.lib-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.lib-main {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.lib-name {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--song-fg);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.lib-author {
-  font-size: 11px;
-  color: var(--song-muted, #888);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-</style>

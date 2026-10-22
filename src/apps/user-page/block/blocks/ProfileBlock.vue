@@ -39,11 +39,11 @@ const model = computed(() => {
     :backgrounded="model.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <div class="profile-hero">
-      <div class="avatar-container">
+    <div class="flex flex-col items-center px-4 py-8 relative overflow-hidden text-center">
+      <div class="relative mb-6">
         <Avatar
           v-if="model.avatarUrl"
-          class="profile-avatar size-28 border-4 border-muted shadow-md"
+          class="size-28 border-4 border-muted shadow-md relative z-2"
         >
           <AvatarImage
             :src="model.avatarUrl"
@@ -58,16 +58,16 @@ const model = computed(() => {
         </Avatar>
       </div>
 
-      <div class="profile-info">
+      <div>
         <h1
           v-if="model.displayName"
-          class="profile-name"
+          class="text-[32px] font-extrabold leading-tight m-0 mb-3 text-foreground"
         >
           {{ model.displayName }}
         </h1>
         <p
           v-if="model.bio"
-          class="profile-bio"
+          class="text-[15px] leading-relaxed text-muted-foreground max-w-[500px] mx-auto m-0 whitespace-pre-wrap"
         >
           {{ model.bio }}
         </p>
@@ -76,44 +76,4 @@ const model = computed(() => {
   </BlockCard>
 </template>
 
-<style scoped>
-.profile-hero {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 32px 16px;
-  position: relative;
-  overflow: hidden;
-  text-align: center;
-}
 
-.avatar-container {
-  position: relative;
-  margin-bottom: 24px;
-}
-
-.profile-avatar {
-  border-color: var(--vtsuru-block-bg-muted);
-  position: relative;
-  z-index: 2;
-  box-shadow: var(--vtsuru-page-shadow);
-}
-
-.profile-name {
-  font-size: 32px;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: 0;
-  margin: 0 0 12px;
-  color: var(--vtsuru-block-fg);
-}
-
-.profile-bio {
-  font-size: 15px;
-  line-height: 1.6;
-  color: var(--vtsuru-block-fg-muted);
-  max-width: 500px;
-  margin: 0 auto;
-  white-space: pre-wrap;
-}
-</style>

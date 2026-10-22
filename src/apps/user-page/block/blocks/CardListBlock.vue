@@ -55,14 +55,23 @@ const items = computed(() =>
     :backgrounded="values.backgrounded !== false"
   >
     <div
-      class="cards"
-      :class="`cards--${layout}`"
+      class="@container grid gap-2.5"
+      :class="
+        layout === 'grid'
+          ? 'grid-cols-[repeat(var(--card-columns),minmax(0,1fr))] @max-[620px]:grid-cols-1'
+          : ''
+      "
       :style="{ '--card-columns': String(columns) }"
     >
       <article
         v-for="item in items"
         :key="item.id"
-        class="card-item"
+        class="min-w-0 overflow-hidden border border-border rounded-[var(--radius)] bg-muted"
+        :class="
+          layout === 'list'
+            ? 'grid grid-cols-[minmax(140px,28%)_minmax(0,1fr)] @max-[620px]:grid-cols-1'
+            : ''
+        "
       >
         <img
           v-if="item.image"
@@ -71,18 +80,29 @@ const items = computed(() =>
           loading="lazy"
           decoding="async"
           referrerpolicy="no-referrer"
-          class="card-image"
+          class="block w-full bg-muted object-cover"
+          :class="
+            layout === 'list'
+              ? 'h-full min-h-[150px] aspect-auto @max-[620px]:min-h-0 @max-[620px]:aspect-video'
+              : 'aspect-video'
+          "
         />
-        <div class="card-content">
-          <h3 v-if="item.title">
+        <div class="grid gap-2.25 p-3">
+          <h3
+            v-if="item.title"
+            class="m-0 text-[15px] leading-snug break-words"
+          >
             {{ item.title }}
           </h3>
-          <p v-if="item.body">
+          <p
+            v-if="item.body"
+            class="m-0 text-muted-foreground text-[13px] leading-relaxed whitespace-pre-wrap break-words"
+          >
             {{ item.body }}
           </p>
           <div
             v-if="item.tags.length"
-            class="card-tags"
+            class="flex gap-1.5 flex-wrap"
           >
             <Badge
               v-for="tag in item.tags"
@@ -93,7 +113,7 @@ const items = computed(() =>
               {{ tag }}
             </Badge>
           </div>
-          <div class="card-actions">
+          <div class="flex gap-1.5 flex-wrap">
             <CardListAction
               :action="item.primaryAction"
               :user-name="props.userInfo?.name"
@@ -110,75 +130,4 @@ const items = computed(() =>
   </BlockCard>
 </template>
 
-<style scoped>
-.cards {
-  container-type: inline-size;
-  display: grid;
-  gap: 10px;
-}
-.cards--grid {
-  grid-template-columns: repeat(var(--card-columns), minmax(0, 1fr));
-}
-.card-item {
-  min-width: 0;
-  overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--muted);
-}
-.card-image {
-  display: block;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  background: var(--muted);
-}
-.card-content {
-  display: grid;
-  gap: 9px;
-  padding: 12px;
-}
-.card-content h3,
-.card-content p {
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-.card-content h3 {
-  font-size: 15px;
-  line-height: 1.4;
-}
-.card-content p {
-  color: var(--muted-foreground);
-  font-size: 13px;
-  line-height: 1.55;
-  white-space: pre-wrap;
-}
-.card-tags,
-.card-actions {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-.cards--list .card-item {
-  display: grid;
-  grid-template-columns: minmax(140px, 28%) minmax(0, 1fr);
-}
-.cards--list .card-image {
-  height: 100%;
-  min-height: 150px;
-  aspect-ratio: auto;
-}
 
-@container (max-width: 620px) {
-  .cards--grid {
-    grid-template-columns: 1fr;
-  }
-  .cards--list .card-item {
-    grid-template-columns: 1fr;
-  }
-  .cards--list .card-image {
-    min-height: 0;
-    aspect-ratio: 16 / 9;
-  }
-}
-</style>

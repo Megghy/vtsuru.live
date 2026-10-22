@@ -67,15 +67,15 @@ function requestSong(song: SongsInfo) {
 </script>
 
 <template>
-  <div class="compact-template">
-    <header class="compact-heading">
+  <div class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] min-w-0 mx-auto p-[clamp(12px,2vw,24px)]">
+    <header class="flex items-end justify-between mb-3.5 gap-3.5">
       <div>
-        <span class="heading-kicker">QUICK INDEX</span>
-        <h2>快速曲库</h2>
+        <span class="block mb-0.5 text-primary text-[10px] font-bold">QUICK INDEX</span>
+        <h2 class="m-0 text-card-foreground text-[clamp(20px,3vw,28px)] leading-[1.15]">快速曲库</h2>
       </div>
       <span
         :key="listKey"
-        class="count is-pulsing"
+        class="text-xs font-mono text-muted-foreground"
       >
         {{ filteredSongs.length }} 首
       </span>
@@ -163,47 +163,45 @@ function requestSong(song: SongsInfo) {
         v-else
         :key="listKey"
         v-bind="containerProps"
-        class="list-container"
+        class="h-[clamp(480px,68vh,840px)] overflow-y-auto"
       >
         <div v-bind="wrapperProps">
           <div
             v-for="{ data: song, index } in list"
             :key="song.key"
-            class="row"
+            class="grid grid-cols-[36px_40px_minmax(140px,1fr)_auto_auto] items-center gap-3 h-[60px] px-3 border-b border-border transition-colors hover:bg-muted"
             :class="{
-              'is-singing': singingSongKeySet.has(song.key),
-              'is-queued': queuedSongKeySet.has(song.key),
-              'is-odd': index % 2 === 1,
-              'is-tag-active': selectedTag && song.tags?.includes(selectedTag),
+              'bg-muted/30': index % 2 === 1,
             }"
           >
-            <div class="row-index">
+            <div class="text-xs font-mono text-muted-foreground text-center">
               {{ index + 1 }}
             </div>
-            <div class="row-cover">
+            <div class="size-10 rounded-md overflow-hidden bg-muted">
               <img
                 v-if="song.cover"
                 :src="song.cover"
                 :alt="song.name"
+                class="size-full object-cover"
                 loading="lazy"
                 referrerpolicy="no-referrer"
               />
               <span
                 v-else
-                class="row-cover-fallback"
+                class="flex-center size-full text-sm font-semibold text-muted-foreground"
                 >{{ song.name.charAt(0) }}</span
               >
             </div>
-            <div class="row-main">
-              <div class="row-title">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 text-[13px] font-medium text-card-foreground">
                 <span
-                  class="name"
+                  class="truncate"
                   :title="song.name"
                   >{{ song.name }}</span
                 >
                 <span
                   v-if="song.translateName"
-                  class="translate"
+                  class="text-[11px] text-muted-foreground"
                   >{{ song.translateName }}</span
                 >
                 <SongStatusBadge
@@ -220,19 +218,19 @@ function requestSong(song: SongsInfo) {
               </div>
               <div
                 v-if="song.author?.length"
-                class="row-author"
+                class="text-[11px] text-muted-foreground truncate"
                 :title="song.author.join(' / ')"
               >
                 {{ song.author.join(' / ') }}
               </div>
             </div>
-            <div class="row-tags">
+            <div class="flex gap-1">
               <button
                 v-for="tag in (song.tags ?? []).slice(0, 3)"
                 :key="tag"
                 type="button"
-                class="clickable-tag"
-                :class="{ 'is-active': selectedTag === tag }"
+                 class="px-1.5 py-0.5 rounded text-[10px] text-muted-foreground bg-muted border-0 cursor-pointer transition-colors hover:text-primary hover:bg-primary/15"
+                 :class="{ 'text-primary bg-primary/15': selectedTag === tag }"
                 :aria-pressed="selectedTag === tag"
                 @click="selectedTag = selectedTag === tag ? null : tag"
               >
@@ -270,151 +268,3 @@ function requestSong(song: SongsInfo) {
   </div>
 </template>
 
-<style scoped>
-.compact-template {
-  width: 100%;
-  max-width: var(--vtsuru-page-max-width, 1180px);
-  min-width: 0;
-  margin: 0 auto;
-  padding: clamp(12px, 2vw, 24px);
-}
-
-.compact-heading {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-bottom: 14px;
-  gap: 14px;
-}
-
-.heading-kicker {
-  display: block;
-  margin-bottom: 3px;
-  color: var(--song-accent);
-  font-size: 10px;
-  font-weight: 750;
-}
-
-.compact-heading h2 {
-  margin: 0;
-  color: var(--song-fg);
-  font-size: clamp(20px, 3vw, 28px);
-  line-height: 1.15;
-}
-
-.list-container {
-  height: clamp(480px, 68vh, 840px);
-  overflow-y: auto;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 36px 40px minmax(140px, 1fr) auto auto;
-  align-items: center;
-  gap: 12px;
-  height: 60px;
-  padding: 0 12px;
-  border-bottom: 1px solid var(--song-border, rgba(128, 128, 128, 0.1));
-  transition: background-color 0.15s ease;
-}
-
-.row:hover {
-  background-color: var(--muted, rgba(128, 128, 128, 0.04));
-}
-
-.row.is-odd {
-  background-color: var(--background-subtle, rgba(128, 128, 128, 0.02));
-}
-
-.row-index {
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--song-muted, #888);
-  text-align: center;
-}
-
-.row-cover {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--muted, rgba(128, 128, 128, 0.08));
-}
-
-.row-cover img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.row-cover-fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--song-muted, #888);
-}
-
-.row-main {
-  min-width: 0;
-}
-
-.row-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--song-fg);
-}
-
-.row-title .name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.row-title .translate {
-  font-size: 11px;
-  color: var(--song-muted, #888);
-}
-
-.row-author {
-  font-size: 11px;
-  color: var(--song-muted, #888);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.row-tags {
-  display: flex;
-  gap: 4px;
-}
-
-.clickable-tag {
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 10px;
-  color: var(--song-muted, #888);
-  background: var(--muted, rgba(128, 128, 128, 0.08));
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.clickable-tag:hover,
-.clickable-tag.is-active {
-  color: var(--song-accent, #23ade5);
-  background: var(--brand-soft, rgba(35, 173, 229, 0.12));
-}
-
-.count {
-  font-size: 12px;
-  font-family: monospace;
-  color: var(--song-muted, #888);
-}
-</style>

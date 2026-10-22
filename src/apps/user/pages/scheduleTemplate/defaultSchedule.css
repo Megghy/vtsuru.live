@@ -1,9 +1,9 @@
 .default-schedule {
   /* 区块页优先使用区块令牌, 普通主页回退到日程主题令牌 */
-  --ds-surface: var(--vtsuru-block-bg-muted, var(--schedule-panel));
-  --ds-line: var(--vtsuru-block-border, var(--schedule-border));
-  --ds-rule: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid) var(--ds-line);
-  --ds-radius: var(--vtsuru-page-radius, 8px);
+  --ds-surface: var(--muted, var(--schedule-panel));
+  --ds-line: var(--border, var(--schedule-border));
+  --ds-rule: var(--ui-border-width) var(--ui-border-style) var(--ds-line);
+  --ds-radius: var(--radius);
   --ds-radius-inner: max(4px, calc(var(--ds-radius) - 3px));
 
   display: grid;
@@ -19,7 +19,7 @@
   background: var(--ds-surface);
   border: var(--ds-rule);
   border-radius: var(--ds-radius);
-  box-shadow: var(--vtsuru-page-shadow);
+  box-shadow: var(--ui-shadow);
 }
 
 /* ---------- 顶部 ---------- */

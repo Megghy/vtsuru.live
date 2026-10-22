@@ -86,7 +86,7 @@ watch(
 </script>
 
 <template>
-  <div class="org-page org-page--index">
+  <div class="org-page p-6">
     <template v-if="!isLoggedIn">
       <Card class="border bg-card">
         <CardHeader class="p-4 border-b">
@@ -251,9 +251,3 @@ watch(
     </template>
   </div>
 </template>
-
-<style scoped>
-.org-page--index {
-  padding: 24px;
-}
-</style>

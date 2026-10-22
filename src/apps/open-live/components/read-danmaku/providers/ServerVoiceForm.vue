@@ -39,7 +39,7 @@ onMounted(loadVoices)
 </script>
 
 <template>
-  <div class="form">
+  <div class="flex flex-col gap-3">
     <span class="text-xs text-muted-foreground">第三方渠道，不保证可用性。</span>
 
     <SectionField label="音色">
@@ -91,11 +91,3 @@ onMounted(loadVoices)
     </SectionField>
   </div>
 </template>
-
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-</style>

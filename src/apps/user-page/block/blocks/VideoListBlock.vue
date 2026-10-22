@@ -143,7 +143,7 @@ const containerStyle = computed(() => {
       {{ cfg.title || '视频' }}
     </template>
 
-    <div class="video-content">
+    <div class="@container">
       <div
         v-if="isLoading"
         class="py-6 flex justify-center"
@@ -182,8 +182,12 @@ const containerStyle = computed(() => {
         </Alert>
         <div
           v-else
-          class="video-list"
-          :class="cfg.layout"
+          class="gap-3"
+          :class="
+            cfg.layout === 'row'
+              ? 'flex pb-1 overflow-x-auto'
+              : 'grid grid-cols-[repeat(var(--video-cols),minmax(0,1fr))] @max-[520px]:grid-cols-[repeat(auto-fit,minmax(min(100%,200px),1fr))]'
+          "
           :style="containerStyle"
         >
           <SimpleVideoCard
@@ -212,20 +216,20 @@ const containerStyle = computed(() => {
             :href="it.url"
             target="_blank"
             rel="noopener noreferrer"
-            class="manual-item"
+            class="flex gap-3 items-center px-3.5 py-3 border border-border rounded-[var(--radius)] no-underline bg-transparent transition-all duration-200 hover:bg-muted hover:translate-x-1 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-2 motion-reduce:transition-none motion-reduce:hover:translate-x-0"
             :aria-label="`${it.title || '打开视频'}（新窗口打开）`"
           >
-            <div class="manual-icon">
+            <div class="size-9 flex-center rounded-[var(--radius)] bg-muted text-muted-foreground shrink-0">
               <component
                 :is="PlayCircleOutline"
                 class="size-5"
               />
             </div>
-            <div class="manual-content">
-              <strong class="manual-title">
+            <div class="flex-1 min-w-0">
+              <strong class="block text-sm leading-snug text-foreground">
                 {{ it.title || it.url }}
               </strong>
-              <span class="manual-url">
+              <span class="block text-xs mt-0.5 truncate text-muted-foreground">
                 {{ it.url }}
               </span>
             </div>
@@ -236,87 +240,4 @@ const containerStyle = computed(() => {
   </BlockCard>
 </template>
 
-<style scoped>
-.video-content {
-  container-type: inline-size;
-}
-.video-list {
-  gap: 12px;
-}
-.video-list.grid {
-  display: grid;
-  grid-template-columns: repeat(var(--video-cols), minmax(0, 1fr));
-}
-.video-list.row {
-  display: flex;
-  padding-bottom: 4px;
-  overflow-x: auto;
-}
-.manual-item {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 12px 14px;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
-  border-radius: var(--vtsuru-page-radius);
-  text-decoration: none;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    transform 0.2s ease;
-  background: transparent;
-}
-.manual-item:hover {
-  background: var(--muted);
-  border-color: var(--border);
-  transform: translateX(4px);
-}
-.manual-icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--muted);
-  color: var(--muted-foreground);
-  font-size: 20px;
-  flex-shrink: 0;
-}
-.manual-content {
-  flex: 1;
-  min-width: 0;
-}
-.manual-title {
-  display: block;
-  font-size: 14px;
-  line-height: 1.4;
-  color: var(--foreground);
-}
-.manual-url {
-  display: block;
-  font-size: 12px;
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  color: var(--muted-foreground);
-}
-.manual-item:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary, var(--brand));
-  outline-offset: 2px;
-}
-@container (max-width: 520px) {
-  .video-list.grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .manual-item {
-    transition: none;
-  }
-  .manual-item:hover {
-    transform: none;
-  }
-}
-</style>
+

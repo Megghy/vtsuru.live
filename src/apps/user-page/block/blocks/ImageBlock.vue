@@ -46,7 +46,7 @@ const wrapStyle = computed(() => {
 const imgStyle = computed(() => {
   const hasConstraint = !!model.value.maxWidth || !!model.value.maxHeight
   const radius =
-    model.value.shape === 'circle' ? '9999px' : model.value.shape === 'square' ? '0px' : 'var(--vtsuru-page-radius)'
+    model.value.shape === 'circle' ? '9999px' : model.value.shape === 'square' ? '0px' : 'var(--radius)'
   return {
     width: hasConstraint ? 'auto' : '100%',
     height: 'auto',
@@ -78,18 +78,20 @@ watch(
     :wrap-style="wrapStyle"
   >
     <div
-      class="image-wrap"
-      :class="{ loaded, failed }"
+      class="relative grid min-w-[min(100%,280px)] overflow-hidden bg-muted"
+      :class="loaded ? 'min-h-0' : 'min-h-40'"
       :style="{ borderRadius: imgStyle.borderRadius }"
     >
       <span
         v-if="!loaded"
-        class="image-state"
+        class="absolute inset-0 grid place-items-center min-h-40 p-4 text-muted-foreground text-center"
         role="status"
         >{{ failed ? '图片加载失败' : '图片加载中' }}</span
       >
       <img
         v-if="!failed"
+        class="relative z-1 motion-reduce:transition-none transition-opacity duration-180"
+        :class="loaded ? 'opacity-100' : 'opacity-0'"
         :src="model.url"
         :alt="model.alt"
         referrerpolicy="no-referrer"
@@ -102,40 +104,4 @@ watch(
   </BlockCard>
 </template>
 
-<style scoped>
-.image-wrap {
-  position: relative;
-  display: grid;
-  min-width: min(100%, 280px);
-  min-height: 160px;
-  overflow: hidden;
-  background: var(--muted);
-}
-.image-wrap img {
-  position: relative;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 180ms ease;
-}
-.image-wrap.loaded {
-  min-height: 0;
-}
-.image-wrap.loaded img {
-  opacity: 1;
-}
-.image-state {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  min-height: 160px;
-  padding: 16px;
-  color: var(--muted-foreground);
-  text-align: center;
-}
-@media (prefers-reduced-motion: reduce) {
-  img {
-    transition: none;
-  }
-}
-</style>
+

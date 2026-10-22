@@ -34,55 +34,15 @@ useGoogleFont(fontFamily)
 <template>
   <button
     type="button"
-    class="font-row"
-    :class="{ active }"
+    class="w-full h-[46px] px-2.5 border-0 border-b border-border bg-transparent text-foreground flex-between gap-3 text-left cursor-pointer hover:bg-[var(--brand-soft)]"
+    :class="{ 'bg-[var(--brand-soft)] text-[var(--brand)]': active }"
     @click="emit('select', font.family)"
   >
     <span
-      class="font-row__name"
+      class="truncate text-[17px]"
       :style="fontStyle"
       >{{ font.family }}</span
     >
-    <span class="font-row__category">{{ categoryLabel }}</span>
+    <span class="shrink-0 text-muted-foreground text-xs">{{ categoryLabel }}</span>
   </button>
 </template>
-
-<style scoped>
-.font-row {
-  width: 100%;
-  height: 46px;
-  padding: 0 10px;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-  color: var(--foreground);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.font-row:hover,
-.font-row.active {
-  background: var(--brand-soft);
-}
-
-.font-row.active {
-  color: var(--brand);
-}
-
-.font-row__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 17px;
-}
-
-.font-row__category {
-  flex: 0 0 auto;
-  color: var(--muted-foreground);
-  font-size: 12px;
-}
-</style>

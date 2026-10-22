@@ -92,7 +92,7 @@ watch(hasUserKey, (value) => {
 </script>
 
 <template>
-  <div class="form">
+  <div class="flex flex-col gap-3.5">
     <SectionField
       label="DashScope API Key"
       hint="需要前往阿里云百炼创建语音服务实例并获取 API Key, 否则使用本站默认的共享 Key, 可能会遇到排队或调用失败的情况"
@@ -227,11 +227,3 @@ watch(hasUserKey, (value) => {
     </SectionField>
   </div>
 </template>
-
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-</style>

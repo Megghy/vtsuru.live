@@ -1,29 +1,5 @@
 .song-list-surface {
-  --vtsuru-page-max-width: 1440px;
-  --song-fg: var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))));
-  --song-muted: var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--muted-foreground)));
-  --song-subtle: var(--vtsuru-block-fg-subtle, var(--vtsuru-surface-fg-subtle, var(--song-muted)));
-  --song-bg: var(
-    --vtsuru-block-bg-muted,
-    var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--muted)))
-  );
-  --song-bg-hover: var(--user-page-theme-surface-bg-hover, color-mix(in srgb, var(--song-bg) 88%, var(--song-fg) 12%));
-  --song-panel: var(--vtsuru-page-card-bg, color-mix(in srgb, var(--song-bg) 88%, transparent));
-  --song-panel-strong: var(--vtsuru-page-card-bg-embedded, color-mix(in srgb, var(--song-bg) 94%, var(--song-fg) 6%));
-  --song-border: var(
-    --vtsuru-block-border,
-    var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)))
-  );
-  --song-accent: var(--vtsuru-page-primary, var(--brand));
-  --song-accent-soft: var(--vtsuru-page-primary-soft, color-mix(in srgb, var(--song-accent) 14%, transparent));
-  --song-accent-readable: var(--vtsuru-page-primary-readable, var(--song-fg));
-  --song-success: var(--vtsuru-success, #22c55e);
-  --song-warning: var(--vtsuru-warning, #f59e0b);
-  --song-danger: var(--vtsuru-error, #ef4444);
-  --song-control-height: var(--vtsuru-page-control-height-medium, 34px);
-  width: 100%;
-  min-width: 0;
-  color: var(--song-fg);
+  color: var(--card-foreground);
   font-family: var(--vtsuru-page-font-family, inherit);
 }
 
@@ -40,7 +16,7 @@
 .traditional-song-list.has-background {
   position: relative;
   isolation: isolate;
-  border-radius: var(--vtsuru-page-radius, 16px);
+  border-radius: var(--radius);
   overflow: hidden;
   background-image: none !important;
 }
@@ -85,8 +61,8 @@
 .traditional-song-list.has-background .song-panel,
 .page-root.bg-host .traditional-song-list .profile-panel,
 .page-root.bg-host .traditional-song-list .song-panel {
-  background-color: var(--vtsuru-page-card-bg, rgba(24, 24, 27, 0.65)) !important;
+  background-color: var(--card) !important;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-color: var(--vtsuru-card-border-color, rgba(255, 255, 255, 0.1)) !important;
+  border-color: var(--border) !important;
 }

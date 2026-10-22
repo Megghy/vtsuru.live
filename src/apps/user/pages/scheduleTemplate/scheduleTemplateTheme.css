@@ -1,26 +1,17 @@
 .schedule-template-surface {
-  --schedule-fg: var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground)));
-  --schedule-muted: var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--muted-foreground)));
-  --schedule-subtle: var(--vtsuru-surface-fg-subtle, color-mix(in srgb, var(--schedule-muted) 72%, transparent));
-  --schedule-page-bg: var(--vtsuru-page-content-color, var(--muted));
-  --schedule-panel: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--schedule-page-bg)));
-  --schedule-panel-embedded: var(
-    --vtsuru-page-card-bg-embedded,
-    color-mix(in srgb, var(--schedule-panel) 90%, var(--schedule-fg) 10%)
-  );
-  --schedule-panel-hover: var(
-    --user-page-theme-surface-bg-hover,
-    color-mix(in srgb, var(--schedule-panel) 88%, var(--schedule-fg) 12%)
-  );
-  --schedule-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)));
-  --schedule-accent: var(--vtsuru-page-primary, var(--brand));
-  --schedule-accent-soft: var(--vtsuru-page-primary-soft, color-mix(in srgb, var(--schedule-accent) 16%, transparent));
-  --schedule-accent-border: var(
-    --vtsuru-page-primary-border,
-    color-mix(in srgb, var(--schedule-accent) 34%, var(--schedule-border))
-  );
+  --schedule-fg: var(--card-foreground, var(--foreground));
+  --schedule-muted: var(--muted-foreground);
+  --schedule-subtle: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
+  --schedule-page-bg: var(--card);
+  --schedule-panel: var(--card);
+  --schedule-panel-embedded: var(--secondary);
+  --schedule-panel-hover: var(--secondary);
+  --schedule-border: var(--border);
+  --schedule-accent: var(--primary);
+  --schedule-accent-soft: color-mix(in srgb, var(--primary) 16%, transparent);
+  --schedule-accent-border: color-mix(in srgb, var(--primary) 34%, var(--border));
   /* readable: 表面上的强调色文字; fg: 强调色填充上的前景色 */
-  --schedule-accent-readable: var(--vtsuru-page-primary-readable, var(--schedule-fg));
+  --schedule-accent-readable: var(--primary);
   --schedule-accent-fg: var(--primary-foreground);
   --schedule-spacing: var(--vtsuru-page-spacing, 16px);
 

@@ -90,12 +90,12 @@ function handleSelect(action: string) {
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
       <div
-        class="queue-item"
+        class="flex items-center gap-2 py-2 px-2.5 border border-border rounded-md bg-card text-xs cursor-grab select-none transition-colors hover:border-primary active:cursor-grabbing"
         :draggable="true"
         @dragstart="$emit('dragstart', index)"
       >
         <div
-          class="drag-handle"
+          class="text-muted-foreground flex items-center"
           @click.stop
         >
           <ReOrder24Filled class="size-3.5" />
@@ -103,14 +103,14 @@ function handleSelect(action: string) {
 
         <Tag
           :type="tag.type"
-          class="type-tag text-[10px] px-1 py-0 h-5"
+          class="shrink-0 text-[10px] px-1 py-0 h-5"
         >
           {{ tag.text }}
         </Tag>
 
-        <span class="uname">{{ item.data.uname }}</span>
+        <span class="font-semibold shrink-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{ item.data.uname }}</span>
 
-        <span class="content text-muted-foreground">
+        <span class="flex-1 text-xs overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-muted-foreground">
           {{ speechText }}
         </span>
 
@@ -132,7 +132,7 @@ function handleSelect(action: string) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <span class="time">{{ timeAgo }}</span>
+              <span class="text-[11px] text-muted-foreground tabular-nums shrink-0">{{ timeAgo }}</span>
             </TooltipTrigger>
             <TooltipContent>
               <p class="text-xs">{{ absoluteTime }}</p>
@@ -141,7 +141,7 @@ function handleSelect(action: string) {
         </TooltipProvider>
 
         <div
-          class="actions"
+          class="flex gap-0.5 shrink-0"
           @click.stop
         >
           <Button
@@ -188,62 +188,3 @@ function handleSelect(action: string) {
     </DropdownMenuContent>
   </DropdownMenu>
 </template>
-
-<style scoped>
-.queue-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--card);
-  font-size: 12px;
-  cursor: grab;
-  user-select: none;
-  transition:
-    border-color 120ms ease,
-    background 120ms ease;
-}
-.queue-item:hover {
-  border-color: var(--primary);
-}
-.queue-item:active {
-  cursor: grabbing;
-}
-.drag-handle {
-  color: var(--muted-foreground);
-  display: flex;
-  align-items: center;
-}
-.type-tag {
-  flex-shrink: 0;
-}
-.uname {
-  font-weight: 600;
-  flex-shrink: 0;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.content {
-  flex: 1;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-}
-.time {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
-}
-.actions {
-  display: flex;
-  gap: 2px;
-  flex-shrink: 0;
-}
-</style>

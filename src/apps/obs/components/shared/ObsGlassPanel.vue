@@ -34,36 +34,43 @@ const topSubtitle = computed(() => {
 </script>
 
 <template>
-  <div class="obs-glass-card">
+  <div class="size-full flex flex-col bg-slate-900/85 backdrop-blur-[20px] border border-white/15 rounded-2xl p-3.5 shadow-2xl text-white overflow-hidden tabular-nums box-border">
     <!-- 顶栏状态与标题 -->
-    <div class="obs-glass-header">
-      <div class="obs-glass-title-row">
+    <div class="flex flex-col gap-2 mb-2.5">
+      <div class="flex items-center gap-2">
         <span
-          class="obs-glass-dot"
-          :class="{ 'is-active': current.active }"
+          class="size-2 rounded-full transition-all"
+          :class="
+            current.active
+              ? 'bg-emerald-500 shadow-[0_0_10px_#22c55e] animate-pulse'
+              : 'bg-slate-400'
+          "
         />
-        <span class="obs-glass-header-title">{{ title }}</span>
+        <span class="text-[15px] font-extrabold text-slate-50 tracking-wide">{{ title }}</span>
         <span
           v-if="countText"
-          class="obs-glass-badge"
-          >{{ countText }}</span
-        >
+          class="text-[11px] px-1.5 py-0.5 rounded-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 ml-auto"
+        >{{ countText }}</span>
       </div>
 
       <!-- 当前进行中内容 -->
       <div
-        class="obs-glass-current-box"
-        :class="{ 'is-active': current.active }"
+        class="p-2.5 rounded-[10px] border transition-all"
+        :class="
+          current.active
+            ? 'bg-gradient-to-br from-emerald-500/15 to-blue-500/15 border-emerald-500/30'
+            : 'bg-white/5 border-white/8'
+        "
       >
-        <div class="obs-glass-current-label">
+        <div class="text-[10px] font-bold text-slate-400 uppercase">
           {{ current.active ? '当前处理' : '当前空闲' }}
         </div>
-        <div class="obs-glass-current-name">
+        <div class="text-sm font-bold text-slate-50 mt-0.5">
           {{ current.active ? current.title : current.emptyText }}
         </div>
         <div
           v-if="topSubtitle && current.active"
-          class="obs-glass-current-sub"
+          class="text-[11px] text-slate-300 mt-0.5"
         >
           {{ topSubtitle }}
         </div>
@@ -73,51 +80,59 @@ const topSubtitle = computed(() => {
     <!-- 滚动列表容器 -->
     <div
       ref="listContainerRef"
-      class="obs-glass-list-container"
+      class="flex-1 relative overflow-hidden min-h-0"
     >
       <template v-if="items.length > 0">
         <div
           ref="listInnerRef"
-          class="obs-glass-list-inner"
+          class="flex flex-col gap-1.5"
           :class="{ animating: isMoreThanContainer }"
         >
           <TransitionGroup
             name="obs-glass-item-anim"
             tag="div"
-            class="obs-glass-list"
+            class="flex flex-col gap-1.5"
           >
             <div
               v-for="(item, index) in items"
               :key="item.id"
-              class="obs-glass-item"
+              class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/4 border border-white/6 transition-all duration-200"
             >
               <div
-                class="obs-glass-rank"
-                :class="[`rank-${index + 1}`, { 'rank-top-3': index < 3 }]"
+                class="size-5.5 rounded-md flex items-center justify-center text-[11px] font-extrabold shrink-0 transition-colors"
+                :class="
+                  index === 0
+                    ? 'bg-amber-500 text-black shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                    : index === 1
+                      ? 'bg-slate-400 text-black'
+                      : index === 2
+                        ? 'bg-amber-700 text-white'
+                        : 'bg-white/10 text-slate-300'
+                "
               >
                 {{ index + 1 }}
               </div>
-              <div class="obs-glass-content">
+              <div class="flex-1 min-w-0">
                 <div
-                  class="obs-glass-primary"
+                  class="text-[13px] font-semibold text-slate-100 truncate drop-shadow-md"
                   :title="item.primary"
                 >
                   {{ item.primary }}
                 </div>
                 <div
                   v-if="item.secondary"
-                  class="obs-glass-secondary"
+                  class="text-[11px] text-slate-400 mt-px"
                 >
                   {{ item.secondary }}
                 </div>
                 <div
                   v-if="(item.badges?.length ?? 0) > 0"
-                  class="obs-glass-badges"
+                  class="flex gap-1 mt-0.75"
                 >
                   <span
                     v-for="(badge, bIdx) in item.badges ?? []"
                     :key="`${item.id}-${bIdx}-${badge.text}`"
-                    class="obs-glass-chip"
+                    class="text-[10px] px-1.25 py-px rounded bg-white/10 text-slate-300 data-[tone=highlight]:bg-amber-500/20 data-[tone=highlight]:text-amber-400 data-[tone=success]:bg-emerald-500/20 data-[tone=success]:text-emerald-400"
                     :data-tone="badge.tone ?? 'muted'"
                   >
                     {{ badge.text }}
@@ -130,7 +145,7 @@ const topSubtitle = computed(() => {
       </template>
       <Empty
         v-else
-        class="obs-glass-empty"
+        class="mt-10"
         :description="emptyText"
       />
     </div>
@@ -138,143 +153,22 @@ const topSubtitle = computed(() => {
     <!-- 底部标签 -->
     <div
       v-if="footerTags.length > 0"
-      class="obs-glass-footer"
+      class="flex gap-2 mt-2 pt-2 border-t border-white/8"
     >
       <div
         v-for="tag in footerTags"
         :key="tag.type"
-        class="obs-glass-footer-tag"
+        class="text-[11px] flex gap-1"
       >
-        <span class="tag-lbl">{{ tag.label }}</span>
-        <span class="tag-val">{{ tag.value }}</span>
+        <span class="text-slate-500">{{ tag.label }}</span>
+        <span class="text-slate-300 font-semibold">{{ tag.value }}</span>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.obs-glass-card {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 16px;
-  padding: 14px;
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  color: #fff;
-  overflow: hidden;
-  box-sizing: border-box;
-  font-variant-numeric: tabular-nums;
-}
-
-.obs-glass-header {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.obs-glass-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.obs-glass-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #94a3b8;
-}
-
-.obs-glass-dot.is-active {
-  background: #22c55e;
-  box-shadow: 0 0 10px #22c55e;
-  animation: glass-pulse 1.8s infinite;
-}
-
-@keyframes glass-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.8;
-  }
-}
-
-.obs-glass-header-title {
-  font-size: 15px;
-  font-weight: 800;
-  color: #f8fafc;
-  letter-spacing: 0.5px;
-}
-
-.obs-glass-badge {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 10px;
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-  margin-left: auto;
-}
-
-.obs-glass-current-box {
-  padding: 8px 12px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.obs-glass-current-box.is-active {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(59, 130, 246, 0.15));
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-.obs-glass-current-label {
-  font-size: 10px;
-  font-weight: 700;
-  color: #94a3b8;
-  text-transform: uppercase;
-}
-
-.obs-glass-current-name {
-  font-size: 14px;
-  font-weight: 700;
-  color: #f8fafc;
-  margin-top: 2px;
-}
-
-.obs-glass-current-sub {
-  font-size: 11px;
-  color: #cbd5e1;
-  margin-top: 2px;
-}
-
-/* 列表容器 */
-.obs-glass-list-container {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.obs-glass-list-inner {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.obs-glass-list-inner.animating {
+.animating {
   animation: obs-glass-scroll v-bind(animationDurationCss) linear infinite;
 }
 
@@ -285,121 +179,5 @@ const topSubtitle = computed(() => {
   100% {
     transform: translateY(v-bind(animationTranslateYCss));
   }
-}
-
-.obs-glass-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.obs-glass-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 8px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  transition: all 0.2s ease;
-}
-
-.obs-glass-rank {
-  width: 22px;
-  height: 22px;
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: #cbd5e1;
-  flex-shrink: 0;
-}
-
-.obs-glass-rank.rank-1 {
-  background: #f59e0b;
-  color: #000;
-  box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
-}
-.obs-glass-rank.rank-2 {
-  background: #94a3b8;
-  color: #000;
-}
-.obs-glass-rank.rank-3 {
-  background: #b45309;
-  color: #fff;
-}
-
-.obs-glass-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.obs-glass-primary {
-  font-size: 13px;
-  font-weight: 600;
-  color: #f1f5f9;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-}
-
-.obs-glass-secondary {
-  font-size: 11px;
-  color: #94a3b8;
-  margin-top: 1px;
-}
-
-.obs-glass-badges {
-  display: flex;
-  gap: 4px;
-  margin-top: 3px;
-}
-
-.obs-glass-chip {
-  font-size: 10px;
-  padding: 1px 5px;
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-}
-
-.obs-glass-chip[data-tone='highlight'] {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
-}
-
-.obs-glass-chip[data-tone='success'] {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
-}
-
-.obs-glass-empty {
-  margin-top: 40px;
-}
-
-.obs-glass-footer {
-  display: flex;
-  gap: 8px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.obs-glass-footer-tag {
-  font-size: 11px;
-  display: flex;
-  gap: 4px;
-}
-
-.tag-lbl {
-  color: #64748b;
-}
-.tag-val {
-  color: #cbd5e1;
-  font-weight: 600;
 }
 </style>

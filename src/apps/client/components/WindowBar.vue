@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { UnlistenFn } from '@tauri-apps/api/event'
-import { getCurrentWindow } from '@tauri-apps/api/window'
 import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent'
 import { Close, RemoveOutline as Minus } from '@vicons/ionicons5'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -11,65 +9,118 @@ import { Badge } from '@/shared/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const router = useRouter()
-const giftWindow = useGiftWindow()
-const appWindow = getCurrentWindow()
 const isMaximized = ref(false)
-let unlisten: UnlistenFn | null = null
+const giftWindow = useGiftWindow()
 
+// 直播控制，用于显示当前开播状态
 const currentLive = computed(() => giftWindow.currentLive)
-const isLiving = computed(() => {
-  return Boolean(currentLive.value && !currentLive.value.isFinish)
-})
+const isLiving = computed(() => Boolean(currentLive.value && !currentLive.value.isFinish))
 
-function goToLiveManage() {
-  router.push({ name: 'client-live-manage' })
-}
+let unlistenResize: (() => void) | null = null
 
-async function updateMaximizedState() {
-  isMaximized.value = await appWindow.isMaximized()
-}
-
-function handleTitlebarMouseDown(event: MouseEvent) {
-  if (event.button === 0) {
-    if (event.detail === 2) {
-      toggleMaximizeWindow()
-    } else {
-      appWindow.startDragging()
-    }
+async function getTauriWindow() {
+  if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
+    return null
+  }
+  try {
+    const { getCurrentWindow } = await import('@tauri-apps/api/window')
+    return getCurrentWindow()
+  } catch {
+    return null
   }
 }
 
 onMounted(async () => {
-  await updateMaximizedState()
-  unlisten = await appWindow.onResized(() => {
-    updateMaximizedState()
-  })
-})
+  const appWindow = await getTauriWindow()
+  if (!appWindow) return
 
-onUnmounted(() => {
-  if (unlisten) {
-    unlisten()
+  try {
+    isMaximized.value = await appWindow.isMaximized()
+    unlistenResize = await appWindow.onResized(async () => {
+      isMaximized.value = await appWindow.isMaximized()
+    })
+  } catch {
+    // 忽略非桌面端或未初始化异常
   }
 })
 
-const minimizeWindow = () => appWindow.minimize()
-async function toggleMaximizeWindow() {
-  await appWindow.toggleMaximize()
-  await updateMaximizedState()
+onUnmounted(() => {
+  if (unlistenResize) {
+    unlistenResize()
+  }
+})
+
+async function minimizeWindow() {
+  const appWindow = await getTauriWindow()
+  if (!appWindow) return
+  try {
+    await appWindow.minimize()
+  } catch {
+    // 忽略
+  }
 }
-const closeWindow = () => appWindow.hide()
+
+async function toggleMaximizeWindow() {
+  const appWindow = await getTauriWindow()
+  if (!appWindow) return
+  try {
+    await appWindow.toggleMaximize()
+  } catch {
+    // 忽略
+  }
+}
+
+async function closeWindow() {
+  const appWindow = await getTauriWindow()
+  if (!appWindow) return
+  try {
+    await appWindow.hide()
+  } catch {
+    // 忽略
+  }
+}
+
+// 拖拽窗口 (双击最大化)
+let lastClickTime = 0
+async function handleTitlebarMouseDown(e: MouseEvent) {
+  // 只响应左键
+  if (e.button !== 0) return
+
+  const now = Date.now()
+  if (now - lastClickTime < 300) {
+    // 双击切换最大化
+    toggleMaximizeWindow()
+    lastClickTime = 0
+    return
+  }
+  lastClickTime = now
+
+  // 单击拖拽窗口
+  const appWindow = await getTauriWindow()
+  if (!appWindow) return
+  try {
+    await appWindow.startDragging()
+  } catch {
+    // 忽略
+  }
+}
+
+function goToLiveManage() {
+  router.push({ name: 'client-live-manage' })
+}
 </script>
 
 <template>
   <header
-    class="titlebar"
-    data-tauri-drag-region="true"
+    class="flex justify-between items-center h-9 bg-background border-b border-border select-none relative z-[1000] px-2.5"
   >
+    <!-- 左侧可拖拽区域：标题与状态 -->
     <div
-      class="titlebar-left"
+      class="flex items-center gap-3 flex-1 h-full cursor-default"
+      data-tauri-drag-region
       @mousedown="handleTitlebarMouseDown"
     >
-      <span class="title">VTsuru.Client</span>
+      <span class="text-xs font-semibold text-foreground tracking-[0.5px]">VTsuru.Client</span>
 
       <!-- 开播状态指示 (可点击跳转直播管理) -->
       <TooltipProvider v-if="isLiving">
@@ -77,18 +128,17 @@ const closeWindow = () => appWindow.hide()
           <TooltipTrigger as-child>
             <Badge
               variant="destructive"
-              class="live-status-tag live-status-tag--active h-5 px-2 text-[11px] font-normal cursor-pointer rounded-full"
-              @click.stop="goToLiveManage"
+              class="h-5 px-2 text-[11px] font-normal cursor-pointer rounded-full"
+              @click="goToLiveManage"
             >
-              <span class="live-dot pulse" />
-              直播中{{ currentLive?.title ? ` · ${currentLive.title}` : '' }}
+              <span class="inline-block size-1.5 rounded-full bg-current mr-1 animate-pulse" />
+              直播中
             </Badge>
           </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <div>
-              <div class="font-bold">{{ currentLive?.title || '直播中' }}</div>
-              <div class="text-xs opacity-85">点击前往「直播管理」页面</div>
-            </div>
+          <TooltipContent class="text-xs">
+            正在直播：{{ currentLive?.title }}
+            <br />
+            点击进入直播管理
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -96,150 +146,40 @@ const closeWindow = () => appWindow.hide()
       <Badge
         v-else
         variant="secondary"
-        class="live-status-tag live-status-tag--idle h-5 px-2 text-[11px] font-normal cursor-pointer rounded-full"
-        @click.stop="goToLiveManage"
+        class="h-5 px-2 text-[11px] font-normal rounded-full"
       >
-        <span class="live-dot" />
         未开播
       </Badge>
     </div>
 
-    <div
-      class="titlebar-controls"
-      data-tauri-drag-region="true"
-      @dblclick="toggleMaximizeWindow"
-    >
+    <!-- 窗口控制按钮 -->
+    <div class="flex items-center gap-1">
       <button
-        type="button"
+        class="flex items-center justify-center w-7 h-6 border-0 bg-transparent text-muted-foreground rounded cursor-pointer transition-colors duration-150 hover:bg-muted hover:text-foreground"
         title="最小化"
-        aria-label="Minimize"
-        class="window-btn flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         @click="minimizeWindow"
       >
-        <Minus class="icon" />
+        <Minus class="size-3.5" />
       </button>
+
       <button
-        type="button"
+        class="flex items-center justify-center w-7 h-6 border-0 bg-transparent text-muted-foreground rounded cursor-pointer transition-colors duration-150 hover:bg-muted hover:text-foreground"
         :title="isMaximized ? '还原' : '最大化'"
-        :aria-label="isMaximized ? 'Restore' : 'Maximize'"
-        class="window-btn flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
         @click="toggleMaximizeWindow"
       >
         <component
           :is="isMaximized ? SquareMultiple24Regular : Maximize24Filled"
-          class="icon"
-          style="width: 14px; height: 14px"
+          class="size-3.5"
         />
       </button>
+
       <button
-        type="button"
-        title="关闭"
-        aria-label="Close"
-        class="window-btn window-btn--close flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive hover:text-destructive-foreground"
+        class="flex items-center justify-center w-7 h-6 border-0 bg-transparent text-muted-foreground rounded cursor-pointer transition-colors duration-150 hover:bg-destructive hover:text-white"
+        title="关闭到后台"
         @click="closeWindow"
       >
-        <Close class="icon" />
+        <Close class="size-3.5" />
       </button>
     </div>
   </header>
 </template>
-
-<style scoped>
-.titlebar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  height: 30px;
-  min-height: 30px;
-  max-height: 30px;
-  width: 100%;
-  flex: 0 0 30px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--border);
-  user-select: none;
-  padding: 0 4px;
-  box-sizing: border-box;
-  background-color: var(--card);
-  z-index: 1000;
-}
-
-.titlebar-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding-left: 8px;
-  flex: 1;
-  height: 100%;
-  min-width: 0;
-}
-
-.titlebar-controls {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  height: 100%;
-}
-
-.title {
-  font-weight: 600;
-  font-size: 12px;
-  letter-spacing: 0.3px;
-  opacity: 0.9;
-}
-
-.live-status-tag {
-  cursor: pointer;
-  max-width: 320px;
-  transition: all 0.2s ease;
-  -webkit-app-region: no-drag;
-}
-
-.live-status-tag:hover {
-  opacity: 0.85;
-}
-
-.live-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--muted-foreground, #9ca3af);
-  margin-right: 4px;
-}
-
-.live-dot.pulse {
-  background: #ef4444;
-  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  animation: pulse-red 2s infinite;
-}
-
-@keyframes pulse-red {
-  0% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  70% {
-    transform: scale(1);
-    box-shadow: 0 0 0 5px rgba(239, 68, 68, 0);
-  }
-  100% {
-    transform: scale(0.95);
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-  }
-}
-
-.icon {
-  width: 16px;
-  height: 16px;
-}
-
-.window-btn {
-  transition: all 0.15s ease;
-}
-
-.window-btn--close:hover {
-  background-color: #e81123 !important;
-  color: #ffffff !important;
-}
-</style>

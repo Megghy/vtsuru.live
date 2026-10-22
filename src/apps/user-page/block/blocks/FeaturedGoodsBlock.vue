@@ -159,7 +159,10 @@ watch(
     >
       <Spin />
     </div>
-    <div v-else>
+    <div
+      v-else
+      class="@container"
+    >
       <Empty
         v-if="!goods.length"
         description="暂无可展示商品"
@@ -167,15 +170,15 @@ watch(
       />
       <div
         v-else
-        class="goods-grid grid grid-cols-3 gap-2.5"
+        class="grid grid-cols-3 gap-2.5 @max-[640px]:grid-cols-2 @max-[380px]:grid-cols-1"
       >
         <RouterLink
           v-for="item in goods"
           :key="item.id"
           :to="{ name: 'user-goods', params: { id: props.userInfo?.name } }"
-          class="goods-item border border-border rounded-lg bg-muted/40 overflow-hidden text-foreground no-underline transition hover:border-primary hover:bg-card"
+          class="border border-border rounded-lg bg-muted/40 overflow-hidden text-foreground no-underline transition hover:border-primary hover:bg-card @max-[380px]:grid @max-[380px]:grid-cols-[112px_minmax(0,1fr)]"
         >
-          <div class="cover-wrap relative aspect-video overflow-hidden bg-muted">
+          <div class="relative aspect-video overflow-hidden bg-muted @max-[380px]:aspect-auto @max-[380px]:min-h-[100px]">
             <img
               v-if="item.cover?.path"
               :src="item.cover.path"
@@ -224,26 +227,4 @@ watch(
   </BlockCard>
 </template>
 
-<style scoped>
-.goods-grid {
-  container-type: inline-size;
-}
-@container (max-width: 640px) {
-  .goods-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@container (max-width: 380px) {
-  .goods-grid {
-    grid-template-columns: 1fr;
-  }
-  .goods-item {
-    display: grid;
-    grid-template-columns: 112px minmax(0, 1fr);
-  }
-  .cover-wrap {
-    aspect-ratio: auto;
-    min-height: 100px;
-  }
-}
-</style>
+

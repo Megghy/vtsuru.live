@@ -40,8 +40,8 @@ function onDragEnd() {
 </script>
 
 <template>
-  <div class="queue-list">
-    <div class="header">
+  <div class="flex flex-col gap-2">
+    <div class="flex items-center gap-2">
       <span class="font-semibold text-xs text-foreground"> 播报队列 </span>
       <span class="text-xs text-muted-foreground"> {{ speakQueue.length }} 项 </span>
       <Button
@@ -67,13 +67,13 @@ function onDragEnd() {
       class="max-h-[400px] pr-2"
     >
       <div
-        class="items"
+        class="flex flex-col gap-1"
         @dragend="onDragEnd"
       >
         <div
           v-for="(item, index) in speakQueue"
           :key="`${item.data.time}-${index}`"
-          :class="{ 'drop-target': dropIndex === index }"
+          :class="{ 'border-t-2 border-primary pt-0.5': dropIndex === index }"
           @dragover="onDragOver($event, index)"
           @drop="onDrop"
         >
@@ -87,25 +87,3 @@ function onDragEnd() {
     </ScrollArea>
   </div>
 </template>
-
-<style scoped>
-.queue-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.items {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.drop-target {
-  border-top: 2px solid var(--primary);
-  padding-top: 2px;
-}
-</style>

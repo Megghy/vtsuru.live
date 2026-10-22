@@ -50,19 +50,26 @@ async function switchToBackupAPI() {
 </script>
 
 <template>
-  <main class="auth-page">
+  <main
+    class="relative grid min-h-screen min-w-0 place-items-center box-border overflow-x-hidden py-12 px-5 isolation-isolate bg-background text-foreground max-[480px]:place-items-start max-[480px]:pt-6 max-[480px]:px-3 max-[480px]:pb-10"
+  >
     <HomeEmojiBackdrop />
 
     <section
       v-if="!pending"
-      class="auth-shell"
+      class="relative z-1 w-[min(100%,520px)] min-w-0 grid gap-[18px]"
       aria-labelledby="auth-title"
     >
-      <header class="auth-header">
-        <VtsuruLogo class="auth-logo" />
-        <p class="auth-eyebrow">VTSURU CENTER</p>
-        <h1 id="auth-title">{{ isUserWorkspace ? '查看积分和订单' : '登录或创建账号' }}</h1>
-        <p class="auth-lead">
+      <header class="text-center">
+        <VtsuruLogo class="size-[72px] mx-auto text-[var(--brand)] max-[480px]:size-[58px]" />
+        <p class="mt-3 mb-1.5 text-muted-foreground text-xs font-bold tracking-normal">VTSURU CENTER</p>
+        <h1
+          id="auth-title"
+          class="m-0 text-foreground text-[28px] font-bold leading-tight tracking-tight"
+        >
+          {{ isUserWorkspace ? '查看积分和订单' : '登录或创建账号' }}
+        </h1>
+        <p class="mt-2 mb-0 text-muted-foreground text-sm leading-relaxed text-center">
           {{
             isUserWorkspace ? '用 Bilibili 发一条弹幕完成认证。不用注册本站账号。' : '主播使用本站账号管理直播工具。'
           }}
@@ -71,7 +78,7 @@ async function switchToBackupAPI() {
 
       <div
         v-if="isUserWorkspace"
-        class="auth-actions"
+        class="flex justify-center gap-2 flex-wrap"
       >
         <Button
           variant="brand"
@@ -93,7 +100,7 @@ async function switchToBackupAPI() {
 
       <div
         v-if="!isUserWorkspace || showSiteLogin"
-        class="auth-form"
+        class="min-w-0 p-5 box-border border border-border rounded-lg bg-[color-mix(in_srgb,var(--popover)_94%,transparent)] shadow-[0_18px_52px_color-mix(in_srgb,var(--foreground)_10%,transparent)] backdrop-blur-md"
       >
         <RegisterAndLogin initial-tab="login" />
       </div>
@@ -120,7 +127,7 @@ async function switchToBackupAPI() {
       <Button
         variant="outline"
         as-child
-        class="home-action mx-auto"
+        class="min-w-28 mx-auto"
       >
         <a href="/">回到主页</a>
       </Button>
@@ -128,7 +135,7 @@ async function switchToBackupAPI() {
 
     <section
       v-else
-      class="loading-panel"
+      class="relative z-1 w-[min(100%,520px)] min-w-0 grid justify-items-center gap-5 p-7 box-border border border-border rounded-lg bg-[color-mix(in_srgb,var(--popover)_94%,transparent)] shadow-[0_18px_52px_color-mix(in_srgb,var(--foreground)_10%,transparent)] backdrop-blur-md"
       aria-live="polite"
     >
       <div class="flex flex-col items-center gap-3 py-6">
@@ -164,117 +171,3 @@ async function switchToBackupAPI() {
     </section>
   </main>
 </template>
-
-<style scoped>
-.auth-page {
-  position: relative;
-  display: grid;
-  min-height: 100vh;
-  min-width: 0;
-  place-items: center;
-  box-sizing: border-box;
-  overflow-x: hidden;
-  padding: 48px 20px;
-  isolation: isolate;
-  background: var(--background);
-  color: var(--foreground);
-}
-
-.auth-shell,
-.loading-panel {
-  position: relative;
-  z-index: 1;
-  width: min(100%, 520px);
-  min-width: 0;
-}
-
-.auth-shell {
-  display: grid;
-  gap: 18px;
-}
-
-.auth-header {
-  text-align: center;
-}
-
-.auth-logo {
-  width: 72px;
-  height: 72px;
-  margin: 0 auto;
-  color: var(--brand);
-}
-
-.auth-eyebrow {
-  margin: 12px 0 5px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.auth-header h1 {
-  margin: 0;
-  color: var(--foreground);
-  font-size: 28px;
-  font-weight: 750;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
-}
-
-.auth-lead {
-  margin: 8px 0 0;
-  color: var(--muted-foreground);
-  font-size: 14px;
-  line-height: 1.6;
-  text-align: center;
-}
-
-.auth-actions {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.auth-form {
-  min-width: 0;
-  padding: 20px;
-  box-sizing: border-box;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--popover) 94%, transparent);
-  box-shadow: 0 18px 52px color-mix(in srgb, var(--foreground) 10%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.home-action {
-  min-width: 112px;
-}
-
-.loading-panel {
-  display: grid;
-  justify-items: center;
-  gap: 20px;
-  padding: 28px;
-  box-sizing: border-box;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--popover) 94%, transparent);
-  box-shadow: 0 18px 52px color-mix(in srgb, var(--foreground) 10%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-@media (max-width: 480px) {
-  .auth-page {
-    align-items: start;
-    padding: 24px 12px 40px;
-  }
-
-  .auth-logo {
-    width: 58px;
-    height: 58px;
-  }
-}
-</style>

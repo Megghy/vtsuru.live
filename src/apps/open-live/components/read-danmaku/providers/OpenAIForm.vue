@@ -21,7 +21,7 @@ const formatOptions = [
 </script>
 
 <template>
-  <div class="form">
+  <div class="flex flex-col gap-3">
     <Alert class="py-2 px-3 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
       <AlertDescription class="text-xs text-current m-0">
         请求由浏览器直连 API 服务方，不经过 VTsuru 后端（避免 IP 暴露和延迟）
@@ -80,11 +80,3 @@ const formatOptions = [
     </SectionField>
   </div>
 </template>
-
-<style scoped>
-.form {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-</style>

@@ -118,7 +118,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
       </div>
     </template>
 
-    <div class="feedback-body">
+    <div class="py-1">
       <template v-if="canEmbedInternalQuestionBox">
         <QuestionBoxView
           v-if="props.userInfo"
@@ -138,7 +138,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
       <template v-else>
         <div
           v-if="cfg.description"
-          class="feedback-desc"
+          class="block mb-3 whitespace-pre-wrap leading-relaxed text-muted-foreground"
         >
           {{ cfg.description }}
         </div>
@@ -173,7 +173,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
 
           <div
             v-if="feedbackEmbed"
-            class="iframe-container"
+            class="w-full overflow-hidden border border-border rounded-[var(--radius)] bg-muted [&_iframe]:block [&_iframe]:w-full [&_iframe]:border-0"
           >
             <iframe
               :src="feedbackEmbed.src"
@@ -197,29 +197,4 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
   </BlockCard>
 </template>
 
-<style scoped>
-.feedback-body {
-  padding: 4px 0;
-}
 
-.feedback-desc {
-  display: block;
-  margin-bottom: 12px;
-  white-space: pre-wrap;
-  line-height: 1.6;
-  color: var(--muted-foreground);
-}
-
-.iframe-container {
-  width: 100%;
-  overflow: hidden;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--border);
-  border-radius: var(--vtsuru-page-radius);
-  background: var(--muted);
-}
-.iframe-container iframe {
-  display: block;
-  width: 100%;
-  border: 0;
-}
-</style>

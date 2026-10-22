@@ -316,7 +316,7 @@ export function buildCustomHtmlDocument(props: CustomHtmlProps, theme: CustomHtm
     `--radius:${theme.radius}`,
     `--border-width:${theme.borderWidth ?? '1px'}`,
     `--border-style:${theme.borderStyle ?? 'solid'}`,
-    `--vtsuru-shadow:${theme.shadow ?? 'none'}`,
+    `--ui-shadow:${theme.shadow ?? 'none'}`,
     assetVariables,
   ]
     .filter(Boolean)

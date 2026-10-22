@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { getVersion } from '@tauri-apps/api/app'
-import { invoke } from '@tauri-apps/api/core'
-import { disable, enable, isEnabled } from '@tauri-apps/plugin-autostart'
 import {
   Alert24Filled,
   ArrowSync24Regular,
@@ -20,6 +17,8 @@ import BiliAccountManagerCard from '@/apps/client/components/settings/BiliAccoun
 import ClientBackupPanel from '@/apps/client/components/settings/ClientBackupPanel.vue'
 import type { NotificationType } from '@/apps/client/store/useSettings'
 import { useSettings } from '@/apps/client/store/useSettings'
+import { isTauri } from '@/shared/config/api'
+import { clientVersion } from '@/shared/config/clientVersion'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -45,7 +44,7 @@ const titleClickCount = ref(0)
 let resetTimeout: number | null = null
 
 const setting = useSettings()
-const currentVersion = await getVersion()
+const currentVersion = ref(clientVersion.value || '1.0.0')
 
 // 更新检查
 const isCheckingUpdate = ref(false)
@@ -103,24 +102,39 @@ const isUpdatingAutostart = ref(false)
 onMounted(async () => {
   isLoading.value = true
   errorMsg.value = null
-  try {
-    isStartOnBoot.value = await isEnabled()
-  } catch (err) {
-    console.error('Failed to fetch autostart status:', err)
-    errorMsg.value = '无法获取开机启动状态，请稍后重试。'
-  } finally {
-    isLoading.value = false
+  if (isTauri()) {
+    try {
+      const { getVersion } = await import('@tauri-apps/api/app')
+      currentVersion.value = await getVersion()
+    } catch (e) {
+      console.warn('获取客户端版本失败:', e)
+    }
+
+    try {
+      const { isEnabled } = await import('@tauri-apps/plugin-autostart')
+      isStartOnBoot.value = await isEnabled()
+    } catch (err) {
+      console.error('Failed to fetch autostart status:', err)
+      errorMsg.value = '无法获取开机启动状态，请稍后重试。'
+    }
   }
+  isLoading.value = false
 })
 
 // --- Watchers for Side Effects ---
 
 watch(isStartOnBoot, async (newValue, oldValue) => {
   if (isLoading.value || newValue === oldValue) return
+  if (!isTauri()) {
+    message.warning('非桌面客户端环境，无法配置开机自启')
+    isStartOnBoot.value = oldValue
+    return
+  }
 
   errorMsg.value = null
   isUpdatingAutostart.value = true
   try {
+    const { enable, disable } = await import('@tauri-apps/plugin-autostart')
     if (newValue) {
       await enable()
     } else {
@@ -196,9 +210,15 @@ function handleTitleClick() {
   }, 3000) as unknown as number
 
   if (titleClickCount.value === 10) {
-    invoke('open_dev_tools').then(() => {
-      message.success('已打开 Dev Tools')
-    })
+    if (isTauri()) {
+      import('@tauri-apps/api/core').then(({ invoke }) => {
+        invoke('open_dev_tools')
+          .then(() => message.success('已打开 Dev Tools'))
+          .catch((e) => message.error(`打开 Dev Tools 失败: ${e}`))
+      })
+    } else {
+      message.info('当前为浏览器环境，请直接按 F12 打开开发者工具')
+    }
   }
 }
 </script>
@@ -279,8 +299,11 @@ function handleTitleClick() {
           </Alert>
 
           <Transition
-            name="fade"
             mode="out-in"
+            enter-active-class="transition-opacity duration-150"
+            enter-from-class="opacity-0"
+            leave-active-class="transition-opacity duration-150"
+            leave-to-class="opacity-0"
           >
             <div :key="currentTab">
               <!-- 常规设置 -->
@@ -384,10 +407,10 @@ function handleTitleClick() {
                     <CardTitle class="text-sm font-semibold">系统通知</CardTitle>
                   </CardHeader>
                   <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3.5">
-                    <div class="notification-master-row">
+                    <div class="flex items-center justify-between gap-3">
                       <div>
-                        <span class="font-bold text-xs text-[var(--foreground)]">桌面通知总开关</span>
-                        <div class="setting-hint">开启后，选中的事件将在 Windows 桌面右下角推送通知</div>
+                        <span class="font-bold text-xs text-foreground">桌面通知总开关</span>
+                        <div class="text-xs text-muted-foreground mt-0.5">开启后，选中的事件将在 Windows 桌面右下角推送通知</div>
                       </div>
                       <Switch
                         :checked="setting.settings.enableNotification"
@@ -404,16 +427,16 @@ function handleTitleClick() {
 
                     <div
                       v-if="setting.settings.enableNotification"
-                      class="notification-list"
+                      class="flex flex-col gap-2.5"
                     >
                       <div
                         v-for="item in notificationItems"
                         :key="item.type"
-                        class="notification-row"
+                        class="flex items-center justify-between py-2 px-3 border border-border rounded-md bg-muted"
                       >
-                        <div class="notification-text">
-                          <span class="font-bold text-xs text-[var(--foreground)]">{{ item.title }}</span>
-                          <div class="setting-hint">
+                        <div class="min-w-0 pr-2">
+                          <span class="font-bold text-xs text-foreground">{{ item.title }}</span>
+                          <div class="text-xs text-muted-foreground mt-0.5">
                             {{ item.desc }}
                           </div>
                         </div>
@@ -426,7 +449,7 @@ function handleTitleClick() {
 
                     <span
                       v-else
-                      class="text-center py-3 text-xs text-[var(--muted-foreground)]"
+                      class="text-center py-3 text-xs text-muted-foreground"
                     >
                       桌面通知已全局关闭
                     </span>
@@ -453,19 +476,19 @@ function handleTitleClick() {
                     <CardTitle class="text-sm font-semibold">关于 VTsuru.Client</CardTitle>
                   </CardHeader>
                   <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3.5">
-                    <div class="about-hero">
-                      <div class="about-title-row">
-                        <span class="font-bold text-base text-[var(--foreground)]"> VTsuru EventFetcher </span>
+                    <div class="flex flex-col gap-1">
+                      <div class="flex items-center gap-2">
+                        <span class="font-bold text-base text-foreground"> VTsuru EventFetcher </span>
                         <Tag variant="secondary"> v{{ currentVersion }} </Tag>
                       </div>
-                      <span class="text-xs text-[var(--muted-foreground)]">
+                      <span class="text-xs text-muted-foreground">
                         专为 Bilibili 主播打造的现代化全功能直播辅助与事件采集桌面客户端
                       </span>
                     </div>
 
-                    <div class="about-meta-list">
-                      <div class="about-meta-item">
-                        <span class="text-xs text-[var(--muted-foreground)]">作者</span>
+                    <div class="flex flex-col gap-2 text-[13px]">
+                      <div class="flex items-center justify-between py-1.5 border-b border-dashed border-border">
+                        <span class="text-xs text-muted-foreground">作者</span>
                         <a
                           href="https://space.bilibili.com/10021741"
                           target="_blank"
@@ -475,8 +498,8 @@ function handleTitleClick() {
                         </a>
                       </div>
 
-                      <div class="about-meta-item">
-                        <span class="text-xs text-[var(--muted-foreground)]">开源仓库</span>
+                      <div class="flex items-center justify-between py-1.5 border-b border-dashed border-border">
+                        <span class="text-xs text-muted-foreground">开源仓库</span>
                         <div class="flex items-center gap-2">
                           <a
                             href="https://github.com/Megghy/vtsuru.live"
@@ -496,9 +519,9 @@ function handleTitleClick() {
                         </div>
                       </div>
 
-                      <div class="about-meta-item">
-                        <span class="text-xs text-[var(--muted-foreground)]">交流与反馈群</span>
-                        <span class="font-bold text-xs text-[var(--foreground)]">873260337</span>
+                      <div class="flex items-center justify-between py-1.5 border-b border-dashed border-border">
+                        <span class="text-xs text-muted-foreground">交流与反馈群</span>
+                        <span class="font-bold text-xs text-foreground">873260337</span>
                       </div>
                     </div>
 
@@ -506,8 +529,8 @@ function handleTitleClick() {
 
                     <div class="flex items-center justify-between">
                       <div>
-                        <span class="font-bold text-xs text-[var(--foreground)]">在线检查更新</span>
-                        <div class="setting-hint">查询服务端最新客户端版本并自动更新</div>
+                        <span class="font-bold text-xs text-foreground">在线检查更新</span>
+                        <div class="text-xs text-muted-foreground mt-0.5">查询服务端最新客户端版本并自动更新</div>
                       </div>
                       <Button
                         variant="secondary"
@@ -533,74 +556,3 @@ function handleTitleClick() {
     </div>
   </div>
 </template>
-
-<style scoped>
-.notification-master-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.setting-hint {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  margin-top: 2px;
-}
-
-.notification-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.notification-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius, 6px);
-  background: var(--muted, rgba(128, 128, 128, 0.03));
-}
-
-.notification-text {
-  min-width: 0;
-}
-
-.about-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.about-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.about-meta-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-}
-
-.about-meta-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 0;
-  border-bottom: 1px dashed var(--border);
-}
-
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-  opacity: 0;
-}
-</style>

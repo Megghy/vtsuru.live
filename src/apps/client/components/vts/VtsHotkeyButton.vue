@@ -31,16 +31,16 @@ const emit = defineEmits<{
       >
         <span
           v-if="custom?.color"
-          class="hotkey-color-dot"
+          class="size-2.5 rounded-full mr-1.5 shrink-0"
           :style="{ backgroundColor: custom.color }"
         />
         <img
           v-if="custom?.iconDataUrl"
-          class="hotkey-icon"
+          class="size-3.5 rounded-[3px] mr-1.5 object-cover shrink-0"
           :src="custom.iconDataUrl"
           alt=""
         />
-        <span class="hotkey-label truncate">{{
+        <span class="overflow-hidden text-ellipsis truncate">{{
           armed ? '再次点击触发' : custom?.displayName || hk.name || hk.hotkeyID
         }}</span>
       </Button>
@@ -50,18 +50,18 @@ const emit = defineEmits<{
         <div class="font-semibold text-sm">{{ hk.name }}</div>
         <div
           v-if="hk.description"
-          class="text-[var(--muted-foreground)] mt-0.5"
+          class="text-muted-foreground mt-0.5"
         >
           {{ hk.description }}
         </div>
         <div
           v-if="hk.type"
-          class="text-[var(--muted-foreground)] mt-0.5"
+          class="text-muted-foreground mt-0.5"
         >
           类型: {{ hk.type }}
         </div>
       </div>
-      <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-[var(--border)]">
+      <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border">
         <Button
           variant="secondary"
           class="h-6 text-[11px] px-2"
@@ -88,25 +88,3 @@ const emit = defineEmits<{
     </PopoverContent>
   </Popover>
 </template>
-
-<style scoped>
-.hotkey-color-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  margin-right: 6px;
-  flex: 0 0 auto;
-}
-.hotkey-icon {
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-  margin-right: 6px;
-  object-fit: cover;
-  flex: 0 0 auto;
-}
-.hotkey-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-</style>

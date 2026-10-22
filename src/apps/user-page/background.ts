@@ -13,7 +13,7 @@ import type {
   PageBackgroundType,
 } from './block/schema'
 import { getGoogleFontFamilyCss } from './googleFonts'
-import { isUserPageColorDark, resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
+import { resolveUserPageReadableAccent, resolveUserPageTextPalette } from './theme'
 import { normalizeUserPageColor, parseUserPageColor } from './themeColor'
 import { resolveUserPageAppearance } from './themeConfig'
 
@@ -92,7 +92,7 @@ export function resolvePageBackground(raw: unknown): ResolvedPageBackground | nu
   }
 }
 
-export function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unknown) {
+function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unknown) {
   const appearance = resolveUserPageAppearance(theme)
   const surfaceAlpha =
     appearance.surfaceOpacity === undefined ? (effectiveIsDark ? 0.7 : 0.62) : appearance.surfaceOpacity / 100
@@ -112,18 +112,14 @@ export function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unkn
             : 0.26
 
   return {
-    '--user-page-ui-surface-bg': effectiveIsDark
+    surfaceBg: effectiveIsDark
       ? `rgba(24, 24, 27, ${surfaceAlpha})`
       : `rgba(255, 255, 255, ${surfaceAlpha})`,
-    '--user-page-ui-surface-bg-hover': effectiveIsDark
+    surfaceBgHover: effectiveIsDark
       ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.16)})`
       : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.1)})`,
-    '--user-page-ui-surface-bg-pressed': effectiveIsDark
-      ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.22)})`
-      : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.18)})`,
-    '--user-page-border-color': `rgba(148, 163, 184, ${borderAlpha})`,
-    '--vtsuru-card-border-color': `rgba(148, 163, 184, ${borderAlpha})`,
-  } as Record<string, string>
+    borderColor: `rgba(148, 163, 184, ${borderAlpha})`,
+  }
 }
 
 function readThemeString(theme: unknown, key: 'primaryColor' | 'backgroundColor' | 'fontFamily') {
@@ -146,7 +142,7 @@ function mixWithTransparent(value: string, amount: number) {
   return formatRgb({ ...color, alpha: (color.alpha ?? 1) * amount })
 }
 
-export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean, canvasColor?: string) {
+export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean, _canvasColor?: string) {
   const primaryColor = readThemeColor(theme, 'primaryColor')
   const backgroundColor = readThemeColor(theme, 'backgroundColor')
   const fontFamily = readThemeString(theme, 'fontFamily')
@@ -159,26 +155,24 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
       ? applyColorOpacity(backgroundColor, appearance.surfaceOpacity)
       : ''
   const contrastSurface =
-    customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars['--user-page-ui-surface-bg'] : undefined)
+    customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars.surfaceBg : undefined)
   const textPalette = resolveUserPageTextPalette(asObject(theme) ?? undefined, effectiveIsDark, contrastSurface)
-  // 直接铺在背景图上的文字按画布亮度选色，卡片仍用表面色板
-  const canvasIsDark = canvasColor ? isUserPageColorDark(canvasColor) : effectiveIsDark
-  const canvasPalette = canvasColor
-    ? resolveUserPageTextPalette(asObject(theme) ?? undefined, canvasIsDark, canvasColor)
-    : textPalette
-  const pageText = canvasPalette.color
   const surfaceText = textPalette.color
   // 主色按当前明暗模式修正为可读色后再派生全部主色 token（如 #000 在暗色下会提亮），
   // 否则文字、描边、浅色底都会与暗色表面糊在一起
   const pagePrimary = resolveUserPageReadableAccent(rawPrimary, backgroundColor, effectiveIsDark, contrastSurface)
-  const canvasAccent = resolveUserPageReadableAccent(
-    rawPrimary,
-    canvasColor || backgroundColor,
-    canvasIsDark,
-    canvasColor || contrastSurface,
-  )
 
-  const contentColor = customSurface || backgroundColor || surfaceVars['--user-page-ui-surface-bg']
+  // 在用户展示页中，控件（Input、Select等）多承载于半透明磨砂卡片内。
+  // 若用户配置了 backgroundColor，但未指定透明度，不可直接把 100% 实色纯背景赋给控件底色 --background，
+  // 否则在半透明卡片内会呈现突兀的实心重色块。此处采用与当前表面亮暗协调的半透明磨砂底。
+  const controlBg =
+    customSurface ||
+    (backgroundColor
+      ? effectiveIsDark
+        ? `color-mix(in srgb, ${backgroundColor} 28%, rgba(24, 24, 27, 0.75))`
+        : `color-mix(in srgb, ${backgroundColor} 20%, rgba(255, 255, 255, 0.7))`
+      : surfaceVars.surfaceBg)
+
   const defaultCardSurface = applyColorOpacity(
     siteTokens.surfaceHover,
     appearance.surfaceOpacity ?? (effectiveIsDark ? 70 : 62),
@@ -187,24 +181,22 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     customSurface || (backgroundColor ? mixWithTransparent(backgroundColor, 0.32) : defaultCardSurface)
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
-    : surfaceVars['--user-page-ui-surface-bg-hover']
-  const themeCanvasBg = backgroundColor || siteTokens.surfaceHover
-  const borderColor = surfaceVars['--vtsuru-card-border-color']
+    : surfaceVars.surfaceBgHover
+  const borderColor = surfaceVars.borderColor
   const radius = `${appearance.radius}px`
 
   return {
-    ...surfaceVars,
     ...getShadcnCssVars(siteTokens),
-    '--background': contentColor,
+    '--background': controlBg,
     '--foreground': surfaceText,
     '--card': surfaceColor,
     '--card-foreground': surfaceText,
     '--popover': surfaceColor,
     '--popover-foreground': surfaceText,
     '--primary': pagePrimary,
-    '--primary-foreground': resolveReadableForeground(pagePrimary, contentColor, effectiveIsDark),
+    '--primary-foreground': resolveReadableForeground(pagePrimary, controlBg, effectiveIsDark),
     '--brand': pagePrimary,
-    '--brand-foreground': resolveReadableForeground(pagePrimary, contentColor, effectiveIsDark),
+    '--brand-foreground': resolveReadableForeground(pagePrimary, controlBg, effectiveIsDark),
     '--brand-soft': `color-mix(in srgb, ${pagePrimary} 12%, transparent)`,
     '--brand-tint': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
     '--secondary': surfaceHover,
@@ -225,48 +217,11 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--ui-height-sm': appearance.controlHeights.small,
     '--ui-height': appearance.controlHeights.medium,
     '--ui-height-lg': appearance.controlHeights.large,
-    '--vtsuru-surface-fg': surfaceText,
-    '--vtsuru-surface-fg-muted': textPalette.muted,
-    '--vtsuru-surface-fg-subtle': textPalette.subtle,
-    '--vtsuru-page-fg-disabled': siteTokens.disabledForeground,
-    '--vtsuru-page-placeholder-disabled': siteTokens.placeholderDisabled,
-    '--vtsuru-page-primary': pagePrimary,
-    '--vtsuru-page-primary-soft': `color-mix(in srgb, ${pagePrimary} 18%, transparent)`,
-    '--vtsuru-page-primary-active': `color-mix(in srgb, ${pagePrimary} 26%, transparent)`,
-    '--vtsuru-page-primary-border': `color-mix(in srgb, ${pagePrimary} 28%, transparent)`,
-    '--vtsuru-page-primary-focus': `color-mix(in srgb, ${pagePrimary} 42%, transparent)`,
-    '--vtsuru-page-primary-readable': pagePrimary,
-    '--vtsuru-page-canvas-accent': canvasAccent,
-    '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
-    '--vtsuru-page-content-color': contentColor,
-    '--vtsuru-page-card-bg': surfaceColor,
-    '--vtsuru-page-card-bg-embedded': surfaceHover,
-    '--vtsuru-page-text': pageText,
-    '--vtsuru-page-text-muted': canvasPalette.muted,
-    '--vtsuru-page-text-subtle': canvasPalette.subtle,
-    '--vtsuru-page-bg': backgroundColor ? `color-mix(in srgb, ${backgroundColor} 32%, transparent)` : 'transparent',
-    '--user-page-theme-content-bg': 'transparent',
-    '--text-color-base': surfaceText,
-    '--text-color-1': surfaceText,
-    '--text-color-2': textPalette.muted,
-    '--text-color-3': textPalette.subtle,
-    '--primary-color': pagePrimary,
-    '--user-page-theme-surface-bg': surfaceColor,
-    '--user-page-theme-surface-bg-hover': surfaceHover,
-    '--user-page-theme-canvas-bg': themeCanvasBg,
-    '--vtsuru-page-radius': radius,
-    '--vtsuru-page-spacing': `${appearance.spacing}px`,
-    '--vtsuru-page-max-width': appearance.pageMaxWidth,
-    '--vtsuru-page-border-width': appearance.borderWidth,
-    '--vtsuru-page-border-style': appearance.borderStyle,
-    '--vtsuru-page-border': `${appearance.borderWidth} ${appearance.borderStyle} ${borderColor}`,
-    '--vtsuru-page-shadow': appearance.shadow,
     '--border-width': appearance.borderWidth,
     '--border-style': appearance.borderStyle,
-    '--vtsuru-shadow': appearance.shadow,
-    '--vtsuru-page-control-height-small': appearance.controlHeights.small,
-    '--vtsuru-page-control-height-medium': appearance.controlHeights.medium,
-    '--vtsuru-page-control-height-large': appearance.controlHeights.large,
+    '--vtsuru-page-font-family': getGoogleFontFamilyCss(fontFamily),
+    '--vtsuru-page-spacing': `${appearance.spacing}px`,
+    '--vtsuru-page-max-width': appearance.pageMaxWidth,
   } as Record<string, string>
 }
 

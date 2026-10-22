@@ -89,7 +89,7 @@ onMounted(() => {
         </Tag>
       </CardHeader>
       <CardContent class="px-4 pb-4 pt-0 space-y-4">
-        <div class="input-grid">
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-[var(--muted-foreground)]">频道</label>
             <Input
@@ -275,11 +275,3 @@ onMounted(() => {
     </Card>
   </div>
 </template>
-
-<style scoped>
-.input-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-</style>

@@ -63,7 +63,7 @@ function formatRelativeTime(time: number) {
           <article
             v-for="item in questions"
             :key="item.id"
-            class="history-item relative p-3.5 rounded-xl border border-border/80 bg-muted/20 space-y-2 group"
+            class="relative p-3.5 rounded-xl border border-border/80 bg-muted/20 space-y-2 group transition-colors duration-150"
           >
             <div class="history-meta flex items-center justify-between text-xs text-muted-foreground">
               <span>提给 {{ item.targetUserName }}</span>
@@ -153,8 +153,3 @@ function formatRelativeTime(time: number) {
   </Sheet>
 </template>
 
-<style scoped>
-.history-item {
-  transition: all 0.15s ease;
-}
-</style>

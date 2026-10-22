@@ -65,16 +65,16 @@ function downloadPng() {
     :backgrounded="config.backgrounded"
     :content-style="{ padding: 'var(--vtsuru-page-spacing)' }"
   >
-    <div class="qrcode-block">
+    <div class="grid justify-items-center gap-3.5">
       <h3
         v-if="config.title"
-        class="qrcode-title"
+        class="m-0 max-w-full break-words text-foreground text-lg leading-snug text-center"
       >
         {{ config.title }}
       </h3>
       <div
         ref="qrRoot"
-        class="qrcode-canvas-wrap"
+        class="grid place-items-center max-w-full overflow-hidden rounded-[var(--radius)] [&_canvas]:block [&_canvas]:max-w-full [&_canvas]:h-auto"
       >
         <QrcodeVue
           v-if="canRender"
@@ -85,11 +85,10 @@ function downloadPng() {
           :level="config.level"
           :margin="config.margin"
           render-as="canvas"
-          class="qrcode-canvas"
         />
         <span
           v-else
-          class="qrcode-state"
+          class="grid place-items-center min-h-32 p-4 text-muted-foreground text-center"
         >
           {{ config.content ? '内容超出当前纠错等级容量' : '请填写二维码内容' }}
         </span>
@@ -127,44 +126,4 @@ function downloadPng() {
   </BlockCard>
 </template>
 
-<style scoped>
-.qrcode-block {
-  display: grid;
-  justify-items: center;
-  gap: 14px;
-}
 
-.qrcode-title {
-  margin: 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-  color: var(--foreground);
-  font-size: 18px;
-  line-height: 1.4;
-  letter-spacing: 0;
-  text-align: center;
-}
-
-.qrcode-canvas-wrap {
-  display: grid;
-  place-items: center;
-  max-width: 100%;
-  overflow: hidden;
-  border-radius: var(--vtsuru-page-radius);
-}
-
-.qrcode-state {
-  display: grid;
-  place-items: center;
-  min-height: 128px;
-  padding: 16px;
-  color: var(--muted-foreground);
-  text-align: center;
-}
-
-.qrcode-canvas-wrap :deep(canvas) {
-  display: block;
-  max-width: 100%;
-  height: auto !important;
-}
-</style>

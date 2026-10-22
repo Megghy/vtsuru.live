@@ -231,7 +231,7 @@ onMounted(() => {
           aria-label="签到排行榜"
         >
           <div
-            class="ranking-header ranking-grid py-2 px-3 text-muted-foreground font-medium text-[11px] border-b border-border/60"
+            class="grid grid-cols-[48px_1.5fr_1fr_1fr_1fr_1.2fr] gap-2 items-center max-[640px]:grid-cols-[36px_1.5fr_1fr_1fr] py-2 px-3 text-muted-foreground font-medium text-[11px] border-b border-border/60"
             role="row"
           >
             <span>排名</span>
@@ -250,7 +250,7 @@ onMounted(() => {
             <div
               v-for="(item, index) in pagedData"
               :key="item.ouId"
-              class="ranking-row ranking-grid py-2 px-3 rounded-lg hover:bg-muted/40 transition items-center"
+              class="grid grid-cols-[48px_1.5fr_1fr_1fr_1fr_1.2fr] gap-2 items-center max-[640px]:grid-cols-[36px_1.5fr_1fr_1fr] py-2 px-3 rounded-lg hover:bg-muted/40 transition"
               :class="{ 'bg-amber-500/5 font-medium': item.rank <= 3 }"
               :style="{ '--row-index': index }"
               role="row"
@@ -284,7 +284,7 @@ onMounted(() => {
                 <strong class="text-primary font-mono">{{ item.consecutiveDays }}</strong>
                 <span class="metric-unit text-[10px] text-muted-foreground">天</span>
               </div>
-              <div class="metric-cell monthly-cell flex items-baseline gap-0.5">
+              <div class="flex items-baseline gap-0.5 max-[640px]:hidden">
                 <strong class="font-mono text-foreground">{{ item.monthlyCheckInCount ?? 0 }}</strong>
                 <span class="metric-unit text-[10px] text-muted-foreground">次</span>
               </div>
@@ -292,7 +292,7 @@ onMounted(() => {
                 <strong class="font-mono text-foreground">{{ item.totalCheckInCount ?? 0 }}</strong>
                 <span class="metric-unit text-[10px] text-muted-foreground">次</span>
               </div>
-              <div class="time-cell text-muted-foreground">
+              <div class="text-muted-foreground max-[640px]:hidden">
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <span class="cursor-help hover:text-foreground">
@@ -349,21 +349,3 @@ onMounted(() => {
   </TooltipProvider>
 </template>
 
-<style scoped>
-.ranking-grid {
-  display: grid;
-  grid-template-columns: 48px 1.5fr 1fr 1fr 1fr 1.2fr;
-  gap: 8px;
-  align-items: center;
-}
-
-@media (max-width: 640px) {
-  .ranking-grid {
-    grid-template-columns: 36px 1.5fr 1fr 1fr;
-  }
-  .monthly-cell,
-  .time-cell {
-    display: none;
-  }
-}
-</style>

@@ -87,13 +87,21 @@ onBeforeUnmount(() => {
 
 <template>
   <aside
-    class="schedule-subscription"
-    :class="{ 'is-docked': docked }"
+    class="flex flex-wrap items-center gap-4 w-full p-3.5 border border-border/80 rounded-lg text-card-foreground bg-card transition-all"
+    :class="[
+      docked
+        ? 'sticky bottom-5 z-25 max-w-[740px] mx-auto p-2 px-3.5 rounded-full bg-card/85 backdrop-blur-xl saturate-180 border-border shadow-lg flex-nowrap gap-3'
+        : 'shadow-sm',
+    ]"
     aria-label="订阅直播日程"
   >
-    <div class="subscription-copy">
+    <div
+      class="flex items-center gap-2.5 min-w-0"
+      :class="docked ? 'flex-1' : 'flex-1 basis-60'"
+    >
       <span
-        class="subscription-icon"
+        class="size-9 rounded-md bg-primary/10 text-primary flex-center shrink-0"
+        :class="{ 'size-8': docked }"
         aria-hidden="true"
       >
         <component
@@ -101,39 +109,45 @@ onBeforeUnmount(() => {
           class="size-5"
         />
       </span>
-      <span class="subscription-text">
-        <strong>订阅直播日程</strong>
-        <span class="subscription-hint">添加到日历后，日程更新自动同步</span>
+      <span
+        class="min-w-0"
+        :class="docked ? 'flex items-center gap-2' : 'flex flex-col gap-0.5'"
+      >
+        <strong class="text-xs font-semibold leading-tight whitespace-nowrap">订阅直播日程</strong>
+        <span class="text-xs text-muted-foreground leading-snug truncate">添加到日历后，日程更新自动同步</span>
       </span>
     </div>
 
-    <div class="subscription-action flex items-center gap-1.5">
+    <div
+      class="flex items-center gap-2 shrink-0"
+      :class="docked ? 'flex-nowrap' : 'flex-wrap justify-end flex-1 basis-[400px]'"
+    >
       <Input
         v-if="!docked"
         :value="url"
         readonly
         aria-label="日历订阅链接"
-        class="font-mono flex-1"
+        class="font-mono flex-1 min-w-[200px]"
         @focus="selectUrl"
         @click="selectUrl"
       />
       <Button
         as-child
         variant="outline"
-        class="flex items-center gap-1"
+        class="flex items-center gap-1.5"
       >
         <a :href="webcalUrl">
           <component
             :is="OpenOutline"
             class="size-3.5"
           />
-          <span class="btn-text-full">打开日历</span>
-          <span class="btn-text-short">日历</span>
+          <span class="max-sm:hidden">打开日历</span>
+          <span class="hidden max-sm:inline">日历</span>
         </a>
       </Button>
       <Button
         variant="outline"
-        class="flex items-center gap-1"
+        class="flex items-center gap-1.5"
         :disabled="copyState === 'success'"
         @click="copyUrl"
       >
@@ -141,10 +155,10 @@ onBeforeUnmount(() => {
           :is="copyState === 'success' ? CheckmarkOutline : CopyOutline"
           class="size-3.5"
         />
-        <span class="btn-text-full">{{
+        <span class="max-sm:hidden">{{
           copyState === 'success' ? '已复制' : copyState === 'error' ? '复制失败' : '复制链接'
         }}</span>
-        <span class="btn-text-short">{{
+        <span class="hidden max-sm:inline">{{
           copyState === 'success' ? '已复制' : copyState === 'error' ? '失败' : '复制'
         }}</span>
       </Button>
@@ -171,21 +185,21 @@ onBeforeUnmount(() => {
 
         <PopoverContent
           align="end"
-          class="dock-settings-popover w-72 p-3 text-xs space-y-3"
+          class="w-72 p-3 text-xs space-y-3"
         >
-          <div class="dock-settings-header space-y-0.5">
+          <div class="space-y-0.5 pb-1.5 border-b border-border">
             <strong class="text-xs font-semibold block text-foreground">订阅参数设置</strong>
-            <span class="dock-settings-sub text-[11px] text-muted-foreground block">{{ settingsSummary }}</span>
+            <span class="text-[11px] text-muted-foreground block truncate">{{ settingsSummary }}</span>
           </div>
 
-          <div class="subscription-setting space-y-1">
-            <span class="setting-label text-[11px] text-muted-foreground font-medium block">开播提醒</span>
-            <div class="setting-options-wrap flex flex-wrap gap-1">
+          <div class="space-y-1">
+            <span class="text-[11px] text-muted-foreground font-medium block">开播提醒</span>
+            <div class="flex flex-wrap gap-1">
               <button
                 v-for="opt in reminderOptions"
                 :key="`dock-r-${opt.value}`"
                 type="button"
-                class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
+                class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
                 :class="
                   reminder === opt.value
                     ? 'bg-primary text-primary-foreground font-medium'
@@ -199,14 +213,14 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="subscription-setting space-y-1">
-            <span class="setting-label text-[11px] text-muted-foreground font-medium block">标题标签</span>
-            <div class="setting-options-wrap flex flex-wrap gap-1">
+          <div class="space-y-1">
+            <span class="text-[11px] text-muted-foreground font-medium block">标题标签</span>
+            <div class="flex flex-wrap gap-1">
               <button
                 v-for="opt in tagOptions"
                 :key="`dock-t-${opt.value}`"
                 type="button"
-                class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
+                class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
                 :class="
                   withTag === opt.value
                     ? 'bg-primary text-primary-foreground font-medium'
@@ -220,12 +234,12 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <div class="dock-url-preview pt-1">
+          <div class="pt-1">
             <input
               :value="url"
               readonly
               aria-label="日历订阅链接"
-              class="w-full h-7 text-[11px] font-mono px-1.5 rounded border border-border bg-background"
+              class="w-full h-7 text-[11px] font-mono px-2 rounded border border-border bg-background outline-none focus-visible:ring-2 focus-visible:ring-primary"
               @focus="selectUrl"
               @click="selectUrl"
             />
@@ -236,11 +250,11 @@ onBeforeUnmount(() => {
 
     <!-- 普通内联模式下的可折叠设置栏 -->
     <template v-if="!docked">
-      <div class="subscription-settings-bar flex items-center justify-between text-xs pt-2 border-t border-border/50">
-        <span class="settings-summary text-[11px] text-muted-foreground">{{ settingsSummary }}</span>
+      <div class="flex items-center justify-between w-full text-xs pt-2.5 border-t border-border/60">
+        <span class="text-[11px] text-muted-foreground truncate">{{ settingsSummary }}</span>
         <button
           type="button"
-          class="settings-toggle inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer"
+          class="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
           :aria-expanded="settingsOpen"
           aria-controls="schedule-subscription-settings"
           @click="settingsOpen = !settingsOpen"
@@ -252,7 +266,7 @@ onBeforeUnmount(() => {
           <span>订阅设置</span>
           <component
             :is="ChevronDownOutline"
-            class="settings-toggle-arrow size-3 transition-transform duration-200"
+            class="size-3 transition-transform duration-200"
             :class="{ 'rotate-180': settingsOpen }"
             aria-hidden="true"
           />
@@ -262,15 +276,15 @@ onBeforeUnmount(() => {
       <div
         v-show="settingsOpen"
         id="schedule-subscription-settings"
-        class="subscription-settings pt-2 space-y-2 text-xs"
+        class="w-full pt-1 space-y-2 text-xs"
       >
-        <div class="subscription-setting flex flex-wrap items-center gap-1.5">
-          <span class="setting-label text-[11px] text-muted-foreground mr-1">开播提醒:</span>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[11px] text-muted-foreground mr-1">开播提醒:</span>
           <button
             v-for="opt in reminderOptions"
             :key="`r-${opt.value}`"
             type="button"
-            class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
+            class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
             :class="
               reminder === opt.value
                 ? 'bg-primary text-primary-foreground font-medium'
@@ -283,13 +297,13 @@ onBeforeUnmount(() => {
           </button>
         </div>
 
-        <div class="subscription-setting flex flex-wrap items-center gap-1.5">
-          <span class="setting-label text-[11px] text-muted-foreground mr-1">标题标签:</span>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[11px] text-muted-foreground mr-1">标题标签:</span>
           <button
             v-for="opt in tagOptions"
             :key="`t-${opt.value}`"
             type="button"
-            class="setting-option px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
+            class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
             :class="
               withTag === opt.value
                 ? 'bg-primary text-primary-foreground font-medium'
@@ -306,6 +320,4 @@ onBeforeUnmount(() => {
   </aside>
 </template>
 
-<style scoped>
-@import './scheduleSubscription.css';
-</style>
+

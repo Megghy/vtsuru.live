@@ -154,7 +154,7 @@ a:hover {
 
 @supports (font-variation-settings: normal) {
   :root {
-    font-family: InterVariable, sans-serif;
+    font-family: InterVariable, 'Noto Sans SC', sans-serif;
   }
 }
 

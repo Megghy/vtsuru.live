@@ -31,12 +31,12 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
       v-model="itemsModel"
       handle=".feature-drag-handle"
       :animation="160"
-      class="feature-list"
+      class="grid gap-1.5 w-full"
     >
       <div
         v-for="item in itemsModel"
         :key="item.key"
-        class="feature-item"
+        class="flex items-center gap-2 min-h-10 py-[5px] px-2 border border-border rounded-md bg-popover"
       >
         <span
           class="feature-drag-handle cursor-grab text-muted-foreground hover:text-foreground"
@@ -59,26 +59,3 @@ function setVisible(item: { hidden?: boolean }, visible: boolean) {
     </VueDraggable>
   </div>
 </template>
-
-<style scoped>
-.feature-list {
-  display: grid;
-  gap: 6px;
-  width: 100%;
-}
-
-.feature-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 40px;
-  padding: 5px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--popover);
-}
-
-.feature-drag-handle {
-  flex: none;
-}
-</style>

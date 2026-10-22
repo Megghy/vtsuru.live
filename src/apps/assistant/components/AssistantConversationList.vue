@@ -68,7 +68,7 @@ function onScroll(e: Event) {
 </script>
 
 <template>
-  <div class="conv-list">
+  <div class="flex flex-col h-full min-h-0 gap-2">
     <Button
       variant="outline"
       class="conv-list__new w-full border-dashed flex items-center justify-center gap-1.5"
@@ -198,17 +198,3 @@ function onScroll(e: Event) {
     </AlertDialog>
   </div>
 </template>
-
-<style scoped>
-.conv-list {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-height: 0;
-  gap: 8px;
-}
-.conv-list__new,
-.conv-list__search {
-  flex: 0 0 auto;
-}
-</style>

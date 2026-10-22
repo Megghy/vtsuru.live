@@ -93,7 +93,7 @@ onMounted(() => {
         <div class="manage-shell__main flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
           <ManageTopBar :account-name="workspace === 'user' ? biliAuth.biliAuth.name : accountInfo?.name" />
           <div class="manage-shell__scroll flex-1 min-h-0 overflow-y-auto flex flex-col">
-            <div class="manage-shell__content flex-1 w-full min-w-[370px] flex flex-col p-0 box-border">
+            <div class="manage-shell__content flex-1 w-full min-w-[370px] max-[600px]:min-w-0 flex flex-col p-0 box-border">
               <ManageUserGate v-if="workspace === 'user'" />
               <ManageContentGate
                 v-else
@@ -109,7 +109,7 @@ onMounted(() => {
       <Button
         variant="brand"
         size="icon"
-        class="assistant-fab fixed right-5 bottom-[84px] z-[1500] h-11 w-11 rounded-full shadow-lg"
+        class="assistant-fab fixed right-5 max-[600px]:right-3 bottom-[84px] max-[600px]:bottom-[72px] z-[1500] h-11 w-11 rounded-full shadow-lg"
         title="VTsuru 助手"
         @click="openAssistant"
       >
@@ -126,15 +126,3 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-@media (max-width: 600px) {
-  .manage-shell__content {
-    min-width: 0 !important;
-  }
-
-  .assistant-fab {
-    right: 12px !important;
-    bottom: 72px !important;
-  }
-}
-</style>

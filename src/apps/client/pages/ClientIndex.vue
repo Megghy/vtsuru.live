@@ -88,13 +88,13 @@ function toggleGiftWindow() {
 </script>
 
 <template>
-  <div class="dashboard-container flex flex-col gap-3.5">
+  <div class="flex flex-col gap-3.5 pb-6">
     <!-- 头部主播状态横幅 -->
-    <Card class="border bg-card hero-card">
+    <Card class="border bg-card">
       <CardContent class="p-4">
-        <div class="hero-wrapper">
-          <div class="hero-left">
-            <div class="avatar-wrap">
+        <div class="flex items-center justify-between gap-4 flex-wrap">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div class="relative shrink-0">
               <Avatar class="size-13 border">
                 <AvatarImage
                   :src="`${accountInfo.streamerInfo?.faceUrl}@100w`"
@@ -106,14 +106,17 @@ function toggleGiftWindow() {
                 </AvatarFallback>
               </Avatar>
               <span
-                class="status-pulse-dot"
-                :class="{ 'status-pulse-dot--live': isStreaming }"
+                class="absolute right-0 bottom-0 size-3 rounded-full bg-muted-foreground border-2 border-card"
+                :class="{
+                  'bg-emerald-500 shadow-[0_0_0_0_rgba(16,185,129,0.7)] animate-[pulse-ring_2s_infinite_cubic-bezier(0.66,0,0,1)]':
+                    isStreaming,
+                }"
               />
             </div>
 
-            <div class="hero-streamer-meta">
-              <div class="hero-title-row">
-                <span class="font-bold text-base text-foreground hero-streamer-name">
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-base text-foreground tracking-tight">
                   {{ accountInfo.name }}
                 </span>
                 <Badge
@@ -127,21 +130,21 @@ function toggleGiftWindow() {
                 </Badge>
               </div>
 
-              <div class="hero-sub-row text-xs text-muted-foreground">
+              <div class="flex items-center gap-1.5 text-xs text-muted-foreground">
                 <span>房间: {{ accountInfo.biliRoomId || '未绑定' }}</span>
-                <span class="dot-divider">·</span>
+                <span class="opacity-50">·</span>
                 <span>
                   {{
                     roomInfo?.parent_area_name ? `${roomInfo.parent_area_name} / ${roomInfo.area_name}` : '未选择分区'
                   }}
                 </span>
-                <span class="dot-divider">·</span>
+                <span class="opacity-50">·</span>
                 <span>UID: {{ accountInfo.streamerInfo?.uId || '—' }}</span>
               </div>
             </div>
           </div>
 
-          <div class="hero-actions">
+          <div class="flex items-center gap-2">
             <Button
               variant="secondary"
               @click="router.push({ name: 'client-pngtuber' })"
@@ -182,12 +185,12 @@ function toggleGiftWindow() {
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
       <!-- EventFetcher 弹幕引擎 -->
       <Card
-        class="border bg-card health-card"
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-fetcher' })"
       >
         <CardContent class="p-3">
-          <div class="health-card-header">
-            <div class="health-icon health-icon--fetcher">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-blue-500/12 text-blue-500">
               <CloudArchive24Filled class="size-4" />
             </div>
             <Badge
@@ -202,8 +205,8 @@ function toggleGiftWindow() {
               {{ webfetcher.state === 'connected' ? '运行中' : '已断开' }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">EventFetcher</div>
-          <div class="health-desc text-xs text-muted-foreground mt-0.5">
+          <div class="text-xs font-semibold text-foreground">EventFetcher</div>
+          <div class="text-xs text-muted-foreground mt-0.5">
             模式: {{ webfetcher.webfetcherType === 'direct' ? '直连' : '开放平台' }}
           </div>
         </CardContent>
@@ -211,12 +214,12 @@ function toggleGiftWindow() {
 
       <!-- Bilibili 凭据状态 -->
       <Card
-        class="border bg-card health-card"
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-fetcher' })"
       >
         <CardContent class="p-3">
-          <div class="health-card-header">
-            <div class="health-icon health-icon--cookie">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-amber-500/12 text-amber-500">
               <Cookies24Filled class="size-4" />
             </div>
             <Badge
@@ -227,8 +230,8 @@ function toggleGiftWindow() {
               {{ cookieBadgeMeta.text }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">B站 Cookie</div>
-          <div class="health-desc text-xs text-muted-foreground mt-0.5">
+          <div class="text-xs font-semibold text-foreground">B站 Cookie</div>
+          <div class="text-xs text-muted-foreground mt-0.5">
             {{ biliCookie.isCookieValid ? '凭据正常运作' : '需要重新扫码' }}
           </div>
         </CardContent>
@@ -236,12 +239,12 @@ function toggleGiftWindow() {
 
       <!-- VTube Studio 联动 -->
       <Card
-        class="border bg-card health-card"
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-vts' })"
       >
         <CardContent class="p-3">
-          <div class="health-card-header">
-            <div class="health-icon health-icon--vts">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-purple-500/12 text-purple-500">
               <VideoPerson24Filled class="size-4" />
             </div>
             <Badge
@@ -256,8 +259,8 @@ function toggleGiftWindow() {
               {{ vtsStore.connected ? '已连接' : '未连接' }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">VTube Studio</div>
-          <div class="health-desc text-xs text-muted-foreground truncate mt-0.5">
+          <div class="text-xs font-semibold text-foreground">VTube Studio</div>
+          <div class="text-xs text-muted-foreground truncate mt-0.5">
             {{ vtsStore.currentModelName || '未加载模型' }}
           </div>
         </CardContent>
@@ -265,12 +268,12 @@ function toggleGiftWindow() {
 
       <!-- 自动操作引擎 -->
       <Card
-        class="border bg-card health-card"
+        class="border bg-card cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
         @click="router.push({ name: 'client-auto-action-manage' })"
       >
         <CardContent class="p-3">
-          <div class="health-card-header">
-            <div class="health-icon health-icon--auto">
+          <div class="flex items-center justify-between mb-2">
+            <div class="size-7 rounded-md flex items-center justify-center text-base bg-emerald-500/12 text-emerald-500">
               <FlashAuto24Filled class="size-4" />
             </div>
             <Badge
@@ -285,8 +288,8 @@ function toggleGiftWindow() {
               {{ activeAutoActionCount > 0 ? `${activeAutoActionCount} 条规则` : '未启用' }}
             </Badge>
           </div>
-          <div class="health-title text-xs font-semibold text-foreground">自动操作</div>
-          <div class="health-desc text-xs text-muted-foreground mt-0.5">自动回复 / 答谢</div>
+          <div class="text-xs font-semibold text-foreground">自动操作</div>
+          <div class="text-xs text-muted-foreground mt-0.5">自动回复 / 答谢</div>
         </CardContent>
       </Card>
     </div>
@@ -299,9 +302,9 @@ function toggleGiftWindow() {
       <CardContent class="p-3">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <!-- 弹幕机浮窗 -->
-          <div class="float-window-box">
-            <div class="float-window-head">
-              <div class="float-window-icon-title">
+          <div class="p-3 border border-border rounded-md bg-muted/30 flex flex-col gap-2 h-full box-border">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
                 <Chat24Filled class="size-4 text-primary" />
                 <span class="font-semibold text-xs text-foreground">弹幕机</span>
               </div>
@@ -318,9 +321,9 @@ function toggleGiftWindow() {
               </Badge>
             </div>
 
-            <div class="float-window-desc">在桌面上显示弹幕机悬浮窗</div>
+            <div class="text-xs text-muted-foreground leading-normal flex-1">在桌面上显示弹幕机悬浮窗</div>
 
-            <div class="float-window-actions">
+            <div class="flex items-center gap-1.5 mt-1">
               <Button
                 size="xs"
                 variant="secondary"
@@ -363,11 +366,11 @@ function toggleGiftWindow() {
           </div>
 
           <!-- 礼物与排行浮窗 -->
-          <div class="float-window-box">
-            <div class="float-window-head">
-              <div class="float-window-icon-title">
+          <div class="p-3 border border-border rounded-md bg-muted/30 flex flex-col gap-2 h-full box-border">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
                 <Gift24Filled class="size-4 text-amber-500" />
-                <span class="font-semibold text-xs text-foreground">礼物与高能榜</span>
+                <span class="font-semibold text-xs text-foreground">礼物与排行</span>
               </div>
               <Badge
                 variant="outline"
@@ -382,9 +385,9 @@ function toggleGiftWindow() {
               </Badge>
             </div>
 
-            <div class="float-window-desc">礼物掉落与高能粉丝榜浮窗</div>
+            <div class="text-xs text-muted-foreground leading-normal flex-1">在桌面上显示礼物展示与舰队排行悬浮窗</div>
 
-            <div class="float-window-actions">
+            <div class="flex items-center gap-1.5 mt-1">
               <Button
                 size="xs"
                 variant="secondary"
@@ -429,66 +432,69 @@ function toggleGiftWindow() {
       </CardContent>
     </Card>
 
-    <!-- 直播间状态看板与常用入口 (双栏 Bento) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <!-- 直播间实时看板 -->
-      <Card class="border bg-card live-monitor-card overflow-hidden">
-        <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-          <div class="flex items-center gap-1.5">
-            <Live24Filled class="size-4 text-primary" />
-            <CardTitle class="text-sm font-semibold">直播间监视</CardTitle>
-          </div>
-          <Badge
-            variant="outline"
-            class="text-xs h-5 px-1.5"
-            :class="isStreaming ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'"
-          >
-            {{ isStreaming ? '● 正在推流' : '未推流' }}
-          </Badge>
-        </CardHeader>
-
-        <div
-          v-if="roomCover"
-          class="client-index-cover"
-          @click="openUrl(liveRoomUrl)"
-        >
-          <div class="client-index-cover__media">
-            <img
-              :src="roomCover"
-              alt="直播间封面"
-              referrerpolicy="no-referrer"
-              class="client-index-cover__img"
-            />
-          </div>
-          <div class="client-index-cover__mask" />
-          <div class="client-index-cover__meta">
-            <div class="client-index-cover__title">
-              {{ roomInfo?.title || '暂无标题' }}
+    <!-- 直播间快捷概览与常用功能 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
+      <!-- 直播间状态与封面 -->
+      <Card class="border bg-card flex flex-col justify-between overflow-hidden h-full">
+        <div>
+          <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+            <CardTitle class="text-sm font-semibold">当前直播间</CardTitle>
+            <div class="flex items-center gap-2">
+              <Button
+                size="xs"
+                variant="outline"
+                class="h-6 text-[11px] px-2"
+                @click="router.push({ name: 'client-live-manage' })"
+              >
+                直播管理
+              </Button>
             </div>
-            <div class="client-index-cover__sub">
-              <span v-if="roomInfo?.parent_area_name">{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span>
-              <span v-if="roomInfo?.online"> · 人气: {{ roomInfo.online }}</span>
-            </div>
-          </div>
-          <div class="client-index-cover__hint">
-            <Badge
-              variant="secondary"
-              class="text-[10px] h-5 px-2 bg-primary text-primary-foreground gap-1"
+          </CardHeader>
+          <CardContent class="p-3">
+            <div
+              v-if="roomCover"
+              class="group relative w-full aspect-video rounded-md overflow-hidden cursor-pointer bg-muted"
+              @click="openUrl(liveRoomUrl)"
             >
-              <span>点击前往直播间</span>
-              <Open24Regular class="size-3" />
-            </Badge>
-          </div>
+              <div class="w-full h-full overflow-hidden">
+                <img
+                  :src="roomCover"
+                  alt="直播间封面"
+                  referrerpolicy="no-referrer"
+                  class="w-full h-full object-cover block transition-all duration-350 ease-out group-hover:scale-105 group-hover:brightness-105"
+                />
+              </div>
+              <div class="absolute inset-0 z-1 bg-gradient-to-t from-black/90 via-black/25 to-black/5 pointer-events-none" />
+              <div class="absolute left-3 right-3 bottom-2.5 z-2 text-white pointer-events-none">
+                <div class="text-[13px] font-semibold text-shadow-md overflow-hidden whitespace-nowrap text-ellipsis">
+                  {{ roomInfo?.title || '暂无标题' }}
+                </div>
+                <div class="text-[11px] text-white/80 mt-0.5">
+                  <span v-if="roomInfo?.parent_area_name">{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span>
+                  <span v-if="roomInfo?.online"> · 人气: {{ roomInfo.online }}</span>
+                </div>
+              </div>
+              <div class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-all duration-250 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0">
+                <Badge
+                  variant="secondary"
+                  class="text-[10px] h-5 px-2 bg-primary text-primary-foreground gap-1"
+                >
+                  <span>点击前往直播间</span>
+                  <Open24Regular class="size-3" />
+                </Badge>
+              </div>
+            </div>
+
+            <div
+              v-else
+              class="flex justify-center p-8"
+            >
+              <span class="text-xs text-muted-foreground">暂无直播间封面信息</span>
+            </div>
+          </CardContent>
         </div>
 
-        <div
-          v-else
-          class="client-index-cover__empty"
-        >
-          <span class="text-xs text-muted-foreground">暂无直播间封面信息</span>
-        </div>
-
-        <div class="client-index-cover__footer">
+        <div class="p-2.5 px-3 pb-3 flex justify-end">
           <Button
             class="gap-1.5"
             @click="router.push({ name: 'client-live-manage' })"
@@ -506,56 +512,56 @@ function toggleGiftWindow() {
             <CardTitle class="text-sm font-semibold">常用工作台</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
-            <div class="launchpad-grid">
+            <div class="grid grid-cols-2 gap-2.5">
               <div
-                class="launchpad-item"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-live-manage' })"
               >
-                <div class="launchpad-icon launchpad-icon--live">
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-blue-500/10 text-blue-500">
                   <Live24Filled class="size-4" />
                 </div>
-                <div class="launchpad-text">
-                  <div class="launchpad-title">直播控制</div>
-                  <div class="launchpad-sub">OBS 推流与场次信息</div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">直播控制</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">OBS 推流与场次信息</div>
                 </div>
               </div>
 
               <div
-                class="launchpad-item"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-read-danmaku' })"
               >
-                <div class="launchpad-icon launchpad-icon--tts">
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-emerald-500/10 text-emerald-500">
                   <Mic24Filled class="size-4" />
                 </div>
-                <div class="launchpad-text">
-                  <div class="launchpad-title">读弹幕 (TTS)</div>
-                  <div class="launchpad-sub">语音朗读与音色设置</div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">读弹幕 (TTS)</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">语音朗读与音色设置</div>
                 </div>
               </div>
 
               <div
-                class="launchpad-item"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-auto-action-manage' })"
               >
-                <div class="launchpad-icon launchpad-icon--auto">
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-amber-500/10 text-amber-500">
                   <FlashAuto24Filled class="size-4" />
                 </div>
-                <div class="launchpad-text">
-                  <div class="launchpad-title">自动操作</div>
-                  <div class="launchpad-sub">入场欢迎与进房致谢</div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">自动操作</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">入场欢迎与进房致谢</div>
                 </div>
               </div>
 
               <div
-                class="launchpad-item"
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-settings' })"
               >
-                <div class="launchpad-icon launchpad-icon--settings">
+                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-muted text-muted-foreground">
                   <Settings24Filled class="size-4" />
                 </div>
-                <div class="launchpad-text">
-                  <div class="launchpad-title">客户端设置</div>
-                  <div class="launchpad-sub">通知 / 偏好 / 备份</div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">客户端设置</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">通知 / 偏好 / 备份</div>
                 </div>
               </div>
             </div>
@@ -564,9 +570,9 @@ function toggleGiftWindow() {
 
         <div
           v-if="rpcServer.running"
-          class="rpc-status-footer p-3 border-t bg-muted/10 text-xs text-muted-foreground flex items-center justify-between"
+          class="p-3 border-t bg-muted/10 text-xs text-muted-foreground flex items-center justify-between"
         >
-          <div class="rpc-status-left flex items-center gap-1.5">
+          <div class="flex items-center gap-1.5">
             <PlugConnected24Filled
               class="size-3.5"
               :class="rpcServer.connectionCount > 0 ? 'text-emerald-500' : 'text-muted-foreground'"
@@ -580,52 +586,6 @@ function toggleGiftWindow() {
 </template>
 
 <style scoped>
-.dashboard-container {
-  padding-bottom: 24px;
-}
-
-/* 主播横幅 */
-.hero-card {
-  background: var(--card);
-}
-
-.hero-wrapper {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.hero-left {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 0;
-}
-
-.avatar-wrap {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.status-pulse-dot {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: var(--muted-foreground);
-  border: 2px solid var(--card);
-}
-
-.status-pulse-dot--live {
-  background-color: var(--vtsuru-success, #10b981);
-  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-  animation: pulse-ring 2s infinite cubic-bezier(0.66, 0, 0, 1);
-}
-
 @keyframes pulse-ring {
   0% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
@@ -636,301 +596,5 @@ function toggleGiftWindow() {
   100% {
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
   }
-}
-
-.hero-streamer-meta {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  min-width: 0;
-}
-
-.hero-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hero-streamer-name {
-  font-size: 16px;
-  letter-spacing: -0.01em;
-}
-
-.hero-sub-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 12px;
-}
-
-.dot-divider {
-  color: var(--muted-foreground);
-  opacity: 0.5;
-}
-
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 核心健康卡片 */
-.health-card {
-  cursor: pointer;
-  transition: all 0.2s ease;
-  height: 100%;
-}
-
-.health-card:hover {
-  transform: translateY(-2px);
-}
-
-.health-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.health-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius, 6px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-}
-
-.health-icon--fetcher {
-  background-color: rgba(59, 130, 246, 0.12);
-  color: #3b82f6;
-}
-
-.health-icon--cookie {
-  background-color: rgba(245, 158, 11, 0.12);
-  color: #f59e0b;
-}
-
-.health-icon--vts {
-  background-color: rgba(139, 92, 246, 0.12);
-  color: #8b5cf6;
-}
-
-.health-icon--auto {
-  background-color: rgba(16, 185, 129, 0.12);
-  color: #10b981;
-}
-
-/* 直播浮窗控制盒 */
-.float-window-box {
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius, 6px);
-  background: var(--muted, rgba(128, 128, 128, 0.04));
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.float-window-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.float-window-icon-title {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.float-window-desc {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  line-height: 1.4;
-  flex-grow: 1;
-}
-
-.float-window-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-}
-
-/* 直播间监视卡片 */
-.live-monitor-card {
-  height: 100%;
-}
-
-.client-index-cover {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius, 6px);
-  overflow: hidden;
-  cursor: pointer;
-  background-color: var(--muted, #1e1e20);
-}
-
-.client-index-cover__media {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-
-.client-index-cover__img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition:
-    transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    filter 0.35s ease;
-}
-
-.client-index-cover:hover .client-index-cover__img {
-  transform: scale(1.05);
-  filter: brightness(1.05);
-}
-
-.client-index-cover__mask {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.25) 50%, rgba(0, 0, 0, 0.05) 100%);
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.client-index-cover__hint {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 3;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: all 0.25s ease;
-  pointer-events: none;
-}
-
-.client-index-cover:hover .client-index-cover__hint {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.client-index-cover__meta {
-  position: absolute;
-  left: 12px;
-  right: 12px;
-  bottom: 10px;
-  z-index: 2;
-  color: white;
-  pointer-events: none;
-}
-
-.client-index-cover__title {
-  font-size: 13px;
-  font-weight: 600;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.client-index-cover__sub {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.8);
-  margin-top: 2px;
-}
-
-.client-index-cover__empty {
-  display: flex;
-  justify-content: center;
-  padding: 32px;
-}
-
-.client-index-cover__footer {
-  padding: 10px 12px 12px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* 常用工作台 Launchpad */
-.launchpad-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-
-.launchpad-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius, 6px);
-  background: var(--card);
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.launchpad-item:hover {
-  background: var(--muted, rgba(128, 128, 128, 0.08));
-  border-color: var(--brand);
-  transform: translateY(-1px);
-}
-
-.launchpad-icon {
-  width: 32px;
-  height: 32px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-
-.launchpad-icon--live {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.launchpad-icon--tts {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-
-.launchpad-icon--auto {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
-}
-
-.launchpad-icon--settings {
-  background: rgba(107, 114, 128, 0.1);
-  color: var(--muted-foreground);
-}
-
-.launchpad-text {
-  min-width: 0;
-}
-
-.launchpad-title {
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.2;
-}
-
-.launchpad-sub {
-  font-size: 11px;
-  color: var(--muted-foreground);
-  margin-top: 2px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
 }
 </style>

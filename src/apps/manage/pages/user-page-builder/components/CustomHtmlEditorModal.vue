@@ -114,15 +114,9 @@ const previewStyle = computed(() => ({
   '--muted': previewTokens.value.inset,
   '--popover': previewTokens.value.elevated,
   '--border': previewTokens.value.borderColor,
+  '--primary': previewTokens.value.brand,
   '--brand': previewTokens.value.brand,
   '--radius': previewTokens.value.radiusSurface,
-  '--vtsuru-page-primary': previewTokens.value.brand,
-  '--vtsuru-page-radius': previewTokens.value.radiusSurface,
-  '--vtsuru-block-fg': previewTokens.value.foreground,
-  '--vtsuru-block-fg-muted': previewTokens.value.mutedForeground,
-  '--vtsuru-block-bg': previewTokens.value.surface,
-  '--vtsuru-block-bg-elevated': previewTokens.value.elevated,
-  '--vtsuru-block-border': previewTokens.value.borderColor,
   colorScheme: previewDark.value ? 'dark' : 'light',
 }))
 

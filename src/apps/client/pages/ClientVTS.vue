@@ -76,7 +76,7 @@ const macroProgress = computed(() => {
 </script>
 
 <template>
-  <div class="vts-page flex flex-col gap-3.5">
+  <div class="w-full flex flex-col gap-3.5">
     <ClientPageHeader
       title="VTube Studio 控制中心"
       description="通过 VTS 插件 API 在本地控制表情、热键、机位、道具与动作宏，可配合自动操作与 OBS 场景联动"
@@ -338,10 +338,6 @@ const macroProgress = computed(() => {
 </template>
 
 <style scoped>
-.vts-page {
-  width: 100%;
-}
-
 .vts-slide-enter-active,
 .vts-slide-leave-active {
   transition: all 0.25s ease;

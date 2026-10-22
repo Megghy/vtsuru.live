@@ -154,7 +154,7 @@ function getAdvancedSummary() {
               :is="TriggerSettings"
               v-if="TriggerSettings"
               :action="action"
-              class="trigger-settings"
+              class="w-full"
             />
 
             <div
@@ -173,7 +173,6 @@ function getAdvancedSummary() {
             <AdvancedSettings
               :action="action"
               :hide-user-filter="hideUserFilter"
-              class="advanced-settings"
             />
           </div>
         </AccordionContent>
@@ -181,13 +180,3 @@ function getAdvancedSummary() {
     </Accordion>
   </div>
 </template>
-
-<style scoped>
-.auto-action-editor {
-  width: 100%;
-}
-
-.trigger-settings {
-  width: 100%;
-}
-</style>

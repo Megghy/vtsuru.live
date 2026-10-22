@@ -251,7 +251,7 @@ function getSafeUrl(value?: string) {
 <template>
   <TooltipProvider>
     <section
-      class="traditional-song-list"
+      class="w-full"
       :class="{ 'has-background': config?.backgroundFile?.length }"
       :style="{
         '--song-list-bg-image': config?.backgroundFile?.length
@@ -670,8 +670,3 @@ function getSafeUrl(value?: string) {
   </TooltipProvider>
 </template>
 
-<style scoped>
-.traditional-song-list {
-  width: 100%;
-}
-</style>

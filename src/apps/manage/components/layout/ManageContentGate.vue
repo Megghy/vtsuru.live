@@ -205,13 +205,6 @@ async function resendEmail() {
 </template>
 
 <style scoped>
-.content-gate {
-  display: flex;
-  flex: 1;
-  min-height: 100%;
-  flex-direction: column;
-}
-
 :deep(.page-fade-enter-active),
 :deep(.page-fade-leave-active) {
   transition:

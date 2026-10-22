@@ -67,8 +67,12 @@ onBeforeUnmount(() => observer?.disconnect())
   >
     <nav
       ref="root"
-      class="section-nav"
-      :class="`section-nav--${layout}`"
+      class="@container min-w-0"
+      :class="
+        layout === 'horizontal'
+          ? 'flex flex-wrap gap-x-3.5 gap-y-1 @max-[420px]:grid @max-[420px]:grid-cols-2 @max-[420px]:gap-x-2.5 @max-[420px]:gap-y-0.5'
+          : 'grid gap-0.5'
+      "
       aria-label="页面目录"
     >
       <Empty
@@ -81,79 +85,34 @@ onBeforeUnmount(() => observer?.disconnect())
         v-else
         :key="section.blockId"
         :href="`#${section.anchorId}`"
-        class="section-link"
-        :class="{ active: activeId === section.anchorId }"
+        class="flex items-center min-w-0 py-1.5 px-0.5 text-[13px] leading-snug no-underline transition-colors"
+        :class="
+          layout === 'vertical'
+            ? [
+                'border-l-2 pl-[calc(8px+var(--section-indent))]',
+                activeId === section.anchorId
+                  ? 'border-primary text-primary bg-muted'
+                  : 'border-border text-muted-foreground hover:border-primary hover:text-primary hover:bg-muted',
+              ]
+            : [
+                'border-b-2',
+                activeId === section.anchorId
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:border-primary hover:text-primary',
+              ]
+        "
         :style="{ '--section-indent': `${Math.max(0, section.level - 1) * 12}px` }"
         :aria-current="activeId === section.anchorId ? 'location' : undefined"
         @click="selectSection(section.anchorId)"
       >
         <span
           v-if="showNumbers"
-          class="section-number"
+          class="flex-none mr-1.25 text-muted-foreground tabular-nums"
           >{{ index + 1 }}.</span
         >
-        <span class="section-text">{{ section.text }}</span>
+        <span class="truncate">{{ section.text }}</span>
       </a>
     </nav>
   </BlockCard>
 </template>
 
-<style scoped>
-.section-nav {
-  container-type: inline-size;
-  min-width: 0;
-}
-.section-nav--horizontal {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 14px;
-}
-.section-nav--vertical {
-  display: grid;
-  gap: 2px;
-}
-.section-link {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  padding: 6px 2px;
-  border-bottom: 2px solid transparent;
-  color: var(--muted-foreground);
-  font-size: 13px;
-  line-height: 1.35;
-  text-decoration: none;
-}
-.section-link:hover,
-.section-link.active {
-  color: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary));
-  border-bottom-color: var(--vtsuru-page-primary);
-}
-.section-nav--vertical .section-link {
-  padding-left: calc(8px + var(--section-indent));
-  border-bottom: 0;
-  border-left: 2px solid var(--border);
-}
-.section-nav--vertical .section-link:hover,
-.section-nav--vertical .section-link.active {
-  border-left-color: var(--vtsuru-page-primary);
-  background: var(--muted);
-}
-.section-number {
-  flex: none;
-  margin-right: 5px;
-  color: var(--muted-foreground);
-  font-variant-numeric: tabular-nums;
-}
-.section-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-@container (max-width: 420px) {
-  .section-nav--horizontal {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2px 10px;
-  }
-}
-</style>

@@ -10,7 +10,7 @@
   --schedule-toolbar-action-bg: #b4ff3e;
   --schedule-toolbar-action-fg: #10150d;
   --schedule-toolbar-label: 'WEEK INDEX / SYS';
-  --schedule-toolbar-radius: min(var(--vtsuru-page-radius, 8px), 8px);
+  --schedule-toolbar-radius: min(var(--radius), 8px);
   --schedule-toolbar-shadow: 0 0 22px -12px rgb(180 255 62 / 72%);
 
   container: neon-stage / inline-size;
@@ -72,10 +72,10 @@
   background-color: var(--console-black);
   background-position: center;
   background-size: cover;
-  border: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style)
+  border: var(--ui-border-width) var(--ui-border-style)
     color-mix(in srgb, var(--console-line) 72%, var(--neon-signal) 28%);
-  border-radius: min(var(--vtsuru-page-radius, 8px), 8px);
-  box-shadow: var(--vtsuru-page-shadow);
+  border-radius: min(var(--radius), 8px);
+  box-shadow: var(--ui-shadow);
 }
 
 .neon-board::before {

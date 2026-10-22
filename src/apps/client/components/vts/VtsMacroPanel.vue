@@ -305,7 +305,7 @@ function runMacro(macroId: string) {
             <div class="flex items-center justify-between gap-2">
               <div class="flex items-center gap-2">
                 <span
-                  class="macro-step-handle"
+                  class="macro-step-handle inline-flex items-center justify-center size-6 rounded cursor-grab active:cursor-grabbing select-none"
                   title="拖拽排序"
                 >
                   <ReorderThreeOutline class="size-4 text-muted-foreground" />
@@ -575,19 +575,3 @@ function runMacro(macroId: string) {
     </DialogContent>
   </Dialog>
 </template>
-
-<style scoped>
-.macro-step-handle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius);
-  cursor: grab;
-  user-select: none;
-}
-.macro-step-handle:active {
-  cursor: grabbing;
-}
-</style>

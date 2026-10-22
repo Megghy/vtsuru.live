@@ -92,12 +92,12 @@ async function saveScheduleImage() {
 
 <template>
   <nav
-    class="schedule-week-toolbar"
+    class="schedule-week-toolbar flex items-center justify-between gap-3 w-full p-2.5 px-3 bg-card border border-border rounded-lg text-card-foreground"
     aria-label="日程周次与导出"
   >
-    <div class="schedule-week-toolbar__navigator">
+    <div class="flex items-center gap-2 flex-1 min-w-0">
       <button
-        class="schedule-week-toolbar__step"
+        class="size-9 rounded-md bg-secondary border border-border text-card-foreground flex-center cursor-pointer transition-colors hover:not-disabled:bg-secondary/80 hover:not-disabled:border-primary disabled:opacity-35 disabled:cursor-not-allowed"
         type="button"
         :disabled="!hasPreviousWeek"
         aria-label="上一周"
@@ -110,8 +110,8 @@ async function saveScheduleImage() {
         />
       </button>
 
-      <div class="schedule-week-toolbar__current">
-        <div class="schedule-week-toolbar__meta">
+      <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+        <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <component
             :is="CalendarLtr20Regular"
             class="size-3.5"
@@ -125,12 +125,12 @@ async function saveScheduleImage() {
           @update:model-value="selectedWeek = String($event)"
         >
           <SelectTrigger
-            class="h-10 w-full bg-[var(--schedule-toolbar-resolved-control-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]"
+            class="h-9 w-full bg-secondary border-border text-card-foreground"
           >
             <SelectValue placeholder="选择周次" />
           </SelectTrigger>
           <SelectContent
-            class="bg-[var(--schedule-toolbar-resolved-bg)] border-[var(--schedule-toolbar-resolved-border)] text-[var(--schedule-toolbar-resolved-fg)]"
+            class="bg-card border-border text-card-foreground"
           >
             <SelectItem
               v-for="opt in options"
@@ -144,14 +144,14 @@ async function saveScheduleImage() {
         </Select>
         <span
           v-else
-          class="schedule-week-toolbar__empty"
+          class="text-xs text-muted-foreground"
         >
           暂无可选日程
         </span>
       </div>
 
       <button
-        class="schedule-week-toolbar__step"
+        class="size-9 rounded-md bg-secondary border border-border text-card-foreground flex-center cursor-pointer transition-colors hover:not-disabled:bg-secondary/80 hover:not-disabled:border-primary disabled:opacity-35 disabled:cursor-not-allowed"
         type="button"
         :disabled="!hasNextWeek"
         aria-label="下一周"
@@ -167,7 +167,7 @@ async function saveScheduleImage() {
 
     <button
       v-if="captureTarget"
-      class="schedule-week-toolbar__save"
+      class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-md bg-primary text-primary-foreground border-0 cursor-pointer transition-opacity whitespace-nowrap hover:not-disabled:opacity-90 disabled:opacity-50 disabled:cursor-wait"
       type="button"
       :disabled="saving"
       :aria-busy="saving"
@@ -182,126 +182,4 @@ async function saveScheduleImage() {
   </nav>
 </template>
 
-<style scoped>
-.schedule-week-toolbar {
-  --schedule-toolbar-resolved-fg: var(
-    --schedule-toolbar-fg,
-    var(--vtsuru-block-fg, var(--vtsuru-surface-fg, var(--vtsuru-page-text, var(--foreground))))
-  );
-  --schedule-toolbar-resolved-muted: var(
-    --schedule-toolbar-muted,
-    var(--vtsuru-block-fg-muted, var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--muted-foreground))))
-  );
-  --schedule-toolbar-resolved-bg: var(
-    --schedule-toolbar-bg,
-    var(--vtsuru-block-bg-muted, var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted))))
-  );
-  --schedule-toolbar-resolved-border: var(
-    --schedule-toolbar-border,
-    var(--vtsuru-block-border, var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border))))
-  );
-  --schedule-toolbar-resolved-accent: var(--schedule-toolbar-accent, var(--vtsuru-page-primary, var(--brand)));
-  --schedule-toolbar-resolved-control-bg: var(
-    --schedule-toolbar-control-bg,
-    color-mix(in srgb, var(--schedule-toolbar-resolved-bg) 84%, transparent)
-  );
-  --schedule-toolbar-resolved-control-bg-hover: var(
-    --schedule-toolbar-control-bg-hover,
-    color-mix(in srgb, var(--schedule-toolbar-resolved-accent) 12%, var(--schedule-toolbar-resolved-bg))
-  );
-  --schedule-toolbar-resolved-focus: color-mix(in srgb, var(--schedule-toolbar-resolved-accent) 24%, transparent);
-  --schedule-toolbar-resolved-radius: var(--vtsuru-page-radius, 14px);
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  width: 100%;
-  padding: 10px 12px;
-  background: var(--schedule-toolbar-resolved-bg);
-  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid)
-    var(--schedule-toolbar-resolved-border);
-  border-radius: var(--schedule-toolbar-resolved-radius);
-  color: var(--schedule-toolbar-resolved-fg);
-  font: inherit;
-}
-
-.schedule-week-toolbar__navigator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1 1 360px;
-  min-width: 0;
-}
-
-.schedule-week-toolbar__current {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.schedule-week-toolbar__meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--schedule-toolbar-resolved-muted);
-}
-
-.schedule-week-toolbar__step {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: max(4px, calc(var(--schedule-toolbar-resolved-radius) - 4px));
-  background: var(--schedule-toolbar-resolved-control-bg);
-  border: var(--vtsuru-page-border-width, 1px) var(--vtsuru-page-border-style, solid)
-    var(--schedule-toolbar-resolved-border);
-  color: var(--schedule-toolbar-resolved-fg);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.schedule-week-toolbar__step:hover:not(:disabled) {
-  background: var(--schedule-toolbar-resolved-control-bg-hover);
-  border-color: var(--schedule-toolbar-resolved-accent);
-}
-
-.schedule-week-toolbar__step:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.schedule-week-toolbar__save {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  font-size: 12px;
-  font-weight: 600;
-  border-radius: max(4px, calc(var(--schedule-toolbar-resolved-radius) - 4px));
-  background: var(--schedule-toolbar-resolved-accent);
-  color: #fff;
-  border: 0;
-  cursor: pointer;
-  transition: opacity 0.15s ease;
-  white-space: nowrap;
-}
-
-.schedule-week-toolbar__save:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.schedule-week-toolbar__save:disabled {
-  opacity: 0.5;
-  cursor: wait;
-}
-
-.schedule-week-toolbar__empty {
-  font-size: 12px;
-  color: var(--schedule-toolbar-resolved-muted);
-}
-</style>

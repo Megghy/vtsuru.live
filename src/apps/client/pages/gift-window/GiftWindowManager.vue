@@ -225,7 +225,7 @@ function toggleFilterType(val: string, checked: boolean) {
 </script>
 
 <template>
-  <div class="gift-manage-view flex flex-col gap-3.5">
+  <div class="w-full flex flex-col gap-3.5">
     <!-- 标准管理页标头 -->
     <ClientPageHeader
       title="礼物与高能榜浮窗管理"
@@ -343,8 +343,8 @@ function toggleFilterType(val: string, checked: boolean) {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- 左列: 本场打赏榜 Top 50 -->
               <div>
-                <div class="thank-section-header">
-                  <span class="thank-section-title flex items-center gap-1.5">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-semibold text-[13px] text-foreground flex items-center gap-1.5">
                     <Trophy20Regular class="size-4 text-amber-500" />
                     本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
                   </span>
@@ -356,7 +356,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   </Badge>
                 </div>
 
-                <div class="thank-scroll-box">
+                <div class="max-h-[460px] overflow-y-auto pr-1">
                   <Empty
                     v-if="realtimeRankList.length === 0"
                     description="本场暂无打赏记录"
@@ -364,35 +364,35 @@ function toggleFilterType(val: string, checked: boolean) {
                   />
                   <div
                     v-else
-                    class="thank-list"
+                    class="flex flex-col gap-1.5"
                   >
                     <div
                       v-for="(r, idx) in realtimeRankList"
                       :key="r.id"
-                      class="thank-item"
-                      :class="{ 'thank-item--top': idx < 3 }"
+                      class="p-2 px-3 rounded-md bg-popover border border-border transition-all duration-150 hover:border-primary"
+                      :class="{ 'border-amber-500/35 bg-amber-500/5': idx < 3 }"
                     >
                       <div class="flex items-center justify-between w-full">
                         <div class="flex items-center gap-2">
                           <span
-                            class="thank-idx"
+                            class="w-5 font-bold text-xs text-center text-muted-foreground"
                             :class="{
-                              'thank-idx--1': idx === 0,
-                              'thank-idx--2': idx === 1,
-                              'thank-idx--3': idx === 2,
+                              'text-amber-500': idx === 0,
+                              'text-slate-400': idx === 1,
+                              'text-amber-700 dark:text-amber-600': idx === 2,
                             }"
                           >
                             {{ idx + 1 }}
                           </span>
-                          <div class="thank-avatar-wrap">
+                          <div class="relative flex items-center justify-center">
                             <img
                               :src="r.uface || 'https://static.hdslb.com/images/member/noface.gif'"
                               class="size-6 rounded-full object-cover"
                               alt="avatar"
                             />
                             <span
-                              class="thank-online-dot"
-                              :class="{ online: r.isOnline }"
+                              class="absolute -right-0.5 -bottom-0.5 size-1.75 rounded-full bg-slate-400 border-[1.5px] border-popover"
+                              :class="{ 'bg-emerald-500 shadow-[0_0_4px_#22c55e]': r.isOnline }"
                               :title="r.isOnline ? '在场活跃' : '离线'"
                             />
                           </div>
@@ -431,8 +431,8 @@ function toggleFilterType(val: string, checked: boolean) {
 
               <!-- 右列: 还在直播间的在场舰长 -->
               <div>
-                <div class="thank-section-header">
-                  <span class="thank-section-title flex items-center gap-1.5">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-semibold text-[13px] text-foreground flex items-center gap-1.5">
                     <VehicleShip20Regular class="size-4 text-sky-500" />
                     还在直播间的舰长 ({{ realtimeGuardList.length }} 人)
                   </span>
@@ -441,7 +441,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   </span>
                 </div>
 
-                <div class="thank-scroll-box">
+                <div class="max-h-[460px] overflow-y-auto pr-1">
                   <Empty
                     v-if="realtimeGuardList.length === 0"
                     description="当前暂无在场大航海观众活跃"
@@ -449,12 +449,12 @@ function toggleFilterType(val: string, checked: boolean) {
                   />
                   <div
                     v-else
-                    class="thank-list"
+                    class="flex flex-col gap-1.5"
                   >
                     <div
                       v-for="g in realtimeGuardList"
                       :key="g.id"
-                      class="thank-item thank-item--guard"
+                      class="p-2 px-3 rounded-md bg-popover border border-sky-500/30 bg-sky-500/5"
                     >
                       <div class="flex items-center justify-between w-full">
                         <div class="flex items-center gap-2">
@@ -471,13 +471,13 @@ function toggleFilterType(val: string, checked: boolean) {
                           >
                             {{ getGuardTitle(g.guardLevel) }}
                           </Badge>
-                          <div class="thank-avatar-wrap">
+                          <div class="relative flex items-center justify-center">
                             <img
                               :src="g.uface || 'https://static.hdslb.com/images/member/noface.gif'"
                               class="size-6 rounded-full object-cover"
                               alt="avatar"
                             />
-                            <span class="thank-online-dot online" />
+                            <span class="absolute -right-0.5 -bottom-0.5 size-1.75 rounded-full border-[1.5px] border-popover bg-emerald-500 shadow-[0_0_4px_#22c55e]" />
                           </div>
                           <span class="text-xs font-semibold text-foreground">{{ g.uname }}</span>
                         </div>
@@ -517,25 +517,25 @@ function toggleFilterType(val: string, checked: boolean) {
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div
-                class="preset-card preset-card--dark"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-[#14141e] text-[#fbbf24]"
                 @click="applyPreset('dark')"
               >
-                <div class="preset-name">暗黑星空</div>
-                <div class="preset-desc">深色沉浸背景搭配琥珀金高亮</div>
+                <div class="text-[13px] font-semibold">暗黑星空</div>
+                <div class="text-[11px] opacity-75 leading-relaxed">深色沉浸背景搭配琥珀金高亮</div>
               </div>
               <div
-                class="preset-card preset-card--warm"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-[#28140a] text-[#ff9f43]"
                 @click="applyPreset('warm')"
               >
-                <div class="preset-name">暖色流金</div>
-                <div class="preset-desc">暖咖质感底色搭配蜜橙重点色</div>
+                <div class="text-[13px] font-semibold">暖色流金</div>
+                <div class="text-[11px] opacity-75 leading-relaxed">暖咖质感底色搭配蜜橙重点色</div>
               </div>
               <div
-                class="preset-card preset-card--purple"
+                class="p-3.5 rounded-md cursor-pointer border border-border flex flex-col gap-1 h-full box-border transition-all duration-200 hover:border-primary hover:-translate-y-0.5 hover:shadow-sm bg-[#190f28] text-[#c084fc]"
                 @click="applyPreset('purple')"
               >
-                <div class="preset-name">梦幻浅紫</div>
-                <div class="preset-desc">神秘浅紫渐变搭配霓虹高光</div>
+                <div class="text-[13px] font-semibold">梦幻浅紫</div>
+                <div class="text-[11px] opacity-75 leading-relaxed">神秘浅紫渐变搭配霓虹高光</div>
               </div>
             </div>
           </CardContent>
@@ -1055,16 +1055,16 @@ function toggleFilterType(val: string, checked: boolean) {
               <div
                 v-for="(item, index) in historyRanking"
                 :key="item.ouId"
-                class="history-rank-item"
+                class="p-2 px-3 rounded-md bg-popover border border-border"
               >
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2.5">
                     <span
-                      class="rank-num"
+                      class="w-5.5 font-bold text-[13px] text-center text-muted-foreground"
                       :class="{
-                        'rank-num--top1': index === 0,
-                        'rank-num--top2': index === 1,
-                        'rank-num--top3': index === 2,
+                        'text-amber-500': index === 0,
+                        'text-slate-400': index === 1,
+                        'text-amber-700 dark:text-amber-600': index === 2,
                       }"
                     >
                       {{ index + 1 }}
@@ -1091,174 +1091,3 @@ function toggleFilterType(val: string, checked: boolean) {
     </Tabs>
   </div>
 </template>
-
-<style scoped>
-.gift-manage-view {
-  width: 100%;
-}
-
-/* 感谢看板 */
-.thank-section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.thank-section-title {
-  font-weight: 600;
-  font-size: 13px;
-  color: var(--foreground);
-}
-
-.thank-scroll-box {
-  max-height: 460px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-
-.thank-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.thank-item {
-  padding: 8px 12px;
-  border-radius: var(--radius, 6px);
-  background: var(--popover);
-  border: 1px solid var(--border);
-  transition: all 0.15s ease;
-}
-
-.thank-item:hover {
-  border-color: var(--brand);
-}
-
-.thank-item--top {
-  border-color: rgba(234, 179, 8, 0.35);
-  background: rgba(234, 179, 8, 0.04);
-}
-
-.thank-item--guard {
-  border-color: rgba(56, 189, 248, 0.3);
-  background: rgba(56, 189, 248, 0.04);
-}
-
-.thank-idx {
-  width: 20px;
-  font-weight: 700;
-  font-size: 12px;
-  text-align: center;
-  color: var(--muted-foreground);
-}
-
-.thank-idx--1 {
-  color: #eab308;
-}
-
-.thank-idx--2 {
-  color: #94a3b8;
-}
-
-.thank-idx--3 {
-  color: #d97706;
-}
-
-.thank-avatar-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.thank-online-dot {
-  position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #94a3b8;
-  border: 1.5px solid var(--popover);
-}
-
-.thank-online-dot.online {
-  background: #22c55e;
-  box-shadow: 0 0 4px #22c55e;
-}
-
-/* 预设卡片 */
-.preset-card {
-  padding: 14px;
-  border-radius: var(--radius, 6px);
-  cursor: pointer;
-  border: 1px solid var(--border);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  height: 100%;
-  box-sizing: border-box;
-}
-
-.preset-card:hover {
-  border-color: var(--brand);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
-}
-
-.preset-card--dark {
-  background-color: #14141e;
-  color: #fbbf24;
-}
-
-.preset-card--warm {
-  background-color: #28140a;
-  color: #ff9f43;
-}
-
-.preset-card--purple {
-  background-color: #190f28;
-  color: #c084fc;
-}
-
-.preset-name {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.preset-desc {
-  font-size: 11px;
-  opacity: 0.75;
-  line-height: 1.4;
-}
-
-/* 历史榜单单项 */
-.history-rank-item {
-  padding: 8px 12px;
-  border-radius: var(--radius, 6px);
-  background: var(--popover);
-  border: 1px solid var(--border);
-}
-
-.rank-num {
-  font-weight: 700;
-  width: 22px;
-  text-align: center;
-  font-size: 13px;
-  color: var(--muted-foreground);
-}
-
-.rank-num--top1 {
-  color: #eab308;
-}
-
-.rank-num--top2 {
-  color: #94a3b8;
-}
-
-.rank-num--top3 {
-  color: #b45309;
-}
-</style>

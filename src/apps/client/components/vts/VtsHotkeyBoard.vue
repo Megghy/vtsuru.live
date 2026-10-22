@@ -321,7 +321,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
           </Button>
           <img
             v-if="editForm.iconDataUrl"
-            class="hotkey-icon-preview"
+            class="size-6 rounded object-cover border border-border"
             :src="editForm.iconDataUrl"
             alt=""
           />
@@ -347,13 +347,3 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
     </DialogContent>
   </Dialog>
 </template>
-
-<style scoped>
-.hotkey-icon-preview {
-  width: 24px;
-  height: 24px;
-  border-radius: 4px;
-  object-fit: cover;
-  border: 1px solid var(--border);
-}
-</style>

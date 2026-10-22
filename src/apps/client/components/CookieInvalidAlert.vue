@@ -43,13 +43,13 @@ const goToSettings = () => {
   <Alert
     v-if="biliCookie.hasBiliCookie && !biliCookie.isCookieValid"
     variant="destructive"
-    class="cookie-invalid-alert"
+    class="w-full box-border"
   >
     <AlertTitle class="font-semibold">{{ alertConfig.title }}</AlertTitle>
-    <AlertDescription class="cookie-invalid-alert__content mt-1">
+    <AlertDescription class="text-[13px] leading-relaxed text-foreground mt-1">
       <p>{{ alertConfig.message }}</p>
       <p>如果已经部署 CookieCloud，请尝试重新同步；否则请重新扫码登录。</p>
-      <div class="cookie-invalid-alert__actions mt-2 flex flex-wrap gap-2">
+      <div class="mt-2 flex flex-wrap gap-2">
         <Button @click="goToFetcher"> 前往 EventFetcher </Button>
         <Button
           variant="outline"
@@ -61,16 +61,3 @@ const goToSettings = () => {
     </AlertDescription>
   </Alert>
 </template>
-
-<style scoped>
-.cookie-invalid-alert {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.cookie-invalid-alert__content {
-  font-size: 13px;
-  line-height: 1.6;
-  color: var(--foreground);
-}
-</style>

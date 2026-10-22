@@ -38,7 +38,7 @@ const providers = [
 </script>
 
 <template>
-  <div class="voice-settings">
+  <div class="flex flex-col gap-3">
     <SectionField
       label="音量"
       :value="`${(settings.speechInfo.volume * 100).toFixed(0)}%`"
@@ -117,11 +117,6 @@ const providers = [
 </template>
 
 <style scoped>
-.voice-settings {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.18s ease;

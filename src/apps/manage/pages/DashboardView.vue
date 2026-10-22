@@ -315,6 +315,7 @@ onUnmounted(() => {
       v-if="accountInfo"
       v-model="selectedTab"
       class="w-full"
+      :class="{ 'dashboard-view--wide': selectedTab === 'template' }"
     >
       <TabsList class="inline-flex p-1 bg-muted rounded-lg">
         <TabsTrigger

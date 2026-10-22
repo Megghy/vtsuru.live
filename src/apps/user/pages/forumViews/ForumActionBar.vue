@@ -36,7 +36,7 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
 
 <template>
   <TooltipProvider>
-    <div class="forum-action-bar flex items-center gap-1">
+    <div class="flex items-center gap-1">
       <Tooltip v-if="canManage">
         <TooltipTrigger as-child>
           <Popconfirm
@@ -95,10 +95,4 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
   </TooltipProvider>
 </template>
 
-<style scoped>
-.forum-action-bar {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-</style>
+

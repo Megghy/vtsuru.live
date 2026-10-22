@@ -181,7 +181,7 @@ function toggleModule(mod: ClientBackupModule) {
           <CardTitle class="text-sm font-semibold">自动备份</CardTitle>
         </CardHeader>
         <CardContent class="p-3 space-y-3">
-          <div class="setting-row">
+          <div class="flex items-center justify-between gap-3">
             <span class="text-xs font-medium text-foreground">启用定时备份</span>
             <Checkbox
               :checked="backupSettings.scheduleEnabled"
@@ -189,7 +189,7 @@ function toggleModule(mod: ClientBackupModule) {
             />
           </div>
 
-          <div class="setting-row">
+          <div class="flex items-center justify-between gap-3">
             <span class="text-xs font-medium text-foreground">预设周期</span>
             <div class="w-[180px]">
               <Select
@@ -213,7 +213,7 @@ function toggleModule(mod: ClientBackupModule) {
             </div>
           </div>
 
-          <div class="setting-row">
+          <div class="flex items-center justify-between gap-3">
             <span class="text-xs font-medium text-foreground">自定义周期（小时）</span>
             <NInputNumber
               :value="backupSettings.customHours"
@@ -224,7 +224,7 @@ function toggleModule(mod: ClientBackupModule) {
             />
           </div>
 
-          <div class="setting-row">
+          <div class="flex items-center justify-between gap-3">
             <span class="text-xs font-medium text-foreground">最多保留份数</span>
             <NInputNumber
               :value="backupSettings.keepCount"
@@ -335,12 +335,3 @@ function toggleModule(mod: ClientBackupModule) {
     </Dialog>
   </div>
 </template>
-
-<style scoped>
-.setting-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-</style>

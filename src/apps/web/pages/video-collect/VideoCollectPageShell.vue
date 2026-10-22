@@ -26,22 +26,6 @@ const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars 
 
 <style scoped>
 .video-collect-page {
-  --collect-fg: var(--vtsuru-page-text, var(--vtsuru-surface-fg, var(--foreground)));
-  --collect-muted: var(
-    --vtsuru-page-text-muted,
-    var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--muted-foreground)))
-  );
-  --collect-subtle: var(--vtsuru-page-text-subtle, var(--vtsuru-surface-fg-subtle, var(--collect-muted)));
-  --collect-surface: var(--user-page-theme-surface-bg, var(--vtsuru-page-content-color, var(--card)));
-  --collect-surface-hover: var(--user-page-theme-surface-bg-hover, var(--vtsuru-page-card-bg-embedded));
-  --collect-card: var(--vtsuru-page-card-bg, var(--collect-surface));
-  --collect-border: var(--vtsuru-card-border-color, var(--user-page-border-color, var(--border)));
-  --collect-accent: var(
-    --vtsuru-page-canvas-accent,
-    --vtsuru-page-primary-readable,
-    var(--vtsuru-page-primary, var(--brand))
-  );
-
   position: relative;
   min-width: 0;
   height: 100vh;
@@ -49,16 +33,9 @@ const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars 
   overflow-x: clip;
   overflow-y: auto;
   isolation: isolate;
-  color: var(--collect-fg);
-  background: var(--vtsuru-page-content-color, var(--background));
+  color: var(--foreground);
+  background: var(--background);
   font-family: var(--vtsuru-page-font-family);
-}
-
-.video-collect-page :deep(.collect-on-surface) {
-  --collect-fg: var(--vtsuru-surface-fg, var(--foreground));
-  --collect-muted: var(--vtsuru-surface-fg-muted, var(--text-color-2, var(--muted-foreground)));
-  --collect-subtle: var(--vtsuru-surface-fg-subtle, var(--collect-muted));
-  --collect-accent: var(--vtsuru-page-primary-readable, var(--vtsuru-page-primary, var(--brand)));
 }
 
 .video-collect-page.has-background {
@@ -100,7 +77,7 @@ const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars 
 
 @media (prefers-reduced-transparency: reduce) {
   .video-collect-page.background-glass::after {
-    background: var(--collect-surface);
+    background: var(--card);
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }

@@ -29,16 +29,13 @@ const isUnframed = computed(() => props.framed === false)
 const isUnbackgrounded = computed(() => props.backgrounded === false)
 
 const palette = computed(() => {
-  const foreground = isUnbackgrounded.value ? 'var(--vtsuru-page-text)' : 'var(--vtsuru-surface-fg)'
+  const foreground = isUnbackgrounded.value ? 'var(--foreground)' : 'var(--card-foreground)'
   return {
     foreground,
     muted: isUnbackgrounded.value
-      ? 'color-mix(in srgb, var(--vtsuru-page-text) 72%, transparent)'
-      : 'var(--vtsuru-surface-fg-muted)',
-    subtle: isUnbackgrounded.value
-      ? 'color-mix(in srgb, var(--vtsuru-page-text) 55%, transparent)'
-      : 'var(--vtsuru-surface-fg-subtle)',
-    mutedBackground: isUnbackgrounded.value ? 'var(--muted)' : 'var(--user-page-ui-surface-bg-hover)',
+      ? 'var(--muted-foreground)'
+      : 'color-mix(in srgb, var(--card-foreground) 75%, transparent)',
+    mutedBackground: isUnbackgrounded.value ? 'var(--muted)' : 'var(--secondary)',
   }
 })
 
@@ -46,12 +43,7 @@ const cardStyle = computed<ThemeStyle>(() => ({
   '--foreground': palette.value.foreground,
   '--card-foreground': palette.value.foreground,
   '--muted-foreground': palette.value.muted,
-  '--vtsuru-block-fg': palette.value.foreground,
-  '--vtsuru-block-fg-muted': palette.value.muted,
-  '--vtsuru-block-fg-subtle': palette.value.subtle,
-  '--vtsuru-block-bg-muted': palette.value.mutedBackground,
-  '--vtsuru-block-border': 'var(--user-page-border-color, var(--border))',
-  '--border': 'var(--user-page-border-color)',
+  '--muted': palette.value.mutedBackground,
 }))
 
 provideThemeScope(
@@ -59,9 +51,9 @@ provideThemeScope(
     ...cardStyle.value,
     ...(isUnbackgrounded.value
       ? {
-          '--foreground': 'var(--vtsuru-page-text)',
-          '--card-foreground': 'var(--vtsuru-page-text)',
-          '--muted-foreground': 'var(--vtsuru-page-text-muted)',
+          '--foreground': 'var(--foreground)',
+          '--card-foreground': 'var(--foreground)',
+          '--muted-foreground': 'var(--muted-foreground)',
         }
       : {}),
   })),
@@ -79,47 +71,51 @@ const borderTitleAlignClass = computed(() => {
 
 <template>
   <div
-    class="vtsuru-block-card"
+    class="vtsuru-block-card relative flex flex-col h-full min-w-0 rounded-[var(--radius)] text-card-foreground bg-card border shadow-[var(--ui-shadow,none)] overflow-hidden backdrop-blur-[var(--user-page-card-blur,12px)]"
     :class="{
-      unframed: isUnframed,
-      unbackgrounded: isUnbackgrounded,
-      'has-border-title': showBorderTitle,
+      'overflow-visible': showBorderTitle,
+      '!border-0 !shadow-none': isUnframed,
+      '!bg-transparent !shadow-none backdrop-blur-none': isUnbackgrounded,
     }"
     :style="[props.wrapStyle, cardStyle]"
   >
     <div
       v-if="showBorderTitle"
-      class="border-title"
-      :class="borderTitleAlignClass"
+      class="absolute top-0 left-0 right-0 z-[3] pointer-events-none flex -translate-y-1/2"
+      :class="{
+        'justify-start pl-[var(--vtsuru-page-spacing,14px)]': borderTitleAlignClass === 'align-left',
+        'justify-center': borderTitleAlignClass === 'align-center',
+        'justify-end pr-[var(--vtsuru-page-spacing,14px)]': borderTitleAlignClass === 'align-right',
+      }"
     >
-      <span class="border-title__text">
+      <span class="relative inline-block text-xs leading-none text-foreground font-semibold tracking-wide opacity-90 [text-shadow:0_1px_0_rgba(0,0,0,0.12)]">
         {{ borderTitleText }}
       </span>
     </div>
     <div
       v-if="$slots.header || $slots['header-extra']"
-      class="vtsuru-block-card-header flex items-center justify-between"
+      class="flex items-center justify-between p-[var(--vtsuru-page-spacing)] border-b border-border"
       :style="props.headerStyle"
     >
-      <div class="vtsuru-block-card-header-main flex-1 min-w-0">
+      <div class="flex-1 min-w-0">
         <slot name="header" />
       </div>
       <div
         v-if="$slots['header-extra']"
-        class="vtsuru-block-card-header-extra shrink-0 ml-2"
+        class="shrink-0 ml-2"
       >
         <slot name="header-extra" />
       </div>
     </div>
     <div
-      class="vtsuru-block-card-content"
+      class="min-w-0 flex-1"
       :style="resolvedContentStyle"
     >
       <slot />
     </div>
     <div
       v-if="$slots.footer"
-      class="vtsuru-block-card-footer"
+      class="p-[var(--vtsuru-page-spacing)] border-t border-border"
       :style="props.footerStyle"
     >
       <slot name="footer" />
@@ -127,92 +123,4 @@ const borderTitleAlignClass = computed(() => {
   </div>
 </template>
 
-<style scoped>
-.vtsuru-block-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  min-width: 0;
-  border-radius: var(--vtsuru-page-radius);
-  color: var(--vtsuru-block-fg);
-  background: var(--vtsuru-page-card-bg, var(--user-page-theme-surface-bg, var(--muted)));
-  backdrop-filter: blur(var(--user-page-card-blur, 12px));
-  -webkit-backdrop-filter: blur(var(--user-page-card-blur, 12px));
-  border: var(--vtsuru-page-border);
-  box-shadow: var(--vtsuru-page-shadow);
-  overflow: hidden;
-}
 
-.vtsuru-block-card.has-border-title {
-  overflow: visible;
-}
-
-.border-title {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 3;
-  pointer-events: none;
-  display: flex;
-  transform: translateY(-50%);
-}
-
-.border-title.align-left {
-  justify-content: flex-start;
-  padding-left: var(--vtsuru-page-spacing, 14px);
-}
-.border-title.align-center {
-  justify-content: center;
-}
-.border-title.align-right {
-  justify-content: flex-end;
-  padding-right: var(--vtsuru-page-spacing, 14px);
-}
-
-.border-title__text {
-  position: relative;
-  display: inline-block;
-  padding: 0;
-  font-size: 12px;
-  line-height: 1;
-  color: var(--vtsuru-block-fg);
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  opacity: 0.9;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.12);
-}
-
-.vtsuru-block-card.unframed {
-  border: 0;
-  box-shadow: none;
-}
-
-.vtsuru-block-card.unbackgrounded {
-  color: var(--vtsuru-block-fg);
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  box-shadow: none;
-}
-
-.vtsuru-block-card.unbackgrounded .border-title__text {
-  color: var(--vtsuru-block-fg);
-}
-
-.vtsuru-block-card-header {
-  padding: var(--vtsuru-page-spacing);
-  border-bottom: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-}
-
-.vtsuru-block-card-content {
-  min-width: 0;
-  flex: 1;
-}
-
-.vtsuru-block-card-footer {
-  padding: var(--vtsuru-page-spacing);
-  border-top: var(--vtsuru-page-border-width) var(--vtsuru-page-border-style) var(--vtsuru-block-border);
-}
-</style>

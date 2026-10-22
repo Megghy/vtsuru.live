@@ -443,11 +443,11 @@ async function go(name: string, query?: Record<string, string>) {
 
 <template>
   <aside
-    class="manage-sider"
+    class="h-full border-r border-border bg-card box-border flex flex-col overflow-hidden transition-[width] duration-200"
     :class="{ collapsed }"
     :style="{ width: collapsed ? `${siderCollapsedWidth}px` : `${siderWidth}px` }"
   >
-    <div class="manage-sider__top">
+    <div class="py-[9px] px-3 pb-1.5 flex flex-col gap-1.5">
       <WorkspaceSwitch
         block
         :collapsed="collapsed"
@@ -457,7 +457,7 @@ async function go(name: string, query?: Record<string, string>) {
         <DropdownMenuTrigger as-child>
           <Button
             variant="secondary"
-            class=".5 w-full flex items-center justify-start gap-2 px-2"
+            class="h-[34px] w-full flex items-center justify-start gap-2 px-2"
             :class="{ 'justify-center p-0 w-8.5': collapsed }"
           >
             <img
@@ -492,7 +492,7 @@ async function go(name: string, query?: Record<string, string>) {
       <Button
         v-else-if="workspace === 'user' && biliAuth.biliAuth.id"
         variant="secondary"
-        class=".5 w-full flex items-center justify-start gap-2 px-2"
+        class="h-[34px] w-full flex items-center justify-start gap-2 px-2"
         :class="{ 'justify-center p-0 w-8.5': collapsed }"
       >
         <img
@@ -509,10 +509,10 @@ async function go(name: string, query?: Record<string, string>) {
       </Button>
 
       <template v-if="workspace === 'streamer'">
-        <div class="manage-sider__top-row">
+        <div class="flex items-center gap-1.5" :class="{ 'justify-center': collapsed }">
           <Button
             variant="secondary"
-            class="sider-top-btn sider-top-btn--panel .5"
+            class="h-[34px]"
             :class="{
               'w-8.5 p-0 justify-center flex-none': collapsed,
               'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
@@ -522,11 +522,11 @@ async function go(name: string, query?: Record<string, string>) {
           >
             <component
               :is="GridOutline"
-              class="sider-icon"
+              class="size-[18px] shrink-0"
             />
             <span
               v-if="!collapsed"
-              class="sider-top-label"
+              class="text-xs font-normal whitespace-nowrap"
               >面板</span
             >
           </Button>
@@ -535,21 +535,21 @@ async function go(name: string, query?: Record<string, string>) {
             v-if="!collapsed"
             size="icon-sm"
             variant="ghost"
-            class="sider-top-icon-btn .5 w-8.5"
+            class="h-[34px] w-8.5"
             title="反馈"
             @click="go('manage-feedback')"
           >
             <component
               :is="PersonFeedback24Filled"
-              class="sider-icon"
+              class="size-[18px] shrink-0"
             />
           </Button>
         </div>
 
-        <div class="manage-sider__top-row sider-top-row--builder">
+        <div class="flex items-center gap-1.5" :class="{ 'justify-center': collapsed }">
           <Button
             variant="brand"
-            class="sider-top-btn sider-top-btn--panel .5"
+            class="h-[34px]"
             :class="{
               'w-8.5 p-0 justify-center flex-none': collapsed,
               'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
@@ -559,11 +559,11 @@ async function go(name: string, query?: Record<string, string>) {
           >
             <component
               :is="ColorPaletteOutline"
-              class="sider-icon"
+              class="size-[18px] shrink-0"
             />
             <span
               v-if="!collapsed"
-              class="sider-btn-label"
+              class="text-xs font-normal whitespace-nowrap"
               >主页装修</span
             >
           </Button>
@@ -572,35 +572,39 @@ async function go(name: string, query?: Record<string, string>) {
             v-if="!collapsed"
             size="icon-sm"
             variant="ghost"
-            class="sider-top-icon-btn .5 w-8.5"
+            class="h-[34px] w-8.5"
             title="更换主页背景与主题"
             @click="go('manage-userPageBuilder', { action: 'theme' })"
           >
             <component
               :is="ImageOutline"
-              class="sider-icon"
+              class="size-[18px] shrink-0"
             />
           </Button>
         </div>
       </template>
     </div>
 
-    <div class="manage-sider__nav overflow-y-auto">
+    <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-thin">
       <nav
-        class="manage-sider__nav-inner"
-        :class="{ collapsed }"
+        class="py-1 px-2 pb-2.5"
+        :class="{ 'px-1.5': collapsed }"
       >
         <template
-          v-for="g in groups"
+          v-for="(g, gi) in groups"
           :key="g.key"
         >
-          <div class="nav-group">
+          <div class="py-1.5">
+            <div
+              v-if="collapsed && gi > 0"
+              class="h-px mx-5 my-1 bg-gradient-to-r from-transparent via-[rgba(127,127,127,0.18)] to-transparent"
+            />
             <div
               v-if="!collapsed"
-              class="nav-group__header"
+              class="flex-between gap-1.5 pt-0.5 px-1 pb-1.5"
             >
               <button
-                class="nav-group__toggle"
+                class="border-0 bg-transparent text-muted-foreground text-[11px] font-normal tracking-wider uppercase inline-flex items-center gap-1.5 cursor-pointer py-0.5 px-0"
                 type="button"
                 :disabled="g.key === 'group-user'"
                 @click="toggleGroup(g.key)"
@@ -608,8 +612,8 @@ async function go(name: string, query?: Record<string, string>) {
                 <span class="nav-group__label">{{ g.label }}</span>
                 <span
                   v-if="g.key !== 'group-user'"
-                  class="nav-group__chev"
-                  :class="{ open: isGroupExpanded(g.key) }"
+                  class="inline-block opacity-80 transition-transform duration-150"
+                  :class="isGroupExpanded(g.key) ? '-rotate-90' : 'rotate-90'"
                   >›</span
                 >
               </button>
@@ -618,13 +622,13 @@ async function go(name: string, query?: Record<string, string>) {
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <button
-                      class="nav-group__info"
+                      class="size-[22px] rounded-[7px] border border-border bg-transparent text-muted-foreground inline-flex-center cursor-pointer hover:bg-[rgba(127,127,127,0.08)]"
                       type="button"
                       :title="g.hint || '提示'"
                     >
                       <component
                         :is="Info24Filled"
-                        class="nav-group__info-icon"
+                        class="size-3.5"
                       />
                     </button>
                   </TooltipTrigger>
@@ -646,35 +650,41 @@ async function go(name: string, query?: Record<string, string>) {
 
             <div
               v-show="collapsed || g.key === 'group-user' || isGroupExpanded(g.key)"
-              class="nav-group__items"
+              class="flex flex-col gap-0.5"
             >
               <div
                 v-for="item in g.items"
                 :key="item.key"
-                class="nav-item-row"
+                class="group/row"
               >
                 <RouterLink
                   v-if="!item.disabled && item.to"
                   :to="item.to"
-                  class="nav-item"
-                  :class="{ active: activeKey === item.key }"
+                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 no-underline text-foreground border border-transparent bg-transparent transition-colors box-border hover:bg-[rgba(127,127,127,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
+                  :class="{
+                    'bg-[rgba(127,127,127,0.12)] border-[rgba(127,127,127,0.18)]': activeKey === item.key,
+                    'p-0 justify-center': collapsed,
+                  }"
                   :title="collapsed ? item.label : undefined"
                   @click="(ev: any) => onClickNavItem(ev, item)"
                 >
                   <component
                     :is="item.icon"
-                    class="nav-item__icon"
+                    class="size-[18px] shrink-0"
                   />
                   <span
                     v-if="!collapsed"
-                    class="nav-item__label"
+                    class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
                     >{{ item.label }}</span
                   >
 
                   <button
                     v-if="!collapsed"
-                    class="nav-item__fav"
-                    :class="{ active: isFavorite(item.key) }"
+                    class="size-[22px] rounded-[7px] border border-[rgba(127,127,127,0.54)] bg-[rgba(127,127,127,0.04)] inline-flex-center cursor-pointer opacity-50 transition-opacity group-hover/row:opacity-100 group-hover/row:bg-[rgba(127,127,127,0.08)]"
+                    :class="{
+                      'opacity-100 bg-amber-500/25 border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                        isFavorite(item.key),
+                    }"
                     type="button"
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
@@ -691,24 +701,28 @@ async function go(name: string, query?: Record<string, string>) {
 
                 <div
                   v-else
-                  class="nav-item nav-item--disabled"
+                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 text-foreground border border-transparent bg-transparent box-border opacity-50 cursor-pointer hover:bg-[rgba(127,127,127,0.08)] hover:opacity-70"
+                  :class="{ 'p-0 justify-center': collapsed }"
                   :title="item.disabledReason || item.label"
                   role="button"
                   @click="onClickDisabledItem(item)"
                 >
                   <component
                     :is="item.icon"
-                    class="nav-item__icon"
+                    class="size-[18px] shrink-0"
                   />
                   <span
                     v-if="!collapsed"
-                    class="nav-item__label"
+                    class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
                     >{{ item.label }}</span
                   >
                   <button
                     v-if="!collapsed"
-                    class="nav-item__fav"
-                    :class="{ active: isFavorite(item.key) }"
+                    class="size-[22px] rounded-[7px] border border-[rgba(127,127,127,0.54)] bg-[rgba(127,127,127,0.04)] inline-flex-center cursor-pointer opacity-50 transition-opacity group-hover/row:opacity-100 group-hover/row:bg-[rgba(127,127,127,0.08)]"
+                    :class="{
+                      'opacity-100 bg-amber-500/25 border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                        isFavorite(item.key),
+                    }"
                     type="button"
                     :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
@@ -731,9 +745,9 @@ async function go(name: string, query?: Record<string, string>) {
 
     <div
       v-if="!collapsed"
-      class="manage-sider__footer"
+      class="border-t border-border py-2.5 px-3 flex flex-col gap-1.5 items-center"
     >
-      <div class="footer-line">
+      <div class="text-xs text-muted-foreground text-center">
         有更多功能建议请
         <button
           type="button"
@@ -743,7 +757,7 @@ async function go(name: string, query?: Record<string, string>) {
           反馈
         </button>
       </div>
-      <div class="footer-line">
+      <div class="text-xs text-muted-foreground text-center">
         <button
           type="button"
           class="text-xs text-brand hover:underline cursor-pointer bg-transparent border-0 p-0 font-medium"
@@ -755,362 +769,3 @@ async function go(name: string, query?: Record<string, string>) {
     </div>
   </aside>
 </template>
-
-<style scoped>
-.manage-sider {
-  height: 100%;
-  border-right: 1px solid var(--border);
-  background: var(--card);
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  transition: width 180ms var(--vtsuru-bezier, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.manage-sider__top {
-  padding: 9px 12px 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.identity-button {
-  justify-content: flex-start;
-}
-
-.identity-button__label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 20px;
-}
-
-.manage-sider__top-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.manage-sider.collapsed .manage-sider__top-row {
-  justify-content: center;
-}
-
-.sider-top-btn {
-  height: 34px;
-  justify-content: flex-start;
-}
-
-.sider-top-btn--panel {
-  flex: 1;
-  min-width: 0;
-}
-
-.manage-sider.collapsed .sider-top-btn--panel {
-  flex: 0 0 auto;
-}
-
-.sider-top-icon-btn {
-  height: 34px;
-  width: 34px;
-  flex: 0 0 auto;
-}
-
-.manage-sider.collapsed .sider-top-icon-btn {
-  height: 32px;
-  width: 32px;
-}
-
-.manage-sider.collapsed .sider-top-btn {
-  height: 32px;
-  width: 32px;
-  padding: 0;
-  justify-content: center;
-  margin: 0 auto;
-}
-
-.sider-icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-}
-
-.sider-top-label,
-.sider-btn-label {
-  font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
-}
-
-.manage-sider__nav {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--foreground) 28%, transparent) transparent;
-}
-
-.manage-sider__nav::-webkit-scrollbar {
-  width: 6px;
-}
-
-.manage-sider__nav::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.manage-sider__nav::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--foreground) 28%, transparent);
-  border-radius: 999px;
-}
-
-.manage-sider__nav::-webkit-scrollbar-thumb:hover {
-  background-color: color-mix(in srgb, var(--foreground) 50%, transparent);
-}
-
-.manage-sider:hover .manage-sider__nav::-webkit-scrollbar-thumb {
-  background-color: color-mix(in srgb, var(--foreground) 35%, transparent);
-}
-
-.manage-sider__nav-inner {
-  padding: 4px 8px 10px;
-  transition: padding 180ms var(--vtsuru-bezier, cubic-bezier(0.4, 0, 0.2, 1));
-}
-
-.manage-sider__nav-inner.collapsed {
-  padding: 4px 6px 10px;
-}
-
-.nav-group {
-  padding: 6px 0;
-}
-
-.manage-sider.collapsed .nav-group + .nav-group::before {
-  content: '';
-  display: block;
-  height: 1px;
-  background: linear-gradient(to right, transparent, rgba(127, 127, 127, 0.18), transparent);
-  margin: 5px 20px 3px;
-  border-radius: 1px;
-}
-
-.nav-group__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 2px 4px 6px;
-}
-
-.nav-group__toggle {
-  border: none;
-  background: transparent;
-  color: var(--muted-foreground);
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  padding: 2px 0;
-}
-
-.nav-group__chev {
-  display: inline-block;
-  transform: rotate(90deg);
-  transition: transform 120ms ease;
-  opacity: 0.8;
-}
-
-.nav-group__chev.open {
-  transform: rotate(270deg);
-}
-
-.nav-group__info {
-  height: 22px;
-  width: 22px;
-  border-radius: 7px;
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--muted-foreground);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.nav-group__info:hover {
-  background: rgba(127, 127, 127, 0.08);
-}
-
-.nav-group__info-icon {
-  width: 14px;
-  height: 14px;
-}
-
-.danmaku-tooltip {
-  width: 320px;
-  max-width: min(360px, 70vw);
-  padding: 10px 10px;
-  border-radius: 12px;
-}
-
-.danmaku-tooltip__title {
-  font-size: 12px;
-  font-weight: 800;
-  margin-bottom: 6px;
-}
-
-.danmaku-tooltip__body {
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--foreground);
-}
-
-.danmaku-tooltip__body a {
-  color: var(--primary);
-  text-decoration: none;
-}
-
-.danmaku-tooltip__body a:hover {
-  text-decoration: underline;
-}
-
-.nav-group__items {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.nav-item {
-  height: 34px;
-  border-radius: 10px;
-  padding: 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  text-decoration: none;
-  color: var(--foreground);
-  border: 1px solid transparent;
-  background: transparent;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease;
-  box-sizing: border-box;
-}
-
-.manage-sider.collapsed .nav-item {
-  padding: 0;
-  justify-content: center;
-}
-
-.nav-item:hover {
-  background: rgba(127, 127, 127, 0.08);
-}
-
-.nav-item:focus-visible {
-  outline: 2px solid rgba(127, 127, 127, 0.28);
-  outline-offset: 2px;
-}
-
-.nav-item.active {
-  background: rgba(127, 127, 127, 0.12);
-  border-color: rgba(127, 127, 127, 0.18);
-}
-
-.nav-item--disabled {
-  opacity: 0.5;
-  cursor: pointer;
-}
-
-.nav-item--disabled:hover {
-  background: rgba(127, 127, 127, 0.08);
-  opacity: 0.72;
-}
-
-.nav-item__icon {
-  width: 18px;
-  height: 18px;
-  flex: 0 0 auto;
-}
-
-.nav-item__label {
-  font-size: 12px;
-  font-weight: 400;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
-}
-
-.nav-item__fav {
-  height: 22px;
-  width: 22px;
-  border-radius: 7px;
-  border: 1px solid rgba(127, 127, 127, 0.541);
-  background: rgba(127, 127, 127, 0.04);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.5;
-  transition:
-    opacity 120ms ease,
-    background-color 120ms ease,
-    border-color 120ms ease;
-}
-
-.nav-item-row:hover .nav-item__fav,
-.nav-item__fav.active {
-  opacity: 1;
-}
-
-.nav-item-row:hover .nav-item__fav {
-  background: rgba(127, 127, 127, 0.08);
-  border-color: rgba(127, 127, 127, 0.25);
-}
-
-.nav-item__fav:hover {
-  background: rgba(127, 127, 127, 0.08);
-  border-color: rgba(127, 127, 127, 0.22);
-}
-
-.nav-item__fav.active {
-  background: rgba(245, 158, 11, 0.26);
-  border-color: rgba(245, 158, 11, 0.58);
-  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.26);
-}
-
-.nav-item__fav-icon {
-  font-size: 16px;
-  color: var(--muted-foreground);
-  transition: color 120ms ease;
-}
-
-.nav-item__fav-icon.active {
-  color: var(--vtsuru-warning);
-}
-
-.nav-item__fav.active .nav-item__fav-icon {
-  color: rgb(245, 158, 11);
-  filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.28));
-}
-
-.manage-sider__footer {
-  border-top: 1px solid var(--border);
-  padding: 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-}
-
-.footer-line {
-  font-size: 12px;
-  color: var(--muted-foreground);
-  text-align: center;
-}
-</style>

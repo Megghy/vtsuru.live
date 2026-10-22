@@ -53,7 +53,7 @@ function addSlot() {
       <div
         v-for="slot in vts.paramSlots"
         :key="slot.id"
-        class="param-slot space-y-2.5"
+        class="p-2.5 sm:px-3 border border-border rounded-md bg-muted space-y-2.5"
       >
         <div class="flex items-center justify-between gap-2 flex-wrap">
           <div class="flex items-center gap-2">
@@ -210,12 +210,3 @@ function addSlot() {
     </CardContent>
   </Card>
 </template>
-
-<style scoped>
-.param-slot {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--muted);
-}
-</style>

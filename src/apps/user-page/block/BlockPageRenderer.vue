@@ -63,20 +63,22 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 
 <template>
   <div
-    class="page"
+    class="page w-full mx-auto flex flex-col bg-transparent max-w-[var(--vtsuru-page-max-width,820px)] py-[var(--vtsuru-page-spacing)] gap-[var(--vtsuru-page-spacing)] text-foreground font-[family-name:var(--vtsuru-page-font-family,inherit)]"
     :style="userThemeVars"
   >
     <div
       v-for="block in renderedBlocks"
       :key="block.id"
-      class="block"
+      class="block relative min-w-0"
       :class="{
-        layout: block.type === 'layout',
         highlight: !!props.highlightBlockId && props.highlightBlockId === block.id,
-        selected: selectedBlockIdSet.has(block.id),
+        'outline outline-1 outline-offset-2 outline-primary/55': !!props.highlightBlockId && props.highlightBlockId === block.id,
+        'outline outline-2 outline-offset-[3px] outline-primary': selectedBlockIdSet.has(block.id),
         hidden: block.hidden,
         unavailable: props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext),
-        selectable: props.editorMode === 'select',
+        'min-h-11 opacity-40': block.hidden || (props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext)),
+        'cursor-pointer': props.editorMode === 'select',
+        '[&_iframe]:pointer-events-none': props.editorMode === 'select',
       }"
       :data-block-overlay="block.hidden ? '已隐藏' : '当前预览条件下不显示'"
       :data-block-id="block.id"
@@ -110,50 +112,6 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
 </template>
 
 <style scoped>
-.page {
-  width: 100%;
-  font-family: var(--vtsuru-page-font-family);
-  max-width: var(--vtsuru-page-max-width, 820px);
-  margin: 0 auto;
-  padding: var(--vtsuru-page-spacing) 0 var(--vtsuru-page-spacing) 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--vtsuru-page-spacing);
-  color: var(--vtsuru-page-text);
-  background: transparent;
-}
-.block {
-  min-width: 0;
-  position: relative;
-}
-.block.layout {
-  padding: 0;
-}
-
-.block.highlight {
-  outline: 1px solid color-mix(in srgb, var(--vtsuru-page-primary) 55%, transparent);
-  outline-offset: 2px;
-}
-
-.block.selected {
-  outline: 2px solid var(--vtsuru-page-primary);
-  outline-offset: 3px;
-}
-
-.block.selectable {
-  cursor: pointer;
-}
-
-.block.hidden,
-.block.unavailable {
-  min-height: 44px;
-  opacity: 0.42;
-}
-
-.block.selectable :deep(iframe) {
-  pointer-events: none;
-}
-
 .block.hidden::before,
 .block.unavailable::before {
   content: attr(data-block-overlay);
@@ -162,12 +120,11 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   z-index: 4;
   display: grid;
   place-items: center;
-  border: 1px dashed var(--vtsuru-page-primary);
-  color: var(--vtsuru-page-text);
-  background: color-mix(in srgb, var(--vtsuru-page-bg) 72%, transparent);
+  border: 1px dashed var(--primary);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--background) 72%, transparent);
   pointer-events: none;
 }
-
 .block.highlight::after {
   content: attr(data-block-type);
   position: absolute;
@@ -177,9 +134,9 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
   font-size: 11px;
   line-height: 16px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--vtsuru-page-primary) 18%, transparent);
-  border: 1px solid color-mix(in srgb, var(--vtsuru-page-primary) 45%, transparent);
-  color: var(--vtsuru-page-text);
+  background: color-mix(in srgb, var(--primary) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 45%, transparent);
+  color: var(--foreground);
   pointer-events: none;
   user-select: none;
 }

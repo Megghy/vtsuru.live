@@ -77,7 +77,7 @@ function requestSong(song: SongsInfo) {
 </script>
 
 <template>
-  <div class="simple-template">
+  <div class="w-full max-w-[var(--vtsuru-page-max-width,1200px)] mx-auto p-[clamp(12px,2vw,24px)]">
     <div class="simple-layout grid grid-cols-1 md:grid-cols-[280px_1fr] gap-6">
       <aside class="filter-panel">
         <div class="filter-panel-scroll max-h-[85vh] overflow-y-auto pr-2">
@@ -319,11 +319,3 @@ function requestSong(song: SongsInfo) {
   </div>
 </template>
 
-<style scoped>
-.simple-template {
-  width: 100%;
-  max-width: var(--vtsuru-page-max-width, 1200px);
-  margin: 0 auto;
-  padding: clamp(12px, 2vw, 24px);
-}
-</style>

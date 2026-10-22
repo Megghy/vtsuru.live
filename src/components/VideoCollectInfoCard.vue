@@ -47,7 +47,7 @@ function onClick() {
     <Card
       class="transition text-xs"
       :class="{
-        'is-clickable hover:shadow-md cursor-pointer': canClick,
+        'hover:shadow-md cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-primary/40': canClick,
         'border-border/80': bordered !== false,
       }"
       :tabindex="canClick ? 0 : undefined"
@@ -138,9 +138,3 @@ function onClick() {
   </TooltipProvider>
 </template>
 
-<style scoped>
-.is-clickable:focus-visible {
-  outline: 2px solid var(--vtsuru-page-primary-focus, var(--brand));
-  outline-offset: 3px;
-}
-</style>

@@ -44,16 +44,11 @@ const backgrounded = computed(() =>
       >
         {{ title }}
       </AlertTitle>
-      <AlertDescription class="alert-content text-xs">
+      <AlertDescription class="text-xs whitespace-pre-wrap leading-relaxed">
         {{ text }}
       </AlertDescription>
     </Alert>
   </BlockCard>
 </template>
 
-<style scoped>
-.alert-content {
-  white-space: pre-wrap;
-  line-height: 1.6;
-}
-</style>
+

@@ -50,7 +50,7 @@ function onClose() {
           <Button
             variant="ghost"
             size="icon"
-            class="assistant-modal__menu-btn size-7 -ml-1 text-muted-foreground"
+            class="hidden max-[720px]:inline-flex size-7 -ml-1 text-muted-foreground"
             @click="drawerVisible = true"
           >
             <component
@@ -114,7 +114,7 @@ function onClose() {
 
       <div class="assistant-modal__layout flex flex-1 min-h-0 overflow-hidden p-4 gap-3">
         <aside
-          class="assistant-modal__sidebar w-52 shrink-0 border-r border-border/60 pr-3 overflow-hidden flex flex-col"
+          class="max-[720px]:hidden w-52 shrink-0 border-r border-border/60 pr-3 overflow-hidden flex flex-col"
         >
           <AssistantConversationList />
         </aside>
@@ -145,17 +145,3 @@ function onClose() {
   </Sheet>
 </template>
 
-<style scoped>
-.assistant-modal__menu-btn {
-  display: none;
-}
-
-@media (max-width: 720px) {
-  .assistant-modal__menu-btn {
-    display: inline-flex;
-  }
-  .assistant-modal__sidebar {
-    display: none;
-  }
-}
-</style>

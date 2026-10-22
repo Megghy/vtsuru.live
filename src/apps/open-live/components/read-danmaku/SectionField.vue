@@ -11,9 +11,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="section-field">
-    <div class="head">
-      <span class="label">{{ label }}</span>
+  <div class="flex flex-col gap-1.5">
+    <div class="flex items-center gap-1 min-h-[18px]">
+      <span class="text-xs font-medium text-foreground">{{ label }}</span>
       <Popover v-if="hint || $slots.hint">
         <PopoverTrigger as-child>
           <button
@@ -31,42 +31,12 @@ defineProps<{
       </Popover>
       <span
         v-if="value !== undefined"
-        class="value"
+        class="ml-auto text-[11px] text-muted-foreground tabular-nums"
         >{{ value }}</span
       >
     </div>
-    <div class="body">
+    <div class="flex flex-col gap-1.5">
       <slot />
     </div>
   </div>
 </template>
-
-<style scoped>
-.section-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.head {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-height: 18px;
-}
-.label {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-.value {
-  margin-left: auto;
-  font-size: 11px;
-  color: var(--muted-foreground);
-  font-variant-numeric: tabular-nums;
-}
-.body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-</style>

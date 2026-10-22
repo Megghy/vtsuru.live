@@ -86,7 +86,7 @@ function handleMoreAction(key: string) {
 </script>
 
 <template>
-  <div class="builder-toolbar flex items-center justify-end gap-1.5 flex-nowrap">
+  <div class="min-w-0 flex items-center justify-end gap-1.5 flex-nowrap">
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger as-child>
@@ -142,7 +142,7 @@ function handleMoreAction(key: string) {
       <Tooltip>
         <TooltipTrigger as-child>
           <Button
-            class="discard-button"
+            class="max-[760px]:w-7 max-[760px]:p-0"
             variant="outline"
             :disabled="!editor.isDirty.value || editor.isSaving.value"
             aria-label="放弃本地修改"
@@ -152,7 +152,7 @@ function handleMoreAction(key: string) {
               :is="RefreshOutline"
               class="size-4 mr-1"
             />
-            <span class="discard-label">放弃本地修改</span>
+            <span class="max-[760px]:hidden">放弃本地修改</span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>放弃本地修改</TooltipContent>
@@ -270,7 +270,7 @@ function handleMoreAction(key: string) {
     </DropdownMenu>
 
     <span
-      class="save-state text-xs text-muted-foreground"
+      class="inline-block w-[108px] overflow-hidden text-left text-ellipsis whitespace-nowrap text-xs text-muted-foreground max-[760px]:hidden"
       :class="{ 'text-destructive': editor.hasSyncError.value }"
       role="status"
       aria-live="polite"
@@ -280,33 +280,3 @@ function handleMoreAction(key: string) {
     </span>
   </div>
 </template>
-
-<style scoped>
-.builder-toolbar {
-  min-width: 0;
-}
-
-.save-state {
-  display: inline-block;
-  width: 108px;
-  overflow: hidden;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 760px) {
-  .discard-label {
-    display: none;
-  }
-
-  .discard-button {
-    width: 28px;
-    padding: 0;
-  }
-
-  .save-state {
-    display: none;
-  }
-}
-</style>

@@ -81,7 +81,7 @@ const items = computed(() => {
         class="faq-item border border-border rounded-lg bg-card/50 overflow-hidden"
       >
         <AccordionTrigger class="px-3 py-2.5 text-xs font-medium hover:no-underline">
-          <span class="faq-q text-left">
+          <span class="text-left text-[13px] text-foreground">
             {{ it.q || `问题 ${idx + 1}` }}
           </span>
         </AccordionTrigger>
@@ -93,9 +93,4 @@ const items = computed(() => {
   </BlockCard>
 </template>
 
-<style scoped>
-.faq-q {
-  font-size: 13px;
-  color: var(--vtsuru-block-fg);
-}
-</style>
+

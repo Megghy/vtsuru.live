@@ -125,11 +125,11 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
     </Alert>
     <div
       v-else
-      class="bili-card"
+      class="@container rounded-[var(--radius)] overflow-hidden"
     >
       <template v-if="cfg.variant === 'compact'">
-        <div class="bili-compact p-4">
-          <div class="flex items-center justify-between gap-3 compact-header">
+        <div class="p-4">
+          <div class="flex items-center justify-between gap-3 @max-[480px]:items-start @max-[480px]:flex-col">
             <div class="flex items-center gap-2.5 min-w-0">
               <Avatar
                 v-if="cfg.showAvatar && model.face"
@@ -160,7 +160,7 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
 
             <div
               v-if="cfg.showButtons"
-              class="flex items-center gap-2 shrink-0 compact-actions"
+              class="flex items-center gap-2 shrink-0 @max-[480px]:w-full @max-[480px]:flex-wrap @max-[480px]:[&>*]:flex-1 @max-[480px]:[&>*]:min-w-[110px]"
             >
               <Button
                 v-if="model.spaceUrl"
@@ -320,7 +320,7 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
 
         <div
           v-if="cfg.showButtons"
-          class="bili-actions p-4 grid grid-cols-2 gap-3"
+          class="p-4 grid grid-cols-2 gap-3 @max-[480px]:grid-cols-1 @max-[480px]:p-3.5"
         >
           <Button
             v-if="model.spaceUrl"
@@ -360,29 +360,4 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
   </BlockCard>
 </template>
 
-<style scoped>
-.bili-card {
-  container-type: inline-size;
-  border-radius: var(--vtsuru-page-radius);
-  overflow: hidden;
-}
 
-@container (max-width: 480px) {
-  .compact-header {
-    align-items: flex-start !important;
-    flex-direction: column;
-  }
-  .compact-actions {
-    width: 100%;
-    flex-wrap: wrap;
-  }
-  .compact-actions > * {
-    flex: 1;
-    min-width: 110px;
-  }
-  .bili-actions {
-    grid-template-columns: 1fr;
-    padding: 14px;
-  }
-}
-</style>

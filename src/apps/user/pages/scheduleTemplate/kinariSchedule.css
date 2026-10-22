@@ -10,7 +10,7 @@
   --schedule-toolbar-action-bg: #23435e;
   --schedule-toolbar-action-fg: #fffdf5;
   --schedule-toolbar-label: '今週の放送案内';
-  --schedule-toolbar-radius: var(--vtsuru-page-radius, 4px);
+  --schedule-toolbar-radius: var(--radius);
   --schedule-toolbar-shadow: 0 14px 30px -22px rgb(35 67 94 / 42%);
 
   container: kinari / inline-size;
@@ -69,8 +69,8 @@
   background-position: center;
   background-size: cover;
   border: 1px solid color-mix(in srgb, var(--kinari-indigo) 24%, transparent);
-  border-radius: var(--vtsuru-page-radius, 4px);
-  box-shadow: var(--vtsuru-page-shadow, 0 18px 48px rgba(39, 55, 63, 0.14));
+  border-radius: var(--radius);
+  box-shadow: var(--ui-shadow, 0 18px 48px rgba(39, 55, 63, 0.14));
 }
 
 .kinari-board.has-background::before {

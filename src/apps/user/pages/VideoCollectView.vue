@@ -47,7 +47,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="video-collect-view">
+  <div class="flex flex-col gap-[var(--vtsuru-page-spacing)]">
     <Card>
       <CardHeader class="py-3 px-4">
         <CardTitle class="text-base font-medium">视频征集</CardTitle>
@@ -81,11 +81,4 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-.video-collect-view {
-  display: flex;
-  flex-direction: column;
-  gap: var(--vtsuru-page-spacing);
-}
 
-</style>

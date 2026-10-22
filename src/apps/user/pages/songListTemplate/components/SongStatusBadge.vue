@@ -42,25 +42,11 @@ const status = computed(() => {
     </Badge>
     <span
       v-else
-      class="song-status-badge text"
-      :class="status"
+      class="text-xs font-semibold"
+      :class="status === 'singing' ? 'text-[var(--vtsuru-warning,#f59e0b)]' : 'text-[var(--vtsuru-success,#22c55e)]'"
     >
       {{ status === 'singing' ? '演唱中' : '排队中' }}
     </span>
   </template>
 </template>
 
-<style scoped>
-.song-status-badge.text {
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.song-status-badge.text.singing {
-  color: var(--song-warning, #f0a020);
-}
-
-.song-status-badge.text.queued {
-  color: var(--song-success, #18a058);
-}
-</style>

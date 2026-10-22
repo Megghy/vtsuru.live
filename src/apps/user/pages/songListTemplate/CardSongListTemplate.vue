@@ -61,7 +61,7 @@ function getMetaText(song: SongsInfo) {
 
 <template>
   <TooltipProvider>
-    <div class="song-list-card-template">
+    <div class="w-full max-w-[var(--vtsuru-page-max-width,1180px)] mx-auto p-[clamp(12px,2vw,24px)]">
       <div class="search-row flex gap-2 mb-3">
         <div class="relative search-field flex-1">
           <component
@@ -218,11 +218,3 @@ function getMetaText(song: SongsInfo) {
   </TooltipProvider>
 </template>
 
-<style scoped>
-.song-list-card-template {
-  width: 100%;
-  max-width: var(--vtsuru-page-max-width, 1180px);
-  margin: 0 auto;
-  padding: clamp(12px, 2vw, 24px);
-}
-</style>

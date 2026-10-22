@@ -28,23 +28,21 @@ describe('getUserPageThemeCssVars 主色', () => {
   it('暗色模式下把用户黑色主色修正为可读主色', () => {
     const vars = getUserPageThemeCssVars({ primaryColor: '#000000' }, true)
 
-    expect(contrast(vars, '--vtsuru-page-primary', DARK_SURFACE)).toBeGreaterThanOrEqual(4.5)
-    expect(sameColor(vars['--vtsuru-page-primary-readable'], vars['--vtsuru-page-primary'])).toBe(true)
-    expect(sameColor(vars['--brand'], vars['--vtsuru-page-primary'])).toBe(true)
-    expect(vars['--vtsuru-page-canvas-accent']).not.toBe('')
+    expect(contrast(vars, '--primary', DARK_SURFACE)).toBeGreaterThanOrEqual(4.5)
+    expect(sameColor(vars['--brand'], vars['--primary'])).toBe(true)
   })
 
   it('暗色模式下不改动仍然可读的主色', () => {
     const vars = getUserPageThemeCssVars({ primaryColor: '#4ea1ff' }, true)
 
-    expect(sameColor(vars['--vtsuru-page-primary'], '#4ea1ff')).toBe(true)
+    expect(sameColor(vars['--primary'], '#4ea1ff')).toBe(true)
   })
 
   it('亮色模式下黑色主色保持原样', () => {
     const vars = getUserPageThemeCssVars({ primaryColor: '#000000' }, false)
 
-    expect(sameColor(vars['--vtsuru-page-primary'], '#000000')).toBe(true)
-    expect(contrast(vars, '--vtsuru-page-primary', LIGHT_SURFACE)).toBeGreaterThanOrEqual(4.5)
+    expect(sameColor(vars['--primary'], '#000000')).toBe(true)
+    expect(contrast(vars, '--primary', LIGHT_SURFACE)).toBeGreaterThanOrEqual(4.5)
   })
 
   it('主色前景与主色底保持可读对比度', () => {
@@ -55,7 +53,7 @@ describe('getUserPageThemeCssVars 主色', () => {
       wcagContrast(parseRgb(light['--primary-foreground'])!, parseRgb(light['--primary'])!),
     ).toBeGreaterThanOrEqual(4.5)
     expect(
-      wcagContrast(parseRgb(dark['--primary-foreground'])!, parseRgb(dark['--vtsuru-page-primary'])!),
+      wcagContrast(parseRgb(dark['--primary-foreground'])!, parseRgb(dark['--primary'])!),
     ).toBeGreaterThanOrEqual(4.5)
   })
 })
