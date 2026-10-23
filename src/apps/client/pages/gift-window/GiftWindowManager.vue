@@ -717,10 +717,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   :model-value="giftWindow.settings.x"
                   :min="0"
                   class="w-full"
-                  @update:model-value="
-                    giftWindow.settings.x = $event || 0
-                    giftWindow.updateWindowPosition()
-                  "
+                  @update:model-value="((giftWindow.settings.x = $event || 0), giftWindow.updateWindowPosition())"
                 />
               </div>
               <div class="space-y-1">
@@ -729,10 +726,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   :model-value="giftWindow.settings.y"
                   :min="0"
                   class="w-full"
-                  @update:model-value="
-                    giftWindow.settings.y = $event || 0
-                    giftWindow.updateWindowPosition()
-                  "
+                  @update:model-value="((giftWindow.settings.y = $event || 0), giftWindow.updateWindowPosition())"
                 />
               </div>
             </div>

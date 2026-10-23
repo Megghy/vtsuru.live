@@ -122,10 +122,7 @@ async function updateSettings() {
                 :class="
                   sortType === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
                 "
-                @click="
-                  sortType = opt.value
-                  updateSettings()
-                "
+                @click="((sortType = opt.value), updateSettings())"
               >
                 {{ opt.label }}
               </button>

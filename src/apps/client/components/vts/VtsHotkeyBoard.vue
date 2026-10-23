@@ -180,10 +180,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
         <div class="flex items-center gap-1.5 cursor-pointer select-none">
           <Switch
             :checked="safeClick"
-            @update:checked="
-              safeClick = $event
-              disarm()
-            "
+            @update:checked="((safeClick = $event), disarm())"
           />
           <span class="text-xs text-muted-foreground">防误触</span>
         </div>

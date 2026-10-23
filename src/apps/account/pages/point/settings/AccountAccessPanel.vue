@@ -353,11 +353,7 @@ defineExpose({ reset })
       <DialogFooter>
         <Button
           class="flex items-center gap-1"
-          @click="
-            copyToClipboard(refreshedLink)
-            toast.success('已复制新链接')
-            refreshedLink = ''
-          "
+          @click="(copyToClipboard(refreshedLink), toast.success('已复制新链接'), (refreshedLink = ''))"
         >
           <component
             :is="Copy24Regular"

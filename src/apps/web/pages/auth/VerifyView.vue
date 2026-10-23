@@ -10,7 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
 
 type Phase = 'checking' | 'success' | 'need-login' | 'error'
-const PHASES: readonly Phase[] = new Set(['checking', 'success', 'need-login', 'error'])
+const PHASES = new Set<Phase>(['checking', 'success', 'need-login', 'error'])
 
 const route = useRoute()
 const router = useRouter()

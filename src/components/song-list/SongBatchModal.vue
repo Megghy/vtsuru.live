@@ -312,10 +312,7 @@ defineExpose({ open, close })
           <div class="flex justify-end">
             <Button
               variant="destructive"
-              @click="
-                emit('delete')
-                close()
-              "
+              @click="(emit('delete'), close())"
             >
               确认删除
             </Button>

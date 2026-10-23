@@ -92,10 +92,7 @@ onMounted(async () => {
       <CardContent class="p-3">
         <Select
           :model-value="selectedStreamerId ? String(selectedStreamerId) : 'all'"
-          @update:model-value="
-            selectedStreamerId = $event === 'all' ? null : Number($event)
-            loadData()
-          "
+          @update:model-value="((selectedStreamerId = $event === 'all' ? null : Number($event)), loadData())"
         >
           <SelectTrigger class="w-full sm:w-80">
             <SelectValue placeholder="选择主播后，可单独查看/修改积分规则与筛选统计" />

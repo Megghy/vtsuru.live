@@ -355,10 +355,7 @@ onMounted(async () => {
               :total="commentTotal"
               :items-per-page="ps"
               :page="pn"
-              @update:page="
-                pn = $event
-                refreshComments()
-              "
+              @update:page="((pn = $event), refreshComments())"
             />
           </div>
 
@@ -389,10 +386,7 @@ onMounted(async () => {
               :total="commentTotal"
               :items-per-page="ps"
               :page="pn"
-              @update:page="
-                pn = $event
-                refreshComments()
-              "
+              @update:page="((pn = $event), refreshComments())"
             />
           </div>
         </CardContent>

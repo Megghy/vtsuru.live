@@ -653,10 +653,7 @@ watch(
                     <input
                       type="radio"
                       :checked="!setting.useDailyFirstGiftPercent"
-                      @change="
-                        setting.useDailyFirstGiftPercent = false
-                        updateSettings()
-                      "
+                      @change="((setting.useDailyFirstGiftPercent = false), updateSettings())"
                     />
                     <span>固定积分</span>
                   </label>
@@ -664,10 +661,7 @@ watch(
                     <input
                       type="radio"
                       :checked="setting.useDailyFirstGiftPercent"
-                      @change="
-                        setting.useDailyFirstGiftPercent = true
-                        updateSettings()
-                      "
+                      @change="((setting.useDailyFirstGiftPercent = true), updateSettings())"
                     />
                     <span>按礼物价值比例</span>
                   </label>
@@ -719,10 +713,7 @@ watch(
                 <input
                   type="radio"
                   :checked="setting.giftAllowType === GiftPointType.WhiteList"
-                  @change="
-                    setting.giftAllowType = GiftPointType.WhiteList
-                    updateSettings()
-                  "
+                  @change="((setting.giftAllowType = GiftPointType.WhiteList), updateSettings())"
                 />
                 <span>仅包含自定义列表中的礼物</span>
               </label>
@@ -730,10 +721,7 @@ watch(
                 <input
                   type="radio"
                   :checked="setting.giftAllowType === GiftPointType.All"
-                  @change="
-                    setting.giftAllowType = GiftPointType.All
-                    updateSettings()
-                  "
+                  @change="((setting.giftAllowType = GiftPointType.All), updateSettings())"
                 />
                 <span>包含所有礼物</span>
               </label>

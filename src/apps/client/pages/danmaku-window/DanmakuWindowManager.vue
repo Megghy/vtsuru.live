@@ -368,10 +368,7 @@ function toggleFilterType(val: string, checked: boolean) {
                     size="xs"
                     variant="secondary"
                     class="h-6 text-[11px] gap-1 shrink-0"
-                    @click="
-                      danmakuWindow.resetLiveStats()
-                      toast.success('实时统计数据已重置')
-                    "
+                    @click="(danmakuWindow.resetLiveStats(), toast.success('实时统计数据已重置'))"
                   >
                     <ArrowReset24Regular class="size-3" />
                     重置统计
@@ -549,8 +546,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   class="w-full"
                   @update:model-value="
-                    danmakuWindow.danmakuWindowSetting.x = $event || 0
-                    danmakuWindow.updateWindowPosition()
+                    ((danmakuWindow.danmakuWindowSetting.x = $event || 0), danmakuWindow.updateWindowPosition())
                   "
                 />
               </div>
@@ -561,8 +557,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   class="w-full"
                   @update:model-value="
-                    danmakuWindow.danmakuWindowSetting.y = $event || 0
-                    danmakuWindow.updateWindowPosition()
+                    ((danmakuWindow.danmakuWindowSetting.y = $event || 0), danmakuWindow.updateWindowPosition())
                   "
                 />
               </div>

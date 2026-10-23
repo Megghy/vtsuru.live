@@ -454,10 +454,7 @@ onMounted(() => {
                     :model-value="serverSetting.baseCheckInPoints"
                     :min="0"
                     class="w-32"
-                    @update:model-value="
-                      serverSetting.baseCheckInPoints = $event || 0
-                      updateServerSettings()
-                    "
+                    @update:model-value="((serverSetting.baseCheckInPoints = $event || 0), updateServerSettings())"
                   />
                 </div>
 
@@ -479,10 +476,7 @@ onMounted(() => {
                       :model-value="serverSetting.bonusPointsPerDay"
                       :min="0"
                       class="w-28"
-                      @update:model-value="
-                        serverSetting.bonusPointsPerDay = $event || 0
-                        updateServerSettings()
-                      "
+                      @update:model-value="((serverSetting.bonusPointsPerDay = $event || 0), updateServerSettings())"
                     />
                   </div>
                   <div class="flex items-center justify-between p-2 rounded border bg-card">
@@ -491,10 +485,7 @@ onMounted(() => {
                       :model-value="serverSetting.maxBonusPoints"
                       :min="0"
                       class="w-28"
-                      @update:model-value="
-                        serverSetting.maxBonusPoints = $event || 0
-                        updateServerSettings()
-                      "
+                      @update:model-value="((serverSetting.maxBonusPoints = $event || 0), updateServerSettings())"
                     />
                   </div>
                 </div>

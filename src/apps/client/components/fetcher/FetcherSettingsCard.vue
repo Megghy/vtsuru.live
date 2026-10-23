@@ -120,10 +120,7 @@ async function handleForceRestartDanmaku() {
             <Switch
               :checked="settings.settings.enableEventFetcher"
               :disabled="webfetcher.state === 'connecting'"
-              @update:checked="
-                settings.settings.enableEventFetcher = $event
-                handleToggleEventFetcher($event)
-              "
+              @update:checked="((settings.settings.enableEventFetcher = $event), handleToggleEventFetcher($event))"
             />
           </div>
         </div>

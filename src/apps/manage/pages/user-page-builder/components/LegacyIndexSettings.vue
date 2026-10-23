@@ -383,10 +383,7 @@ await loadIndexInfo()
         <Checkbox
           :checked="accountInfo.settings.index.allowDisplayInIndex"
           :disabled="isLoading"
-          @update:checked="
-            accountInfo.settings.index.allowDisplayInIndex = $event
-            updateUserIndexSettings()
-          "
+          @update:checked="((accountInfo.settings.index.allowDisplayInIndex = $event), updateUserIndexSettings())"
         />
         允许显示在网站主页与直播列表
       </label>

@@ -236,10 +236,7 @@ function handleSubAreaChange(val: any) {
               placeholder="输入直播间标题"
               maxlength="40"
               :class="c.titleChanged.value ? 'border-amber-500/50' : ''"
-              @update:model-value="
-                c.liveTitle.value = String($event)
-                c.markTitleEdited()
-              "
+              @update:model-value="((c.liveTitle.value = String($event)), c.markTitleEdited())"
             />
           </div>
 

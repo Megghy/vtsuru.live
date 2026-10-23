@@ -301,13 +301,7 @@ const handleToggleConnect = () => {
             :variant="scene === obsStore.currentObsScene ? 'default' : 'outline'"
             class="text-xs h-7 px-2.5"
             :disabled="obsStore.isSwitchingScene"
-            @click="
-              () => {
-                if (!obsStore.isSwitchingScene && scene !== obsStore.currentObsScene) {
-                  obsStore.switchToScene(scene)
-                }
-              }
-            "
+            @click="scene !== obsStore.currentObsScene && obsStore.switchToScene(scene)"
           >
             {{ scene }}
           </Button>
@@ -332,10 +326,7 @@ const handleToggleConnect = () => {
             <span class="text-xs text-foreground">启用自动场景切换</span>
             <Switch
               :checked="obsStore.obsSceneConfig.autoSwitchEnabled"
-              @update:checked="
-                obsStore.obsSceneConfig.autoSwitchEnabled = $event
-                obsStore.saveSceneConfig()
-              "
+              @update:checked="((obsStore.obsSceneConfig.autoSwitchEnabled = $event), obsStore.saveSceneConfig())"
             />
           </div>
 
@@ -348,10 +339,7 @@ const handleToggleConnect = () => {
             </div>
             <Switch
               :checked="obsStore.obsSceneConfig.autoToggleStream"
-              @update:checked="
-                obsStore.obsSceneConfig.autoToggleStream = $event
-                obsStore.saveSceneConfig()
-              "
+              @update:checked="((obsStore.obsSceneConfig.autoToggleStream = $event), obsStore.saveSceneConfig())"
             />
           </div>
         </div>

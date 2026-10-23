@@ -791,10 +791,7 @@ const requestClose = () => {
             <label class="text-muted-foreground text-[11px]">省份</label>
             <Select
               :model-value="currentAddress.province || ''"
-              @update:model-value="
-                currentAddress.province = String($event)
-                onAreaSelectChange(0)
-              "
+              @update:model-value="((currentAddress.province = String($event)), onAreaSelectChange(0))"
             >
               <SelectTrigger>
                 <SelectValue placeholder="省份" />
@@ -817,10 +814,7 @@ const requestClose = () => {
             <Select
               :model-value="currentAddress.city || ''"
               :disabled="!currentAddress.province"
-              @update:model-value="
-                currentAddress.city = String($event)
-                onAreaSelectChange(1)
-              "
+              @update:model-value="((currentAddress.city = String($event)), onAreaSelectChange(1))"
             >
               <SelectTrigger>
                 <SelectValue placeholder="城市" />
@@ -843,10 +837,7 @@ const requestClose = () => {
             <Select
               :model-value="currentAddress.district || ''"
               :disabled="!currentAddress.city"
-              @update:model-value="
-                currentAddress.district = String($event)
-                onAreaSelectChange(2)
-              "
+              @update:model-value="((currentAddress.district = String($event)), onAreaSelectChange(2))"
             >
               <SelectTrigger>
                 <SelectValue placeholder="区/县" />
@@ -982,14 +973,7 @@ const requestClose = () => {
         >
           关闭
         </Button>
-        <Button
-          @click="
-            showSuccessModal = false
-            router.push({ name: 'bili-user-orders' })
-          "
-        >
-          查看我的订单
-        </Button>
+        <Button @click="((showSuccessModal = false), router.push({ name: 'bili-user-orders' }))"> 查看我的订单 </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>

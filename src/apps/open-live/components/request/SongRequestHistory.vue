@@ -121,10 +121,7 @@ function getStatusBadge(status: SongRequestStatus) {
           :value="songRequest.filterSongName"
           placeholder="搜索歌曲..."
           class="flex-1"
-          @input="
-            songRequest.filterSongName = ($event.target as HTMLInputElement).value
-            currentPage = 1
-          "
+          @input="((songRequest.filterSongName = $event.target.value), (currentPage = 1))"
         />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
           <Checkbox
@@ -140,10 +137,7 @@ function getStatusBadge(status: SongRequestStatus) {
           :value="songRequest.filterName"
           placeholder="搜索用户..."
           class="flex-1"
-          @input="
-            songRequest.filterName = ($event.target as HTMLInputElement).value
-            currentPage = 1
-          "
+          @input="((songRequest.filterName = $event.target.value), (currentPage = 1))"
         />
         <label class="flex items-center gap-1 cursor-pointer text-xs shrink-0 select-none">
           <Checkbox

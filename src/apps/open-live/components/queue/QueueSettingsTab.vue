@@ -60,10 +60,7 @@ function onChange() {
                 type="button"
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'"
-                @click="
-                  settings.matchType = KeywordMatchType.Full
-                  onChange()
-                "
+                @click="((settings.matchType = KeywordMatchType.Full), onChange())"
               >
                 完全
               </Button>
@@ -71,10 +68,7 @@ function onChange() {
                 type="button"
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'"
-                @click="
-                  settings.matchType = KeywordMatchType.Contains
-                  onChange()
-                "
+                @click="((settings.matchType = KeywordMatchType.Contains), onChange())"
               >
                 包含
               </Button>
@@ -82,10 +76,7 @@ function onChange() {
                 type="button"
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'"
-                @click="
-                  settings.matchType = KeywordMatchType.Regex
-                  onChange()
-                "
+                @click="((settings.matchType = KeywordMatchType.Regex), onChange())"
               >
                 正则
               </Button>
@@ -244,10 +235,7 @@ function onChange() {
                 type="button"
                 class="px-2.5"
                 :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'"
-                @click="
-                  settings.giftFilterType = QueueGiftFilterType.And
-                  onChange()
-                "
+                @click="((settings.giftFilterType = QueueGiftFilterType.And), onChange())"
               >
                 需同时满足名称和价值
               </Button>
@@ -255,10 +243,7 @@ function onChange() {
                 type="button"
                 class="px-2.5"
                 :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'"
-                @click="
-                  settings.giftFilterType = QueueGiftFilterType.Or
-                  onChange()
-                "
+                @click="((settings.giftFilterType = QueueGiftFilterType.Or), onChange())"
               >
                 满足名称或价值之一
               </Button>

@@ -312,10 +312,7 @@ async function selectFolder() {
               <Button
                 size="xs"
                 variant="outline"
-                @click="
-                  batchEditFolderSongs('author', [batchAuthorInput])
-                  batchAuthorInput = ''
-                "
+                @click="(batchEditFolderSongs('author', [batchAuthorInput]), (batchAuthorInput = ''))"
               >
                 设置作者
               </Button>
@@ -330,10 +327,7 @@ async function selectFolder() {
               <Button
                 size="xs"
                 variant="outline"
-                @click="
-                  batchEditFolderSongs('language', [batchLanguageInput])
-                  batchLanguageInput = ''
-                "
+                @click="(batchEditFolderSongs('language', [batchLanguageInput]), (batchLanguageInput = ''))"
               >
                 设置语言
               </Button>
@@ -348,10 +342,7 @@ async function selectFolder() {
               <Button
                 size="xs"
                 variant="outline"
-                @click="
-                  batchEditFolderSongs('tags', [batchTagInput])
-                  batchTagInput = ''
-                "
+                @click="(batchEditFolderSongs('tags', [batchTagInput]), (batchTagInput = ''))"
               >
                 设置标签
               </Button>

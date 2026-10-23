@@ -16,6 +16,7 @@
     "format:vize": "vize fmt --check --no-config",
     "typecheck:vize": "vize check --no-config",
     "api:gen": "node ./node_modules/orval/dist/bin/orval.mjs",
+    "api:check": "bun scripts/check-api-gen.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "oxlint --ignore-path .oxlintignore",

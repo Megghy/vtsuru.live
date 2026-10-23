@@ -529,10 +529,7 @@ onMounted(async () => {
                           variant="ghost"
                           size="xs"
                           class="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
-                          @click="
-                            currentUser = user
-                            showModal = true
-                          "
+                          @click="((currentUser = user), (showModal = true))"
                         >
                           详情
                         </Button>
@@ -568,10 +565,7 @@ onMounted(async () => {
                 <div class="w-28">
                   <Select
                     :model-value="String(ps)"
-                    @update:model-value="
-                      ps = Number($event)
-                      pn = 1
-                    "
+                    @update:model-value="((ps = Number($event)), (pn = 1))"
                   >
                     <SelectTrigger size="xs">
                       <SelectValue />

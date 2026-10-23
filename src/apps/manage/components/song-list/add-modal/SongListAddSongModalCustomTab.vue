@@ -133,10 +133,7 @@ async function addCustomSong() {
         <Input
           v-model="authorInput"
           placeholder="输入作者后按回车新增"
-          @keyup.enter="
-            addTagItem('author', authorInput)
-            authorInput = ''
-          "
+          @keyup.enter="(addTagItem('author', authorInput), (authorInput = ''))"
         />
         <div
           v-if="addSongModel.author && addSongModel.author.length > 0"
@@ -167,10 +164,7 @@ async function addCustomSong() {
             v-model="languageInput"
             placeholder="输入语言后回车"
             class="flex-1"
-            @keyup.enter="
-              addTagItem('language', languageInput)
-              languageInput = ''
-            "
+            @keyup.enter="(addTagItem('language', languageInput), (languageInput = ''))"
           />
           <div class="w-32">
             <Select @update:model-value="addTagItem('language', String($event))">
@@ -216,10 +210,7 @@ async function addCustomSong() {
         <Input
           v-model="tagInput"
           placeholder="输入标签后按回车新增"
-          @keyup.enter="
-            addTagItem('tags', tagInput)
-            tagInput = ''
-          "
+          @keyup.enter="(addTagItem('tags', tagInput), (tagInput = ''))"
         />
         <div
           v-if="addSongModel.tags && addSongModel.tags.length > 0"
