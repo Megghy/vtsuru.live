@@ -96,7 +96,7 @@ function isTagBlocked(tagType: ViolationTypes): boolean {
 }
 
 function toggleBlockTag(tagType: ViolationTypes) {
-  if (!accountInfo.value?.settings?.questionBox) return
+  if (useQB.isLoading || !accountInfo.value?.settings?.questionBox) return
   const qb = accountInfo.value.settings.questionBox
   let current = qb.blockedTags
     ? [...qb.blockedTags]
@@ -166,7 +166,7 @@ function addTag() {
               :disabled="useQB.isLoading"
               @update:model-value="saveQuestionBoxSettings"
             />
-            <span>允许匿名提问（关闭后必须以登录/认证身份实名提交）</span>
+            <span>允许已登录用户隐藏身份</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
@@ -257,9 +257,7 @@ function addTag() {
                 <Checkbox
                   :checked="isTagBlocked(tag.type)"
                   :disabled="useQB.isLoading"
-                  class="mt-0.5"
-                  @click.stop
-                  @update:checked="() => toggleBlockTag(tag.type)"
+                  class="mt-0.5 pointer-events-none"
                 />
                 <div class="flex-1 min-w-0">
                   <div class="text-xs font-medium text-foreground leading-none">{{ tag.label }}</div>

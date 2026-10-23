@@ -351,12 +351,6 @@ async function submit() {
             <span>对方已禁止未登录用户提问，请先登录或完成 B 站认证</span>
           </div>
           <div
-            v-else-if="!allowAnonymous"
-            class="text-xs text-destructive"
-          >
-            <span>对方已禁止匿名提问，请先登录以实名提交</span>
-          </div>
-          <div
             v-else
             class="guest-fields"
           >

@@ -42,6 +42,32 @@ describe('Checkbox and Switch compatibility', () => {
     expect(checked.value).toBe(false)
   })
 
+  it('renders initial :checked=true on Checkbox', () => {
+    const wrapper = mount({
+      components: { Checkbox },
+      template: '<Checkbox :checked="true" />',
+    })
+
+    expect(wrapper.find('button').attributes('aria-checked')).toBe('true')
+    expect(wrapper.find('button').attributes('data-state')).toBe('checked')
+  })
+
+  it('reflects parent :checked changes on Checkbox', async () => {
+    const checked = ref(false)
+    const wrapper = mount({
+      components: { Checkbox },
+      setup() {
+        return { checked }
+      },
+      template: '<Checkbox :checked="checked" />',
+    })
+
+    expect(wrapper.find('button').attributes('aria-checked')).toBe('false')
+    checked.value = true
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('button').attributes('aria-checked')).toBe('true')
+  })
+
   it('supports :checked and @update:checked on Checkbox', async () => {
     const checked = ref(false)
     let emitted = false
@@ -99,6 +125,16 @@ describe('Checkbox and Switch compatibility', () => {
 
     await button.trigger('click')
     expect(active.value).toBe(false)
+  })
+
+  it('renders initial :checked=true on Switch', () => {
+    const wrapper = mount({
+      components: { Switch },
+      template: '<Switch :checked="true" />',
+    })
+
+    expect(wrapper.find('button').attributes('aria-checked')).toBe('true')
+    expect(wrapper.find('button').attributes('data-state')).toBe('checked')
   })
 
   it('supports :checked and @update:checked on Switch', async () => {

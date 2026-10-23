@@ -35,6 +35,17 @@ function emptyDraft(): QuestionDraft {
   return { message: '', tag: null, anonymousName: '', anonymousEmail: '', isAnonymous: true, allowPublic: true }
 }
 
+export function isQuestionSubmitAllowed(params: {
+  allowUnregistedUser: boolean
+  allowAnonymous: boolean
+  isIdentified: boolean
+  isAnonymous: boolean
+}): boolean {
+  if (!params.allowUnregistedUser && !params.isIdentified) return false
+  if (!params.allowAnonymous && params.isIdentified && params.isAnonymous) return false
+  return true
+}
+
 export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitted: () => void) {
   const accountInfo = useAccount()
   const biliAuth = useBiliAuth()
@@ -108,8 +119,12 @@ export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitt
       characterCount.value >= 3 &&
       cooldownSeconds.value === 0 &&
       isValidEmail(draft.value.anonymousEmail) &&
-      (allowUnregistedUser.value || isIdentified.value) &&
-      (allowAnonymous.value || isIdentified.value),
+      isQuestionSubmitAllowed({
+        allowUnregistedUser: allowUnregistedUser.value,
+        allowAnonymous: allowAnonymous.value,
+        isIdentified: isIdentified.value,
+        isAnonymous: draft.value.isAnonymous,
+      }),
   )
 
   function isValidEmail(email: string) {

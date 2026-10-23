@@ -56,6 +56,7 @@ const thumbSizes: Record<string, string> = {
 <template>
   <SwitchRoot
     v-bind="forwarded"
+    :model-value="resolvedModelValue"
     @update:model-value="handleUpdateModelValue"
     :class="
       cn(

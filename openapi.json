@@ -27588,6 +27588,7 @@
           "jianzhangPoint",
           "tiduPoint",
           "zongduPoint",
+          "giftPercentMap",
           "giftPointPercent",
           "giftAllowType",
           "shouldDiscontinueWhenSoldOut",
@@ -27633,8 +27634,7 @@
             "additionalProperties": {
               "type": "number",
               "format": "double"
-            },
-            "nullable": true
+            }
           },
           "scPointPercent": {
             "type": "number",

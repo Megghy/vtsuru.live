@@ -44,6 +44,7 @@ function handleUpdateModelValue(val: boolean | 'indeterminate') {
 <template>
   <CheckboxRoot
     v-bind="forwarded"
+    :model-value="resolvedModelValue"
     @update:model-value="handleUpdateModelValue"
     :class="
       cn(

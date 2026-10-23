@@ -226,7 +226,7 @@ async function SaveComboSetting() {
                     }
                   "
                 />
-                <span>允许匿名提问（关闭后必须实名）</span>
+                <span>允许已登录用户隐藏身份</span>
               </label>
             </div>
           </div>
