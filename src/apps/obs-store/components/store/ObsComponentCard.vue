@@ -154,7 +154,9 @@ async function handleCopy() {
         class="flex items-center gap-1.5 text-[11px] bg-muted px-2 py-1 rounded text-muted-foreground mt-auto"
       >
         <span class="opacity-80">推荐尺寸:</span>
-        <span class="font-medium text-foreground">{{ item.defaultResolution.width }} × {{ item.defaultResolution.height }} px</span>
+        <span class="font-medium text-foreground"
+          >{{ item.defaultResolution.width }} × {{ item.defaultResolution.height }} px</span
+        >
       </div>
     </div>
 

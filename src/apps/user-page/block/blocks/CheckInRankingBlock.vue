@@ -3,8 +3,8 @@ import { OpenOutline, RefreshOutline, TrophyOutline } from '@vicons/ionicons5'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type { ResponseUserCheckInModel, ResponseUserInfo } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import { fetchPublicCheckInRanking } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
@@ -17,7 +17,7 @@ import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
 }>()
 
 const values = computed<Record<string, unknown>>(() =>
@@ -29,7 +29,7 @@ const count = computed<3 | 10>(() => (values.value.count === 10 ? 10 : 3))
 const showMonthly = computed(() => values.value.showMonthly !== false)
 const showTotal = computed(() => values.value.showTotal === true)
 const enabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.CheckInRanking))
-const query = useUserPageRuntimeQuery<CheckInRankingInfo[]>({
+const query = useUserPageRuntimeQuery<ResponseUserCheckInModel[]>({
   key: () => `check-in-ranking:${props.userInfo?.id ?? 0}:${count.value}`,
   ttlMs: 60_000,
   loader: (signal) => fetchPublicCheckInRanking(props.userInfo!.id, count.value, { signal }),
@@ -174,5 +174,3 @@ watch(
     </div>
   </BlockCard>
 </template>
-
-

@@ -2,7 +2,7 @@
 import { Clock24Regular, Ribbon24Filled, Trophy24Filled } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { VoteOBSData, VoteOptionDto } from '@/api/api-models'
+import type { VoteOBSData, VoteOptionDto } from '@/api/generated/model'
 import { formatCountdown, remainingMs } from '@/shared/utils/countdown'
 import { useVoteCardMotion } from '@/shared/utils/voteCardMotion'
 import { getVoteStandings, voteOutcomeLabel } from '@/shared/utils/voteStandings'

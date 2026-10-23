@@ -3,8 +3,9 @@ import { ArrowDown24Filled, ArrowUp24Filled, Delete24Filled, NotepadEdit20Filled
 import type { VNodeChild } from 'vue'
 import { computed, ref } from 'vue'
 
-import type { SongRequestInfo, SongsInfo } from '@/api/api-models'
-import { SongFrom, SongRequestStatus } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform, SongRequestStatus } from '@/api/generated/model'
 import SongBatchModal from '@/components/song-list/SongBatchModal.vue'
 import SongEditModal from '@/components/song-list/SongEditModal.vue'
 import { useSongList } from '@/components/song-list/useSongList'
@@ -23,10 +24,10 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import { GetPlayButton } from '@/shared/utils'
 
 const props = defineProps<{
-  songs: SongsInfo[]
+  songs: ResponseSongModel[]
   canEdit?: boolean
   isSelf: boolean
-  extraButton?: (song: SongsInfo) => VNodeChild[]
+  extraButton?: (song: ResponseSongModel) => VNodeChild[]
   liveRequestActive?: SongRequestInfo[]
 }>()
 
@@ -83,7 +84,9 @@ defineExpose({ nextPage, prevPage, currentPage })
 
 const hasAudio = computed(() => songsInternal.value.some((s) => s.url && /\.(?:mp3|flac|ogg|wav|m4a)$/i.test(s.url)))
 const hasLinks = computed(() =>
-  songsInternal.value.some((s) => s.url || [SongFrom.Netease, SongFrom.FiveSing, SongFrom.Kugou].includes(s.from)),
+  songsInternal.value.some(
+    (s) => s.url || [SongPlatform.Netease, SongPlatform.FiveSing, SongPlatform.Kugou].includes(s.from),
+  ),
 )
 
 function getSCColor(price: number): string {
@@ -99,7 +102,7 @@ function getGuardColor(level: number): string {
   return level === 1 ? 'rgb(122, 4, 35)' : level === 2 ? 'rgb(157, 155, 255)' : 'rgb(104, 136, 241)'
 }
 
-function hasSongOptions(options?: SongsInfo['options']): boolean {
+function hasSongOptions(options?: ResponseSongModel['options']): boolean {
   if (!options) return false
   return !!(
     options.needJianzhang ||
@@ -139,7 +142,7 @@ function toggleSelectRow(key: string, checked: boolean) {
   }
 }
 
-async function handleEditSave(song: SongsInfo) {
+async function handleEditSave(song: ResponseSongModel) {
   const ok = await updateSong(song)
   if (ok) editModalRef.value?.close()
   else if (editModalRef.value) editModalRef.value.loading = false
@@ -147,7 +150,7 @@ async function handleEditSave(song: SongsInfo) {
 
 async function handleBatchField(
   endpoint: string,
-  field: keyof SongsInfo,
+  field: keyof ResponseSongModel,
   value: string[],
   mode: 'replace' | 'append',
   label: string,

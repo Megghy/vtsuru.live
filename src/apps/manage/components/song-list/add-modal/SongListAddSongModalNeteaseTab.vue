@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { getApiSongListGetNeteaseList } from '@/api/generated/song-list/song-list'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { Button } from '@/shared/ui/button'
@@ -13,18 +13,18 @@ import { Transfer, type TransferOption } from '@/shared/ui/transfer'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
-  existingSongs: SongsInfo[]
+  existingSongs: ResponseSongModel[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'added', songs: SongsInfo[]): void
+  (e: 'added', songs: ResponseSongModel[]): void
   (e: 'loadingChange', value: boolean): void
 }>()
 
 const message = useMessage()
 
 const neteaseIdInput = ref<string>('')
-const neteaseSongs = ref<SongsInfo[]>([])
+const neteaseSongs = ref<ResponseSongModel[]>([])
 const neteaseSongsOptions = ref<TransferOption[]>([])
 const selectedNeteaseSongs = ref<string[]>([])
 /** 本会话已成功添加的网易云歌曲 Id，避免 props 未及时同步时重复提交 */
@@ -64,9 +64,9 @@ const neteaseSongListId = computed<number | null>(() => {
   return null
 })
 
-function isSongAlreadyInList(song: SongsInfo) {
+function isSongAlreadyInList(song: ResponseSongModel) {
   if (sessionAddedIds.value.has(song.id)) return true
-  return props.existingSongs.some((exist) => exist.from === SongFrom.Netease && exist.id === song.id)
+  return props.existingSongs.some((exist) => exist.from === SongPlatform.Netease && exist.id === song.id)
 }
 
 function getSelectedNewSongs() {
@@ -110,7 +110,7 @@ async function getNeteaseSongList() {
     })) as unknown as {
       code: number
       message?: string
-      data: SongsInfo[]
+      data: ResponseSongModel[]
     }
     if (data.code !== 200) {
       message.error(`获取歌单失败: ${data.message}`)
@@ -143,7 +143,7 @@ async function addNeteaseSongs() {
   isAdding.value = true
   emit('loadingChange', true)
   try {
-    const data = await addSongsToSongList(selected, SongFrom.Netease)
+    const data = await addSongsToSongList(selected, SongPlatform.Netease)
     if (data.code !== 200) {
       message.error(`添加失败: ${data.message}`)
       return
@@ -170,7 +170,7 @@ async function addNeteaseSongs() {
       message.success(`已添加 ${addedCount} 首歌曲`)
     }
 
-    if (addedCount > 0) emit('added', data.data as unknown as SongsInfo[])
+    if (addedCount > 0) emit('added', data.data as unknown as ResponseSongModel[])
   } catch (err) {
     console.error(err)
     message.error('添加失败')

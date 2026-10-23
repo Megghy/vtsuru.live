@@ -4,7 +4,7 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, ref } from 'vue'
 
-import type { QAInfo } from '@/api/api-models'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import { useQuestionBox } from '@/store/useQuestionBox'
 
 const props = defineProps<{
-  item: QAInfo
+  item: ResponseQAInfoToTarget
   selectable?: boolean
   selected?: boolean
 }>()

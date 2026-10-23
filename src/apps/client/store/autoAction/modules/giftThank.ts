@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 
 import { executeActions, filterValidActions } from '../actionUtils'
 import type { AutoActionItem, RuntimeState } from '../types'

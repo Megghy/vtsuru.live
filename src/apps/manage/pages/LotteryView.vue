@@ -22,12 +22,12 @@ import { List } from 'linqts'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { LotteryUserInfo, OpenLiveLotteryUserInfo } from '@/api/api-models'
 import {
   getApiLotteryComments,
   getApiLotteryForward,
   postApiLotteryLiveUpdateUsers,
 } from '@/api/generated/lottery/lottery'
+import type { LiveLotteryUserInfo, LotteryUserInfo } from '@/api/generated/model'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import LotteryAddUserModal from '@/apps/open-live/components/lottery/LotteryAddUserModal.vue'
 import LotteryHistoryModal from '@/apps/open-live/components/lottery/LotteryHistoryModal.vue'
@@ -102,9 +102,9 @@ const client = await useDanmakuClient().initOpenlive()
 const lotteryCode = computed(() => resolveLotteryIdentityCode(undefined, accountInfo.value?.biliAuthCode))
 const obsUrl = computed(() => buildLotteryObsUrl(CURRENT_HOST, accountInfo.value?.id, lotteryCode.value))
 
-const originUsers = ref<OpenLiveLotteryUserInfo[]>([])
-const currentUsers = ref<OpenLiveLotteryUserInfo[]>([])
-const liveResultUsers = ref<OpenLiveLotteryUserInfo[]>([])
+const originUsers = ref<LiveLotteryUserInfo[]>([])
+const currentUsers = ref<LiveLotteryUserInfo[]>([])
+const liveResultUsers = ref<LiveLotteryUserInfo[]>([])
 const isStartLiveLottery = ref(false)
 const isLiveLottering = ref(false)
 const isLiveLotteried = ref(false)
@@ -112,7 +112,7 @@ const showLiveObsModal = ref(false)
 const showLiveHistoryModal = ref(false)
 const showLiveAddUserModal = ref(false)
 const liveProgress = ref(0)
-const eliminatedUsers = ref<OpenLiveLotteryUserInfo[]>([])
+const eliminatedUsers = ref<LiveLotteryUserInfo[]>([])
 
 interface CardState {
   flipped: boolean
@@ -129,7 +129,7 @@ function ensureCardState(userId: string): CardState {
   return cardStates.value[userId]
 }
 
-function syncCardStates(users: OpenLiveLotteryUserInfo[], options: { reset?: boolean } = {}) {
+function syncCardStates(users: LiveLotteryUserInfo[], options: { reset?: boolean } = {}) {
   const nextStates: Record<string, CardState> = {}
   users.forEach((user) => {
     const existing = cardStates.value[user.openId]
@@ -164,7 +164,7 @@ function updateLiveUsers(force = false) {
   })
 }
 
-function addLiveUser(user: OpenLiveLotteryUserInfo, danmu?: any) {
+function addLiveUser(user: LiveLotteryUserInfo, danmu?: any) {
   if (originUsers.value.find((u) => u.openId == user.openId) || (!isStartLiveLottery.value && danmu)) return
   if (danmu && !isLiveUserValid(user, danmu, liveOption.value)) return
 
@@ -181,7 +181,7 @@ function addManualLiveUser(payload: ManualUserFormModel) {
     return
   }
   const formattedAvatar = formatLotteryAvatar(payload.avatar, 96)
-  const newUser: OpenLiveLotteryUserInfo = {
+  const newUser: LiveLotteryUserInfo = {
     uId: Date.now(),
     openId: `manual_${Date.now()}`,
     name: payload.name.trim(),

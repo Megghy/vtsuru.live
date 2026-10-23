@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import {
-  AlertCircle,
-  CheckCircle2,
-  Clock,
-  Radio,
-  Wifi,
-} from 'lucide-vue-next'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { AlertCircle, CheckCircle2, Clock, Radio, Wifi } from 'lucide-vue-next'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { Badge } from '@/shared/ui/badge'

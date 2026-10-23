@@ -156,9 +156,13 @@ const breakdown = computed(() => {
           </div>
 
           <template v-if="cfg.showSeconds">
-            <div class="text-[28px] font-light text-muted-foreground mt-0.5 select-none @max-[420px]:text-[22px]">:</div>
+            <div class="text-[28px] font-light text-muted-foreground mt-0.5 select-none @max-[420px]:text-[22px]">
+              :
+            </div>
             <div class="flex flex-col items-center min-w-0">
-              <div class="font-mono text-[38px] font-extrabold leading-none tabular-nums text-primary @max-[420px]:text-[30px]">
+              <div
+                class="font-mono text-[38px] font-extrabold leading-none tabular-nums text-primary @max-[420px]:text-[30px]"
+              >
                 {{ breakdown?.seconds?.toString().padStart(2, '0') ?? '00' }}
               </div>
               <div class="text-[10px] font-semibold text-muted-foreground mt-1.5">秒</div>

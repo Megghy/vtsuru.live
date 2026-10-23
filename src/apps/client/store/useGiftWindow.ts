@@ -4,14 +4,14 @@ import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
+import type { EventModel } from '@/api/client-types'
+import { getApiLiveCurrent, getApiLiveRanking } from '@/api/generated/live/live'
 import type {
-  EventModel,
   ResponseCurrentLiveModel,
   ResponseLiveInfoModel,
   ResponseLiveRankingEntryModel,
-} from '@/api/api-models'
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
-import { getApiLiveCurrent, getApiLiveRanking } from '@/api/generated/live/live'
+} from '@/api/generated/model'
+import { EventDataTypes, GuardLevel } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'

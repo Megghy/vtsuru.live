@@ -3,8 +3,9 @@ import { Box24Regular, Money24Regular, VehicleShip24Filled } from '@vicons/fluen
 import { format } from 'date-fns'
 import { computed } from 'vue'
 
-import type { AccountInfo, DanmakuModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { DanmakuModel } from '@/api/client-types'
+import type { ResponseAccountInfo } from '@/api/generated/model'
+import { EventDataTypes } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Tag } from '@/shared/ui/tag'
@@ -19,7 +20,7 @@ const {
   showAvatar = true,
 } = defineProps<{
   danmaku: DanmakuModel
-  accountInfo: AccountInfo | undefined
+  accountInfo: ResponseAccountInfo | undefined
   showName?: boolean
   showAvatar?: boolean
   height?: number

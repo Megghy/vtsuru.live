@@ -56,7 +56,9 @@ function handleRemove() {
       <!-- 当前封面 -->
       <div class="space-y-1.5">
         <span class="text-xs text-muted-foreground block">当前线上封面</span>
-        <div class="aspect-video w-full max-w-[200px] rounded-md border border-border bg-muted/40 overflow-hidden flex items-center justify-center relative shadow-inner">
+        <div
+          class="aspect-video w-full max-w-[200px] rounded-md border border-border bg-muted/40 overflow-hidden flex items-center justify-center relative shadow-inner"
+        >
           <img
             v-if="roomInfo?.user_cover || roomInfo?.keyframe"
             :src="roomInfo?.user_cover || roomInfo?.keyframe"

@@ -2,7 +2,7 @@
 import { computed, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
@@ -20,7 +20,7 @@ import { isDarkMode } from '@/shared/utils'
 const props = defineProps<{
   biliInfo: BiliProfile | undefined
   biliStatus?: BiliProfileStatus
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
 }>()
 
 const route = useRoute()

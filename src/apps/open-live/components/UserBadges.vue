@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DanmakuUserInfo } from '@/api/api-models'
+import type { DanmakuUserInfo } from '@/api/generated/model'
 import { getGuardColor } from '@/shared/utils/queue'
 
 withDefaults(

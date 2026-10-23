@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { onMounted, ref } from 'vue'
 
-import type { UserInfo, VideoCollectTable } from '@/api/api-models'
+import type { ResponseUserInfo, ResponseVideoCollectModel } from '@/api/generated/model'
 import { getApiVideoCollectGetActive } from '@/api/generated/video-collect/video-collect'
 import VideoCollectInfoCard from '@/components/VideoCollectInfoCard.vue'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -10,13 +10,13 @@ import { Spin } from '@/shared/ui/spin'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
-  userInfo: UserInfo
+  userInfo: ResponseUserInfo
 }>()
 
 const isLoading = ref(true)
 const message = useMessage()
 
-const videoTables = ref<VideoCollectTable[]>([])
+const videoTables = ref<ResponseVideoCollectModel[]>([])
 
 async function get() {
   try {
@@ -26,7 +26,7 @@ async function get() {
     })) as unknown as {
       code: number
       message?: string
-      data?: VideoCollectTable[]
+      data?: ResponseVideoCollectModel[]
     }
     if (data.code === 200) {
       videoTables.value = data.data ?? []
@@ -80,5 +80,3 @@ onMounted(() => {
     </Card>
   </div>
 </template>
-
-

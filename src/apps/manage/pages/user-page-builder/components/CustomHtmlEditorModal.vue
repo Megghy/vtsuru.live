@@ -11,7 +11,7 @@ import {
 import { watchDebounced } from '@vueuse/core'
 import { computed, inject, ref, watch } from 'vue'
 
-import type { APIFileModel } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
 import {
   CUSTOM_CSS_MAX_BYTES,

@@ -52,9 +52,9 @@ describe('getUserPageThemeCssVars 主色', () => {
     expect(
       wcagContrast(parseRgb(light['--primary-foreground'])!, parseRgb(light['--primary'])!),
     ).toBeGreaterThanOrEqual(4.5)
-    expect(
-      wcagContrast(parseRgb(dark['--primary-foreground'])!, parseRgb(dark['--primary'])!),
-    ).toBeGreaterThanOrEqual(4.5)
+    expect(wcagContrast(parseRgb(dark['--primary-foreground'])!, parseRgb(dark['--primary'])!)).toBeGreaterThanOrEqual(
+      4.5,
+    )
   })
 
   it('浅色画布在暗色主题下让铺在背景上的文字用深色', () => {

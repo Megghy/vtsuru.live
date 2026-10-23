@@ -6,11 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type SupportTicketType = (typeof SupportTicketType)[keyof typeof SupportTicketType]
-
-export const SupportTicketType = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-} as const
+export enum SupportTicketType {
+  Bug = 0,
+  Feature = 1,
+  Account = 2,
+  Other = 3,
+}

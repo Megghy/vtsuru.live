@@ -4,8 +4,8 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import type { CheckInRankingInfo, UserInfo } from '@/api/api-models'
 import { getApiCheckinKeyword, getApiCheckinRanking } from '@/api/generated/check-in/check-in'
+import type { ResponseUserCheckInModel, ResponseUserInfo } from '@/api/generated/model'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -19,11 +19,11 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import { toast } from '@/shared/utils'
 
 const props = defineProps<{
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
 }>()
 
 const isLoading = ref(false)
-const rankingData = ref<CheckInRankingInfo[]>([])
+const rankingData = ref<ResponseUserCheckInModel[]>([])
 const timeRange = ref('all')
 const userFilter = ref('')
 const checkInKeyword = ref('签到')
@@ -84,7 +84,7 @@ async function loadCheckInRanking() {
     })) as unknown as {
       code: number
       message?: string
-      data: CheckInRankingInfo[]
+      data: ResponseUserCheckInModel[]
     }
 
     if (response.code !== 200) {
@@ -348,4 +348,3 @@ onMounted(() => {
     </Card>
   </TooltipProvider>
 </template>
-

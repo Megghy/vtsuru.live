@@ -12,7 +12,7 @@ import {
 import { onBeforeUnmount, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { AVATAR_URL } from '@/shared/config'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
@@ -26,7 +26,7 @@ import { useMessage } from '@/shared/utils'
 import { useQuestionComposer } from './useQuestionComposer'
 
 const props = defineProps<{
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
   tags: string[]
   embedded?: boolean
   defaultTag?: string

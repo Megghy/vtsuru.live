@@ -5,7 +5,7 @@ import { computed, provide } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
-import { QueueSortType, SongRequestStatus } from '@/api/api-models'
+import { QueueSortType, SongRequestStatus } from '@/api/generated/model'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -123,7 +123,7 @@ async function updateSettings() {
                   sortType === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
                 "
                 @click="
-                  sortType = opt.value;
+                  sortType = opt.value
                   updateSettings()
                 "
               >
@@ -194,4 +194,3 @@ async function updateSettings() {
     />
   </div>
 </template>
-

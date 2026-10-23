@@ -202,7 +202,9 @@ const obsUrl = computed(() =>
           <!-- 右侧：实时预览 -->
           <div class="flex flex-col items-center gap-2">
             <div class="text-xs text-muted-foreground">实时预览 (280 × 500)</div>
-            <div class="h-[500px] w-[280px] relative border border-dashed border-border rounded-lg overflow-hidden bg-muted">
+            <div
+              class="h-[500px] w-[280px] relative border border-dashed border-border rounded-lg overflow-hidden bg-muted"
+            >
               <slot
                 v-if="effectiveUserId"
                 name="preview"
@@ -221,4 +223,3 @@ const obsUrl = computed(() =>
     </DialogContent>
   </Dialog>
 </template>
-

@@ -6,7 +6,7 @@ import { vtsuruMutator } from '../../orval-mutator'
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseResultOfDictionaryOfSystemStringSystemInt32 } from '../model'
+import type { ResponseResultOfDictionaryOfStringInt32 } from '../model'
 
 export const getGetApiBillingGetPredictCostUrl = () => {
   return `/api/billing/get-predict-cost`
@@ -14,8 +14,8 @@ export const getGetApiBillingGetPredictCostUrl = () => {
 
 export const getApiBillingGetPredictCost = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfDictionaryOfSystemStringSystemInt32> => {
-  return vtsuruMutator<ResponseResultOfDictionaryOfSystemStringSystemInt32>(getGetApiBillingGetPredictCostUrl(), {
+): Promise<ResponseResultOfDictionaryOfStringInt32> => {
+  return vtsuruMutator<ResponseResultOfDictionaryOfStringInt32>(getGetApiBillingGetPredictCostUrl(), {
     ...options,
     method: 'GET',
   })

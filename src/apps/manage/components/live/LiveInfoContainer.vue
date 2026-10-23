@@ -12,7 +12,7 @@ import { format } from 'date-fns'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { ResponseLiveInfoModel } from '@/api/api-models'
+import type { ResponseLiveInfoModel } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 

@@ -3,7 +3,7 @@ import { Bot24Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import type { SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import SongListAddSongModalCustomTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalCustomTab.vue'
 import SongListAddSongModalDirectoryTab from '@/apps/manage/components/song-list/add-modal/SongListAddSongModalDirectoryTab.vue'
@@ -19,12 +19,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const props = defineProps<{
   show: boolean
-  songs: SongsInfo[]
+  songs: ResponseSongModel[]
 }>()
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
-  (e: 'added', songs: SongsInfo[]): void
+  (e: 'added', songs: ResponseSongModel[]): void
 }>()
 
 const route = useRoute()
@@ -99,7 +99,7 @@ const languageSelectOption = computed(() => {
   return [...items].map((t) => ({ label: t, value: t }))
 })
 
-function onAdded(songs: SongsInfo[]) {
+function onAdded(songs: ResponseSongModel[]) {
   emit('added', songs)
 }
 

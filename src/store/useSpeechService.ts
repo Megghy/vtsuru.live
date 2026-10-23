@@ -3,8 +3,8 @@ import { nextTick, reactive, ref, watch } from 'vue'
 import { clearInterval, clearTimeout, setInterval, setTimeout } from 'worker-timers'
 
 import { DownloadConfig, isLoggedIn, UploadConfig, useAccount } from '@/api/account'
-import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 import {
   createVoiceProvider,
   DEFAULT_COSYVOICE_MODEL,

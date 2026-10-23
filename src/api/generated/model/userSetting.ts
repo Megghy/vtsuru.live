@@ -5,6 +5,7 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { FunctionTypes } from './functionTypes'
 import type { GeneralSettings } from './generalSettings'
 import type { SettingIndex } from './settingIndex'
 import type { SettingPoint } from './settingPoint'
@@ -13,7 +14,6 @@ import type { SettingQuestionDisplay } from './settingQuestionDisplay'
 import type { SettingQueue } from './settingQueue'
 import type { SettingSendEmail } from './settingSendEmail'
 import type { SettingSongRequest } from './settingSongRequest'
-import type { VTsuruEnumsFunctionTypes } from './vTsuruEnumsFunctionTypes'
 
 export interface UserSetting {
   sendEmail: SettingSendEmail
@@ -24,7 +24,7 @@ export interface UserSetting {
   questionDisplay: SettingQuestionDisplay
   general: GeneralSettings
   index: SettingIndex
-  enableFunctions: VTsuruEnumsFunctionTypes[]
+  enableFunctions: FunctionTypes[]
   /** @nullable */
   songListTemplate?: string | null
   /** @nullable */

@@ -13,10 +13,10 @@ import type {
   PostApiQueueAddParams,
   PostApiQueueSetStatusParams,
   ResponseResult,
+  ResponseResultOfInt64Array,
   ResponseResultOfListOfResponseQueueModel,
-  ResponseResultOfQueueControllerResponseQueueResponseAndSettings,
   ResponseResultOfResponseQueueModel,
-  ResponseResultOfSystemInt64Array,
+  ResponseResultOfResponseQueueResponseAndSettings,
   SettingQueue,
 } from '../model'
 
@@ -67,8 +67,8 @@ export const getPostApiQueueDeactivateUrl = () => {
 
 export const postApiQueueDeactivate = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt64Array> => {
-  return vtsuruMutator<ResponseResultOfSystemInt64Array>(getPostApiQueueDeactivateUrl(), {
+): Promise<ResponseResultOfInt64Array> => {
+  return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiQueueDeactivateUrl(), {
     ...options,
     method: 'POST',
   })
@@ -81,7 +81,7 @@ export const getPostApiQueueDeleteUrl = () => {
 export const postApiQueueDelete = async (
   postApiQueueDeleteBody?: number[],
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt64Array> => {
+): Promise<ResponseResultOfInt64Array> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -96,7 +96,7 @@ export const postApiQueueDelete = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt64Array>(getPostApiQueueDeleteUrl(), {
+  return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiQueueDeleteUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -123,8 +123,8 @@ export const getGetApiQueueGetActiveAndSettingsUrl = (params?: GetApiQueueGetAct
 export const getApiQueueGetActiveAndSettings = async (
   params?: GetApiQueueGetActiveAndSettingsParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfQueueControllerResponseQueueResponseAndSettings> => {
-  return vtsuruMutator<ResponseResultOfQueueControllerResponseQueueResponseAndSettings>(
+): Promise<ResponseResultOfResponseQueueResponseAndSettings> => {
+  return vtsuruMutator<ResponseResultOfResponseQueueResponseAndSettings>(
     getGetApiQueueGetActiveAndSettingsUrl(params),
     {
       ...options,

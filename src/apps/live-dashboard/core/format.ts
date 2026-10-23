@@ -1,7 +1,7 @@
 import { formatDistanceToNowStrict } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import { AVATAR_URL } from '@/shared/config'
 import { formatDanmakuPrice } from '@/shared/utils/danmakuGiftDisplay'
 

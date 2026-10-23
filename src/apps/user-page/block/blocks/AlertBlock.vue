@@ -50,5 +50,3 @@ const backgrounded = computed(() =>
     </Alert>
   </BlockCard>
 </template>
-
-

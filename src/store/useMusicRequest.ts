@@ -1,18 +1,18 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { DanmakuUserInfo, ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export interface WaitMusicInfo {
   from: DanmakuUserInfo
-  music: SongsInfo
+  music: ResponseSongModel
 }
 /** 点歌历史记录项 (前端本地记录, 因后端不保存点歌历史) */
 export interface MusicHistoryEntry {
   from: DanmakuUserInfo
-  music: SongsInfo
+  music: ResponseSongModel
   /** played: 已播放 / cancelled: 已取消 */
   status: 'played' | 'cancelled'
   time: number
@@ -46,7 +46,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
   const waitingMusics = usePersistedStorage<WaitMusicInfo[]>('Setting.MusicRequest.Waiting', [])
   /** 点歌历史 (本地记录, 最多保留 200 条) */
   const history = usePersistedStorage<MusicHistoryEntry[]>('Setting.MusicRequest.History', [])
-  const originMusics = ref<SongsInfo[]>([])
+  const originMusics = ref<ResponseSongModel[]>([])
   const aplayerMusics = computed(() => originMusics.value.map((m) => songToMusic(m)))
   const currentMusic = ref<Music>({
     id: -1,
@@ -152,7 +152,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       return false
     }
   }
-  function playMusic(music: SongsInfo) {
+  function playMusic(music: ResponseSongModel) {
     // pauseMusic()
     currentMusic.value = songToMusic(music)
     aplayerRef.value?.thenPlay()
@@ -162,12 +162,12 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       aplayerRef.value?.pause()
     }
   }
-  function songToMusic(s: SongsInfo) {
+  function songToMusic(s: ResponseSongModel) {
     return {
       id: s.id,
       title: s.name,
       artist: s.author?.join('/'),
-      src: s.from == SongFrom.Netease ? `https://music.163.com/song/media/outer/url?id=${s.id}.mp3` : s.url,
+      src: s.from == SongPlatform.Netease ? `https://music.163.com/song/media/outer/url?id=${s.id}.mp3` : s.url,
       pic: s.cover ?? '',
       lrc: '',
     }

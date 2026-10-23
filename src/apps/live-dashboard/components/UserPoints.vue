@@ -120,4 +120,3 @@ async function give(sign: 1 | -1) {
     </div>
   </div>
 </template>
-

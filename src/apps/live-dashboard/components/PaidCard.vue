@@ -2,7 +2,7 @@
 import { useNow } from '@vueuse/core'
 import { computed } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import { getGuardColor } from '@/shared/utils/queue'
 
 import { avatarUrl, formatClock, formatPrice, formatRelative, paidSummary, superChatTier } from '../core/format'
@@ -42,7 +42,10 @@ const timeText = computed(() => {
     @dblclick="dashboard.toggleRead(event)"
     @contextmenu="ui.openContextMenu(event, $event)"
   >
-    <div class="flex gap-2 py-1.5 px-2.5 items-center bg-[var(--paid-header)]" :class="{ 'bg-transparent': !colors }">
+    <div
+      class="flex gap-2 py-1.5 px-2.5 items-center bg-[var(--paid-header)]"
+      :class="{ 'bg-transparent': !colors }"
+    >
       <img
         v-if="dashboard.settings.showAvatar && event.uface"
         class="paid__avatar size-[2.4em] rounded-full shrink-0 object-cover"
@@ -97,4 +100,3 @@ const timeText = computed(() => {
     </div>
   </div>
 </template>
-

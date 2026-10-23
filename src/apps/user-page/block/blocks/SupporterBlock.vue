@@ -142,8 +142,12 @@ function getStyle(p: Platform) {
             '--accent-readable': getStyle(it.platform).readable ?? getStyle(it.platform).bg,
           }"
         >
-          <div class="absolute inset-0 bg-[var(--accent-color)] opacity-0 transition-opacity duration-300 group-hover:opacity-5 pointer-events-none" />
-          <div class="relative z-1 size-12 rounded-[var(--radius)] bg-secondary flex items-center justify-center text-2xl text-[var(--accent-readable)] transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--accent-color)] group-hover:text-[var(--accent-text)]">
+          <div
+            class="absolute inset-0 bg-[var(--accent-color)] opacity-0 transition-opacity duration-300 group-hover:opacity-5 pointer-events-none"
+          />
+          <div
+            class="relative z-1 size-12 rounded-[var(--radius)] bg-secondary flex items-center justify-center text-2xl text-[var(--accent-readable)] transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--accent-color)] group-hover:text-[var(--accent-text)]"
+          >
             <component
               :is="getIcon(it.platform)"
               class="size-6"
@@ -153,7 +157,9 @@ function getStyle(p: Platform) {
             <span class="font-bold text-base leading-snug">{{ it.label || platformLabel(it.platform) }}</span>
             <span class="text-xs text-muted-foreground mt-0.5">前往 {{ platformLabel(it.platform) }} 支持</span>
           </div>
-          <div class="relative z-1 text-xl opacity-30 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1 group-hover:text-[var(--accent-readable)]">
+          <div
+            class="relative z-1 text-xl opacity-30 transition-all duration-200 group-hover:opacity-100 group-hover:translate-x-1 group-hover:text-[var(--accent-readable)]"
+          >
             <component
               :is="ArrowForwardOutline"
               class="size-5"

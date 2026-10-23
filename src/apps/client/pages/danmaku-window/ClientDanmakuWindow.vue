@@ -10,8 +10,8 @@ import {
 import { nanoid } from 'nanoid'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
 import type { DanmakuWindowBCData, DanmakuWindowSettings, LiveStatsData } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'

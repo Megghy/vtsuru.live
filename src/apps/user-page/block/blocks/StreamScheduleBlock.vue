@@ -2,7 +2,7 @@
 import { CalendarNumberOutline, RefreshOutline } from '@vicons/ionicons5'
 import { computed, onMounted, watch } from 'vue'
 
-import type { ScheduleDayInfo, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
+import type { ResponseScheduleDayModel, ResponseScheduleModel, ResponseUserInfo } from '@/api/generated/model'
 import { getApiScheduleGet } from '@/api/generated/schedule/schedule'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import ScheduleSubscription from '@/components/ScheduleSubscription.vue'
@@ -36,7 +36,7 @@ interface ScheduleRow {
   isToday: boolean
 }
 
-const props = defineProps<{ blockProps: unknown; userInfo?: UserInfo; biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: ResponseUserInfo; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
   const o =
@@ -55,7 +55,7 @@ const cfg = computed<BlockConfig>(() => {
   }
 })
 
-const scheduleQuery = useUserPageRuntimeQuery<ScheduleWeekInfo[]>({
+const scheduleQuery = useUserPageRuntimeQuery<ResponseScheduleModel[]>({
   key: () => `schedule:${props.userInfo?.id ?? ''}`,
   ttlMs: 60_000,
   loader: async (signal) => {
@@ -64,7 +64,7 @@ const scheduleQuery = useUserPageRuntimeQuery<ScheduleWeekInfo[]>({
     const response = (await getApiScheduleGet({ id: String(userId) }, { signal })) as unknown as {
       code: number
       message?: string
-      data?: ScheduleWeekInfo[]
+      data?: ResponseScheduleModel[]
     }
     if (response.code !== 200) throw new Error(response.message || `HTTP ${response.code}`)
     return Array.isArray(response.data) ? response.data : []
@@ -101,7 +101,7 @@ function dayLabel(dayIndex: number) {
   return ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][dayIndex] ?? ''
 }
 
-function normalizeItem(item: ScheduleDayInfo) {
+function normalizeItem(item: ResponseScheduleDayModel) {
   return {
     title: typeof item.title === 'string' ? item.title : '',
     tag: typeof item.tag === 'string' ? item.tag : '',
@@ -307,5 +307,3 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
     </section>
   </BlockCard>
 </template>
-
-

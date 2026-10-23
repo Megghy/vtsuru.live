@@ -12,7 +12,6 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
-import { BiliAuthCodeStatusType } from '@/api/api-models'
 import {
   postApiAccountBindBili,
   postApiAccountChangeBili,
@@ -20,6 +19,7 @@ import {
   postApiAccountResetBili,
   postApiAccountResetToken,
 } from '@/api/generated/account/account'
+import { BiliAuthCodeStatusType } from '@/api/generated/model'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'

@@ -1,8 +1,8 @@
 import type { ComputedRef, Ref } from 'vue'
 import { computed } from 'vue'
 
-import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 import { GetGuardColor } from '@/shared/utils'
 import { formatDanmakuPrice, getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
 

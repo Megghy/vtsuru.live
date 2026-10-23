@@ -3,7 +3,7 @@ import { ArrowUp20Filled, Copy20Filled, Delete20Filled, Play20Filled, ReOrder24F
 import { useTimeAgo } from '@vueuse/core'
 import { computed } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import {
   DropdownMenu,
@@ -108,7 +108,9 @@ function handleSelect(action: string) {
           {{ tag.text }}
         </Tag>
 
-        <span class="font-semibold shrink-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{ item.data.uname }}</span>
+        <span class="font-semibold shrink-0 max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap">{{
+          item.data.uname
+        }}</span>
 
         <span class="flex-1 text-xs overflow-hidden text-ellipsis whitespace-nowrap min-w-0 text-muted-foreground">
           {{ speechText }}

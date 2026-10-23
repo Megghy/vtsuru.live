@@ -10,7 +10,7 @@ import {
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ResponseUserIndexModel, UserInfo } from '@/api/api-models'
+import type { ResponseUserIndexModel, ResponseUserInfo } from '@/api/generated/model'
 import { getApiUserIndexGet } from '@/api/generated/user-index/user-index'
 import type { BiliProfile } from '@/apps/user-page/types'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
@@ -25,7 +25,7 @@ import { formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 import BilibiliIcon from '@/svgs/social/bilibili.svg?component'
 
 const props = defineProps<{
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
   biliInfo: BiliProfile | undefined
 }>()
 defineExpose({ Config, DefaultConfig })

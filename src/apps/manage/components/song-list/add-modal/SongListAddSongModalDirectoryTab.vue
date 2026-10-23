@@ -2,8 +2,8 @@
 import { ArchiveOutline } from '@vicons/ionicons5'
 import { computed, ref } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -18,20 +18,20 @@ interface OptionItem {
 }
 
 const props = defineProps<{
-  existingSongs: SongsInfo[]
+  existingSongs: ResponseSongModel[]
   authors: OptionItem[]
   tags: OptionItem[]
   languageSelectOption: OptionItem[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'added', songs: SongsInfo[]): void
+  (e: 'added', songs: ResponseSongModel[]): void
   (e: 'loadingChange', value: boolean): void
 }>()
 
 const message = useMessage()
 
-const folderSongs = ref<SongsInfo[]>([])
+const folderSongs = ref<ResponseSongModel[]>([])
 const folderSongsOptions = ref<TransferOption[]>([])
 const selectedFolderSongs = ref<string[]>([])
 const isScanningFolder = ref(false)
@@ -69,7 +69,7 @@ async function scanDirectory(
   }
 }
 
-function parseAudioFileName(fileName: string, file: File, filePath: string): SongsInfo | null {
+function parseAudioFileName(fileName: string, file: File, filePath: string): ResponseSongModel | null {
   const nameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.'))
 
   let name = ''
@@ -138,17 +138,17 @@ function parseAudioFileName(fileName: string, file: File, filePath: string): Son
     description: `从文件导入: ${filePath}`,
     language: [],
     tags: [],
-    from: SongFrom.Custom,
+    from: SongPlatform.Custom,
     createTime: Date.now(),
     updateTime: Date.now(),
     // @ts-ignore
     _originalFile: file,
     // @ts-ignore
     _filePath: filePath,
-  } as SongsInfo
+  } as ResponseSongModel
 }
 
-function updateFolderSongsOptions(newlyAddedSongs: SongsInfo[] = []) {
+function updateFolderSongsOptions(newlyAddedSongs: ResponseSongModel[] = []) {
   folderSongsOptions.value = folderSongs.value.map((s) => ({
     label: `${s.name} - ${s.author?.join('/') || '未知'}`,
     value: `${s.name}_${(s as any)._filePath}`,
@@ -195,7 +195,7 @@ async function addFolderSongs() {
         ...s,
         description: `${s.description || ''} [注意: 链接为本地文件，刷新页面后可能失效]`,
       })),
-      SongFrom.Custom,
+      SongPlatform.Custom,
     )
 
     if (result.code !== 200) {
@@ -204,8 +204,8 @@ async function addFolderSongs() {
     }
 
     message.success(`已添加 ${result.data.length} 首歌曲`)
-    emit('added', result.data as unknown as SongsInfo[])
-    updateFolderSongsOptions(result.data as unknown as SongsInfo[])
+    emit('added', result.data as unknown as ResponseSongModel[])
+    updateFolderSongsOptions(result.data as unknown as ResponseSongModel[])
   } catch (err: any) {
     message.error(`添加失败: ${err.message}`)
     console.error(err)
@@ -313,7 +313,7 @@ async function selectFolder() {
                 size="xs"
                 variant="outline"
                 @click="
-                  batchEditFolderSongs('author', [batchAuthorInput]);
+                  batchEditFolderSongs('author', [batchAuthorInput])
                   batchAuthorInput = ''
                 "
               >
@@ -331,7 +331,7 @@ async function selectFolder() {
                 size="xs"
                 variant="outline"
                 @click="
-                  batchEditFolderSongs('language', [batchLanguageInput]);
+                  batchEditFolderSongs('language', [batchLanguageInput])
                   batchLanguageInput = ''
                 "
               >
@@ -349,7 +349,7 @@ async function selectFolder() {
                 size="xs"
                 variant="outline"
                 @click="
-                  batchEditFolderSongs('tags', [batchTagInput]);
+                  batchEditFolderSongs('tags', [batchTagInput])
                   batchTagInput = ''
                 "
               >

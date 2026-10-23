@@ -24,8 +24,13 @@ import Qrcode from 'qrcode.vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { VideoCollectCreateModel, VideoCollectDetail, VideoCollectTable, VideoInfo } from '@/api/api-models'
-import { DuplicateVideoPolicy, VideoStatus } from '@/api/api-models'
+import type {
+  RequestVideoTable,
+  ResponseVideoCollectDetail,
+  ResponseVideoCollectModel,
+  VideoCollectInfo,
+} from '@/api/generated/model'
+import { DuplicateVideoPolicy, VideoStatus } from '@/api/generated/model'
 import {
   getApiVideoCollectGet,
   postApiVideoCollectDelete,
@@ -76,7 +81,7 @@ const route = useRoute()
 const router = useRouter()
 const message = useMessage()
 
-const videoDetail = ref<VideoCollectDetail>()
+const videoDetail = ref<ResponseVideoCollectDetail>()
 const isLoading = ref(false)
 const tableOperation = ref<string>()
 const videoOperation = ref<string>()
@@ -111,7 +116,7 @@ const acceptedVideos = computed(() => videos.value.filter((item) => item.info.st
 const rejectedVideos = computed(() => videos.value.filter((item) => item.info.status === VideoStatus.Rejected))
 const acceptedDuration = computed(() => acceptedVideos.value.reduce((sum, item) => sum + item.video.length, 0))
 
-const editValue = computed<VideoCollectCreateModel | undefined>(() => {
+const editValue = computed<RequestVideoTable | undefined>(() => {
   if (!table.value) return undefined
   return {
     id: table.value.id,
@@ -193,7 +198,7 @@ function currentId() {
   return id
 }
 
-function latestSubmitTime(info: VideoInfo) {
+function latestSubmitTime(info: VideoCollectInfo) {
   return Math.max(...info.senders.map((sender) => toTimestamp(sender.sendAt)), 0)
 }
 
@@ -203,7 +208,7 @@ async function loadData() {
     const response = (await getApiVideoCollectGet({ id: currentId() })) as unknown as {
       code: number
       message?: string
-      data: VideoCollectDetail
+      data: ResponseVideoCollectDetail
     }
     if (response.code !== 200) throw new Error(response.message)
     videoDetail.value = response.data
@@ -216,7 +221,7 @@ async function loadData() {
   }
 }
 
-async function setStatus(status: VideoStatus, video: VideoInfo) {
+async function setStatus(status: VideoStatus, video: VideoCollectInfo) {
   videoOperation.value = video.bvid
   try {
     const response = await postApiVideoCollectSetStatus({
@@ -236,7 +241,7 @@ async function setStatus(status: VideoStatus, video: VideoInfo) {
   }
 }
 
-function updateLocalStatus(video: VideoInfo, status: VideoStatus) {
+function updateLocalStatus(video: VideoCollectInfo, status: VideoStatus) {
   if (table.value) {
     const occupiedBefore = video.status !== VideoStatus.Rejected
     const occupiedAfter = status !== VideoStatus.Rejected
@@ -304,7 +309,7 @@ async function batchSetStatus(status: VideoStatus) {
   }
 }
 
-async function updateTable(model: VideoCollectCreateModel) {
+async function updateTable(model: RequestVideoTable) {
   tableOperation.value = 'edit'
   try {
     const response = (await postApiVideoCollectUpdate({
@@ -313,7 +318,7 @@ async function updateTable(model: VideoCollectCreateModel) {
     } as any)) as unknown as {
       code: number
       message?: string
-      data: VideoCollectTable
+      data: ResponseVideoCollectModel
     }
     if (response.code !== 200) throw new Error(response.message)
     if (videoDetail.value) videoDetail.value.table = response.data
@@ -905,7 +910,7 @@ function openVideoInBili(bvid: string) {
             <Button
               variant="brand"
               @click="
-                copyToClipboard(shareUrl);
+                copyToClipboard(shareUrl)
                 message.success('链接已复制')
               "
             >

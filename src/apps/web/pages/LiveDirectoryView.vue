@@ -4,7 +4,8 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { ACCOUNT, isLoggedIn } from '@/api/account'
-import { getDirectory, type LiveDirectoryEntry } from '@/api/following'
+import { getDirectory } from '@/api/following'
+import type { DirectoryEntry } from '@/api/generated/model'
 import FollowButton from '@/components/common/FollowButton.vue'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
@@ -18,12 +19,12 @@ import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 const route = useRoute()
 const tab = ref(route.query.tab === 'following' ? 'following' : 'live')
 const search = ref('')
-const entries = ref<LiveDirectoryEntry[]>([])
+const entries = ref<DirectoryEntry[]>([])
 const loading = ref(false)
 const error = ref('')
 const revision = ref(0)
 const now = ref(Date.now())
-const freshStatus = (entry: LiveDirectoryEntry) => (now.value / 1000 - entry.updatedAt > 120 ? 'unknown' : entry.status)
+const freshStatus = (entry: DirectoryEntry) => (now.value / 1000 - entry.updatedAt > 120 ? 'unknown' : entry.status)
 const visible = computed(() =>
   entries.value.filter(
     (entry) =>
@@ -65,7 +66,7 @@ useIntervalFn(() => {
 useIntervalFn(() => {
   if (!loading.value) revision.value++
 }, 30_000)
-function changed(entry: LiveDirectoryEntry, following: boolean) {
+function changed(entry: DirectoryEntry, following: boolean) {
   entry.isFollowing = following
   if (!following && tab.value !== 'live') entries.value = entries.value.filter((item) => item.id !== entry.id)
 }

@@ -3,8 +3,8 @@ import { Delete24Regular, Info24Filled } from '@vicons/fluent'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { SaveSetting, useAccount } from '@/api/account'
-import type { Setting_Point } from '@/api/api-models'
-import { EventDataTypes, SettingPointGiftAllowType } from '@/api/api-models'
+import type { SettingPoint } from '@/api/generated/model'
+import { EventDataTypes, GiftPointType } from '@/api/generated/model'
 import { getApiOrgOrgIdPointsSettingsDetail, postApiOrgOrgIdPointsSettingsUpdate } from '@/api/generated/org/org'
 import { unwrapOk } from '@/api/query'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
@@ -31,7 +31,7 @@ const props = defineProps<{
 const accountInfo = useAccount()
 
 // 默认积分设置
-const defaultSettingPoint: Setting_Point = {
+const defaultSettingPoint: SettingPoint = {
   allowType: [EventDataTypes.Guard],
   jianzhangPoint: 10,
   tiduPoint: 100,
@@ -39,7 +39,7 @@ const defaultSettingPoint: Setting_Point = {
   giftPercentMap: {},
   scPointPercent: 0.1,
   giftPointPercent: 0.1,
-  giftAllowType: SettingPointGiftAllowType.All,
+  giftAllowType: GiftPointType.All,
   enableCheckIn: false,
   checkInKeyword: '签到',
   givePointsForCheckIn: false,
@@ -60,7 +60,7 @@ const defaultSettingPoint: Setting_Point = {
   checkInOnlyOnStreaming: false,
 }
 
-const orgSetting = ref<Setting_Point>(defaultSettingPoint)
+const orgSetting = ref<SettingPoint>(defaultSettingPoint)
 
 async function loadOrgSetting() {
   if (!props.orgId || !props.streamerId) return
@@ -654,7 +654,7 @@ watch(
                       type="radio"
                       :checked="!setting.useDailyFirstGiftPercent"
                       @change="
-                        setting.useDailyFirstGiftPercent = false;
+                        setting.useDailyFirstGiftPercent = false
                         updateSettings()
                       "
                     />
@@ -665,7 +665,7 @@ watch(
                       type="radio"
                       :checked="setting.useDailyFirstGiftPercent"
                       @change="
-                        setting.useDailyFirstGiftPercent = true;
+                        setting.useDailyFirstGiftPercent = true
                         updateSettings()
                       "
                     />
@@ -718,9 +718,9 @@ watch(
               <label class="flex items-center gap-1 cursor-pointer text-xs">
                 <input
                   type="radio"
-                  :checked="setting.giftAllowType === SettingPointGiftAllowType.WhiteList"
+                  :checked="setting.giftAllowType === GiftPointType.WhiteList"
                   @change="
-                    setting.giftAllowType = SettingPointGiftAllowType.WhiteList;
+                    setting.giftAllowType = GiftPointType.WhiteList
                     updateSettings()
                   "
                 />
@@ -729,9 +729,9 @@ watch(
               <label class="flex items-center gap-1 cursor-pointer text-xs">
                 <input
                   type="radio"
-                  :checked="setting.giftAllowType === SettingPointGiftAllowType.All"
+                  :checked="setting.giftAllowType === GiftPointType.All"
                   @change="
-                    setting.giftAllowType = SettingPointGiftAllowType.All;
+                    setting.giftAllowType = GiftPointType.All
                     updateSettings()
                   "
                 />
@@ -740,7 +740,7 @@ watch(
             </div>
 
             <div
-              v-if="setting.giftAllowType === SettingPointGiftAllowType.All"
+              v-if="setting.giftAllowType === GiftPointType.All"
               class="flex items-center gap-2 max-w-sm pt-1"
             >
               <span class="text-muted-foreground w-24 shrink-0">礼物转换倍率:</span>

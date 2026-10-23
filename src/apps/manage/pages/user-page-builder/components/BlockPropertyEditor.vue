@@ -199,7 +199,10 @@ function groupSelection() {
             v-for="opt in PAGE_MODE_OPTIONS"
             :key="opt.value"
             class="py-2.5 px-3 rounded-lg border border-border bg-muted cursor-pointer transition flex flex-col gap-1 hover:border-primary hover:bg-popover"
-            :class="{ 'border-primary bg-[var(--brand-tint,rgba(0,150,255,0.08))] shadow-[0_0_0_1px_var(--primary)]': editor.currentPage.value.mode === opt.value }"
+            :class="{
+              'border-primary bg-[var(--brand-tint,rgba(0,150,255,0.08))] shadow-[0_0_0_1px_var(--primary)]':
+                editor.currentPage.value.mode === opt.value,
+            }"
             @click="handleModeChange(opt.value)"
           >
             <div class="flex-between">
@@ -531,7 +534,9 @@ function groupSelection() {
                       已添加 {{ blocksCount }} 个区块
                     </Badge>
                   </div>
-                  <div class="text-xs text-muted-foreground leading-normal">点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。</div>
+                  <div class="text-xs text-muted-foreground leading-normal">
+                    点击左侧区块列表或中间预览画布中的任意组件即可进入细节属性配置。
+                  </div>
                 </div>
 
                 <div class="h-px bg-border my-2" />
@@ -649,4 +654,3 @@ function groupSelection() {
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
-

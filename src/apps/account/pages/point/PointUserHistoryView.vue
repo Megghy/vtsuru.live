@@ -4,8 +4,8 @@ import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { computed, onMounted, ref } from 'vue'
 
-import type { ResponsePointHisrotyModel } from '@/api/api-models'
-import { PointFrom } from '@/api/api-models'
+import type { ResponsePointHisrotyModel } from '@/api/client-types'
+import { PointFrom } from '@/api/generated/model'
 import { getApiPointUserGetHistories } from '@/api/generated/point/point'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
@@ -252,4 +252,3 @@ onMounted(() => void loadHistories())
     </template>
   </div>
 </template>
-

@@ -19,7 +19,7 @@ vi.mock('@/api/obs-store', () => ({
   },
 }))
 import { ObsSyncConflict } from '@/api/obs-store'
-function snapshot(data: object, hash = 'a') {
+function makeSnapshot(data: object, hash = 'a') {
   return { hash, data: JSON.stringify(data), changed: true, updatedAt: 1 }
 }
 function deferred<T>() {
@@ -54,7 +54,7 @@ beforeEach(() => {
   route.query = {}
   localStorage.clear()
   vi.clearAllMocks()
-  mocks.get.mockResolvedValue(snapshot({ count: 5, title: 'remote' }))
+  mocks.get.mockResolvedValue(makeSnapshot({ count: 5, title: 'remote' }))
   mocks.update.mockResolvedValue({ hash: 'b', changed: false, data: null, updatedAt: 2 })
   vi.stubGlobal(
     'BroadcastChannel',
@@ -107,22 +107,22 @@ describe('OBS owner-scoped synchronization', () => {
     expect(mocks.update).not.toHaveBeenCalled()
   })
   it('rejects late snapshots after account changes', async () => {
-    const old = deferred<ReturnType<typeof snapshot>>()
+    const old = deferred<ReturnType<typeof makeSnapshot>>()
     mocks.get.mockReturnValueOnce(old.promise)
     const bridge = setup()
     account.value.id = 2
     await nextTick()
     await flushPromises()
-    old.resolve(snapshot({ count: 999, title: 'wrong owner' }))
+    old.resolve(makeSnapshot({ count: 999, title: 'wrong owner' }))
     await flushPromises()
     expect(bridge.state.value.count).toBe(5)
   })
   it('ignores a poll that returns after a newer write has already completed', async () => {
-    const old = deferred<ReturnType<typeof snapshot>>()
+    const old = deferred<ReturnType<typeof makeSnapshot>>()
     mocks.get.mockReturnValueOnce(old.promise)
     const bridge = setup()
     await bridge.updateState({ count: 7 })
-    old.resolve(snapshot({ count: 1, title: 'stale' }, 'old'))
+    old.resolve(makeSnapshot({ count: 1, title: 'stale' }, 'old'))
     await flushPromises()
     expect(bridge.state.value.count).toBe(7)
     expect(bridge.currentHash.value).toBe('b')
@@ -144,7 +144,7 @@ describe('OBS owner-scoped synchronization', () => {
   it('rebases only edited fields on conflicting remote configuration', async () => {
     const bridge = setup()
     await flushPromises()
-    mocks.update.mockRejectedValueOnce(new ObsSyncConflict(snapshot({ count: 10, title: 'other window' }, 'new')))
+    mocks.update.mockRejectedValueOnce(new ObsSyncConflict(makeSnapshot({ count: 10, title: 'other window' }, 'new')))
     await bridge.updateState({ count: 6 })
     expect(bridge.state.value).toEqual({ count: 6, title: 'other window' })
     expect(mocks.update.mock.calls[1][3]).toBe('new')

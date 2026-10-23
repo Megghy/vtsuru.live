@@ -3,8 +3,9 @@ import { OpenOutline, RefreshOutline, StorefrontOutline } from '@vicons/ionicons
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { ResponsePointGoodModel, UserInfo } from '@/api/api-models'
-import { FunctionTypes, GoodsStatus } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import type { ResponseUserInfo } from '@/api/generated/model'
+import { FunctionTypes, GoodsStatus } from '@/api/generated/model'
 import { fetchPublicPointGoods } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
@@ -16,7 +17,7 @@ import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 
-const props = defineProps<{ blockProps: unknown; userInfo?: UserInfo }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: ResponseUserInfo }>()
 const values = computed<Record<string, unknown>>(() =>
   props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
     ? (props.blockProps as Record<string, unknown>)
@@ -178,7 +179,9 @@ watch(
           :to="{ name: 'user-goods', params: { id: props.userInfo?.name } }"
           class="border border-border rounded-lg bg-muted/40 overflow-hidden text-foreground no-underline transition hover:border-primary hover:bg-card @max-[380px]:grid @max-[380px]:grid-cols-[112px_minmax(0,1fr)]"
         >
-          <div class="relative aspect-video overflow-hidden bg-muted @max-[380px]:aspect-auto @max-[380px]:min-h-[100px]">
+          <div
+            class="relative aspect-video overflow-hidden bg-muted @max-[380px]:aspect-auto @max-[380px]:min-h-[100px]"
+          >
             <img
               v-if="item.cover?.path"
               :src="item.cover.path"
@@ -226,5 +229,3 @@ watch(
     </div>
   </BlockCard>
 </template>
-
-

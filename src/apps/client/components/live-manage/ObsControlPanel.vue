@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import {
-  AlertCircle,
-  CheckCircle2,
-  HelpCircle,
-  Info,
-  Play,
-  RefreshCw,
-  Square,
-  Video,
-} from 'lucide-vue-next'
+import { AlertCircle, CheckCircle2, HelpCircle, Info, Play, RefreshCw, Square, Video } from 'lucide-vue-next'
 
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
@@ -16,13 +7,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -214,12 +199,14 @@ const handleToggleConnect = () => {
                   <span
                     class="text-sm font-semibold mt-0.5 block font-mono cursor-help"
                     :class="
-                      ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100) > 2
+                      (obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100 > 2
                         ? 'text-amber-500'
                         : 'text-foreground'
                     "
                   >
-                    {{ ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100).toFixed(2) }}%
+                    {{
+                      ((obsStore.obsStats.outputSkippedFrames / obsStore.obsStats.outputTotalFrames) * 100).toFixed(2)
+                    }}%
                   </span>
                 </TooltipTrigger>
                 <TooltipContent class="text-xs">
@@ -230,7 +217,8 @@ const handleToggleConnect = () => {
             <span
               v-else
               class="text-sm font-semibold text-foreground mt-0.5 block font-mono"
-            >—</span>
+              >—</span
+            >
           </div>
 
           <!-- CPU 使用率 -->
@@ -264,12 +252,14 @@ const handleToggleConnect = () => {
                   <span
                     class="text-sm font-semibold mt-0.5 block font-mono cursor-help"
                     :class="
-                      ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100) > 2
+                      (obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100 > 2
                         ? 'text-amber-500'
                         : 'text-foreground'
                     "
                   >
-                    {{ ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100).toFixed(2) }}%
+                    {{
+                      ((obsStore.obsStats.renderSkippedFrames / obsStore.obsStats.renderTotalFrames) * 100).toFixed(2)
+                    }}%
                   </span>
                 </TooltipTrigger>
                 <TooltipContent class="text-xs">
@@ -280,7 +270,8 @@ const handleToggleConnect = () => {
             <span
               v-else
               class="text-sm font-semibold text-foreground mt-0.5 block font-mono"
-            >—</span>
+              >—</span
+            >
           </div>
         </div>
       </div>
@@ -342,8 +333,8 @@ const handleToggleConnect = () => {
             <Switch
               :checked="obsStore.obsSceneConfig.autoSwitchEnabled"
               @update:checked="
-                obsStore.obsSceneConfig.autoSwitchEnabled = $event;
-                obsStore.saveSceneConfig();
+                obsStore.obsSceneConfig.autoSwitchEnabled = $event
+                obsStore.saveSceneConfig()
               "
             />
           </div>
@@ -358,8 +349,8 @@ const handleToggleConnect = () => {
             <Switch
               :checked="obsStore.obsSceneConfig.autoToggleStream"
               @update:checked="
-                obsStore.obsSceneConfig.autoToggleStream = $event;
-                obsStore.saveSceneConfig();
+                obsStore.obsSceneConfig.autoToggleStream = $event
+                obsStore.saveSceneConfig()
               "
             />
           </div>

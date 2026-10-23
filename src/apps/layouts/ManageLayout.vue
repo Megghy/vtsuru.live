@@ -4,7 +4,7 @@ import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { isLoadingAccount, useAccount } from '@/api/account'
-import { BiliAuthCodeStatusType } from '@/api/api-models'
+import { BiliAuthCodeStatusType } from '@/api/generated/model'
 import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import ManageAuthGate from '@/apps/manage/components/layout/ManageAuthGate.vue'
@@ -93,7 +93,9 @@ onMounted(() => {
         <div class="manage-shell__main flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
           <ManageTopBar :account-name="workspace === 'user' ? biliAuth.biliAuth.name : accountInfo?.name" />
           <div class="manage-shell__scroll flex-1 min-h-0 overflow-y-auto flex flex-col">
-            <div class="manage-shell__content flex-1 w-full min-w-[370px] max-[600px]:min-w-0 flex flex-col p-0 box-border">
+            <div
+              class="manage-shell__content flex-1 w-full min-w-[370px] max-[600px]:min-w-0 flex flex-col p-0 box-border"
+            >
               <ManageUserGate v-if="workspace === 'user'" />
               <ManageContentGate
                 v-else
@@ -125,4 +127,3 @@ onMounted(() => {
     <ManageAuthGate v-else />
   </div>
 </template>
-

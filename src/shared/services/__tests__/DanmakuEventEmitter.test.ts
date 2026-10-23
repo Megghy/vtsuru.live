@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 
 import DanmakuEventEmitter from '../DanmakuClients/DanmakuEventEmitter'
 

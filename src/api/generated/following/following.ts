@@ -7,12 +7,12 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
-  FollowingControllerFollowRequest,
+  FollowRequest,
   GetApiFollowingDirectoryParams,
   GetApiFollowingStatesParams,
   ResponseResult,
-  ResponseResultOfFollowingControllerDirectoryEntryArray,
-  ResponseResultOfIEnumerableOfFollowingControllerFollowState,
+  ResponseResultOfDirectoryEntryArray,
+  ResponseResultOfIEnumerableOfFollowState,
 } from '../model'
 
 export const getPostApiFollowingIdUrl = (id: number) => {
@@ -21,7 +21,7 @@ export const getPostApiFollowingIdUrl = (id: number) => {
 
 export const postApiFollowingId = async (
   id: number,
-  followingControllerFollowRequest?: FollowingControllerFollowRequest,
+  followRequest?: FollowRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -42,7 +42,7 @@ export const postApiFollowingId = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(followingControllerFollowRequest),
+    body: JSON.stringify(followRequest),
   })
 }
 
@@ -63,8 +63,8 @@ export const getGetApiFollowingDirectoryUrl = (params?: GetApiFollowingDirectory
 export const getApiFollowingDirectory = async (
   params?: GetApiFollowingDirectoryParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfFollowingControllerDirectoryEntryArray> => {
-  return vtsuruMutator<ResponseResultOfFollowingControllerDirectoryEntryArray>(getGetApiFollowingDirectoryUrl(params), {
+): Promise<ResponseResultOfDirectoryEntryArray> => {
+  return vtsuruMutator<ResponseResultOfDirectoryEntryArray>(getGetApiFollowingDirectoryUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -92,12 +92,9 @@ export const getGetApiFollowingStatesUrl = (params?: GetApiFollowingStatesParams
 export const getApiFollowingStates = async (
   params?: GetApiFollowingStatesParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfIEnumerableOfFollowingControllerFollowState> => {
-  return vtsuruMutator<ResponseResultOfIEnumerableOfFollowingControllerFollowState>(
-    getGetApiFollowingStatesUrl(params),
-    {
-      ...options,
-      method: 'GET',
-    },
-  )
+): Promise<ResponseResultOfIEnumerableOfFollowState> => {
+  return vtsuruMutator<ResponseResultOfIEnumerableOfFollowState>(getGetApiFollowingStatesUrl(params), {
+    ...options,
+    method: 'GET',
+  })
 }

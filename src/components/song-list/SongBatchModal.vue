@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import type { SongRequestOption } from '@/api/api-models'
+import type { SongRequestOption } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -313,7 +313,7 @@ defineExpose({ open, close })
             <Button
               variant="destructive"
               @click="
-                emit('delete');
+                emit('delete')
                 close()
               "
             >

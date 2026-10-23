@@ -8,7 +8,7 @@
 import type { APIFileModel } from './aPIFileModel'
 import type { QAMessage } from './qAMessage'
 import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel'
-import type { ResponseQAInfoResponseQATextReviewInfo } from './responseQAInfoResponseQATextReviewInfo'
+import type { ResponseQATextReviewInfo } from './responseQATextReviewInfo'
 import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 export interface ResponseQAInfoToTarget {
@@ -31,7 +31,7 @@ export interface ResponseQAInfoToTarget {
   isSenderBiliAuthed: boolean
   /** @nullable */
   tag?: string | null
-  reviewResult?: ResponseQAInfoResponseQATextReviewInfo
+  reviewResult?: ResponseQATextReviewInfo
   /** @nullable */
   questionImages?: APIFileModel[] | null
   /** @nullable */

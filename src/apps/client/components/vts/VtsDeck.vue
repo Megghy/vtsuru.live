@@ -149,12 +149,8 @@ function addExpressions() {
             tileDisabled
               ? 'cursor-not-allowed opacity-50'
               : 'cursor-pointer hover:-translate-y-0.5 hover:shadow-md active:scale-[0.97]',
-            vts.isDeckTileActive(tile)
-              ? 'bg-primary/15 shadow-[0_0_0_2px_var(--primary)]'
-              : '',
-            isTargetMissing(tile.type, tile.targetId)
-              ? 'border-dashed opacity-60'
-              : '',
+            vts.isDeckTileActive(tile) ? 'bg-primary/15 shadow-[0_0_0_2px_var(--primary)]' : '',
+            isTargetMissing(tile.type, tile.targetId) ? 'border-dashed opacity-60' : '',
             editing ? 'cursor-grab' : '',
           ]"
           :style="{
@@ -169,7 +165,9 @@ function addExpressions() {
             class="size-5 flex"
             :style="{ color: tile.color || 'var(--primary)' }"
           />
-          <span class="max-w-full overflow-hidden text-[13px] font-semibold text-ellipsis whitespace-nowrap">{{ tile.label }}</span>
+          <span class="max-w-full overflow-hidden text-[13px] font-semibold text-ellipsis whitespace-nowrap">{{
+            tile.label
+          }}</span>
           <span class="text-[11px] text-muted-foreground">
             {{ isTargetMissing(tile.type, tile.targetId) ? '目标不存在' : DECK_TYPE_META[tile.type].label }}
           </span>

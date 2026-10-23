@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { SongFrom } from '@/api/api-models'
+import { SongPlatform } from '@/api/generated/model'
 
 import { applySongOrder, moveSongInOrder, parseSongListCsv, parsedRowsToSongsInfo } from '../songListCsv'
 
@@ -12,9 +12,9 @@ describe('songListCsv', () => {
     const rows = parseSongListCsv(csv)
     expect(rows).toHaveLength(2)
     expect(rows[0].name).toBe('歌A')
-    expect(rows[0].from).toBe(SongFrom.Netease)
+    expect(rows[0].from).toBe(SongPlatform.Netease)
     expect(rows[0].author).toEqual(['作者1', '作者2'])
-    expect(rows[1].from).toBe(SongFrom.Custom)
+    expect(rows[1].from).toBe(SongPlatform.Custom)
 
     const songs = parsedRowsToSongsInfo(rows)
     expect(songs[0].name).toBe('歌A')

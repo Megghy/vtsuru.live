@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 const mocks = vi.hoisted(() => ({ switchExpression: vi.fn(), history: vi.fn() }))
 vi.mock('../../usePngtuberDriver', () => ({ usePngtuberDriver: () => ({ switchExpression: mocks.switchExpression }) }))
 vi.mock('../../useBiliCookie', () => ({ useBiliCookie: () => ({ isCookieValid: false }) }))

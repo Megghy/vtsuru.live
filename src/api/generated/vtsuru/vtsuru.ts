@@ -9,10 +9,10 @@ import { vtsuruMutator } from '../../orval-mutator'
 import type {
   GetApiVtsuruUserFaceIdParams,
   ResponseResult,
-  ResponseResultOfIEnumerableOfVtsuruControllerTempResponseEmoiconModel,
-  ResponseResultOfSystemString,
-  ResponseResultOfVtsuruControllerLiveEmojiResponse,
-  ResponseResultOfVtsuruControllerTempResponseIndexDataModel,
+  ResponseResultOfIEnumerableOfTempResponseEmoiconModel,
+  ResponseResultOfLiveEmojiResponse,
+  ResponseResultOfString,
+  ResponseResultOfTempResponseIndexDataModel,
   SendEmailRequest,
   TranslateRequest,
 } from '../model'
@@ -37,14 +37,11 @@ export const getGetApiVtsuruBlivechatEmoticonUrl = () => {
 
 export const getApiVtsuruBlivechatEmoticon = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfIEnumerableOfVtsuruControllerTempResponseEmoiconModel> => {
-  return vtsuruMutator<ResponseResultOfIEnumerableOfVtsuruControllerTempResponseEmoiconModel>(
-    getGetApiVtsuruBlivechatEmoticonUrl(),
-    {
-      ...options,
-      method: 'GET',
-    },
-  )
+): Promise<ResponseResultOfIEnumerableOfTempResponseEmoiconModel> => {
+  return vtsuruMutator<ResponseResultOfIEnumerableOfTempResponseEmoiconModel>(getGetApiVtsuruBlivechatEmoticonUrl(), {
+    ...options,
+    method: 'GET',
+  })
 }
 
 export const getGetApiVtsuruClientLatestJsonUrl = () => {
@@ -64,8 +61,8 @@ export const getGetApiVtsuruClientLiveEmojiUrl = () => {
 
 export const getApiVtsuruClientLiveEmoji = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVtsuruControllerLiveEmojiResponse> => {
-  return vtsuruMutator<ResponseResultOfVtsuruControllerLiveEmojiResponse>(getGetApiVtsuruClientLiveEmojiUrl(), {
+): Promise<ResponseResultOfLiveEmojiResponse> => {
+  return vtsuruMutator<ResponseResultOfLiveEmojiResponse>(getGetApiVtsuruClientLiveEmojiUrl(), {
     ...options,
     method: 'GET',
   })
@@ -77,8 +74,8 @@ export const getGetApiVtsuruEventFetcherVersionUrl = () => {
 
 export const getApiVtsuruEventFetcherVersion = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiVtsuruEventFetcherVersionUrl(), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiVtsuruEventFetcherVersionUrl(), {
     ...options,
     method: 'GET',
   })
@@ -101,8 +98,8 @@ export const getGetApiVtsuruGetIndexDataUrl = () => {
 
 export const getApiVtsuruGetIndexData = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVtsuruControllerTempResponseIndexDataModel> => {
-  return vtsuruMutator<ResponseResultOfVtsuruControllerTempResponseIndexDataModel>(getGetApiVtsuruGetIndexDataUrl(), {
+): Promise<ResponseResultOfTempResponseIndexDataModel> => {
+  return vtsuruMutator<ResponseResultOfTempResponseIndexDataModel>(getGetApiVtsuruGetIndexDataUrl(), {
     ...options,
     method: 'GET',
   })
@@ -145,7 +142,7 @@ export const getPostApiVtsuruTranslateUrl = () => {
 export const postApiVtsuruTranslate = async (
   translateRequest?: TranslateRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -160,7 +157,7 @@ export const postApiVtsuruTranslate = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiVtsuruTranslateUrl(), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiVtsuruTranslateUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -201,8 +198,8 @@ export const getGetApiVtsuruVersionUrl = () => {
 
 export const getApiVtsuruVersion = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiVtsuruVersionUrl(), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiVtsuruVersionUrl(), {
     ...options,
     method: 'GET',
   })

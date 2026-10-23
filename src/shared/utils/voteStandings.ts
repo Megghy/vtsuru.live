@@ -1,4 +1,4 @@
-import type { VoteOptionDto } from '@/api/api-models'
+import type { VoteOptionDto } from '@/api/generated/model'
 
 /** 票数是排名、票差与胜负的唯一依据；API 的 percentage 仅是舍入后的展示值。 */
 export function getVoteStandings(options: readonly VoteOptionDto[]) {

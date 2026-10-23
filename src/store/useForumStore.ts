@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import type { ForumCommentModel } from '@/api/client-types'
 import {
   getApiForumGetComments,
   getApiForumGetForum,
@@ -22,12 +23,11 @@ import {
   postApiForumPostTopic,
 } from '@/api/generated/forum/forum'
 import type {
-  ForumCommentModel,
   ForumCommentSortTypes,
-  ForumPostTopicModel,
-  ForumReplyModel,
   ForumTopicSortTypes,
-} from '@/api/models/forum'
+  RequestPostTopic,
+  ResponseForumCommentReplyBaseModel,
+} from '@/api/generated/model'
 import { requestWithCaptchaRetry } from '@/shared/captcha'
 import { message } from '@/shared/utils'
 
@@ -36,7 +36,7 @@ export const useForumStore = defineStore('forum', () => {
   const isLikeLoading = ref(false)
 
   const replyingComment = ref<ForumCommentModel>()
-  const replyingReply = ref<ForumReplyModel>()
+  const replyingReply = ref<ResponseForumCommentReplyBaseModel>()
   const showReplyModal = ref(false)
 
   async function GetForumInfo(owner: number) {
@@ -202,7 +202,7 @@ export const useForumStore = defineStore('forum', () => {
       isLoading.value = false
     }
   }
-  function PostTopic(topic: ForumPostTopicModel, token: string, refresh?: () => Promise<string>) {
+  function PostTopic(topic: RequestPostTopic, token: string, refresh?: () => Promise<string>) {
     return postWithCaptcha(
       (captchaToken) =>
         postApiForumPostTopic(topic as any, {
@@ -284,7 +284,7 @@ export const useForumStore = defineStore('forum', () => {
   }
   async function SetReplyingComment(
     comment: ForumCommentModel | undefined = undefined,
-    reply: ForumReplyModel | undefined = undefined,
+    reply: ResponseForumCommentReplyBaseModel | undefined = undefined,
   ) {
     if (!comment) {
       replyingComment.value = undefined

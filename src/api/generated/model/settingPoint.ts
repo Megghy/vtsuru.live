@@ -6,19 +6,18 @@
  * OpenAPI spec version: v1
  */
 import type { EventDataTypes } from './eventDataTypes'
+import type { GiftPointType } from './giftPointType'
 import type { SettingPointGiftPercentMap } from './settingPointGiftPercentMap'
-import type { SettingPointGiftPointType } from './settingPointGiftPointType'
 
 export interface SettingPoint {
   allowType: EventDataTypes[]
   jianzhangPoint: number
   tiduPoint: number
   zongduPoint: number
-  /** @nullable */
-  giftPercentMap?: SettingPointGiftPercentMap
+  giftPercentMap: SettingPointGiftPercentMap
   scPointPercent?: number
   giftPointPercent: number
-  giftAllowType: SettingPointGiftPointType
+  giftAllowType: GiftPointType
   /** 是否在售罄时下架 */
   shouldDiscontinueWhenSoldOut: boolean
   enableCheckIn: boolean

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 
 import BlockCard from '../BlockCard.vue'
@@ -9,7 +9,7 @@ import CardListAction from './CardListAction.vue'
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
 }>()
 
 const values = computed<Record<string, unknown>>(() =>
@@ -56,22 +56,14 @@ const items = computed(() =>
   >
     <div
       class="@container grid gap-2.5"
-      :class="
-        layout === 'grid'
-          ? 'grid-cols-[repeat(var(--card-columns),minmax(0,1fr))] @max-[620px]:grid-cols-1'
-          : ''
-      "
+      :class="layout === 'grid' ? 'grid-cols-[repeat(var(--card-columns),minmax(0,1fr))] @max-[620px]:grid-cols-1' : ''"
       :style="{ '--card-columns': String(columns) }"
     >
       <article
         v-for="item in items"
         :key="item.id"
         class="min-w-0 overflow-hidden border border-border rounded-[var(--radius)] bg-muted"
-        :class="
-          layout === 'list'
-            ? 'grid grid-cols-[minmax(140px,28%)_minmax(0,1fr)] @max-[620px]:grid-cols-1'
-            : ''
-        "
+        :class="layout === 'list' ? 'grid grid-cols-[minmax(140px,28%)_minmax(0,1fr)] @max-[620px]:grid-cols-1' : ''"
       >
         <img
           v-if="item.image"
@@ -129,5 +121,3 @@ const items = computed(() =>
     </div>
   </BlockCard>
 </template>
-
-

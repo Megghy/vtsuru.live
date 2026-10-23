@@ -2,8 +2,8 @@
 import { Info24Filled } from '@vicons/fluent'
 import { ref } from 'vue'
 
-import type { SongRequestOption, SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel, SongRequestOption } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -25,17 +25,17 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  (e: 'save', song: SongsInfo): void
+  (e: 'save', song: ResponseSongModel): void
 }>()
 
 const show = ref(false)
-const model = ref<SongsInfo>({} as SongsInfo)
+const model = ref<ResponseSongModel>({} as ResponseSongModel)
 const loading = ref(false)
 const authorText = ref('')
 const languageText = ref('')
 const tagText = ref('')
 
-function open(song: SongsInfo) {
+function open(song: ResponseSongModel) {
   model.value = JSON.parse(JSON.stringify(song))
   authorText.value = (model.value.author ?? []).join(', ')
   languageText.value = (model.value.language ?? []).join(', ')
@@ -126,7 +126,7 @@ defineExpose({ open, close, loading })
               <Input
                 v-model="model.url"
                 placeholder="音频直链"
-                :disabled="model.from !== SongFrom.Custom"
+                :disabled="model.from !== SongPlatform.Custom"
               />
             </div>
           </div>

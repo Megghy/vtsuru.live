@@ -2,7 +2,7 @@
 import { useDebounceFn } from '@vueuse/core'
 import { onMounted, ref, watch } from 'vue'
 
-import type { UserBasicInfo } from '@/api/api-models'
+import type { ResponseUserBasicInfo } from '@/api/generated/model'
 import { getApiUserBasicValue } from '@/api/generated/user/user'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -14,9 +14,9 @@ import { getUserAvatarUrl } from '@/shared/utils'
 const props = defineProps<{
   user: string | number
 }>()
-const userInfo = defineModel<UserBasicInfo | undefined>('userInfo')
+const userInfo = defineModel<ResponseUserBasicInfo | undefined>('userInfo')
 
-const currentUser = ref<UserBasicInfo>({} as UserBasicInfo)
+const currentUser = ref<ResponseUserBasicInfo>({} as ResponseUserBasicInfo)
 const isLoading = ref(false)
 const deBounce = useDebounceFn((newValue: string | number) => {
   getUserInfo(newValue)
@@ -32,18 +32,18 @@ watch(
 async function getUserInfo(user: string | number) {
   try {
     if (!props.user) {
-      currentUser.value = {} as UserBasicInfo
+      currentUser.value = {} as ResponseUserBasicInfo
       return
     }
     isLoading.value = true
     const data = (await getApiUserBasicValue(String(user))) as unknown as {
       code: number
-      data: UserBasicInfo
+      data: ResponseUserBasicInfo
     }
     if (data.code === 200) {
       currentUser.value = data.data
     } else {
-      currentUser.value = {} as UserBasicInfo
+      currentUser.value = {} as ResponseUserBasicInfo
     }
   } finally {
     isLoading.value = false

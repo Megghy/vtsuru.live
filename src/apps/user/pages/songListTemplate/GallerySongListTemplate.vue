@@ -2,7 +2,7 @@
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { Button } from '@/shared/ui/button'
@@ -35,14 +35,14 @@ const {
 
 const searchKeyword = ref('')
 const selectedTag = ref<string | null>(null)
-const previewSong = ref<SongsInfo>()
+const previewSong = ref<ResponseSongModel>()
 const isLrcLoading = ref('')
 
 const tagOptions = computed(() => {
   return getSongFieldOptions(props.data, 'tags')
 })
 
-const filteredSongs = computed<SongsInfo[]>(() => {
+const filteredSongs = computed<ResponseSongModel[]>(() => {
   return filterSongs(props.data, {
     keyword: searchKeyword.value,
     tag: selectedTag.value,
@@ -52,7 +52,7 @@ const filteredSongs = computed<SongsInfo[]>(() => {
 const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
 const { listKey } = useFilterListKey({ tag: selectedTag })
 
-function requestSong(song: SongsInfo) {
+function requestSong(song: ResponseSongModel) {
   if (!beginRequest(song)) return
   emits('requestSong', song)
 }
@@ -257,4 +257,3 @@ function requestSong(song: SongsInfo) {
     </div>
   </TooltipProvider>
 </template>
-

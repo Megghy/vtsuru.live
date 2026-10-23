@@ -6,7 +6,8 @@ import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
+import type { ForumCommentModel } from '@/api/client-types'
+import type { ResponseForumTopicModel } from '@/api/generated/model'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -20,7 +21,7 @@ import ForumReplyItem from './ForumReplyItem.vue'
 
 const props = defineProps<{
   item: ForumCommentModel
-  topic: ForumTopicModel
+  topic: ResponseForumTopicModel
 }>()
 
 const emits = defineEmits<{

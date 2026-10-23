@@ -8,20 +8,20 @@ import { vtsuruMutator } from '../../orval-mutator'
  */
 import type {
   AddSongModel,
+  BatchUpdate,
+  BatchUpdateLanguage,
+  BatchUpdateOption,
   GetApiSongListGetByUidParams,
   GetApiSongListGetNeteaseListParams,
   GetApiSongListGetNeteaseLyricParams,
   GetApiSongListGetParams,
   PostApiSongListDeleteParams,
   ResponseResult,
+  ResponseResultOfInt32,
   ResponseResultOfListOfResponseSongModel,
   ResponseResultOfResponseNeteaseSongLyricModel,
   ResponseResultOfResponseSongModel,
   ResponseResultOfResponseSongModelArray,
-  ResponseResultOfSystemInt32,
-  SongListControllerBatchUpdate,
-  SongListControllerBatchUpdateLanguage,
-  SongListControllerBatchUpdateOption,
   UpdateSongModel,
 } from '../model'
 
@@ -62,7 +62,7 @@ export const getPostApiSongListDeleteBatchUrl = () => {
 export const postApiSongListDeleteBatch = async (
   postApiSongListDeleteBatchBody?: string[],
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -77,7 +77,7 @@ export const postApiSongListDeleteBatch = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiSongListDeleteBatchUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListDeleteBatchUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -214,9 +214,9 @@ export const getPostApiSongListUpdateBatchAuthorUrl = () => {
 }
 
 export const postApiSongListUpdateBatchAuthor = async (
-  songListControllerBatchUpdate?: SongListControllerBatchUpdate,
+  batchUpdate?: BatchUpdate,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -231,11 +231,11 @@ export const postApiSongListUpdateBatchAuthor = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiSongListUpdateBatchAuthorUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchAuthorUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(songListControllerBatchUpdate),
+    body: JSON.stringify(batchUpdate),
   })
 }
 
@@ -244,9 +244,9 @@ export const getPostApiSongListUpdateBatchLanguageUrl = () => {
 }
 
 export const postApiSongListUpdateBatchLanguage = async (
-  songListControllerBatchUpdateLanguage?: SongListControllerBatchUpdateLanguage,
+  batchUpdateLanguage?: BatchUpdateLanguage,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -261,11 +261,11 @@ export const postApiSongListUpdateBatchLanguage = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiSongListUpdateBatchLanguageUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchLanguageUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(songListControllerBatchUpdateLanguage),
+    body: JSON.stringify(batchUpdateLanguage),
   })
 }
 
@@ -274,9 +274,9 @@ export const getPostApiSongListUpdateBatchOptionUrl = () => {
 }
 
 export const postApiSongListUpdateBatchOption = async (
-  songListControllerBatchUpdateOption?: SongListControllerBatchUpdateOption,
+  batchUpdateOption?: BatchUpdateOption,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -291,11 +291,11 @@ export const postApiSongListUpdateBatchOption = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiSongListUpdateBatchOptionUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchOptionUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(songListControllerBatchUpdateOption),
+    body: JSON.stringify(batchUpdateOption),
   })
 }
 
@@ -304,9 +304,9 @@ export const getPostApiSongListUpdateBatchTagUrl = () => {
 }
 
 export const postApiSongListUpdateBatchTag = async (
-  songListControllerBatchUpdate?: SongListControllerBatchUpdate,
+  batchUpdate?: BatchUpdate,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -321,11 +321,11 @@ export const postApiSongListUpdateBatchTag = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiSongListUpdateBatchTagUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiSongListUpdateBatchTagUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(songListControllerBatchUpdate),
+    body: JSON.stringify(batchUpdate),
   })
 }
 

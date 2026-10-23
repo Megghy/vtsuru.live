@@ -1,4 +1,4 @@
-import type { PointOrderStatus } from '@/api/api-models'
+import type { PointOrderStatus } from '@/api/generated/model'
 import {
   getApiOrgOrgIdPointsOrders,
   postApiOrgOrgIdPointsOrdersExpress,

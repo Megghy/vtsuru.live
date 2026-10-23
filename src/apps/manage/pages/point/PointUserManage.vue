@@ -15,8 +15,9 @@ import { saveAs } from 'file-saver'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ResponsePointGoodModel, ResponsePointUserModel, Setting_Point } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import type { ResponsePointUserModel, SettingPoint } from '@/api/generated/model'
+import { EventDataTypes } from '@/api/generated/model'
 import {
   getApiPointGetAllUsers,
   postApiPointDeleteUser,
@@ -54,7 +55,7 @@ interface PointUserSettings {
 
 const props = defineProps<{
   goods: ResponsePointGoodModel[]
-  pointSetting?: Setting_Point
+  pointSetting?: SettingPoint
 }>()
 const emit = defineEmits<{
   openSourceSettings: []
@@ -529,7 +530,7 @@ onMounted(async () => {
                           size="xs"
                           class="text-blue-500 hover:text-blue-600 hover:bg-blue-500/10"
                           @click="
-                            currentUser = user;
+                            currentUser = user
                             showModal = true
                           "
                         >
@@ -568,7 +569,7 @@ onMounted(async () => {
                   <Select
                     :model-value="String(ps)"
                     @update:model-value="
-                      ps = Number($event);
+                      ps = Number($event)
                       pn = 1
                     "
                   >

@@ -1,14 +1,7 @@
 <script setup lang="ts">
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
 import { Button } from '@/shared/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 
 const props = defineProps<{ control: LiveControl }>()
 const c = props.control
@@ -49,9 +42,7 @@ const c = props.control
           暂无二维码
         </div>
 
-        <p class="text-xs text-center text-muted-foreground">
-          认证完成后，请关闭此窗口并重新点击“开始直播”
-        </p>
+        <p class="text-xs text-center text-muted-foreground">认证完成后，请关闭此窗口并重新点击“开始直播”</p>
       </div>
 
       <DialogFooter>

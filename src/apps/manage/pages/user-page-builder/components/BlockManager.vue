@@ -530,4 +530,3 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped src="./ui-transitions.css"></style>
-

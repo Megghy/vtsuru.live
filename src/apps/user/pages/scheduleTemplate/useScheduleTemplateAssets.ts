@@ -1,12 +1,12 @@
 import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 
 /** 各风格化日程模板共用的素材配置字段 */
 export interface ScheduleTemplateAssetsConfig {
-  backgroundFile: UploadFileResponse[]
-  portraitFile?: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
+  portraitFile?: APIFileModel[]
   showAvatar?: boolean
 }
 

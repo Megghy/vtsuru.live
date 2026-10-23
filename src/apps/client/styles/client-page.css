@@ -41,7 +41,6 @@
   margin: 0;
 }
 
-
 /* 窄窗口下收紧外边距, 让内容获得更多可用宽度 */
 @media (max-width: 640px) {
   .client-page {

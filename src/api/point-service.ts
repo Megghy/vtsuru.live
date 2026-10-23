@@ -1,3 +1,5 @@
+import type { ServiceConfigData, ServiceField, ServiceOrderData } from '@/api/generated/model'
+import { ServiceFieldType } from '@/api/generated/model'
 import {
   getApiPointServiceOrderOwner,
   getApiPointServiceOrderUser,
@@ -6,9 +8,7 @@ import {
 } from '@/api/generated/point/point'
 import { unwrapOk } from '@/api/query'
 
-import { ServiceFieldType, type ServiceConfig, type ServiceField, type ServiceOrderData } from './api-models'
-
-export type { ServiceConfig, ServiceField, ServiceOrderData }
+export type { ServiceConfigData, ServiceField, ServiceOrderData }
 export { ServiceFieldType }
 export type OwnerServiceOrderUpdate = {
   orderId: number

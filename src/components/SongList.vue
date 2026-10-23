@@ -2,14 +2,15 @@
 import type { VNodeChild } from 'vue'
 import { ref } from 'vue'
 
-import type { SongRequestInfo, SongsInfo } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
+import type { ResponseSongModel } from '@/api/generated/model'
 import SongListTable from '@/components/song-list/SongListTable.vue'
 
 defineProps<{
-  songs: SongsInfo[]
+  songs: ResponseSongModel[]
   canEdit?: boolean
   isSelf: boolean
-  extraButton?: (song: SongsInfo) => VNodeChild[]
+  extraButton?: (song: ResponseSongModel) => VNodeChild[]
   liveRequestActive?: SongRequestInfo[]
 }>()
 

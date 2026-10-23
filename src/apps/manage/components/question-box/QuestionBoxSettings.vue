@@ -4,8 +4,8 @@ import { SettingsOutline } from '@vicons/ionicons5'
 import { computed, ref, watch } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
-import { ViolationTypes } from '@/api/api-models'
-import type { SettingQuestionBoxSaftyLevels } from '@/api/generated/model'
+import { ViolationTypes } from '@/api/generated/model'
+import type { SaftyLevels } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -36,7 +36,7 @@ const selectedSaftyLevel = computed({
   get: () => String(accountInfo.value?.settings?.questionBox?.saftyLevel ?? 0),
   set: (val: string) => {
     if (!val || !accountInfo.value?.settings?.questionBox) return
-    const num = Number(val) as SettingQuestionBoxSaftyLevels
+    const num = Number(val) as SaftyLevels
     accountInfo.value.settings.questionBox.saftyLevel = num
     saveQuestionBoxSettings()
   },

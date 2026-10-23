@@ -9,7 +9,7 @@ import { snapdom } from '@zumer/snapdom'
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
-import type { ScheduleWeekInfo } from '@/api/api-models'
+import type { ResponseScheduleModel } from '@/api/generated/model'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { toast } from '@/shared/utils'
 
@@ -17,7 +17,7 @@ import { scheduleFontStylesheetDomains, waitForScheduleFonts } from './scheduleF
 import { getISOWeekStart } from './scheduleTemplateUtils'
 
 const props = defineProps<{
-  weeks: ScheduleWeekInfo[]
+  weeks: ResponseScheduleModel[]
   captureTarget: HTMLElement | null | undefined
   fileName: string
 }>()
@@ -124,14 +124,10 @@ async function saveScheduleImage() {
           :model-value="selectedWeek"
           @update:model-value="selectedWeek = String($event)"
         >
-          <SelectTrigger
-            class="h-9 w-full bg-secondary border-border text-card-foreground"
-          >
+          <SelectTrigger class="h-9 w-full bg-secondary border-border text-card-foreground">
             <SelectValue placeholder="选择周次" />
           </SelectTrigger>
-          <SelectContent
-            class="bg-card border-border text-card-foreground"
-          >
+          <SelectContent class="bg-card border-border text-card-foreground">
             <SelectItem
               v-for="opt in options"
               :key="opt.value"
@@ -181,5 +177,3 @@ async function saveScheduleImage() {
     </button>
   </nav>
 </template>
-
-

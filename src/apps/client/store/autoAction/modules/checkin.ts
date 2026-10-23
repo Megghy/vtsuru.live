@@ -1,9 +1,9 @@
-import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { v4 as uuidv4 } from 'uuid'
 import type { Ref } from 'vue'
 
-import type { DanmakuModel, EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { DanmakuModel, EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
+import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 
 import { executeActions } from '../actionUtils'
 import type { AutoActionItem, RuntimeState } from '../types'
@@ -121,10 +121,7 @@ export function useCheckIn(
   _isTianXuanActive: Ref<boolean>,
   sendDanmaku: (roomId: number, message: string) => Promise<boolean>,
 ) {
-  const checkInConfig = usePersistedStorage<CheckInConfig>(
-    'autoAction.checkin.config',
-    createDefaultCheckInConfig(),
-  )
+  const checkInConfig = usePersistedStorage<CheckInConfig>('autoAction.checkin.config', createDefaultCheckInConfig())
   const isConfigLoaded = persistLoaded(checkInConfig)
 
   function processCheckInResult(payload: CheckInHubEvent, runtimeState: RuntimeState) {

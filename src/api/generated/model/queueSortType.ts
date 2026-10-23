@@ -6,11 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type QueueSortType = (typeof QueueSortType)[keyof typeof QueueSortType]
-
-export const QueueSortType = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-} as const
+export enum QueueSortType {
+  GuardFirst = 0,
+  PaymentFist = 1,
+  TimeFirst = 2,
+  FansMedalFirst = 3,
+}

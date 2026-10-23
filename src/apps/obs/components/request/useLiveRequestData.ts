@@ -1,15 +1,16 @@
 import { List } from 'linqts'
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
-import { QueueSortType, SongRequestStatus } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
 import { getApiLiveRequestGetActiveAndSettings } from '@/api/generated/live-request/live-request'
+import type { SettingSongRequest } from '@/api/generated/model'
+import { QueueSortType, SongRequestStatus } from '@/api/generated/model'
 import { useWebRTC } from '@/store/useRTC'
 
 export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const rtc = ref<any>(null)
   const originSongs = ref<SongRequestInfo[]>([])
-  const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
+  const settings = ref<SettingSongRequest>({} as SettingSongRequest)
   const key = ref(Date.now())
 
   // 计算属性
@@ -73,7 +74,7 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
 
       const data = (await getApiLiveRequestGetActiveAndSettings(params)) as unknown as {
         code: number
-        data: { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+        data: { songs: SongRequestInfo[]; setting: SettingSongRequest }
       }
       if (data.code == 200) {
         return data.data
@@ -83,8 +84,8 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
     }
     return {
       songs: [],
-      setting: {} as Setting_LiveRequest,
-    } as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+      setting: {} as SettingSongRequest,
+    } as { songs: SongRequestInfo[]; setting: SettingSongRequest }
   }
 
   async function update() {
@@ -94,7 +95,7 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
       originSongs.value = (r.songs ?? []).toSorted((a, b) => {
         return b.createAt - a.createAt
       })
-      settings.value = r.setting ?? ({} as Setting_LiveRequest)
+      settings.value = r.setting ?? ({} as SettingSongRequest)
       if (isCountChange) {
         key.value = Date.now()
       }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { Cpu, Server } from 'lucide-vue-next'
 import { invoke } from '@tauri-apps/api/core'
 import { error as logError } from '@tauri-apps/plugin-log'
 import { platform, type, version } from '@tauri-apps/plugin-os'
+import { Cpu, Server } from 'lucide-vue-next'
 import { onMounted, ref } from 'vue'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'

@@ -2,7 +2,7 @@
 import { defineComponent, h, onMounted, shallowRef } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { ConsumptionTypes } from '@/api/models/consumption'
+import { ConsumptionTypes } from '@/api/generated/model'
 import { isDev } from '@/shared/config'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'

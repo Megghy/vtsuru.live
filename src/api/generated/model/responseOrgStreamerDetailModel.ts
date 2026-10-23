@@ -6,14 +6,14 @@
  * OpenAPI spec version: v1
  */
 import type { HeatmapItem } from './heatmapItem'
-import type { OrgStreamerDataOrgStreamerStatuses } from './orgStreamerDataOrgStreamerStatuses'
+import type { OrgStreamerStatuses } from './orgStreamerStatuses'
 import type { ResponseLiveInfoModel } from './responseLiveInfoModel'
 import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 import type { StreamerLiveSummary } from './streamerLiveSummary'
 
 export interface ResponseOrgStreamerDetailModel {
   streamer: ResponseUserBasicInfo
-  status: OrgStreamerDataOrgStreamerStatuses
+  status: OrgStreamerStatuses
   /** @nullable */
   note?: string | null
   addedAt: number

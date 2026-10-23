@@ -2,7 +2,7 @@
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { fetchPublicForumExists } from '@/apps/user-page/api'
 import {
   getEnabledUserFunctions,
@@ -16,7 +16,7 @@ import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
 }>()
 
 const values = computed<Record<string, unknown>>(() =>
@@ -97,5 +97,3 @@ const availableFeatures = computed(() =>
     </nav>
   </BlockCard>
 </template>
-
-

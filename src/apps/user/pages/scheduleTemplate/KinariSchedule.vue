@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -14,7 +14,7 @@ import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 import './scheduleTemplateTheme.css'
 
 interface KinariConfig {
-  backgroundFile: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
   heading: string
   accentColor: RGBAColor
   indigoColor: RGBAColor
@@ -30,7 +30,7 @@ const Config = defineTemplateConfig([
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: KinariConfig) => (config.backgroundFile = files),
+    onUploaded: (files: APIFileModel[], config: KinariConfig) => (config.backgroundFile = files),
   },
   { name: '布告栏标题', type: 'string', key: 'heading', default: '日和町放送便り' },
   {

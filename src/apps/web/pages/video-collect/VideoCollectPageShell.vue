@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { toRef } from 'vue'
 
-import type { VideoCollectTable } from '@/api/api-models'
+import type { ResponseVideoCollectModel } from '@/api/generated/model'
 
 import { useVideoCollectPageTheme } from './useVideoCollectPageTheme'
 
 const props = defineProps<{
-  table?: VideoCollectTable | null
+  table?: ResponseVideoCollectModel | null
 }>()
 
 const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars } = useVideoCollectPageTheme(

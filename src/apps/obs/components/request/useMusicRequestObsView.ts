@@ -1,14 +1,14 @@
 import type { MaybeRefOrGetter } from 'vue'
 import { computed, ref, toValue, watch } from 'vue'
 
-import type { DanmakuUserInfo, SongsInfo } from '@/api/api-models'
+import type { DanmakuUserInfo, ResponseSongModel } from '@/api/generated/model'
 import { getApiMusicRequestGetWaiting } from '@/api/generated/music-request/music-request'
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
 import { AVATAR_URL } from '@/shared/config'
 
 interface WaitMusicInfo {
   from: DanmakuUserInfo
-  music: SongsInfo
+  music: ResponseSongModel
 }
 
 /**

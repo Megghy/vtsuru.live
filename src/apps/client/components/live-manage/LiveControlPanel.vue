@@ -1,11 +1,5 @@
 <script setup lang="ts">
-import {
-  AlertTriangle,
-  Play,
-  RefreshCw,
-  Square,
-  Video,
-} from 'lucide-vue-next'
+import { AlertTriangle, Play, RefreshCw, Square, Video } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
@@ -14,13 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/shared/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -192,9 +180,7 @@ function handleSubAreaChange(val: any) {
                 </Button>
               </div>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
-              请先开始直播后再控制 OBS 推流
-            </TooltipContent>
+            <TooltipContent class="text-xs"> 请先开始直播后再控制 OBS 推流 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
@@ -251,8 +237,8 @@ function handleSubAreaChange(val: any) {
               maxlength="40"
               :class="c.titleChanged.value ? 'border-amber-500/50' : ''"
               @update:model-value="
-                c.liveTitle.value = String($event);
-                c.markTitleEdited();
+                c.liveTitle.value = String($event)
+                c.markTitleEdited()
               "
             />
           </div>

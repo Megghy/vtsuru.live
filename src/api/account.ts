@@ -21,13 +21,13 @@ import {
   getApiUserConfigGetUser,
   postApiUserConfigSet,
 } from '@/api/generated/config/config'
-import type { AccountControllerTempResponseAloginModel } from '@/api/generated/model/accountControllerTempResponseAloginModel'
+import type { FunctionTypes } from '@/api/generated/model'
 import type { PrepareAccountBiliAuthResponse } from '@/api/generated/model/prepareAccountBiliAuthResponse'
 import type { ResponseAccountInfo } from '@/api/generated/model/responseAccountInfo'
+import type { TempResponseAloginModel } from '@/api/generated/model/tempResponseAloginModel'
 import { persistedRemoveItem } from '@/shared/storage/persist'
 import { message } from '@/shared/utils'
 
-import type { FunctionTypes } from './api-models'
 import { cookie } from './auth'
 
 // 手动登出后本次标签页会话内不再 dev 自动登录；关闭标签页后恢复。生产构建不会读写该键。
@@ -161,7 +161,7 @@ export async function Register(name: string, email: string, password: string, to
   return postApiAccountRegister({ name, email, password }, { headers: { Turnstile: token } })
 }
 
-export type AccountSession = AccountControllerTempResponseAloginModel
+export type AccountSession = TempResponseAloginModel
 
 export function applyAccountSession(session: AccountSession) {
   ACCOUNT.value = session.account

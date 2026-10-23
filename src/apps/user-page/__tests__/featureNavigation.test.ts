@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { FunctionTypes } from '@/api/api-models'
+import { FunctionTypes } from '@/api/generated/model'
 
 import { getEnabledUserFunctions, isUserFeatureEnabled, USER_FEATURE_DEFINITION_MAP } from '../featureNavigation'
 

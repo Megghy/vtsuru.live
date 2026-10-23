@@ -1,11 +1,11 @@
 import { computed, type MaybeRefOrGetter, toValue } from 'vue'
 
-import type { ScheduleDayInfo } from '@/api/api-models'
+import type { ResponseScheduleDayModel } from '@/api/generated/model'
 
 import { SCHEDULE_CATEGORIES, resolveScheduleCategory, type ScheduleCategoryKey } from './scheduleCategories'
 
 export function useScheduleCategoryLegend(
-  days: MaybeRefOrGetter<{ items: ScheduleDayInfo[] }[]>,
+  days: MaybeRefOrGetter<{ items: ResponseScheduleDayModel[] }[]>,
   resolveColor: (tag?: string | null, color?: string | null) => string,
   fallbackColors?: Partial<Record<ScheduleCategoryKey, string>>,
 ) {

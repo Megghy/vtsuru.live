@@ -83,7 +83,9 @@ function toggleGiftWindow() {
 </script>
 
 <template>
-  <footer class="flex items-center justify-between h-6.5 min-h-6.5 px-2.5 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3">
+  <footer
+    class="flex items-center justify-between h-6.5 min-h-6.5 px-2.5 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3"
+  >
     <!-- 左侧：连接与采集源状态 -->
     <div class="flex items-center gap-2 whitespace-nowrap shrink-0">
       <TooltipProvider>
@@ -139,7 +141,9 @@ function toggleGiftWindow() {
         <!-- 本地 RPC 外部接入状态 -->
         <Tooltip v-if="rpcServer.running && rpcServer.connectionCount > 0">
           <TooltipTrigger as-child>
-            <div class="inline-flex items-center gap-1.25 px-1.5 py-0.5 rounded text-[11px] cursor-pointer text-indigo-500 bg-indigo-500/10">
+            <div
+              class="inline-flex items-center gap-1.25 px-1.5 py-0.5 rounded text-[11px] cursor-pointer text-indigo-500 bg-indigo-500/10"
+            >
               <component
                 :is="PlugConnected20Regular"
                 class="size-3.5"
@@ -206,7 +210,9 @@ function toggleGiftWindow() {
             :is="Payment20Regular"
             class="size-3.5 opacity-80"
           />
-          <span class="text-amber-400 font-semibold">¥ {{ isIncomeHidden ? '***' : formatIncome(liveStats.totalIncome) }}</span>
+          <span class="text-amber-400 font-semibold"
+            >¥ {{ isIncomeHidden ? '***' : formatIncome(liveStats.totalIncome) }}</span
+          >
         </div>
 
         <component

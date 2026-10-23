@@ -2,7 +2,7 @@
 import { useMediaQuery, useNow } from '@vueuse/core'
 import { computed, provide } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { getUserPageThemeCssVars } from '@/apps/user-page/background'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 
@@ -14,7 +14,7 @@ import { isBlockVisible } from './visibility'
 
 const props = defineProps<{
   project: BlockPageProject
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
   biliInfo: any | undefined
   biliStatus?: BiliProfileStatus
   isDark: boolean
@@ -72,11 +72,13 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
       class="block relative min-w-0"
       :class="{
         highlight: !!props.highlightBlockId && props.highlightBlockId === block.id,
-        'outline outline-1 outline-offset-2 outline-primary/55': !!props.highlightBlockId && props.highlightBlockId === block.id,
+        'outline outline-1 outline-offset-2 outline-primary/55':
+          !!props.highlightBlockId && props.highlightBlockId === block.id,
         'outline outline-2 outline-offset-[3px] outline-primary': selectedBlockIdSet.has(block.id),
         hidden: block.hidden,
         unavailable: props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext),
-        'min-h-11 opacity-40': block.hidden || (props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext)),
+        'min-h-11 opacity-40':
+          block.hidden || (props.editorMode && !block.hidden && !isBlockVisible(block, activeVisibilityContext)),
         'cursor-pointer': props.editorMode === 'select',
         '[&_iframe]:pointer-events-none': props.editorMode === 'select',
       }"

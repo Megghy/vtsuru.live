@@ -1,6 +1,6 @@
+import type { APIRoot } from '@/api/client-types'
 import { BASE_URL } from '@/shared/config/api'
 
-import type { APIRoot } from './api-models'
 import {
   QueryDeleteAPI,
   QueryGetAPI,

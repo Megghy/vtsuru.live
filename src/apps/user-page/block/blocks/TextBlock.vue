@@ -36,5 +36,3 @@ const fxClass = computed(() => textAppearanceClass(appearance.value))
     </div>
   </BlockCard>
 </template>
-
-

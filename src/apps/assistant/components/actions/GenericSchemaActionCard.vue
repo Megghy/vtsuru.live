@@ -262,4 +262,3 @@ function displayValue(f: EditableField) {
     />
   </div>
 </template>
-

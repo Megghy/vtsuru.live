@@ -1,5 +1,5 @@
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 
 export interface ParsedSongCsvRow {
   name: string
@@ -9,15 +9,15 @@ export interface ParsedSongCsvRow {
   language: string[]
   tags?: string[]
   url: string
-  from: SongFrom
+  from: SongPlatform
 }
 
-function parseFromLabel(label: string | undefined): SongFrom {
+function parseFromLabel(label: string | undefined): SongPlatform {
   const t = (label ?? '').trim()
-  if (t.includes('网易')) return SongFrom.Netease
-  if (t.toLowerCase().includes('5sing') || t.includes('5sing')) return SongFrom.FiveSing
-  if (t.includes('酷狗')) return SongFrom.Kugou
-  return SongFrom.Custom
+  if (t.includes('网易')) return SongPlatform.Netease
+  if (t.toLowerCase().includes('5sing') || t.includes('5sing')) return SongPlatform.FiveSing
+  if (t.includes('酷狗')) return SongPlatform.Kugou
+  return SongPlatform.Custom
 }
 
 /** 简易 CSV 行解析（支持双引号字段） */
@@ -122,7 +122,7 @@ export function parseSongListCsv(text: string): ParsedSongCsvRow[] {
   return result
 }
 
-export function parsedRowsToSongsInfo(rows: ParsedSongCsvRow[]): SongsInfo[] {
+export function parsedRowsToSongsInfo(rows: ParsedSongCsvRow[]): ResponseSongModel[] {
   const now = Date.now()
   return rows.map((r, i) => ({
     id: -1,
@@ -141,10 +141,10 @@ export function parsedRowsToSongsInfo(rows: ParsedSongCsvRow[]): SongsInfo[] {
 }
 
 /** 按 key 顺序重排歌曲列表；未知 key 追加到末尾 */
-export function applySongOrder(songs: SongsInfo[], orderKeys: string[]): SongsInfo[] {
+export function applySongOrder(songs: ResponseSongModel[], orderKeys: string[]): ResponseSongModel[] {
   if (!orderKeys.length) return songs
   const map = new Map(songs.map((s) => [s.key, s]))
-  const ordered: SongsInfo[] = []
+  const ordered: ResponseSongModel[] = []
   for (const key of orderKeys) {
     const song = map.get(key)
     if (song) {

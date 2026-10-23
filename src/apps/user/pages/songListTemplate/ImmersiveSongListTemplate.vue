@@ -3,7 +3,7 @@ import { MusicNote224Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { Badge } from '@/shared/ui/badge'
@@ -33,10 +33,10 @@ const {
 })
 
 const searchKeyword = ref('')
-const selectedSong = ref<SongsInfo>()
+const selectedSong = ref<ResponseSongModel>()
 const isLrcLoading = ref('')
 
-const filteredSongs = computed<SongsInfo[]>(() => {
+const filteredSongs = computed<ResponseSongModel[]>(() => {
   return filterSongs(props.data, { keyword: searchKeyword.value })
 })
 
@@ -55,13 +55,13 @@ watch(
 )
 
 const stageEpoch = ref(0)
-function selectSong(song: SongsInfo) {
+function selectSong(song: ResponseSongModel) {
   if (selectedSong.value?.key === song.key) return
   selectedSong.value = song
   stageEpoch.value += 1
 }
 
-function requestSong(song: SongsInfo) {
+function requestSong(song: ResponseSongModel) {
   if (!beginRequest(song)) return
   emits('requestSong', song)
 }
@@ -225,7 +225,9 @@ const stageRequestLabel = computed(() => {
               :aria-current="selectedSong?.key === song.key ? 'true' : undefined"
               @click="selectSong(song)"
             >
-              <span class="size-9 rounded-md overflow-hidden bg-muted flex-center text-xs font-semibold text-muted-foreground shrink-0">
+              <span
+                class="size-9 rounded-md overflow-hidden bg-muted flex-center text-xs font-semibold text-muted-foreground shrink-0"
+              >
                 <img
                   v-if="song.cover"
                   :src="song.cover"

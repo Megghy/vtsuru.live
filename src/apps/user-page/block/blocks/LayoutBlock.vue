@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 
 import type { BiliProfileStatus } from '../../types'
 import BlockCard from '../BlockCard.vue'
@@ -11,7 +11,7 @@ import { isBlockVisible } from '../visibility'
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
   biliInfo: any | undefined
   biliStatus?: BiliProfileStatus
   highlightBlockId?: string | null
@@ -170,7 +170,8 @@ function handleBlockClick(event: MouseEvent, blockId: string) {
       <div
         class="w-full gap-[var(--vtsuru-layout-gap)]"
         :class="{
-          'grid grid-cols-[repeat(var(--vtsuru-layout-columns),minmax(0,1fr))] @max-[520px]:grid-cols-1': layout === 'grid',
+          'grid grid-cols-[repeat(var(--vtsuru-layout-columns),minmax(0,1fr))] @max-[520px]:grid-cols-1':
+            layout === 'grid',
           flex: layout !== 'grid',
           'flex-wrap': wrap && layout === 'row',
           'flex-col': layout === 'column',

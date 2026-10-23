@@ -2,14 +2,14 @@
 import { ArrowReset24Regular, Checkmark16Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { Setting_QuestionDisplay } from '@/api/api-models'
+import type { SettingQuestionDisplay } from '@/api/generated/model'
 import {
   QuestionDisplayAlign,
   QuestionDisplayImageLayout,
   QuestionDisplayShadow,
   QuestionDisplayTransition,
   QuestionDisplayVerticalAlign,
-} from '@/api/api-models'
+} from '@/api/generated/model'
 import GoogleFontPicker from '@/shared/components/GoogleFontPicker.vue'
 import {
   createDefaultQuestionDisplaySetting,
@@ -25,7 +25,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 
-const setting = defineModel<Setting_QuestionDisplay>({ required: true })
+const setting = defineModel<SettingQuestionDisplay>({ required: true })
 
 const contentFont = computed<string | null>({
   get: () => setting.value.font ?? null,

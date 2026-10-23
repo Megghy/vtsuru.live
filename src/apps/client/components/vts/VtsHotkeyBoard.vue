@@ -181,7 +181,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
           <Switch
             :checked="safeClick"
             @update:checked="
-              safeClick = $event;
+              safeClick = $event
               disarm()
             "
           />

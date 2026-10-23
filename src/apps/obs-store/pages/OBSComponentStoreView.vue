@@ -80,7 +80,9 @@ watch(
 </script>
 
 <template>
-  <div class="min-h-[calc(100dvh-var(--vtsuru-header-height))] py-5 px-6 pb-7 box-border max-w-[1480px] mx-auto max-sm:py-3.5 max-sm:px-3 max-sm:pb-5.5">
+  <div
+    class="min-h-[calc(100dvh-var(--vtsuru-header-height))] py-5 px-6 pb-7 box-border max-w-[1480px] mx-auto max-sm:py-3.5 max-sm:px-3 max-sm:pb-5.5"
+  >
     <ObsStoreHeader
       :category="category"
       :search="search"
@@ -90,7 +92,9 @@ watch(
       @update:status-filter="statusFilter = $event"
     />
 
-    <div class="flex-between gap-3 -mt-1 mb-3.5 text-xs text-muted-foreground max-sm:flex-col max-sm:items-start max-sm:gap-1">
+    <div
+      class="flex-between gap-3 -mt-1 mb-3.5 text-xs text-muted-foreground max-sm:flex-col max-sm:items-start max-sm:gap-1"
+    >
       <span class="text-foreground font-semibold">{{ components.length }} 个组件</span>
       <span class="text-right max-sm:text-left">点击“配置与调试”打开配置台，OBS 源链接可直接复制</span>
     </div>

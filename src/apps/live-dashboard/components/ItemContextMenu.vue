@@ -13,7 +13,7 @@ import {
 import type { Component } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import { copyToClipboard } from '@/shared/utils'
 
 import { useEventActions } from '../store/eventActions'

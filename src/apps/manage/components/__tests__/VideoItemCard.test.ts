@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
-import { VideoFrom, VideoStatus } from '@/api/api-models'
+import { VideoFrom, VideoStatus } from '@/api/generated/model'
 import VideoItemCard from '@/apps/manage/components/VideoItemCard.vue'
 
 describe('VideoItemCard.vue', () => {

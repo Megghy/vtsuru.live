@@ -24,13 +24,13 @@ import type {
   PostApiQaSetCurrentParams,
   PostApiQaUpdateTagVisibleParams,
   ResponseResult,
-  ResponseResultOfListOfQAControllerQATagInfo,
+  ResponseResultOfListOfQATagInfo,
   ResponseResultOfListOfResponseQAInfo,
-  ResponseResultOfQAControllerResponseCurrentQuestionAndSettingModel,
-  ResponseResultOfQAControllerTempResponseRecievedQuestions,
+  ResponseResultOfResponseCurrentQuestionAndSettingModel,
   ResponseResultOfResponseQAInfo,
   ResponseResultOfResponseQAInfoToTarget,
-  ResponseResultOfSystemString,
+  ResponseResultOfString,
+  ResponseResultOfTempResponseRecievedQuestions,
   SettingQuestionDisplay,
 } from '../model'
 
@@ -173,8 +173,8 @@ export const getGetApiQaGetCurrentAndSettingsUrl = (params?: GetApiQaGetCurrentA
 export const getApiQaGetCurrentAndSettings = async (
   params?: GetApiQaGetCurrentAndSettingsParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfQAControllerResponseCurrentQuestionAndSettingModel> => {
-  return vtsuruMutator<ResponseResultOfQAControllerResponseCurrentQuestionAndSettingModel>(
+): Promise<ResponseResultOfResponseCurrentQuestionAndSettingModel> => {
+  return vtsuruMutator<ResponseResultOfResponseCurrentQuestionAndSettingModel>(
     getGetApiQaGetCurrentAndSettingsUrl(params),
     {
       ...options,
@@ -203,8 +203,8 @@ export const getGetApiQaGetHashUrl = (params?: GetApiQaGetHashParams) => {
 export const getApiQaGetHash = async (
   params?: GetApiQaGetHashParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiQaGetHashUrl(params), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiQaGetHashUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -240,8 +240,8 @@ export const getGetApiQaGetReceiveUrl = () => {
 
 export const getApiQaGetReceive = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfQAControllerTempResponseRecievedQuestions> => {
-  return vtsuruMutator<ResponseResultOfQAControllerTempResponseRecievedQuestions>(getGetApiQaGetReceiveUrl(), {
+): Promise<ResponseResultOfTempResponseRecievedQuestions> => {
+  return vtsuruMutator<ResponseResultOfTempResponseRecievedQuestions>(getGetApiQaGetReceiveUrl(), {
     ...options,
     method: 'GET',
   })
@@ -277,8 +277,8 @@ export const getGetApiQaGetTagsUrl = (params?: GetApiQaGetTagsParams) => {
 export const getApiQaGetTags = async (
   params?: GetApiQaGetTagsParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfListOfQAControllerQATagInfo> => {
-  return vtsuruMutator<ResponseResultOfListOfQAControllerQATagInfo>(getGetApiQaGetTagsUrl(params), {
+): Promise<ResponseResultOfListOfQATagInfo> => {
+  return vtsuruMutator<ResponseResultOfListOfQATagInfo>(getGetApiQaGetTagsUrl(params), {
     ...options,
     method: 'GET',
   })

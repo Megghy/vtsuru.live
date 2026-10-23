@@ -1,6 +1,7 @@
-import type { EventDataTypes, EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 import { getApiEventGet } from '@/api/generated/event/event'
 import { getApiLiveCurrent, getApiLiveRanking } from '@/api/generated/live/live'
+import type { EventDataTypes } from '@/api/generated/model'
 import { unwrapOk } from '@/api/query'
 
 // 直播场次与云端事件接口：均要求已认证哔哩哔哩账号，失败抛出后端消息

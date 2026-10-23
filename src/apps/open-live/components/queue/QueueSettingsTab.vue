@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Info24Filled } from '@vicons/fluent'
 
-import type { Setting_Queue } from '@/api/api-models'
-import { KeywordMatchType, QueueGiftFilterType } from '@/api/api-models'
+import type { SettingQueue } from '@/api/generated/model'
+import { KeywordMatchType, QueueGiftFilterType } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -16,7 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 
 defineProps<{
   isLoading: boolean
-  settings: Setting_Queue
+  settings: SettingQueue
 }>()
 
 const emit = defineEmits<{
@@ -61,7 +61,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Full ? 'default' : 'ghost'"
                 @click="
-                  settings.matchType = KeywordMatchType.Full;
+                  settings.matchType = KeywordMatchType.Full
                   onChange()
                 "
               >
@@ -72,7 +72,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Contains ? 'default' : 'ghost'"
                 @click="
-                  settings.matchType = KeywordMatchType.Contains;
+                  settings.matchType = KeywordMatchType.Contains
                   onChange()
                 "
               >
@@ -83,7 +83,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.matchType === KeywordMatchType.Regex ? 'default' : 'ghost'"
                 @click="
-                  settings.matchType = KeywordMatchType.Regex;
+                  settings.matchType = KeywordMatchType.Regex
                   onChange()
                 "
               >
@@ -245,7 +245,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.giftFilterType === QueueGiftFilterType.And ? 'default' : 'ghost'"
                 @click="
-                  settings.giftFilterType = QueueGiftFilterType.And;
+                  settings.giftFilterType = QueueGiftFilterType.And
                   onChange()
                 "
               >
@@ -256,7 +256,7 @@ function onChange() {
                 class="px-2.5"
                 :variant="settings.giftFilterType === QueueGiftFilterType.Or ? 'default' : 'ghost'"
                 @click="
-                  settings.giftFilterType = QueueGiftFilterType.Or;
+                  settings.giftFilterType = QueueGiftFilterType.Or
                   onChange()
                 "
               >

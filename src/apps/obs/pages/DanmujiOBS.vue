@@ -2,8 +2,8 @@
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 
 import { isInBiliBlackList } from '@/api/account'
-import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 import { getApiVtsuruBlivechatEmoticon } from '@/api/generated/vtsuru/vtsuru'
 // @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'

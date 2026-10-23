@@ -2,7 +2,7 @@ import { useIntervalFn } from '@vueuse/core'
 import type { ShallowRef } from 'vue'
 import { computed, reactive, ref } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 
 import type { DashboardEvent } from '../core/types'
 import { userKeyOf } from '../core/types'

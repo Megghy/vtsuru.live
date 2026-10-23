@@ -3,7 +3,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { Gift20Regular, PeopleCommunity20Regular, Trophy20Regular, VehicleShip20Regular } from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { EventDataTypes, GuardLevel } from '@/api/generated/model'
 import type {
   GiftEntry,
   GiftWindowBCData,
@@ -501,7 +501,6 @@ body {
   overflow: hidden;
   margin: 0;
 }
-
 
 :root {
   --gw-bg-color: rgba(20, 20, 30, 0.85);

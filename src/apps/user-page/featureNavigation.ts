@@ -2,7 +2,7 @@ import { BookCoins20Filled, CalendarClock24Filled, CheckmarkCircle24Filled, Vide
 import { ChatboxOutline, ChatbubblesOutline, MusicalNotesOutline } from '@vicons/ionicons5'
 import type { Component } from 'vue'
 
-import { FunctionTypes } from '@/api/api-models'
+import { FunctionTypes } from '@/api/generated/model'
 
 export const USER_FEATURE_KEYS = [
   'songList',

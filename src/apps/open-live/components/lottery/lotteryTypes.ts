@@ -1,4 +1,4 @@
-import type { OpenLiveLotteryUserInfo } from '@/api/api-models'
+import type { LiveLotteryUserInfo } from '@/api/generated/model'
 
 export interface LotteryOption {
   resultCount: number
@@ -16,7 +16,7 @@ export interface LotteryOption {
 }
 
 export interface LotteryHistory {
-  users: OpenLiveLotteryUserInfo[]
+  users: LiveLotteryUserInfo[]
   time: number
 }
 

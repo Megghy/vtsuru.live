@@ -39,5 +39,3 @@ const backgrounded = computed(() =>
     </div>
   </BlockCard>
 </template>
-
-

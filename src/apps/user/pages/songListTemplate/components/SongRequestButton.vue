@@ -2,7 +2,7 @@
 import { CloudAdd20Filled } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { Setting_LiveRequest, SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel, SettingSongRequest } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -10,8 +10,8 @@ import { getSongRequestTooltip } from '../utils/songRequestUtils'
 
 const props = withDefaults(
   defineProps<{
-    song: SongsInfo
-    liveRequestSettings?: Setting_LiveRequest
+    song: ResponseSongModel
+    liveRequestSettings?: SettingSongRequest
     authState: { isLoggedIn: boolean; isBiliAuthed: boolean }
     loading?: boolean
     disabled?: boolean
@@ -32,7 +32,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  request: [song: SongsInfo]
+  request: [song: ResponseSongModel]
 }>()
 
 const tooltip = computed(() => getSongRequestTooltip(props.song, props.liveRequestSettings, props.authState))

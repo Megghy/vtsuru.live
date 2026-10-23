@@ -4,8 +4,8 @@ import { useIntervalFn } from '@vueuse/core'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
-import { FunctionTypes, SongRequestStatus } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
+import { FunctionTypes, SongRequestStatus } from '@/api/generated/model'
 import { fetchPublicSongRequestState } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
@@ -16,13 +16,13 @@ import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 
-const props = defineProps<{ blockProps: unknown; userInfo?: UserInfo }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: ResponseUserInfo }>()
 const values = computed<Record<string, unknown>>(() =>
   props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
     ? (props.blockProps as Record<string, unknown>)
     : {},
 )
-const enabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.LiveRequest))
+const enabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.SongRequest))
 const query = useUserPageRuntimeQuery({
   key: () => `now-playing:${props.userInfo?.id ?? 0}`,
   ttlMs: 15_000,
@@ -176,5 +176,3 @@ useIntervalFn(() => {
     </div>
   </BlockCard>
 </template>
-
-

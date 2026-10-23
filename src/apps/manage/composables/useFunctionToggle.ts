@@ -1,7 +1,7 @@
 import { ref } from 'vue'
 
 import { DisableFunction, EnableFunction, useAccount } from '@/api/account'
-import type { FunctionTypes } from '@/api/api-models'
+import type { FunctionTypes } from '@/api/generated/model'
 import { useMessage } from '@/shared/utils'
 
 /**

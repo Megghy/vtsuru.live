@@ -20,11 +20,11 @@ import type {
   PostApiLiveRequestFinishParams,
   PostApiLiveRequestSingingParams,
   ResponseResult,
+  ResponseResultOfInt64Array,
   ResponseResultOfListOfResponseSongRequestModel,
-  ResponseResultOfLiveRequestControllerResponseSongrequestResponseAndSettings,
   ResponseResultOfResponseSongRequestModel,
-  ResponseResultOfSystemInt64Array,
-  ResponseResultOfSystemString,
+  ResponseResultOfResponseSongrequestResponseAndSettings,
+  ResponseResultOfString,
   SettingSongRequest,
 } from '../model'
 
@@ -149,8 +149,8 @@ export const getPostApiLiveRequestDeactivateUrl = () => {
 
 export const postApiLiveRequestDeactivate = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt64Array> => {
-  return vtsuruMutator<ResponseResultOfSystemInt64Array>(getPostApiLiveRequestDeactivateUrl(), {
+): Promise<ResponseResultOfInt64Array> => {
+  return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestDeactivateUrl(), {
     ...options,
     method: 'POST',
   })
@@ -163,7 +163,7 @@ export const getPostApiLiveRequestDeleteUrl = () => {
 export const postApiLiveRequestDelete = async (
   postApiLiveRequestDeleteBody?: number[],
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt64Array> => {
+): Promise<ResponseResultOfInt64Array> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -178,7 +178,7 @@ export const postApiLiveRequestDelete = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt64Array>(getPostApiLiveRequestDeleteUrl(), {
+  return vtsuruMutator<ResponseResultOfInt64Array>(getPostApiLiveRequestDeleteUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -229,8 +229,8 @@ export const getGetApiLiveRequestGetActiveAndSettingsUrl = (params?: GetApiLiveR
 export const getApiLiveRequestGetActiveAndSettings = async (
   params?: GetApiLiveRequestGetActiveAndSettingsParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfLiveRequestControllerResponseSongrequestResponseAndSettings> => {
-  return vtsuruMutator<ResponseResultOfLiveRequestControllerResponseSongrequestResponseAndSettings>(
+): Promise<ResponseResultOfResponseSongrequestResponseAndSettings> => {
+  return vtsuruMutator<ResponseResultOfResponseSongrequestResponseAndSettings>(
     getGetApiLiveRequestGetActiveAndSettingsUrl(params),
     {
       ...options,
@@ -284,8 +284,8 @@ export const getGetApiLiveRequestGetHashUrl = () => {
 
 export const getApiLiveRequestGetHash = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiLiveRequestGetHashUrl(), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiLiveRequestGetHashUrl(), {
     ...options,
     method: 'GET',
   })
@@ -310,8 +310,8 @@ export const getGetApiLiveRequestGetTodayUrl = (params?: GetApiLiveRequestGetTod
 export const getApiLiveRequestGetToday = async (
   params?: GetApiLiveRequestGetTodayParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfLiveRequestControllerResponseSongrequestResponseAndSettings> => {
-  return vtsuruMutator<ResponseResultOfLiveRequestControllerResponseSongrequestResponseAndSettings>(
+): Promise<ResponseResultOfResponseSongrequestResponseAndSettings> => {
+  return vtsuruMutator<ResponseResultOfResponseSongrequestResponseAndSettings>(
     getGetApiLiveRequestGetTodayUrl(params),
     {
       ...options,

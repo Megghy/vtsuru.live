@@ -6,10 +6,10 @@
  * OpenAPI spec version: v1
  */
 import type { APIFileModel } from './aPIFileModel'
+import type { GoodsTypes } from './goodsTypes'
 import type { GuardLevel } from './guardLevel'
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
-import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode'
-import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting'
+import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
+import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
 
 export interface ResponseSubPointGoodsModel {
   id: number
@@ -20,7 +20,7 @@ export interface ResponseSubPointGoodsModel {
   count?: number | null
   price: number
   tags: string[]
-  type: PointGoodsDataGoodsTypes
+  type: GoodsTypes
   /** @nullable */
   collectUrl?: string | null
   embedCollectUrl: boolean
@@ -28,11 +28,11 @@ export interface ResponseSubPointGoodsModel {
   maxBuyCount: number
   canFreeBuy: boolean
   allowGuardLevel: GuardLevel
-  setting: RequestPointGoodsModelTempRequestGoodsSetting
+  setting: TempRequestGoodsSetting
   cover?: APIFileModel
   /** @nullable */
   content?: string | null
   /** @nullable */
   virtualKeys?: string[] | null
-  keySelectionMode?: PointGoodsDataVirtualKeySelectionMode
+  keySelectionMode?: VirtualKeySelectionMode
 }

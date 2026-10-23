@@ -1,4 +1,5 @@
-import { OpenLiveLotteryType, type OpenLiveLotteryUserInfo } from '@/api/api-models'
+import type { LiveLotteryUserInfo } from '@/api/generated/model'
+import { LiveLotteryTypes } from '@/api/generated/model'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 
 import type { LotteryOption } from './lotteryTypes'
@@ -19,11 +20,7 @@ export function shuffleArray<T>(arr: T[]): T[] {
   return result
 }
 
-export function isUserValid(
-  u: OpenLiveLotteryUserInfo,
-  danmu: { cmd: string; data: any },
-  option: LotteryOption,
-): boolean {
+export function isUserValid(u: LiveLotteryUserInfo, danmu: { cmd: string; data: any }, option: LotteryOption): boolean {
   const { cmd, data } = danmu
   if (option.needWearFanMedal && !u.fans_medal_wearing_status) return false
   if (option.needFanMedal && u.fans_medal_level === 0) return false
@@ -132,8 +129,8 @@ export function shouldSyncLiveLottery(state: {
 
 export function buildLiveLotterySyncBody(options: {
   code?: string
-  users: OpenLiveLotteryUserInfo[]
-  resultUsers: OpenLiveLotteryUserInfo[]
+  users: LiveLotteryUserInfo[]
+  resultUsers: LiveLotteryUserInfo[]
   drawing: boolean
   finished: boolean
 }) {
@@ -143,9 +140,9 @@ export function buildLiveLotterySyncBody(options: {
     users: options.users,
     resultUsers: options.resultUsers,
     type: options.finished
-      ? OpenLiveLotteryType.Result
+      ? LiveLotteryTypes.Result
       : options.drawing
-        ? OpenLiveLotteryType.Drawing
-        : OpenLiveLotteryType.Waiting,
+        ? LiveLotteryTypes.Drawing
+        : LiveLotteryTypes.Waiting,
   }
 }

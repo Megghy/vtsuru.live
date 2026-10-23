@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { useAccount } from '@/api/account'
-import type { OpenLiveInfo } from '@/api/api-models'
+import type { AppStartData } from '@/api/generated/model'
 import OpenLivePageHeader from '@/apps/open-live/components/OpenLivePageHeader.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card'
 
 defineProps<{
-  roomInfo?: OpenLiveInfo
+  roomInfo?: AppStartData
   code?: string | undefined
 }>()
 

@@ -2,8 +2,8 @@
 import { Info24Filled } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import type { SongRequestOption, SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel, SongRequestOption } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
@@ -19,21 +19,21 @@ interface OptionItem {
 }
 
 const props = defineProps<{
-  existingSongs: SongsInfo[]
+  existingSongs: ResponseSongModel[]
   authors: OptionItem[]
   tags: OptionItem[]
   songSelectOption: OptionItem[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'added', songs: SongsInfo[]): void
+  (e: 'added', songs: ResponseSongModel[]): void
   (e: 'loadingChange', value: boolean): void
   (e: 'resetRender'): void
 }>()
 
 const message = useMessage()
 
-const addSongModel = ref<SongsInfo>({} as SongsInfo)
+const addSongModel = ref<ResponseSongModel>({} as ResponseSongModel)
 const onlyResetNameOnAdded = ref(true)
 
 // 多选 Tag 输入辅助
@@ -67,7 +67,7 @@ function resetAddingSong(onlyName = false) {
     addSongModel.value.name = ''
     addSongModel.value.description = ''
   } else {
-    addSongModel.value = {} as SongsInfo
+    addSongModel.value = {} as ResponseSongModel
   }
   authorInput.value = ''
   languageInput.value = ''
@@ -91,7 +91,7 @@ async function addCustomSong() {
 
   emit('loadingChange', true)
   try {
-    const result = await addSongsToSongList([addSongModel.value], SongFrom.Custom)
+    const result = await addSongsToSongList([addSongModel.value], SongPlatform.Custom)
     if (result.code !== 200) {
       message.error(`添加失败: ${result.message}`)
       return
@@ -103,7 +103,7 @@ async function addCustomSong() {
     }
 
     message.success(`成功添加歌曲: ${name}`)
-    emit('added', result.data as unknown as SongsInfo[])
+    emit('added', result.data as unknown as ResponseSongModel[])
     resetAddingSong(onlyResetNameOnAdded.value)
   } catch (err) {
     console.error(err)
@@ -134,7 +134,7 @@ async function addCustomSong() {
           v-model="authorInput"
           placeholder="输入作者后按回车新增"
           @keyup.enter="
-            addTagItem('author', authorInput);
+            addTagItem('author', authorInput)
             authorInput = ''
           "
         />
@@ -168,7 +168,7 @@ async function addCustomSong() {
             placeholder="输入语言后回车"
             class="flex-1"
             @keyup.enter="
-              addTagItem('language', languageInput);
+              addTagItem('language', languageInput)
               languageInput = ''
             "
           />
@@ -217,7 +217,7 @@ async function addCustomSong() {
           v-model="tagInput"
           placeholder="输入标签后按回车新增"
           @keyup.enter="
-            addTagItem('tags', tagInput);
+            addTagItem('tags', tagInput)
             tagInput = ''
           "
         />

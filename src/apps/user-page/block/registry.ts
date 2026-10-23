@@ -167,14 +167,12 @@ function createViewer(loader: AsyncComponentLoader): Component {
   })
 }
 
-export const BLOCK_DEFINITIONS = SHARED_BLOCK_DEFINITIONS.map(
-  (definition): BlockDefinition => ({
-    ...definition,
-    icon: ICONS[definition.type],
-    editor: { kind: 'shared-properties-form' },
-    viewer: createViewer(VIEWERS[definition.type]),
-  }),
-)
+export const BLOCK_DEFINITIONS = SHARED_BLOCK_DEFINITIONS.map((definition): BlockDefinition => ({
+  ...definition,
+  icon: ICONS[definition.type],
+  editor: { kind: 'shared-properties-form' },
+  viewer: createViewer(VIEWERS[definition.type]),
+}))
 
 export const BLOCK_DEFINITION_MAP = Object.fromEntries(
   BLOCK_DEFINITIONS.map((definition) => [definition.type, definition]),

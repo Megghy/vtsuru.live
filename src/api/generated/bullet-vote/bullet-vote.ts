@@ -17,7 +17,7 @@ import type {
   ResponseResult,
   ResponseResultOfListOfResponseVoteSession,
   ResponseResultOfResponseVoteSession,
-  ResponseResultOfSystemString,
+  ResponseResultOfString,
   ResponseResultOfVoteConfig,
   ResponseResultOfVoteOBSData,
   VoteConfig,
@@ -222,8 +222,8 @@ export const getGetApiVoteObsHashUrl = (params?: GetApiVoteObsHashParams) => {
 export const getApiVoteObsHash = async (
   params?: GetApiVoteObsHashParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiVoteObsHashUrl(params), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiVoteObsHashUrl(params), {
     ...options,
     method: 'GET',
   })

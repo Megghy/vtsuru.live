@@ -6,9 +6,9 @@
  * OpenAPI spec version: v1
  */
 import type { APIFileModel } from './aPIFileModel'
+import type { GoodsStatus } from './goodsStatus'
+import type { GoodsTypes } from './goodsTypes'
 import type { GuardLevel } from './guardLevel'
-import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus'
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
 import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel'
 
 /**
@@ -23,8 +23,8 @@ export interface ResponseBasePointGoodsModel {
   price: number
   tags: string[]
   images: number[]
-  status: PointGoodsDataGoodsStatus
-  type: PointGoodsDataGoodsTypes
+  status: GoodsStatus
+  type: GoodsTypes
   isPinned: boolean
   isAllowRebuy: boolean
   maxBuyCount: number

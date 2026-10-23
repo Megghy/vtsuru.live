@@ -15,7 +15,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, ref } from 'vue'
 
-import type { QAInfo } from '@/api/api-models'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import { questionSenderLabel } from '@/shared/questionDisplay'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
-  questions: QAInfo[]
+  questions: ResponseQAInfoToTarget[]
   currentId?: number
   tags: string[]
   loading: boolean
@@ -34,10 +34,10 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   refresh: []
-  show: [question: QAInfo]
+  show: [question: ResponseQAInfoToTarget]
   clear: []
-  read: [question: QAInfo]
-  favorite: [question: QAInfo, value: boolean]
+  read: [question: ResponseQAInfoToTarget]
+  favorite: [question: ResponseQAInfoToTarget, value: boolean]
 }>()
 
 const search = defineModel<string>('search', { required: true })

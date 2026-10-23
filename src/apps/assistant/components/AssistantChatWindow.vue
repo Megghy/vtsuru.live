@@ -198,14 +198,18 @@ function onPickSuggestion(text: string) {
         v-else
         class="flex flex-col items-center gap-2 pt-12 px-4 pb-6 text-center"
       >
-        <div class="flex-center size-12 rounded-xl bg-[var(--brand-soft,rgba(35,173,229,0.12))] text-[var(--brand,#23ade5)] mb-1">
+        <div
+          class="flex-center size-12 rounded-xl bg-[var(--brand-soft,rgba(35,173,229,0.12))] text-[var(--brand,#23ade5)] mb-1"
+        >
           <component
             :is="Sparkle24Regular"
             class="size-6 text-primary"
           />
         </div>
         <div class="text-base font-semibold text-foreground">有什么可以帮你的?</div>
-        <div class="text-[13px] text-muted-foreground max-w-[380px]">用自然语言管理日程、查询数据, 或上传截图让我识别</div>
+        <div class="text-[13px] text-muted-foreground max-w-[380px]">
+          用自然语言管理日程、查询数据, 或上传截图让我识别
+        </div>
         <div
           v-if="digest.length"
           class="flex flex-col gap-1.5 w-full max-w-[440px] mt-2"
@@ -263,4 +267,3 @@ function onPickSuggestion(text: string) {
     </div>
   </div>
 </template>
-

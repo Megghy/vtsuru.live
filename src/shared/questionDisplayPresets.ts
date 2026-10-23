@@ -1,13 +1,13 @@
-import type { Setting_QuestionDisplay } from '@/api/api-models'
+import type { SettingQuestionDisplay } from '@/api/generated/model'
 import {
   QuestionDisplayAlign,
   QuestionDisplayImageLayout,
   QuestionDisplayShadow,
   QuestionDisplayTransition,
   QuestionDisplayVerticalAlign,
-} from '@/api/api-models'
+} from '@/api/generated/model'
 
-export type QuestionDisplayVisualPreset = Omit<Setting_QuestionDisplay, 'syncScroll'>
+export type QuestionDisplayVisualPreset = Omit<SettingQuestionDisplay, 'syncScroll'>
 
 export const SYSTEM_CHINESE_FONT_OPTIONS = [
   { label: '系统黑体 (Sans-serif)', value: 'sans-serif' },
@@ -165,6 +165,6 @@ export const QUESTION_DISPLAY_PRESETS: Array<{
   },
 ]
 
-export function createDefaultQuestionDisplaySetting(): Setting_QuestionDisplay {
+export function createDefaultQuestionDisplaySetting(): SettingQuestionDisplay {
   return { ...MARSHMALLOW_QUESTION_DISPLAY_PRESET, syncScroll: true }
 }

@@ -2,8 +2,8 @@
 import { Play24Filled, Search24Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
@@ -25,7 +25,7 @@ const emits = defineEmits(['requestSong'])
 const searchKeyword = ref('')
 const selectedTag = ref<string | null>(null)
 const selectedAuthor = ref<string | null>(null)
-const selectedSong = ref<SongsInfo>()
+const selectedSong = ref<ResponseSongModel>()
 const isLrcLoading = ref('')
 
 const {
@@ -50,7 +50,7 @@ const filteredSongs = computed(() =>
 )
 const hasFilters = computed(() => !!searchKeyword.value.trim() || !!selectedTag.value || !!selectedAuthor.value)
 const showRequestQueue = computed(
-  () => props.userInfo?.extra?.enableFunctions.includes(FunctionTypes.LiveRequest) ?? false,
+  () => props.userInfo?.extra?.enableFunctions.includes(FunctionTypes.SongRequest) ?? false,
 )
 
 const { listKey } = useFilterListKey({ tag: selectedTag, author: selectedAuthor })
@@ -70,7 +70,7 @@ function clearFilters() {
   selectedAuthor.value = null
 }
 
-function requestSong(song: SongsInfo) {
+function requestSong(song: ResponseSongModel) {
   if (!beginRequest(song)) return
   emits('requestSong', song)
 }
@@ -318,4 +318,3 @@ function requestSong(song: SongsInfo) {
     </div>
   </div>
 </template>
-

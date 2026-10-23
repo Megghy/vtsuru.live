@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 
 import { formatDanmakuPrice, getDanmakuGiftDisplayMeta, getGiftPaymentDisplayMeta } from '../danmakuGiftDisplay'
 

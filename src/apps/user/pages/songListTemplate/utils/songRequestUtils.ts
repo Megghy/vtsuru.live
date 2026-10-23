@@ -1,4 +1,4 @@
-import type { Setting_LiveRequest, SongsInfo, UserInfo } from '@/api/api-models'
+import type { ResponseSongModel, ResponseUserInfo, SettingSongRequest } from '@/api/generated/model'
 
 interface SongRequestAuthState {
   isLoggedIn: boolean
@@ -24,7 +24,7 @@ const TOOLTIP_REASONS = {
 } as const
 
 function isAnonymousWebRequestBlocked(
-  liveRequestSettings: Setting_LiveRequest | undefined,
+  liveRequestSettings: SettingSongRequest | undefined,
   { isLoggedIn, isBiliAuthed }: SongRequestAuthState,
 ) {
   return (
@@ -33,8 +33,8 @@ function isAnonymousWebRequestBlocked(
 }
 
 function getCopyOnlyReason(
-  song: SongsInfo,
-  liveRequestSettings: Setting_LiveRequest | undefined,
+  song: ResponseSongModel,
+  liveRequestSettings: SettingSongRequest | undefined,
   authState: SongRequestAuthState,
 ) {
   if (song.options) return COPY_REASONS.special
@@ -49,8 +49,8 @@ function getCopyOnlyReason(
  * @returns tooltip文本
  */
 export function getSongRequestTooltip(
-  song: SongsInfo,
-  liveRequestSettings: Setting_LiveRequest | undefined,
+  song: ResponseSongModel,
+  liveRequestSettings: SettingSongRequest | undefined,
   authState: SongRequestAuthState,
 ): string {
   if (song.options) return TOOLTIP_REASONS.special
@@ -67,8 +67,8 @@ export function getSongRequestTooltip(
  * @returns 按钮类型
  */
 export function getSongRequestButtonType(
-  song: SongsInfo,
-  liveRequestSettings: Setting_LiveRequest | undefined,
+  song: ResponseSongModel,
+  liveRequestSettings: SettingSongRequest | undefined,
   authState: SongRequestAuthState,
 ): 'warning' | 'info' {
   return getCopyOnlyReason(song, liveRequestSettings, authState) ? 'warning' : 'info'
@@ -85,9 +85,9 @@ export function getSongRequestButtonType(
  * @returns 是否可以点歌和原因
  */
 export function canRequestSong(
-  song: SongsInfo,
-  userInfo: UserInfo | undefined,
-  liveRequestSettings: Setting_LiveRequest | undefined,
+  song: ResponseSongModel,
+  userInfo: ResponseUserInfo | undefined,
+  liveRequestSettings: SettingSongRequest | undefined,
   isLoggedIn: boolean,
   isBiliAuthed: boolean,
   nextRequestTime?: Date,
@@ -117,6 +117,6 @@ export function canRequestSong(
  * @param song 歌曲信息
  * @returns 点歌提示文本
  */
-export function getSongRequestConfirmText(song: SongsInfo): string {
+export function getSongRequestConfirmText(song: ResponseSongModel): string {
   return `确定要点 ${song.name} 么`
 }

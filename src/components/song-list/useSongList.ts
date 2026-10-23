@@ -2,7 +2,7 @@ import { refDebounced } from '@vueuse/core'
 import type { Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
 import {
   postApiSongListDelete,
   postApiSongListDeleteBatch,
@@ -17,10 +17,10 @@ import { applySongOrder, moveSongInOrder } from '@/apps/manage/composables/songL
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { toast } from '@/shared/utils'
 
-export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
-  const songsInternal = ref<SongsInfo[]>([...props.songs])
+export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean }) {
+  const songsInternal = ref<ResponseSongModel[]>([...props.songs])
   const isLoading = ref(false)
-  const playingSong = ref<SongsInfo>()
+  const playingSong = ref<ResponseSongModel>()
   const isLrcLoading = ref<string>()
   // 后端暂无排序字段：用本机持久化 key 顺序；CRUD 后仍写回服务端歌曲本体
   const songOrderKeys = usePersistedStorage<string[]>('vtsuru:settings:song-list:order-keys', [])
@@ -83,7 +83,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     return [...authors].toSorted().map((t) => ({ label: t, value: t }))
   })
 
-  function syncOrderKeys(list: SongsInfo[]) {
+  function syncOrderKeys(list: ResponseSongModel[]) {
     const keys = list.map((s) => s.key)
     const prev = songOrderKeys.value ?? []
     const merged = applySongOrder(
@@ -116,7 +116,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
   }
 
   // CRUD 操作
-  async function updateSong(song: SongsInfo) {
+  async function updateSong(song: ResponseSongModel) {
     if (songsInternal.value.some((s) => s.name === song.name && s.key !== song.key)) {
       toast.error('已存在相同名称的歌曲')
       return false
@@ -132,7 +132,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
         song: song as any,
       })) as unknown as {
         code: number
-        data: SongsInfo
+        data: ResponseSongModel
         message: string
       }
       if (code === 200 && data) {
@@ -148,7 +148,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     }
   }
 
-  async function updateSongs(songs: SongsInfo[], label: string) {
+  async function updateSongs(songs: ResponseSongModel[], label: string) {
     if (songs.length === 0) {
       toast.warning('请先选择歌曲')
       return false
@@ -162,7 +162,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
         message: err,
       } = (await postApiSongListUpdateBatch(payload as any)) as unknown as {
         code: number
-        data: SongsInfo[]
+        data: ResponseSongModel[]
         message: string
       }
       if (code === 200 && data) {
@@ -178,7 +178,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     }
   }
 
-  async function deleteSong(song: SongsInfo) {
+  async function deleteSong(song: ResponseSongModel) {
     isLoading.value = true
     try {
       const { code, message: err } = await postApiSongListDelete({ key: song.key })
@@ -219,7 +219,7 @@ export function useSongList(props: { songs: SongsInfo[]; isSelf: boolean }) {
     }
   }
 
-  async function batchUpdate(endpoint: string, field: keyof SongsInfo, data: unknown, label: string) {
+  async function batchUpdate(endpoint: string, field: keyof ResponseSongModel, data: unknown, label: string) {
     if (selectedKeys.value.length === 0) {
       toast.warning('请先选择歌曲')
       return false

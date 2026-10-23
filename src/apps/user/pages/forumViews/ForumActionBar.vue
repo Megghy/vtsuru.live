@@ -94,5 +94,3 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
     </div>
   </TooltipProvider>
 </template>
-
-

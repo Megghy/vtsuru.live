@@ -125,5 +125,3 @@ function downloadPng() {
     </div>
   </BlockCard>
 </template>
-
-

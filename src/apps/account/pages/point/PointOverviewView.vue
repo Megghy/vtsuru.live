@@ -3,7 +3,7 @@ import { ArrowRight24Regular, ArrowSync24Regular, Gift24Regular, Open24Regular, 
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { getApiPointUserGetAllPoint } from '@/api/generated/point/point'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
@@ -15,7 +15,7 @@ import { toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 interface PointAccount {
-  owner: UserInfo
+  owner: ResponseUserInfo
   points: number
 }
 

@@ -5,20 +5,20 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
-import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus'
-import type { PointOrderDataServiceOrderData } from './pointOrderDataServiceOrderData'
+import type { GoodsTypes } from './goodsTypes'
+import type { PointOrderStatus } from './pointOrderStatus'
 import type { ResponsePointGoodsModel } from './responsePointGoodsModel'
 import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo'
+import type { ServiceOrderData } from './serviceOrderData'
 import type { ShippingAddressInfo } from './shippingAddressInfo'
 
 export interface ResponsePointOrder2UserModel {
   id: number
   point: number
-  type: PointGoodsDataGoodsTypes
+  type: GoodsTypes
   address?: ShippingAddressInfo
   goods: ResponsePointGoodsModel
-  status: PointOrderDataPointOrderStatus
+  status: PointOrderStatus
   /** @nullable */
   remark?: string | null
   createAt: number
@@ -28,5 +28,5 @@ export interface ResponsePointOrder2UserModel {
   expressCompany?: string | null
   /** @nullable */
   selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null
-  serviceData?: PointOrderDataServiceOrderData
+  serviceData?: ServiceOrderData
 }

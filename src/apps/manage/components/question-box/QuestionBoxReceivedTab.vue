@@ -12,7 +12,7 @@ import { Heart, HeartOutline } from '@vicons/ionicons5'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { QAInfo } from '@/api/api-models'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import QuestionItems from '@/components/QuestionItems.vue'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -26,7 +26,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import type { SortMode } from '@/store/useQuestionBox'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
-const emit = defineEmits<{ (e: 'reply', item: QAInfo): void }>()
+const emit = defineEmits<{ (e: 'reply', item: ResponseQAInfoToTarget): void }>()
 const useQB = useQuestionBox()
 const router = useRouter()
 

@@ -5,7 +5,8 @@ import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ForumCommentModel, ForumReplyModel, ForumTopicModel } from '@/api/models/forum'
+import type { ForumCommentModel } from '@/api/client-types'
+import type { ResponseForumCommentReplyBaseModel, ResponseForumTopicModel } from '@/api/generated/model'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -14,11 +15,11 @@ import { getUserAvatarUrl } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
 const props = defineProps<{
-  item: ForumReplyModel
-  replyTo?: ForumReplyModel
+  item: ResponseForumCommentReplyBaseModel
+  replyTo?: ResponseForumCommentReplyBaseModel
   replyToId?: number
   comment: ForumCommentModel
-  topic: ForumTopicModel
+  topic: ResponseForumTopicModel
   showReplyButton?: boolean
 }>()
 

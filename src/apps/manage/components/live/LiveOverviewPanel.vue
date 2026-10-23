@@ -10,9 +10,10 @@ import {
 } from '@vicons/fluent'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import type { DanmakuModel, ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { DanmakuModel } from '@/api/client-types'
 import { getApiLiveRanking } from '@/api/generated/live/live'
+import type { ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/generated/model'
+import { EventDataTypes } from '@/api/generated/model'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'

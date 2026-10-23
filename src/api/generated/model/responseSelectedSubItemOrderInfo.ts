@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
+import type { GoodsTypes } from './goodsTypes'
 
 export interface ResponseSelectedSubItemOrderInfo {
   subItemId: number
   nameSnapshot: string
   priceSnapshot: number
   quantity: number
-  typeSnapshot: PointGoodsDataGoodsTypes
+  typeSnapshot: GoodsTypes
   assignedVirtualKeys: string[]
 }

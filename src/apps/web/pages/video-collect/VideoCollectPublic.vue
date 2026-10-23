@@ -4,8 +4,8 @@ import { useNow } from '@vueuse/core'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { VideoCollectDetail, VideoCollectTable } from '@/api/api-models'
-import { DuplicateVideoPolicy } from '@/api/api-models'
+import type { ResponseVideoCollectDetail, ResponseVideoCollectModel } from '@/api/generated/model'
+import { DuplicateVideoPolicy } from '@/api/generated/model'
 import { getApiVideoCollectGet, postApiVideoCollectAdd } from '@/api/generated/video-collect/video-collect'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
@@ -33,7 +33,7 @@ const router = useRouter()
 const biliAuth = useBiliAuth()
 const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 1000) })
 
-const table = ref<VideoCollectTable | null>()
+const table = ref<ResponseVideoCollectModel | null>()
 const turnstile = ref<InstanceType<typeof CaptchaWidget>>()
 const token = ref('')
 const isLoading = ref(false)
@@ -133,7 +133,7 @@ async function loadTable() {
     })) as unknown as {
       code: number
       message?: string
-      data: VideoCollectDetail
+      data: ResponseVideoCollectDetail
     }
     table.value =
       response.code === 200
@@ -476,4 +476,3 @@ onUnmounted(() => turnstile.value?.remove())
     </template>
   </VideoCollectPageShell>
 </template>
-

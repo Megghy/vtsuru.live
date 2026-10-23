@@ -7,7 +7,7 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
-  CheckInControllerBatchCheckInRequest,
+  BatchCheckInRequest,
   GetApiCheckinHistoryParams,
   GetApiCheckinKeywordParams,
   GetApiCheckinRankingParams,
@@ -16,12 +16,12 @@ import type {
   PostApiCheckinCheckInForParams,
   PostApiCheckinCheckInParams,
   ResponseResult,
-  ResponseResultOfCheckInControllerCheckInResponse,
+  ResponseResultOfCheckInResponse,
+  ResponseResultOfInt32,
   ResponseResultOfKeywordResponse,
   ResponseResultOfListOfResponseCheckInHistoryModel,
   ResponseResultOfListOfResponseUserCheckInModel,
   ResponseResultOfResponseCheckInModel,
-  ResponseResultOfSystemInt32,
 } from '../model'
 
 export const getPostApiCheckinAdminResetUrl = (params?: PostApiCheckinAdminResetParams) => {
@@ -69,9 +69,9 @@ export const getPostApiCheckinBatchCheckInUrl = () => {
  * @summary 批量签到接口
  */
 export const postApiCheckinBatchCheckIn = async (
-  checkInControllerBatchCheckInRequest?: CheckInControllerBatchCheckInRequest,
+  batchCheckInRequest?: BatchCheckInRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -86,11 +86,11 @@ export const postApiCheckinBatchCheckIn = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiCheckinBatchCheckInUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiCheckinBatchCheckInUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(checkInControllerBatchCheckInRequest),
+    body: JSON.stringify(batchCheckInRequest),
   })
 }
 
@@ -114,8 +114,8 @@ export const getPostApiCheckinCheckInForUrl = (params?: PostApiCheckinCheckInFor
 export const postApiCheckinCheckInFor = async (
   params?: PostApiCheckinCheckInForParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfCheckInControllerCheckInResponse> => {
-  return vtsuruMutator<ResponseResultOfCheckInControllerCheckInResponse>(getPostApiCheckinCheckInForUrl(params), {
+): Promise<ResponseResultOfCheckInResponse> => {
+  return vtsuruMutator<ResponseResultOfCheckInResponse>(getPostApiCheckinCheckInForUrl(params), {
     ...options,
     method: 'POST',
   })
@@ -141,8 +141,8 @@ export const getPostApiCheckinCheckInUrl = (params?: PostApiCheckinCheckInParams
 export const postApiCheckinCheckIn = async (
   params?: PostApiCheckinCheckInParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfCheckInControllerCheckInResponse> => {
-  return vtsuruMutator<ResponseResultOfCheckInControllerCheckInResponse>(getPostApiCheckinCheckInUrl(params), {
+): Promise<ResponseResultOfCheckInResponse> => {
+  return vtsuruMutator<ResponseResultOfCheckInResponse>(getPostApiCheckinCheckInUrl(params), {
     ...options,
     method: 'POST',
   })

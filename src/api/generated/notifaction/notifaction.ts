@@ -10,8 +10,8 @@ import type {
   GetApiNotificationGetParams,
   PaginationResponseOfListOfResponseNotifaction,
   PostApiNotificationReadParams,
+  ResponseResultOfInt32,
   ResponseResultOfListOfResponseNotifaction,
-  ResponseResultOfSystemInt32,
 } from '../model'
 
 export const getGetApiNotificationGetUnreadUrl = () => {
@@ -73,8 +73,8 @@ export const getPostApiNotificationReadUrl = (params?: PostApiNotificationReadPa
 export const postApiNotificationRead = async (
   params?: PostApiNotificationReadParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiNotificationReadUrl(params), {
+): Promise<ResponseResultOfInt32> => {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiNotificationReadUrl(params), {
     ...options,
     method: 'POST',
   })

@@ -5,7 +5,7 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VideoCollectDataDuplicateVideoPolicy } from './videoCollectDataDuplicateVideoPolicy'
+import type { DuplicateVideoPolicy } from './duplicateVideoPolicy'
 
 export interface RequestVideoTable {
   /** @nullable */
@@ -47,5 +47,5 @@ export interface RequestVideoTable {
    */
   maxVideoPerUser: number
   requireDescription: boolean
-  duplicatePolicy: VideoCollectDataDuplicateVideoPolicy
+  duplicatePolicy: DuplicateVideoPolicy
 }

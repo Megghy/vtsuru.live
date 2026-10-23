@@ -1,5 +1,5 @@
-import type { DanmakuModel, EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { DanmakuModel, EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 
 type DanmakuGiftLike = Pick<DanmakuModel, 'type' | 'msg' | 'num' | 'price'> &
   Partial<Pick<DanmakuModel, 'mysteryBoxName' | 'mysteryBoxPrice'>> &

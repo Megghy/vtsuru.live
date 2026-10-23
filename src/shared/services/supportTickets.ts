@@ -1,4 +1,4 @@
-import type { CreateSupportTicketRequest } from '@/api/api-models'
+import type { CreateSupportTicketModel } from '@/api/generated/model'
 import {
   getApiSupportTicketsId,
   getApiSupportTicketsMine,
@@ -22,7 +22,7 @@ export async function getSupportTicket(id: number) {
   return unwrapOk(await getApiSupportTicketsId(id), '无法获取工单详情')
 }
 
-export async function createSupportTicket(request: CreateSupportTicketRequest) {
+export async function createSupportTicket(request: CreateSupportTicketModel) {
   return unwrapOk(await postApiSupportTickets(request), '创建工单失败')
 }
 

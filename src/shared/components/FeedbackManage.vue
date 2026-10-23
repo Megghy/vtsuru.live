@@ -4,8 +4,9 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
-import type { CreateSupportTicketRequest, SupportTicketDetail, SupportTicketSummary } from '@/api/api-models'
-import { SupportTicketStatus, SupportTicketType } from '@/api/api-models'
+import type { SupportTicketDetail } from '@/api/client-types'
+import type { CreateSupportTicketModel, SupportTicketModel } from '@/api/generated/model'
+import { SupportTicketStatus, SupportTicketType } from '@/api/generated/model'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import {
   createSupportTicket,
@@ -38,7 +39,7 @@ const route = useRoute()
 const router = useRouter()
 
 const view = ref<'mine' | 'public'>(isLoggedIn.value ? 'mine' : 'public')
-const tickets = ref<SupportTicketSummary[]>([])
+const tickets = ref<SupportTicketModel[]>([])
 const selectedTicket = ref<SupportTicketDetail>()
 const loadingList = ref(false)
 const loadingDetail = ref(false)
@@ -50,7 +51,7 @@ const typeFilter = ref<string>('all')
 const fileList = ref<LocalFileItem[]>([])
 const fileInputRef = ref<HTMLInputElement>()
 
-const draft = ref<CreateSupportTicketRequest>({
+const draft = ref<CreateSupportTicketModel>({
   title: '',
   content: '',
   type: SupportTicketType.Bug,

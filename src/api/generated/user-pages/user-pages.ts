@@ -9,9 +9,9 @@ import { vtsuruMutator } from '../../orval-mutator'
 import type {
   GetApiUserPagesGetUserParams,
   ResponseResult,
-  ResponseResultOfSystemString,
-  ResponseResultOfUserPagesControllerMyUserPagesStateResponse,
-  UserPagesControllerUpdateUserPagesModel,
+  ResponseResultOfMyUserPagesStateResponse,
+  ResponseResultOfString,
+  UpdateUserPagesModel,
 } from '../model'
 
 export const getPostApiUserPagesClearDraftUrl = () => {
@@ -33,8 +33,8 @@ export const getGetApiUserPagesGetMyUrl = () => {
 
 export const getApiUserPagesGetMy = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfUserPagesControllerMyUserPagesStateResponse> => {
-  return vtsuruMutator<ResponseResultOfUserPagesControllerMyUserPagesStateResponse>(getGetApiUserPagesGetMyUrl(), {
+): Promise<ResponseResultOfMyUserPagesStateResponse> => {
+  return vtsuruMutator<ResponseResultOfMyUserPagesStateResponse>(getGetApiUserPagesGetMyUrl(), {
     ...options,
     method: 'GET',
   })
@@ -57,8 +57,8 @@ export const getGetApiUserPagesGetUserUrl = (params?: GetApiUserPagesGetUserPara
 export const getApiUserPagesGetUser = async (
   params?: GetApiUserPagesGetUserParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiUserPagesGetUserUrl(params), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiUserPagesGetUserUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -69,9 +69,9 @@ export const getPostApiUserPagesPublishUrl = () => {
 }
 
 export const postApiUserPagesPublish = async (
-  userPagesControllerUpdateUserPagesModel?: UserPagesControllerUpdateUserPagesModel,
+  updateUserPagesModel?: UpdateUserPagesModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -86,11 +86,11 @@ export const postApiUserPagesPublish = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiUserPagesPublishUrl(), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiUserPagesPublishUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(userPagesControllerUpdateUserPagesModel),
+    body: JSON.stringify(updateUserPagesModel),
   })
 }
 
@@ -112,9 +112,9 @@ export const getPostApiUserPagesSaveDraftUrl = () => {
 }
 
 export const postApiUserPagesSaveDraft = async (
-  userPagesControllerUpdateUserPagesModel?: UserPagesControllerUpdateUserPagesModel,
+  updateUserPagesModel?: UpdateUserPagesModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -129,10 +129,10 @@ export const postApiUserPagesSaveDraft = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiUserPagesSaveDraftUrl(), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiUserPagesSaveDraftUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(userPagesControllerUpdateUserPagesModel),
+    body: JSON.stringify(updateUserPagesModel),
   })
 }

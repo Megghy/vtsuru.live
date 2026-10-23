@@ -2,7 +2,7 @@
 import { Live24Filled } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -17,8 +17,8 @@ import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 import './scheduleTemplateTheme.css'
 
 interface LivePosterConfig {
-  backgroundFile: UploadFileResponse[]
-  portraitFile: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
+  portraitFile: APIFileModel[]
   heading: string
   subheading: string
   accentColor: RGBAColor
@@ -37,14 +37,14 @@ const Config = defineTemplateConfig([
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: LivePosterConfig) => (config.backgroundFile = files),
+    onUploaded: (files: APIFileModel[], config: LivePosterConfig) => (config.backgroundFile = files),
   },
   {
     name: '主视觉立绘',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: LivePosterConfig) => (config.portraitFile = files),
+    onUploaded: (files: APIFileModel[], config: LivePosterConfig) => (config.portraitFile = files),
   },
   { name: '海报标题', type: 'string', key: 'heading', default: 'LIVE' },
   { name: '海报副标题', type: 'string', key: 'subheading', default: 'WEEKLY TOUR' },

@@ -3,7 +3,7 @@ import { Buffer } from 'node:buffer'
 import { Field, Root, Type } from 'protobufjs'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 
 import DirectClient from '../DanmakuClients/DirectClient'
 import type { AuthInfo } from '../DanmakuClients/OpenLiveClient'

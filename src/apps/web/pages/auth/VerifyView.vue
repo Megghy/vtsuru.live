@@ -10,7 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
 
 type Phase = 'checking' | 'success' | 'need-login' | 'error'
-const PHASES: readonly Phase[] = ['checking', 'success', 'need-login', 'error']
+const PHASES: readonly Phase[] = new Set(['checking', 'success', 'need-login', 'error'])
 
 const route = useRoute()
 const router = useRouter()
@@ -29,7 +29,7 @@ const target = computed(() => queryText('target') ?? '')
 const preview = computed<Phase | null>(() => {
   if (!('preview' in route.query)) return null
   const raw = queryText('preview') ?? ''
-  return PHASES.includes(raw as Phase) ? (raw as Phase) : 'success'
+  return PHASES.has(raw as Phase) ? (raw as Phase) : 'success'
 })
 
 const copy = computed(() => {
@@ -113,7 +113,9 @@ onUnmounted(() => {
 
 <template>
   <main class="grid min-h-svh py-8 px-4 bg-muted place-items-center">
-    <section class="grid w-full max-w-[420px] pt-8 px-7 pb-7 border border-border rounded-[var(--radius)] bg-popover justify-items-center text-center gap-2">
+    <section
+      class="grid w-full max-w-[420px] pt-8 px-7 pb-7 border border-border rounded-[var(--radius)] bg-popover justify-items-center text-center gap-2"
+    >
       <div
         class="grid size-[52px] mb-2 rounded-xl place-items-center"
         :class="{

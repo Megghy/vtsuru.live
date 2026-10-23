@@ -5,8 +5,8 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventFetcherStateModelEventFetcherType } from './eventFetcherStateModelEventFetcherType'
 import type { EventFetcherStateModelStatus } from './eventFetcherStateModelStatus'
+import type { EventFetcherType } from './eventFetcherType'
 
 export interface EventFetcherStateModel {
   online: boolean
@@ -15,5 +15,5 @@ export interface EventFetcherStateModel {
   version?: string | null
   todayReceive: number
   useCookie: boolean
-  type?: EventFetcherStateModelEventFetcherType
+  type?: EventFetcherType
 }

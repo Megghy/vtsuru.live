@@ -2,7 +2,7 @@
 import { PlayCircleOutline, RefreshOutline } from '@vicons/ionicons5'
 import { computed, onMounted, watch } from 'vue'
 
-import type { ResponseUserIndexModel, UserInfo, VideoCollectVideo } from '@/api/api-models'
+import type { ResponseUserIndexModel, ResponseUserInfo, VideoData } from '@/api/generated/model'
 import { getApiUserIndexGet } from '@/api/generated/user-index/user-index'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import SimpleVideoCard from '@/components/SimpleVideoCard.vue'
@@ -32,7 +32,7 @@ interface BlockConfig {
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo | undefined
+  userInfo?: ResponseUserInfo | undefined
   biliInfo?: unknown
 }>()
 
@@ -107,7 +107,7 @@ watch(
 )
 
 const videos = computed(() => {
-  if (cfg.value.source !== 'userIndex' || !props.userInfo?.name) return [] as VideoCollectVideo[]
+  if (cfg.value.source !== 'userIndex' || !props.userInfo?.name) return [] as VideoData[]
   const list = Array.isArray(userIndex.value?.videos) ? userIndex.value!.videos : []
   return list.slice(0, cfg.value.maxItems ?? 6)
 })
@@ -239,5 +239,3 @@ const containerStyle = computed(() => {
     </div>
   </BlockCard>
 </template>
-
-

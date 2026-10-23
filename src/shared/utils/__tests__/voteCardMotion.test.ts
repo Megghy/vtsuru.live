@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { effectScope, nextTick, ref } from 'vue'
 
-import type { VoteOBSData } from '@/api/api-models'
+import type { VoteOBSData } from '@/api/generated/model'
 import { voteSnapshot } from '@/test/voteFixtures'
 
 import { computeRankMoves, useVoteCardMotion } from '../voteCardMotion'

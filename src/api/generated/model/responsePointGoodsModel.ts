@@ -6,22 +6,22 @@
  * OpenAPI spec version: v1
  */
 import type { APIFileModel } from './aPIFileModel'
+import type { GoodsStatus } from './goodsStatus'
+import type { GoodsTypes } from './goodsTypes'
 import type { GuardLevel } from './guardLevel'
-import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus'
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
-import type { PointGoodsDataServiceConfigData } from './pointGoodsDataServiceConfigData'
-import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode'
-import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting'
 import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel'
+import type { ServiceConfigData } from './serviceConfigData'
+import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
+import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
 
 export interface ResponsePointGoodsModel {
   content: string
   collectUrl: string
   embedCollectUrl: boolean
-  setting: RequestPointGoodsModelTempRequestGoodsSetting
-  serviceConfig?: PointGoodsDataServiceConfigData
+  setting: TempRequestGoodsSetting
+  serviceConfig?: ServiceConfigData
   virtualKeys: string[]
-  keySelectionMode: PointGoodsDataVirtualKeySelectionMode
+  keySelectionMode: VirtualKeySelectionMode
   id: number
   name: string
   description: string
@@ -30,8 +30,8 @@ export interface ResponsePointGoodsModel {
   price: number
   tags: string[]
   images: number[]
-  status: PointGoodsDataGoodsStatus
-  type: PointGoodsDataGoodsTypes
+  status: GoodsStatus
+  type: GoodsTypes
   isPinned: boolean
   isAllowRebuy: boolean
   maxBuyCount: number

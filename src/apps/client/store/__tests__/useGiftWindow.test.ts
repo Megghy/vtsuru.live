@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import { GuardLevel } from '@/api/api-models'
+import { GuardLevel } from '@/api/generated/model'
 
 import { useGiftWindow } from '../useGiftWindow'
 

@@ -3,9 +3,8 @@ import { format } from 'date-fns'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { UserInfo } from '@/api/api-models'
-import type { ForumPostTopicModel, ForumTopicBaseModel } from '@/api/models/forum'
-import { ForumTopicSortTypes, ForumUserLevels } from '@/api/models/forum'
+import type { RequestPostTopic, ResponseForumTopicSimpleModel, ResponseUserInfo } from '@/api/generated/model'
+import { ForumTopicSortTypes, ForumUserLevels } from '@/api/generated/model'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { refreshCaptcha } from '@/shared/captcha'
@@ -24,16 +23,16 @@ import { useForumStore } from '@/store/useForumStore'
 import ForumPreviewItem from './ForumPreviewItem.vue'
 
 const { userInfo } = defineProps<{
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
 }>()
 const accountInfo = useAccount()
 const token = ref('')
 const turnstile = ref()
 const editor = ref()
 
-const postTopicBackup = usePersistedStorage<{ [key: number]: ForumPostTopicModel }>('Forum.PostTopic', {})
+const postTopicBackup = usePersistedStorage<{ [key: number]: RequestPostTopic }>('Forum.PostTopic', {})
 const showPostTopicModal = ref(false)
-const currentPostTopicModel = ref<ForumPostTopicModel>({} as ForumPostTopicModel)
+const currentPostTopicModel = ref<RequestPostTopic>({} as RequestPostTopic)
 const lastBackupTopic = ref(Date.now())
 
 const useForum = useForumStore()
@@ -43,7 +42,7 @@ const sort = ref(ForumTopicSortTypes.Time)
 
 const forumInfo = ref<Awaited<ReturnType<typeof useForum.GetForumInfo>>>()
 const forumLoading = ref(true)
-const topics = ref<{ data: ForumTopicBaseModel[]; total: number; more: boolean }>()
+const topics = ref<{ data: ResponseForumTopicSimpleModel[]; total: number; more: boolean }>()
 
 async function ApplyToForum() {
   if (!forumInfo.value) return
@@ -64,7 +63,7 @@ function postTopic() {
     .PostTopic(currentPostTopicModel.value, token.value, () => refreshCaptcha(turnstile.value))
     .then(async (topic) => {
       if (topic) {
-        currentPostTopicModel.value = {} as ForumPostTopicModel
+        currentPostTopicModel.value = {} as RequestPostTopic
         delete postTopicBackup.value[forumInfo.value?.owner.id ?? -1]
         showPostTopicModal.value = false
         topics.value = await useForum.GetTopics(forumInfo.value?.owner.id ?? -1, ps.value, pn.value, sort.value)
@@ -285,5 +284,3 @@ onUnmounted(() => {
     </Dialog>
   </template>
 </template>
-
-

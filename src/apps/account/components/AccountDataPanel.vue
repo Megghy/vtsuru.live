@@ -12,9 +12,12 @@ defineProps<{
 const TONE_CARD: Record<string, string> = {
   default: '',
   primary: 'border-primary/30 bg-primary/5',
-  success: 'border-[color-mix(in_srgb,var(--vtsuru-success)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-success)_4%,var(--card))]',
-  warning: 'border-[color-mix(in_srgb,var(--vtsuru-warning)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-warning)_4%,var(--card))]',
-  error: 'border-[color-mix(in_srgb,var(--vtsuru-error)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-error)_4%,var(--card))]',
+  success:
+    'border-[color-mix(in_srgb,var(--vtsuru-success)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-success)_4%,var(--card))]',
+  warning:
+    'border-[color-mix(in_srgb,var(--vtsuru-warning)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-warning)_4%,var(--card))]',
+  error:
+    'border-[color-mix(in_srgb,var(--vtsuru-error)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-error)_4%,var(--card))]',
   info: 'border-[color-mix(in_srgb,var(--vtsuru-info)_32%,var(--border))] bg-[color-mix(in_srgb,var(--vtsuru-info)_4%,var(--card))]',
 }
 

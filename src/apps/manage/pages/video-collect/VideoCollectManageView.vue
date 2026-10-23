@@ -19,8 +19,8 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { VideoCollectCreateModel, VideoCollectTable } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type { RequestVideoTable, ResponseVideoCollectModel } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import {
   getApiVideoCollectGetAll,
   postApiVideoCollectCreate,
@@ -64,17 +64,17 @@ const message = useMessage()
 const router = useRouter()
 const accountInfo = useAccount()
 
-const videoTables = ref<VideoCollectTable[]>([])
+const videoTables = ref<ResponseVideoCollectModel[]>([])
 const isLoading = ref(false)
 const isCreating = ref(false)
 const createModalVisible = ref(false)
 const editModalVisible = ref(false)
-const currentEditingTable = ref<VideoCollectTable>()
+const currentEditingTable = ref<ResponseVideoCollectModel>()
 const keyword = ref('')
 const statusFilter = ref<StatusFilter>('all')
 
 const deleteModalVisible = ref(false)
-const tableToDelete = ref<VideoCollectTable | null>(null)
+const tableToDelete = ref<ResponseVideoCollectModel | null>(null)
 
 const videoCollectUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/video-collect` : '',
@@ -94,7 +94,7 @@ const filteredTables = computed(() => {
     .toSorted((a, b) => Number(isActive(b)) - Number(isActive(a)) || b.createAt - a.createAt)
 })
 
-const editInitialValue = computed<VideoCollectCreateModel | undefined>(() => {
+const editInitialValue = computed<RequestVideoTable | undefined>(() => {
   if (!currentEditingTable.value) return undefined
   const t = currentEditingTable.value
   return {
@@ -116,17 +116,17 @@ const editInitialValue = computed<VideoCollectCreateModel | undefined>(() => {
 
 void loadTables()
 
-function isActive(table: VideoCollectTable) {
+function isActive(table: ResponseVideoCollectModel) {
   return !table.isFinish && table.endAt > Date.now()
 }
 
-function tableStatus(table: VideoCollectTable) {
+function tableStatus(table: ResponseVideoCollectModel) {
   if (!isActive(table)) return '已结束'
   if (table.startAt > Date.now()) return '未开始'
   return '进行中'
 }
 
-function capacityPercentage(table: VideoCollectTable) {
+function capacityPercentage(table: ResponseVideoCollectModel) {
   return Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))
 }
 
@@ -136,7 +136,7 @@ async function loadTables() {
     const response = (await getApiVideoCollectGetAll()) as unknown as {
       code: number
       message?: string
-      data: VideoCollectTable[]
+      data: ResponseVideoCollectModel[]
     }
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value = response.data
@@ -148,13 +148,13 @@ async function loadTables() {
   }
 }
 
-async function createTable(model: VideoCollectCreateModel) {
+async function createTable(model: RequestVideoTable) {
   isCreating.value = true
   try {
     const response = (await postApiVideoCollectCreate(model as any)) as unknown as {
       code: number
       message?: string
-      data: VideoCollectTable
+      data: ResponseVideoCollectModel
     }
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value.unshift(response.data)
@@ -168,7 +168,7 @@ async function createTable(model: VideoCollectCreateModel) {
   }
 }
 
-async function updateTable(model: VideoCollectCreateModel) {
+async function updateTable(model: RequestVideoTable) {
   if (!currentEditingTable.value) return
   isCreating.value = true
   try {
@@ -178,7 +178,7 @@ async function updateTable(model: VideoCollectCreateModel) {
     } as any)) as unknown as {
       code: number
       message?: string
-      data: VideoCollectTable
+      data: ResponseVideoCollectModel
     }
     if (response.code !== 200) throw new Error(response.message)
     const idx = videoTables.value.findIndex((t) => t.id === currentEditingTable.value?.id)
@@ -193,22 +193,22 @@ async function updateTable(model: VideoCollectCreateModel) {
   }
 }
 
-function copyShareLink(table: VideoCollectTable) {
+function copyShareLink(table: ResponseVideoCollectModel) {
   const url = `${CURRENT_HOST}video-collect/${table.shortId}`
   copyToClipboard(url)
   message.success('已复制投稿页面链接')
 }
 
-function openResultPage(table: VideoCollectTable) {
+function openResultPage(table: ResponseVideoCollectModel) {
   router.push({ name: 'video-collect-list', params: { id: table.id } })
 }
 
-function openEditModal(table: VideoCollectTable) {
+function openEditModal(table: ResponseVideoCollectModel) {
   currentEditingTable.value = table
   editModalVisible.value = true
 }
 
-async function toggleFinish(table: VideoCollectTable) {
+async function toggleFinish(table: ResponseVideoCollectModel) {
   const finish = !table.isFinish
   try {
     const response = await postApiVideoCollectFinish({ id: table.id, finish: finish as any })
@@ -221,7 +221,7 @@ async function toggleFinish(table: VideoCollectTable) {
   }
 }
 
-function promptDelete(table: VideoCollectTable) {
+function promptDelete(table: ResponseVideoCollectModel) {
   tableToDelete.value = table
   deleteModalVisible.value = true
 }

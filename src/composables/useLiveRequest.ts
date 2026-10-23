@@ -2,8 +2,7 @@ import { List } from 'linqts'
 import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, useAccount } from '@/api/account'
-import type { EventModel, SongRequestInfo, SongsInfo } from '@/api/api-models'
-import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/api-models'
+import type { EventModel, SongRequestInfo } from '@/api/client-types'
 import {
   getApiLiveRequestGetActive,
   getApiLiveRequestGetAll,
@@ -16,6 +15,8 @@ import {
   postApiLiveRequestSinging,
   postApiLiveRequestTryAdd,
 } from '@/api/generated/live-request/live-request'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { EventDataTypes, FunctionTypes, SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { GuidUtils } from '@/shared/utils'
 import { sortByQueueType } from '@/shared/utils/queue'
@@ -36,7 +37,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   const filterName = ref('')
   const filterNameContains = ref(false)
   const newSongName = ref('')
-  const selectedSong = ref<SongsInfo>()
+  const selectedSong = ref<ResponseSongModel>()
   const isLrcLoading = ref('')
 
   const configCanEdit = computed(() => {
@@ -405,7 +406,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   }
 
   function checkMessage(msg: string) {
-    if (isLoggedIn.value && accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.LiveRequest) != true) {
+    if (isLoggedIn.value && accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.SongRequest) != true) {
       return false
     }
     const prefix = accountInfo.value?.settings?.songRequest?.orderPrefix || defaultPrefix.value

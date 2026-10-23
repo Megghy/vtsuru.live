@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { isTauri } from '@/shared/config'
 

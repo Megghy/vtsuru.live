@@ -112,9 +112,7 @@ function getUserPageSurfaceCssVars(effectiveIsDark: boolean, theme?: unknown) {
             : 0.26
 
   return {
-    surfaceBg: effectiveIsDark
-      ? `rgba(24, 24, 27, ${surfaceAlpha})`
-      : `rgba(255, 255, 255, ${surfaceAlpha})`,
+    surfaceBg: effectiveIsDark ? `rgba(24, 24, 27, ${surfaceAlpha})` : `rgba(255, 255, 255, ${surfaceAlpha})`,
     surfaceBgHover: effectiveIsDark
       ? `rgba(39, 39, 42, ${Math.min(1, surfaceAlpha + 0.16)})`
       : `rgba(244, 244, 245, ${Math.min(1, surfaceAlpha + 0.1)})`,
@@ -154,8 +152,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     backgroundColor && appearance.surfaceOpacity !== undefined
       ? applyColorOpacity(backgroundColor, appearance.surfaceOpacity)
       : ''
-  const contrastSurface =
-    customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars.surfaceBg : undefined)
+  const contrastSurface = customSurface || (appearance.surfaceOpacity !== undefined ? surfaceVars.surfaceBg : undefined)
   const textPalette = resolveUserPageTextPalette(asObject(theme) ?? undefined, effectiveIsDark, contrastSurface)
   const canvasIsDark = canvasColor ? isUserPageColorDark(canvasColor) : effectiveIsDark
   const canvasPalette = canvasColor

@@ -6,10 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type ForumTopicSortTypes = (typeof ForumTopicSortTypes)[keyof typeof ForumTopicSortTypes]
-
-export const ForumTopicSortTypes = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-} as const
+export enum ForumTopicSortTypes {
+  Time = 0,
+  Comment = 1,
+  Like = 2,
+}

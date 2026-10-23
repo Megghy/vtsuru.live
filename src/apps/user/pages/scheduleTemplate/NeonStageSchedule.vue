@@ -2,7 +2,7 @@
 import { Live24Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -16,8 +16,8 @@ import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 import './scheduleTemplateTheme.css'
 
 interface NeonStageConfig {
-  backgroundFile: UploadFileResponse[]
-  portraitFile: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
+  portraitFile: APIFileModel[]
   heading: string
   signalColor: RGBAColor
   showAvatar: boolean
@@ -33,14 +33,14 @@ const Config = defineTemplateConfig([
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: NeonStageConfig) => (config.backgroundFile = files),
+    onUploaded: (files: APIFileModel[], config: NeonStageConfig) => (config.backgroundFile = files),
   },
   {
     name: '频道识别图',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: NeonStageConfig) => (config.portraitFile = files),
+    onUploaded: (files: APIFileModel[], config: NeonStageConfig) => (config.portraitFile = files),
   },
   { name: '主标题', type: 'string', key: 'heading', default: 'BROADCAST CONTROL' },
   {

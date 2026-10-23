@@ -232,4 +232,3 @@ function removeReplacement(index: number) {
     </SectionField>
   </div>
 </template>
-

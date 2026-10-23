@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { QAInfo } from '@/api/api-models'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 
 import QuestionItem from './QuestionItem.vue'
 
 defineProps<{
-  questions: QAInfo[]
+  questions: ResponseQAInfoToTarget[]
   selectable?: boolean
   selectedIds?: number[]
 }>()
@@ -37,4 +37,3 @@ const emit = defineEmits<{ (e: 'select', id: number): void }>()
     </QuestionItem>
   </div>
 </template>
-

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { SongRequestOption } from '@/api/api-models'
+import type { SongRequestOption } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 
 import { getSongOptionBadges } from '../utils/songOptionBadges'

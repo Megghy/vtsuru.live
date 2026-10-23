@@ -7,11 +7,7 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
-  ForumControllerRequestCreateForum,
-  ForumControllerRequestPostComment,
-  ForumControllerRequestPostReply,
-  ForumControllerRequestPostTopic,
-  ForumForumDataForumSetting,
+  ForumSetting,
   GetApiForumGetCommentsParams,
   GetApiForumGetForumParams,
   GetApiForumGetTopicParams,
@@ -33,6 +29,10 @@ import type {
   PostApiForumManageRestoreTopicParams,
   PostApiForumManageSetTopicTopParams,
   PostApiForumManageUnbanParams,
+  RequestCreateForum,
+  RequestPostComment,
+  RequestPostReply,
+  RequestPostTopic,
   ResponseResult,
   ResponseResultOfListOfResponseForumModel,
   ResponseResultOfResponseForumBaseModel,
@@ -71,7 +71,7 @@ export const getPostApiForumCreateUrl = () => {
 }
 
 export const postApiForumCreate = async (
-  forumControllerRequestCreateForum?: ForumControllerRequestCreateForum,
+  requestCreateForum?: RequestCreateForum,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponseForumModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -92,7 +92,7 @@ export const postApiForumCreate = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(forumControllerRequestCreateForum),
+    body: JSON.stringify(requestCreateForum),
   })
 }
 
@@ -566,7 +566,7 @@ export const getPostApiForumManageUpdateSettingUrl = () => {
 }
 
 export const postApiForumManageUpdateSetting = async (
-  forumForumDataForumSetting?: ForumForumDataForumSetting,
+  forumSetting?: ForumSetting,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -587,7 +587,7 @@ export const postApiForumManageUpdateSetting = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(forumForumDataForumSetting),
+    body: JSON.stringify(forumSetting),
   })
 }
 
@@ -596,7 +596,7 @@ export const getPostApiForumPostCommentUrl = () => {
 }
 
 export const postApiForumPostComment = async (
-  forumControllerRequestPostComment?: ForumControllerRequestPostComment,
+  requestPostComment?: RequestPostComment,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponseForumCommentBaseModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -617,7 +617,7 @@ export const postApiForumPostComment = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(forumControllerRequestPostComment),
+    body: JSON.stringify(requestPostComment),
   })
 }
 
@@ -626,7 +626,7 @@ export const getPostApiForumPostReplyUrl = () => {
 }
 
 export const postApiForumPostReply = async (
-  forumControllerRequestPostReply?: ForumControllerRequestPostReply,
+  requestPostReply?: RequestPostReply,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponseForumCommentReplyBaseModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -647,7 +647,7 @@ export const postApiForumPostReply = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(forumControllerRequestPostReply),
+    body: JSON.stringify(requestPostReply),
   })
 }
 
@@ -656,7 +656,7 @@ export const getPostApiForumPostTopicUrl = () => {
 }
 
 export const postApiForumPostTopic = async (
-  forumControllerRequestPostTopic?: ForumControllerRequestPostTopic,
+  requestPostTopic?: RequestPostTopic,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponseForumTopicModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -677,7 +677,7 @@ export const postApiForumPostTopic = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(forumControllerRequestPostTopic),
+    body: JSON.stringify(requestPostTopic),
   })
 }
 
@@ -686,7 +686,7 @@ export const getPostApiForumUpdateUrl = () => {
 }
 
 export const postApiForumUpdate = async (
-  forumControllerRequestCreateForum?: ForumControllerRequestCreateForum,
+  requestCreateForum?: RequestCreateForum,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -707,6 +707,6 @@ export const postApiForumUpdate = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(forumControllerRequestCreateForum),
+    body: JSON.stringify(requestCreateForum),
   })
 }

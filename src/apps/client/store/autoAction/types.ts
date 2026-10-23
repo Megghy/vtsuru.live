@@ -1,6 +1,7 @@
 // 统一的自动操作类型定义
 
-import type { EventModel, GuardLevel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import type { GuardLevel } from '@/api/generated/model'
 
 // 触发条件类型
 export enum TriggerType {

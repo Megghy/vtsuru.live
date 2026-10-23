@@ -1,12 +1,5 @@
 <script setup lang="ts">
-import {
-  Check,
-  Copy,
-  Eye,
-  EyeOff,
-  Info,
-  RefreshCw,
-} from 'lucide-vue-next'
+import { Check, Copy, Eye, EyeOff, Info, RefreshCw } from 'lucide-vue-next'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 

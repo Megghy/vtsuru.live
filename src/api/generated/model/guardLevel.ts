@@ -6,11 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type GuardLevel = (typeof GuardLevel)[keyof typeof GuardLevel]
-
-export const GuardLevel = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-} as const
+export enum GuardLevel {
+  None = 0,
+  Zongdu = 1,
+  Tidu = 2,
+  Jianzhang = 3,
+}

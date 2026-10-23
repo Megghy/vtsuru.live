@@ -3,7 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { DownloadConfig } from '@/api/account'
-import type { BiliLiveReserveModel, ScheduleWeekInfo, UserInfo } from '@/api/api-models'
+import type { ResponseBiliLiveReserveModel, ResponseScheduleModel, ResponseUserInfo } from '@/api/generated/model'
 import { getApiScheduleBiliReserve, getApiScheduleGet } from '@/api/generated/schedule/schedule'
 import type { BiliProfile } from '@/apps/user-page/types'
 import { mergeBiliReservesIntoWeeks } from '@/apps/user/pages/scheduleTemplate/scheduleTemplateUtils'
@@ -16,17 +16,17 @@ import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   biliInfo: BiliProfile | undefined
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
   template?: string
-  fakeData?: ScheduleWeekInfo[]
+  fakeData?: ResponseScheduleModel[]
 }>()
 
 const message = useMessage()
-const currentData = ref<ScheduleWeekInfo[]>([])
+const currentData = ref<ResponseScheduleModel[]>([])
 const currentConfig = ref<Record<string, unknown>>({})
 const loadingData = ref(true)
 const loadingConfig = ref(true)
-const biliReserve = ref<BiliLiveReserveModel>({
+const biliReserve = ref<ResponseBiliLiveReserveModel>({
   items: [],
   fetchedAt: 0,
   intervalMinutes: 15,
@@ -49,7 +49,9 @@ const componentType = computed(
     props.userInfo?.extra?.templateTypes.schedule?.toLowerCase() ??
     '',
 )
-const selectedTemplate = computed(() => ScheduleTemplateMap[componentType.value] ?? ScheduleTemplateMap.default ?? ScheduleTemplateMap[''])
+const selectedTemplate = computed(
+  () => ScheduleTemplateMap[componentType.value] ?? ScheduleTemplateMap.default ?? ScheduleTemplateMap[''],
+)
 const isLoading = computed(() => loadingData.value || loadingConfig.value)
 
 async function loadSchedule() {
@@ -72,7 +74,7 @@ async function loadSchedule() {
       id: String(userId),
     })) as unknown as {
       code: number
-      data?: ScheduleWeekInfo[]
+      data?: ResponseScheduleModel[]
       message?: string
     }
     if (response.code !== 200) throw new Error(response.message)
@@ -111,7 +113,7 @@ async function loadBiliReserve() {
       id: String(props.userInfo.id),
     })) as unknown as {
       code: number
-      data?: BiliLiveReserveModel
+      data?: ResponseBiliLiveReserveModel
     }
     if (response.code === 200 && response.data) biliReserve.value = response.data
   } catch (error) {
@@ -154,5 +156,3 @@ watch(() => [props.userInfo?.id, selectedTemplate.value.settingName] as const, l
     />
   </div>
 </template>
-
-

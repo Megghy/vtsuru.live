@@ -1,4 +1,4 @@
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 
 import * as constants from './constants'
 

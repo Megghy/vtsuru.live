@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
-import type { PointOrderDataPointOrderStatus } from './pointOrderDataPointOrderStatus'
-import type { PointOrderDataServiceOrderData } from './pointOrderDataServiceOrderData'
+import type { GoodsTypes } from './goodsTypes'
+import type { PointOrderStatus } from './pointOrderStatus'
 import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel'
 import type { ResponsePointGoodsModel } from './responsePointGoodsModel'
 import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo'
+import type { ServiceOrderData } from './serviceOrderData'
 import type { ShippingAddressInfo } from './shippingAddressInfo'
 
 export interface ResponsePointOrder2OwnerModel {
   id: number
   point: number
   vTsuruId: number
-  type: PointGoodsDataGoodsTypes
+  type: GoodsTypes
   customer: ResponseBiliAuthBasicModel
   address?: ShippingAddressInfo
   goods: ResponsePointGoodsModel
@@ -25,7 +25,7 @@ export interface ResponsePointOrder2OwnerModel {
   createAt: number
   /** @nullable */
   updateAt?: number | null
-  status: PointOrderDataPointOrderStatus
+  status: PointOrderStatus
   /** @nullable */
   remark?: string | null
   /** @nullable */
@@ -34,5 +34,5 @@ export interface ResponsePointOrder2OwnerModel {
   expressCompany?: string | null
   /** @nullable */
   selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null
-  serviceData?: PointOrderDataServiceOrderData
+  serviceData?: ServiceOrderData
 }

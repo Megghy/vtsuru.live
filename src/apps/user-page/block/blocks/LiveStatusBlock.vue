@@ -2,7 +2,7 @@
 import { CalendarOutline, GameControllerOutline, HomeOutline, PlayCircleOutline, TvOutline } from '@vicons/ionicons5'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
@@ -23,7 +23,7 @@ interface BlockConfig {
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
   biliInfo?: unknown
 }>()
 
@@ -196,7 +196,8 @@ const hasCover = computed(
               <span
                 class="block truncate text-xs mt-0.5"
                 :class="hasCover ? 'text-white/80' : 'text-muted-foreground'"
-              >哔哩哔哩直播</span>
+                >哔哩哔哩直播</span
+              >
             </div>
           </div>
 
@@ -229,7 +230,8 @@ const hasCover = computed(
           <strong
             v-if="cfg.showTitle && model.title"
             class="text-base leading-snug font-bold break-words"
-          >{{ model.title }}</strong>
+            >{{ model.title }}</strong
+          >
           <div
             v-if="cfg.showArea && model.area"
             class="flex items-center gap-1.75 text-[13px] leading-relaxed"

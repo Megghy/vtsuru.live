@@ -1,5 +1,5 @@
-import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 
 const FILTER_TYPES: Partial<Record<EventDataTypes, string>> = {
   [EventDataTypes.Message]: 'Message',

@@ -3,7 +3,7 @@ import { Copy24Regular, Info24Filled } from '@vicons/fluent'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { FunctionTypes } from '@/api/api-models'
+import type { FunctionTypes } from '@/api/generated/model'
 import { useFunctionToggle } from '@/apps/manage/composables/useFunctionToggle'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'

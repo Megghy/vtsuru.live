@@ -5,13 +5,10 @@ import {
   getApiFollowingStates,
   postApiFollowingId,
 } from '@/api/generated/following/following'
-import type { FollowingControllerDirectoryEntry } from '@/api/generated/model/followingControllerDirectoryEntry'
-import type { FollowingControllerFollowState } from '@/api/generated/model/followingControllerFollowState'
+import type { FollowState } from '@/api/generated/model'
 
 import { ACCOUNT } from './account'
 import { unwrapOk } from './query'
-export type FollowState = FollowingControllerFollowState
-export type LiveDirectoryEntry = FollowingControllerDirectoryEntry
 export async function setFollowing(id: number, following: boolean) {
   unwrapOk(await postApiFollowingId(id, { following }), '关注操作失败')
 }

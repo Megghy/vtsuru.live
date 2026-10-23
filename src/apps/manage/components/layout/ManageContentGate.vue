@@ -4,8 +4,8 @@ import { computed, onUnmounted, ref, watchEffect } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 
 import { logoutAccount } from '@/api/account'
-import type { AccountInfo } from '@/api/api-models'
 import { postApiAccountSendVerifyEmail } from '@/api/generated/account/account'
+import type { ResponseAccountInfo } from '@/api/generated/model'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
 import ManageDanmakuStatusBanner from '@/apps/manage/components/event-fetcher/ManageDanmakuStatusBanner.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
@@ -18,7 +18,7 @@ import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
-  accountInfo: AccountInfo
+  accountInfo: ResponseAccountInfo
 }>()
 
 const message = useMessage()

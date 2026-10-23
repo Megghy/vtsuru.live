@@ -116,7 +116,10 @@ const previewBoxStyle = computed(() => {
                   :key="opt.value"
                   type="button"
                   class="flex-between py-1.5 px-2.5 rounded-md border border-border bg-background text-foreground cursor-pointer outline-none box-border transition hover:bg-popover hover:border-[var(--brand-tint,rgba(56,189,248,0.4))]"
-                  :class="{ 'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold': selectedMode === opt.value }"
+                  :class="{
+                    'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold':
+                      selectedMode === opt.value,
+                  }"
                   @click="selectedMode = opt.value"
                 >
                   <span class="text-xs">{{ opt.label }}</span>
@@ -134,7 +137,10 @@ const previewBoxStyle = computed(() => {
                   :key="opt.value"
                   type="button"
                   class="flex-between py-1.5 px-2.5 rounded-md border border-border bg-background text-foreground cursor-pointer outline-none box-border transition hover:bg-popover hover:border-[var(--brand-tint,rgba(56,189,248,0.4))]"
-                  :class="{ 'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold': selectedStyle === opt.value }"
+                  :class="{
+                    'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold':
+                      selectedStyle === opt.value,
+                  }"
                   @click="selectedStyle = opt.value"
                 >
                   <span class="text-xs">{{ opt.label }}</span>
@@ -198,7 +204,9 @@ const previewBoxStyle = computed(() => {
             <div class="text-xs text-muted-foreground text-center">
               实时预览 ({{ recommendedSize.width }} × {{ recommendedSize.height }})
             </div>
-            <div class="w-full h-[400px] flex-center border border-dashed border-border rounded-lg bg-muted p-3 box-border">
+            <div
+              class="w-full h-[400px] flex-center border border-dashed border-border rounded-lg bg-muted p-3 box-border"
+            >
               <div
                 class="relative overflow-hidden transition"
                 :style="previewBoxStyle"
@@ -217,4 +225,3 @@ const previewBoxStyle = computed(() => {
     </DialogContent>
   </Dialog>
 </template>
-

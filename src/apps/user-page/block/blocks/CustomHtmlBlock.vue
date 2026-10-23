@@ -38,8 +38,8 @@ const iframeHeight = computed(() =>
 
 function readTheme() {
   if (!host.value) return
-    const style = getComputedStyle(host.value)
-    const nextTheme: CustomHtmlTheme = {
+  const style = getComputedStyle(host.value)
+  const nextTheme: CustomHtmlTheme = {
     fg: style.getPropertyValue('--foreground').trim() || '#18181b',
     fgMuted: style.getPropertyValue('--muted-foreground').trim() || '#71717a',
     bg: style.getPropertyValue('--background').trim() || '#ffffff',
@@ -112,5 +112,3 @@ onBeforeUnmount(() => {
     </div>
   </BlockCard>
 </template>
-
-

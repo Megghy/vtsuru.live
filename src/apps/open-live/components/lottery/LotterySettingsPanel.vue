@@ -57,7 +57,9 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
       <!-- 左列：参与规则 -->
       <div class="flex-1 min-w-[300px]">
         <div class="bg-card rounded-[var(--radius)] p-4 h-full border border-border box-border">
-          <div class="text-sm font-bold mb-4 flex items-center gap-2 text-foreground border-b border-dashed border-border pb-2.5">
+          <div
+            class="text-sm font-bold mb-4 flex items-center gap-2 text-foreground border-b border-dashed border-border pb-2.5"
+          >
             <Target24Filled class="size-4" />
             参与规则
           </div>
@@ -229,7 +231,9 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
       <!-- 右列：玩法设置 -->
       <div class="flex-1 min-w-[300px]">
         <div class="bg-card rounded-[var(--radius)] p-4 h-full border border-border box-border">
-          <div class="text-sm font-bold mb-4 flex items-center gap-2 text-foreground border-b border-dashed border-border pb-2.5">
+          <div
+            class="text-sm font-bold mb-4 flex items-center gap-2 text-foreground border-b border-dashed border-border pb-2.5"
+          >
             <Sparkle24Filled class="size-4" />
             玩法设置
           </div>
@@ -270,7 +274,8 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   class="flex flex-col-center p-2.5 border border-border rounded-[var(--radius)] bg-card cursor-pointer text-center gap-1.5 transition hover:border-[var(--brand)] hover:bg-[var(--brand-soft)]"
                   :class="{
                     'border-[var(--brand)] bg-[var(--brand-soft)] text-[var(--brand)]': option.lotteryType === key,
-                    'opacity-50 cursor-not-allowed hover:border-border hover:bg-card': isLottering || (key === 'wheel' && currentUsersLength < 2),
+                    'opacity-50 cursor-not-allowed hover:border-border hover:bg-card':
+                      isLottering || (key === 'wheel' && currentUsersLength < 2),
                   }"
                   @click="
                     !isLottering && (key !== 'wheel' || currentUsersLength >= 2) && (option.lotteryType = key as any)
@@ -331,4 +336,3 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
     </div>
   </div>
 </template>
-

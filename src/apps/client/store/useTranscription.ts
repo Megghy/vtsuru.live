@@ -247,10 +247,10 @@ export const useTranscription = defineStore('transcription', () => {
     void reconnectPipeline(error)
   }
 
-  function reconnectPipeline(error: unknown) {
+  function reconnectPipeline(cause: unknown) {
     if (reconnectTask) return reconnectTask
     const epoch = ++pipelineEpoch
-    const task = runReconnect(epoch, error).finally(() => {
+    const task = runReconnect(epoch, cause).finally(() => {
       reconnectTask = undefined
     })
     reconnectTask = task

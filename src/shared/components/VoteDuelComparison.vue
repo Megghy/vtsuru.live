@@ -2,7 +2,7 @@
 import { ArrowLeft24Filled, ArrowRight24Filled, Ribbon24Filled } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { VoteOptionDto } from '@/api/api-models'
+import type { VoteOptionDto } from '@/api/generated/model'
 import type { VoteStandings } from '@/shared/utils/voteStandings'
 
 const props = defineProps<{

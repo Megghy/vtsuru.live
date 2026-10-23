@@ -14,8 +14,8 @@ import {
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
 
-import type { ResponsePointOrder2OwnerModel, ResponsePointOrder2UserModel } from '@/api/api-models'
-import { GoodsTypes, PointOrderStatus, ServiceTimelineActor, ServiceTimelineType } from '@/api/api-models'
+import type { ResponsePointOrder2OwnerModel, ResponsePointOrder2UserModel } from '@/api/generated/model'
+import { GoodsTypes, PointOrderStatus, ServiceTimelineActor, ServiceTimelineType } from '@/api/generated/model'
 import {
   fetchOwnerServiceOrder,
   fetchUserServiceOrder,

@@ -36,7 +36,7 @@ import {
 import { computed, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
-import type { AccountInfo } from '@/api/api-models'
+import type { ResponseAccountInfo } from '@/api/generated/model'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -53,7 +53,7 @@ import { useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const props = defineProps<{
-  accountInfo: AccountInfo
+  accountInfo: ResponseAccountInfo
 }>()
 
 type ManageNavGroupId = 'favorites' | 'user' | 'common' | 'data' | 'tools' | 'danmaku'
@@ -509,7 +509,10 @@ async function go(name: string, query?: Record<string, string>) {
       </Button>
 
       <template v-if="workspace === 'streamer'">
-        <div class="flex items-center gap-1.5" :class="{ 'justify-center': collapsed }">
+        <div
+          class="flex items-center gap-1.5"
+          :class="{ 'justify-center': collapsed }"
+        >
           <Button
             variant="secondary"
             class="h-[34px]"
@@ -546,7 +549,10 @@ async function go(name: string, query?: Record<string, string>) {
           </Button>
         </div>
 
-        <div class="flex items-center gap-1.5" :class="{ 'justify-center': collapsed }">
+        <div
+          class="flex items-center gap-1.5"
+          :class="{ 'justify-center': collapsed }"
+        >
           <Button
             variant="brand"
             class="h-[34px]"

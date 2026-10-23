@@ -45,8 +45,7 @@ const wrapStyle = computed(() => {
 
 const imgStyle = computed(() => {
   const hasConstraint = !!model.value.maxWidth || !!model.value.maxHeight
-  const radius =
-    model.value.shape === 'circle' ? '9999px' : model.value.shape === 'square' ? '0px' : 'var(--radius)'
+  const radius = model.value.shape === 'circle' ? '9999px' : model.value.shape === 'square' ? '0px' : 'var(--radius)'
   return {
     width: hasConstraint ? 'auto' : '100%',
     height: 'auto',
@@ -103,5 +102,3 @@ watch(
     </div>
   </BlockCard>
 </template>
-
-

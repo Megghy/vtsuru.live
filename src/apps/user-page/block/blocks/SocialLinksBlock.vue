@@ -195,5 +195,3 @@ const iconSizeClass = computed(() => {
     </div>
   </BlockCard>
 </template>
-
-

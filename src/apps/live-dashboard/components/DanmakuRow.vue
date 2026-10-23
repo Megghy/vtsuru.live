@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 
 import { avatarUrl, formatClock } from '../core/format'
 import type { DashboardEvent } from '../core/types'
@@ -91,4 +91,3 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
     </div>
   </div>
 </template>
-

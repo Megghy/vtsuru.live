@@ -20,7 +20,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 
 import { useAccount } from '@/api/account'
-import type { RequestCreateBulletVote, ResponseVoteSession, VoteConfig, VoteOBSData } from '@/api/api-models'
 import {
   getApiVoteGetActive,
   getApiVoteGetConfig,
@@ -31,6 +30,7 @@ import {
   postApiVoteExtend,
   postApiVoteSaveConfig,
 } from '@/api/generated/bullet-vote/bullet-vote'
+import type { RequestCreateBulletVote, ResponseVoteSession, VoteConfig, VoteOBSData } from '@/api/generated/model'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
 import { CURRENT_HOST } from '@/shared/config'

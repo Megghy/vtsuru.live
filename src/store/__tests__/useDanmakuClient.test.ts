@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { reactive, ref } from 'vue'
 
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 
 const account = ref({ id: 1001 })
 const startMock = vi.fn(async () => ({ success: true, message: '' }))

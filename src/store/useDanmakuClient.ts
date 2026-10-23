@@ -2,7 +2,8 @@ import { defineStore } from 'pinia'
 import { computed, onScopeDispose, ref, shallowRef } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { EventModel, OpenLiveInfo } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import type { AppStartData } from '@/api/generated/model'
 import { isTauri } from '@/shared/config'
 import { probeLocalFetcher } from '@/shared/rpc/client'
 import type { ClientType, DanmakuSourceMeta } from '@/shared/services/danmakuChannel'
@@ -74,7 +75,7 @@ export const useDanmakuClient = defineStore('DanmakuClient', () => {
   const danmakuClient = shallowRef<DanmakuEventEmitter>()
   const state = ref<'waiting' | 'connecting' | 'connected'>('waiting')
   const phase = ref<ConnectionPhase>('idle')
-  const authInfo = ref<OpenLiveInfo>()
+  const authInfo = ref<AppStartData>()
   const sourceMeta = ref<DanmakuSourceMeta>()
   const lastEventAt = ref<number>()
   const lastError = ref('')

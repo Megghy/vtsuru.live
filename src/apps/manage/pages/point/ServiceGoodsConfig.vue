@@ -2,7 +2,7 @@
 import { Add24Filled, Delete24Filled, Info24Filled } from '@vicons/fluent'
 import { computed, ref, watch } from 'vue'
 
-import { ServiceFieldType, type ServiceConfig, type ServiceField } from '@/api/point-service'
+import { ServiceFieldType, type ServiceConfigData, type ServiceField } from '@/api/point-service'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -14,8 +14,8 @@ import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
-const props = defineProps<{ modelValue?: ServiceConfig }>()
-const emit = defineEmits<{ (event: 'update:modelValue', value: ServiceConfig): void }>()
+const props = defineProps<{ modelValue?: ServiceConfigData }>()
+const emit = defineEmits<{ (event: 'update:modelValue', value: ServiceConfigData): void }>()
 
 let fieldSeed = 0
 const fieldTypes: Array<{ label: string; value: ServiceFieldType }> = [
@@ -44,7 +44,7 @@ function createField(overrides: Partial<ServiceField> = {}): ServiceField {
   }
 }
 
-function cloneConfig(value?: ServiceConfig): ServiceConfig {
+function cloneConfig(value?: ServiceConfigData): ServiceConfigData {
   return {
     fields: (value?.fields ?? []).map((field) => ({
       id: field.id || nextFieldId(),
@@ -67,11 +67,11 @@ function parseOptionalNumber(value: string | null): number | undefined {
   return Number.isFinite(number) ? number : undefined
 }
 
-const draft = ref<ServiceConfig>(cloneConfig(props.modelValue))
+const draft = ref<ServiceConfigData>(cloneConfig(props.modelValue))
 const estimatedDaysInput = ref<string | null>(null)
 const maxActiveOrdersInput = ref<string | null>(null)
 
-function syncInputs(value: ServiceConfig) {
+function syncInputs(value: ServiceConfigData) {
   estimatedDaysInput.value = value.estimatedDays == null ? null : String(value.estimatedDays)
   maxActiveOrdersInput.value = value.maxActiveOrders == null ? null : String(value.maxActiveOrders)
 }

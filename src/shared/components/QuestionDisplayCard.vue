@@ -2,13 +2,13 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
 
-import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
+import type { ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
 import {
   QuestionDisplayAlign,
   QuestionDisplayImageLayout,
   QuestionDisplayTransition,
   QuestionDisplayVerticalAlign,
-} from '@/api/api-models'
+} from '@/api/generated/model'
 import { normalizeGoogleFontFamily, useGoogleFont } from '@/apps/user-page/googleFonts'
 import {
   formatColor,
@@ -44,8 +44,8 @@ type DisplayStatus = 'loading' | 'empty' | 'ready' | 'stale' | 'error'
 
 const props = withDefaults(
   defineProps<{
-    question?: QAInfo
-    setting: Setting_QuestionDisplay
+    question?: ResponseQAInfoToTarget
+    setting: SettingQuestionDisplay
     status?: DisplayStatus
   }>(),
   {

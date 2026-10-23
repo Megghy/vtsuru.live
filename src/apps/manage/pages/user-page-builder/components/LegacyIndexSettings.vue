@@ -4,7 +4,7 @@ import { ArrowDownOutline, ArrowUpOutline } from '@vicons/ionicons5'
 import { computed, ref } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
-import type { ResponseUserIndexModel, VideoCollectVideo } from '@/api/api-models'
+import type { ResponseUserIndexModel, VideoData } from '@/api/generated/model'
 import {
   getApiUserIndexGet,
   postApiUserIndexAddVideo,
@@ -132,7 +132,7 @@ async function addVideo() {
     })) as unknown as {
       code: number
       message?: string
-      data: VideoCollectVideo
+      data: VideoData
     }
     if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
     message.success('添加成功')
@@ -157,7 +157,7 @@ async function removeVideo(id: string) {
     })) as unknown as {
       code: number
       message?: string
-      data: VideoCollectVideo
+      data: VideoData
     }
     if (response.code !== 200) throw new Error(response.message || `删除失败: ${response.code}`)
     message.success('删除成功')
@@ -384,7 +384,7 @@ await loadIndexInfo()
           :checked="accountInfo.settings.index.allowDisplayInIndex"
           :disabled="isLoading"
           @update:checked="
-            accountInfo.settings.index.allowDisplayInIndex = $event;
+            accountInfo.settings.index.allowDisplayInIndex = $event
             updateUserIndexSettings()
           "
         />
@@ -666,4 +666,3 @@ await loadIndexInfo()
     </DialogContent>
   </Dialog>
 </template>
-

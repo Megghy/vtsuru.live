@@ -11,7 +11,7 @@ import {
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { FunctionTypes } from '@/api/api-models'
+import { FunctionTypes } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Textarea } from '@/shared/ui/textarea'
 import { copyToClipboard, useMessage } from '@/shared/utils'

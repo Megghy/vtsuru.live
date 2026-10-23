@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 
-import type { SongRequestInfo } from '@/api/api-models'
-import { SongRequestStatus } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
+import { SongRequestStatus } from '@/api/generated/model'
 
 export function useLiveRequestStatus(source: () => SongRequestInfo[] | undefined) {
   const active = computed(() => {

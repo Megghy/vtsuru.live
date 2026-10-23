@@ -61,5 +61,3 @@ const model = computed(() => {
     </div>
   </BlockCard>
 </template>
-
-

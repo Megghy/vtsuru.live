@@ -273,7 +273,9 @@ function toggleGiftWindow() {
       >
         <CardContent class="p-3">
           <div class="flex items-center justify-between mb-2">
-            <div class="size-7 rounded-md flex items-center justify-center text-base bg-emerald-500/12 text-emerald-500">
+            <div
+              class="size-7 rounded-md flex items-center justify-center text-base bg-emerald-500/12 text-emerald-500"
+            >
               <FlashAuto24Filled class="size-4" />
             </div>
             <Badge
@@ -464,17 +466,23 @@ function toggleGiftWindow() {
                   class="w-full h-full object-cover block transition-all duration-350 ease-out group-hover:scale-105 group-hover:brightness-105"
                 />
               </div>
-              <div class="absolute inset-0 z-1 bg-gradient-to-t from-black/90 via-black/25 to-black/5 pointer-events-none" />
+              <div
+                class="absolute inset-0 z-1 bg-gradient-to-t from-black/90 via-black/25 to-black/5 pointer-events-none"
+              />
               <div class="absolute left-3 right-3 bottom-2.5 z-2 text-white pointer-events-none">
                 <div class="text-[13px] font-semibold text-shadow-md overflow-hidden whitespace-nowrap text-ellipsis">
                   {{ roomInfo?.title || '暂无标题' }}
                 </div>
                 <div class="text-[11px] text-white/80 mt-0.5">
-                  <span v-if="roomInfo?.parent_area_name">{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span>
+                  <span v-if="roomInfo?.parent_area_name"
+                    >{{ roomInfo.parent_area_name }} / {{ roomInfo.area_name }}</span
+                  >
                   <span v-if="roomInfo?.online"> · 人气: {{ roomInfo.online }}</span>
                 </div>
               </div>
-              <div class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-all duration-250 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0">
+              <div
+                class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-all duration-250 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0"
+              >
                 <Badge
                   variant="secondary"
                   class="text-[10px] h-5 px-2 bg-primary text-primary-foreground gap-1"
@@ -517,12 +525,16 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-live-manage' })"
               >
-                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-blue-500/10 text-blue-500">
+                <div
+                  class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-blue-500/10 text-blue-500"
+                >
                   <Live24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
                   <div class="text-[13px] font-medium leading-tight">直播控制</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">OBS 推流与场次信息</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
+                    OBS 推流与场次信息
+                  </div>
                 </div>
               </div>
 
@@ -530,12 +542,16 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-read-danmaku' })"
               >
-                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-emerald-500/10 text-emerald-500">
+                <div
+                  class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-emerald-500/10 text-emerald-500"
+                >
                   <Mic24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
                   <div class="text-[13px] font-medium leading-tight">读弹幕 (TTS)</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">语音朗读与音色设置</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
+                    语音朗读与音色设置
+                  </div>
                 </div>
               </div>
 
@@ -543,12 +559,16 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-auto-action-manage' })"
               >
-                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-amber-500/10 text-amber-500">
+                <div
+                  class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-amber-500/10 text-amber-500"
+                >
                   <FlashAuto24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
                   <div class="text-[13px] font-medium leading-tight">自动操作</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">入场欢迎与进房致谢</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
+                    入场欢迎与进房致谢
+                  </div>
                 </div>
               </div>
 
@@ -556,12 +576,16 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-settings' })"
               >
-                <div class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-muted text-muted-foreground">
+                <div
+                  class="size-8 rounded-md flex items-center justify-center text-lg shrink-0 bg-muted text-muted-foreground"
+                >
                   <Settings24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
                   <div class="text-[13px] font-medium leading-tight">客户端设置</div>
-                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">通知 / 偏好 / 备份</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
+                    通知 / 偏好 / 备份
+                  </div>
                 </div>
               </div>
             </div>

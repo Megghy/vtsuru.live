@@ -1,6 +1,6 @@
 import { List } from 'linqts'
 
-import { KeywordMatchType, QueueSortType } from '@/api/api-models'
+import { KeywordMatchType, QueueSortType } from '@/api/generated/model'
 
 /** 舰长等级对应主题色 (1 总督 / 2 提督 / 3 舰长), 其它返回次要文本色 */
 export function getGuardColor(level: number | null | undefined): string {

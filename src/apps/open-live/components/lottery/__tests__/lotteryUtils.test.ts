@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { OpenLiveLotteryType, type OpenLiveLotteryUserInfo } from '@/api/api-models'
+import type { LiveLotteryUserInfo } from '@/api/generated/model'
+import { LiveLotteryTypes } from '@/api/generated/model'
 
 import type { LotteryOption } from '../lotteryTypes'
 import {
@@ -16,7 +17,7 @@ import {
   shuffleArray,
 } from '../lotteryUtils'
 
-function makeUser(overrides: Partial<OpenLiveLotteryUserInfo> = {}): OpenLiveLotteryUserInfo {
+function makeUser(overrides: Partial<LiveLotteryUserInfo> = {}): LiveLotteryUserInfo {
   return {
     uId: 1,
     openId: 'user_1',
@@ -276,7 +277,7 @@ describe('buildLiveLotterySyncBody', () => {
     expect(buildLiveLotterySyncBody({ code: '  ', users, resultUsers, drawing: false, finished: false })).toEqual({
       users,
       resultUsers,
-      type: OpenLiveLotteryType.Waiting,
+      type: LiveLotteryTypes.Waiting,
     })
   })
 
@@ -288,10 +289,10 @@ describe('buildLiveLotterySyncBody', () => {
 
   it('marks drawing and result states for OBS', () => {
     expect(buildLiveLotterySyncBody({ users, resultUsers, drawing: true, finished: false }).type).toBe(
-      OpenLiveLotteryType.Drawing,
+      LiveLotteryTypes.Drawing,
     )
     expect(buildLiveLotterySyncBody({ users, resultUsers, drawing: true, finished: true }).type).toBe(
-      OpenLiveLotteryType.Result,
+      LiveLotteryTypes.Result,
     )
   })
 })

@@ -1,6 +1,6 @@
 import { onScopeDispose, ref, watch } from 'vue'
 
-import type { VoteOBSData } from '@/api/api-models'
+import type { VoteOBSData } from '@/api/generated/model'
 
 import { getVoteStandings } from './voteStandings'
 

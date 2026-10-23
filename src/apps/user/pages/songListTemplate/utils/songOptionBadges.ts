@@ -1,4 +1,4 @@
-import type { SongRequestOption } from '@/api/api-models'
+import type { SongRequestOption } from '@/api/generated/model'
 import { GetGuardColor } from '@/shared/utils'
 
 export type SongOptionBadgeTone = 'default' | 'info' | 'success' | 'warning' | 'error'

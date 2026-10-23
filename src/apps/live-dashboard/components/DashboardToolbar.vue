@@ -279,7 +279,9 @@ const SEARCH_HELP = [
                 @click="stats.reset()"
               >
                 <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">统计时长</span>
-                <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatDuration(stats.duration) }}</span>
+                <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+                  formatDuration(stats.duration)
+                }}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent class="text-xs">点击重置统计（仅影响顶部数据）</TooltipContent>
@@ -292,7 +294,9 @@ const SEARCH_HELP = [
           class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">弹幕</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.counters.danmaku }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            stats.counters.danmaku
+          }}</span>
         </div>
 
         <!-- 在线观众 -->
@@ -348,7 +352,9 @@ const SEARCH_HELP = [
           title="直播间热度值"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">人气</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ officialStats.popularity ?? dashboard.officialOnline ?? '暂无' }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            officialStats.popularity ?? dashboard.officialOnline ?? '暂无'
+          }}</span>
         </div>
 
         <!-- 近 20 分钟互动 -->
@@ -358,7 +364,9 @@ const SEARCH_HELP = [
           title="最近 20 分钟内收到互动事件的去重用户数"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">近 20 分钟互动</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.onlineCount }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            stats.onlineCount
+          }}</span>
         </div>
 
         <!-- 总收益 -->
@@ -368,7 +376,9 @@ const SEARCH_HELP = [
           title="本场礼物、SC 与大航海汇总"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">总收益</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(stats.totals.totalRevenue) }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            formatPrice(stats.totals.totalRevenue)
+          }}</span>
         </div>
 
         <!-- 醒目留言 -->
@@ -377,7 +387,9 @@ const SEARCH_HELP = [
           class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">醒目留言</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(stats.totals.sc) }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            formatPrice(stats.totals.sc)
+          }}</span>
         </div>
 
         <!-- 礼物 -->
@@ -386,7 +398,9 @@ const SEARCH_HELP = [
           class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">礼物</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(stats.totals.gift) }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            formatPrice(stats.totals.gift)
+          }}</span>
         </div>
 
         <!-- 大航海 -->
@@ -395,7 +409,9 @@ const SEARCH_HELP = [
           class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">大航海</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.totals.guardCount }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            stats.totals.guardCount
+          }}</span>
         </div>
 
         <!-- 每分钟事件 -->
@@ -404,7 +420,9 @@ const SEARCH_HELP = [
           class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
         >
           <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">每分钟事件</span>
-          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ stats.perMinute }}</span>
+          <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+            stats.perMinute
+          }}</span>
         </div>
 
         <!-- Top Payers -->
@@ -422,8 +440,12 @@ const SEARCH_HELP = [
               referrerpolicy="no-referrer"
             />
             <div class="flex flex-col min-w-0">
-              <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap max-w-20 truncate">{{ payer.uname }}</span>
-              <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{ formatPrice(payer.total) }}</span>
+              <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap max-w-20 truncate">{{
+                payer.uname
+              }}</span>
+              <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
+                formatPrice(payer.total)
+              }}</span>
             </div>
           </div>
         </template>

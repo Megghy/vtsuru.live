@@ -1,4 +1,4 @@
-import type { VoteOBSData } from '@/api/api-models'
+import type { VoteOBSData } from '@/api/generated/model'
 
 export function voteSnapshot(counts: number[], overrides: Partial<VoteOBSData> = {}): VoteOBSData {
   const totalVotes = counts.reduce((sum, count) => sum + count, 0)

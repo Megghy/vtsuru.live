@@ -3,8 +3,8 @@ import { MusicalNotesOutline, OpenOutline, RefreshOutline, SearchOutline } from 
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { Setting_LiveRequest, SongsInfo, UserInfo } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type { ResponseSongModel, ResponseUserInfo, SettingSongRequest } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import { fetchPublicSongList, fetchPublicSongRequestSettings } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
@@ -19,7 +19,7 @@ import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
 }>()
 
 const values = computed<Record<string, unknown>>(() =>
@@ -37,7 +37,7 @@ const showRequestStatus = computed(() => values.value.showRequestStatus !== fals
 const songListEnabled = computed(() => getEnabledUserFunctions(props.userInfo).has(FunctionTypes.SongList))
 const search = ref('')
 
-const query = useUserPageRuntimeQuery<{ songs: SongsInfo[]; settings: Setting_LiveRequest }>({
+const query = useUserPageRuntimeQuery<{ songs: ResponseSongModel[]; settings: SettingSongRequest }>({
   key: () => `song-list-summary:${props.userInfo?.id ?? 0}`,
   ttlMs: 60_000,
   loader: async (signal) => {
@@ -84,7 +84,7 @@ const filteredSongs = computed(() => {
   return filtered.slice(0, maxItems.value)
 })
 
-function requestStatus(song: SongsInfo) {
+function requestStatus(song: ResponseSongModel) {
   if (song.options) return { label: '有点歌要求', variant: 'outline' as const }
   const settings = query.data.value?.settings
   if (!settings?.allowFromWeb) return { label: '直播间点歌', variant: 'secondary' as const }
@@ -233,5 +233,3 @@ function requestStatus(song: SongsInfo) {
     </div>
   </BlockCard>
 </template>
-
-

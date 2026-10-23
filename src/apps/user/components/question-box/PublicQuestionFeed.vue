@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
-import type { QAInfo, UserInfo } from '@/api/api-models'
+import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'
 import { AVATAR_URL } from '@/shared/config'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Empty } from '@/shared/ui/empty'
@@ -22,9 +22,9 @@ function formatRelativeTime(val: number | string | Date | undefined | null) {
 }
 
 const props = defineProps<{
-  questions: QAInfo[]
+  questions: ResponseQAInfoToTarget[]
   isLoading: boolean
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
   embedded?: boolean
 }>()
 
@@ -173,18 +173,31 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
               v-for="(item, index) in pagedQuestions"
               :key="item.id"
               class="question-thread grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4 bg-card border border-border rounded-lg shadow-sm backdrop-blur-sm @[max-width:480px]:grid-cols-[minmax(0,1fr)] @[max-width:480px]:p-3.5"
-              :class="{ '!p-4 !px-0 !bg-transparent !border-0 !border-t !border-border !rounded-none !shadow-none': embedded }"
+              :class="{
+                '!p-4 !px-0 !bg-transparent !border-0 !border-t !border-border !rounded-none !shadow-none': embedded,
+              }"
               :style="{ '--thread-index': index }"
             >
-              <div class="size-8 shrink-0 rounded-full bg-primary/10 border border-primary/20 text-primary flex-center @[max-width:480px]:size-7">
+              <div
+                class="size-8 shrink-0 rounded-full bg-primary/10 border border-primary/20 text-primary flex-center @[max-width:480px]:size-7"
+              >
                 <Chat24Regular class="size-4" />
               </div>
               <div class="min-w-0">
                 <div class="flex items-center gap-2 text-xs text-muted-foreground/70">
-                  <span class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground">{{ formatRelativeTime(item.sendAt) }}</span>
-                  <span v-if="item.tag" class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground">{{ item.tag }}</span>
+                  <span
+                    class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground"
+                    >{{ formatRelativeTime(item.sendAt) }}</span
+                  >
+                  <span
+                    v-if="item.tag"
+                    class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground"
+                    >{{ item.tag }}</span
+                  >
                 </div>
-                <p class="m-0 mt-2 text-[15px] leading-relaxed break-words whitespace-pre-wrap">{{ item.question.message }}</p>
+                <p class="m-0 mt-2 text-[15px] leading-relaxed break-words whitespace-pre-wrap">
+                  {{ item.question.message }}
+                </p>
                 <div
                   v-if="item.questionImages?.length"
                   class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 mt-2.5 @[max-width:480px]:grid-cols-2"
@@ -203,7 +216,9 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
                   v-if="item.answer"
                   class="relative mt-4 p-3.5 bg-secondary/40 border-l-3 border-primary rounded-md @[max-width:480px]:p-3"
                 >
-                  <div class="flex items-center gap-1.5 min-w-0 text-xs text-muted-foreground @[max-width:480px]:flex-wrap">
+                  <div
+                    class="flex items-center gap-1.5 min-w-0 text-xs text-muted-foreground @[max-width:480px]:flex-wrap"
+                  >
                     <Avatar class="size-7 rounded-full">
                       <AvatarImage
                         :src="
@@ -225,7 +240,9 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
                       {{ formatRelativeTime(item.answer.createdAt) }}
                     </span>
                   </div>
-                  <p class="m-0 mt-2 text-sm leading-relaxed break-words whitespace-pre-wrap">{{ item.answer.message }}</p>
+                  <p class="m-0 mt-2 text-sm leading-relaxed break-words whitespace-pre-wrap">
+                    {{ item.answer.message }}
+                  </p>
                   <div
                     v-if="item.answerImages?.length"
                     class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 mt-2.5 @[max-width:480px]:grid-cols-2"

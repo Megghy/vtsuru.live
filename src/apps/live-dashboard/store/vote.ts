@@ -1,7 +1,7 @@
 import { useIntervalFn } from '@vueuse/core'
 import { computed, onActivated, onDeactivated, ref, shallowRef } from 'vue'
 
-import type { RequestCreateBulletVote, ResponseVoteSession, VoteOptionDto } from '@/api/api-models'
+import type { RequestCreateBulletVote, ResponseVoteSession, VoteOptionDto } from '@/api/generated/model'
 import * as voteApi from '@/api/vote'
 import { getVoteStandings } from '@/shared/utils/voteStandings'
 

@@ -45,7 +45,10 @@ export function canonicalizePersistKey(key: string): string {
 }
 
 function isTauriRuntime(): boolean {
-  return typeof window !== 'undefined' && ('__TAURI__' in window || '__TAURI_INTERNAL__' in window || '__TAURI_INTERNALS__' in window)
+  return (
+    typeof window !== 'undefined' &&
+    ('__TAURI__' in window || '__TAURI_INTERNAL__' in window || '__TAURI_INTERNALS__' in window)
+  )
 }
 
 function decodeStoredValue(value: unknown): unknown {

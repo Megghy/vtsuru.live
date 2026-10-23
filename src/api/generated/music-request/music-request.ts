@@ -11,13 +11,13 @@ import type {
   GetApiMusicRequestGetWaitingParams,
   GetApiMusicRequestSearchKugouParams,
   GetApiMusicRequestSearchNeteaseParams,
-  MusicRequestControllerWitingListModel,
   ResponseResult,
+  ResponseResultOfInt32,
   ResponseResultOfListOfResponseSongModel,
-  ResponseResultOfMusicRequestControllerWitingListModel,
   ResponseResultOfResponseSongModel,
   ResponseResultOfResponseSongModelArray,
-  ResponseResultOfSystemInt32,
+  ResponseResultOfWitingListModel,
+  WitingListModel,
 } from '../model'
 
 export const getPostApiMusicRequestAddUrl = () => {
@@ -70,7 +70,7 @@ export const getPostApiMusicRequestDeleteUrl = () => {
 export const postApiMusicRequestDelete = async (
   postApiMusicRequestDeleteBody?: string[],
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -85,7 +85,7 @@ export const postApiMusicRequestDelete = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiMusicRequestDeleteUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiMusicRequestDeleteUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -112,14 +112,11 @@ export const getGetApiMusicRequestGetWaitingUrl = (params?: GetApiMusicRequestGe
 export const getApiMusicRequestGetWaiting = async (
   params?: GetApiMusicRequestGetWaitingParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfMusicRequestControllerWitingListModel> => {
-  return vtsuruMutator<ResponseResultOfMusicRequestControllerWitingListModel>(
-    getGetApiMusicRequestGetWaitingUrl(params),
-    {
-      ...options,
-      method: 'GET',
-    },
-  )
+): Promise<ResponseResultOfWitingListModel> => {
+  return vtsuruMutator<ResponseResultOfWitingListModel>(getGetApiMusicRequestGetWaitingUrl(params), {
+    ...options,
+    method: 'GET',
+  })
 }
 
 export const getGetApiMusicRequestGetUrl = () => {
@@ -192,7 +189,7 @@ export const getPostApiMusicRequestUpdateWaitingUrl = () => {
 }
 
 export const postApiMusicRequestUpdateWaiting = async (
-  musicRequestControllerWitingListModel?: MusicRequestControllerWitingListModel,
+  witingListModel?: WitingListModel,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponseSongModelArray> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -213,6 +210,6 @@ export const postApiMusicRequestUpdateWaiting = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(musicRequestControllerWitingListModel),
+    body: JSON.stringify(witingListModel),
   })
 }

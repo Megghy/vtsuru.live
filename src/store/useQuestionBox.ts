@@ -2,11 +2,9 @@ import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { ViolationTypes } from '@/api/api-models'
 import { postApiAccountBlackListAdd } from '@/api/generated/account/account'
-import type { QAControllerQATagInfo } from '@/api/generated/model/qAControllerQATagInfo'
-import type { ResponseQAInfo } from '@/api/generated/model/responseQAInfo'
-import type { ResponseQAInfoToTarget } from '@/api/generated/model/responseQAInfoToTarget'
+import { ViolationTypes } from '@/api/generated/model'
+import type { QATagInfo, ResponseQAInfo, ResponseQAInfoToTarget } from '@/api/generated/model'
 import {
   getApiQaGetReceive,
   getApiQaGetSend,
@@ -22,8 +20,6 @@ import {
   postApiQaSetCurrent,
   postApiQaUpdateTagVisible,
 } from '@/api/generated/qa/qa'
-
-export type QATagInfo = QAControllerQATagInfo
 
 export type SortMode = 'default' | 'newest' | 'oldest' | 'unreadFirst' | 'repliedFirst' | 'unrepliedFirst'
 
@@ -59,9 +55,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
   // 展示相关
   const currentQuestion = ref<ResponseQAInfoToTarget>()
   const displayQuestion = ref<ResponseQAInfoToTarget>()
-
-  let isRecieveGetted = false
-  let isSendGetted = false
 
   const trashQuestions = computed(() =>
     recieveQuestions.value.filter((q) => q.reviewResult && q.reviewResult.isApproved === false),
@@ -122,7 +115,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
         reviewing.value = resp.data.reviewCount
         const displayId = accountInfo.value?.currentQuestionId
         displayQuestion.value = displayId ? recieveQuestions.value.find((q) => q.id === displayId) : undefined
-        isRecieveGetted = true
       } else {
         message.error(resp.message)
       }
@@ -139,7 +131,6 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
       const resp = await getApiQaGetSend()
       if (resp.code === 200) {
         sendQuestions.value = resp.data
-        isSendGetted = true
       } else {
         message.error(resp.message)
       }

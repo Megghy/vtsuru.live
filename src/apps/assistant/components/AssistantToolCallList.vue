@@ -59,7 +59,9 @@ function formatDuration(ms?: number): string {
             class="size-3.5"
           />
         </span>
-        <span class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-xs font-semibold">{{ tool.title || tool.name }}</span>
+        <span class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap text-xs font-semibold">{{
+          tool.title || tool.name
+        }}</span>
         <span class="text-muted-foreground text-[11px] whitespace-nowrap">
           {{ STATUS_META[tool.status].label }}
           <template v-if="formatDuration(tool.durationMs)"> · {{ formatDuration(tool.durationMs) }} </template>

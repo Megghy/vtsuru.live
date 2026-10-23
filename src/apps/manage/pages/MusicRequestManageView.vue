@@ -19,7 +19,7 @@ import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
 
 import { useAccount } from '@/api/account'
-import type { OpenLiveInfo, SongsInfo } from '@/api/api-models'
+import type { AppStartData, ResponseSongModel } from '@/api/generated/model'
 import {
   getApiMusicRequestGet,
   postApiMusicRequestAdd,
@@ -62,7 +62,7 @@ import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
 defineProps<{
-  roomInfo?: OpenLiveInfo
+  roomInfo?: AppStartData
   code?: string | undefined
   isOpenLive?: boolean
 }>()
@@ -193,7 +193,7 @@ async function fetchOriginMusics() {
   try {
     const res = (await getApiMusicRequestGet()) as unknown as {
       code: number
-      data?: SongsInfo[]
+      data?: ResponseSongModel[]
     }
     if (res.code === 200 && res.data) {
       musicRequestStore.originMusics = res.data
@@ -205,7 +205,7 @@ async function fetchOriginMusics() {
   }
 }
 
-async function delMusic(song: SongsInfo) {
+async function delMusic(song: ResponseSongModel) {
   try {
     const res = (await postApiMusicRequestDelete([song.key])) as unknown as {
       code: number
@@ -243,7 +243,7 @@ async function syncFromMySongList() {
   try {
     const res = (await getApiSongListGet()) as unknown as {
       code: number
-      data?: SongsInfo[]
+      data?: ResponseSongModel[]
     }
     if (res.code === 200 && res.data && res.data.length > 0) {
       const addRes = await postApiMusicRequestAdd(res.data as any)
@@ -272,7 +272,7 @@ const neteaseSongListId = computed(() => {
   return match ? match[1] : raw
 })
 const isNeteaseLoading = ref(false)
-const neteaseSongs = ref<SongsInfo[]>([])
+const neteaseSongs = ref<ResponseSongModel[]>([])
 const selectedNeteaseKeys = ref<string[]>([])
 
 async function loadNeteasePlaylist() {
@@ -284,7 +284,7 @@ async function loadNeteasePlaylist() {
   try {
     const res = await getApiSongListGetNeteaseList({ id: Number(neteaseSongListId.value) })
     if (res.code === 200 && res.data) {
-      neteaseSongs.value = res.data as unknown as SongsInfo[]
+      neteaseSongs.value = res.data as unknown as ResponseSongModel[]
       selectedNeteaseKeys.value = res.data
         .filter((s) => !originMusics.value.some((exist) => exist.id === s.id))
         .map((s) => s.key)

@@ -1,4 +1,3 @@
-import type { RequestCreateBulletVote } from '@/api/api-models'
 import {
   getApiVoteGetActive,
   getApiVoteGetConfig,
@@ -7,6 +6,7 @@ import {
   postApiVoteEnd,
   postApiVoteExtend,
 } from '@/api/generated/bullet-vote/bullet-vote'
+import type { RequestCreateBulletVote } from '@/api/generated/model'
 import { unwrapOk } from '@/api/query'
 
 export async function getVoteConfig() {

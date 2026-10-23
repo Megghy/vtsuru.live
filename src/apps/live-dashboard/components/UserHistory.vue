@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 import { queryUserHistory } from '../core/archive'

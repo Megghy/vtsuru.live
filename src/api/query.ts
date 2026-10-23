@@ -1,3 +1,4 @@
+import type { APIRoot, PaginationResponse } from '@/api/client-types'
 import {
   getAPIUrl,
   isManagedAPIUrl,
@@ -7,7 +8,6 @@ import {
   resolveFileUrl,
 } from '@/shared/config'
 
-import type { APIRoot, PaginationResponse } from './api-models'
 import { cookie } from './auth'
 
 export function unwrapOk<T>(resp: { code: number; message?: string; data: T }, failMessage: string): T {

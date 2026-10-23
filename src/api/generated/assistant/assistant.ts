@@ -7,16 +7,16 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
+  AssistantConversationRenameRequest,
+  AssistantMessageRequest,
+  AssistantScheduleRequest,
+  AssistantUpdateRequest,
   GetApiAssistantConversationsParams,
-  PaginationResponseOfListOfVTsuruCoreAIContractsAssistantConversationDto,
+  PaginationResponseOfListOfAssistantConversationDto,
   ResponseResult,
-  ResponseResultOfListOfVTsuruCoreAIContractsAssistantDigestItem,
-  ResponseResultOfListOfVTsuruCoreAIContractsAssistantHistoryMessageDto,
-  ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto,
-  VTsuruCoreAIContractsAssistantConversationRenameRequest,
-  VTsuruCoreAIContractsAssistantMessageRequest,
-  VTsuruCoreAIContractsAssistantScheduleRequest,
-  VTsuruCoreAIContractsAssistantUpdateRequest,
+  ResponseResultOfAssistantProposalDto,
+  ResponseResultOfListOfAssistantDigestItem,
+  ResponseResultOfListOfAssistantHistoryMessageDto,
 } from '../model'
 
 export const getPostApiAssistantActionsIdApproveUrl = (id: number) => {
@@ -29,14 +29,11 @@ export const getPostApiAssistantActionsIdApproveUrl = (id: number) => {
 export const postApiAssistantActionsIdApprove = async (
   id: number,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto> => {
-  return vtsuruMutator<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto>(
-    getPostApiAssistantActionsIdApproveUrl(id),
-    {
-      ...options,
-      method: 'POST',
-    },
-  )
+): Promise<ResponseResultOfAssistantProposalDto> => {
+  return vtsuruMutator<ResponseResultOfAssistantProposalDto>(getPostApiAssistantActionsIdApproveUrl(id), {
+    ...options,
+    method: 'POST',
+  })
 }
 
 export const getPostApiAssistantActionsIdCancelScheduleUrl = (id: number) => {
@@ -49,14 +46,11 @@ export const getPostApiAssistantActionsIdCancelScheduleUrl = (id: number) => {
 export const postApiAssistantActionsIdCancelSchedule = async (
   id: number,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto> => {
-  return vtsuruMutator<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto>(
-    getPostApiAssistantActionsIdCancelScheduleUrl(id),
-    {
-      ...options,
-      method: 'POST',
-    },
-  )
+): Promise<ResponseResultOfAssistantProposalDto> => {
+  return vtsuruMutator<ResponseResultOfAssistantProposalDto>(getPostApiAssistantActionsIdCancelScheduleUrl(id), {
+    ...options,
+    method: 'POST',
+  })
 }
 
 export const getPostApiAssistantActionsIdRejectUrl = (id: number) => {
@@ -69,14 +63,11 @@ export const getPostApiAssistantActionsIdRejectUrl = (id: number) => {
 export const postApiAssistantActionsIdReject = async (
   id: number,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto> => {
-  return vtsuruMutator<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto>(
-    getPostApiAssistantActionsIdRejectUrl(id),
-    {
-      ...options,
-      method: 'POST',
-    },
-  )
+): Promise<ResponseResultOfAssistantProposalDto> => {
+  return vtsuruMutator<ResponseResultOfAssistantProposalDto>(getPostApiAssistantActionsIdRejectUrl(id), {
+    ...options,
+    method: 'POST',
+  })
 }
 
 export const getPostApiAssistantActionsIdScheduleUrl = (id: number) => {
@@ -88,9 +79,9 @@ export const getPostApiAssistantActionsIdScheduleUrl = (id: number) => {
  */
 export const postApiAssistantActionsIdSchedule = async (
   id: number,
-  vTsuruCoreAIContractsAssistantScheduleRequest?: VTsuruCoreAIContractsAssistantScheduleRequest,
+  assistantScheduleRequest?: AssistantScheduleRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto> => {
+): Promise<ResponseResultOfAssistantProposalDto> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -105,15 +96,12 @@ export const postApiAssistantActionsIdSchedule = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto>(
-    getPostApiAssistantActionsIdScheduleUrl(id),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-      body: JSON.stringify(vTsuruCoreAIContractsAssistantScheduleRequest),
-    },
-  )
+  return vtsuruMutator<ResponseResultOfAssistantProposalDto>(getPostApiAssistantActionsIdScheduleUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assistantScheduleRequest),
+  })
 }
 
 export const getPostApiAssistantActionsIdUpdateUrl = (id: number) => {
@@ -125,9 +113,9 @@ export const getPostApiAssistantActionsIdUpdateUrl = (id: number) => {
  */
 export const postApiAssistantActionsIdUpdate = async (
   id: number,
-  vTsuruCoreAIContractsAssistantUpdateRequest?: VTsuruCoreAIContractsAssistantUpdateRequest,
+  assistantUpdateRequest?: AssistantUpdateRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto> => {
+): Promise<ResponseResultOfAssistantProposalDto> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -142,15 +130,12 @@ export const postApiAssistantActionsIdUpdate = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfVTsuruCoreAIContractsAssistantProposalDto>(
-    getPostApiAssistantActionsIdUpdateUrl(id),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-      body: JSON.stringify(vTsuruCoreAIContractsAssistantUpdateRequest),
-    },
-  )
+  return vtsuruMutator<ResponseResultOfAssistantProposalDto>(getPostApiAssistantActionsIdUpdateUrl(id), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(assistantUpdateRequest),
+  })
 }
 
 export const getGetApiAssistantConversationsUrl = (params?: GetApiAssistantConversationsParams) => {
@@ -175,14 +160,11 @@ export const getGetApiAssistantConversationsUrl = (params?: GetApiAssistantConve
 export const getApiAssistantConversations = async (
   params?: GetApiAssistantConversationsParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<PaginationResponseOfListOfVTsuruCoreAIContractsAssistantConversationDto> => {
-  return vtsuruMutator<PaginationResponseOfListOfVTsuruCoreAIContractsAssistantConversationDto>(
-    getGetApiAssistantConversationsUrl(params),
-    {
-      ...options,
-      method: 'GET',
-    },
-  )
+): Promise<PaginationResponseOfListOfAssistantConversationDto> => {
+  return vtsuruMutator<PaginationResponseOfListOfAssistantConversationDto>(getGetApiAssistantConversationsUrl(params), {
+    ...options,
+    method: 'GET',
+  })
 }
 
 export const getPostApiAssistantConversationsIdDeleteUrl = (id: number) => {
@@ -212,8 +194,8 @@ export const getGetApiAssistantConversationsIdMessagesUrl = (id: number) => {
 export const getApiAssistantConversationsIdMessages = async (
   id: number,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfListOfVTsuruCoreAIContractsAssistantHistoryMessageDto> => {
-  return vtsuruMutator<ResponseResultOfListOfVTsuruCoreAIContractsAssistantHistoryMessageDto>(
+): Promise<ResponseResultOfListOfAssistantHistoryMessageDto> => {
+  return vtsuruMutator<ResponseResultOfListOfAssistantHistoryMessageDto>(
     getGetApiAssistantConversationsIdMessagesUrl(id),
     {
       ...options,
@@ -231,7 +213,7 @@ export const getPostApiAssistantConversationsIdRenameUrl = (id: number) => {
  */
 export const postApiAssistantConversationsIdRename = async (
   id: number,
-  vTsuruCoreAIContractsAssistantConversationRenameRequest?: VTsuruCoreAIContractsAssistantConversationRenameRequest,
+  assistantConversationRenameRequest?: AssistantConversationRenameRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -252,7 +234,7 @@ export const postApiAssistantConversationsIdRename = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(vTsuruCoreAIContractsAssistantConversationRenameRequest),
+    body: JSON.stringify(assistantConversationRenameRequest),
   })
 }
 
@@ -265,8 +247,8 @@ export const getGetApiAssistantDigestUrl = () => {
  */
 export const getApiAssistantDigest = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfListOfVTsuruCoreAIContractsAssistantDigestItem> => {
-  return vtsuruMutator<ResponseResultOfListOfVTsuruCoreAIContractsAssistantDigestItem>(getGetApiAssistantDigestUrl(), {
+): Promise<ResponseResultOfListOfAssistantDigestItem> => {
+  return vtsuruMutator<ResponseResultOfListOfAssistantDigestItem>(getGetApiAssistantDigestUrl(), {
     ...options,
     method: 'GET',
   })
@@ -280,7 +262,7 @@ export const getPostApiAssistantMessageUrl = () => {
  * @summary 发送一条消息, 以 SSE 流式返回思考、正文增量与待审批提案。
  */
 export const postApiAssistantMessage = async (
-  vTsuruCoreAIContractsAssistantMessageRequest?: VTsuruCoreAIContractsAssistantMessageRequest,
+  assistantMessageRequest?: AssistantMessageRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<void> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -301,6 +283,6 @@ export const postApiAssistantMessage = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(vTsuruCoreAIContractsAssistantMessageRequest),
+    body: JSON.stringify(assistantMessageRequest),
   })
 }

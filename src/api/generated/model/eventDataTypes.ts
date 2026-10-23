@@ -6,15 +6,13 @@
  * OpenAPI spec version: v1
  */
 
-export type EventDataTypes = (typeof EventDataTypes)[keyof typeof EventDataTypes]
-
-export const EventDataTypes = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-  NUMBER_4: 4,
-  NUMBER_5: 5,
-  NUMBER_6: 6,
-  NUMBER_7: 7,
-} as const
+export enum EventDataTypes {
+  Guard = 0,
+  SC = 1,
+  Gift = 2,
+  Message = 3,
+  Like = 4,
+  SCDel = 5,
+  Enter = 6,
+  Follow = 7,
+}

@@ -7,8 +7,9 @@ import type { ExternalToast } from 'vue-sonner'
 
 export { toast } from 'vue-sonner'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom, ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/client-types'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { VTSURU_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import type { UploadFileInfo } from '@/shared/types/upload'
@@ -329,9 +330,9 @@ export class GuidUtils {
   }
 }
 
-export function GetPlayButton(song: SongsInfo) {
+export function GetPlayButton(song: ResponseSongModel) {
   switch (song.from) {
-    case SongFrom.FiveSing: {
+    case SongPlatform.FiveSing: {
       return h(
         'button',
         {
@@ -343,7 +344,7 @@ export function GetPlayButton(song: SongsInfo) {
         [h(FiveSingIcon, { class: 'svg-icon fivesing w-3.5 h-3.5 mr-1' }), '5sing'],
       )
     }
-    case SongFrom.Netease:
+    case SongPlatform.Netease:
       return h(
         'button',
         {
@@ -354,7 +355,7 @@ export function GetPlayButton(song: SongsInfo) {
         },
         [h(NeteaseIcon, { class: 'svg-icon netease w-3.5 h-3.5 mr-1' }), '网易云'],
       )
-    case SongFrom.Custom:
+    case SongPlatform.Custom:
       return song.url
         ? h(
             'button',

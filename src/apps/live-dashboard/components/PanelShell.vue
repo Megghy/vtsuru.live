@@ -8,7 +8,9 @@ defineSlots<{ actions?: () => unknown; default: () => unknown }>()
     class="flex flex-col h-full min-w-0 min-h-0 bg-background"
     :class="{ 'blur-[6px] grayscale-[0.6] opacity-50 pointer-events-none': blurred }"
   >
-    <header class="flex items-center gap-1.5 h-[30px] px-2 shrink-0 text-xs text-muted-foreground border-b border-border">
+    <header
+      class="flex items-center gap-1.5 h-[30px] px-2 shrink-0 text-xs text-muted-foreground border-b border-border"
+    >
       <span class="font-semibold text-foreground">{{ title }}</span>
       <span
         v-if="count !== undefined"

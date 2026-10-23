@@ -11,7 +11,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import { EventFetcherType } from '@/api/api-models'
+import { EventFetcherType } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -133,7 +133,9 @@ function goBindBili() {
           <TooltipProvider v-if="status === 'success' && !accountInfo?.isServerFetcherOnline">
             <Tooltip>
               <TooltipTrigger as-child>
-                <span class="inline-flex items-center gap-0.75 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] font-medium cursor-help hover:bg-accent transition-all">
+                <span
+                  class="inline-flex items-center gap-0.75 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] font-medium cursor-help hover:bg-accent transition-all"
+                >
                   <component
                     :is="FlashCheckmark16Filled"
                     class="size-3"
@@ -141,9 +143,7 @@ function goBindBili() {
                   {{ eventFetcherVersionName }}
                 </span>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">
-                当前连接版本
-              </TooltipContent>
+              <TooltipContent class="text-xs"> 当前连接版本 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>

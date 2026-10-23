@@ -9,10 +9,10 @@ import { vtsuruMutator } from '../../orval-mutator'
 import type {
   GetApiObsStorePngtuberAssetsUserIdAssetIdParams,
   GetApiObsStoreSyncGetStateParams,
-  ObsStoreControllerRequestObsSyncUpdate,
   PostApiObsStorePngtuberAssetsBody,
-  ResponseResultOfObsStoreControllerAvatarAsset,
-  ResponseResultOfObsStoreControllerResponseObsSyncState,
+  RequestObsSyncUpdate,
+  ResponseResultOfAvatarAsset,
+  ResponseResultOfResponseObsSyncState,
 } from '../model'
 
 export const getPostApiObsStorePngtuberAssetsUrl = () => {
@@ -22,13 +22,13 @@ export const getPostApiObsStorePngtuberAssetsUrl = () => {
 export const postApiObsStorePngtuberAssets = async (
   postApiObsStorePngtuberAssetsBody?: PostApiObsStorePngtuberAssetsBody,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfObsStoreControllerAvatarAsset> => {
+): Promise<ResponseResultOfAvatarAsset> => {
   const formData = new FormData()
   if (postApiObsStorePngtuberAssetsBody?.file !== undefined) {
     formData.append(`file`, postApiObsStorePngtuberAssetsBody.file)
   }
 
-  return vtsuruMutator<ResponseResultOfObsStoreControllerAvatarAsset>(getPostApiObsStorePngtuberAssetsUrl(), {
+  return vtsuruMutator<ResponseResultOfAvatarAsset>(getPostApiObsStorePngtuberAssetsUrl(), {
     ...options,
     method: 'POST',
     body: formData,
@@ -86,14 +86,11 @@ export const getGetApiObsStoreSyncGetStateUrl = (params?: GetApiObsStoreSyncGetS
 export const getApiObsStoreSyncGetState = async (
   params?: GetApiObsStoreSyncGetStateParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfObsStoreControllerResponseObsSyncState> => {
-  return vtsuruMutator<ResponseResultOfObsStoreControllerResponseObsSyncState>(
-    getGetApiObsStoreSyncGetStateUrl(params),
-    {
-      ...options,
-      method: 'GET',
-    },
-  )
+): Promise<ResponseResultOfResponseObsSyncState> => {
+  return vtsuruMutator<ResponseResultOfResponseObsSyncState>(getGetApiObsStoreSyncGetStateUrl(params), {
+    ...options,
+    method: 'GET',
+  })
 }
 
 export const getPostApiObsStoreSyncUpdateStateUrl = () => {
@@ -101,9 +98,9 @@ export const getPostApiObsStoreSyncUpdateStateUrl = () => {
 }
 
 export const postApiObsStoreSyncUpdateState = async (
-  obsStoreControllerRequestObsSyncUpdate?: ObsStoreControllerRequestObsSyncUpdate,
+  requestObsSyncUpdate?: RequestObsSyncUpdate,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfObsStoreControllerResponseObsSyncState> => {
+): Promise<ResponseResultOfResponseObsSyncState> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -118,10 +115,10 @@ export const postApiObsStoreSyncUpdateState = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfObsStoreControllerResponseObsSyncState>(getPostApiObsStoreSyncUpdateStateUrl(), {
+  return vtsuruMutator<ResponseResultOfResponseObsSyncState>(getPostApiObsStoreSyncUpdateStateUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(obsStoreControllerRequestObsSyncUpdate),
+    body: JSON.stringify(requestObsSyncUpdate),
   })
 }

@@ -2,7 +2,8 @@ import { List } from 'linqts'
 import { computed, ref } from 'vue'
 
 import { AddBiliBlackList, SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
-import type { DanmakuUserInfo, EventModel, ResponseQueueModel, Setting_Queue } from '@/api/api-models'
+import type { EventModel, ResponseQueueModel } from '@/api/client-types'
+import type { DanmakuUserInfo, SettingQueue } from '@/api/generated/model'
 import {
   EventDataTypes,
   FunctionTypes,
@@ -11,7 +12,7 @@ import {
   QueueGiftFilterType,
   QueueSortType,
   QueueStatus,
-} from '@/api/api-models'
+} from '@/api/generated/model'
 import {
   getApiQueueGetActive,
   getApiQueueGetAll,
@@ -55,7 +56,7 @@ const defaultSettings = {
   showPayment: true,
   sendGiftDirectJoin: true,
   sendGiftIgnoreLimit: false,
-} as Setting_Queue
+} as SettingQueue
 
 export const STATUS_MAP = {
   [QueueStatus.Waiting]: '等待中',
@@ -120,7 +121,7 @@ export const useQueue = defineStore('queue', () => {
   const isLoggedIn = computed(() => accountInfo.value != null && accountInfo.value.id != null)
   const configCanEdit = computed(() => accountInfo.value != null)
 
-  const settings = computed<Setting_Queue>({
+  const settings = computed<SettingQueue>({
     get: () => (accountInfo.value.id ? accountInfo.value.settings.queue : defaultSettings),
     set: (value) => {
       if (accountInfo.value.id) accountInfo.value.settings.queue = value

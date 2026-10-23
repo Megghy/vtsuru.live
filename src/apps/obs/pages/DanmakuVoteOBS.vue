@@ -2,8 +2,8 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import type { VoteOBSData } from '@/api/api-models'
 import { getApiVoteObsData, getApiVoteObsHash } from '@/api/generated/bullet-vote/bullet-vote'
+import type { VoteOBSData } from '@/api/generated/model'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 

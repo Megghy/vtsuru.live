@@ -3,7 +3,8 @@ import { isPermissionGranted, sendNotification } from '@tauri-apps/plugin-notifi
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { h } from 'vue'
 
-import type { QAInfo, ResponsePointGoodModel, ResponsePointOrder2OwnerModel } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import type { ResponsePointOrder2OwnerModel, ResponseQAInfoToTarget } from '@/api/generated/model'
 import QuestionItem from '@/components/QuestionItem.vue'
 import { CN_HOST } from '@/shared/config'
 import { dialog } from '@/shared/utils'
@@ -32,7 +33,7 @@ export function onReceivedNotification(type: string, json: string) {
   }
 }
 
-export async function onReceivedQuestion(question: QAInfo) {
+export async function onReceivedQuestion(question: ResponseQAInfoToTarget) {
   const setting = useSettings()
   if (setting.settings.notificationSettings.enableTypes.includes('question-box')) {
     window.$notification.info({

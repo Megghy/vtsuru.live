@@ -112,7 +112,8 @@ watch(
         <div class="px-3.5 pt-3 shrink-0">
           <Alert class="text-xs py-2">
             <AlertDescription>
-              CSS 作用于公开用户页，可使用 --foreground、--primary、--card、--border 等主题变量；不允许外部 URL、@import 和脚本相关属性。
+              CSS 作用于公开用户页，可使用 --foreground、--primary、--card、--border 等主题变量；不允许外部 URL、@import
+              和脚本相关属性。
             </AlertDescription>
           </Alert>
         </div>

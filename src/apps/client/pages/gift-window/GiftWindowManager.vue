@@ -17,8 +17,9 @@ import {
 import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
-import { GuardLevel, type ResponseLiveInfoModel, type ResponseLiveRankingEntryModel } from '@/api/api-models'
 import { getApiLiveGetAll, getApiLiveRanking } from '@/api/generated/live/live'
+import type { ResponseLiveInfoModel, ResponseLiveRankingEntryModel } from '@/api/generated/model'
+import { GuardLevel } from '@/api/generated/model'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
@@ -477,7 +478,9 @@ function toggleFilterType(val: string, checked: boolean) {
                               class="size-6 rounded-full object-cover"
                               alt="avatar"
                             />
-                            <span class="absolute -right-0.5 -bottom-0.5 size-1.75 rounded-full border-[1.5px] border-popover bg-emerald-500 shadow-[0_0_4px_#22c55e]" />
+                            <span
+                              class="absolute -right-0.5 -bottom-0.5 size-1.75 rounded-full border-[1.5px] border-popover bg-emerald-500 shadow-[0_0_4px_#22c55e]"
+                            />
                           </div>
                           <span class="text-xs font-semibold text-foreground">{{ g.uname }}</span>
                         </div>
@@ -715,7 +718,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   class="w-full"
                   @update:model-value="
-                    giftWindow.settings.x = $event || 0;
+                    giftWindow.settings.x = $event || 0
                     giftWindow.updateWindowPosition()
                   "
                 />
@@ -727,7 +730,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   :min="0"
                   class="w-full"
                   @update:model-value="
-                    giftWindow.settings.y = $event || 0;
+                    giftWindow.settings.y = $event || 0
                     giftWindow.updateWindowPosition()
                   "
                 />

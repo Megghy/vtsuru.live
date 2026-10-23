@@ -2,7 +2,7 @@
 import { ChatbubbleOutline, OpenOutline } from '@vicons/ionicons5'
 import { computed } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import QuestionBoxView from '@/apps/user/pages/QuestionBoxView.vue'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -25,7 +25,7 @@ interface BlockConfig {
   showPublicQuestions: boolean
 }
 
-const props = defineProps<{ blockProps: unknown; userInfo?: UserInfo | undefined; biliInfo?: unknown }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: ResponseUserInfo | undefined; biliInfo?: unknown }>()
 
 const cfg = computed<BlockConfig>(() => {
   const o =
@@ -196,5 +196,3 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
     </div>
   </BlockCard>
 </template>
-
-

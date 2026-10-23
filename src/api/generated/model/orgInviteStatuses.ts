@@ -6,13 +6,11 @@
  * OpenAPI spec version: v1
  */
 
-export type OrgInviteStatuses = (typeof OrgInviteStatuses)[keyof typeof OrgInviteStatuses]
-
-export const OrgInviteStatuses = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-  NUMBER_4: 4,
-  NUMBER_5: 5,
-} as const
+export enum OrgInviteStatuses {
+  Active = 0,
+  Used = 1,
+  Accepted = 2,
+  Rejected = 3,
+  Expired = 4,
+  Revoked = 5,
+}

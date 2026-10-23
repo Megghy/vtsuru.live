@@ -6,11 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type QueueFrom = (typeof QueueFrom)[keyof typeof QueueFrom]
-
-export const QueueFrom = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-} as const
+export enum QueueFrom {
+  Manual = 0,
+  Danmaku = 1,
+  Gift = 2,
+  Web = 3,
+}

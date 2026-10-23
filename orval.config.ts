@@ -48,6 +48,7 @@ export default defineConfig({
       indexFiles: true,
       prettier: false,
       override: {
+        enumGenerationType: 'enum',
         mutator: {
           path: './src/api/orval-mutator.ts',
           name: 'vtsuruMutator',

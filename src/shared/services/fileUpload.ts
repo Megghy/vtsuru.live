@@ -1,5 +1,5 @@
-import type { UploadFileResponse } from '@/api/api-models'
 import { postApiFilesUpload } from '@/api/generated/file/file'
+import type { APIFileModel } from '@/api/generated/model'
 
 export const FileStore = {
   Library: 'library',
@@ -26,7 +26,7 @@ export async function uploadFiles(
   files: File | File[],
   store: FileStoreName = FileStore.Library,
   onProgress?: (stage: string) => void,
-): Promise<UploadFileResponse[]> {
+): Promise<APIFileModel[]> {
   try {
     onProgress?.(UploadStage.Preparing)
 
@@ -36,7 +36,7 @@ export async function uploadFiles(
     const result = (await postApiFilesUpload({ files: fileList, store })) as unknown as {
       code: number
       message?: string
-      data: UploadFileResponse[]
+      data: APIFileModel[]
     }
     if (result.code === 200) {
       onProgress?.(UploadStage.Success)

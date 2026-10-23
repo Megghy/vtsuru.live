@@ -274,4 +274,3 @@ function saveEdit() {
     </CardFooter>
   </Card>
 </template>
-

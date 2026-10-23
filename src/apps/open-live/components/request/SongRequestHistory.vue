@@ -3,8 +3,8 @@ import { ArrowCounterclockwise24Regular, Delete24Filled } from '@vicons/fluent'
 import { format } from 'date-fns'
 import { computed, ref } from 'vue'
 
-import type { SongRequestInfo } from '@/api/api-models'
-import { SongRequestFrom, SongRequestStatus } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
+import { SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -122,7 +122,7 @@ function getStatusBadge(status: SongRequestStatus) {
           placeholder="搜索歌曲..."
           class="flex-1"
           @input="
-            songRequest.filterSongName = ($event.target as HTMLInputElement).value;
+            songRequest.filterSongName = ($event.target as HTMLInputElement).value
             currentPage = 1
           "
         />
@@ -141,7 +141,7 @@ function getStatusBadge(status: SongRequestStatus) {
           placeholder="搜索用户..."
           class="flex-1"
           @input="
-            songRequest.filterName = ($event.target as HTMLInputElement).value;
+            songRequest.filterName = ($event.target as HTMLInputElement).value
             currentPage = 1
           "
         />

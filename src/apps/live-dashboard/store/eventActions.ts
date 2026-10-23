@@ -1,5 +1,5 @@
 import { AddBiliBlackList, DelBiliBlackList, isInBiliBlackList } from '@/api/account'
-import type { APIRoot } from '@/api/api-models'
+import type { APIRoot } from '@/api/client-types'
 import { useTranslate } from '@/composables/useTranslate'
 import { useSpeechService } from '@/store/useSpeechService'
 

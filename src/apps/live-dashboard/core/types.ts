@@ -1,5 +1,5 @@
-import type { EventModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
+import { EventDataTypes } from '@/api/generated/model'
 
 /** 中控台内部统一事件：来源字段归一化 + 已读标记，本地库与内存列表共用 */
 export interface DashboardEvent {

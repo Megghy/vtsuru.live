@@ -171,5 +171,3 @@ const itemsClass = computed(() => {
     </div>
   </BlockCard>
 </template>
-
-

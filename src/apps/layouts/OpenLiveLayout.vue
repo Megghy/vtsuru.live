@@ -11,7 +11,7 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import { ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/client-types'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'

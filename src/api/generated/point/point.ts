@@ -18,28 +18,28 @@ import type {
   GetApiPointServiceOrderUserParams,
   GetApiPointUserGetPointParams,
   PaginationResponseOfListOfResponsePointUserModel,
-  PointControllerRequestApplyPointGuardDuplicateFixModel,
-  PointControllerRequestBatchUpdateOrderStatusModel,
-  PointControllerRequestBuyPointGoodsModel,
-  PointControllerRequestSetOrderStatusModel,
-  PointControllerRequestTestPointModel,
-  PointControllerRequestUpdateGoodsStatusModel,
-  PointControllerRequestUpdateOrderExpressModel,
-  PointControllerServiceOwnerUpdateRequest,
-  PointControllerServiceUserUpdateRequest,
-  PointControllerTempRequestDelUserModel,
   PostApiPointDeleteGoodsParams,
   PostApiPointDeleteUserParams,
   PostApiPointGivePointParams,
   PostApiPointUserDeleteAddressParams,
+  RequestApplyPointGuardDuplicateFixModel,
+  RequestBatchUpdateOrderStatusModel,
+  RequestBuyPointGoodsModel,
   RequestPointGoodsModel,
+  RequestSetOrderStatusModel,
+  RequestTestPointModel,
+  RequestUpdateGoodsStatusModel,
+  RequestUpdateOrderExpressModel,
   ResponseResult,
+  ResponseResultOfDecimal,
+  ResponseResultOfGivePointResult,
+  ResponseResultOfInt32,
+  ResponseResultOfInt32Array,
   ResponseResultOfListOfResponseBasePointGoodsModel,
   ResponseResultOfListOfResponsePointHistoryModel,
   ResponseResultOfListOfResponsePointUserModel,
-  ResponseResultOfPointControllerGivePointResult,
-  ResponseResultOfPointControllerResponseAllPointsModelArray,
-  ResponseResultOfPointControllerResponseTestPointModel,
+  ResponseResultOfPointGuardDuplicateApplyResult,
+  ResponseResultOfResponseAllPointsModelArray,
   ResponseResultOfResponsePointGoodsEligibilityModel,
   ResponseResultOfResponsePointGoodsModel,
   ResponseResultOfResponsePointGuardDuplicateDetailModel,
@@ -49,13 +49,13 @@ import type {
   ResponseResultOfResponsePointOrder2OwnerModelArray,
   ResponseResultOfResponsePointOrder2UserModel,
   ResponseResultOfResponsePointOrder2UserModelArray,
+  ResponseResultOfResponseTestPointModel,
   ResponseResultOfShippingAddressInfo,
-  ResponseResultOfSystemDecimal,
-  ResponseResultOfSystemInt32,
-  ResponseResultOfSystemInt32Array,
-  ResponseResultOfVTsuruCorePointGuardDuplicateApplyResult,
+  ServiceOwnerUpdateRequest,
+  ServiceUserUpdateRequest,
   SettingPoint,
   ShippingAddressInfo,
+  TempRequestDelUserModel,
 } from '../model'
 
 export const getPostApiPointApplyDuplicateGuardsFixUrl = () => {
@@ -63,9 +63,9 @@ export const getPostApiPointApplyDuplicateGuardsFixUrl = () => {
 }
 
 export const postApiPointApplyDuplicateGuardsFix = async (
-  pointControllerRequestApplyPointGuardDuplicateFixModel?: PointControllerRequestApplyPointGuardDuplicateFixModel,
+  requestApplyPointGuardDuplicateFixModel?: RequestApplyPointGuardDuplicateFixModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfVTsuruCorePointGuardDuplicateApplyResult> => {
+): Promise<ResponseResultOfPointGuardDuplicateApplyResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -80,15 +80,12 @@ export const postApiPointApplyDuplicateGuardsFix = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfVTsuruCorePointGuardDuplicateApplyResult>(
-    getPostApiPointApplyDuplicateGuardsFixUrl(),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-      body: JSON.stringify(pointControllerRequestApplyPointGuardDuplicateFixModel),
-    },
-  )
+  return vtsuruMutator<ResponseResultOfPointGuardDuplicateApplyResult>(getPostApiPointApplyDuplicateGuardsFixUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestApplyPointGuardDuplicateFixModel),
+  })
 }
 
 export const getPostApiPointBatchDeleteUserUrl = () => {
@@ -96,9 +93,9 @@ export const getPostApiPointBatchDeleteUserUrl = () => {
 }
 
 export const postApiPointBatchDeleteUser = async (
-  pointControllerTempRequestDelUserModel?: PointControllerTempRequestDelUserModel[],
+  tempRequestDelUserModel?: TempRequestDelUserModel[],
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -113,11 +110,11 @@ export const postApiPointBatchDeleteUser = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiPointBatchDeleteUserUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiPointBatchDeleteUserUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerTempRequestDelUserModel),
+    body: JSON.stringify(tempRequestDelUserModel),
   })
 }
 
@@ -126,9 +123,9 @@ export const getPostApiPointBatchUpdateOrderStatusUrl = () => {
 }
 
 export const postApiPointBatchUpdateOrderStatus = async (
-  pointControllerRequestBatchUpdateOrderStatusModel?: PointControllerRequestBatchUpdateOrderStatusModel,
+  requestBatchUpdateOrderStatusModel?: RequestBatchUpdateOrderStatusModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32Array> => {
+): Promise<ResponseResultOfInt32Array> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -143,11 +140,11 @@ export const postApiPointBatchUpdateOrderStatus = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32Array>(getPostApiPointBatchUpdateOrderStatusUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32Array>(getPostApiPointBatchUpdateOrderStatusUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerRequestBatchUpdateOrderStatusModel),
+    body: JSON.stringify(requestBatchUpdateOrderStatusModel),
   })
 }
 
@@ -156,7 +153,7 @@ export const getPostApiPointBuyUrl = () => {
 }
 
 export const postApiPointBuy = async (
-  pointControllerRequestBuyPointGoodsModel?: PointControllerRequestBuyPointGoodsModel,
+  requestBuyPointGoodsModel?: RequestBuyPointGoodsModel,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponsePointOrder2UserModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -177,7 +174,7 @@ export const postApiPointBuy = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerRequestBuyPointGoodsModel),
+    body: JSON.stringify(requestBuyPointGoodsModel),
   })
 }
 
@@ -370,8 +367,8 @@ export const getGetApiPointGetTestAccountPointUrl = () => {
 
 export const getApiPointGetTestAccountPoint = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemDecimal> => {
-  return vtsuruMutator<ResponseResultOfSystemDecimal>(getGetApiPointGetTestAccountPointUrl(), {
+): Promise<ResponseResultOfDecimal> => {
+  return vtsuruMutator<ResponseResultOfDecimal>(getGetApiPointGetTestAccountPointUrl(), {
     ...options,
     method: 'GET',
   })
@@ -468,8 +465,8 @@ export const getPostApiPointGivePointUrl = (params?: PostApiPointGivePointParams
 export const postApiPointGivePoint = async (
   params?: PostApiPointGivePointParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfPointControllerGivePointResult> => {
-  return vtsuruMutator<ResponseResultOfPointControllerGivePointResult>(getPostApiPointGivePointUrl(params), {
+): Promise<ResponseResultOfGivePointResult> => {
+  return vtsuruMutator<ResponseResultOfGivePointResult>(getPostApiPointGivePointUrl(params), {
     ...options,
     method: 'POST',
   })
@@ -559,7 +556,7 @@ export const getPostApiPointServiceOrderOwnerUpdateUrl = () => {
 }
 
 export const postApiPointServiceOrderOwnerUpdate = async (
-  pointControllerServiceOwnerUpdateRequest?: PointControllerServiceOwnerUpdateRequest,
+  serviceOwnerUpdateRequest?: ServiceOwnerUpdateRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponsePointOrder2OwnerModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -580,7 +577,7 @@ export const postApiPointServiceOrderOwnerUpdate = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerServiceOwnerUpdateRequest),
+    body: JSON.stringify(serviceOwnerUpdateRequest),
   })
 }
 
@@ -615,7 +612,7 @@ export const getPostApiPointServiceOrderUserUpdateUrl = () => {
 }
 
 export const postApiPointServiceOrderUserUpdate = async (
-  pointControllerServiceUserUpdateRequest?: PointControllerServiceUserUpdateRequest,
+  serviceUserUpdateRequest?: ServiceUserUpdateRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponsePointOrder2UserModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -636,7 +633,7 @@ export const postApiPointServiceOrderUserUpdate = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerServiceUserUpdateRequest),
+    body: JSON.stringify(serviceUserUpdateRequest),
   })
 }
 
@@ -645,9 +642,9 @@ export const getPostApiPointTestPointUrl = () => {
 }
 
 export const postApiPointTestPoint = async (
-  pointControllerRequestTestPointModel?: PointControllerRequestTestPointModel,
+  requestTestPointModel?: RequestTestPointModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfPointControllerResponseTestPointModel> => {
+): Promise<ResponseResultOfResponseTestPointModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -662,11 +659,11 @@ export const postApiPointTestPoint = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfPointControllerResponseTestPointModel>(getPostApiPointTestPointUrl(), {
+  return vtsuruMutator<ResponseResultOfResponseTestPointModel>(getPostApiPointTestPointUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerRequestTestPointModel),
+    body: JSON.stringify(requestTestPointModel),
   })
 }
 
@@ -675,7 +672,7 @@ export const getPostApiPointUpdateGoodsStatusUrl = () => {
 }
 
 export const postApiPointUpdateGoodsStatus = async (
-  pointControllerRequestUpdateGoodsStatusModel?: PointControllerRequestUpdateGoodsStatusModel,
+  requestUpdateGoodsStatusModel?: RequestUpdateGoodsStatusModel,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfResponsePointGoodsModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -696,7 +693,7 @@ export const postApiPointUpdateGoodsStatus = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerRequestUpdateGoodsStatusModel),
+    body: JSON.stringify(requestUpdateGoodsStatusModel),
   })
 }
 
@@ -735,7 +732,7 @@ export const getPostApiPointUpdateOrderExpressUrl = () => {
 }
 
 export const postApiPointUpdateOrderExpress = async (
-  pointControllerRequestUpdateOrderExpressModel?: PointControllerRequestUpdateOrderExpressModel,
+  requestUpdateOrderExpressModel?: RequestUpdateOrderExpressModel,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -756,7 +753,7 @@ export const postApiPointUpdateOrderExpress = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerRequestUpdateOrderExpressModel),
+    body: JSON.stringify(requestUpdateOrderExpressModel),
   })
 }
 
@@ -765,9 +762,9 @@ export const getPostApiPointUpdateOrdersStatusUrl = () => {
 }
 
 export const postApiPointUpdateOrdersStatus = async (
-  pointControllerRequestSetOrderStatusModel?: PointControllerRequestSetOrderStatusModel,
+  requestSetOrderStatusModel?: RequestSetOrderStatusModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32> => {
+): Promise<ResponseResultOfInt32> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -782,11 +779,11 @@ export const postApiPointUpdateOrdersStatus = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32>(getPostApiPointUpdateOrdersStatusUrl(), {
+  return vtsuruMutator<ResponseResultOfInt32>(getPostApiPointUpdateOrdersStatusUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(pointControllerRequestSetOrderStatusModel),
+    body: JSON.stringify(requestSetOrderStatusModel),
   })
 }
 
@@ -852,8 +849,8 @@ export const getGetApiPointUserGetAllPointUrl = () => {
 
 export const getApiPointUserGetAllPoint = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfPointControllerResponseAllPointsModelArray> => {
-  return vtsuruMutator<ResponseResultOfPointControllerResponseAllPointsModelArray>(getGetApiPointUserGetAllPointUrl(), {
+): Promise<ResponseResultOfResponseAllPointsModelArray> => {
+  return vtsuruMutator<ResponseResultOfResponseAllPointsModelArray>(getGetApiPointUserGetAllPointUrl(), {
     ...options,
     method: 'GET',
   })
@@ -902,8 +899,8 @@ export const getGetApiPointUserGetPointUrl = (params?: GetApiPointUserGetPointPa
 export const getApiPointUserGetPoint = async (
   params?: GetApiPointUserGetPointParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemDecimal> => {
-  return vtsuruMutator<ResponseResultOfSystemDecimal>(getGetApiPointUserGetPointUrl(params), {
+): Promise<ResponseResultOfDecimal> => {
+  return vtsuruMutator<ResponseResultOfDecimal>(getGetApiPointUserGetPointUrl(params), {
     ...options,
     method: 'GET',
   })

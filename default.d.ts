@@ -46,5 +46,3 @@ declare global {
     $mitt: Emitter<MittType>
   }
 }
-
-export {}

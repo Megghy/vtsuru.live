@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgMemberDataOrgMemberRoles } from './orgMemberDataOrgMemberRoles'
+import type { OrgMemberRoles } from './orgMemberRoles'
 
 export interface UpdateOrgMemberRoleModel {
   targetUserId: number
-  role: OrgMemberDataOrgMemberRoles
+  role: OrgMemberRoles
 }

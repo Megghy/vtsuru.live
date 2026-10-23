@@ -34,23 +34,22 @@ const topSubtitle = computed(() => {
 </script>
 
 <template>
-  <div class="size-full flex flex-col bg-slate-900/85 backdrop-blur-[20px] border border-white/15 rounded-2xl p-3.5 shadow-2xl text-white overflow-hidden tabular-nums box-border">
+  <div
+    class="size-full flex flex-col bg-slate-900/85 backdrop-blur-[20px] border border-white/15 rounded-2xl p-3.5 shadow-2xl text-white overflow-hidden tabular-nums box-border"
+  >
     <!-- 顶栏状态与标题 -->
     <div class="flex flex-col gap-2 mb-2.5">
       <div class="flex items-center gap-2">
         <span
           class="size-2 rounded-full transition-all"
-          :class="
-            current.active
-              ? 'bg-emerald-500 shadow-[0_0_10px_#22c55e] animate-pulse'
-              : 'bg-slate-400'
-          "
+          :class="current.active ? 'bg-emerald-500 shadow-[0_0_10px_#22c55e] animate-pulse' : 'bg-slate-400'"
         />
         <span class="text-[15px] font-extrabold text-slate-50 tracking-wide">{{ title }}</span>
         <span
           v-if="countText"
           class="text-[11px] px-1.5 py-0.5 rounded-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 ml-auto"
-        >{{ countText }}</span>
+          >{{ countText }}</span
+        >
       </div>
 
       <!-- 当前进行中内容 -->

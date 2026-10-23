@@ -3,7 +3,7 @@ import { Search24Regular } from '@vicons/fluent'
 import { MusicalNote } from '@vicons/ionicons5'
 import { computed, ref } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
@@ -35,7 +35,7 @@ const {
 const inputKeyword = ref('')
 const searchKeyword = ref('')
 
-const filteredSongs = computed<SongsInfo[]>(() => {
+const filteredSongs = computed<ResponseSongModel[]>(() => {
   return filterSongs(props.data, { keyword: searchKeyword.value })
 })
 const { visibleItems, hasMore, loadMoreTrigger, loadMore } = useProgressiveList(filteredSongs, 24)
@@ -45,12 +45,12 @@ function commitSearch() {
   searchKeyword.value = inputKeyword.value.trim()
 }
 
-function requestSong(song: SongsInfo) {
+function requestSong(song: ResponseSongModel) {
   if (!beginRequest(song)) return
   emits('requestSong', song)
 }
 
-function getMetaText(song: SongsInfo) {
+function getMetaText(song: ResponseSongModel) {
   const tags = (song.tags ?? []).filter(Boolean)
   const languages = (song.language ?? []).filter(Boolean)
   const left = tags.slice(0, 2).join(', ')
@@ -217,4 +217,3 @@ function getMetaText(song: SongsInfo) {
     </div>
   </TooltipProvider>
 </template>
-

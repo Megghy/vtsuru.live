@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 
 import type { ExecutionContext } from '../types'
 import { evaluateExpression } from '../utils'

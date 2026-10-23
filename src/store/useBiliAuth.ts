@@ -2,13 +2,14 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
 import { ACCOUNT } from '@/api/account'
-import type { BiliAuthModel, ResponsePointGoodModel } from '@/api/api-models'
 import { cookie } from '@/api/auth'
+import type { ResponsePointGoodModel } from '@/api/client-types'
 import {
   getApiBiliAuthInfo,
   postApiBiliAuthMigrate,
   postApiBiliAuthSessionRotate,
 } from '@/api/generated/bili-auth-v2/bili-auth-v2'
+import type { ResponseBiliAuthModel } from '@/api/generated/model'
 import { getApiPointGetGoods, getApiPointUserGetPoint } from '@/api/generated/point/point'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
@@ -17,10 +18,10 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     token: string
     expiresAt: number | null
   }
-  const sessionAuth = ref<BiliAuthModel>({} as BiliAuthModel)
+  const sessionAuth = ref<ResponseBiliAuthModel>({} as ResponseBiliAuthModel)
   const usesAccountIdentity = computed(() => Boolean(cookie.value?.cookie))
   const biliAuth = computed(() =>
-    usesAccountIdentity.value ? (ACCOUNT.value.biliUserAuthInfo ?? ({} as BiliAuthModel)) : sessionAuth.value,
+    usesAccountIdentity.value ? (ACCOUNT.value.biliUserAuthInfo ?? ({} as ResponseBiliAuthModel)) : sessionAuth.value,
   )
 
   const biliTokens = usePersistedStorage<
@@ -57,7 +58,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   watch(
     identity,
     () => {
-      sessionAuth.value = {} as BiliAuthModel
+      sessionAuth.value = {} as ResponseBiliAuthModel
       isLoading.value = false
       isInvalid.value = false
       legacyToken.value = null
@@ -70,7 +71,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     if (usesAccountIdentity.value) throw new Error('请先退出站内账号，再切换独立认证账号')
     if (!token) throw new Error('认证凭据不能为空')
     await currentTokenReady
-    sessionAuth.value = {} as BiliAuthModel
+    sessionAuth.value = {} as ResponseBiliAuthModel
     currentToken.value = token
     legacyToken.value = null
     replacementToken.value = null
@@ -89,7 +90,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
         isLoading.value = true
         const data = (await getApiBiliAuthInfo({
           headers: Object.fromEntries(await getBiliAuthHeaders()),
-        })) as unknown as { code: number; message: string; data: BiliAuthModel }
+        })) as unknown as { code: number; message: string; data: ResponseBiliAuthModel }
         // 切换账号后到达的旧响应不能覆盖当前身份。
         if (identity.value !== requestIdentity) return false
         if (data.code == 200) {
@@ -116,7 +117,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
         } else {
           console.error(`[bili-auth] 无法获取 Bilibili 认证信息: ${data.message}`)
           if (usesAccountIdentity.value) ACCOUNT.value.biliUserAuthInfo = undefined
-          else sessionAuth.value = {} as BiliAuthModel
+          else sessionAuth.value = {} as ResponseBiliAuthModel
           isInvalid.value = true
           if (!usesAccountIdentity.value && currentToken.value && data.message === '旧版认证链接需要迁移') {
             legacyToken.value = currentToken.value
@@ -214,7 +215,7 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   }
 
   function logout() {
-    sessionAuth.value = {} as BiliAuthModel
+    sessionAuth.value = {} as ResponseBiliAuthModel
     biliTokens.value = biliTokens.value.filter((t) => t.token != currentToken.value)
     currentToken.value = ''
     legacyToken.value = null

@@ -2,7 +2,7 @@
 import { Add20Filled, Delete20Filled } from '@vicons/fluent'
 import { reactive } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -619,4 +619,3 @@ function fireMock() {
     </template>
   </div>
 </template>
-

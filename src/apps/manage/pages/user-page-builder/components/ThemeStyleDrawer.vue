@@ -327,7 +327,9 @@ function clearCurrentTheme() {
               >
                 全局主页
               </Badge>
-              <span class="block text-xs text-muted-foreground mt-1 leading-snug">配置将直接应用到主页，并作为全站各页面的默认底色。</span>
+              <span class="block text-xs text-muted-foreground mt-1 leading-snug"
+                >配置将直接应用到主页，并作为全站各页面的默认底色。</span
+              >
             </div>
           </template>
           <template v-else>
@@ -361,7 +363,9 @@ function clearCurrentTheme() {
         </div>
 
         <!-- 智能提取板块 -->
-        <div class="bg-[var(--brand-tint,rgba(99,102,241,0.05))] border border-dashed border-border rounded-lg py-2.5 px-3.5">
+        <div
+          class="bg-[var(--brand-tint,rgba(99,102,241,0.05))] border border-dashed border-border rounded-lg py-2.5 px-3.5"
+        >
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
               <component
@@ -597,4 +601,3 @@ function clearCurrentTheme() {
     </SheetContent>
   </Sheet>
 </template>
-

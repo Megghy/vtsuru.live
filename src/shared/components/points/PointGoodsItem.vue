@@ -2,8 +2,8 @@
 import { Pin16Filled } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { ResponsePointGoodModel } from '@/api/api-models'
-import { GoodsTypes } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import { GoodsTypes } from '@/api/generated/model'
 import { IMGUR_URL } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardFooter } from '@/shared/ui/card'

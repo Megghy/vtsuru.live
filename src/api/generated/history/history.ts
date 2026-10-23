@@ -8,11 +8,11 @@ import { vtsuruMutator } from '../../orval-mutator'
  */
 import type {
   GetApiHistoryGuardsListParams,
-  ResponseResultOfHistoryControllerGuardStatsModel,
-  ResponseResultOfHistoryControllerResponseAllHistoryModel,
-  ResponseResultOfListOfHistoryControllerGuardMemberModel,
+  ResponseResultOfGuardStatsModel,
+  ResponseResultOfListOfGuardMemberModel,
   ResponseResultOfListOfResponseHistoryModel,
   ResponseResultOfListOfResponseUpstatModel,
+  ResponseResultOfResponseAllHistoryModel,
 } from '../model'
 
 export const getGetApiHistoryFansUrl = () => {
@@ -34,8 +34,8 @@ export const getGetApiHistoryGetAllUrl = () => {
 
 export const getApiHistoryGetAll = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfHistoryControllerResponseAllHistoryModel> => {
-  return vtsuruMutator<ResponseResultOfHistoryControllerResponseAllHistoryModel>(getGetApiHistoryGetAllUrl(), {
+): Promise<ResponseResultOfResponseAllHistoryModel> => {
+  return vtsuruMutator<ResponseResultOfResponseAllHistoryModel>(getGetApiHistoryGetAllUrl(), {
     ...options,
     method: 'GET',
   })
@@ -61,8 +61,8 @@ export const getGetApiHistoryGuardsListUrl = (params?: GetApiHistoryGuardsListPa
 export const getApiHistoryGuardsList = async (
   params?: GetApiHistoryGuardsListParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfListOfHistoryControllerGuardMemberModel> => {
-  return vtsuruMutator<ResponseResultOfListOfHistoryControllerGuardMemberModel>(getGetApiHistoryGuardsListUrl(params), {
+): Promise<ResponseResultOfListOfGuardMemberModel> => {
+  return vtsuruMutator<ResponseResultOfListOfGuardMemberModel>(getGetApiHistoryGuardsListUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -90,8 +90,8 @@ export const getGetApiHistoryGuardsStatsUrl = () => {
  */
 export const getApiHistoryGuardsStats = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfHistoryControllerGuardStatsModel> => {
-  return vtsuruMutator<ResponseResultOfHistoryControllerGuardStatsModel>(getGetApiHistoryGuardsStatsUrl(), {
+): Promise<ResponseResultOfGuardStatsModel> => {
+  return vtsuruMutator<ResponseResultOfGuardStatsModel>(getGetApiHistoryGuardsStatsUrl(), {
     ...options,
     method: 'GET',
   })

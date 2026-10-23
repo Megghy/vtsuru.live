@@ -4,7 +4,7 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import { BiliAuthCodeStatusType } from '@/api/api-models'
+import { BiliAuthCodeStatusType } from '@/api/generated/model'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Tag } from '@/shared/ui/tag'

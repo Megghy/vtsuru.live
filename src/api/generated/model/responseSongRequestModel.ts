@@ -7,15 +7,15 @@
  */
 import type { DanmakuUserInfo } from './danmakuUserInfo'
 import type { ResponseSongModel } from './responseSongModel'
-import type { SongRequestDataSongRequestFrom } from './songRequestDataSongRequestFrom'
-import type { SongRequestDataSongRequestStatus } from './songRequestDataSongRequestStatus'
+import type { SongRequestFrom } from './songRequestFrom'
+import type { SongRequestStatus } from './songRequestStatus'
 
 export interface ResponseSongRequestModel {
   id: number
   songName: string
   song?: ResponseSongModel
-  status: SongRequestDataSongRequestStatus
-  from: SongRequestDataSongRequestFrom
+  status: SongRequestStatus
+  from: SongRequestFrom
   /** @nullable */
   price?: number | null
   user?: DanmakuUserInfo

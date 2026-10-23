@@ -31,6 +31,7 @@ import type {
   RemoveOrgStreamerModel,
   RenameOrgModel,
   ResponseResult,
+  ResponseResultOfInt32Array,
   ResponseResultOfListOfOrgInfoModel,
   ResponseResultOfListOfOrgInviteMemberListItem,
   ResponseResultOfListOfOrgInviteStreamerListItem,
@@ -47,7 +48,6 @@ import type {
   ResponseResultOfOrgPointStatsModel,
   ResponseResultOfResponseOrgStreamerDetailModel,
   ResponseResultOfSettingPoint,
-  ResponseResultOfSystemInt32Array,
   SettingPoint,
   TransferOrgOwnerModel,
   UpdateOrgMemberRoleModel,
@@ -462,7 +462,7 @@ export const postApiOrgOrgIdPointsOrdersStatus = async (
   orgId: number,
   updateOrgOrdersStatusModel?: UpdateOrgOrdersStatusModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemInt32Array> => {
+): Promise<ResponseResultOfInt32Array> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -477,7 +477,7 @@ export const postApiOrgOrgIdPointsOrdersStatus = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemInt32Array>(getPostApiOrgOrgIdPointsOrdersStatusUrl(orgId), {
+  return vtsuruMutator<ResponseResultOfInt32Array>(getPostApiOrgOrgIdPointsOrdersStatusUrl(orgId), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },

@@ -14,16 +14,16 @@ import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, ref } from 'vue'
 
-import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
-import { VideoStatus } from '@/api/api-models'
+import type { VideoCollectInfo, VideoData } from '@/api/generated/model'
+import { VideoStatus } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 
 const props = withDefaults(
   defineProps<{
-    videoInfo: VideoInfo
-    videoData: VideoCollectVideo
+    videoInfo: VideoCollectInfo
+    videoData: VideoData
     loading?: boolean
     selectable?: boolean
     selected?: boolean
@@ -38,7 +38,7 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  updateStatus: [status: VideoStatus, video: VideoInfo]
+  updateStatus: [status: VideoStatus, video: VideoCollectInfo]
   toggleSelect: [bvid: string]
   preview: [bvid: string, title: string]
 }>()

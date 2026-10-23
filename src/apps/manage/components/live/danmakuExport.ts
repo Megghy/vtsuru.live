@@ -1,8 +1,9 @@
 import { XMLBuilder } from 'fast-xml-parser'
 import { List } from 'linqts'
 
-import type { AccountInfo, DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { DanmakuModel } from '@/api/client-types'
+import type { ResponseAccountInfo, ResponseLiveInfoModel } from '@/api/generated/model'
+import { EventDataTypes } from '@/api/generated/model'
 
 const builder = new XMLBuilder({
   attributeNamePrefix: '@',
@@ -12,7 +13,7 @@ const builder = new XMLBuilder({
 })
 
 export function GetString(
-  account: AccountInfo | undefined,
+  account: ResponseAccountInfo | undefined,
   live: ResponseLiveInfoModel,
   danmakus: DanmakuModel[],
   type: 'json' | 'xml' | 'csv',

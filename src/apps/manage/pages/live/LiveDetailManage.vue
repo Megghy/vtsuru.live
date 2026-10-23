@@ -3,9 +3,10 @@ import { ArrowLeft24Regular, Chat24Regular, DataPie24Regular, Mic24Regular } fro
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { DanmakuModel, ResponseLiveInfoModel } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { DanmakuModel } from '@/api/client-types'
 import { getApiLiveGet } from '@/api/generated/live/live'
+import type { ResponseLiveInfoModel } from '@/api/generated/model'
+import { EventDataTypes } from '@/api/generated/model'
 import DanmakuContainer from '@/apps/manage/components/live/DanmakuContainer.vue'
 import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.vue'
 import LiveOverviewPanel from '@/apps/manage/components/live/LiveOverviewPanel.vue'

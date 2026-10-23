@@ -5,8 +5,8 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { DuplicateVideoPolicy } from './duplicateVideoPolicy'
 import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
-import type { VideoCollectDataDuplicateVideoPolicy } from './videoCollectDataDuplicateVideoPolicy'
 
 export interface ResponseVideoCollectModel {
   id: string
@@ -25,6 +25,6 @@ export interface ResponseVideoCollectModel {
   allowUnregisteredUser: boolean
   maxVideoPerUser: number
   requireDescription: boolean
-  duplicatePolicy: VideoCollectDataDuplicateVideoPolicy
+  duplicatePolicy: DuplicateVideoPolicy
   isFinish: boolean
 }

@@ -2,8 +2,8 @@
 import { ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
 import { computed, onMounted, ref } from 'vue'
 
-import type { ResponsePointOrder2UserModel } from '@/api/api-models'
-import { PointOrderStatus } from '@/api/api-models'
+import type { ResponsePointOrder2UserModel } from '@/api/generated/model'
+import { PointOrderStatus } from '@/api/generated/model'
 import { getApiPointUserGetOrders } from '@/api/generated/point/point'
 import AccountDataPanel from '@/apps/account/components/AccountDataPanel.vue'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
@@ -226,4 +226,3 @@ onMounted(() => void loadOrders())
     </template>
   </div>
 </template>
-

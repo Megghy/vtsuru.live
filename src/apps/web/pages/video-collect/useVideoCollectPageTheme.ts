@@ -1,7 +1,7 @@
 import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 
-import type { VideoCollectTable } from '@/api/api-models'
+import type { ResponseVideoCollectModel } from '@/api/generated/model'
 import { fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
@@ -11,7 +11,7 @@ import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { UserPagesSettings } from '@/apps/user-page/types'
 import { isDarkMode } from '@/shared/utils'
 
-export function useVideoCollectPageTheme(table: Ref<VideoCollectTable | null | undefined>) {
+export function useVideoCollectPageTheme(table: Ref<ResponseVideoCollectModel | null | undefined>) {
   const ownerSettings = ref<UserPagesSettings | null>(null)
   let requestId = 0
 

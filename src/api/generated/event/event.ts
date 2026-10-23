@@ -7,19 +7,19 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
-  EventControllerDeleteGuardEventRequest,
-  EventControllerManualGuardEventRequest,
-  EventControllerRequestEventModelV3,
+  DeleteGuardEventRequest,
   EventModel,
   GetApiEventGetParams,
+  ManualGuardEventRequest,
   PostApiEventUpdateParams,
   PostApiEventUpdateV2Params,
   PostApiEventUpdateV3Params,
-  ResponseResultOfEventControllerResponseEventModel,
-  ResponseResultOfEventControllerResponseEventModelV3,
+  RequestEventModelV3,
   ResponseResultOfEventModel,
   ResponseResultOfListOfEventModel,
-  ResponseResultOfSystemString,
+  ResponseResultOfResponseEventModel,
+  ResponseResultOfResponseEventModelV3,
+  ResponseResultOfString,
 } from '../model'
 
 // https://stackoverflow.com/questions/49579094/typescript-conditional-types-filter-out-readonly-properties-pick-only-requir/49579497#49579497
@@ -68,9 +68,9 @@ export const getPostApiEventGuardDeleteUrl = () => {
 }
 
 export const postApiEventGuardDelete = async (
-  eventControllerDeleteGuardEventRequest?: EventControllerDeleteGuardEventRequest,
+  deleteGuardEventRequest?: DeleteGuardEventRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -85,11 +85,11 @@ export const postApiEventGuardDelete = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiEventGuardDeleteUrl(), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiEventGuardDeleteUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(eventControllerDeleteGuardEventRequest),
+    body: JSON.stringify(deleteGuardEventRequest),
   })
 }
 
@@ -98,7 +98,7 @@ export const getPostApiEventGuardManualUrl = () => {
 }
 
 export const postApiEventGuardManual = async (
-  eventControllerManualGuardEventRequest?: EventControllerManualGuardEventRequest,
+  manualGuardEventRequest?: ManualGuardEventRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfEventModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -119,7 +119,7 @@ export const postApiEventGuardManual = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(eventControllerManualGuardEventRequest),
+    body: JSON.stringify(manualGuardEventRequest),
   })
 }
 
@@ -141,7 +141,7 @@ export const postApiEventUpdateV2 = async (
   eventModel?: NonReadonly<EventModel[]>,
   params?: PostApiEventUpdateV2Params,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfEventControllerResponseEventModel> => {
+): Promise<ResponseResultOfResponseEventModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -156,7 +156,7 @@ export const postApiEventUpdateV2 = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfEventControllerResponseEventModel>(getPostApiEventUpdateV2Url(params), {
+  return vtsuruMutator<ResponseResultOfResponseEventModel>(getPostApiEventUpdateV2Url(params), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -179,10 +179,10 @@ export const getPostApiEventUpdateV3Url = (params?: PostApiEventUpdateV3Params) 
 }
 
 export const postApiEventUpdateV3 = async (
-  eventControllerRequestEventModelV3?: EventControllerRequestEventModelV3,
+  requestEventModelV3?: RequestEventModelV3,
   params?: PostApiEventUpdateV3Params,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfEventControllerResponseEventModelV3> => {
+): Promise<ResponseResultOfResponseEventModelV3> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -197,11 +197,11 @@ export const postApiEventUpdateV3 = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfEventControllerResponseEventModelV3>(getPostApiEventUpdateV3Url(params), {
+  return vtsuruMutator<ResponseResultOfResponseEventModelV3>(getPostApiEventUpdateV3Url(params), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(eventControllerRequestEventModelV3),
+    body: JSON.stringify(requestEventModelV3),
   })
 }
 
@@ -223,7 +223,7 @@ export const postApiEventUpdate = async (
   eventModel?: NonReadonly<EventModel[]>,
   params?: PostApiEventUpdateParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -238,7 +238,7 @@ export const postApiEventUpdate = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiEventUpdateUrl(params), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiEventUpdateUrl(params), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },

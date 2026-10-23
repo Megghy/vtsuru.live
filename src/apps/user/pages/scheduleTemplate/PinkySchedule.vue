@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -14,8 +14,8 @@ import ScheduleWeekToolbar from './ScheduleWeekToolbar.vue'
 import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 
 interface PinkyConfig {
-  backgroundFile: UploadFileResponse[]
-  portraitFile: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
+  portraitFile: APIFileModel[]
   heading: string
   accentColor: RGBAColor
   showAvatar: boolean
@@ -31,14 +31,14 @@ const Config = defineTemplateConfig([
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: PinkyConfig) => (config.backgroundFile = files),
+    onUploaded: (files: APIFileModel[], config: PinkyConfig) => (config.backgroundFile = files),
   },
   {
     name: '角色立绘',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: PinkyConfig) => (config.portraitFile = files),
+    onUploaded: (files: APIFileModel[], config: PinkyConfig) => (config.portraitFile = files),
   },
   { name: '标题', type: 'string', key: 'heading', default: 'SCHEDULE' },
   {

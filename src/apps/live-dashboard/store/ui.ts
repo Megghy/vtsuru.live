@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { reactive, ref, shallowRef } from 'vue'
 
-import { ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/client-types'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { isDarkMode } from '@/shared/utils'
 

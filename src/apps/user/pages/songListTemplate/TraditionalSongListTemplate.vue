@@ -7,8 +7,8 @@ import {
 } from '@vicons/fluent'
 import { computed, ref, watch } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import type { SongListConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -39,7 +39,7 @@ interface ProfileLink {
 }
 
 const props = defineProps<SongListConfigTypeWithConfig<TraditionalConfigType>>()
-const emit = defineEmits<{ requestSong: [song: SongsInfo] }>()
+const emit = defineEmits<{ requestSong: [song: ResponseSongModel] }>()
 defineExpose({ Config, DefaultConfig })
 
 const searchQuery = ref('')
@@ -81,7 +81,7 @@ const languageOptions = computed(() => [
   ...getSongFieldOptions(props.data, 'language'),
 ])
 const tagOptions = computed(() => [{ label: '未设定', value: '__unset' }, ...getSongFieldOptions(props.data, 'tags')])
-const optionFilters: Record<string, (song: SongsInfo) => boolean> = {
+const optionFilters: Record<string, (song: ResponseSongModel) => boolean> = {
   unset: (song) => !song.options,
   captain: (song) => song.options?.needJianzhang === true,
   admiral: (song) => song.options?.needTidu === true,
@@ -165,13 +165,13 @@ function matchesField(values: string[] | undefined, selected: string | null) {
   return selected === '__unset' ? !values?.length : values?.includes(selected) === true
 }
 
-function compareSongs(left: SongsInfo, right: SongsInfo, key: SortKey) {
+function compareSongs(left: ResponseSongModel, right: ResponseSongModel, key: SortKey) {
   const leftValue = getSortValue(left, key)
   const rightValue = getSortValue(right, key)
   return leftValue.localeCompare(rightValue, 'zh-CN', { numeric: true })
 }
 
-function getSortValue(song: SongsInfo, key: SortKey) {
+function getSortValue(song: ResponseSongModel, key: SortKey) {
   if (key === 'options') return song.options ? '1' : '0'
   const value = song[key]
   return Array.isArray(value) ? value.join(' ') : String(value ?? '')
@@ -213,7 +213,7 @@ function randomOrder() {
   }
 }
 
-function requestSong(song: SongsInfo) {
+function requestSong(song: ResponseSongModel) {
   if (isSelf.value) return
   const tooltip = getSongRequestTooltip(song, props.liveRequestSettings, requestAuthState.value)
   dialogState.value = {
@@ -226,9 +226,9 @@ function requestSong(song: SongsInfo) {
   }
 }
 
-function getSongLink(song: SongsInfo) {
-  if (song.from === SongFrom.Netease) return `https://music.163.com/#/song?id=${song.id}`
-  if (song.from === SongFrom.FiveSing) return `https://5sing.kugou.com/bz/${song.id}.html`
+function getSongLink(song: ResponseSongModel) {
+  if (song.from === SongPlatform.Netease) return `https://music.163.com/#/song?id=${song.id}`
+  if (song.from === SongPlatform.FiveSing) return `https://5sing.kugou.com/bz/${song.id}.html`
   return getSafeUrl(song.url)
 }
 
@@ -669,4 +669,3 @@ function getSafeUrl(value?: string) {
     </section>
   </TooltipProvider>
 </template>
-

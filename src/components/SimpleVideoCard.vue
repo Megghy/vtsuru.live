@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { VideoCollectVideo } from '@/api/api-models'
+import type { VideoData } from '@/api/generated/model'
 import { Card, CardContent } from '@/shared/ui/card'
 
 defineProps<{
-  video: VideoCollectVideo
+  video: VideoData
   width?: number
 }>()
 </script>

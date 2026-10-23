@@ -15,8 +15,9 @@ import { Plus, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ResponsePointGoodModel, UploadPointGoodsModel, UploadSubPointGoodsModel } from '@/api/api-models'
-import { FunctionTypes, GoodsStatus, GoodsTypes, KeySelectionMode } from '@/api/api-models'
+import type { ResponsePointGoodModel, UploadPointGoodsModel } from '@/api/client-types'
+import type { TempSubPointGoodsModel } from '@/api/generated/model'
+import { FunctionTypes, GoodsStatus, GoodsTypes, VirtualKeySelectionMode } from '@/api/generated/model'
 import {
   postApiPointDeleteGoods,
   postApiPointUpdateGoods,
@@ -94,16 +95,10 @@ function sortGoods(a: ResponsePointGoodModel, b: ResponsePointGoodModel) {
   return b.id - a.id
 }
 const onShelfGoods = computed(() =>
-  goods.value
-    .filter((g) => g.status !== GoodsStatus.Discontinued)
-    .slice()
-    .sort(sortGoods),
+  goods.value.filter((g) => g.status !== GoodsStatus.Discontinued).toSorted(sortGoods),
 )
 const offShelfGoods = computed(() =>
-  goods.value
-    .filter((g) => g.status === GoodsStatus.Discontinued)
-    .slice()
-    .sort(sortGoods),
+  goods.value.filter((g) => g.status === GoodsStatus.Discontinued).toSorted(sortGoods),
 )
 
 function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] } {
@@ -119,7 +114,7 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFi
         allowGuardFreeMinLevel: 0,
       },
       virtualKeys: [],
-      keySelectionMode: KeySelectionMode.None,
+      keySelectionMode: VirtualKeySelectionMode.None,
       currentKeyIndex: 0,
       subItems: [],
       name: '',
@@ -135,7 +130,7 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFi
 const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }>(defaultGoodsModel())
 const subItemFileLists = ref<Record<string, UploadFileInfo[]>>({})
 
-function getSubItemKey(sub: UploadSubPointGoodsModel) {
+function getSubItemKey(sub: TempSubPointGoodsModel) {
   return String(sub.id)
 }
 
@@ -147,7 +142,7 @@ function addSubItem() {
   ensureSubItems()
   const parent = currentGoodsModel.value.goods
   const tempId = tempSubItemIdSeed--
-  const sub: UploadSubPointGoodsModel = {
+  const sub: TempSubPointGoodsModel = {
     id: tempId,
     name: '',
     price: parent.price,

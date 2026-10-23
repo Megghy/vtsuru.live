@@ -4,14 +4,14 @@ import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type {
+  PointGuardDuplicateApplyResult,
   RequestApplyPointGuardDuplicateFixModel,
   RequestPointGuardDuplicatePointValues,
-  ResponsePointGuardDuplicateApplyResult,
   ResponsePointGuardDuplicateDetailModel,
   ResponsePointGuardDuplicateLevelCounts,
   ResponsePointGuardDuplicateScanModel,
   ResponsePointGuardDuplicateUserModel,
-} from '@/api/api-models'
+} from '@/api/generated/model'
 import {
   getApiPointGetDuplicateGuardDetail,
   getApiPointScanDuplicateGuards,
@@ -64,7 +64,7 @@ const detailLoading = ref(false)
 const showDetailModal = ref(false)
 const scanResult = ref<ResponsePointGuardDuplicateScanModel | null>(null)
 const detailResult = ref<ResponsePointGuardDuplicateDetailModel | null>(null)
-const applyResult = ref<ResponsePointGuardDuplicateApplyResult | null>(null)
+const applyResult = ref<PointGuardDuplicateApplyResult | null>(null)
 const selectedRowKeys = ref<string[]>([])
 
 // 分页

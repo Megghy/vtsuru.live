@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 
 import { SaveAccountSettings, SaveEnableFunctions, useAccount } from '@/api/account'
-import { FunctionTypes } from '@/api/api-models'
+import { FunctionTypes } from '@/api/generated/model'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -30,7 +30,7 @@ const functionList: { type: FunctionTypes; label: string }[] = [
   { type: FunctionTypes.SongList, label: '歌单' },
   { type: FunctionTypes.QuestionBox, label: '提问箱（棉花糖）' },
   { type: FunctionTypes.Schedule, label: '日程' },
-  { type: FunctionTypes.LiveRequest, label: '点播' },
+  { type: FunctionTypes.SongRequest, label: '点播' },
   { type: FunctionTypes.Queue, label: '排队' },
   { type: FunctionTypes.Point, label: '积分和礼物' },
   { type: FunctionTypes.VideoCollect, label: '视频征集' },

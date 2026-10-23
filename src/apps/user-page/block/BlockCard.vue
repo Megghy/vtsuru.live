@@ -88,7 +88,9 @@ const borderTitleAlignClass = computed(() => {
         'justify-end pr-[var(--vtsuru-page-spacing,14px)]': borderTitleAlignClass === 'align-right',
       }"
     >
-      <span class="relative inline-block text-xs leading-none text-foreground font-semibold tracking-wide opacity-90 [text-shadow:0_1px_0_rgba(0,0,0,0.12)]">
+      <span
+        class="relative inline-block text-xs leading-none text-foreground font-semibold tracking-wide opacity-90 [text-shadow:0_1px_0_rgba(0,0,0,0.12)]"
+      >
         {{ borderTitleText }}
       </span>
     </div>
@@ -122,5 +124,3 @@ const borderTitleAlignClass = computed(() => {
     </div>
   </div>
 </template>
-
-

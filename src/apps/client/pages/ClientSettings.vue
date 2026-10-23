@@ -10,7 +10,7 @@ import {
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/client-types'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import BiliAccountManagerCard from '@/apps/client/components/settings/BiliAccountManagerCard.vue'
@@ -410,7 +410,9 @@ function handleTitleClick() {
                     <div class="flex items-center justify-between gap-3">
                       <div>
                         <span class="font-bold text-xs text-foreground">桌面通知总开关</span>
-                        <div class="text-xs text-muted-foreground mt-0.5">开启后，选中的事件将在 Windows 桌面右下角推送通知</div>
+                        <div class="text-xs text-muted-foreground mt-0.5">
+                          开启后，选中的事件将在 Windows 桌面右下角推送通知
+                        </div>
                       </div>
                       <Switch
                         :checked="setting.settings.enableNotification"

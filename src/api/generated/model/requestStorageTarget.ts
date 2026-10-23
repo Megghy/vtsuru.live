@@ -5,7 +5,7 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruDataFileStorageStorageProviderKind } from './vTsuruDataFileStorageStorageProviderKind'
+import type { StorageProviderKind } from './storageProviderKind'
 
 /**
  * 用户自定义存储目标。凭据只进不出，定位字段创建后不可修改。
@@ -13,7 +13,7 @@ import type { VTsuruDataFileStorageStorageProviderKind } from './vTsuruDataFileS
 export interface RequestStorageTarget {
   /** 展示名 */
   name: string
-  provider: VTsuruDataFileStorageStorageProviderKind
+  provider: StorageProviderKind
   /** HTTP(S) 端点，必须解析到公网 IP */
   endpoint: string
   /** @nullable */

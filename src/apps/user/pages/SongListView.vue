@@ -3,11 +3,12 @@ import { addSeconds } from 'date-fns'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { DownloadConfig, useAccount } from '@/api/account'
-import type { Setting_LiveRequest, SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
 import {
   getApiLiveRequestGetActiveAndSettings,
   postApiLiveRequestAddFromWeb,
 } from '@/api/generated/live-request/live-request'
+import type { ResponseSongModel, ResponseUserInfo, SettingSongRequest } from '@/api/generated/model'
 import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import DynamicForm from '@/apps/manage/components/DynamicForm.vue'
 import type { BiliProfile } from '@/apps/user-page/types'
@@ -27,9 +28,9 @@ import './songListTemplate/songListTheme.css'
 // 组件属性
 const props = defineProps<{
   biliInfo: BiliProfile | undefined
-  userInfo: UserInfo | undefined // 用户信息
+  userInfo: ResponseUserInfo | undefined // 用户信息
   template?: string | undefined // 模板名称
-  fakeData?: SongsInfo[] // 测试数据
+  fakeData?: ResponseSongModel[] // 测试数据
 }>()
 // 用户账号信息
 const accountInfo = useAccount()
@@ -46,15 +47,15 @@ const componentType = computed(() => {
 })
 
 // 数据状态
-const currentData = ref<SongsInfo[]>([]) // 歌单数据
+const currentData = ref<ResponseSongModel[]>([]) // 歌单数据
 const dynamicConfigRef = ref() // 动态配置引用
 const songsActive = ref<SongRequestInfo[]>([]) // 当前点歌列表
-const settings = ref<Setting_LiveRequest>({
+const settings = ref<SettingSongRequest>({
   // 点歌设置
   allowFromWeb: false,
   allowAnonymousFromWeb: false,
   orderPrefix: '',
-} as Setting_LiveRequest)
+} as SettingSongRequest)
 
 // 加载状态
 const isDataLoading = ref(true)
@@ -91,7 +92,7 @@ async function getSongRequestInfo() {
       id: props.userInfo.id,
     })) as unknown as {
       code: number
-      data: { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+      data: { songs: SongRequestInfo[]; setting: SettingSongRequest }
       message?: string
     }
 
@@ -124,7 +125,7 @@ async function getSongs() {
       id: String(props.userInfo.id),
     })) as unknown as {
       code: number
-      data: SongsInfo[]
+      data: ResponseSongModel[]
       message?: string
     }
 
@@ -189,7 +190,7 @@ function copyToClipboard(text: string, sendMessage: boolean = true) {
 /**
  * 点歌处理
  */
-async function requestSong(song: SongsInfo) {
+async function requestSong(song: ResponseSongModel) {
   const orderText = `${settings.value.orderPrefix || ''} ${song.name}`
   const check = canRequestSong(
     song,

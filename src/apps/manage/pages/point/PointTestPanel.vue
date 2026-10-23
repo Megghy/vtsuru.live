@@ -2,8 +2,9 @@
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { EventDataTypes } from '@/api/api-models'
-import type { ResponsePointGoodModel, ResponsePointUserModel } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import type { ResponsePointUserModel } from '@/api/generated/model'
+import { EventDataTypes } from '@/api/generated/model'
 import {
   getApiPointCheckEligibility,
   getApiPointGetAllUsers,

@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 
 import BlockCard from '../BlockCard.vue'
 
 const props = defineProps<{
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
   biliInfo: any | undefined
   blockProps: unknown
 }>()
@@ -75,5 +75,3 @@ const model = computed(() => {
     </div>
   </BlockCard>
 </template>
-
-

@@ -4,7 +4,7 @@ import { X } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { UploadConfig } from '@/api/account'
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
 import type { UploadFileInfo } from '@/shared/types/upload'
 import type {
@@ -47,7 +47,7 @@ const message = useMessage()
 
 const fileList = ref<{ [key: string]: UploadFileInfo[] }>({})
 const decorativeFileList = ref<{ [key: string]: UploadFileInfo[] }>({})
-const filePreviews = new Map<File, { key: string; data: UploadFileResponse }>()
+const filePreviews = new Map<File, { key: string; data: APIFileModel }>()
 const decorativePreviews = new Map<File, { key: string; data: DecorativeImageProperties }>()
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 const IMAGE_ACCEPT = '.png,.jpg,.jpeg,.gif,.svg,.webp,.ico,.bmp,.tiff,.heic,.heif'
@@ -112,12 +112,12 @@ function getOptionSafeValue(val: unknown): string {
   return String(val)
 }
 
-function getUploadedFiles(key: string): UploadFileResponse[] {
+function getUploadedFiles(key: string): APIFileModel[] {
   const files = props.configData[key]
   return Array.isArray(files) ? files : []
 }
 
-function toUploadFileList(files: UploadFileResponse[]): UploadFileInfo[] {
+function toUploadFileList(files: APIFileModel[]): UploadFileInfo[] {
   return toImageUploadFileList(files, '文件')
 }
 
@@ -125,7 +125,7 @@ function syncUploadedFileList(key: string) {
   fileList.value[key] = toUploadFileList(getUploadedFiles(key))
 }
 
-function createPreviewFile(file: File): UploadFileResponse {
+function createPreviewFile(file: File): APIFileModel {
   return {
     id: nextPreviewId--,
     path: URL.createObjectURL(file),
@@ -135,7 +135,7 @@ function createPreviewFile(file: File): UploadFileResponse {
   }
 }
 
-function releasePreview(preview: UploadFileResponse) {
+function releasePreview(preview: APIFileModel) {
   URL.revokeObjectURL(preview.path)
 }
 
@@ -176,10 +176,10 @@ function onFileListChange(item: ConfigItemDefinition, files: UploadFileInfo[]) {
   const existingUploaded = limitedFiles
     .filter((file) => !file.file)
     .map((file) => getUploadedFiles(item.key).find((itemFile) => String(itemFile.id) === file.id))
-    .filter((file): file is UploadFileResponse => !!file)
+    .filter((file): file is APIFileModel => !!file)
 
   const pendingFiles = limitedFiles.filter((file): file is UploadFileInfo & { file: File } => !!file.file)
-  const previewItems: UploadFileResponse[] = []
+  const previewItems: APIFileModel[] = []
   for (const fileInfo of pendingFiles) {
     let preview = filePreviews.get(fileInfo.file)
     if (!preview) {

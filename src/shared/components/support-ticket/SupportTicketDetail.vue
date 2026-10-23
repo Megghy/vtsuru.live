@@ -11,8 +11,8 @@ import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, ref, watch } from 'vue'
 
-import type { SupportTicketDetail } from '@/api/api-models'
-import { SupportTicketAuthorType, SupportTicketStatus } from '@/api/api-models'
+import type { SupportTicketDetail } from '@/api/client-types'
+import { SupportTicketAuthorType, SupportTicketStatus } from '@/api/generated/model'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import {
   addSupportTicketMessage,

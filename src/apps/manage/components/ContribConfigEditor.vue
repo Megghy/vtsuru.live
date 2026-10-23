@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, RGBAColor, TemplateConfigFileItem } from '@/shared/types/VTsuruConfigTypes'
 import { isValidRGBAColor, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -36,7 +36,7 @@ const visibleItems = computed(() => {
   })
 })
 
-function ensureArrayValue(key: string): UploadFileResponse[] {
+function ensureArrayValue(key: string): APIFileModel[] {
   const v = props.configData[key]
   if (Array.isArray(v)) return v
   props.configData[key] = []

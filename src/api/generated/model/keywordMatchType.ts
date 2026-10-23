@@ -6,10 +6,8 @@
  * OpenAPI spec version: v1
  */
 
-export type KeywordMatchType = (typeof KeywordMatchType)[keyof typeof KeywordMatchType]
-
-export const KeywordMatchType = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-} as const
+export enum KeywordMatchType {
+  Full = 0,
+  Contains = 1,
+  Regex = 2,
+}

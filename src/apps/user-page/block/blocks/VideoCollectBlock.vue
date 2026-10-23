@@ -4,8 +4,8 @@ import { useNow } from '@vueuse/core'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
-import type { UserInfo } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import { fetchPublicActiveVideoCollect } from '@/apps/user-page/api'
 import { getEnabledUserFunctions } from '@/apps/user-page/featureNavigation'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
@@ -17,7 +17,7 @@ import { Spin } from '@/shared/ui/spin'
 
 import BlockCard from '../BlockCard.vue'
 
-const props = defineProps<{ blockProps: unknown; userInfo?: UserInfo }>()
+const props = defineProps<{ blockProps: unknown; userInfo?: ResponseUserInfo }>()
 const values = computed<Record<string, unknown>>(() =>
   props.blockProps && typeof props.blockProps === 'object' && !Array.isArray(props.blockProps)
     ? (props.blockProps as Record<string, unknown>)
@@ -196,5 +196,3 @@ watch(
     </div>
   </BlockCard>
 </template>
-
-

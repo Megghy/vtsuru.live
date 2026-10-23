@@ -7,7 +7,7 @@ export interface SelectOption {
 import type { VNode } from 'vue'
 
 // 导入 Vue 的 VNode 类型和 h 函数（用于示例）
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 
 // --- 基础和通用类型 ---
 
@@ -54,7 +54,7 @@ export function createDefaultRGBA(r = 0, g = 0, b = 0, a = 1): RGBAColor {
 }
 
 // 添加类型守卫函数，用于检查上传文件信息
-export function isUploadFileInfo(obj: any): obj is UploadFileResponse {
+export function isUploadFileInfo(obj: any): obj is APIFileModel {
   return (
     obj &&
     typeof obj === 'object' &&
@@ -172,11 +172,11 @@ export type TemplateConfigBooleanItem<T = unknown> = TemplateConfigItemWithType<
 }
 
 // 将文件类型统一为数组，不再根据fileLimit区分
-export type TemplateConfigFileItem<T = unknown> = TemplateConfigItemWithType<T, UploadFileResponse[]> & {
+export type TemplateConfigFileItem<T = unknown> = TemplateConfigItemWithType<T, APIFileModel[]> & {
   type: 'file'
   fileLimit?: number // 变为可选参数，仅用于UI限制，不影响类型
   fileType?: string[]
-  onUploaded?: (data: UploadFileResponse[], config: T) => void
+  onUploaded?: (data: APIFileModel[], config: T) => void
 }
 
 // --- 新增：装饰性图片配置 ---
@@ -184,7 +184,7 @@ export type TemplateConfigFileItem<T = unknown> = TemplateConfigItemWithType<T, 
 /**
  * @description 单个装饰图片的属性接口
  */
-export interface DecorativeImageProperties extends UploadFileResponse {
+export interface DecorativeImageProperties extends APIFileModel {
   x: number // X 坐标 (%)
   y: number // Y 坐标 (%)
   width: number // 宽度 (%)
@@ -291,7 +291,7 @@ export type ExtractConfigData<Items extends readonly ConfigItemDefinition[]> = {
               ? number[]
               : // 文件类型统一处理为数组
                 ItemWithKeyK extends { type: 'file' }
-                ? UploadFileResponse[]
+                ? APIFileModel[]
                 : ItemWithKeyK extends { type: 'boolean' }
                   ? boolean
                   : ItemWithKeyK extends { type: 'color' }

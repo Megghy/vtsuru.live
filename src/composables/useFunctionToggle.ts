@@ -1,5 +1,5 @@
 import { SaveEnableFunctions, useAccount } from '@/api/account'
-import type { FunctionTypes } from '@/api/api-models'
+import type { FunctionTypes } from '@/api/generated/model'
 
 /**
  * 统一封装功能开关的启用/禁用: 乐观更新 + 失败回滚 + 成功/失败提示。

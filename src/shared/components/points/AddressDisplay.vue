@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import type { AddressInfo } from '@/api/api-models'
+import type { ShippingAddressInfo } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 
 const { size = 'default' } = defineProps<{
-  address: AddressInfo | undefined
+  address: ShippingAddressInfo | undefined
   size?: 'small' | 'default'
 }>()
 

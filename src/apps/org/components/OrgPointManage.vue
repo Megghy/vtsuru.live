@@ -93,7 +93,7 @@ onMounted(async () => {
         <Select
           :model-value="selectedStreamerId ? String(selectedStreamerId) : 'all'"
           @update:model-value="
-            selectedStreamerId = $event === 'all' ? null : Number($event);
+            selectedStreamerId = $event === 'all' ? null : Number($event)
             loadData()
           "
         >

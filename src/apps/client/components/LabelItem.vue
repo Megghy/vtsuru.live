@@ -14,9 +14,7 @@ withDefaults(
   <span
     class="flex gap-3 py-1.5 min-w-0"
     :class="
-      labelPlacement === 'top'
-        ? 'flex-col items-stretch gap-1'
-        : 'flex-row items-center justify-between flex-wrap'
+      labelPlacement === 'top' ? 'flex-col items-stretch gap-1' : 'flex-row items-center justify-between flex-wrap'
     "
   >
     <span class="text-xs text-foreground">

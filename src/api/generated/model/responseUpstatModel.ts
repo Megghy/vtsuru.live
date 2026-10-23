@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { UpstatDataUpstatTuple } from './upstatDataUpstatTuple'
+import type { UpstatTuple } from './upstatTuple'
 
 export interface ResponseUpstatModel {
   time: number
-  stats: UpstatDataUpstatTuple
+  stats: UpstatTuple
 }

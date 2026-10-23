@@ -3,8 +3,8 @@ import type { Ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
+import type { ResponseObsSyncState } from '@/api/generated/model'
 import { getObsSyncState, ObsSyncConflict, updateObsSyncState } from '@/api/obs-store'
-import type { ObsSyncStateResponse } from '@/api/obs-store'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
 
 import { isObsSyncChannel } from './channel'
@@ -51,7 +51,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
       console.warn('OBS 本地缓存不可用', error)
     }
   }
-  function apply(snapshot: ObsSyncStateResponse) {
+  function apply(snapshot: ResponseObsSyncState) {
     currentHash.value = snapshot.hash
     if (snapshot.changed && snapshot.data)
       state.value = { ...structuredClone(options.defaultState), ...JSON.parse(snapshot.data), ...pending }
@@ -92,8 +92,8 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
         apply(snapshot)
       }
       let conflicts = 0
-      // epoch/generation 在循环内未修改是有意为之，通过 return 语句跳出循环
-      while (epoch === generation && Object.keys(pending).length) {
+      while (Object.keys(pending).length) {
+        if (epoch !== generation) return
         const patch = pending
         pending = {}
         try {

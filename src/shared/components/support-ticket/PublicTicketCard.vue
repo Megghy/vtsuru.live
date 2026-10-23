@@ -3,12 +3,12 @@ import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
-import type { SupportTicketSummary } from '@/api/api-models'
+import type { SupportTicketModel } from '@/api/generated/model'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
 import { Badge } from '@/shared/ui/badge'
 
 const props = defineProps<{
-  ticket: SupportTicketSummary
+  ticket: SupportTicketModel
 }>()
 
 const relativeTime = computed(() => {

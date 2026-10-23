@@ -6,12 +6,12 @@
  * OpenAPI spec version: v1
  */
 import type { APIFileModel } from './aPIFileModel'
-import type { PointGoodsDataGoodsStatus } from './pointGoodsDataGoodsStatus'
-import type { PointGoodsDataGoodsTypes } from './pointGoodsDataGoodsTypes'
-import type { PointGoodsDataServiceConfigData } from './pointGoodsDataServiceConfigData'
-import type { PointGoodsDataVirtualKeySelectionMode } from './pointGoodsDataVirtualKeySelectionMode'
-import type { RequestPointGoodsModelTempRequestGoodsSetting } from './requestPointGoodsModelTempRequestGoodsSetting'
-import type { RequestPointGoodsModelTempSubPointGoodsModel } from './requestPointGoodsModelTempSubPointGoodsModel'
+import type { GoodsStatus } from './goodsStatus'
+import type { GoodsTypes } from './goodsTypes'
+import type { ServiceConfigData } from './serviceConfigData'
+import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
+import type { TempSubPointGoodsModel } from './tempSubPointGoodsModel'
+import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
 
 export interface RequestPointGoodsModel {
   /** @nullable */
@@ -27,8 +27,8 @@ export interface RequestPointGoodsModel {
   /** @nullable */
   tags?: string[] | null
   cover?: APIFileModel
-  status: PointGoodsDataGoodsStatus
-  type: PointGoodsDataGoodsTypes
+  status: GoodsStatus
+  type: GoodsTypes
   /**
    * @minLength 0
    * @maxLength 300
@@ -51,15 +51,15 @@ export interface RequestPointGoodsModel {
   content?: string | null
   /** @nullable */
   virtualKeys?: string[] | null
-  keySelectionMode: PointGoodsDataVirtualKeySelectionMode
+  keySelectionMode: VirtualKeySelectionMode
   /** @nullable */
   isPinned?: boolean | null
   isAllowRebuy: boolean
   maxBuyCount: number
   /** @nullable */
   maxSubItemSelections?: number | null
-  setting: RequestPointGoodsModelTempRequestGoodsSetting
-  serviceConfig?: PointGoodsDataServiceConfigData
+  setting: TempRequestGoodsSetting
+  serviceConfig?: ServiceConfigData
   /** @nullable */
-  subItems?: RequestPointGoodsModelTempSubPointGoodsModel[] | null
+  subItems?: TempSubPointGoodsModel[] | null
 }

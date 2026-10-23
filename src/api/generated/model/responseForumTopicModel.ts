@@ -5,7 +5,7 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumForumSectionData } from './forumForumSectionData'
+import type { ForumSectionData } from './forumSectionData'
 import type { ForumUserInfo } from './forumUserInfo'
 
 export interface ResponseForumTopicModel {
@@ -21,7 +21,7 @@ export interface ResponseForumTopicModel {
   likeCount: number
   viewCount: number
   commentCount: number
-  section?: ForumForumSectionData
+  section?: ForumSectionData
   sampleLikedBy: number[]
   isLiked: boolean
   isPinned: boolean

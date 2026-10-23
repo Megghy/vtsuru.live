@@ -2,7 +2,7 @@ import { useIntervalFn, useNow } from '@vueuse/core'
 import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { postApiQaSend } from '@/api/generated/qa/qa'
 import { refreshCaptcha, requestWithCaptchaRetry, type CaptchaHandle } from '@/shared/captcha'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -46,7 +46,7 @@ export function isQuestionSubmitAllowed(params: {
   return true
 }
 
-export function useQuestionComposer(target: Ref<UserInfo | undefined>, onSubmitted: () => void) {
+export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, onSubmitted: () => void) {
   const accountInfo = useAccount()
   const biliAuth = useBiliAuth()
   const history = useQuestionBoxHistory()

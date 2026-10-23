@@ -312,7 +312,9 @@ onBeforeRouteLeave(() => {
 </script>
 
 <template>
-  <div class="user-page-builder h-[calc(100dvh-var(--vtsuru-header-height))] w-full p-[var(--vtsuru-content-padding)] box-border overflow-hidden flex flex-col gap-3">
+  <div
+    class="user-page-builder h-[calc(100dvh-var(--vtsuru-header-height))] w-full p-[var(--vtsuru-content-padding)] box-border overflow-hidden flex flex-col gap-3"
+  >
     <ManagePageHeader
       title="主页装修"
       subtitle="配置个人主页、视觉主题与展示块"

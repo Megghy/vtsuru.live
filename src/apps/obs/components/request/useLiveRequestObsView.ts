@@ -1,6 +1,6 @@
 import { computed, type MaybeRefOrGetter } from 'vue'
 
-import { SongRequestFrom } from '@/api/api-models'
+import { SongRequestFrom } from '@/api/generated/model'
 import type { ObsDisplayCurrent, ObsDisplayFooterTag, ObsDisplayItem } from '@/apps/obs/components/shared/obsDisplay'
 
 import { useLiveRequestData } from './useLiveRequestData'

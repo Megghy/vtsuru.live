@@ -145,7 +145,6 @@
   background: var(--muted);
 }
 
-
 .point-settings__row-actions {
   justify-content: flex-end;
   gap: 4px;

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import type { ResponsePointGoodModel } from '@/api/api-models'
-import { GoodsStatus } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import { GoodsStatus } from '@/api/generated/model'
 import { fetchPublicPointGoods } from '@/apps/user-page/api'
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Checkbox } from '@/shared/ui/checkbox'

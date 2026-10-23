@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import {
-  Clock,
-  Flame,
-  Tv,
-  User,
-} from 'lucide-vue-next'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
+import { Clock, Flame, Tv, User } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, toRef, watch } from 'vue'
 
-import type { QAInfo, UserInfo } from '@/api/api-models'
+import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'
 import { getApiQaGetPublic, getApiQaGetTags } from '@/api/generated/qa/qa'
 import LocalQuestionDrawer from '@/apps/user/components/question-box/LocalQuestionDrawer.vue'
 import PublicQuestionFeed from '@/apps/user/components/question-box/PublicQuestionFeed.vue'
@@ -10,7 +10,7 @@ import QuestionComposer from '@/apps/user/components/question-box/QuestionCompos
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
-  userInfo?: UserInfo
+  userInfo?: ResponseUserInfo
   embedded?: boolean
   defaultTag?: string
   showPublicQuestions?: boolean
@@ -19,7 +19,7 @@ const props = defineProps<{
 const message = useMessage()
 const target = toRef(props, 'userInfo')
 const history = useQuestionBoxHistory()
-const publicQuestions = ref<QAInfo[]>([])
+const publicQuestions = ref<ResponseQAInfoToTarget[]>([])
 const tags = ref<string[]>([])
 const isLoadingQuestions = ref(false)
 const showHistory = ref(false)
@@ -55,7 +55,7 @@ async function loadPublicQuestions() {
     })) as unknown as {
       code: number
       message?: string
-      data: QAInfo[]
+      data: ResponseQAInfoToTarget[]
     }
     if (response.code !== 200) throw new Error(response.message)
     publicQuestions.value = response.data
@@ -97,7 +97,9 @@ function clearHistory() {
 </script>
 
 <template>
-  <main class="grid w-full min-w-0 mx-auto max-w-[var(--vtsuru-page-max-width,880px)] gap-[clamp(28px,5vw,52px)] pb-6 max-[600px]:gap-[30px] max-[600px]:pb-2.5">
+  <main
+    class="grid w-full min-w-0 mx-auto max-w-[var(--vtsuru-page-max-width,880px)] gap-[clamp(28px,5vw,52px)] pb-6 max-[600px]:gap-[30px] max-[600px]:pb-2.5"
+  >
     <QuestionComposer
       :user-info="userInfo"
       :tags="tags"
@@ -121,5 +123,3 @@ function clearHistory() {
     />
   </main>
 </template>
-
-

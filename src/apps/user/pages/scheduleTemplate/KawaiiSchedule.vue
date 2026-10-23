@@ -2,7 +2,7 @@
 import { Sparkle24Filled } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { DecorativeImageProperties, RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -16,8 +16,8 @@ import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 import './scheduleTemplateTheme.css'
 
 interface KawaiiConfig {
-  backgroundFile: UploadFileResponse[]
-  portraitFile: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
+  portraitFile: APIFileModel[]
   portraitPosition: string
   heading: string
   accentColor: RGBAColor
@@ -36,14 +36,14 @@ const Config = defineTemplateConfig([
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: KawaiiConfig) => (config.backgroundFile = files),
+    onUploaded: (files: APIFileModel[], config: KawaiiConfig) => (config.backgroundFile = files),
   },
   {
     name: '角色贴纸',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: KawaiiConfig) => (config.portraitFile = files),
+    onUploaded: (files: APIFileModel[], config: KawaiiConfig) => (config.portraitFile = files),
   },
   {
     name: '贴纸位置',

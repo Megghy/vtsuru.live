@@ -1,4 +1,4 @@
-import type { VoteOBSData } from '@/api/api-models'
+import type { VoteOBSData } from '@/api/generated/model'
 
 const duelOptions = ['蓝方：冰霜骑士', '红方：炽热战队']
 const scenes = {

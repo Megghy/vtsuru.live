@@ -5,8 +5,8 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { QAInfo } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import router from '@/app/router'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionBoxOBSModal from '@/apps/manage/components/question-box/QuestionBoxOBSModal.vue'
@@ -52,7 +52,7 @@ const directShareUrl = computed(() => {
   return selectedDirectShareTag.value ? `${base}?tag=${selectedDirectShareTag.value}` : base
 })
 
-function onOpenReply(question: QAInfo) {
+function onOpenReply(question: ResponseQAInfoToTarget) {
   useQB.currentQuestion = question
   replyModalVisible.value = true
 }

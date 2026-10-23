@@ -2,7 +2,11 @@ import { useIntervalFn, useNow } from '@vueuse/core'
 import { format, getISOWeek, getISOWeekYear } from 'date-fns'
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import type { BiliLiveReserveItem, ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
+import type {
+  ResponseBiliLiveReserveItem,
+  ResponseScheduleDayModel,
+  ResponseScheduleModel,
+} from '@/api/generated/model'
 
 export const SCHEDULE_DAYS = [
   { label: '周一', shortLabel: '一', english: 'MON' },
@@ -30,7 +34,7 @@ export function getWeekDateRange(year: number, week: number) {
   return `${dateFormatter.format(start)} - ${dateFormatter.format(end)}`
 }
 
-function hasScheduleContent(item: ScheduleDayInfo) {
+function hasScheduleContent(item: ResponseScheduleDayModel) {
   return Boolean(item.title || item.time || item.tag)
 }
 
@@ -40,12 +44,12 @@ export function parseScheduleMinutes(time: string | null) {
   return match ? Number(match[1]) * 60 + Number(match[2]) : undefined
 }
 
-function compareScheduleTime(left: ScheduleDayInfo, right: ScheduleDayInfo) {
+function compareScheduleTime(left: ResponseScheduleDayModel, right: ResponseScheduleDayModel) {
   return (parseScheduleMinutes(left.time) ?? Infinity) - (parseScheduleMinutes(right.time) ?? Infinity)
 }
 
 /** 展开某周的 7 天: 日期、今日/已过去标记, 当日安排按时间升序 (无法识别的时间排最后) */
-export function buildScheduleDays(week: ScheduleWeekInfo, now: Date) {
+export function buildScheduleDays(week: ResponseScheduleModel, now: Date) {
   const start = getISOWeekStart(week.year, week.week)
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
@@ -80,9 +84,9 @@ const BILI_RESERVE_TAG = '预约'
 const BILI_RESERVE_COLOR = '#FB7299'
 
 export function mergeBiliReservesIntoWeeks(
-  weeks: ScheduleWeekInfo[],
-  items: BiliLiveReserveItem[],
-): ScheduleWeekInfo[] {
+  weeks: ResponseScheduleModel[],
+  items: ResponseBiliLiveReserveItem[],
+): ResponseScheduleModel[] {
   if (!items.length) return weeks
   const now = Date.now() / 1000
   const upcoming = items.filter((item) => item.planStart >= now - 2 * 3600)
@@ -100,7 +104,7 @@ export function mergeBiliReservesIntoWeeks(
         year: item.year,
         week: item.week,
         version: '',
-        days: Array.from({ length: 7 }, () => [] as ScheduleDayInfo[]),
+        days: Array.from({ length: 7 }, () => [] as ResponseScheduleDayModel[]),
       }
       cloned.push(week)
     }
@@ -124,7 +128,7 @@ export function mergeBiliReservesIntoWeeks(
   return cloned
 }
 
-export function useScheduleWeek(data: MaybeRefOrGetter<ScheduleWeekInfo[] | undefined>) {
+export function useScheduleWeek(data: MaybeRefOrGetter<ResponseScheduleModel[] | undefined>) {
   const selectedWeek = ref<string>()
   const weekDirection = ref(0)
   const weeks = computed(() => toValue(data) ?? [])

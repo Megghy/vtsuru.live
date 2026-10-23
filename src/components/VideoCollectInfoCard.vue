@@ -4,7 +4,7 @@ import { useNow } from '@vueuse/core'
 import { format } from 'date-fns'
 import { computed } from 'vue'
 
-import type { VideoCollectTable } from '@/api/api-models'
+import type { ResponseVideoCollectModel } from '@/api/generated/model'
 import router from '@/app/router'
 import { CURRENT_HOST } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
@@ -12,7 +12,7 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
-  item: VideoCollectTable
+  item: ResponseVideoCollectModel
   canClick?: boolean
   from: 'user' | 'owner'
   bordered?: boolean
@@ -47,7 +47,8 @@ function onClick() {
     <Card
       class="transition text-xs"
       :class="{
-        'hover:shadow-md cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-primary/40': canClick,
+        'hover:shadow-md cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-primary/40':
+          canClick,
         'border-border/80': bordered !== false,
       }"
       :tabindex="canClick ? 0 : undefined"
@@ -137,4 +138,3 @@ function onClick() {
     </Card>
   </TooltipProvider>
 </template>
-

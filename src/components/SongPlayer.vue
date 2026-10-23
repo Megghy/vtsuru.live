@@ -3,13 +3,13 @@ import { computed, ref, watch } from 'vue'
 // @ts-ignore
 import APlayer from 'vue3-aplayer'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { getApiSongListGetNeteaseLyric } from '@/api/generated/song-list/song-list'
 import { Empty } from '@/shared/ui/empty'
 
 const props = defineProps<{
-  song: SongsInfo | undefined
+  song: ResponseSongModel | undefined
   isLrcLoading?: string
 }>()
 const emits = defineEmits(['update:isLrcLoading', 'update:close', 'update:volume'])
@@ -30,8 +30,8 @@ watch(temp, (newV) => {
   if (newV) console.log(`开始播放: ${newV.name}`)
 })
 
-function OnPlayMusic(song: SongsInfo) {
-  if (song.from === SongFrom.Netease) {
+function OnPlayMusic(song: ResponseSongModel) {
+  if (song.from === SongPlatform.Netease) {
     GetLyric(song)
   } else {
     aplayerMusic.value = {
@@ -44,7 +44,7 @@ function OnPlayMusic(song: SongsInfo) {
   }
 }
 
-async function GetLyric(song: SongsInfo) {
+async function GetLyric(song: ResponseSongModel) {
   emits('update:isLrcLoading', song.key)
   ;(
     getApiSongListGetNeteaseLyric({ id: song.id }) as unknown as Promise<{

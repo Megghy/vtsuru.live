@@ -227,7 +227,9 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
               decoding="async"
               referrerpolicy="no-referrer"
               class="block size-full motion-reduce:transition-none transition-opacity duration-180"
-              :class="failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0'"
+              :class="
+                failedSources.has(item.src) ? 'invisible' : loadedSources.has(item.src) ? 'opacity-100' : 'opacity-0'
+              "
               :style="{ objectFit: model.fit }"
               @load="markLoaded(item.src)"
               @error="markFailed(item.src)"

@@ -15,7 +15,7 @@ import type {
   ResponseResult,
   ResponseResultOfListOfResponseStorageTarget,
   ResponseResultOfResponseStorageTarget,
-  ResponseResultOfSystemString,
+  ResponseResultOfString,
 } from '../model'
 
 export const getPostApiStorageTargetsCreateUrl = () => {
@@ -136,8 +136,8 @@ export const getPostApiStorageTargetsTestUrl = (params?: PostApiStorageTargetsTe
 export const postApiStorageTargetsTest = async (
   params?: PostApiStorageTargetsTestParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiStorageTargetsTestUrl(params), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiStorageTargetsTestUrl(params), {
     ...options,
     method: 'POST',
   })

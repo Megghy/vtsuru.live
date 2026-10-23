@@ -3,8 +3,9 @@ import { Add24Regular, ArrowSync24Regular } from '@vicons/fluent'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { AddressInfo, ResponsePointGoodModel, ResponsePointOrder2UserModel } from '@/api/api-models'
-import { GoodsTypes, ServiceFieldType } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import type { ResponsePointOrder2UserModel, ShippingAddressInfo } from '@/api/generated/model'
+import { GoodsTypes, ServiceFieldType } from '@/api/generated/model'
 import { postApiPointBuy, postApiPointUserUpdateAddress } from '@/api/generated/point/point'
 import { IMGUR_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -48,10 +49,10 @@ const goods = defineModel<ResponsePointGoodModel | undefined>('goods', { require
 // --- 状态 ---
 const isLoading = ref(false)
 const showAddressModal = ref(false)
-const currentAddress = ref<AddressInfo>({} as AddressInfo)
+const currentAddress = ref<ShippingAddressInfo>({} as ShippingAddressInfo)
 const userAgree = ref(false)
 const buyCount = ref(1)
-const selectedAddress = ref<AddressInfo>()
+const selectedAddress = ref<ShippingAddressInfo>()
 const remark = ref('')
 const serviceAnswers = ref<Record<string, string | string[] | number | undefined>>({})
 type BuySubItem = { subItemId: number; quantity: number }
@@ -251,7 +252,7 @@ function onAreaSelectChange(level: number) {
 }
 
 async function openAddressModal() {
-  currentAddress.value = {} as AddressInfo
+  currentAddress.value = {} as ShippingAddressInfo
   userAgree.value = false
   showAddressModal.value = true
   await getArea()
@@ -291,7 +292,7 @@ async function updateAddress() {
     })) as unknown as {
       code: number
       message?: string
-      data: AddressInfo
+      data: ShippingAddressInfo
     }
     if (data.code !== 200) {
       toast.error(`保存失败: ${data.message}`)
@@ -791,7 +792,7 @@ const requestClose = () => {
             <Select
               :model-value="currentAddress.province || ''"
               @update:model-value="
-                currentAddress.province = String($event);
+                currentAddress.province = String($event)
                 onAreaSelectChange(0)
               "
             >
@@ -817,7 +818,7 @@ const requestClose = () => {
               :model-value="currentAddress.city || ''"
               :disabled="!currentAddress.province"
               @update:model-value="
-                currentAddress.city = String($event);
+                currentAddress.city = String($event)
                 onAreaSelectChange(1)
               "
             >
@@ -843,7 +844,7 @@ const requestClose = () => {
               :model-value="currentAddress.district || ''"
               :disabled="!currentAddress.city"
               @update:model-value="
-                currentAddress.district = String($event);
+                currentAddress.district = String($event)
                 onAreaSelectChange(2)
               "
             >
@@ -983,7 +984,7 @@ const requestClose = () => {
         </Button>
         <Button
           @click="
-            showSuccessModal = false;
+            showSuccessModal = false
             router.push({ name: 'bili-user-orders' })
           "
         >

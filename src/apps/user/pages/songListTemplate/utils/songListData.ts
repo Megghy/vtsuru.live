@@ -1,4 +1,4 @@
-import type { SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
 
 export interface SongListFilters {
   keyword?: string
@@ -7,7 +7,7 @@ export interface SongListFilters {
   language?: string | null
 }
 
-export function filterSongs(songs: SongsInfo[] | undefined, filters: SongListFilters) {
+export function filterSongs(songs: ResponseSongModel[] | undefined, filters: SongListFilters) {
   const keyword = filters.keyword?.trim().toLocaleLowerCase() ?? ''
 
   return (songs ?? []).filter((song) => {
@@ -31,12 +31,12 @@ export function filterSongs(songs: SongsInfo[] | undefined, filters: SongListFil
   })
 }
 
-export function getSongFieldValues(songs: SongsInfo[] | undefined, field: 'author' | 'language' | 'tags') {
+export function getSongFieldValues(songs: ResponseSongModel[] | undefined, field: 'author' | 'language' | 'tags') {
   const values = new Set<string>()
   songs?.forEach((song) => song[field]?.forEach((value) => value?.trim() && values.add(value.trim())))
   return [...values].toSorted((left, right) => left.localeCompare(right, 'zh-CN'))
 }
 
-export function getSongFieldOptions(songs: SongsInfo[] | undefined, field: 'author' | 'language' | 'tags') {
+export function getSongFieldOptions(songs: ResponseSongModel[] | undefined, field: 'author' | 'language' | 'tags') {
   return getSongFieldValues(songs, field).map((value) => ({ label: value, value }))
 }

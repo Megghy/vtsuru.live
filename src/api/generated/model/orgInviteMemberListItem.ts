@@ -6,14 +6,14 @@
  * OpenAPI spec version: v1
  */
 import type { OrgInviteStatuses } from './orgInviteStatuses'
-import type { OrgMemberDataOrgMemberRoles } from './orgMemberDataOrgMemberRoles'
+import type { OrgMemberRoles } from './orgMemberRoles'
 
 export interface OrgInviteMemberListItem {
   token: string
   joinUrl: string
   expiresAt: number
   status: OrgInviteStatuses
-  role: OrgMemberDataOrgMemberRoles
+  role: OrgMemberRoles
   createdByUserId: number
   /** @nullable */
   createdByName?: string | null

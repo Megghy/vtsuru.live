@@ -3,7 +3,7 @@ import { AppsListDetail24Regular, Code24Regular, Info24Filled, LiveOff24Regular 
 import { useDebounceFn } from '@vueuse/core'
 import { computed, nextTick, ref, watch } from 'vue'
 
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import { evaluateTemplateExpressions } from '@/apps/client/store/autoAction/expressionEvaluator'
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { buildExecutionContext } from '@/apps/client/store/autoAction/utils'
@@ -459,7 +459,9 @@ function handleVariableInsert(text: string) {
                     <strong>运行时数据</strong>仅在本次运行有效, 重启后失效，且操作是<strong>同步</strong>的。
                   </AlertDescription>
                 </Alert>
-                <ul class="space-y-1 [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:mr-1">
+                <ul
+                  class="space-y-1 [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:mr-1"
+                >
                   <li><code>getData(key, defaultValue?)</code>: 获取运行时数据。</li>
                   <li><code>setData(key, value)</code>: 设置运行时数据。</li>
                   <li><code>containsData(key)</code>: 检查运行时数据是否存在。</li>
@@ -477,7 +479,9 @@ function handleVariableInsert(text: string) {
                     在 <code>js+</code> 中使用 <code>await</code> 或 <code>.then()</code>。
                   </AlertDescription>
                 </Alert>
-                <ul class="space-y-1 [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:mr-1">
+                <ul
+                  class="space-y-1 [&_code]:bg-muted [&_code]:px-1 [&_code]:py-0.5 [&_code]:rounded [&_code]:font-mono [&_code]:mr-1"
+                >
                   <li><code>getStorageData(key, defaultValue?)</code>: 获取持久化数据 (异步)。</li>
                   <li><code>setStorageData(key, value)</code>: 设置持久化数据 (异步)。</li>
                   <li><code>hasStorageData(key)</code>: 检查持久化数据是否存在 (异步)。</li>

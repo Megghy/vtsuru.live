@@ -121,7 +121,7 @@ async function handleForceRestartDanmaku() {
               :checked="settings.settings.enableEventFetcher"
               :disabled="webfetcher.state === 'connecting'"
               @update:checked="
-                settings.settings.enableEventFetcher = $event;
+                settings.settings.enableEventFetcher = $event
                 handleToggleEventFetcher($event)
               "
             />

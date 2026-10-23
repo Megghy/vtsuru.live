@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { BiliAuthCodeStatusType } from './biliAuthCodeStatusType'
 import type { EventFetcherStateModel } from './eventFetcherStateModel'
 import type { LiveReserveInfo } from './liveReserveInfo'
 import type { ResponseAccountInfoBiliBlackList } from './responseAccountInfoBiliBlackList'
 import type { ResponseBiliAuthModel } from './responseBiliAuthModel'
 import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
-import type { ResponseUserInfoResponseUserInfoExtra } from './responseUserInfoResponseUserInfoExtra'
+import type { ResponseUserInfoExtra } from './responseUserInfoExtra'
 import type { StreamerModel } from './streamerModel'
 import type { UserConsumptionSetting } from './userConsumptionSetting'
 import type { UserSetting } from './userSetting'
-import type { VTsuruEnumsBiliAuthCodeStatusType } from './vTsuruEnumsBiliAuthCodeStatusType'
 
 export interface ResponseAccountInfo {
-  extra?: ResponseUserInfoResponseUserInfoExtra
+  extra?: ResponseUserInfoExtra
   token: string
   /** @nullable */
   bindEmail?: string | null
@@ -28,7 +28,7 @@ export interface ResponseAccountInfo {
   consumptionSettings: UserConsumptionSetting
   isEmailVerified: boolean
   eventFetcherState: EventFetcherStateModel
-  biliAuthCodeStatus: VTsuruEnumsBiliAuthCodeStatusType
+  biliAuthCodeStatus: BiliAuthCodeStatusType
   /** @nullable */
   biliAuthCode?: string | null
   blackList: ResponseUserBasicInfo[]

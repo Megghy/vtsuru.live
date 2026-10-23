@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgStreamerDataOrgStreamerStatuses } from './orgStreamerDataOrgStreamerStatuses'
+import type { OrgStreamerStatuses } from './orgStreamerStatuses'
 import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 export interface ResponseOrgStreamerModel {
   streamer: ResponseUserBasicInfo
-  status: OrgStreamerDataOrgStreamerStatuses
+  status: OrgStreamerStatuses
   addedAt: number
   /** @nullable */
   respondedAt?: number | null

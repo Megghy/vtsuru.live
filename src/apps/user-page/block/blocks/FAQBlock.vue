@@ -92,5 +92,3 @@ const items = computed(() => {
     </Accordion>
   </BlockCard>
 </template>
-
-

@@ -4,8 +4,9 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
-import { OpenLiveLotteryType, type UpdateLiveLotteryUsersModel } from '@/api/api-models'
 import { getApiLotteryLiveGetUsers } from '@/api/generated/lottery/lottery'
+import type { UpdateLiveLotteryUsersModel } from '@/api/generated/model'
+import { LiveLotteryTypes } from '@/api/generated/model'
 import {
   DEFAULT_LOTTERY_AVATAR,
   formatLotteryAvatar,
@@ -51,13 +52,13 @@ const { height } = useElementSize(listContainerRef)
 const result = ref<UpdateLiveLotteryUsersModel>({
   users: [],
   resultUsers: [],
-  type: OpenLiveLotteryType.Waiting,
+  type: LiveLotteryTypes.Waiting,
 })
 
 const users = computed(() => result.value.users ?? [])
 const resultUsers = computed(() => result.value.resultUsers ?? [])
-const isDrawing = computed(() => result.value.type === OpenLiveLotteryType.Drawing)
-const isResult = computed(() => result.value.type === OpenLiveLotteryType.Result)
+const isDrawing = computed(() => result.value.type === LiveLotteryTypes.Drawing)
+const isResult = computed(() => result.value.type === LiveLotteryTypes.Result)
 const isMoreThanContainer = computed(() => users.value.length * 44 > (height.value || 200))
 
 let pollTimer: number | undefined

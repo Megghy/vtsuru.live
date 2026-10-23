@@ -5,8 +5,8 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SongDataSongRequestOption } from './songDataSongRequestOption'
-import type { VTsuruInterfacesSongPlatform } from './vTsuruInterfacesSongPlatform'
+import type { SongPlatform } from './songPlatform'
+import type { SongRequestOption } from './songRequestOption'
 
 export interface ResponseSongModel {
   name: string
@@ -18,14 +18,14 @@ export interface ResponseSongModel {
   description?: string | null
   id: number
   key: string
-  from: VTsuruInterfacesSongPlatform
+  from: SongPlatform
   author: string[]
   /** @nullable */
   url?: string | null
   /** @nullable */
   language?: string[] | null
   tags: string[]
-  options?: SongDataSongRequestOption
+  options?: SongRequestOption
   /** @nullable */
   cover?: string | null
 }

@@ -98,5 +98,3 @@ function getContrastColor(color: string) {
     </div>
   </BlockCard>
 </template>
-
-

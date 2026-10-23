@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { FETCH_API } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
@@ -12,18 +12,18 @@ import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
 defineProps<{
-  existingSongs: SongsInfo[]
+  existingSongs: ResponseSongModel[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'added', songs: SongsInfo[]): void
+  (e: 'added', songs: ResponseSongModel[]): void
   (e: 'loadingChange', value: boolean): void
 }>()
 
 const message = useMessage()
 
 const fivesingSearchInput = ref<string>('')
-const fivesingResults = ref<SongsInfo[]>([])
+const fivesingResults = ref<ResponseSongModel[]>([])
 const fivesingTotalPageCount = ref(1)
 const fivesingCurrentPage = ref(1)
 const isGettingFivesingSongPlayUrl = ref(0)
@@ -34,7 +34,7 @@ function extractTextFromHtml(html: string): string {
   return html
 }
 
-async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
+async function getFivesingSongUrl(song: ResponseSongModel): Promise<string> {
   const apiUrl = `http://service.5sing.kugou.com/song/getsongurl?songid=${song.id}&songtype=bz&from=web&version=6.6.72`
   const data = await fetch(FETCH_API + apiUrl)
   const result = await data.text()
@@ -44,7 +44,7 @@ async function getFivesingSongUrl(song: SongsInfo): Promise<string> {
   return ''
 }
 
-async function playFivesingSong(song: SongsInfo) {
+async function playFivesingSong(song: ResponseSongModel) {
   isGettingFivesingSongPlayUrl.value = song.id
   try {
     song.url = await getFivesingSongUrl(song)
@@ -75,7 +75,7 @@ async function getFivesingSearchList(isRestart = false) {
         id: song.songId,
         name: extractTextFromHtml(song.songName),
         author: [song.originSinger, song.singer].filter(Boolean),
-      } as SongsInfo
+      } as ResponseSongModel
       fivesingResults.value.push(songInfo)
     })
 
@@ -88,7 +88,7 @@ async function getFivesingSearchList(isRestart = false) {
   }
 }
 
-async function addFivesingSongs(song: SongsInfo) {
+async function addFivesingSongs(song: ResponseSongModel) {
   emit('loadingChange', true)
   try {
     if (!song.url) {
@@ -99,13 +99,13 @@ async function addFivesingSongs(song: SongsInfo) {
       }
     }
 
-    const data = await addSongsToSongList([song], SongFrom.FiveSing)
+    const data = await addSongsToSongList([song], SongPlatform.FiveSing)
     if (data.code !== 200) {
       message.error(`添加失败: ${data.message}`)
       return
     }
     message.success('已添加歌曲')
-    emit('added', data.data as unknown as SongsInfo[])
+    emit('added', data.data as unknown as ResponseSongModel[])
   } catch (err) {
     message.error('添加失败')
     console.error(err)

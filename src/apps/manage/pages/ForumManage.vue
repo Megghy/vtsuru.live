@@ -3,7 +3,6 @@ import { format } from 'date-fns'
 import { computed, onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { UserBasicInfo } from '@/api/api-models'
 import {
   postApiForumCreate,
   postApiForumManageAddAdmin,
@@ -12,8 +11,8 @@ import {
   postApiForumManageUnban,
   postApiForumManageUpdateSetting,
 } from '@/api/generated/forum/forum'
-import type { ForumModel, ForumUserModel } from '@/api/models/forum'
-import { ForumUserLevels } from '@/api/models/forum'
+import type { ForumUserInfo, ResponseForumModel, ResponseUserBasicInfo } from '@/api/generated/model'
+import { ForumUserLevels } from '@/api/generated/model'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import UserBasicInfoCard from '@/apps/manage/components/UserBasicInfoCard.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
@@ -37,13 +36,13 @@ const accountInfo = useAccount()
 const message = useMessage()
 const { run } = useApiAction()
 
-const managedForums = ref<ForumModel[]>([])
+const managedForums = ref<ResponseForumModel[]>([])
 
 function forumByOwner(owner: number) {
   return managedForums.value.find((f) => f.owner.id === owner)
 }
 
-const currentForum = ref<ForumModel>({} as ForumModel)
+const currentForum = ref<ResponseForumModel>({} as ResponseForumModel)
 const selectedForum = ref<string>('')
 
 const readedAgreement = ref(false)
@@ -53,11 +52,11 @@ const create_Description = ref('')
 
 const showAddAdminModal = ref(false)
 const addAdminName = ref('')
-const currentAdminInfo = ref<UserBasicInfo>()
+const currentAdminInfo = ref<ResponseUserBasicInfo>()
 
 const showBanModal = ref(false)
 const addBanName = ref('')
-const currentBanUserInfo = ref<UserBasicInfo>()
+const currentBanUserInfo = ref<ResponseUserBasicInfo>()
 
 const levels = [
   {
@@ -91,7 +90,7 @@ async function createForum() {
     message.warning('请输入名称')
     return
   }
-  const data = await run<ForumModel>(() => postApiForumCreate({ name: create_Name.value }), {
+  const data = await run<ResponseForumModel>(() => postApiForumCreate({ name: create_Name.value }), {
     success: '创建成功',
     fail: '创建失败',
   })
@@ -105,7 +104,7 @@ async function SwitchForum(owner: number | string) {
   const numOwner = Number(owner)
   selectedForum.value = String(numOwner)
   managedForums.value = (await useForum.GetManagedForums()) ?? []
-  currentForum.value = forumByOwner(numOwner) ?? ({} as ForumModel)
+  currentForum.value = forumByOwner(numOwner) ?? ({} as ResponseForumModel)
 }
 
 async function refreshForumInfo() {

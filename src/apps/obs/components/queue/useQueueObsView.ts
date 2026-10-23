@@ -1,7 +1,7 @@
 import { computed, type MaybeRefOrGetter } from 'vue'
 
-import { QueueFrom } from '@/api/api-models'
-import type { ResponseQueueModel } from '@/api/api-models'
+import type { ResponseQueueModel } from '@/api/client-types'
+import { QueueFrom } from '@/api/generated/model'
 import type {
   ObsDisplayBadge,
   ObsDisplayCurrent,

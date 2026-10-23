@@ -3,9 +3,9 @@ import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled 
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { useSpeechService } from '@/store/useSpeechService'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { useSpeechService } from '@/store/useSpeechService'
 
 const router = useRouter()
 const route = useRoute()

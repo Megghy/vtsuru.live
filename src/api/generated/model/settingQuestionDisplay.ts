@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SettingQuestionDisplayQuestionDisplayAlign } from './settingQuestionDisplayQuestionDisplayAlign'
-import type { SettingQuestionDisplayQuestionDisplayImageLayout } from './settingQuestionDisplayQuestionDisplayImageLayout'
-import type { SettingQuestionDisplayQuestionDisplayShadow } from './settingQuestionDisplayQuestionDisplayShadow'
-import type { SettingQuestionDisplayQuestionDisplayTransition } from './settingQuestionDisplayQuestionDisplayTransition'
-import type { SettingQuestionDisplayQuestionDisplayVerticalAlign } from './settingQuestionDisplayQuestionDisplayVerticalAlign'
+import type { QuestionDisplayAlign } from './questionDisplayAlign'
+import type { QuestionDisplayImageLayout } from './questionDisplayImageLayout'
+import type { QuestionDisplayShadow } from './questionDisplayShadow'
+import type { QuestionDisplayTransition } from './questionDisplayTransition'
+import type { QuestionDisplayVerticalAlign } from './questionDisplayVerticalAlign'
 
 export interface SettingQuestionDisplay {
   /**
@@ -120,14 +120,14 @@ export interface SettingQuestionDisplay {
    * @maximum 1080
    */
   imageMaxHeight: number
-  transition: SettingQuestionDisplayQuestionDisplayTransition
-  imageLayout: SettingQuestionDisplayQuestionDisplayImageLayout
-  shadow: SettingQuestionDisplayQuestionDisplayShadow
-  textShadow: SettingQuestionDisplayQuestionDisplayShadow
+  transition: QuestionDisplayTransition
+  imageLayout: QuestionDisplayImageLayout
+  shadow: QuestionDisplayShadow
+  textShadow: QuestionDisplayShadow
   showUserName: boolean
   showImage: boolean
   showBrand: boolean
-  align: SettingQuestionDisplayQuestionDisplayAlign
-  verticalAlign: SettingQuestionDisplayQuestionDisplayVerticalAlign
+  align: QuestionDisplayAlign
+  verticalAlign: QuestionDisplayVerticalAlign
   syncScroll: boolean
 }

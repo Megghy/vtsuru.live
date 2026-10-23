@@ -229,7 +229,9 @@ function toggleActionOnlyLive(row: AutoActionItem) {
 
 <template>
   <div class="flex flex-col h-full">
-    <div class="py-2.5 px-3.5 bg-muted rounded-md border border-border flex items-center justify-between gap-3 flex-wrap">
+    <div
+      class="py-2.5 px-3.5 bg-muted rounded-md border border-border flex items-center justify-between gap-3 flex-wrap"
+    >
       <div class="flex items-center gap-4 flex-wrap">
         <div class="flex items-center gap-2 cursor-pointer select-none">
           <Switch v-model:checked="typeEnabled" />

@@ -65,7 +65,10 @@ export const updateNotes: updateNoteType[] = [
             '左侧可以添加新的页面, 右侧可以添加区块, 可以拖拽调整顺序, 拖到一起可以合并成组(布局), 点击区块可以调整参数\r\n',
             '如果有更多的区块建议可以提出, 后续会持续更新\r\n',
             () =>
-              h(NoteImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png', width: 300 }),
+              h(NoteImage, {
+                src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2026-01-16 213146.png',
+                width: 300,
+              }),
           ],
           [
             '入口：',
@@ -236,7 +239,10 @@ export const updateNotes: updateNoteType[] = [
           [
             '弹幕姬现在可用，兼容 blivechat 样式',
             () =>
-              h(NoteImage, { src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2025-05-01 081550.png', width: 300 }),
+              h(NoteImage, {
+                src: 'https://files.vtsuru.suki.club/updatelog/屏幕截图 2025-05-01 081550.png',
+                width: 300,
+              }),
           ],
           [
             '大部分功能都和 blivechat 一致, 不过目前还无法提供本地文件访问, 部分css中需要使用图片等本地资源样式的需要等 EventFetcher 更新相关功能后才能使用\r\n',
@@ -378,7 +384,11 @@ export const updateNotes: updateNoteType[] = [
           [
             '新增一个歌单样式: 列表',
             () =>
-              h(NoteImage, { src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250408-134631.png', width: 300, height: 200 }),
+              h(NoteImage, {
+                src: 'https://pan.suki.club/d/vtsuru/imgur/QQ20250408-134631.png',
+                width: 300,
+                height: 200,
+              }),
           ],
         ],
       },

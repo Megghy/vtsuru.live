@@ -8,7 +8,7 @@ import { useAccount } from '@/api/account'
 //
 // 在 Tauri 客户端内启动: 把本地能力 (弹幕订阅、发送弹幕/私信) 通过 birpc 暴露给外部网页。
 // server/health 的传输由 Rust rpc_server.rs 负责, 本 store 只提供 ServerFunctions 实现。
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 import { useBiliFunction } from '@/apps/client/store/useBiliFunction'
 import type { DanmakuEventName, ServerFunctions } from '@/shared/rpc/contract'
 import { DANMAKU_EVENT_NAMES } from '@/shared/rpc/contract'

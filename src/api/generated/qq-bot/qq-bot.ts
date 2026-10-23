@@ -7,12 +7,12 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
-  QqBotControllerQqBotNotifyRequest,
-  QqBotControllerQqBotUnbindRequest,
+  QqBotNotifyRequest,
+  QqBotUnbindRequest,
   ResponseResult,
-  ResponseResultOfListOfQqBotControllerQqBotGroupModel,
-  ResponseResultOfQqBotControllerQqBotBindCodeModel,
-  ResponseResultOfQqBotControllerQqBotStatusModel,
+  ResponseResultOfListOfQqBotGroupModel,
+  ResponseResultOfQqBotBindCodeModel,
+  ResponseResultOfQqBotStatusModel,
 } from '../model'
 
 export const getPostApiQqBotBindCodeUrl = () => {
@@ -21,8 +21,8 @@ export const getPostApiQqBotBindCodeUrl = () => {
 
 export const postApiQqBotBindCode = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfQqBotControllerQqBotBindCodeModel> => {
-  return vtsuruMutator<ResponseResultOfQqBotControllerQqBotBindCodeModel>(getPostApiQqBotBindCodeUrl(), {
+): Promise<ResponseResultOfQqBotBindCodeModel> => {
+  return vtsuruMutator<ResponseResultOfQqBotBindCodeModel>(getPostApiQqBotBindCodeUrl(), {
     ...options,
     method: 'POST',
   })
@@ -34,8 +34,8 @@ export const getGetApiQqBotGroupsUrl = () => {
 
 export const getApiQqBotGroups = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfListOfQqBotControllerQqBotGroupModel> => {
-  return vtsuruMutator<ResponseResultOfListOfQqBotControllerQqBotGroupModel>(getGetApiQqBotGroupsUrl(), {
+): Promise<ResponseResultOfListOfQqBotGroupModel> => {
+  return vtsuruMutator<ResponseResultOfListOfQqBotGroupModel>(getGetApiQqBotGroupsUrl(), {
     ...options,
     method: 'GET',
   })
@@ -46,7 +46,7 @@ export const getPostApiQqBotGroupsNotifyUrl = () => {
 }
 
 export const postApiQqBotGroupsNotify = async (
-  qqBotControllerQqBotNotifyRequest?: QqBotControllerQqBotNotifyRequest,
+  qqBotNotifyRequest?: QqBotNotifyRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -67,7 +67,7 @@ export const postApiQqBotGroupsNotify = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(qqBotControllerQqBotNotifyRequest),
+    body: JSON.stringify(qqBotNotifyRequest),
   })
 }
 
@@ -76,7 +76,7 @@ export const getPostApiQqBotGroupsUnbindUrl = () => {
 }
 
 export const postApiQqBotGroupsUnbind = async (
-  qqBotControllerQqBotUnbindRequest?: QqBotControllerQqBotUnbindRequest,
+  qqBotUnbindRequest?: QqBotUnbindRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -97,7 +97,7 @@ export const postApiQqBotGroupsUnbind = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(qqBotControllerQqBotUnbindRequest),
+    body: JSON.stringify(qqBotUnbindRequest),
   })
 }
 
@@ -107,8 +107,8 @@ export const getGetApiQqBotStatusUrl = () => {
 
 export const getApiQqBotStatus = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfQqBotControllerQqBotStatusModel> => {
-  return vtsuruMutator<ResponseResultOfQqBotControllerQqBotStatusModel>(getGetApiQqBotStatusUrl(), {
+): Promise<ResponseResultOfQqBotStatusModel> => {
+  return vtsuruMutator<ResponseResultOfQqBotStatusModel>(getGetApiQqBotStatusUrl(), {
     ...options,
     method: 'GET',
   })

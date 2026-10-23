@@ -1,8 +1,8 @@
 import { createDanmakuSocket } from '@vtsuru/danmaku'
 import { clearTimeout, setTimeout } from 'worker-timers'
 
-import type { OpenLiveInfo } from '@/api/api-models'
-import { EventDataTypes } from '@/api/api-models'
+import type { AppStartData } from '@/api/generated/model'
+import { EventDataTypes } from '@/api/generated/model'
 import {
   getApiOpenLiveHeartbeatInternal,
   postApiOpenLiveHeartbeat,
@@ -27,7 +27,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
   private connectionLossReported = false
 
   public authInfo: AuthInfo | undefined
-  public roomAuthInfo: OpenLiveInfo | undefined
+  public roomAuthInfo: AppStartData | undefined
 
   public async Start(): Promise<{ success: boolean; message: string }> {
     const wasConnected = this.state === 'connected'
@@ -100,7 +100,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
   }
 
   private async getAuthInfo(signal: AbortSignal): Promise<{
-    data: OpenLiveInfo | null
+    data: AppStartData | null
     message: string
   }> {
     try {
@@ -108,7 +108,7 @@ export default class OpenLiveClient extends BaseDanmakuClient {
         signal,
       })) as unknown as {
         code: number
-        data: OpenLiveInfo
+        data: AppStartData
         message: string
       }
       if (data.code == 200) {

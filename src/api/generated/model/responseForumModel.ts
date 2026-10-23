@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumForumDataForumSetting } from './forumForumDataForumSetting'
-import type { ForumForumDataForumUserLevels } from './forumForumDataForumUserLevels'
+import type { ForumSetting } from './forumSetting'
 import type { ForumUserInfo } from './forumUserInfo'
+import type { ForumUserLevels } from './forumUserLevels'
 
 export interface ResponseForumModel {
   members: ForumUserInfo[]
@@ -20,9 +20,9 @@ export interface ResponseForumModel {
   description?: string | null
   topicCount: number
   createAt: number
-  level: ForumForumDataForumUserLevels
+  level: ForumUserLevels
   isApplied: boolean
-  settings: ForumForumDataForumSetting
+  settings: ForumSetting
   isAdmin: boolean
   isMember: boolean
 }

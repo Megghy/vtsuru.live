@@ -7,8 +7,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { SongsInfo } from '@/api/api-models'
-import { FunctionTypes, SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { FunctionTypes, SongPlatform } from '@/api/generated/model'
 import { getApiSongListGet } from '@/api/generated/song-list/song-list'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAddSongModal.vue'
@@ -28,7 +28,7 @@ const accountInfo = useAccount()
 const isLoading = ref(true)
 const isImporting = ref(false)
 const showModal = ref(false)
-const songs = ref<SongsInfo[]>([])
+const songs = ref<ResponseSongModel[]>([])
 const csvInputRef = ref<HTMLInputElement | null>(null)
 const songListUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/song-list` : '',
@@ -51,19 +51,19 @@ async function getSongs() {
   }
 }
 
-function onSongsAdded(addedSongs: SongsInfo[]) {
+function onSongsAdded(addedSongs: ResponseSongModel[]) {
   songs.value.push(...addedSongs)
 }
 
 function exportData() {
   const source = songs.value
-  const from = (f: SongFrom) => {
+  const from = (f: SongPlatform) => {
     switch (f) {
-      case SongFrom.Custom:
+      case SongPlatform.Custom:
         return '手动添加'
-      case SongFrom.Netease:
+      case SongPlatform.Netease:
         return '网易云'
-      case SongFrom.FiveSing:
+      case SongPlatform.FiveSing:
         return '5sing'
       default:
         return '其他'
@@ -124,17 +124,17 @@ async function onCsvFileChange(ev: Event) {
       return
     }
     const payload = parsedRowsToSongsInfo(rows)
-    const groups = new Map<SongFrom, SongsInfo[]>()
+    const groups = new Map<SongPlatform, ResponseSongModel[]>()
     for (const song of payload) {
       const list = groups.get(song.from) ?? []
       list.push(song)
       groups.set(song.from, list)
     }
-    const added: SongsInfo[] = []
+    const added: ResponseSongModel[] = []
     for (const [from, list] of groups) {
       const resp = await addSongsToSongList(list, from)
       if (resp.code !== 200) throw new Error(resp.message || '导入失败')
-      if (resp.data?.length) added.push(...(resp.data as unknown as SongsInfo[]))
+      if (resp.data?.length) added.push(...(resp.data as unknown as ResponseSongModel[]))
     }
     songs.value.push(...added)
     message.success(`已导入 ${added.length} 首歌曲`)

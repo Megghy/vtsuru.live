@@ -2,7 +2,7 @@
 import { Add24Regular, Delete24Regular, Edit24Regular, Location24Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
-import type { AddressInfo } from '@/api/api-models'
+import type { ShippingAddressInfo } from '@/api/generated/model'
 import { postApiPointUserDeleteAddress, postApiPointUserUpdateAddress } from '@/api/generated/point/point'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -26,7 +26,7 @@ interface AreaData {
   }
 }
 
-interface AddressDraft extends Omit<AddressInfo, 'phone'> {
+interface AddressDraft extends Omit<ShippingAddressInfo, 'phone'> {
   phone: number | null
 }
 
@@ -52,7 +52,7 @@ const streetOptions = computed(() =>
   toOptions(areas.value.data[draft.value.province]?.[draft.value.city ?? '']?.[draft.value.district ?? ''] ?? []),
 )
 
-function createAddressDraft(address?: AddressInfo): AddressDraft {
+function createAddressDraft(address?: ShippingAddressInfo): AddressDraft {
   return {
     id: address?.id,
     province: address?.province ?? '',
@@ -88,7 +88,7 @@ async function loadAreas() {
   }
 }
 
-async function openEditor(address?: AddressInfo) {
+async function openEditor(address?: ShippingAddressInfo) {
   draft.value = createAddressDraft(address)
   agreed.value = false
   editing.value = true
@@ -143,7 +143,7 @@ async function saveAddress() {
     })) as unknown as {
       code: number
       message?: string
-      data: AddressInfo
+      data: ShippingAddressInfo
     }
     if (response.code !== 200) throw new Error(response.message)
 
@@ -159,7 +159,7 @@ async function saveAddress() {
   }
 }
 
-async function deleteAddress(address: AddressInfo) {
+async function deleteAddress(address: ShippingAddressInfo) {
   if (!address.id) {
     toast.error('该地址缺少标识，无法删除')
     return

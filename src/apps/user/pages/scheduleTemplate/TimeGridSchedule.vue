@@ -12,7 +12,7 @@ import { snapdom } from '@zumer/snapdom'
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
-import type { ScheduleDayInfo, UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel, ResponseScheduleDayModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -40,7 +40,7 @@ interface TimeGridConfig {
   heading: string
   subheading: string
   accentColor: RGBAColor
-  backgroundFile: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
   autoFocusActiveTime: boolean
   showNowIndicator: boolean
 }
@@ -331,7 +331,7 @@ function toggleCategoryFilter(key: string) {
   activeCategoryFilter.value = activeCategoryFilter.value === key ? null : key
 }
 
-function isItemFilteredOut(item: ScheduleDayInfo) {
+function isItemFilteredOut(item: ResponseScheduleDayModel) {
   if (!activeCategoryFilter.value) return false
   const tag = item.tag?.trim() || '直播'
   const category = resolveScheduleCategory(tag)
@@ -341,7 +341,7 @@ function isItemFilteredOut(item: ScheduleDayInfo) {
 
 // 每日时序甘特布局计算 (结合 activeTimeRange 映射)
 interface TimelineEventItem {
-  item: ScheduleDayInfo
+  item: ResponseScheduleDayModel
   minutes: number
   leftPercent: number
   subRowIndex: number
@@ -355,7 +355,7 @@ interface ProcessedDayTimeline {
   isToday: boolean
   isPast: boolean
   scheduled: TimelineEventItem[]
-  allday: ScheduleDayInfo[]
+  allday: ResponseScheduleDayModel[]
   totalSubRows: number
 }
 
@@ -364,8 +364,8 @@ const processedTimelineDays = computed<ProcessedDayTimeline[]>(() => {
     const isToday = idx === todayDayIndex.value
     const isPast = todayDayIndex.value !== -1 && idx < todayDayIndex.value
 
-    const scheduledRaw: { item: ScheduleDayInfo; minutes: number }[] = []
-    const allday: ScheduleDayInfo[] = []
+    const scheduledRaw: { item: ResponseScheduleDayModel; minutes: number }[] = []
+    const allday: ResponseScheduleDayModel[] = []
 
     for (const item of day.items) {
       const m = parseScheduleMinutes(item.time)

@@ -19,8 +19,9 @@ import { isSameDay } from 'date-fns'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { OpenLiveInfo, ResponseQueueModel } from '@/api/api-models'
-import { FunctionTypes, QueueFrom, QueueStatus } from '@/api/api-models'
+import type { ResponseQueueModel } from '@/api/client-types'
+import type { AppStartData } from '@/api/generated/model'
+import { FunctionTypes, QueueFrom, QueueStatus } from '@/api/generated/model'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QueueOBS from '@/apps/obs/pages/QueueOBS.vue'
 import QueueItem from '@/apps/open-live/components/queue/QueueItem.vue'
@@ -52,7 +53,7 @@ import { formatListForCopy } from '@/shared/utils/queue'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 defineProps<{
-  roomInfo?: OpenLiveInfo
+  roomInfo?: AppStartData
   code?: string | undefined
   isOpenLive?: boolean
 }>()

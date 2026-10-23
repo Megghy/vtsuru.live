@@ -185,4 +185,3 @@ function toggleNotificationEvent(val: string) {
     </SectionField>
   </div>
 </template>
-

@@ -1,7 +1,7 @@
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, toValue, watch } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 
-import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
+import type { ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
 import { getApiQaGetCurrentAndSettings, getApiQaGetHash } from '@/api/generated/qa/qa'
 import { QueryRequestError } from '@/api/query'
 import { QUESTION_API_URL } from '@/shared/config'
@@ -20,8 +20,8 @@ const POLL_INTERVAL_MS = 3000
 const REQUEST_TIMEOUT_MS = 8000
 
 export interface QuestionDisplaySnapshot {
-  question?: QAInfo | null
-  setting: Setting_QuestionDisplay
+  question?: ResponseQAInfoToTarget | null
+  setting: SettingQuestionDisplay
 }
 
 export interface UseQuestionDisplayOBSOptions {
@@ -33,8 +33,8 @@ export interface UseQuestionDisplayOBSOptions {
 }
 
 export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
-  const question = ref<QAInfo>()
-  const setting = ref<Setting_QuestionDisplay>(createDefaultQuestionDisplaySetting())
+  const question = ref<ResponseQAInfoToTarget>()
+  const setting = ref<SettingQuestionDisplay>(createDefaultQuestionDisplaySetting())
   const state = ref<QuestionDisplayOBSState>('loading')
   const lastUpdatedAt = ref<number>()
   const version = ref('')

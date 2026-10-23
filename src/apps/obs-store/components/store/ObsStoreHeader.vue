@@ -36,7 +36,9 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2">
           <h1 class="m-0 text-lg font-semibold text-foreground leading-tight">OBS 独立组件</h1>
-          <span class="text-[11px] text-muted-foreground bg-muted border border-border py-px px-1.5 rounded-full font-medium">
+          <span
+            class="text-[11px] text-muted-foreground bg-muted border border-border py-px px-1.5 rounded-full font-medium"
+          >
             {{ availableCount }} 个可用
           </span>
         </div>

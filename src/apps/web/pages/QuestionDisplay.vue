@@ -15,7 +15,7 @@ import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
+import type { ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
 import { postApiQaUpdateSetting } from '@/api/generated/qa/qa'
 import QuestionDisplayQueue from '@/apps/web/components/question-display/QuestionDisplayQueue.vue'
 import QuestionDisplayStylePanel from '@/apps/web/components/question-display/QuestionDisplayStylePanel.vue'
@@ -47,7 +47,7 @@ const stageViewportRef = ref<HTMLElement>()
 const { width: viewportWidth, height: viewportHeight } = useElementSize(stageViewportRef)
 
 // 默认 fallback 为棉花糖预设
-const settingDraft = ref<Setting_QuestionDisplay>(createDefaultQuestionDisplaySetting())
+const settingDraft = ref<SettingQuestionDisplay>(createDefaultQuestionDisplaySetting())
 const previewSetting = computed(() => normalizeQuestionDisplaySetting(settingDraft.value))
 const saving = ref(false)
 const settingsReady = computed(() => Boolean(accountInfo.value?.settings))
@@ -214,7 +214,7 @@ async function saveSettings() {
   }
 }
 
-async function showQuestion(item: QAInfo) {
+async function showQuestion(item: ResponseQAInfoToTarget) {
   await questionBox.setCurrentQuestion(item)
   if (autoMarkRead.value && !item.isReaded) {
     void questionBox.read(item, true)

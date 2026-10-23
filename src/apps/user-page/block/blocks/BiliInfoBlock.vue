@@ -2,7 +2,7 @@
 import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
 import { computed } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
@@ -27,7 +27,7 @@ interface BlockConfig {
 
 const props = defineProps<{
   blockProps: unknown
-  userInfo?: UserInfo | undefined
+  userInfo?: ResponseUserInfo | undefined
   biliInfo?: any | undefined
   biliStatus?: BiliProfileStatus
 }>()
@@ -359,5 +359,3 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
     </div>
   </BlockCard>
 </template>
-
-

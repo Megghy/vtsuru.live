@@ -34,20 +34,22 @@ const topSubtitle = computed(() => {
 </script>
 
 <template>
-  <div class="size-full flex flex-col bg-transparent p-1 box-border text-white overflow-hidden tabular-nums [text-shadow:0_2px_4px_rgba(0,0,0,0.95),0_0_8px_rgba(0,0,0,0.8),-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000]">
+  <div
+    class="size-full flex flex-col bg-transparent p-1 box-border text-white overflow-hidden tabular-nums [text-shadow:0_2px_4px_rgba(0,0,0,0.95),0_0_8px_rgba(0,0,0,0.8),-1px_-1px_0_#000,1px_-1px_0_#000,-1px_1px_0_#000,1px_1px_0_#000]"
+  >
     <!-- 头部当前处理中提示 -->
     <div class="mb-1.5">
       <div class="flex items-center gap-1.5">
         <span
           class="size-2 rounded-full transition-all"
           :class="
-            current.active
-              ? 'bg-emerald-500 shadow-[0_0_8px_#22c55e]'
-              : 'bg-slate-400 shadow-[0_0_6px_rgba(0,0,0,0.8)]'
+            current.active ? 'bg-emerald-500 shadow-[0_0_8px_#22c55e]' : 'bg-slate-400 shadow-[0_0_6px_rgba(0,0,0,0.8)]'
           "
         />
         <span class="text-[11px] font-black text-cyan-300 tracking-wide">{{ current.active ? 'NOW' : 'IDLE' }}</span>
-        <span class="text-[15px] font-extrabold text-white truncate">{{ current.active ? current.title : current.emptyText }}</span>
+        <span class="text-[15px] font-extrabold text-white truncate">{{
+          current.active ? current.title : current.emptyText
+        }}</span>
       </div>
       <div
         v-if="topSubtitle && current.active"
@@ -89,7 +91,8 @@ const topSubtitle = computed(() => {
                 <span
                   v-if="item.secondary"
                   class="text-[11px] text-slate-300"
-                >{{ item.secondary }}</span>
+                  >{{ item.secondary }}</span
+                >
               </div>
               <div
                 v-if="(item.badges?.length ?? 0) > 0"

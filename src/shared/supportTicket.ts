@@ -1,5 +1,5 @@
-import type { SupportTicketMessage, SupportTicketSummary } from '@/api/api-models'
-import { SupportTicketAuthorType, SupportTicketStatus, SupportTicketType } from '@/api/api-models'
+import type { SupportTicketMessageModel, SupportTicketModel } from '@/api/generated/model'
+import { SupportTicketAuthorType, SupportTicketStatus, SupportTicketType } from '@/api/generated/model'
 
 export const supportTicketStatusMeta: Record<
   SupportTicketStatus,
@@ -32,7 +32,7 @@ export function supportTicketTypeLabel(type: SupportTicketType) {
 }
 
 export function filterSupportTickets(
-  tickets: SupportTicketSummary[],
+  tickets: SupportTicketModel[],
   query: { keyword?: string; status?: SupportTicketStatus | null; type?: SupportTicketType | null },
 ) {
   const keyword = query.keyword?.trim().toLowerCase() ?? ''
@@ -51,8 +51,8 @@ export function remainingReplyImageSlots(draftCount: number) {
 }
 
 export function imagesForMessage(
-  ticket: SupportTicketSummary | undefined,
-  message: SupportTicketMessage,
+  ticket: SupportTicketModel | undefined,
+  message: SupportTicketMessageModel,
   index: number,
 ) {
   if (!ticket || message.images?.length) return message.images ?? []

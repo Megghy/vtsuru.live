@@ -3,8 +3,8 @@ import { ChevronDown24Regular, ChevronUp24Regular, Filter24Regular } from '@vico
 import { format } from 'date-fns'
 import { computed, ref, watch } from 'vue'
 
-import type { VideoCollectCreateModel } from '@/api/api-models'
-import { DuplicateVideoPolicy } from '@/api/api-models'
+import type { RequestVideoTable } from '@/api/generated/model'
+import { DuplicateVideoPolicy } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -16,17 +16,17 @@ import { useMessage } from '@/shared/utils'
 const props = defineProps<{
   show: boolean
   title: string
-  initialValue?: Partial<VideoCollectCreateModel>
+  initialValue?: Partial<RequestVideoTable>
   loading?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:show': [value: boolean]
-  submit: [value: VideoCollectCreateModel]
+  submit: [value: RequestVideoTable]
 }>()
 
 const message = useMessage()
-const model = ref<VideoCollectCreateModel>(createModel())
+const model = ref<RequestVideoTable>(createModel())
 const showAdvanced = ref(false)
 const partitionInput = ref('')
 
@@ -66,7 +66,7 @@ watch(
   },
 )
 
-function createModel(value?: Partial<VideoCollectCreateModel>): VideoCollectCreateModel {
+function createModel(value?: Partial<RequestVideoTable>): RequestVideoTable {
   return {
     id: value?.id,
     name: value?.name ?? '',

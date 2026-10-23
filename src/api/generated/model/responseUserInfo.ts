@@ -6,7 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { LiveReserveInfo } from './liveReserveInfo'
-import type { ResponseUserInfoResponseUserInfoExtra } from './responseUserInfoResponseUserInfoExtra'
+import type { ResponseUserInfoExtra } from './responseUserInfoExtra'
 import type { StreamerBaseModel } from './streamerBaseModel'
 
 export interface ResponseUserInfo {
@@ -21,7 +21,7 @@ export interface ResponseUserInfo {
   indexNotification?: string | null
   streamerInfo: StreamerBaseModel
   liveReserve?: LiveReserveInfo
-  extra?: ResponseUserInfoResponseUserInfoExtra
+  extra?: ResponseUserInfoExtra
   name: string
   id: number
   isBiliAuthed: boolean

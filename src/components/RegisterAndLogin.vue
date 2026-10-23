@@ -3,13 +3,13 @@ import { Dismiss16Regular } from '@vicons/fluent'
 import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
-import type { AccountInfo } from '@/api/api-models'
 import { cookie } from '@/api/auth'
 import {
   postApiAccountLogin,
   postApiAccountRegister,
   postApiAccountResetPassword,
 } from '@/api/generated/account/account'
+import type { ResponseAccountInfo } from '@/api/generated/model'
 import { QueryRequestError } from '@/api/query'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import { refreshCaptcha, requestWithCaptchaRetry } from '@/shared/captcha'
@@ -374,7 +374,7 @@ async function onLoginButtonClick() {
       code: number
       message?: string
       data: {
-        account: AccountInfo
+        account: ResponseAccountInfo
         token: string
       }
     }

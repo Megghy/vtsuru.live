@@ -6,11 +6,9 @@
  * OpenAPI spec version: v1
  */
 
-export type SupportTicketStatus = (typeof SupportTicketStatus)[keyof typeof SupportTicketStatus]
-
-export const SupportTicketStatus = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-  NUMBER_2: 2,
-  NUMBER_3: 3,
-} as const
+export enum SupportTicketStatus {
+  Open = 0,
+  InProgress = 1,
+  WaitingForUser = 2,
+  Resolved = 3,
+}

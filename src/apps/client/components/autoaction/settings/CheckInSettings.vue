@@ -14,13 +14,13 @@ import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveEnableFunctions, SaveSetting, useAccount } from '@/api/account'
-import type { CheckInRankingInfo, CheckInResult, Setting_Point } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
 import {
   getApiCheckinAdminUsers,
   postApiCheckinAdminReset,
   postApiCheckinCheckInFor,
 } from '@/api/generated/check-in/check-in'
+import type { CheckInResponse, ResponseUserCheckInModel, SettingPoint } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import BiliUserSelector from '@/components/common/BiliUserSelector.vue'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
@@ -58,7 +58,7 @@ const customTestContext = ref({
 
 const checkInPlaceholders = CHECKIN_PLACEHOLDERS
 
-const defaultPointSetting: Setting_Point = {
+const defaultPointSetting: SettingPoint = {
   allowType: [],
   jianzhangPoint: 0,
   tiduPoint: 0,
@@ -87,7 +87,7 @@ const defaultPointSetting: Setting_Point = {
   checkInOnlyOnStreaming: false,
 }
 
-const serverSetting = computed<Setting_Point>(() => {
+const serverSetting = computed<SettingPoint>(() => {
   return accountInfo.value?.settings?.point ?? defaultPointSetting
 })
 
@@ -124,7 +124,7 @@ async function updateServerSettings() {
 }
 
 // 排行榜数据
-const rankingData = ref<CheckInRankingInfo[]>([])
+const rankingData = ref<ResponseUserCheckInModel[]>([])
 const isLoadingRanking = ref(false)
 const timeRange = ref<string>('all')
 const userFilter = ref<string>('')
@@ -194,7 +194,7 @@ async function loadCheckInRanking() {
     const response = (await getApiCheckinAdminUsers()) as unknown as {
       code: number
       message?: string
-      data: CheckInRankingInfo[]
+      data: ResponseUserCheckInModel[]
     }
 
     if (response.code === 200) {
@@ -277,7 +277,7 @@ async function handleTestCheckIn() {
     })) as unknown as {
       code: number
       message?: string
-      data: CheckInResult
+      data: CheckInResponse
     }
 
     if (response.code === 200 && response.data) {
@@ -455,7 +455,7 @@ onMounted(() => {
                     :min="0"
                     class="w-32"
                     @update:model-value="
-                      serverSetting.baseCheckInPoints = $event || 0;
+                      serverSetting.baseCheckInPoints = $event || 0
                       updateServerSettings()
                     "
                   />
@@ -480,7 +480,7 @@ onMounted(() => {
                       :min="0"
                       class="w-28"
                       @update:model-value="
-                        serverSetting.bonusPointsPerDay = $event || 0;
+                        serverSetting.bonusPointsPerDay = $event || 0
                         updateServerSettings()
                       "
                     />
@@ -492,7 +492,7 @@ onMounted(() => {
                       :min="0"
                       class="w-28"
                       @update:model-value="
-                        serverSetting.maxBonusPoints = $event || 0;
+                        serverSetting.maxBonusPoints = $event || 0
                         updateServerSettings()
                       "
                     />

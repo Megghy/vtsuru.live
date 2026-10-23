@@ -8,8 +8,8 @@ import {
 } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { ResponseQueueModel } from '@/api/api-models'
-import { QueueFrom, QueueStatus } from '@/api/api-models'
+import type { ResponseQueueModel } from '@/api/client-types'
+import { QueueFrom, QueueStatus } from '@/api/generated/model'
 import UserBadges from '@/apps/open-live/components/UserBadges.vue'
 import { getQueuePaymentMeta, useQueue } from '@/composables/useQueue'
 import {

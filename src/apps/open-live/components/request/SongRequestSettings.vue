@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
-import type { Setting_LiveRequest } from '@/api/api-models'
+import type { SettingSongRequest } from '@/api/generated/model'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -35,7 +35,7 @@ const defaultSettings = {
   enableWebCooldown: true,
   webCooldownSecond: 600,
   isReverse: false,
-} as Setting_LiveRequest
+} as SettingSongRequest
 
 const liveRequest = useLiveRequest()
 const accountInfo = useAccount()
@@ -134,7 +134,7 @@ async function updateSettings() {
               :checked="settings.enableOnStreaming"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.enableOnStreaming = $event;
+                settings.enableOnStreaming = $event
                 updateSettings()
               "
             />
@@ -145,7 +145,7 @@ async function updateSettings() {
               :checked="settings.allowAllDanmaku"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.allowAllDanmaku = $event;
+                settings.allowAllDanmaku = $event
                 updateSettings()
               "
             />
@@ -160,7 +160,7 @@ async function updateSettings() {
                 :checked="settings.needWearFanMedal"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="
-                  settings.needWearFanMedal = $event;
+                  settings.needWearFanMedal = $event
                   updateSettings()
                 "
               />
@@ -193,7 +193,7 @@ async function updateSettings() {
                 :checked="settings.needJianzhang"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="
-                  settings.needJianzhang = $event;
+                  settings.needJianzhang = $event
                   updateSettings()
                 "
               />
@@ -204,7 +204,7 @@ async function updateSettings() {
                 :checked="settings.needTidu"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="
-                  settings.needTidu = $event;
+                  settings.needTidu = $event
                   updateSettings()
                 "
               />
@@ -215,7 +215,7 @@ async function updateSettings() {
                 :checked="settings.needZongdu"
                 :disabled="!liveRequest.configCanEdit"
                 @update:checked="
-                  settings.needZongdu = $event;
+                  settings.needZongdu = $event
                   updateSettings()
                 "
               />
@@ -230,7 +230,7 @@ async function updateSettings() {
               :checked="settings.allowSC"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.allowSC = $event;
+                settings.allowSC = $event
                 updateSettings()
               "
             />
@@ -244,7 +244,7 @@ async function updateSettings() {
               :checked="settings.scIgnoreLimit"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.scIgnoreLimit = $event;
+                settings.scIgnoreLimit = $event
                 updateSettings()
               "
             />
@@ -287,7 +287,7 @@ async function updateSettings() {
               :checked="settings.onlyAllowSongList"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.onlyAllowSongList = $event;
+                settings.onlyAllowSongList = $event
                 updateSettings()
               "
             />
@@ -308,7 +308,7 @@ async function updateSettings() {
               :checked="settings.allowReorderSong"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.allowReorderSong = $event;
+                settings.allowReorderSong = $event
                 updateSettings()
               "
             />
@@ -319,7 +319,7 @@ async function updateSettings() {
               :checked="settings.allowFromWeb"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.allowFromWeb = $event;
+                settings.allowFromWeb = $event
                 updateSettings()
               "
             />
@@ -333,7 +333,7 @@ async function updateSettings() {
               :checked="settings.allowAnonymousFromWeb"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.allowAnonymousFromWeb = $event;
+                settings.allowAnonymousFromWeb = $event
                 updateSettings()
               "
             />
@@ -355,7 +355,7 @@ async function updateSettings() {
               :checked="settings.enableCooldown"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.enableCooldown = $event;
+                settings.enableCooldown = $event
                 updateSettings()
               "
             />
@@ -366,7 +366,7 @@ async function updateSettings() {
               :checked="settings.enableWebCooldown"
               :disabled="!liveRequest.configCanEdit"
               @update:checked="
-                settings.enableWebCooldown = $event;
+                settings.enableWebCooldown = $event
                 updateSettings()
               "
             />
@@ -503,9 +503,9 @@ async function updateSettings() {
               :checked="settings.showRequireInfo"
               :disabled="!configCanEdit"
               @update:checked="
-              settings.showRequireInfo = $event;
-              updateSettings()
-            "
+                settings.showRequireInfo = $event
+                updateSettings()
+              "
             />
             <span>显示底部需求信息</span>
           </label>
@@ -514,9 +514,9 @@ async function updateSettings() {
               :checked="settings.showUserName"
               :disabled="!configCanEdit"
               @update:checked="
-              settings.showUserName = $event;
-              updateSettings()
-            "
+                settings.showUserName = $event
+                updateSettings()
+              "
             />
             <span>显示点播用户名</span>
           </label>
@@ -525,9 +525,9 @@ async function updateSettings() {
               :checked="settings.showFanMadelInfo"
               :disabled="!configCanEdit"
               @update:checked="
-              settings.showFanMadelInfo = $event;
-              updateSettings()
-            "
+                settings.showFanMadelInfo = $event
+                updateSettings()
+              "
             />
             <span>显示点播用户粉丝牌</span>
           </label>

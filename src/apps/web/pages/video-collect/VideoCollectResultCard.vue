@@ -12,12 +12,12 @@ import {
 } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { VideoCollectVideo, VideoInfo } from '@/api/api-models'
+import type { VideoCollectInfo, VideoData } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 
 const props = withDefaults(
   defineProps<{
-    item: { info: VideoInfo; video: VideoCollectVideo }
+    item: { info: VideoCollectInfo; video: VideoData }
     index: number
     presentation?: 'plain' | 'flip'
     revealed?: boolean

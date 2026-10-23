@@ -2,14 +2,14 @@
 import { Dismiss16Filled, MusicNote2Play20Filled, PresenceBlocked16Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
-  music: SongsInfo
+  music: ResponseSongModel
   fromName: string
   index: number
 }>()
@@ -22,9 +22,9 @@ const emit = defineEmits<{
 
 const platformTag = computed(() => {
   switch (props.music.from) {
-    case SongFrom.Netease:
+    case SongPlatform.Netease:
       return { label: '网易', variant: 'destructive' as const }
-    case SongFrom.Kugou:
+    case SongPlatform.Kugou:
       return { label: '酷狗', variant: 'brand' as const }
     default:
       return null

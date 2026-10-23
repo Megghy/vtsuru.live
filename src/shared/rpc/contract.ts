@@ -3,7 +3,7 @@
 // Tauri 客户端 (server 端) 与外部网页 (client 端) 都 import 本文件, 从而获得端到端强类型。
 // 新增一个开放接口 = 在 ServerFunctions 里加一个方法签名 + 在 server 实现里补上对应函数,
 // Rust 中继层完全无需改动。
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 
 /** 事件订阅时可选的事件名 (与 useDanmakuClient 的 MODEL_EVENT_NAMES 对齐) */
 export type DanmakuEventName = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel' | 'follow' | 'like'

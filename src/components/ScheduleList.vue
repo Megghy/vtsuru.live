@@ -2,7 +2,7 @@
 import { Bed20Regular, Clock20Regular } from '@vicons/fluent'
 import { format } from 'date-fns'
 
-import type { ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
+import type { ResponseScheduleDayModel, ResponseScheduleModel } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
@@ -11,16 +11,16 @@ import { Popconfirm } from '@/shared/ui/popconfirm'
 import { hexToRgba } from '@/shared/utils'
 
 defineProps<{
-  schedules: ScheduleWeekInfo[]
+  schedules: ResponseScheduleModel[]
   isSelf: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'onUpdate', schedule: ScheduleWeekInfo): void
-  (e: 'onDelete', schedule: ScheduleWeekInfo): void
-  (e: 'onCopy', schedule: ScheduleWeekInfo): void
-  (e: 'onEditItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
-  (e: 'onDeleteItem', schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo): void
+  (e: 'onUpdate', schedule: ResponseScheduleModel): void
+  (e: 'onDelete', schedule: ResponseScheduleModel): void
+  (e: 'onCopy', schedule: ResponseScheduleModel): void
+  (e: 'onEditItem', schedule: ResponseScheduleModel, dayIndex: number, item: ResponseScheduleDayModel): void
+  (e: 'onDeleteItem', schedule: ResponseScheduleModel, dayIndex: number, item: ResponseScheduleDayModel): void
 }>()
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']

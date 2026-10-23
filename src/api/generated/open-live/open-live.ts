@@ -6,11 +6,7 @@ import { vtsuruMutator } from '../../orval-mutator'
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type {
-  RequestStartOpenLiveModel,
-  ResponseResultOfOpenBLiveClientDataAppStartData,
-  ResponseResultOfSystemString,
-} from '../model'
+import type { RequestStartOpenLiveModel, ResponseResultOfAppStartData, ResponseResultOfString } from '../model'
 
 export const getGetApiOpenLiveHeartbeatInternalUrl = () => {
   return `/api/open-live/heartbeat-internal`
@@ -18,8 +14,8 @@ export const getGetApiOpenLiveHeartbeatInternalUrl = () => {
 
 export const getApiOpenLiveHeartbeatInternal = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiOpenLiveHeartbeatInternalUrl(), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiOpenLiveHeartbeatInternalUrl(), {
     ...options,
     method: 'GET',
   })
@@ -32,7 +28,7 @@ export const getPostApiOpenLiveHeartbeatUrl = () => {
 export const postApiOpenLiveHeartbeat = async (
   requestStartOpenLiveModel?: RequestStartOpenLiveModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -47,7 +43,7 @@ export const postApiOpenLiveHeartbeat = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiOpenLiveHeartbeatUrl(), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiOpenLiveHeartbeatUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -61,8 +57,8 @@ export const getPostApiOpenLiveStartInternalUrl = () => {
 
 export const postApiOpenLiveStartInternal = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfOpenBLiveClientDataAppStartData> => {
-  return vtsuruMutator<ResponseResultOfOpenBLiveClientDataAppStartData>(getPostApiOpenLiveStartInternalUrl(), {
+): Promise<ResponseResultOfAppStartData> => {
+  return vtsuruMutator<ResponseResultOfAppStartData>(getPostApiOpenLiveStartInternalUrl(), {
     ...options,
     method: 'POST',
   })
@@ -75,7 +71,7 @@ export const getGetApiOpenLiveStartUrl = () => {
 export const getApiOpenLiveStart = async (
   requestStartOpenLiveModel?: RequestStartOpenLiveModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfOpenBLiveClientDataAppStartData> => {
+): Promise<ResponseResultOfAppStartData> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -90,7 +86,7 @@ export const getApiOpenLiveStart = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfOpenBLiveClientDataAppStartData>(getGetApiOpenLiveStartUrl(), {
+  return vtsuruMutator<ResponseResultOfAppStartData>(getGetApiOpenLiveStartUrl(), {
     ...options,
     method: 'GET',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -105,7 +101,7 @@ export const getPostApiOpenLiveStartUrl = () => {
 export const postApiOpenLiveStart = async (
   requestStartOpenLiveModel?: RequestStartOpenLiveModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfOpenBLiveClientDataAppStartData> => {
+): Promise<ResponseResultOfAppStartData> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -120,7 +116,7 @@ export const postApiOpenLiveStart = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfOpenBLiveClientDataAppStartData>(getPostApiOpenLiveStartUrl(), {
+  return vtsuruMutator<ResponseResultOfAppStartData>(getPostApiOpenLiveStartUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },

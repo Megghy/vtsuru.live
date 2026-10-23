@@ -1,12 +1,10 @@
-import type { ObsStoreControllerResponseObsSyncState } from '@/api/generated/model/obsStoreControllerResponseObsSyncState'
+import type { ResponseObsSyncState } from '@/api/generated/model'
 import { getApiObsStoreSyncGetState, postApiObsStoreSyncUpdateState } from '@/api/generated/obs-store/obs-store'
 
 import { unwrapOk } from './query'
 
-export type ObsSyncStateResponse = ObsStoreControllerResponseObsSyncState
-
 export class ObsSyncConflict extends Error {
-  constructor(public snapshot: ObsSyncStateResponse) {
+  constructor(public snapshot: ResponseObsSyncState) {
     super('配置已在其他窗口更新')
   }
 }
@@ -16,7 +14,7 @@ export async function getObsSyncState(
   channel = 'default',
   hash?: string,
   userId?: number,
-): Promise<ObsSyncStateResponse> {
+): Promise<ResponseObsSyncState> {
   const resp = await getApiObsStoreSyncGetState({
     component,
     channel,
@@ -31,7 +29,7 @@ export async function updateObsSyncState(
   channel: string,
   data: string,
   expectedHash = '',
-): Promise<ObsSyncStateResponse> {
+): Promise<ResponseObsSyncState> {
   const resp = await postApiObsStoreSyncUpdateState({
     component,
     channel,

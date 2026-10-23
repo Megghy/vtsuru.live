@@ -1,7 +1,7 @@
 import type { LiveEventMap } from '@laplace.live/ws/browser'
 import { createDanmakuSocket } from '@vtsuru/danmaku'
 
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { EventDataTypes, GuardLevel } from '@/api/generated/model'
 import { AVATAR_URL } from '@/shared/config'
 import { updateOfficialStats } from '@/shared/services/officialLiveStats'
 import { GuidUtils } from '@/shared/utils'

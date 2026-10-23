@@ -6,9 +6,7 @@
  * OpenAPI spec version: v1
  */
 
-export type VoteResultMode = (typeof VoteResultMode)[keyof typeof VoteResultMode]
-
-export const VoteResultMode = {
-  NUMBER_0: 0,
-  NUMBER_1: 1,
-} as const
+export enum VoteResultMode {
+  ByCount = 0,
+  ByContribution = 1,
+}

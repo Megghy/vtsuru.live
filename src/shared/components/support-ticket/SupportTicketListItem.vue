@@ -3,17 +3,17 @@ import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
-import type { SupportTicketSummary } from '@/api/api-models'
-import { SupportTicketStatus } from '@/api/api-models'
+import type { SupportTicketModel } from '@/api/generated/model'
+import { SupportTicketStatus } from '@/api/generated/model'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
 import { Badge } from '@/shared/ui/badge'
 
 const props = defineProps<{
-  ticket: SupportTicketSummary
+  ticket: SupportTicketModel
   active: boolean
 }>()
 
-function hasUnread(ticket: SupportTicketSummary) {
+function hasUnread(ticket: SupportTicketModel) {
   return (
     ticket.status !== SupportTicketStatus.Resolved && (ticket.lastMessageId ?? 0) > (ticket.userLastReadMessageId ?? 0)
   )

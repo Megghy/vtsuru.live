@@ -21,8 +21,8 @@ import {
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import type { VideoCollectDetail, VideoCollectVideo, VideoInfo } from '@/api/api-models'
-import { VideoStatus } from '@/api/api-models'
+import type { ResponseVideoCollectDetail, VideoCollectInfo, VideoData } from '@/api/generated/model'
+import { VideoStatus } from '@/api/generated/model'
 import { getApiVideoCollectGet } from '@/api/generated/video-collect/video-collect'
 import { formatDuration } from '@/apps/manage/composables/formatters'
 import { Badge } from '@/shared/ui/badge'
@@ -37,7 +37,7 @@ import { toast } from '@/shared/utils'
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
 import VideoCollectResultCard from './VideoCollectResultCard.vue'
 
-type ResultVideo = { info: VideoInfo; video: VideoCollectVideo }
+type ResultVideo = { info: VideoCollectInfo; video: VideoData }
 type ViewMode = 'list' | 'draw' | 'sequence' | 'flip'
 type WatchFilter = 'all' | 'unwatched' | 'watched'
 type SortOption = 'default' | 'duration-asc' | 'duration-desc' | 'senders-desc'
@@ -45,7 +45,7 @@ type SortOption = 'default' | 'duration-asc' | 'duration-desc' | 'senders-desc'
 const route = useRoute()
 const router = useRouter()
 
-const videoDetail = ref<VideoCollectDetail | null | undefined>()
+const videoDetail = ref<ResponseVideoCollectDetail | null | undefined>()
 const isLoading = ref(false)
 const loadError = ref<string | null>(null)
 const mode = ref<ViewMode>('list')
@@ -183,7 +183,7 @@ async function loadData() {
     })) as unknown as {
       code: number
       message?: string
-      data: VideoCollectDetail
+      data: ResponseVideoCollectDetail
     }
     if (response.code === 200) {
       videoDetail.value = response.data
@@ -356,7 +356,9 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
 
 <template>
   <VideoCollectPageShell :table="table">
-    <main class="w-[min(calc(100%-32px),1200px)] max-w-[var(--vtsuru-page-max-width,1200px)] min-w-0 min-h-screen min-h-[100svh] mx-auto pt-9 pb-16 box-border">
+    <main
+      class="w-[min(calc(100%-32px),1200px)] max-w-[var(--vtsuru-page-max-width,1200px)] min-w-0 min-h-screen min-h-[100svh] mx-auto pt-9 pb-16 box-border"
+    >
       <div
         v-if="isLoading && !videoDetail"
         class="py-24 flex justify-center"
@@ -1048,4 +1050,3 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
     </main>
   </VideoCollectPageShell>
 </template>
-

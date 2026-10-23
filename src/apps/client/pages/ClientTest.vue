@@ -2,7 +2,7 @@
 import { Alert24Filled, Chat24Filled } from '@vicons/fluent'
 import { useRouter } from 'vue-router'
 
-import type { QAInfo } from '@/api/api-models'
+import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import ClientPageHeader from '@/apps/client/components/ClientPageHeader.vue'
 import LabelItem from '@/apps/client/components/LabelItem.vue'
 import { onReceivedQuestion } from '@/apps/client/data/notification'
@@ -23,7 +23,7 @@ async function testNotification() {
     tag: '测试标签',
     sender: { name: '测试用户', id: 1, isBiliAuthed: false },
     isPublic: true,
-  } as QAInfo)
+  } as ResponseQAInfoToTarget)
 }
 </script>
 

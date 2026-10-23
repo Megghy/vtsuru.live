@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { QuestionDisplayAlign, QuestionDisplayShadow } from '@/api/api-models'
+import { QuestionDisplayAlign, QuestionDisplayShadow } from '@/api/generated/model'
 import {
   formatColor,
   formatColorWithOpacity,

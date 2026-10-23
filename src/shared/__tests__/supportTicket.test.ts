@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import type { SupportTicketMessage, SupportTicketSummary } from '@/api/api-models'
-import { SupportTicketAuthorType, SupportTicketSource, SupportTicketStatus, SupportTicketType } from '@/api/api-models'
+import type { SupportTicketMessageModel, SupportTicketModel } from '@/api/generated/model'
+import {
+  SupportTicketAuthorType,
+  SupportTicketSource,
+  SupportTicketStatus,
+  SupportTicketType,
+} from '@/api/generated/model'
 import {
   filterSupportTickets,
   imagesForMessage,
@@ -10,7 +15,7 @@ import {
   SUPPORT_TICKET_MAX_IMAGES,
 } from '@/shared/supportTicket'
 
-function ticket(partial: Partial<SupportTicketSummary> = {}): SupportTicketSummary {
+function ticket(partial: Partial<SupportTicketModel> = {}): SupportTicketModel {
   return {
     id: 7,
     title: '弹幕延迟',
@@ -27,7 +32,7 @@ function ticket(partial: Partial<SupportTicketSummary> = {}): SupportTicketSumma
   }
 }
 
-function message(partial: Partial<SupportTicketMessage> = {}): SupportTicketMessage {
+function message(partial: Partial<SupportTicketMessageModel> = {}): SupportTicketMessageModel {
   return {
     id: 1,
     authorType: SupportTicketAuthorType.User,

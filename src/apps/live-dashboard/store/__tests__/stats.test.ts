@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { shallowRef } from 'vue'
 
-import { EventDataTypes, GuardLevel } from '@/api/api-models'
+import { EventDataTypes, GuardLevel } from '@/api/generated/model'
 
 import type { DashboardEvent } from '../../core/types'
 import { useDashboardStats } from '../stats'

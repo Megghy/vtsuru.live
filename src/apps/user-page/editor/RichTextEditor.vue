@@ -4,7 +4,7 @@ import type { IEditorConfig, IToolbarConfig } from '@wangeditor/editor'
 import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
 import { onBeforeUnmount, shallowRef, watch } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { isDarkMode, toast } from '@/shared/utils'
 
@@ -14,7 +14,7 @@ import '@wangeditor/editor/dist/css/style.css'
 type InsertFnType = (url: string, alt: string, href: string) => void
 
 const html = defineModel<string>('html', { required: true })
-const imagesFile = defineModel<UploadFileResponse[]>('imagesFile', { default: () => [] })
+const imagesFile = defineModel<APIFileModel[]>('imagesFile', { default: () => [] })
 
 const editorRef = shallowRef()
 

@@ -6,7 +6,7 @@ import md5 from 'md5'
 // 只负责「事件表 + 订阅/分发」, 不关心数据从哪来 (B站 LiveWS / 本地 RPC / 未来其他来源)。
 // - BaseDanmakuClient 继承它, 补上 B 站 LiveWS 专属的连接与原始命令解析。
 // - LocalRpcClient 继承它, 走本地 birpc 拿到已经是 EventModel 的数据后直接分发。
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 
 export type DanmakuClientType = 'openlive' | 'direct' | 'local' | 'broadcast'
 

@@ -1,14 +1,15 @@
 import { List } from 'linqts'
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
-import type { ResponseQueueModel, Setting_Queue } from '@/api/api-models'
-import { QueueFrom, QueueStatus } from '@/api/api-models'
+import type { ResponseQueueModel } from '@/api/client-types'
+import type { SettingQueue } from '@/api/generated/model'
+import { QueueFrom, QueueStatus } from '@/api/generated/model'
 import { getApiQueueGetActiveAndSettings } from '@/api/generated/queue/queue'
 import { sortByQueueType } from '@/shared/utils/queue'
 
 export function useQueueData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
   const queue = ref<ResponseQueueModel[]>([])
-  const settings = ref<Setting_Queue>({} as Setting_Queue)
+  const settings = ref<SettingQueue>({} as SettingQueue)
 
   const progressing = computed(() => {
     return queue.value.find((item) => item.status === QueueStatus.Progressing)
@@ -92,7 +93,7 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
 
       const data = (await getApiQueueGetActiveAndSettings(params)) as unknown as {
         code: number
-        data: { queue: ResponseQueueModel[]; setting: Setting_Queue }
+        data: { queue: ResponseQueueModel[]; setting: SettingQueue }
       }
 
       if (data.code === 200) {
@@ -104,14 +105,14 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
 
     return {
       queue: [],
-      setting: {} as Setting_Queue,
+      setting: {} as SettingQueue,
     }
   }
 
   async function update() {
     const result = await get()
     queue.value = (result.queue ?? []).toSorted((a, b) => b.createAt - a.createAt)
-    settings.value = result.setting ?? ({} as Setting_Queue)
+    settings.value = result.setting ?? ({} as SettingQueue)
   }
 
   watch(

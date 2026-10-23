@@ -14,9 +14,9 @@ import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vu
 import { useRoute, useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { UserInfo } from '@/api/api-models'
-import { ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/client-types'
 import { useFollowingStates } from '@/api/following'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { fetchBiliProfile, fetchPublicUserInfo, fetchUserPagesSettingsByUserId } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
@@ -51,7 +51,6 @@ import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
-
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 // --- 响应式状态和常量 ---
@@ -68,7 +67,7 @@ const id = computed(() => route.params.id)
 const themeType = usePersistedStorage<ThemeType>('Settings.Theme', ThemeType.Auto)
 
 // 用户和页面状态
-const userInfo = ref<UserInfo | null>(null)
+const userInfo = ref<ResponseUserInfo | null>(null)
 const isOwner = computed(() => {
   if (!accountInfo.value?.id || !userInfo.value?.id) return false
   return accountInfo.value.id === userInfo.value.id
@@ -409,7 +408,7 @@ function updateMenuOptions() {
   navGroups.value = groups
 }
 
-async function requestBiliUserData(user: UserInfo, signal: AbortSignal) {
+async function requestBiliUserData(user: ResponseUserInfo, signal: AbortSignal) {
   if (!user.biliId) {
     biliProfileStatus.value = 'empty'
     return
@@ -447,7 +446,7 @@ async function loadPublicUser(userId: string | string[] | undefined, signal: Abo
     return
   }
 
-  let fetchedUserInfo: UserInfo | undefined
+  let fetchedUserInfo: ResponseUserInfo | undefined
   try {
     fetchedUserInfo = (await fetchPublicUserInfo(userId, { signal })) ?? undefined
   } catch (cause) {

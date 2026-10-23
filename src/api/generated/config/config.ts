@@ -7,12 +7,12 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
-  ConfigControllerUpdateConfigModel,
   GetApiUserConfigGetHashParams,
   GetApiUserConfigGetParams,
   GetApiUserConfigGetUserParams,
   ResponseResult,
-  ResponseResultOfSystemString,
+  ResponseResultOfString,
+  UpdateConfigModel,
 } from '../model'
 
 export const getGetApiUserConfigGetHashUrl = (params?: GetApiUserConfigGetHashParams) => {
@@ -32,8 +32,8 @@ export const getGetApiUserConfigGetHashUrl = (params?: GetApiUserConfigGetHashPa
 export const getApiUserConfigGetHash = async (
   params?: GetApiUserConfigGetHashParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiUserConfigGetHashUrl(params), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiUserConfigGetHashUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -56,8 +56,8 @@ export const getGetApiUserConfigGetUserUrl = (params?: GetApiUserConfigGetUserPa
 export const getApiUserConfigGetUser = async (
   params?: GetApiUserConfigGetUserParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiUserConfigGetUserUrl(params), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiUserConfigGetUserUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -80,8 +80,8 @@ export const getGetApiUserConfigGetUrl = (params?: GetApiUserConfigGetParams) =>
 export const getApiUserConfigGet = async (
   params?: GetApiUserConfigGetParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getGetApiUserConfigGetUrl(params), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiUserConfigGetUrl(params), {
     ...options,
     method: 'GET',
   })
@@ -92,7 +92,7 @@ export const getPostApiUserConfigSetUrl = () => {
 }
 
 export const postApiUserConfigSet = async (
-  configControllerUpdateConfigModel?: ConfigControllerUpdateConfigModel,
+  updateConfigModel?: UpdateConfigModel,
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -113,6 +113,6 @@ export const postApiUserConfigSet = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(configControllerUpdateConfigModel),
+    body: JSON.stringify(updateConfigModel),
   })
 }

@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ViolationTypes } from '@/api/api-models'
+import { ViolationTypes } from '@/api/generated/model'
 import * as queryApi from '@/api/query'
 import { useQuestionBox } from '@/store/useQuestionBox'
 import { createMockQuestion } from '@/test/testUtils'

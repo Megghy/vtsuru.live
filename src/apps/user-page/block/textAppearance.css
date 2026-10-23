@@ -96,8 +96,7 @@
   }
   50% {
     opacity: 1;
-    text-shadow: 0 0 12px
-      color-mix(in srgb, var(--primary) calc(var(--text-fx-glow) * 70%), transparent);
+    text-shadow: 0 0 12px color-mix(in srgb, var(--primary) calc(var(--text-fx-glow) * 70%), transparent);
   }
 }
 

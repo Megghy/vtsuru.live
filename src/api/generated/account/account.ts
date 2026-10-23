@@ -9,6 +9,7 @@ import { vtsuruMutator } from '../../orval-mutator'
 import type {
   ChangePasswordRequest,
   CompleteAccountBiliAuthRequest,
+  FunctionTypes,
   GetApiAccountVerifyParams,
   LoginModel,
   PostApiAccountBindBiliParams,
@@ -27,13 +28,12 @@ import type {
   PrepareAccountBiliAuthRequest,
   RegisterModel,
   ResponseResult,
-  ResponseResultOfAccountControllerTempResponseAloginModel,
-  ResponseResultOfOpenBLiveClientDataAppStartAnchorInfo,
+  ResponseResultOfAppStartAnchorInfo,
   ResponseResultOfPrepareAccountBiliAuthResponse,
   ResponseResultOfResponseAccountInfo,
-  ResponseResultOfSystemString,
+  ResponseResultOfString,
+  ResponseResultOfTempResponseAloginModel,
   UserSetting,
-  VTsuruEnumsFunctionTypes,
 } from '../model'
 
 // https://stackoverflow.com/questions/49579094/typescript-conditional-types-filter-out-readonly-properties-pick-only-requir/49579497#49579497
@@ -60,7 +60,7 @@ export const getPostApiAccountBiliAuthCompleteUrl = () => {
 export const postApiAccountBiliAuthComplete = async (
   completeAccountBiliAuthRequest?: CompleteAccountBiliAuthRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfAccountControllerTempResponseAloginModel> => {
+): Promise<ResponseResultOfTempResponseAloginModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -75,15 +75,12 @@ export const postApiAccountBiliAuthComplete = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfAccountControllerTempResponseAloginModel>(
-    getPostApiAccountBiliAuthCompleteUrl(),
-    {
-      ...options,
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-      body: JSON.stringify(completeAccountBiliAuthRequest),
-    },
-  )
+  return vtsuruMutator<ResponseResultOfTempResponseAloginModel>(getPostApiAccountBiliAuthCompleteUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(completeAccountBiliAuthRequest),
+  })
 }
 
 export const getPostApiAccountBiliAuthPrepareUrl = () => {
@@ -133,8 +130,8 @@ export const getPostApiAccountBindBiliUrl = (params?: PostApiAccountBindBiliPara
 export const postApiAccountBindBili = async (
   params?: PostApiAccountBindBiliParams,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfOpenBLiveClientDataAppStartAnchorInfo> => {
-  return vtsuruMutator<ResponseResultOfOpenBLiveClientDataAppStartAnchorInfo>(getPostApiAccountBindBiliUrl(params), {
+): Promise<ResponseResultOfAppStartAnchorInfo> => {
+  return vtsuruMutator<ResponseResultOfAppStartAnchorInfo>(getPostApiAccountBindBiliUrl(params), {
     ...options,
     method: 'POST',
   })
@@ -299,7 +296,7 @@ export const getPostApiAccountChangePasswordUrl = () => {
 export const postApiAccountChangePassword = async (
   changePasswordRequest?: ChangePasswordRequest,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -314,7 +311,7 @@ export const postApiAccountChangePassword = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiAccountChangePasswordUrl(), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiAccountChangePasswordUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -329,7 +326,7 @@ export const getPostApiAccountLoginUrl = () => {
 export const postApiAccountLogin = async (
   loginModel?: LoginModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfAccountControllerTempResponseAloginModel> => {
+): Promise<ResponseResultOfTempResponseAloginModel> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -344,7 +341,7 @@ export const postApiAccountLogin = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfAccountControllerTempResponseAloginModel>(getPostApiAccountLoginUrl(), {
+  return vtsuruMutator<ResponseResultOfTempResponseAloginModel>(getPostApiAccountLoginUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -358,8 +355,8 @@ export const getPostApiAccountRefreshTokenUrl = () => {
 
 export const postApiAccountRefreshToken = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiAccountRefreshTokenUrl(), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiAccountRefreshTokenUrl(), {
     ...options,
     method: 'POST',
   })
@@ -372,7 +369,7 @@ export const getPostApiAccountRegisterUrl = () => {
 export const postApiAccountRegister = async (
   registerModel?: RegisterModel,
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
+): Promise<ResponseResultOfString> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {}
     if (h instanceof Headers) return Object.fromEntries(h.entries())
@@ -387,7 +384,7 @@ export const postApiAccountRegister = async (
     }
     return headers
   }
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiAccountRegisterUrl(), {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiAccountRegisterUrl(), {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
@@ -503,8 +500,8 @@ export const getPostApiAccountResetTokenUrl = () => {
 
 export const postApiAccountResetToken = async (
   options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfSystemString> => {
-  return vtsuruMutator<ResponseResultOfSystemString>(getPostApiAccountResetTokenUrl(), {
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getPostApiAccountResetTokenUrl(), {
     ...options,
     method: 'POST',
   })
@@ -597,7 +594,7 @@ export const getPostApiAccountUpdateEnableFunctionsUrl = () => {
 }
 
 export const postApiAccountUpdateEnableFunctions = async (
-  vTsuruEnumsFunctionTypes?: VTsuruEnumsFunctionTypes[],
+  functionTypes?: FunctionTypes[],
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResult> => {
   const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
@@ -618,7 +615,7 @@ export const postApiAccountUpdateEnableFunctions = async (
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(vTsuruEnumsFunctionTypes),
+    body: JSON.stringify(functionTypes),
   })
 }
 

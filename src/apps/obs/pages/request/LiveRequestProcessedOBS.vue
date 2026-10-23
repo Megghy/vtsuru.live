@@ -5,9 +5,10 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
-import type { Setting_LiveRequest, SongRequestInfo } from '@/api/api-models'
-import { QueueSortType, SongRequestFrom } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
 import { getApiLiveRequestGetToday } from '@/api/generated/live-request/live-request'
+import type { SettingSongRequest } from '@/api/generated/model'
+import { QueueSortType, SongRequestFrom } from '@/api/generated/model'
 import { Empty } from '@/shared/ui/empty'
 import { Separator } from '@/shared/ui/separator'
 
@@ -64,7 +65,7 @@ const isMoreThanContainer = computed(() => {
   return songs.value.length * itemHeight > height.value
 })
 
-const settings = ref<Setting_LiveRequest>({} as Setting_LiveRequest)
+const settings = ref<SettingSongRequest>({} as SettingSongRequest)
 
 async function get() {
   try {
@@ -72,7 +73,7 @@ async function get() {
       currentId.value ? { id: Number(currentId.value) } : {},
     )) as unknown as {
       code: number
-      data: { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+      data: { songs: SongRequestInfo[]; setting: SettingSongRequest }
     }
     if (data.code === 200) {
       return data.data
@@ -80,7 +81,7 @@ async function get() {
   } catch (err) {
     console.error(err)
   }
-  return {} as { songs: SongRequestInfo[]; setting: Setting_LiveRequest }
+  return {} as { songs: SongRequestInfo[]; setting: SettingSongRequest }
 }
 async function update() {
   const r = await get()
@@ -233,7 +234,6 @@ onUnmounted(() => {
     transform: rotate(360deg);
   }
 }
-
 
 .live-request-content {
   background-color: var(--obs-classic-surface-bg, rgba(15, 15, 15, 0.2));

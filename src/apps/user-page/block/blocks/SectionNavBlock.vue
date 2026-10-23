@@ -115,4 +115,3 @@ onBeforeUnmount(() => observer?.disconnect())
     </nav>
   </BlockCard>
 </template>
-

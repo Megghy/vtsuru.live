@@ -2,14 +2,14 @@
 import { CalendarLtr20Regular, Clock20Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
-import type { BiliLiveReserveItem } from '@/api/api-models'
+import type { ResponseBiliLiveReserveItem } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Switch } from '@/shared/ui/switch'
 import { formatBiliLiveReserveInterval, formatBiliLiveReserveTime } from '@/shared/utils/formatBiliLiveReserve'
 
 const props = defineProps<{
-  items: BiliLiveReserveItem[]
+  items: ResponseBiliLiveReserveItem[]
   fetchedAt: number
   intervalMinutes: number
   liveRoomUrl?: string
@@ -108,7 +108,11 @@ const fetchedLabel = computed(() => {
             {{ formatBiliLiveReserveTime(item.planStart) }}
           </span>
           <strong class="text-[13px] truncate">{{ item.title }}</strong>
-          <em v-if="item.total > 0" class="text-[11px] not-italic text-[#fb7299]">{{ item.total }} 人预约</em>
+          <em
+            v-if="item.total > 0"
+            class="text-[11px] not-italic text-[#fb7299]"
+            >{{ item.total }} 人预约</em
+          >
         </a>
         <div
           v-else
@@ -122,7 +126,11 @@ const fetchedLabel = computed(() => {
             {{ formatBiliLiveReserveTime(item.planStart) }}
           </span>
           <strong class="text-[13px] truncate">{{ item.title }}</strong>
-          <em v-if="item.total > 0" class="text-[11px] not-italic text-[#fb7299]">{{ item.total }} 人预约</em>
+          <em
+            v-if="item.total > 0"
+            class="text-[11px] not-italic text-[#fb7299]"
+            >{{ item.total }} 人预约</em
+          >
         </div>
       </li>
     </ul>

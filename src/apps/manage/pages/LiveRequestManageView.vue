@@ -11,8 +11,8 @@ import {
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { OpenLiveInfo } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type { AppStartData } from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import LiveRequestOBS from '@/apps/obs/pages/request/LiveRequestOBS.vue'
 import SongRequestHistory from '@/apps/open-live/components/request/SongRequestHistory.vue'
@@ -33,7 +33,7 @@ import { copyToClipboard } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 defineProps<{
-  roomInfo?: OpenLiveInfo
+  roomInfo?: AppStartData
   code?: string | undefined
   isOpenLive?: boolean
 }>()
@@ -104,7 +104,7 @@ onUnmounted(() => {
     <ManagePageHeader
       title="弹幕点播系统"
       subtitle="观众通过发送弹幕指令（如 点播 BV号）或醒目留言触发点歌/点播，支持自动拉取信息、播放控制与 OBS 动态呈现"
-      :function-type="FunctionTypes.LiveRequest"
+      :function-type="FunctionTypes.SongRequest"
       :links="[
         {
           label: 'OBS 浏览器源地址',

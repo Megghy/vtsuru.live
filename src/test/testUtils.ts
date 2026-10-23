@@ -1,14 +1,14 @@
-import type { QAInfo, Setting_QuestionDisplay, UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel, ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
 import {
   QuestionDisplayAlign,
   QuestionDisplayImageLayout,
   QuestionDisplayShadow,
   QuestionDisplayTransition,
   QuestionDisplayVerticalAlign,
-} from '@/api/api-models'
+} from '@/api/generated/model'
 import { createDefaultQuestionDisplaySetting } from '@/shared/questionDisplayPresets'
 
-export function createMockUploadFile(overrides?: Partial<UploadFileResponse>): UploadFileResponse {
+export function createMockUploadFile(overrides?: Partial<APIFileModel>): APIFileModel {
   return {
     id: 1,
     name: 'test-image.png',
@@ -19,7 +19,7 @@ export function createMockUploadFile(overrides?: Partial<UploadFileResponse>): U
   }
 }
 
-export function createMockQuestion(overrides?: Partial<QAInfo>): QAInfo {
+export function createMockQuestion(overrides?: Partial<ResponseQAInfoToTarget>): ResponseQAInfoToTarget {
   return {
     id: 101,
     sender: {
@@ -51,9 +51,7 @@ export function createMockQuestion(overrides?: Partial<QAInfo>): QAInfo {
   }
 }
 
-export function createMockQuestionDisplaySetting(
-  overrides?: Partial<Setting_QuestionDisplay>,
-): Setting_QuestionDisplay {
+export function createMockQuestionDisplaySetting(overrides?: Partial<SettingQuestionDisplay>): SettingQuestionDisplay {
   return {
     ...createDefaultQuestionDisplaySetting(),
     align: QuestionDisplayAlign.Left,

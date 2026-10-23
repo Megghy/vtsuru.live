@@ -2,12 +2,8 @@
 import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
 import { computed, onMounted, ref } from 'vue'
 
-import type {
-  ResponsePointGoodModel,
-  ResponsePointHisrotyModel,
-  ResponsePointOrder2OwnerModel,
-  ResponsePointUserModel,
-} from '@/api/api-models'
+import type { ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/client-types'
+import type { ResponsePointOrder2OwnerModel, ResponsePointUserModel } from '@/api/generated/model'
 import {
   getApiPointGetUserHistories,
   getApiPointGetUserOrders,

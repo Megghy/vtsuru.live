@@ -19,9 +19,9 @@ function encode(payload: Record<string, unknown>) {
 
 describe('decodeInteractWord', () => {
   it('keeps the top-level uname when present', () => {
-    expect(
-      decodeInteractWord(encode({ uid: 1, uname: '顶层用户', msgType: 1, timestamp: 1 })),
-    ).toEqual(expect.objectContaining({ uid: 1, uname: '顶层用户' }))
+    expect(decodeInteractWord(encode({ uid: 1, uname: '顶层用户', msgType: 1, timestamp: 1 }))).toEqual(
+      expect.objectContaining({ uid: 1, uname: '顶层用户' }),
+    )
   })
 
   it('falls back to uinfo.base.name when the top-level uname is empty', () => {

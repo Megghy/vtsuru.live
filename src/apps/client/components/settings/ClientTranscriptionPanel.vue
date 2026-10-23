@@ -3,8 +3,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
-import type { ResponseCurrentLiveModel } from '@/api/api-models'
 import { getApiLiveCurrent } from '@/api/generated/live/live'
+import type { ResponseCurrentLiveModel } from '@/api/generated/model'
 import { useTranscription } from '@/apps/client/store/useTranscription'
 import { createTranscriptionProfile, useTranscriptionSettings } from '@/apps/client/store/useTranscriptionSettings'
 import {
@@ -268,7 +268,9 @@ function removeHotword(index: number) {
       <div class="flex justify-between items-center">
         <div>
           <span class="font-semibold text-sm text-foreground">运行状态</span>
-          <div class="mt-0.5 text-xs text-muted-foreground">最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。</div>
+          <div class="mt-0.5 text-xs text-muted-foreground">
+            最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。
+          </div>
         </div>
         <Badge
           variant="outline"

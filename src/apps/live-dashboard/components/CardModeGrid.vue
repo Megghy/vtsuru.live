@@ -17,7 +17,9 @@ const victim = computed(() => grid.value.nextVictim())
 </script>
 
 <template>
-  <div class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] auto-rows-[minmax(72px,auto)] gap-1.5 p-1.5 overflow-y-auto h-full box-border content-start">
+  <div
+    class="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] auto-rows-[minmax(72px,auto)] gap-1.5 p-1.5 overflow-y-auto h-full box-border content-start"
+  >
     <div
       v-for="(card, index) in grid.slots"
       :key="index"
@@ -91,4 +93,3 @@ const victim = computed(() => grid.value.nextVictim())
     </div>
   </div>
 </template>
-

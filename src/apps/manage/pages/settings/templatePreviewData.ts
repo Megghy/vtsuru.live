@@ -1,11 +1,11 @@
 import { getISOWeek, getISOWeekYear } from 'date-fns'
 
-import type { ScheduleWeekInfo, SongRequestOption, SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseScheduleModel, ResponseSongModel, SongRequestOption } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 
 // 模板预览用的假数据 (仅用于设置页实时预览, 不参与实际展示)
 
-export const schedulePreviewData: ScheduleWeekInfo[] = [
+export const schedulePreviewData: ResponseScheduleModel[] = [
   {
     year: getISOWeekYear(new Date()),
     week: getISOWeek(new Date()),
@@ -25,7 +25,7 @@ export const schedulePreviewData: ScheduleWeekInfo[] = [
   },
 ]
 
-export const songListPreviewData: SongsInfo[] = [
+export const songListPreviewData: ResponseSongModel[] = [
   {
     id: 1,
     key: 'song1',
@@ -34,7 +34,7 @@ export const songListPreviewData: SongsInfo[] = [
     tags: ['标签1', '标签2'],
     description: '这是一段描述',
     url: 'https://example.com/song1.mp3',
-    from: SongFrom.Custom,
+    from: SongPlatform.Custom,
     language: ['中文'],
     createTime: Date.now(),
     updateTime: Date.now(),
@@ -46,7 +46,7 @@ export const songListPreviewData: SongsInfo[] = [
     author: ['作者1'],
     tags: ['标签1', '标签2'],
     url: 'https://example.com/song2.mp3',
-    from: SongFrom.Custom,
+    from: SongPlatform.Custom,
     language: ['中文'],
     createTime: Date.now(),
     updateTime: Date.now(),
@@ -64,7 +64,7 @@ export const songListPreviewData: SongsInfo[] = [
     tags: ['标签3', '很长很长很长很长很长很长很长很长很长很长的标签'],
     author: ['作者3'],
     url: 'https://example.com/song3.mp3',
-    from: SongFrom.Custom,
+    from: SongPlatform.Custom,
     description: '这是一段很长很长很长很长很长很长很长很长很长很长的描述',
     language: ['中文'],
     createTime: Date.now(),
@@ -77,7 +77,7 @@ export const songListPreviewData: SongsInfo[] = [
     author: ['作者4'],
     tags: [],
     url: 'https://example.com/song4.mp3',
-    from: SongFrom.Custom,
+    from: SongPlatform.Custom,
     language: ['中文'],
     createTime: Date.now(),
     updateTime: Date.now(),
@@ -89,7 +89,7 @@ export const songListPreviewData: SongsInfo[] = [
     author: ['作者5'],
     tags: ['标签1', '标签5', '标签6', '标签7', '标签8', '标签9', '标签10'],
     url: 'https://example.com/song5.mp3',
-    from: SongFrom.Custom,
+    from: SongPlatform.Custom,
     language: ['中文'],
     createTime: Date.now(),
     updateTime: Date.now(),

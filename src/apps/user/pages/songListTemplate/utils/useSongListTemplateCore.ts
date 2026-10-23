@@ -1,13 +1,14 @@
 import { computed, onScopeDispose, ref, watch, type MaybeRefOrGetter, toValue } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { SongRequestInfo, SongsInfo, UserInfo } from '@/api/api-models'
+import type { SongRequestInfo } from '@/api/client-types'
+import type { ResponseSongModel, ResponseUserInfo } from '@/api/generated/model'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 import { useLiveRequestStatus } from './useLiveRequestStatus'
 
 export interface SongListTemplateCoreOptions {
-  userInfo: MaybeRefOrGetter<UserInfo | undefined>
+  userInfo: MaybeRefOrGetter<ResponseUserInfo | undefined>
   liveRequestActive?: MaybeRefOrGetter<SongRequestInfo[] | undefined>
   /** 点歌 loading 自动清除时长，默认 2000ms */
   requestLoadingMs?: number
@@ -37,7 +38,7 @@ export function useSongListTemplateCore(options: SongListTemplateCoreOptions) {
     requestTimer = undefined
   }
 
-  function beginRequest(song: SongsInfo) {
+  function beginRequest(song: ResponseSongModel) {
     if (isSelf.value) return false
     requestingKey.value = song.key
     clearRequestTimer()

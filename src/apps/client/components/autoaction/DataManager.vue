@@ -51,9 +51,9 @@ const persistentLoading = ref(true)
 async function fetchPersistentData() {
   persistentLoading.value = true
   try {
-        const allEntries = (await persistedEntries()).filter(([key]) => key.startsWith(AUTO_ACTION_USER_DATA_PREFIX))
-        persistentData.value = allEntries.map(([rawKey, value]) => {
-          const key = rawKey.slice(AUTO_ACTION_USER_DATA_PREFIX.length)
+    const allEntries = (await persistedEntries()).filter(([key]) => key.startsWith(AUTO_ACTION_USER_DATA_PREFIX))
+    persistentData.value = allEntries.map(([rawKey, value]) => {
+      const key = rawKey.slice(AUTO_ACTION_USER_DATA_PREFIX.length)
       let valueDisplay = ''
       let type: string = typeof value
 

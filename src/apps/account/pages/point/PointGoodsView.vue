@@ -3,7 +3,8 @@ import { ArrowSync24Regular, Filter24Regular, Person24Regular, Search24Regular }
 import { useDebounceFn } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
 
-import type { ResponsePointGoodModel, UserInfo } from '@/api/api-models'
+import type { ResponsePointGoodModel } from '@/api/client-types'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import PointGoodsExchangeDialog from '@/shared/components/points/PointGoodsExchangeDialog.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import { Badge } from '@/shared/ui/badge'
@@ -19,7 +20,7 @@ import { NavigateToNewTab, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
 const props = defineProps<{
-  userInfo: UserInfo
+  userInfo: ResponseUserInfo
 }>()
 
 const useAuth = useBiliAuth()
@@ -479,4 +480,3 @@ onMounted(async () => {
     />
   </div>
 </template>
-

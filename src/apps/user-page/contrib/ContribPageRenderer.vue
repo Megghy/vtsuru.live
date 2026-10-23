@@ -3,7 +3,7 @@ import { AlertCircleOutline } from '@vicons/ionicons5'
 import { computed, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 
-import type { UserInfo } from '@/api/api-models'
+import type { ResponseUserInfo } from '@/api/generated/model'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Spin } from '@/shared/ui/spin'
 
@@ -12,7 +12,7 @@ import { getContribPageImporter } from './registry'
 
 const props = defineProps<{
   page: ContribPageRef
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
   biliInfo: any | undefined
 }>()
 

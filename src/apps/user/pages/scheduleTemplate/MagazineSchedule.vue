@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import type { ScheduleConfigTypeWithConfig } from '@/shared/types/TemplateTypes'
 import type { RGBAColor } from '@/shared/types/VTsuruConfigTypes'
 import { defineTemplateConfig, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -16,8 +16,8 @@ import { useScheduleTemplateAssets } from './useScheduleTemplateAssets'
 import './scheduleTemplateTheme.css'
 
 interface MagazineConfig {
-  backgroundFile: UploadFileResponse[]
-  portraitFile: UploadFileResponse[]
+  backgroundFile: APIFileModel[]
+  portraitFile: APIFileModel[]
   heading: string
   accentColor: RGBAColor
   showAvatar: boolean
@@ -33,14 +33,14 @@ const Config = defineTemplateConfig([
     type: 'file',
     key: 'backgroundFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: MagazineConfig) => (config.backgroundFile = files),
+    onUploaded: (files: APIFileModel[], config: MagazineConfig) => (config.backgroundFile = files),
   },
   {
     name: '封面照片',
     type: 'file',
     key: 'portraitFile',
     fileLimit: 1,
-    onUploaded: (files: UploadFileResponse[], config: MagazineConfig) => (config.portraitFile = files),
+    onUploaded: (files: APIFileModel[], config: MagazineConfig) => (config.portraitFile = files),
   },
   { name: '刊头标题', type: 'string', key: 'heading', default: '本周放送特刊' },
   {

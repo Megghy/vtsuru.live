@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, nextTick, ref } from 'vue'
 
 import { DownloadConfig, GetConfigHash } from '@/api/account'
-import { EventDataTypes } from '@/api/api-models'
+import { EventDataTypes } from '@/api/generated/model'
 import * as messageTypes from '@/apps/obs/components/blivechat/constants'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 import Ticker from '@/apps/obs/components/blivechat/Ticker.vue'

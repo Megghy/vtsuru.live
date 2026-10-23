@@ -11,8 +11,8 @@ import {
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
 
-import type { ResponsePointOrder2UserModel } from '@/api/api-models'
-import { GoodsTypes, PointOrderStatus } from '@/api/api-models'
+import type { ResponsePointOrder2UserModel } from '@/api/generated/model'
+import { GoodsTypes, PointOrderStatus } from '@/api/generated/model'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import ServiceOrderPanel from '@/shared/components/points/ServiceOrderPanel.vue'
@@ -406,4 +406,3 @@ function formatDateTime(ts: number) {
     @updated="(updated) => Object.assign(serviceDetail!, updated)"
   />
 </template>
-

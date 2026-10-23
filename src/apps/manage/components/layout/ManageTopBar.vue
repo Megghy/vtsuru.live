@@ -4,7 +4,7 @@ import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ThemeType } from '@/api/api-models'
+import { ThemeType } from '@/api/client-types'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
 import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
@@ -78,7 +78,9 @@ async function goToUserPage(accountName?: string) {
       <div class="text-[15px] font-bold tracking-tight text-foreground whitespace-nowrap max-[600px]:hidden">
         VTSURU CENTER
       </div>
-      <div class="py-0.5 px-1.5 rounded-md bg-[var(--brand-soft)] text-[var(--brand)] text-[11px] font-bold whitespace-nowrap">
+      <div
+        class="py-0.5 px-1.5 rounded-md bg-[var(--brand-soft)] text-[var(--brand)] text-[11px] font-bold whitespace-nowrap"
+      >
         {{ WORKSPACE_LABELS[workspace] }}
       </div>
       <div

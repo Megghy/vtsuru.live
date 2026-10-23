@@ -1,16 +1,16 @@
-import type { QAInfo, Setting_QuestionDisplay } from '@/api/api-models'
+import type { ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
 import {
   QuestionDisplayAlign,
   QuestionDisplayImageLayout,
   QuestionDisplayShadow,
   QuestionDisplayTransition,
   QuestionDisplayVerticalAlign,
-} from '@/api/api-models'
+} from '@/api/generated/model'
 
 import { createDefaultQuestionDisplaySetting } from './questionDisplayPresets'
 
 export function questionSenderLabel(
-  question?: Pick<QAInfo, 'isAnonymous' | 'anonymousName' | 'sender'> | null,
+  question?: Pick<ResponseQAInfoToTarget, 'isAnonymous' | 'anonymousName' | 'sender'> | null,
 ): string {
   if (!question) return '匿名用户'
   if (question.isAnonymous) return question.anonymousName || '匿名用户'
@@ -70,7 +70,7 @@ export function formatTextShadow(value?: QuestionDisplayShadow): string {
   return 'none'
 }
 
-export function isLegacyQuestionDisplaySetting(setting?: Partial<Setting_QuestionDisplay> | null): boolean {
+export function isLegacyQuestionDisplaySetting(setting?: Partial<SettingQuestionDisplay> | null): boolean {
   if (!setting || typeof setting !== 'object') return true
   // 若缺少核心视觉属性或关键尺寸异常，视为未初始化或 legacy，需要全量 fallback 到棉花糖
   if (!setting.fontColor || !setting.backgroundColor) return true
@@ -91,8 +91,8 @@ function clamp(value: unknown, min: number, max: number, fallback: number): numb
 }
 
 export function normalizeQuestionDisplaySetting(
-  setting?: Partial<Setting_QuestionDisplay> | null,
-): Setting_QuestionDisplay {
+  setting?: Partial<SettingQuestionDisplay> | null,
+): SettingQuestionDisplay {
   const fallback = createDefaultQuestionDisplaySetting() // 默认棉花糖预设
   if (isLegacyQuestionDisplaySetting(setting)) {
     return {
@@ -142,10 +142,10 @@ export function normalizeQuestionDisplaySetting(
  * 支持循环遍历；若当前选中的问题不在当前过滤列表中，会根据方向平滑过渡到最接近项（不会突跳至 0）。
  */
 export function getAdjacentQuestion(
-  questions: QAInfo[],
+  questions: ResponseQAInfoToTarget[],
   currentId?: number,
   direction: -1 | 1 = 1,
-): QAInfo | undefined {
+): ResponseQAInfoToTarget | undefined {
   if (!questions.length) return undefined
   const currentIndex = currentId ? questions.findIndex((q) => q.id === currentId) : -1
 
@@ -160,7 +160,10 @@ export function getAdjacentQuestion(
 /**
  * 查找下一条未读问题（按列表循环查找排除当前项）
  */
-export function getNextUnreadQuestion(questions: QAInfo[], currentId?: number): QAInfo | undefined {
+export function getNextUnreadQuestion(
+  questions: ResponseQAInfoToTarget[],
+  currentId?: number,
+): ResponseQAInfoToTarget | undefined {
   if (!questions.length) return undefined
   const currentIndex = currentId ? questions.findIndex((q) => q.id === currentId) : -1
   const start = currentIndex >= 0 ? currentIndex : -1

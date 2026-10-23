@@ -1,4 +1,4 @@
-import type { UploadFileResponse } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 
 export const CUSTOM_HTML_MAX_BYTES = 32 * 1024
 export const CUSTOM_CSS_MAX_BYTES = 24 * 1024
@@ -10,7 +10,7 @@ export const CUSTOM_HTML_ASSET_KEY_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9
 
 export interface CustomHtmlAsset {
   key: string
-  file: UploadFileResponse
+  file: APIFileModel
 }
 
 export interface CustomHtmlProps {
@@ -57,7 +57,7 @@ export function normalizeCustomHtmlProps(value: unknown): CustomHtmlProps {
           typeof file.path !== 'string'
         )
           return []
-        return [{ key: asset.key, file: file as unknown as UploadFileResponse }]
+        return [{ key: asset.key, file: file as unknown as APIFileModel }]
       })
     : []
 

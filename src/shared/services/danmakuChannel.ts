@@ -1,4 +1,4 @@
-import type { EventModel } from '@/api/api-models'
+import type { EventModel } from '@/api/client-types'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 
 const LOCAL_EVENT_CHANNEL = 'vtsuru.danmaku.model-events.v2'

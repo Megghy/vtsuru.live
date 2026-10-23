@@ -5,8 +5,8 @@ import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
 import { useAccount } from '@/api/account'
+import type { ResponseForumTopicSimpleModel } from '@/api/generated/model'
 import type { ResponseForumBaseModel } from '@/api/generated/model/responseForumBaseModel'
-import type { ForumTopicBaseModel } from '@/api/models/forum'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
@@ -15,7 +15,7 @@ import { toast } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
 const props = defineProps<{
-  item: ForumTopicBaseModel
+  item: ResponseForumTopicSimpleModel
   forum: ResponseForumBaseModel
 }>()
 

@@ -3,8 +3,12 @@ import { addWeeks, endOfWeek, endOfYear, format, isBefore, startOfWeek, startOfY
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { BiliLiveReserveModel, ScheduleDayInfo, ScheduleWeekInfo } from '@/api/api-models'
-import { FunctionTypes } from '@/api/api-models'
+import type {
+  ResponseBiliLiveReserveModel,
+  ResponseScheduleDayModel,
+  ResponseScheduleModel,
+} from '@/api/generated/model'
+import { FunctionTypes } from '@/api/generated/model'
 import {
   getApiScheduleBiliReserve,
   getApiScheduleGet,
@@ -170,7 +174,7 @@ function normalizeColor(color: any): string | null {
   return null
 }
 
-function createEmptyDay(): ScheduleDayInfo {
+function createEmptyDay(): ResponseScheduleDayModel {
   return {
     title: null,
     tag: null,
@@ -180,14 +184,14 @@ function createEmptyDay(): ScheduleDayInfo {
   }
 }
 
-function createEmptyDays(): ScheduleDayInfo[][] {
-  return Array.from({ length: 7 }, () => [] as ScheduleDayInfo[])
+function createEmptyDays(): ResponseScheduleDayModel[][] {
+  return Array.from({ length: 7 }, () => [] as ResponseScheduleDayModel[])
 }
 
-function normalizeWeek(week?: ScheduleWeekInfo): ScheduleWeekInfo {
+function normalizeWeek(week?: ResponseScheduleModel): ResponseScheduleModel {
   const normalizedDays = Array.from({ length: 7 }, (_, index) => {
     const list = week?.days?.[index]
-    if (!Array.isArray(list)) return [] as ScheduleDayInfo[]
+    if (!Array.isArray(list)) return [] as ResponseScheduleDayModel[]
     return list.filter(Boolean).map((item) => ({
       title: item?.title ?? null,
       tag: item?.tag ?? null,
@@ -205,7 +209,7 @@ function normalizeWeek(week?: ScheduleWeekInfo): ScheduleWeekInfo {
   }
 }
 
-function cloneWeek(week: ScheduleWeekInfo, options: { resetIds?: boolean } = {}): ScheduleWeekInfo {
+function cloneWeek(week: ResponseScheduleModel, options: { resetIds?: boolean } = {}): ResponseScheduleModel {
   const deepCloned = JSON.parse(JSON.stringify(week))
   const normalized = normalizeWeek(deepCloned)
   return {
@@ -224,7 +228,7 @@ function cloneWeek(week: ScheduleWeekInfo, options: { resetIds?: boolean } = {})
   }
 }
 
-function createEmptyWeek(year?: number, week?: number): ScheduleWeekInfo {
+function createEmptyWeek(year?: number, week?: number): ResponseScheduleModel {
   return {
     year: year ?? new Date().getFullYear(),
     week: week ?? Number(format(Date.now(), 'w')) + 1,
@@ -233,7 +237,7 @@ function createEmptyWeek(year?: number, week?: number): ScheduleWeekInfo {
   }
 }
 
-function ensureDayInitialized(target: ScheduleWeekInfo, dayIndex: number) {
+function ensureDayInitialized(target: ResponseScheduleModel, dayIndex: number) {
   if (!target.days || !Array.isArray(target.days)) {
     target.days = createEmptyDays()
   }
@@ -245,7 +249,7 @@ function ensureDayInitialized(target: ScheduleWeekInfo, dayIndex: number) {
   }
 }
 
-function sanitizeDays(days?: ScheduleDayInfo[][]): ScheduleDayInfo[][] {
+function sanitizeDays(days?: ResponseScheduleDayModel[][]): ResponseScheduleDayModel[][] {
   return Array.from({ length: 7 }, (_, index) => {
     const list = days?.[index] ?? []
     return list
@@ -280,7 +284,7 @@ function getAllWeeks(year: number) {
 }
 
 const accountInfo = useAccount()
-const schedules = ref<ScheduleWeekInfo[]>([])
+const schedules = ref<ResponseScheduleModel[]>([])
 const message = useMessage()
 
 const isLoading = ref(true)
@@ -291,7 +295,7 @@ const scheduleSubscribeUrl = computed(() =>
   accountInfo.value?.id ? `${SCHEDULE_API_URL}${accountInfo.value.id}.ics` : '',
 )
 
-function sortSchedules(list: ScheduleWeekInfo[]) {
+function sortSchedules(list: ResponseScheduleModel[]) {
   return [...list].toSorted((a, b) => b.year - a.year || b.week - a.week)
 }
 
@@ -299,7 +303,7 @@ const showUpdateModal = ref(false)
 const showAddModal = ref(false)
 const showCopyModal = ref(false)
 const showBatchAddModal = ref(false)
-const updateScheduleModel = ref<ScheduleWeekInfo>(createEmptyWeek())
+const updateScheduleModel = ref<ResponseScheduleModel>(createEmptyWeek())
 const scheduleConflict = ref(false)
 const copyMode = ref<'merge' | 'replace'>('merge')
 
@@ -311,7 +315,7 @@ const batchAddYear = ref(String(new Date().getFullYear()))
 const batchAddWeekFrom = ref(String(Number(format(Date.now(), 'w')) + 1))
 const batchAddWeekTo = ref(String(Number(format(Date.now(), 'w')) + 1))
 const batchAddDay = ref('0')
-const batchAddItem = ref<ScheduleDayInfo>(createEmptyDay())
+const batchAddItem = ref<ResponseScheduleDayModel>(createEmptyDay())
 
 const batchWeekOptions = computed(() => {
   const all = getAllWeeks(Number(batchAddYear.value))
@@ -358,7 +362,7 @@ async function get() {
     })) as unknown as {
       code: number
       message?: string
-      data?: ScheduleWeekInfo[]
+      data?: ResponseScheduleModel[]
     }
     if (data.code !== 200) throw new Error(data.message || '加载失败')
     schedules.value = sortSchedules((data.data ?? []).map((week) => normalizeWeek(week)))
@@ -390,7 +394,7 @@ async function loadLatestScheduleVersion() {
 }
 
 const isFetching = ref(false)
-const biliReserve = ref<BiliLiveReserveModel>({
+const biliReserve = ref<ResponseBiliLiveReserveModel>({
   items: [],
   fetchedAt: 0,
   intervalMinutes: 15,
@@ -409,7 +413,7 @@ async function loadBiliReserve() {
       id: String(accountInfo.value.id),
     })) as unknown as {
       code: number
-      data?: BiliLiveReserveModel
+      data?: ResponseBiliLiveReserveModel
     }
     if (response.code === 200 && response.data) {
       biliReserve.value = response.data
@@ -427,7 +431,7 @@ async function refreshBiliReserve() {
   try {
     const response = (await postApiScheduleBiliReserveRefresh()) as unknown as {
       code: number
-      data?: BiliLiveReserveModel
+      data?: ResponseBiliLiveReserveModel
       message?: string
     }
     if (response.code === 200 && response.data) {
@@ -450,7 +454,7 @@ async function setBiliReserveAutoSync(enable: boolean) {
       enable,
     })) as unknown as {
       code: number
-      data?: BiliLiveReserveModel
+      data?: ResponseBiliLiveReserveModel
       message?: string
     }
     if (response.code === 200 && response.data) {
@@ -481,7 +485,7 @@ async function addSchedule() {
     })) as unknown as {
       code: number
       message?: string
-      data?: ScheduleWeekInfo
+      data?: ResponseScheduleModel
     }
     if (data.code === 409) return await reloadAfterConflict()
     if (data.code !== 200 || !data.data) return message.error(`添加失败: ${data.message}`)
@@ -510,7 +514,7 @@ async function onCopySchedule() {
     })) as unknown as {
       code: number
       message?: string
-      data?: ScheduleWeekInfo
+      data?: ResponseScheduleModel
     }
     if (response.code === 409) {
       await reloadAfterConflict()
@@ -539,7 +543,7 @@ async function saveSchedule(day: number | null) {
     year: number
     week: number
     day?: number
-    days: ScheduleDayInfo[][]
+    days: ResponseScheduleDayModel[][]
     expectedVersion: string
   } = {
     year: updateScheduleModel.value.year,
@@ -556,7 +560,7 @@ async function saveSchedule(day: number | null) {
     const data = (await postApiScheduleUpdate(payload as any)) as unknown as {
       code: number
       message?: string
-      data?: ScheduleWeekInfo
+      data?: ResponseScheduleModel
     }
     if (data.code === 409) return await reloadAfterConflict()
     if (data.code === 200 && data.data) {
@@ -583,7 +587,7 @@ async function saveSchedule(day: number | null) {
   }
 }
 
-async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
+async function onDeleteSchedule(schedule: ResponseScheduleModel) {
   const data = await postApiScheduleDelete({
     year: schedule.year,
     week: schedule.week,
@@ -598,7 +602,7 @@ async function onDeleteSchedule(schedule: ScheduleWeekInfo) {
   }
 }
 
-function onOpenUpdateModal(schedule: ScheduleWeekInfo) {
+function onOpenUpdateModal(schedule: ResponseScheduleModel) {
   scheduleConflict.value = false
   updateScheduleModel.value = cloneWeek(schedule)
   selectedDay.value = '0'
@@ -606,7 +610,7 @@ function onOpenUpdateModal(schedule: ScheduleWeekInfo) {
   showUpdateModal.value = true
 }
 
-function onOpenCopyModal(schedule: ScheduleWeekInfo) {
+function onOpenCopyModal(schedule: ResponseScheduleModel) {
   scheduleConflict.value = false
   updateScheduleModel.value = cloneWeek(schedule, { resetIds: true })
   copyMode.value = 'merge'
@@ -615,14 +619,14 @@ function onOpenCopyModal(schedule: ScheduleWeekInfo) {
   showCopyModal.value = true
 }
 
-function onEditScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, _item: ScheduleDayInfo) {
+function onEditScheduleItem(schedule: ResponseScheduleModel, dayIndex: number, _item: ResponseScheduleDayModel) {
   updateScheduleModel.value = cloneWeek(schedule)
   selectedDay.value = String(dayIndex)
   ensureDayInitialized(updateScheduleModel.value, dayIndex)
   showUpdateModal.value = true
 }
 
-async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number, item: ScheduleDayInfo) {
+async function onDeleteScheduleItem(schedule: ResponseScheduleModel, dayIndex: number, item: ResponseScheduleDayModel) {
   const targetSchedule = schedules.value.find((s) => s.year === schedule.year && s.week === schedule.week)
   if (!targetSchedule) return
 
@@ -646,7 +650,7 @@ async function onDeleteScheduleItem(schedule: ScheduleWeekInfo, dayIndex: number
   })) as unknown as {
     code: number
     message?: string
-    data?: ScheduleWeekInfo
+    data?: ResponseScheduleModel
   }
   if (data.code === 409) await reloadAfterConflict()
   else if (data.code === 200 && data.data) {
@@ -678,7 +682,7 @@ async function onBatchAddSchedule() {
     return
   }
 
-  const fixedItem: ScheduleDayInfo = {
+  const fixedItem: ResponseScheduleDayModel = {
     title: batchAddItem.value.title?.trim() || null,
     tag: batchAddItem.value.tag?.trim() || null,
     tagColor: normalizeColor(batchAddItem.value.tagColor),
@@ -707,7 +711,7 @@ async function onBatchAddSchedule() {
       })) as unknown as {
         code: number
         message?: string
-        data?: ScheduleWeekInfo
+        data?: ResponseScheduleModel
       }
 
       if (resp.code === 409) {
@@ -719,7 +723,7 @@ async function onBatchAddSchedule() {
         return
       }
 
-      const normalizedWeek = normalizeWeek(resp.data as ScheduleWeekInfo)
+      const normalizedWeek = normalizeWeek(resp.data as ResponseScheduleModel)
       const index = schedules.value.findIndex((s) => s.year === year && s.week === week)
       if (index >= 0) {
         schedules.value.splice(index, 1, normalizedWeek)

@@ -2,7 +2,7 @@
 import * as monaco from 'monaco-editor'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
-import type { APIFileModel } from '@/api/api-models'
+import type { APIFileModel } from '@/api/generated/model'
 import { configureMonacoEnvironment } from '@/apps/manage/components/monacoEnvironment'
 import type { CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
 import type { CustomCodeIssue } from '@/apps/user-page/block/customHtmlRuntime'

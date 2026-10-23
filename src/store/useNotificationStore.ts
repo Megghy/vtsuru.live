@@ -3,7 +3,8 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
-import type { LevelTypes, PaginationResponse } from '@/api/api-models'
+import type { PaginationResponse } from '@/api/client-types'
+import type { LevelTypes } from '@/api/generated/model'
 import {
   getApiNotificationGet,
   getApiNotificationGetUnread,

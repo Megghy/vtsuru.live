@@ -7,10 +7,10 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
-import type { PaginationResponse, UserInfo } from '@/api/api-models'
+import type { ForumCommentModel, PaginationResponse } from '@/api/client-types'
+import type { ResponseForumTopicModel, ResponseUserInfo } from '@/api/generated/model'
+import { ForumCommentSortTypes } from '@/api/generated/model'
 import type { PaginationResponseOfListOfResponseForumCommentBaseModel } from '@/api/generated/model'
-import type { ForumCommentModel, ForumTopicModel } from '@/api/models/forum'
-import { ForumCommentSortTypes } from '@/api/models/forum'
 import router from '@/app/router'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
@@ -45,7 +45,7 @@ interface PostReplyModel {
 }
 
 const { userInfo } = defineProps<{
-  userInfo: UserInfo | undefined
+  userInfo: ResponseUserInfo | undefined
 }>()
 
 const route = useRoute()
@@ -65,7 +65,7 @@ const currentCommentContent = ref<PostCommentModel>({} as PostCommentModel)
 const currentReplyContent = ref<PostReplyModel>({} as PostReplyModel)
 
 const comments = ref<PaginationResponseOfListOfResponseForumCommentBaseModel>()
-const topic = ref<ForumTopicModel>({} as ForumTopicModel)
+const topic = ref<ResponseForumTopicModel>({} as ResponseForumTopicModel)
 
 const sort = ref<ForumCommentSortTypes>(ForumCommentSortTypes.Time)
 const isAsc = ref(false)
@@ -169,7 +169,7 @@ function formatFullTime(time: number) {
 onMounted(async () => {
   if (route.params.topicId) {
     topicId.value = route.params.topicId as unknown as number
-    topic.value = (await useForum.GetTopicDetail(topicId.value)) ?? ({ id: -1 } as ForumTopicModel)
+    topic.value = (await useForum.GetTopicDetail(topicId.value)) ?? ({ id: -1 } as ResponseForumTopicModel)
     refreshComments()
   }
 })
@@ -356,7 +356,7 @@ onMounted(async () => {
               :items-per-page="ps"
               :page="pn"
               @update:page="
-                pn = $event;
+                pn = $event
                 refreshComments()
               "
             />
@@ -390,7 +390,7 @@ onMounted(async () => {
               :items-per-page="ps"
               :page="pn"
               @update:page="
-                pn = $event;
+                pn = $event
                 refreshComments()
               "
             />

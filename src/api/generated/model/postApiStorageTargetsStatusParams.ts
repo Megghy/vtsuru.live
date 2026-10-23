@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VTsuruDataFileStorageStorageTargetStatus } from './vTsuruDataFileStorageStorageTargetStatus'
+import type { StorageTargetStatus } from './storageTargetStatus'
 
 export type PostApiStorageTargetsStatusParams = {
   id?: number
   /**
    * 目标是否接收用户上传。Disabled 后不再写入新对象，读取仍然可用。
    */
-  status?: VTsuruDataFileStorageStorageTargetStatus
+  status?: StorageTargetStatus
 }

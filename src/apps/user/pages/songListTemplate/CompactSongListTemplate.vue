@@ -3,7 +3,7 @@ import { Play24Filled, Search24Regular } from '@vicons/fluent'
 import { useVirtualList } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
-import type { SongsInfo } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
 import SongPlayer from '@/components/SongPlayer.vue'
 import type { SongListConfigType } from '@/shared/types/TemplateTypes'
 import { Button } from '@/shared/ui/button'
@@ -35,7 +35,7 @@ const {
 const searchKeyword = ref('')
 const selectedTag = ref<string | null>(null)
 const selectedAuthor = ref<string | null>(null)
-const previewSong = ref<SongsInfo>()
+const previewSong = ref<ResponseSongModel>()
 const isLrcLoading = ref('')
 
 const tagOptions = computed(() => {
@@ -45,7 +45,7 @@ const authorOptions = computed(() => {
   return getSongFieldOptions(props.data, 'author')
 })
 
-const filteredSongs = computed<SongsInfo[]>(() => {
+const filteredSongs = computed<ResponseSongModel[]>(() => {
   return filterSongs(props.data, {
     keyword: searchKeyword.value,
     tag: selectedTag.value,
@@ -60,7 +60,7 @@ const { list, containerProps, wrapperProps } = useVirtualList(filteredSongs, {
   overscan: 8,
 })
 
-function requestSong(song: SongsInfo) {
+function requestSong(song: ResponseSongModel) {
   if (!beginRequest(song)) return
   emits('requestSong', song)
 }
@@ -229,8 +229,8 @@ function requestSong(song: SongsInfo) {
                 v-for="tag in (song.tags ?? []).slice(0, 3)"
                 :key="tag"
                 type="button"
-                 class="px-1.5 py-0.5 rounded text-[10px] text-muted-foreground bg-muted border-0 cursor-pointer transition-colors hover:text-primary hover:bg-primary/15"
-                 :class="{ 'text-primary bg-primary/15': selectedTag === tag }"
+                class="px-1.5 py-0.5 rounded text-[10px] text-muted-foreground bg-muted border-0 cursor-pointer transition-colors hover:text-primary hover:bg-primary/15"
+                :class="{ 'text-primary bg-primary/15': selectedTag === tag }"
                 :aria-pressed="selectedTag === tag"
                 @click="selectedTag = selectedTag === tag ? null : tag"
               >
@@ -267,4 +267,3 @@ function requestSong(song: SongsInfo) {
     </Transition>
   </div>
 </template>
-

@@ -4,8 +4,8 @@ import { ArchiveOutline } from '@vicons/ionicons5'
 import { computed, ref } from 'vue'
 import * as XLSX from 'xlsx'
 
-import type { SongsInfo } from '@/api/api-models'
-import { SongFrom } from '@/api/api-models'
+import type { ResponseSongModel } from '@/api/generated/model'
+import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
@@ -18,11 +18,11 @@ import { Transfer, type TransferOption } from '@/shared/ui/transfer'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
-  existingSongs: SongsInfo[]
+  existingSongs: ResponseSongModel[]
 }>()
 
 const emit = defineEmits<{
-  (e: 'added', songs: SongsInfo[]): void
+  (e: 'added', songs: ResponseSongModel[]): void
   (e: 'loadingChange', value: boolean): void
 }>()
 
@@ -40,7 +40,7 @@ const columnMappings = usePersistedStorage('song-list-column-mappings', {
 })
 
 const selectedFile = ref<File | null>(null)
-const uploadSongsFromFile = ref<SongsInfo[]>([])
+const uploadSongsFromFile = ref<ResponseSongModel[]>([])
 const selecteduploadSongs = ref<string[]>([])
 
 defineExpose({
@@ -127,7 +127,7 @@ function parseExcelFile() {
 
     const parsedSongs = rows
       .map((row) => {
-        const song = {} as SongsInfo
+        const song = {} as ResponseSongModel
 
         for (let i = 0; i < headers.length; i++) {
           const headerFromFile = (headers[i] as string)?.toLowerCase().trim()
@@ -188,7 +188,7 @@ function parseExcelFile() {
         if (!song.name) return null
         return song
       })
-      .filter((s) => s !== null) as SongsInfo[]
+      .filter((s) => s !== null) as ResponseSongModel[]
 
     uploadSongsFromFile.value = parsedSongs
     message.success(`解析完成，共获取 ${uploadSongsFromFile.value.length} 首曲目`)
@@ -205,14 +205,14 @@ async function addUploadFileSong() {
   try {
     const songsToAdd = uploadSongsFromFile.value.filter((s) => selecteduploadSongs.value.includes(s.name))
 
-    const data = await addSongsToSongList(songsToAdd, SongFrom.Custom)
+    const data = await addSongsToSongList(songsToAdd, SongPlatform.Custom)
     if (data.code !== 200) {
       message.error(`添加失败: ${data.message}`)
       return
     }
 
     message.success(`已添加 ${data.data.length} 首歌曲`)
-    emit('added', data.data as unknown as SongsInfo[])
+    emit('added', data.data as unknown as ResponseSongModel[])
   } catch (err) {
     message.error(`添加失败: ${err}`)
     console.error(err)
