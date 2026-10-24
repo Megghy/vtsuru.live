@@ -4,6 +4,7 @@ import { saveAs } from 'file-saver'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
+import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -48,32 +49,34 @@ async function doExport(format: ExportFormat) {
   }
 }
 
-async function handleFileChoose(e: Event, action: (file: File) => Promise<string>) {
-  const input = e.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (!file) return
-  try {
-    const res = await action(file)
-    message.success(res)
-  } catch (error) {
-    message.error(error instanceof Error ? error.message : '导入失败')
-  } finally {
-    input.value = ''
-  }
+const { open: openJsonPicker } = useFilePicker({
+  accept: '.json',
+  onError: message.error,
+})
+
+function chooseJsonFile(action: (file: File) => Promise<string>) {
+  openJsonPicker({
+    onSelect: async ([file]) => {
+      try {
+        const res = await action(file)
+        message.success(res)
+      } catch (error) {
+        message.error(error instanceof Error ? error.message : '导入失败')
+      }
+    },
+  })
 }
 
-async function onImportEvents(e: Event) {
-  await handleFileChoose(e, async (file) => {
+function onImportEvents() {
+  chooseJsonFile(async (file) => {
     const count = await importArchive(file)
     await refreshCounts()
     return `已导入 ${count} 条事件，刷新页面后载入列表`
   })
 }
 
-async function onImportNotes(e: Event) {
-  await handleFileChoose(e, async (file) => {
-    return `已导入 ${await dashboard.notes.importFile(file)} 条备注`
-  })
+function onImportNotes() {
+  chooseJsonFile(async (file) => `已导入 ${await dashboard.notes.importFile(file)} 条备注`)
 }
 
 function exportNotes() {
@@ -222,21 +225,12 @@ function resetToolbarOrder() {
           >
             导出备注
           </Button>
-          <label>
-            <input
-              type="file"
-              accept=".json"
-              class="hidden"
-              @change="onImportNotes"
-            />
-            <Button
-              variant="outline"
-              as="span"
-              class="cursor-pointer"
-            >
-              导入备注
-            </Button>
-          </label>
+          <Button
+            variant="outline"
+            @click="onImportNotes"
+          >
+            导入备注
+          </Button>
         </div>
 
         <Separator />
@@ -266,21 +260,12 @@ function resetToolbarOrder() {
           </Button>
         </div>
         <div class="settings__buttons items-center">
-          <label>
-            <input
-              type="file"
-              accept=".json"
-              class="hidden"
-              @change="onImportEvents"
-            />
-            <Button
-              variant="outline"
-              as="span"
-              class="cursor-pointer"
-            >
-              导入 JSON 归档
-            </Button>
-          </label>
+          <Button
+            variant="outline"
+            @click="onImportEvents"
+          >
+            导入 JSON 归档
+          </Button>
           <Popconfirm @positive-click="clearAll">
             <template #trigger>
               <Button variant="destructive"> 清空本地事件 </Button>

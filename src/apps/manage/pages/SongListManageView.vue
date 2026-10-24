@@ -15,6 +15,7 @@ import SongListAddSongModal from '@/apps/manage/components/song-list/SongListAdd
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { parseSongListCsv, parsedRowsToSongsInfo } from '@/apps/manage/composables/songListCsv'
 import SongList from '@/components/SongList.vue'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { CURRENT_HOST } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
@@ -29,7 +30,11 @@ const isLoading = ref(true)
 const isImporting = ref(false)
 const showModal = ref(false)
 const songs = ref<ResponseSongModel[]>([])
-const csvInputRef = ref<HTMLInputElement | null>(null)
+const { open: openCsvPicker } = useFilePicker({
+  accept: ['.csv', 'text/csv'],
+  onError: message.error,
+  onSelect: ([file]) => importCsvFile(file),
+})
 const songListUrl = computed(() =>
   accountInfo.value?.name ? `${CURRENT_HOST}@${accountInfo.value.name}/song-list` : '',
 )
@@ -98,7 +103,7 @@ function handleMoreAction(key: string) {
       exportData()
       break
     case 'import':
-      csvInputRef.value?.click()
+      openCsvPicker()
       break
     case 'live-request':
       router.push({ name: 'manage-liveRequest' })
@@ -109,12 +114,7 @@ function handleMoreAction(key: string) {
   }
 }
 
-async function onCsvFileChange(ev: Event) {
-  const input = ev.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file) return
-
+async function importCsvFile(file: File) {
   isImporting.value = true
   try {
     const text = await file.text()
@@ -194,14 +194,6 @@ onMounted(getSongs)
               <DropdownMenuItem @click="handleMoreAction('song-list')"> 前往歌单展示页 </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-
-          <input
-            ref="csvInputRef"
-            type="file"
-            accept=".csv,text/csv"
-            style="display: none"
-            @change="onCsvFileChange"
-          />
         </div>
       </template>
     </ManagePageHeader>

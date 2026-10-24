@@ -1,7 +1,7 @@
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 
 import { uploadCover, updateCover } from '@/apps/client/api/live-manage'
-import type { UploadFileInfo } from '@/shared/utils'
+import { toast } from '@/shared/utils'
 
 // 封面上传校验配置
 const COVER_MAX_SIZE = 5 * 1024 * 1024 // 5MB
@@ -24,32 +24,32 @@ export function useLiveCover() {
     coverPreviewUrl.value = ''
   }
 
-  const handleCoverFileChange = (file: UploadFileInfo) => {
-    if (!file.file) {
+  const handleCoverFileChange = (file: File | null | undefined) => {
+    if (!file) {
       handleCoverRemove()
       return
     }
 
-    // 格式校验
-    if (!COVER_ACCEPT_TYPES.has(file.file.type)) {
-      window.$message.error('封面格式不支持，仅支持 JPG / PNG / WEBP')
+    if (!COVER_ACCEPT_TYPES.has(file.type)) {
+      toast.error('封面格式不支持，仅支持 JPG / PNG / WEBP')
       handleCoverRemove()
       return
     }
 
-    // 大小校验
-    if (file.file.size > COVER_MAX_SIZE) {
-      window.$message.error('封面文件过大，请上传不超过 5MB 的图片')
+    if (file.size > COVER_MAX_SIZE) {
+      toast.error('封面文件过大，请上传不超过 5MB 的图片')
       handleCoverRemove()
       return
     }
 
-    coverFile.value = file.file
+    coverFile.value = file
     if (coverPreviewUrl.value) {
       URL.revokeObjectURL(coverPreviewUrl.value)
     }
-    coverPreviewUrl.value = URL.createObjectURL(file.file)
+    coverPreviewUrl.value = URL.createObjectURL(file)
   }
+
+  onBeforeUnmount(handleCoverRemove)
 
   const handleUploadCover = async () => {
     if (!coverFile.value) {

@@ -48,8 +48,6 @@ import { useBlockPropertyFocus } from './useBlockPropertyFocus'
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
-const uploadInput = editor.uploadInput
-
 const { expandedPageSections } = useBlockPropertyFocus()
 const { templateOptions, addBlockOptions, insertTemplate, handleAddBlockMenuSelect } = useBlockManagerLibrary()
 const pageSlug = ref(editor.currentKey.value)
@@ -640,15 +638,6 @@ function groupSelection() {
           在新标签页打开对外预览
         </Button>
       </div>
-
-      <input
-        ref="uploadInput"
-        type="file"
-        accept="image/*"
-        multiple
-        style="display: none"
-        @change="editor.onUploadChange"
-      />
     </CardContent>
   </Card>
 </template>

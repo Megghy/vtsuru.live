@@ -7,6 +7,7 @@ import { postApiTtsMimoVoicesCustom } from '@/api/generated/tts/tts'
 import { GetHeaders } from '@/api/query'
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from '@/apps/open-live/voice-providers/ai-client'
 import { saveVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { TTS_API_URL } from '@/shared/config'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -38,10 +39,17 @@ const description = ref('')
 const directorNote = ref('')
 const previewText = ref('你好，这是一段试听')
 const audioFile = ref<File | null>(null)
-const fileInput = ref<HTMLInputElement>()
 const saving = ref(false)
 const previewing = ref(false)
 const previewAudio = ref<HTMLAudioElement | null>(null)
+
+const { open: openAudioPicker } = useFilePicker({
+  accept: ['.mp3', '.wav'],
+  maxSize: 10 * 1024 * 1024,
+  onSelect: ([file]) => {
+    audioFile.value = file
+  },
+})
 
 watch(show, (v) => {
   if (v && props.editVoice) {
@@ -67,11 +75,6 @@ const canSave = computed(() => {
   if (isEdit.value) return true
   return canPreview.value
 })
-
-function onFileChange(e: Event) {
-  const target = e.target as HTMLInputElement
-  audioFile.value = target.files?.[0] || null
-}
 
 function buildFormData(includeText = false) {
   const fd = new FormData()
@@ -235,7 +238,6 @@ function reset() {
   description.value = ''
   directorNote.value = ''
   audioFile.value = null
-  if (fileInput.value) fileInput.value.value = ''
 }
 </script>
 
@@ -294,17 +296,10 @@ function reset() {
             <div class="flex items-center gap-2">
               <Button
                 variant="outline"
-                @click="fileInput?.click()"
+                @click="openAudioPicker()"
               >
                 {{ audioFile ? audioFile.name : '选择文件 (mp3/wav, 最大 10MB)' }}
               </Button>
-              <input
-                ref="fileInput"
-                hidden
-                type="file"
-                accept=".mp3,.wav"
-                @change="onFileChange"
-              />
             </div>
             <div
               v-if="!isEdit"

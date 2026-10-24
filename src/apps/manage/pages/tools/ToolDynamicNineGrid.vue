@@ -5,6 +5,7 @@ import JSZip from 'jszip'
 import { computed, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 
+import { useFilePicker } from '@/composables/useFilePicker'
 import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -208,18 +209,19 @@ async function downloadZip() {
 const hasAnyAdditional = computed(() => cellImages.value.some((arr) => arr.length > 0))
 const expandedCell = ref<number | null>(null)
 
+const { open: openCellImagePicker } = useFilePicker({
+  accept: 'image/*',
+  multiple: true,
+})
+
 function addImageToCell(cellIndex: number) {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = 'image/*'
-  input.multiple = true
-  input.onchange = () => {
-    if (!input.files) return
-    for (const file of input.files) {
-      cellImages.value[cellIndex].push({ file, url: URL.createObjectURL(file), fit: 'stretch-width', height: 0 })
-    }
-  }
-  input.click()
+  openCellImagePicker({
+    onSelect: (files) => {
+      for (const file of files) {
+        cellImages.value[cellIndex].push({ file, url: URL.createObjectURL(file), fit: 'stretch-width', height: 0 })
+      }
+    },
+  })
 }
 function removeImageFromCell(cellIndex: number, imgIndex: number) {
   URL.revokeObjectURL(cellImages.value[cellIndex][imgIndex].url)

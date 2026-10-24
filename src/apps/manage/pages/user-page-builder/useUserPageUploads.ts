@@ -1,13 +1,14 @@
 import type { Ref } from 'vue'
-import { ref, shallowRef } from 'vue'
+import { ref } from 'vue'
 
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
 import { reportUserPageError } from '@/apps/user-page/runtime/observability'
 import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { FileStore, UploadStage, uploadFiles } from '@/shared/services/fileUpload'
 
-import { validateUserPageImageFiles } from './userPageImageUpload'
+import { USER_PAGE_IMAGE_EXTENSIONS, USER_PAGE_IMAGE_MAX_BYTES, validateUserPageImageFiles } from './userPageImageUpload'
 
 type UploadKey = 'imageFile' | 'avatarFile'
 
@@ -33,8 +34,11 @@ export interface UseUserPageUploadsOptions {
 export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
   const isUploading = ref(false)
   const uploadQueue = ref<Array<{ name: string; stage: UploadStage }>>([])
-  const uploadInput = ref<HTMLInputElement | null>(null)
-  const pendingUpload = shallowRef<PendingUploadContext | null>(null)
+  const { open: openImagePicker } = useFilePicker({
+    accept: USER_PAGE_IMAGE_EXTENSIONS,
+    maxSize: USER_PAGE_IMAGE_MAX_BYTES,
+    onError: opts.notify.error,
+  })
 
   function asObject(v: unknown): Record<string, any> | null {
     if (!v || typeof v !== 'object') return null
@@ -55,26 +59,24 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
     return null
   }
 
+  function openForContext(ctx: PendingUploadContext) {
+    openImagePicker({
+      multiple: ctx.kind === 'galleryBulk',
+      onSelect: (files) => handleUploadFiles(ctx, files),
+    })
+  }
+
   function triggerUpload(block: BlockNode, key: UploadKey) {
     if (!opts.currentProject.value) {
       opts.notify.error('当前页不是区块模式，无法上传')
       return
     }
-    if (!uploadInput.value) {
-      opts.notify.error('上传控件未就绪，请稍后重试')
-      return
-    }
-    pendingUpload.value = { kind: 'block', blockId: block.id, key }
-    uploadInput.value?.click()
+    openForContext({ kind: 'block', blockId: block.id, key })
   }
 
   function triggerUploadItemImage(block: BlockNode, itemIndex: number) {
     if (!opts.currentProject.value) {
       opts.notify.error('当前页不是区块模式，无法上传')
-      return
-    }
-    if (!uploadInput.value) {
-      opts.notify.error('上传控件未就绪，请稍后重试')
       return
     }
     if (!Number.isInteger(itemIndex) || itemIndex < 0) {
@@ -87,8 +89,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('找不到要上传到的图片项')
       return
     }
-    pendingUpload.value = { kind: 'itemImage', blockId: block.id, item }
-    uploadInput.value?.click()
+    openForContext({ kind: 'itemImage', blockId: block.id, item })
   }
 
   function triggerUploadGalleryBulk(block: BlockNode) {
@@ -96,12 +97,7 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('当前页不是区块模式，无法上传')
       return
     }
-    if (!uploadInput.value) {
-      opts.notify.error('上传控件未就绪，请稍后重试')
-      return
-    }
-    pendingUpload.value = { kind: 'galleryBulk', blockId: block.id }
-    uploadInput.value?.click()
+    openForContext({ kind: 'galleryBulk', blockId: block.id })
   }
 
   function triggerUploadPageBackground() {
@@ -109,44 +105,19 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
       opts.notify.error('当前页不是区块模式，无法上传')
       return
     }
-    if (!uploadInput.value) {
-      opts.notify.error('上传控件未就绪，请稍后重试')
-      return
-    }
-    pendingUpload.value = { kind: 'pageBackground' }
-    uploadInput.value?.click()
+    openForContext({ kind: 'pageBackground' })
   }
 
   function triggerUploadGlobalBackground() {
-    if (!uploadInput.value) {
-      opts.notify.error('上传控件未就绪，请稍后重试')
-      return
-    }
-    pendingUpload.value = { kind: 'globalBackground' }
-    uploadInput.value?.click()
+    openForContext({ kind: 'globalBackground' })
   }
 
   function triggerUploadPageBackgroundOverride() {
-    if (!uploadInput.value) {
-      opts.notify.error('上传控件未就绪，请稍后重试')
-      return
-    }
-    pendingUpload.value = { kind: 'pageBackgroundOverride' }
-    uploadInput.value?.click()
+    openForContext({ kind: 'pageBackgroundOverride' })
   }
 
-  async function onUploadChange(ev: Event) {
-    const input = ev.target as HTMLInputElement
-    const files = input.files ? Array.from(input.files) : []
-    input.value = ''
+  async function handleUploadFiles(ctx: PendingUploadContext, files: File[]) {
     if (!files.length) return
-    if (!pendingUpload.value) {
-      opts.notify.error('未找到上传上下文，请重新点击上传按钮')
-      return
-    }
-
-    const ctx = pendingUpload.value
-    pendingUpload.value = null
     const isBulk = ctx.kind === 'galleryBulk'
     const requiresProject =
       ctx.kind === 'pageBackground' || ctx.kind === 'block' || ctx.kind === 'itemImage' || ctx.kind === 'galleryBulk'
@@ -292,15 +263,12 @@ export function useUserPageUploads(opts: UseUserPageUploadsOptions) {
   return {
     isUploading,
     uploadQueue,
-    uploadInput,
-    pendingUpload,
     triggerUpload,
     triggerUploadItemImage,
     triggerUploadGalleryBulk,
     triggerUploadPageBackground,
     triggerUploadGlobalBackground,
     triggerUploadPageBackgroundOverride,
-    onUploadChange,
     clearUploadedFile,
     clearUploadedItemImage,
     clearPageBackgroundImageFile,

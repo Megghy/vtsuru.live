@@ -1,33 +1,28 @@
 <script setup lang="ts">
-import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled, Image24Regular } from '@vicons/fluent'
-import { X } from 'lucide-vue-next'
+import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled } from '@vicons/fluent'
 import { ref, watch } from 'vue'
 
-import type { UploadFileInfo } from '@/shared/types/upload'
 import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { NumberField } from '@/shared/ui/number-field'
 import { Slider } from '@/shared/ui/slider'
-import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
   images: DecorativeImageProperties[]
-  pendingFiles: UploadFileInfo[]
+  pendingFiles: UploadImageItem[]
   disabled?: boolean
   maxFileSize: number
 }>()
 
 const emit = defineEmits<{
   'update:images': [images: DecorativeImageProperties[]]
-  'update:pendingFiles': [files: UploadFileInfo[]]
+  'update:pendingFiles': [files: UploadImageItem[]]
 }>()
 
-const message = useMessage()
 const selectedImageId = ref<number>()
-const fileInputRef = ref<HTMLInputElement>()
-const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'ico', 'bmp', 'tiff', 'heic', 'heif'])
 
 watch(
   () => props.images,
@@ -37,44 +32,6 @@ watch(
     }
   },
 )
-
-function onFileInput(e: Event) {
-  const target = e.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-  const newFiles: UploadFileInfo[] = []
-  for (let i = 0; i < target.files.length; i++) {
-    const file = target.files[i]
-    newFiles.push({
-      id: `${Date.now()}_${i}`,
-      name: file.name,
-      file,
-      status: 'finished',
-      url: URL.createObjectURL(file),
-    })
-  }
-  target.value = ''
-  onPendingFilesChange([...props.pendingFiles, ...newFiles])
-}
-
-function onPendingFilesChange(files: UploadFileInfo[]) {
-  const fingerprints = new Set<string>()
-  const accepted = files.filter((item) => {
-    if (!item.file) return false
-    const extension = item.name.split('.').pop()?.toLowerCase()
-    const fingerprint = `${item.file.name}:${item.file.size}:${item.file.lastModified}`
-    if (fingerprints.has(fingerprint)) return false
-    fingerprints.add(fingerprint)
-    return item.file.size <= props.maxFileSize && !!extension && IMAGE_EXTENSIONS.has(extension)
-  })
-  if (accepted.length !== files.length) message.error('仅支持不超过 10MB 的图片文件')
-  emit('update:pendingFiles', accepted)
-}
-
-function removePendingFile(index: number) {
-  const next = [...props.pendingFiles]
-  next.splice(index, 1)
-  emit('update:pendingFiles', next)
-}
 
 function updateImage(id: number, values: Partial<DecorativeImageProperties>) {
   emit(
@@ -106,46 +63,15 @@ function moveImage(id: number, offset: -1 | 1) {
 
 <template>
   <div class="flex flex-col gap-3 w-full">
-    <!-- 上传区域 -->
-    <div class="grid grid-cols-4 sm:grid-cols-6 gap-2">
-      <div
-        v-for="(f, idx) in pendingFiles"
-        :key="f.id"
-        class="relative aspect-square rounded-md border border-border overflow-hidden group bg-muted/20"
-      >
-        <img
-          :src="f.url"
-          :alt="f.name"
-          class="w-full h-full object-cover"
-        />
-        <button
-          type="button"
-          class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-          @click.stop="removePendingFile(idx)"
-        >
-          <X class="size-3" />
-        </button>
-      </div>
-
-      <button
-        v-if="pendingFiles.length < 20"
-        type="button"
-        class="aspect-square flex flex-col items-center justify-center rounded-md border border-dashed border-input hover:border-primary bg-background/50 hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-all cursor-pointer p-2 disabled:opacity-50 disabled:pointer-events-none"
-        :disabled="disabled"
-        @click="fileInputRef?.click()"
-      >
-        <Image24Regular class="size-6 mb-1 text-muted-foreground/60" />
-        <span class="text-[11px]">添加装饰图片</span>
-      </button>
-      <input
-        ref="fileInputRef"
-        type="file"
-        multiple
-        accept="image/*"
-        class="hidden"
-        @change="onFileInput"
-      />
-    </div>
+    <ImageUpload
+      :model-value="pendingFiles"
+      :max-files="20"
+      :max-size="maxFileSize"
+      :disabled="disabled"
+      size="grid"
+      placeholder="添加装饰图片"
+      @update:model-value="emit('update:pendingFiles', $event)"
+    />
 
     <p
       v-if="pendingFiles.length"

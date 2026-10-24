@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { Image24Regular, Info24Filled } from '@vicons/fluent'
-import { X } from 'lucide-vue-next'
+import { Info24Filled } from '@vicons/fluent'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { UploadConfig } from '@/api/account'
 import type { APIFileModel } from '@/api/generated/model'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
-import type { UploadFileInfo } from '@/shared/types/upload'
 import type {
   ConfigItemDefinition,
   DecorativeImageProperties,
@@ -19,6 +17,14 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import {
+  acquireFilePreviewUrl,
+  fromRemoteImageList,
+  getPendingUploadFiles,
+  ImageUpload,
+  releaseFilePreviewUrl,
+  type UploadImageItem,
+} from '@/shared/ui/image-upload'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
@@ -26,7 +32,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/shared/ui/slider'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
-import { toImageUploadFileList } from '@/shared/utils/uploadFileHelper'
 
 import DecorativeImageEditor from './DecorativeImageEditor.vue'
 
@@ -45,8 +50,8 @@ const emit = defineEmits<{
 
 const message = useMessage()
 
-const fileList = ref<{ [key: string]: UploadFileInfo[] }>({})
-const decorativeFileList = ref<{ [key: string]: UploadFileInfo[] }>({})
+const fileList = ref<{ [key: string]: UploadImageItem[] }>({})
+const decorativeFileList = ref<{ [key: string]: UploadImageItem[] }>({})
 const filePreviews = new Map<File, { key: string; data: APIFileModel }>()
 const decorativePreviews = new Map<File, { key: string; data: DecorativeImageProperties }>()
 const MAX_FILE_SIZE = 10 * 1024 * 1024
@@ -117,8 +122,8 @@ function getUploadedFiles(key: string): APIFileModel[] {
   return Array.isArray(files) ? files : []
 }
 
-function toUploadFileList(files: APIFileModel[]): UploadFileInfo[] {
-  return toImageUploadFileList(files, '文件')
+function toUploadFileList(files: APIFileModel[]): UploadImageItem[] {
+  return fromRemoteImageList(files, '文件')
 }
 
 function syncUploadedFileList(key: string) {
@@ -128,93 +133,64 @@ function syncUploadedFileList(key: string) {
 function createPreviewFile(file: File): APIFileModel {
   return {
     id: nextPreviewId--,
-    path: URL.createObjectURL(file),
+    path: acquireFilePreviewUrl(file),
     name: file.name,
     hash: '',
     size: file.size,
   }
 }
 
-function releasePreview(preview: APIFileModel) {
-  URL.revokeObjectURL(preview.path)
-}
-
 function releaseAllPreviews() {
-  for (const preview of filePreviews.values()) releasePreview(preview.data)
-  for (const preview of decorativePreviews.values()) releasePreview(preview.data)
+  for (const file of filePreviews.keys()) releaseFilePreviewUrl(file)
+  for (const file of decorativePreviews.keys()) releaseFilePreviewUrl(file)
   filePreviews.clear()
   decorativePreviews.clear()
 }
 
-function getFileAccept(item: ConfigItemDefinition): string {
-  if (item.type !== 'file' || !item.fileType?.length) return IMAGE_ACCEPT
-  return item.fileType.join(',')
+function releaseUnusedPreviews() {
+  const activeFiles = new Set<File>()
+  for (const files of Object.values(fileList.value)) {
+    for (const item of files) if (item.kind === 'local') activeFiles.add(item.file)
+  }
+  for (const files of Object.values(decorativeFileList.value)) {
+    for (const item of files) if (item.kind === 'local') activeFiles.add(item.file)
+  }
+  for (const file of [...filePreviews.keys()]) {
+    if (!activeFiles.has(file)) {
+      releaseFilePreviewUrl(file)
+      filePreviews.delete(file)
+    }
+  }
+  for (const file of [...decorativePreviews.keys()]) {
+    if (!activeFiles.has(file)) {
+      releaseFilePreviewUrl(file)
+      decorativePreviews.delete(file)
+    }
+  }
 }
 
-function onFileListChange(item: ConfigItemDefinition, files: UploadFileInfo[]) {
+function onFileListChange(item: ConfigItemDefinition, files: UploadImageItem[]) {
   if (isUploading.value) return
-  const extensions = item.type === 'file' && item.fileType?.length ? item.fileType : IMAGE_ACCEPT.split(',')
-  const allowedExtensions = new Set(extensions.map((extension) => extension.replace('.', '').toLowerCase()))
-  const fingerprints = new Set<string>()
-  const acceptedFiles = files.filter((file) => {
-    if (!file.file) return true
-    const extension = file.name.split('.').pop()?.toLowerCase()
-    const fingerprint = `${file.file.name}:${file.file.size}:${file.file.lastModified}`
-    if (fingerprints.has(fingerprint)) return false
-    fingerprints.add(fingerprint)
-    return file.file.size <= MAX_FILE_SIZE && !!extension && allowedExtensions.has(extension)
-  })
+  fileList.value[item.key] = files
 
-  if (acceptedFiles.length !== files.length) {
-    message.error(`部分文件不符合限制（仅支持 ${extensions.join(' / ')} 且不超过 10MB）`)
-  }
-
-  const limit = item.type === 'file' ? item.fileLimit : undefined
-  const limitedFiles = limit ? acceptedFiles.slice(0, limit) : acceptedFiles
-  fileList.value[item.key] = limitedFiles
-
-  const existingUploaded = limitedFiles
-    .filter((file) => !file.file)
-    .map((file) => getUploadedFiles(item.key).find((itemFile) => String(itemFile.id) === file.id))
+  const existingUploaded = files
+    .filter((entry) => entry.kind === 'remote')
+    .map((entry) => getUploadedFiles(item.key).find((itemFile) => String(itemFile.id) === entry.id))
     .filter((file): file is APIFileModel => !!file)
 
-  const pendingFiles = limitedFiles.filter((file): file is UploadFileInfo & { file: File } => !!file.file)
   const previewItems: APIFileModel[] = []
-  for (const fileInfo of pendingFiles) {
-    let preview = filePreviews.get(fileInfo.file)
+  for (const entry of files) {
+    if (entry.kind !== 'local') continue
+    let preview = filePreviews.get(entry.file)
     if (!preview) {
-      preview = { key: item.key, data: createPreviewFile(fileInfo.file) }
-      filePreviews.set(fileInfo.file, preview)
+      preview = { key: item.key, data: createPreviewFile(entry.file) }
+      filePreviews.set(entry.file, preview)
     }
     previewItems.push(preview.data)
   }
 
   props.configData[item.key] = [...existingUploaded, ...previewItems]
-}
-
-function onFileInput(item: ConfigItemDefinition, e: Event) {
-  const target = e.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-  const current = fileList.value[item.key] || []
-  const newFiles: UploadFileInfo[] = []
-  for (let i = 0; i < target.files.length; i++) {
-    const f = target.files[i]
-    newFiles.push({
-      id: `${Date.now()}_${i}`,
-      name: f.name,
-      file: f,
-      status: 'finished',
-      url: URL.createObjectURL(f),
-    })
-  }
-  target.value = ''
-  onFileListChange(item, [...current, ...newFiles])
-}
-
-function removeUploadedFile(item: ConfigItemDefinition, index: number) {
-  const next = [...(fileList.value[item.key] || [])]
-  next.splice(index, 1)
-  onFileListChange(item, next)
+  releaseUnusedPreviews()
 }
 
 function getDecorativeImages(key: string): DecorativeImageProperties[] {
@@ -224,14 +200,57 @@ function getDecorativeImages(key: string): DecorativeImageProperties[] {
 
 function updateDecorativeImages(key: string, images: DecorativeImageProperties[]) {
   props.configData[key] = images
+  const activeIds = new Set(images.map((image) => image.id))
+  const currentFiles = decorativeFileList.value[key] ?? []
+  if (currentFiles.length) {
+    decorativeFileList.value[key] = currentFiles.filter((item) => {
+      if (item.kind !== 'local') return false
+      const preview = decorativePreviews.get(item.file)
+      return !preview || activeIds.has(preview.data.id)
+    })
+  }
+  releaseUnusedPreviews()
 }
 
-function updateDecorativeFiles(key: string, files: UploadFileInfo[]) {
+function updateDecorativeFiles(key: string, files: UploadImageItem[]) {
+  if (isUploading.value) return
   decorativeFileList.value[key] = files
-}
 
-function getPendingFiles(files: UploadFileInfo[]): File[] {
-  return files.map((item) => item.file).filter((file): file is File => file instanceof File)
+  const currentImages = getDecorativeImages(key)
+  const savedImages = currentImages.filter((image) => image.id > 0)
+  const existingLocalById = new Map(currentImages.filter((image) => image.id <= 0).map((image) => [image.id, image]))
+  const localImages: DecorativeImageProperties[] = []
+
+  for (const item of files) {
+    if (item.kind !== 'local') continue
+    let preview = decorativePreviews.get(item.file)
+    if (!preview) {
+      const index = savedImages.length + localImages.length
+      preview = {
+        key,
+        data: {
+          ...createPreviewFile(item.file),
+          x: 10 + index * 5,
+          y: 10 + index * 5,
+          width: 20,
+          rotation: 0,
+          opacity: 1,
+          zIndex: index + 1,
+        },
+      }
+      decorativePreviews.set(item.file, preview)
+    } else {
+      const latest = existingLocalById.get(preview.data.id)
+      if (latest) preview.data = latest
+    }
+    localImages.push(preview.data)
+  }
+
+  props.configData[key] = [...savedImages, ...localImages].map((image, index) => ({
+    ...image,
+    zIndex: index + 1,
+  }))
+  releaseUnusedPreviews()
 }
 
 function updateUploadProgress(stage: string, done?: number, total?: number) {
@@ -245,11 +264,11 @@ function updateUploadProgress(stage: string, done?: number, total?: number) {
 async function uploadAllFiles() {
   const uploadGroups: { key: string; files: File[]; decorative: boolean }[] = []
   for (const [key, files] of Object.entries(fileList.value)) {
-    const pendingFiles = getPendingFiles(files)
+    const pendingFiles = getPendingUploadFiles(files)
     if (pendingFiles.length) uploadGroups.push({ key, files: pendingFiles, decorative: false })
   }
   for (const [key, files] of Object.entries(decorativeFileList.value)) {
-    const pendingFiles = getPendingFiles(files)
+    const pendingFiles = getPendingUploadFiles(files)
     if (pendingFiles.length) uploadGroups.push({ key, files: pendingFiles, decorative: true })
   }
 
@@ -287,10 +306,12 @@ async function uploadAllFiles() {
             zIndex: currentPreview?.zIndex ?? current.length + 1,
           }
           props.configData[group.key] = current.map((image) => (image.id === preview?.data.id ? nextImage : image))
-          decorativeFileList.value[group.key] = decorativeFileList.value[group.key].filter((item) => item.file !== file)
+          decorativeFileList.value[group.key] = decorativeFileList.value[group.key].filter(
+            (item) => !(item.kind === 'local' && item.file === file),
+          )
           await nextTick()
           if (preview) {
-            releasePreview(preview.data)
+            releaseFilePreviewUrl(file)
             decorativePreviews.delete(file)
           }
         } else {
@@ -300,11 +321,11 @@ async function uploadAllFiles() {
           )
           const uploadedItem = toUploadFileList([result])[0]
           fileList.value[group.key] = fileList.value[group.key].map((item) =>
-            item.file === file ? uploadedItem : item,
+            item.kind === 'local' && item.file === file ? uploadedItem : item,
           )
           await nextTick()
           if (preview) {
-            releasePreview(preview.data)
+            releaseFilePreviewUrl(file)
             filePreviews.delete(file)
           }
         }
@@ -566,44 +587,17 @@ onBeforeUnmount(() => {
             v-else-if="item.type === 'file'"
             class="space-y-2"
           >
-            <div
-              class="grid gap-2"
-              :class="fillHeight ? 'grid-cols-3' : 'grid-cols-4 sm:grid-cols-6'"
-            >
-              <div
-                v-for="(f, fIdx) in fileList[item.key] ?? []"
-                :key="f.id"
-                class="relative aspect-square rounded-md border border-border overflow-hidden group bg-muted/20"
-              >
-                <img
-                  :src="f.url"
-                  :alt="f.name"
-                  class="w-full h-full object-cover"
-                />
-                <button
-                  type="button"
-                  class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                  @click.stop="removeUploadedFile(item, fIdx)"
-                >
-                  <X class="size-3" />
-                </button>
-              </div>
-
-              <label
-                v-if="!item.fileLimit || (fileList[item.key]?.length ?? 0) < item.fileLimit"
-                class="aspect-square flex flex-col items-center justify-center rounded-md border border-dashed border-input hover:border-primary bg-background/50 hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-all cursor-pointer p-2"
-              >
-                <Image24Regular class="size-6 mb-1 text-muted-foreground/60" />
-                <span class="text-[11px]">上传文件</span>
-                <input
-                  type="file"
-                  class="hidden"
-                  :accept="getFileAccept(item)"
-                  :multiple="(item.fileLimit ?? 2) > 1"
-                  @change="onFileInput(item, $event)"
-                />
-              </label>
-            </div>
+            <ImageUpload
+              :model-value="fileList[item.key] ?? []"
+              :max-files="item.fileLimit"
+              :max-size="MAX_FILE_SIZE"
+              :accept="item.fileType?.length ? item.fileType : IMAGE_ACCEPT"
+              :disabled="isUploading"
+              size="grid"
+              :grid-class="fillHeight ? 'grid-cols-3' : 'grid-cols-4 sm:grid-cols-6'"
+              placeholder="上传文件"
+              @update:model-value="(files) => onFileListChange(item, files)"
+            />
           </div>
         </div>
       </div>

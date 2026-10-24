@@ -12,11 +12,8 @@ import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { VTSURU_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
-import type { UploadFileInfo } from '@/shared/types/upload'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
-
-export type { UploadFileInfo } from '@/shared/types/upload'
 
 const isPreferredDark = usePreferredDark()
 const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
@@ -220,43 +217,6 @@ export function downloadImage(imageSrc: string, filename: string) {
     })
   }
   image.src = imageSrc
-}
-
-export async function getBase64(file: File | undefined | null): Promise<string | undefined> {
-  if (!file) return new Promise((resolve) => resolve(undefined))
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result?.toString().split(',')[1] || undefined)
-    reader.onerror = (error) => reject(error)
-  })
-}
-
-export async function getImageUploadModel(
-  files: UploadFileInfo[] | undefined | null,
-  maxSize: number = 10 * 1024 * 1024,
-) {
-  const result = {
-    existImages: [],
-    newImagesBase64: [],
-  } as { existImages: string[]; newImagesBase64: string[] }
-  if (!files) return result
-  for (let i = 0; i < files.length; i++) {
-    const file = files[i]
-    if ((file.file?.size ?? 0) > maxSize) {
-      message.error(`文件大小不能超过 ${maxSize / 1024 / 1024}MB`)
-      return result
-    }
-    if (!file.file) {
-      result.existImages.push(file.id)
-    } else {
-      const base64 = await getBase64(file.file)
-      if (base64) {
-        result.newImagesBase64.push(base64)
-      }
-    }
-  }
-  return result
 }
 
 export function getUserAvatarUrl(userId: number | undefined | null, size = 64) {

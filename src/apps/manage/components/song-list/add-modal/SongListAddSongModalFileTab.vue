@@ -7,6 +7,7 @@ import * as XLSX from 'xlsx'
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -40,8 +41,18 @@ const columnMappings = usePersistedStorage('song-list-column-mappings', {
 })
 
 const selectedFile = ref<File | null>(null)
+const dropZoneRef = ref<HTMLElement | null>(null)
 const uploadSongsFromFile = ref<ResponseSongModel[]>([])
 const selecteduploadSongs = ref<string[]>([])
+
+const { open: openSheetPicker, isOverDropZone } = useFilePicker({
+  dropZoneRef,
+  accept: ['.xlsx', '.xls', '.csv'],
+  onError: message.error,
+  onSelect: ([file]) => {
+    selectedFile.value = file
+  },
+})
 
 defineExpose({
   add: addUploadFileSong,
@@ -67,22 +78,6 @@ function parseMultipleValues(value: any): string[] {
     .split(/\/|,/)
     .map((a: string) => a.trim())
     .filter((v: string, index: number, self: string[]) => v && self.indexOf(v) === index)
-}
-
-function onFileSelect(e: Event) {
-  const target = e.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-  const file = target.files[0]
-  const validExtensions = ['.xlsx', '.xls', '.csv']
-  const isValid = validExtensions.some((ext) => file.name.endsWith(ext))
-
-  if (!isValid) {
-    message.error('只能选择 xlsx、xls 或 csv 文件')
-    target.value = ''
-    return
-  }
-
-  selectedFile.value = file
 }
 
 function resetColumnMappings() {
@@ -332,21 +327,23 @@ async function addUploadFileSong() {
 
     <!-- 上传区域 -->
     <div class="space-y-2">
-      <label
-        class="border border-dashed border-input hover:border-primary rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer transition-colors bg-card hover:bg-muted/30"
+      <button
+        ref="dropZoneRef"
+        type="button"
+        class="w-full border border-dashed rounded-lg p-6 flex-col-center cursor-pointer transition-colors"
+        :class="
+          isOverDropZone
+            ? 'border-primary bg-primary/5'
+            : 'border-input hover:border-primary bg-card hover:bg-muted/30'
+        "
+        @click="openSheetPicker()"
       >
         <ArchiveOutline class="size-8 text-muted-foreground/60 mb-2" />
         <span class="text-xs font-medium text-foreground">
           {{ selectedFile ? selectedFile.name : '点击选择 Excel (.xlsx, .xls) 或 CSV 文件' }}
         </span>
         <span class="text-[11px] text-muted-foreground mt-1">支持拖拽或直接点击选择</span>
-        <input
-          type="file"
-          accept=".xlsx,.xls,.csv"
-          class="hidden"
-          @change="onFileSelect"
-        />
-      </label>
+      </button>
 
       <div class="flex justify-end">
         <Button

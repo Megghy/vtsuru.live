@@ -3,6 +3,7 @@ import { saveAs } from 'file-saver'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import type { VtsProfile } from '@/apps/client/store/useVtsStore'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
@@ -46,16 +47,15 @@ function exportProfile(p: VtsProfile) {
   }, '已导出')
 }
 
-async function onImportFileChange(ev: Event) {
-  const input = ev.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file) return
-  run(async () => {
-    const text = await file.text()
-    await vts.importProfile(JSON.parse(text))
-  }, '已导入')
-}
+const { open: openProfileImport } = useFilePicker({
+  accept: 'application/json',
+  onSelect: ([file]) => {
+    run(async () => {
+      const text = await file.text()
+      await vts.importProfile(JSON.parse(text))
+    }, '已导入')
+  },
+})
 </script>
 
 <template>
@@ -71,20 +71,12 @@ async function onImportFileChange(ev: Event) {
         >
           从当前创建
         </Button>
-        <label class="cursor-pointer">
-          <Button
-            variant="outline"
-            as-child
-          >
-            <span>导入</span>
-          </Button>
-          <input
-            type="file"
-            accept="application/json"
-            style="display: none"
-            @change="onImportFileChange"
-          />
-        </label>
+        <Button
+          variant="outline"
+          @click="openProfileImport()"
+        >
+          导入
+        </Button>
         <span class="text-[var(--muted-foreground)]">保存/恢复 VTS 控制配置 (不含连接信息)</span>
       </div>
 

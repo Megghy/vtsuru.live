@@ -2,8 +2,6 @@
 import {
   ArrowLeft24Regular,
   CheckmarkCircle24Regular,
-  Dismiss16Regular,
-  Image24Regular,
   Send24Regular,
   Settings24Regular,
 } from '@vicons/fluent'
@@ -22,7 +20,7 @@ import {
 import {
   imagesForMessage,
   isOwnTicketMessage,
-  remainingReplyImageSlots,
+  SUPPORT_TICKET_MAX_IMAGES,
   supportTicketStatusMeta,
   supportTicketTypeLabel,
 } from '@/shared/supportTicket'
@@ -30,17 +28,12 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { getPendingUploadFiles, ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { Empty } from '@/shared/ui/empty'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Spin } from '@/shared/ui/spin'
 import { Textarea } from '@/shared/ui/textarea'
 import { toast } from '@/shared/utils'
-
-interface LocalFileItem {
-  id: string
-  file: File
-  url: string
-}
 
 const props = defineProps<{
   ticket?: SupportTicketDetail
@@ -54,8 +47,7 @@ const emit = defineEmits<{
 }>()
 
 const reply = ref('')
-const replyFiles = ref<LocalFileItem[]>([])
-const fileInputRef = ref<HTMLInputElement>()
+const replyFiles = ref<UploadImageItem[]>([])
 const sending = ref(false)
 const resolving = ref(false)
 const savingPreferences = ref(false)
@@ -65,7 +57,6 @@ const emailOnStaffReply = ref(false)
 const timeline = ref<HTMLElement>()
 
 const messages = computed(() => props.ticket?.messages ?? [])
-const remainingImageSlots = computed(() => remainingReplyImageSlots(replyFiles.value.length))
 const canSend = computed(() => Boolean(reply.value.trim() || replyFiles.value.length))
 
 watch(
@@ -86,37 +77,12 @@ function authorLabel(authorType: SupportTicketAuthorType) {
   return props.editable ? '我' : '用户'
 }
 
-function onFileSelect(e: Event) {
-  const target = e.target as HTMLInputElement
-  if (!target.files?.length) return
-  const remaining = remainingImageSlots.value
-  const files = Array.from(target.files).slice(0, remaining)
-  for (const f of files) {
-    if (!f.type.startsWith('image/')) {
-      toast.error('只能上传图片文件')
-      continue
-    }
-    replyFiles.value.push({
-      id: `${f.name}-${Date.now()}-${Math.random()}`,
-      file: f,
-      url: URL.createObjectURL(f),
-    })
-  }
-  target.value = ''
-}
-
-function removeFile(index: number) {
-  const item = replyFiles.value[index]
-  if (item) URL.revokeObjectURL(item.url)
-  replyFiles.value.splice(index, 1)
-}
-
 async function sendReply() {
   const content = reply.value.trim()
   if (!props.ticket || (!content && !replyFiles.value.length)) return
   sending.value = true
   try {
-    const files = replyFiles.value.map((item) => item.file)
+    const files = getPendingUploadFiles(replyFiles.value)
     const uploaded = files.length ? await uploadFiles(files, FileStore.Tickets) : []
     await addSupportTicketMessage(
       props.ticket.id,
@@ -124,7 +90,6 @@ async function sendReply() {
       uploaded.map((file) => file.id),
     )
     reply.value = ''
-    replyFiles.value.forEach((f) => URL.revokeObjectURL(f.url))
     replyFiles.value = []
     emit('refresh')
   } catch (error) {
@@ -299,50 +264,12 @@ function formatRelative(time: number) {
         class="ticket-detail__composer pt-3 border-t border-border/60 space-y-2 text-xs"
       >
         <!-- 图片预览与选择 -->
-        <div class="flex items-center gap-2 flex-wrap">
-          <div
-            v-for="(item, i) in replyFiles"
-            :key="item.id"
-            class="relative size-12 rounded border border-border overflow-hidden group"
-          >
-            <img
-              :src="item.url"
-              class="size-full object-cover"
-              alt=""
-            />
-            <button
-              type="button"
-              class="absolute top-0.5 right-0.5 size-3.5 rounded-full bg-black/60 text-white flex items-center justify-center"
-              @click="removeFile(i)"
-            >
-              <component
-                :is="Dismiss16Regular"
-                class="size-2"
-              />
-            </button>
-          </div>
-
-          <button
-            v-if="remainingImageSlots > 0"
-            type="button"
-            class="size-12 rounded border border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-primary hover:text-primary transition"
-            title="添加图片"
-            @click="fileInputRef?.click()"
-          >
-            <component
-              :is="Image24Regular"
-              class="size-4"
-            />
-          </button>
-          <input
-            ref="fileInputRef"
-            type="file"
-            accept="image/*"
-            multiple
-            class="hidden"
-            @change="onFileSelect"
-          />
-        </div>
+        <ImageUpload
+          v-model="replyFiles"
+          :max-files="SUPPORT_TICKET_MAX_IMAGES"
+          :disabled="sending"
+          size="xs"
+        />
 
         <Textarea
           v-model="reply"

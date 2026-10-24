@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Add24Regular, ArrowClockwise24Regular, Dismiss16Regular, Image24Regular } from '@vicons/fluent'
+import { Add24Regular, ArrowClockwise24Regular } from '@vicons/fluent'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -19,6 +19,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { getPendingUploadFiles, ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
@@ -28,12 +29,6 @@ import { toast } from '@/shared/utils'
 import PublicTicketCard from './support-ticket/PublicTicketCard.vue'
 import SupportTicketDetailView from './support-ticket/SupportTicketDetail.vue'
 import SupportTicketListItem from './support-ticket/SupportTicketListItem.vue'
-
-interface LocalFileItem {
-  id: string
-  file: File
-  url: string
-}
 
 const route = useRoute()
 const router = useRouter()
@@ -48,8 +43,7 @@ const creating = ref(false)
 const keyword = ref('')
 const statusFilter = ref<string>('all')
 const typeFilter = ref<string>('all')
-const fileList = ref<LocalFileItem[]>([])
-const fileInputRef = ref<HTMLInputElement>()
+const fileList = ref<UploadImageItem[]>([])
 
 const draft = ref<CreateSupportTicketModel>({
   title: '',
@@ -134,33 +128,7 @@ function resetDraft() {
     emailOnStaffReply: false,
     imageFileIds: [],
   }
-  fileList.value.forEach((f) => URL.revokeObjectURL(f.url))
   fileList.value = []
-}
-
-function onFileSelect(e: Event) {
-  const target = e.target as HTMLInputElement
-  if (!target.files?.length) return
-  const remaining = 5 - fileList.value.length
-  const files = Array.from(target.files).slice(0, remaining)
-  for (const f of files) {
-    if (!f.type.startsWith('image/')) {
-      toast.error('只能上传图片文件')
-      continue
-    }
-    fileList.value.push({
-      id: `${f.name}-${Date.now()}-${Math.random()}`,
-      file: f,
-      url: URL.createObjectURL(f),
-    })
-  }
-  target.value = ''
-}
-
-function removeFile(index: number) {
-  const item = fileList.value[index]
-  if (item) URL.revokeObjectURL(item.url)
-  fileList.value.splice(index, 1)
 }
 
 async function submitTicket() {
@@ -172,7 +140,7 @@ async function submitTicket() {
   }
   creating.value = true
   try {
-    const files = fileList.value.map((item) => item.file)
+    const files = getPendingUploadFiles(fileList.value)
     const uploaded = files.length ? await uploadFiles(files, FileStore.Tickets) : []
     const ticket = await createSupportTicket({
       ...draft.value,
@@ -473,50 +441,13 @@ watch(
           <!-- 图片上传 -->
           <div class="space-y-1.5">
             <label class="font-medium text-foreground">图片 (最多 5 张)</label>
-            <div class="flex items-center gap-2 flex-wrap">
-              <div
-                v-for="(item, i) in fileList"
-                :key="item.id"
-                class="relative size-16 rounded-md border border-border overflow-hidden group"
-              >
-                <img
-                  :src="item.url"
-                  class="size-full object-cover"
-                  alt=""
-                />
-                <button
-                  type="button"
-                  class="absolute top-1 right-1 size-4 rounded-full bg-black/60 text-white flex items-center justify-center opacity-80 hover:opacity-100"
-                  @click="removeFile(i)"
-                >
-                  <component
-                    :is="Dismiss16Regular"
-                    class="size-2.5"
-                  />
-                </button>
-              </div>
-
-              <button
-                v-if="fileList.length < 5"
-                type="button"
-                class="size-16 rounded-md border border-dashed border-border flex flex-col items-center justify-center gap-1 text-muted-foreground hover:border-primary hover:text-primary transition"
-                @click="fileInputRef?.click()"
-              >
-                <component
-                  :is="Image24Regular"
-                  class="size-5"
-                />
-                <span class="text-[10px]">添加</span>
-              </button>
-              <input
-                ref="fileInputRef"
-                type="file"
-                accept="image/*"
-                multiple
-                class="hidden"
-                @change="onFileSelect"
-              />
-            </div>
+            <ImageUpload
+              v-model="fileList"
+              :max-files="5"
+              :disabled="creating"
+              size="sm"
+              placeholder="添加"
+            />
           </div>
 
           <div class="flex items-center gap-4 pt-1">

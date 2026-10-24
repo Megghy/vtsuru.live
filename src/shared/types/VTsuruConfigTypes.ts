@@ -53,22 +53,6 @@ export function createDefaultRGBA(r = 0, g = 0, b = 0, a = 1): RGBAColor {
   return { r, g, b, a }
 }
 
-// 添加类型守卫函数，用于检查上传文件信息
-export function isUploadFileInfo(obj: any): obj is APIFileModel {
-  return (
-    obj &&
-    typeof obj === 'object' &&
-    'id' in obj &&
-    typeof obj.id === 'number' &&
-    'path' in obj &&
-    typeof obj.path === 'string' &&
-    'name' in obj &&
-    typeof obj.name === 'string' &&
-    'hash' in obj &&
-    typeof obj.hash === 'string'
-  )
-}
-
 /**
  * @description 带有特定值类型 'V' 的配置项的基础类型。
  * @template T - 完整配置对象的类型 (默认为 unknown)。
@@ -309,12 +293,12 @@ export type ExtractConfigData<Items extends readonly ConfigItemDefinition[]> = {
 // --- Key 约束辅助类型 ---
 /**
  * @description 根据配置项的 'type' 约束其 'key' 属性。
- * - type: 'file'或'decorativeImages'等包含UploadFileInfo的类型的key必须以'File'结尾。
+ * - type: 'file'或'decorativeImages'等包含APIFileModel的类型的key必须以'File'结尾。
  * - 其他type的key禁止以'File'结尾。
  * @template Item - 待检查的配置项定义类型。
  */
 type ConstrainedKeyItem<Item extends ConfigItemDefinition> =
-  // 所有包含UploadFileInfo的类型必须以'File'结尾
+  // 所有包含APIFileModel的类型必须以'File'结尾
   Item extends { type: 'file' } | { type: 'decorativeImages' }
     ? // 强制key以'File'结尾
       Omit<Item, 'key'> & { key: `${string}File` }

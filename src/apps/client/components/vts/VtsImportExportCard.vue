@@ -3,6 +3,7 @@ import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -35,20 +36,19 @@ function exportFull() {
   }, '已导出全量配置')
 }
 
-async function onImportFileChange(ev: Event) {
-  const input = ev.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file) return
-  run(async () => {
-    const parsed = JSON.parse(await file.text())
-    pending.value = {
-      kind: parsed && typeof parsed === 'object' && parsed.version === 2 ? 'full' : 'minimal',
-      payload: parsed,
-    }
-    showPreview.value = true
-  })
-}
+const { open: openConfigImport } = useFilePicker({
+  accept: 'application/json',
+  onSelect: ([file]) => {
+    run(async () => {
+      const parsed = JSON.parse(await file.text())
+      pending.value = {
+        kind: parsed && typeof parsed === 'object' && parsed.version === 2 ? 'full' : 'minimal',
+        payload: parsed,
+      }
+      showPreview.value = true
+    })
+  },
+})
 
 const previewLines = computed(() => {
   if (!pending.value) return []
@@ -106,21 +106,13 @@ function cancelImport() {
         >
           导出全量配置
         </Button>
-        <label class="cursor-pointer">
-          <Button
-            variant="outline"
-            :disabled="importing"
-            as-child
-          >
-            <span>导入</span>
-          </Button>
-          <input
-            type="file"
-            accept="application/json"
-            style="display: none"
-            @change="onImportFileChange"
-          />
-        </label>
+        <Button
+          variant="outline"
+          :disabled="importing"
+          @click="openConfigImport()"
+        >
+          导入
+        </Button>
         <span class="text-[var(--muted-foreground)]">wsUrl: {{ vts.wsUrl || '未设置' }}</span>
         <span class="text-[var(--muted-foreground)]">Token: {{ vts.authToken ? '已保存' : '无' }}</span>
       </div>

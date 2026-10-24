@@ -5,6 +5,7 @@ import type { VtsHotkeyInfo } from '@/apps/client/api/vts/messages'
 import type { VtsHotkeyCustomization } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { newDeckTile } from '@/apps/client/store/vts/deck'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
@@ -87,22 +88,20 @@ function clearCustomization() {
   showEdit.value = false
 }
 
-async function onIconFileChange(ev: Event) {
-  const input = ev.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file) return
-  await run(async () => {
-    if (!file.type.startsWith('image/')) throw new Error('仅支持图片文件')
-    if (file.size > ICON_MAX_BYTES) throw new Error('图标过大（>200KB），请换更小的图片')
-    editForm.iconDataUrl = await new Promise<string>((resolve, reject) => {
-      const reader = new FileReader()
-      reader.onload = () => resolve(String(reader.result))
-      reader.onerror = () => reject(new Error('读取图标失败'))
-      reader.readAsDataURL(file)
+const { open: openIconPicker } = useFilePicker({
+  accept: 'image/*',
+  maxSize: ICON_MAX_BYTES,
+  onSelect: ([file]) => {
+    void run(async () => {
+      editForm.iconDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(String(reader.result))
+        reader.onerror = () => reject(new Error('读取图标失败'))
+        reader.readAsDataURL(file)
+      })
     })
-  })
-}
+  },
+})
 
 function togglePinned(hk: VtsHotkeyInfo) {
   const c = getCustom(hk.hotkeyID)
@@ -295,20 +294,12 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
         </div>
 
         <div class="flex items-center gap-2">
-          <label class="cursor-pointer">
-            <Button
-              variant="outline"
-              as-child
-            >
-              <span>选择图标</span>
-            </Button>
-            <input
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="onIconFileChange"
-            />
-          </label>
+          <Button
+            variant="outline"
+            @click="openIconPicker()"
+          >
+            选择图标
+          </Button>
           <Button
             variant="ghost"
             :disabled="!editForm.iconDataUrl"

@@ -29,6 +29,7 @@ import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
 import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { Button } from '@/shared/ui/button'
@@ -60,7 +61,6 @@ const resourceSearch = ref('')
 const previewDevice = ref<'desktop' | 'mobile'>('desktop')
 const previewDark = ref(isDarkMode.value)
 const uploading = ref(false)
-const uploadInput = ref<HTMLInputElement | null>(null)
 const codeEditor = ref<InstanceType<typeof CustomHtmlCodeEditor> | null>(null)
 const resources = useBuilderResources({
   fileRefs: editor.fileRefs,
@@ -194,10 +194,14 @@ function updateShow(value: boolean) {
   if (!value) closeEditor()
 }
 
-async function handleUpload(event: Event) {
-  const input = event.target as HTMLInputElement
-  const files = input.files ? [...input.files] : []
-  input.value = ''
+const { open: openImageUpload } = useFilePicker({
+  accept: ['.png', '.jpg', '.jpeg', '.gif', '.webp'],
+  maxSize: 10 * 1024 * 1024,
+  onError: editor.message.error,
+  onSelect: handleUpload,
+})
+
+async function handleUpload(files: File[]) {
   const fileError = validateUserPageImageFiles(files, false)
   if (fileError) {
     editor.message.error(fileError)
@@ -277,9 +281,9 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                       variant="ghost"
                       class="size-7"
                       :disabled="uploading"
-                      aria-label="上传图片"
-                      @click="uploadInput?.click()"
-                    >
+                        aria-label="上传图片"
+                        @click="openImageUpload()"
+                      >
                       <CloudUploadOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -287,19 +291,12 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                 </Tooltip>
               </TooltipProvider>
             </div>
-            <Input
-              v-model="resourceSearch"
-              size="xs"
-              placeholder="搜索文件"
-            />
-            <input
-              ref="uploadInput"
-              type="file"
-              accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
-              hidden
-              @change="handleUpload"
-            />
-          </div>
+              <Input
+                v-model="resourceSearch"
+                size="xs"
+                placeholder="搜索文件"
+              />
+            </div>
           <div class="flex-1 min-h-0 overflow-y-auto p-2">
             <div
               v-if="filteredResources.length"

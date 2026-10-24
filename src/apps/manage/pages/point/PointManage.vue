@@ -5,13 +5,12 @@ import {
   Copy24Regular,
   Delete24Filled,
   Edit24Filled,
-  Image24Regular,
   Info24Filled,
   Open24Regular,
   ShoppingBag24Filled,
 } from '@vicons/fluent'
 import { useRouteHash } from '@vueuse/router'
-import { Plus, X } from 'lucide-vue-next'
+import { Plus } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -30,13 +29,13 @@ import PointOrderManage from '@/shared/components/points/PointOrderManage.vue'
 import PointSettings from '@/shared/components/points/PointSettings.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { FileStore, uploadFiles, UploadStage } from '@/shared/services/fileUpload'
-import type { UploadFileInfo } from '@/shared/types/upload'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { fromRemoteImageList, getPendingUploadFiles, ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -49,7 +48,6 @@ import { copyToClipboard, toast, useMessage } from '@/shared/utils'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
-import { createCoverFileInfo } from './goodsCoverHelper'
 import PointGuardDuplicateManage from './PointGuardDuplicateManage.vue'
 import PointTestPanel from './PointTestPanel.vue'
 import PointUserManage from './PointUserManage.vue'
@@ -101,7 +99,7 @@ const offShelfGoods = computed(() =>
   goods.value.filter((g) => g.status === GoodsStatus.Discontinued).toSorted(sortGoods),
 )
 
-function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFileInfo[] } {
+function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadImageItem[] } {
   return {
     goods: {
       type: GoodsTypes.Virtual,
@@ -127,8 +125,8 @@ function defaultGoodsModel(): { goods: UploadPointGoodsModel; fileList: UploadFi
     fileList: [],
   }
 }
-const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadFileInfo[] }>(defaultGoodsModel())
-const subItemFileLists = ref<Record<string, UploadFileInfo[]>>({})
+const currentGoodsModel = ref<{ goods: UploadPointGoodsModel; fileList: UploadImageItem[] }>(defaultGoodsModel())
+const subItemFileLists = ref<Record<string, UploadImageItem[]>>({})
 
 function getSubItemKey(sub: TempSubPointGoodsModel) {
   return String(sub.id)
@@ -202,38 +200,6 @@ async function uploadCover(file: File) {
   })
 }
 
-function onCoverFileInput(e: Event) {
-  const target = e.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-  const file = target.files[0]
-  target.value = ''
-  currentGoodsModel.value.fileList = [
-    {
-      id: String(Date.now()),
-      name: file.name,
-      file,
-      status: 'finished',
-      url: URL.createObjectURL(file),
-    },
-  ]
-}
-
-function onSubCoverFileInput(subKey: string, e: Event) {
-  const target = e.target as HTMLInputElement
-  if (!target.files || target.files.length === 0) return
-  const file = target.files[0]
-  target.value = ''
-  subItemFileLists.value[subKey] = [
-    {
-      id: String(Date.now()),
-      name: file.name,
-      file,
-      status: 'finished',
-      url: URL.createObjectURL(file),
-    },
-  ]
-}
-
 async function updateGoods() {
   if (isUpdating.value || isUploadingCover.value) return
   isUpdating.value = true
@@ -249,19 +215,20 @@ async function updateGoods() {
       throw new Error('礼物所需积分不能为负数')
     }
 
-    const newFilesToUpload = currentGoodsModel.value.fileList.filter((f) => f.file && f.status !== 'finished')
-    if (newFilesToUpload.length > 0 && newFilesToUpload[0].file) {
+    const newFilesToUpload = getPendingUploadFiles(currentGoodsModel.value.fileList)
+    if (newFilesToUpload.length > 0) {
       isUploadingCover.value = true
       message.info(shouldWatermarkCover.value ? '正在添加封面水印并上传...' : '正在上传封面...')
-      const uploadResults = await uploadCover(newFilesToUpload[0].file)
+      const uploadResults = await uploadCover(newFilesToUpload[0])
       isUploadingCover.value = false
       if (uploadResults && uploadResults.length > 0) {
         currentGoodsModel.value.goods.cover = uploadResults[0]
+        currentGoodsModel.value.fileList = fromRemoteImageList([uploadResults[0]], '封面')
         message.success('封面上传成功')
       } else {
         throw new Error('封面上传失败')
       }
-    } else if (currentGoodsModel.value.fileList.length === 0 && currentGoodsModel.value.goods.id) {
+    } else if (currentGoodsModel.value.fileList.length === 0) {
       currentGoodsModel.value.goods.cover = undefined
     }
 
@@ -270,14 +237,16 @@ async function updateGoods() {
     for (const sub of currentGoodsModel.value.goods.subItems ?? []) {
       const key = getSubItemKey(sub)
       const fileList = subItemFileLists.value[key] ?? []
-      const subFilesToUpload = fileList.filter((f) => f.file && f.status !== 'finished')
-      if (subFilesToUpload.length > 0 && subFilesToUpload[0].file) {
+      const subFilesToUpload = getPendingUploadFiles(fileList)
+      if (subFilesToUpload.length > 0) {
         isUploadingCover.value = true
-        const uploadResults = await uploadCover(subFilesToUpload[0].file)
+        const uploadResults = await uploadCover(subFilesToUpload[0])
         isUploadingCover.value = false
         if (uploadResults && uploadResults.length > 0) {
           sub.cover = uploadResults[0]
-          subItemFileLists.value[key] = createCoverFileInfo(uploadResults[0])
+          subItemFileLists.value[key] = fromRemoteImageList([uploadResults[0]], '封面')
+        } else {
+          throw new Error(`款式封面上传失败: ${sub.name || '未命名'}`)
         }
       } else if (fileList.length === 0) {
         sub.cover = undefined
@@ -321,12 +290,12 @@ function onUpdateClick(item: ResponsePointGoodModel) {
   const copiedItem = JSON.parse(JSON.stringify(item)) as UploadPointGoodsModel
   currentGoodsModel.value = {
     goods: copiedItem,
-    fileList: createCoverFileInfo(item.cover),
+    fileList: fromRemoteImageList([item.cover], '封面'),
   }
   subItemFileLists.value = {}
   for (const s of copiedItem.subItems ?? []) {
     const key = getSubItemKey(s)
-    subItemFileLists.value[key] = createCoverFileInfo(s.cover)
+    subItemFileLists.value[key] = fromRemoteImageList([s.cover], '封面')
   }
   isAllowedPrivacyPolicy.value = true
   shouldWatermarkCover.value = true
@@ -825,38 +794,13 @@ function resetGoods() {
                     </label>
                   </div>
 
-                  <div class="flex items-center gap-3">
-                    <div
-                      v-if="currentGoodsModel.fileList.length > 0"
-                      class="relative size-20 rounded border border-border overflow-hidden group bg-muted/20"
-                    >
-                      <img
-                        :src="currentGoodsModel.fileList[0].url"
-                        class="w-full h-full object-cover"
-                      />
-                      <button
-                        type="button"
-                        class="absolute top-1 right-1 p-0.5 rounded-full bg-black/60 text-white hover:bg-destructive opacity-0 group-hover:opacity-100 transition-opacity"
-                        @click="currentGoodsModel.fileList = []"
-                      >
-                        <X class="size-3" />
-                      </button>
-                    </div>
-
-                    <label
-                      v-else
-                      class="size-20 flex flex-col items-center justify-center rounded border border-dashed border-input hover:border-primary bg-background/50 text-muted-foreground hover:text-foreground cursor-pointer transition-colors p-1 text-center"
-                    >
-                      <Image24Regular class="size-6 text-muted-foreground/60 mb-0.5" />
-                      <span class="text-[10px]">上传封面</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        class="hidden"
-                        @change="onCoverFileInput"
-                      />
-                    </label>
-                  </div>
+                  <ImageUpload
+                    v-model="currentGoodsModel.fileList"
+                    :max-files="1"
+                    :disabled="isUpdating || isUploadingCover"
+                    size="md"
+                    placeholder="上传封面"
+                  />
                 </div>
               </div>
 
@@ -1003,37 +947,13 @@ function resetGoods() {
                     </div>
                     <div class="space-y-1">
                       <label class="text-xs font-medium text-foreground">款式封面</label>
-                      <div class="flex items-center gap-2">
-                        <div
-                          v-if="subItemFileLists[getSubItemKey(sub)]?.length"
-                          class="relative size-10 rounded border border-border overflow-hidden group"
-                        >
-                          <img
-                            :src="subItemFileLists[getSubItemKey(sub)][0].url"
-                            class="w-full h-full object-cover"
-                          />
-                          <button
-                            type="button"
-                            class="absolute top-0.5 right-0.5 p-0.5 bg-black/60 rounded text-white opacity-0 group-hover:opacity-100"
-                            @click="subItemFileLists[getSubItemKey(sub)] = []"
-                          >
-                            <X class="size-2.5" />
-                          </button>
-                        </div>
-                        <label
-                          v-else
-                          class="h-8 px-2.5 rounded border border-input text-xs flex items-center gap-1 cursor-pointer hover:bg-muted/30"
-                        >
-                          <Image24Regular class="size-3.5" />
-                          <span>上传款式封面</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            class="hidden"
-                            @change="onSubCoverFileInput(getSubItemKey(sub), $event)"
-                          />
-                        </label>
-                      </div>
+                      <ImageUpload
+                        v-model="subItemFileLists[getSubItemKey(sub)]"
+                        :max-files="1"
+                        :disabled="isUpdating || isUploadingCover"
+                        size="xs"
+                        placeholder="上传款式封面"
+                      />
                     </div>
                   </div>
                 </Card>

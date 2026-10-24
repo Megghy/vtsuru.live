@@ -2,6 +2,7 @@
 import { Dismiss12Regular, Image24Regular, Mic24Filled, Mic24Regular, Send24Filled, Stop24Filled } from '@vicons/fluent'
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 
+import { useFilePicker, validatePickedFiles } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -15,7 +16,6 @@ const emit = defineEmits<{
 const text = ref('')
 /** 待发送图片 (base64 data URL) */
 const images = ref<string[]>([])
-const fileInput = ref<HTMLInputElement | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 /** 把文本填入输入框并聚焦, 供预置操作点击使用 (不直接发送) */
@@ -55,20 +55,26 @@ function readAsDataUrl(file: File): Promise<string> {
   })
 }
 
-async function addFiles(files: FileList | File[]) {
-  for (const file of Array.from(files)) {
-    if (!file.type.startsWith('image/')) continue
-    if (file.size > MAX_SIZE) continue
-    if (images.value.length >= MAX_IMAGES) break
+async function addFiles(files: File[]) {
+  const valid = validatePickedFiles(files, {
+    accept: 'image/*',
+    maxSize: MAX_SIZE,
+    maxFiles: MAX_IMAGES - images.value.length,
+  })
+  for (const file of valid) {
     images.value.push(await readAsDataUrl(file))
   }
 }
 
-function onPickFiles(e: Event) {
-  const input = e.target as HTMLInputElement
-  if (input.files?.length) void addFiles(input.files)
-  input.value = ''
-}
+const { open: openImagePicker } = useFilePicker({
+  accept: 'image/*',
+  multiple: true,
+  maxSize: MAX_SIZE,
+  resolveOptions: () => ({
+    maxFiles: MAX_IMAGES - images.value.length,
+  }),
+  onSelect: addFiles,
+})
 
 function onPaste(e: ClipboardEvent) {
   const items = e.clipboardData?.items
@@ -169,7 +175,7 @@ onBeforeUnmount(() => recognition?.abort())
               size="icon"
               class="size-8 rounded-full text-muted-foreground hover:text-foreground"
               :disabled="loading || images.length >= MAX_IMAGES"
-              @click="fileInput?.click()"
+              @click="openImagePicker()"
             >
               <component
                 :is="Image24Regular"
@@ -179,14 +185,6 @@ onBeforeUnmount(() => recognition?.abort())
           </TooltipTrigger>
           <TooltipContent>添加图片 (可粘贴截图), 最多 {{ MAX_IMAGES }} 张</TooltipContent>
         </Tooltip>
-        <input
-          ref="fileInput"
-          type="file"
-          accept="image/*"
-          multiple
-          hidden
-          @change="onPickFiles"
-        />
 
         <Tooltip v-if="speechSupported">
           <TooltipTrigger as-child>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import type { APIFileModel } from '@/api/generated/model'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import type { ConfigItemDefinition, RGBAColor, TemplateConfigFileItem } from '@/shared/types/VTsuruConfigTypes'
 import { isValidRGBAColor, rgbaToString } from '@/shared/types/VTsuruConfigTypes'
@@ -20,9 +21,9 @@ const props = defineProps<{
 }>()
 
 const message = useMessage()
-
-const uploadInput = ref<HTMLInputElement | null>(null)
-const pendingUploadKey = ref<string | null>(null)
+const { open: openFilePicker } = useFilePicker({
+  onError: message.error,
+})
 
 const visibleItems = computed(() => {
   return props.config.filter((item) => {
@@ -65,44 +66,33 @@ function safeRgbaString(v: unknown): string {
   return rgbaToString({ r: 0, g: 0, b: 0, a: 0 })
 }
 
-function triggerUpload(key: string) {
-  pendingUploadKey.value = key
-  uploadInput.value?.click()
-}
-
-async function onUploadChange(e: Event) {
-  const input = e.target as HTMLInputElement
-  const files = input.files ? Array.from(input.files) : []
-  input.value = ''
-  const key = pendingUploadKey.value
-  pendingUploadKey.value = null
-  if (!key) return
-  if (!files.length) return
-
-  const limit = props.config.find(
-    (x): x is TemplateConfigFileItem<any> => x.key === key && x.type === 'file',
-  )?.fileLimit
+function triggerUpload(item: TemplateConfigFileItem<any>) {
+  const limit = item.fileLimit
+  let left: number | undefined
   if (typeof limit === 'number' && limit > 0) {
-    const existing = ensureArrayValue(key)
-    const left = limit - existing.length
+    const existing = ensureArrayValue(item.key)
+    left = limit - existing.length
     if (left <= 0) {
       message.error(`最多只能上传 ${limit} 个文件`)
       return
     }
-    if (files.length > left) {
-      message.error(`最多还能上传 ${left} 个文件`)
-      return
-    }
   }
 
-  try {
-    const results = await uploadFiles(files, FileStore.Configs)
-    const arr = ensureArrayValue(key)
-    arr.push(...results)
-    message.success('已上传')
-  } catch (err) {
-    message.error((err as Error).message || String(err))
-  }
+  openFilePicker({
+    accept: item.fileType,
+    multiple: (limit ?? 2) > 1,
+    maxFiles: left,
+    onSelect: async (files) => {
+      try {
+        const results = await uploadFiles(files, FileStore.Configs)
+        const arr = ensureArrayValue(item.key)
+        arr.push(...results)
+        message.success('已上传')
+      } catch (err) {
+        message.error((err as Error).message || String(err))
+      }
+    },
+  })
 }
 
 function removeUploadedFile(key: string, idx: number) {
@@ -175,7 +165,7 @@ function removeUploadedFile(key: string, idx: number) {
           <div class="flex items-center gap-2">
             <Button
               variant="outline"
-              @click="triggerUpload(item.key)"
+              @click="triggerUpload(item)"
             >
               上传
             </Button>
@@ -213,13 +203,5 @@ function removeUploadedFile(key: string, idx: number) {
         <span class="text-xs text-muted-foreground">不支持的配置项类型：{{ item.type }}</span>
       </template>
     </div>
-
-    <input
-      ref="uploadInput"
-      type="file"
-      style="display: none"
-      multiple
-      @change="onUploadChange"
-    />
   </div>
 </template>

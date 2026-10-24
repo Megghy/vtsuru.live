@@ -20,6 +20,7 @@ const showToast = toast
 import type { AutoActionItem } from '@/apps/client/store/autoAction/types'
 import { ActionType, TriggerType, useAutoAction } from '@/apps/client/store/useAutoAction'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
@@ -190,13 +191,9 @@ function exportActions() {
   showToast.success(`已导出 ${actionsToExport.length} 条操作`)
 }
 
-function importActions() {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.json'
-  input.onchange = async (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file) return
+const { open: openActionsImport } = useFilePicker({
+  accept: '.json',
+  onSelect: async ([file]) => {
     try {
       const text = await file.text()
       const imported = JSON.parse(text) as AutoActionItem[]
@@ -212,8 +209,11 @@ function importActions() {
     } catch (err) {
       showToast.error(`导入失败: ${(err as Error).message}`)
     }
-  }
-  input.click()
+  },
+})
+
+function importActions() {
+  openActionsImport()
 }
 
 function toggleActionEnabled(row: AutoActionItem) {

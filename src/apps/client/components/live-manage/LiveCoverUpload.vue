@@ -1,39 +1,19 @@
 <script setup lang="ts">
 import { Image, Upload, X } from 'lucide-vue-next'
-import { ref } from 'vue'
 
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
 import { roomInfo } from '@/apps/client/data/info'
+import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
 
 const props = defineProps<{ control: LiveControl }>()
 const c = props.control
 
-const fileInputRef = ref<HTMLInputElement | null>(null)
-
-function triggerSelectFile() {
-  fileInputRef.value?.click()
-}
-
-function onFileInputChange(event: Event) {
-  const target = event.target as HTMLInputElement
-  const file = target.files?.[0]
-  if (file) {
-    c.handleCoverFileChange({
-      id: 'cover',
-      name: file.name,
-      status: 'finished',
-      file,
-    } as any)
-  }
-}
-
-function handleRemove() {
-  c.handleCoverRemove()
-  if (fileInputRef.value) {
-    fileInputRef.value.value = ''
-  }
-}
+const { open: triggerSelectFile } = useFilePicker({
+  accept: 'image/jpeg,image/png,image/webp',
+  maxSize: 5 * 1024 * 1024,
+  onSelect: ([file]) => c.handleCoverFileChange(file),
+})
 </script>
 
 <template>
@@ -42,15 +22,6 @@ function handleRemove() {
       <span class="text-xs font-semibold text-foreground">直播封面</span>
       <span class="text-[11px] text-muted-foreground">支持 JPG / PNG / WEBP，大小不超过 5MB</span>
     </div>
-
-    <!-- 隐藏的文件选择器 -->
-    <input
-      ref="fileInputRef"
-      type="file"
-      accept="image/jpeg,image/png,image/webp"
-      class="hidden"
-      @change="onFileInputChange"
-    />
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <!-- 当前封面 -->
@@ -106,7 +77,7 @@ function handleRemove() {
             variant="ghost"
             class="size-8 p-0 text-muted-foreground hover:text-destructive"
             title="移除已选图片"
-            @click="handleRemove"
+            @click="c.handleCoverRemove"
           >
             <X class="size-4" />
           </Button>
