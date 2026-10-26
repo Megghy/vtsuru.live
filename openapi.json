@@ -9037,6 +9037,59 @@
         ]
       }
     },
+    "/api/point/buy-batch": {
+      "post": {
+        "tags": [
+          "Point"
+        ],
+        "summary": "购物车结算:全部成功或全部不生效,每个礼物一张订单",
+        "operationId": "postApiPointBuyBatch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBuyBatchModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBuyBatchModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestBuyBatchModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfListOfResponsePointOrder2UserModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfListOfResponsePointOrder2UserModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfListOfResponsePointOrder2UserModel"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/point/buy": {
       "post": {
         "tags": [
@@ -20752,6 +20805,60 @@
         },
         "additionalProperties": false
       },
+      "RequestBuyBatchModel": {
+        "required": [
+          "vId",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "vId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestBuyItemModel"
+            }
+          },
+          "addressId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestBuyItemModel": {
+        "required": [
+          "goodsId",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "goodsId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "selectedSubItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RequestBuySubItemModel"
+            },
+            "nullable": true
+          },
+          "remark": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "RequestBuyPointGoodsModel": {
         "required": [
           "vId",
@@ -25073,6 +25180,32 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ResponsePointHistoryModel"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfListOfResponsePointOrder2UserModel": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResponsePointOrder2UserModel"
             },
             "nullable": true
           }

@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { ArrowSync24Regular, Filter24Regular, Person24Regular, Search24Regular } from '@vicons/fluent'
+import { ArrowSync24Regular, Cart24Regular, Filter24Regular, Person24Regular, Search24Regular } from '@vicons/fluent'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
-import type { ResponseUserInfo } from '@/api/generated/model'
+import type { ResponsePointOrder2UserModel, ResponseUserInfo } from '@/api/generated/model'
+import PointCartSheet from '@/shared/components/points/PointCartSheet.vue'
 import PointGoodsExchangeDialog from '@/shared/components/points/PointGoodsExchangeDialog.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
+import PointOrderSuccessDialog from '@/shared/components/points/PointOrderSuccessDialog.vue'
+import { usePointCart } from '@/shared/components/points/usePointCart'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
@@ -32,6 +35,10 @@ const goods = ref<ResponsePointGoodModel[]>([]) // 礼物列表
 const currentPoint = ref<number>(-1) // 当前用户积分
 const currentGoods = ref<ResponsePointGoodModel>() // 兑换弹窗选中的礼物
 const showBuyModal = ref(false)
+const showCart = ref(false)
+const successOrders = ref<ResponsePointOrder2UserModel[]>([])
+const showSuccess = ref(false)
+const { count: cartCount } = usePointCart(props.userInfo.id)
 
 // 筛选相关状态
 const selectedTag = ref<string>() // 选中的标签
@@ -165,7 +172,9 @@ function onBuyClick(good: ResponsePointGoodModel) {
   showBuyModal.value = true
 }
 
-async function onExchangeSuccess() {
+async function onExchangeSuccess(orders: ResponsePointOrder2UserModel[]) {
+  successOrders.value = orders
+  showSuccess.value = true
   await refreshCurrentPoint()
   goods.value = await useAuth.GetGoods(props.userInfo.id)
 }
@@ -380,6 +389,23 @@ onMounted(async () => {
 
             <div class="toolbar-actions flex items-center gap-2">
               <Button
+                variant="outline"
+                class="relative flex items-center gap-1"
+                @click="showCart = true"
+              >
+                <component
+                  :is="Cart24Regular"
+                  class="size-3.5"
+                />
+                购物车
+                <Badge
+                  v-if="cartCount"
+                  class="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px]"
+                >
+                  {{ cartCount }}
+                </Badge>
+              </Button>
+              <Button
                 v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder !== 'default'"
                 variant="ghost"
                 class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
@@ -477,6 +503,20 @@ onMounted(async () => {
       :v-id="props.userInfo.id"
       :current-point="currentPoint"
       @success="onExchangeSuccess"
+    />
+
+    <PointCartSheet
+      v-model:show="showCart"
+      :v-id="props.userInfo.id"
+      :current-point="currentPoint"
+      :goods="goods"
+      @edit="((showCart = false), onBuyClick($event))"
+      @success="onExchangeSuccess"
+    />
+
+    <PointOrderSuccessDialog
+      v-model:show="showSuccess"
+      :orders="successOrders"
     />
   </div>
 </template>

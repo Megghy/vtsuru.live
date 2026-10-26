@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { Add24Regular, ArrowSync24Regular } from '@vicons/fluent'
 import { computed, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
 import type { ResponsePointOrder2UserModel, ShippingAddressInfo } from '@/api/generated/model'
 import { GoodsTypes, ServiceFieldType } from '@/api/generated/model'
-import { postApiPointBuy, postApiPointUserUpdateAddress } from '@/api/generated/point/point'
+import { postApiPointBuy } from '@/api/generated/point/point'
 import { IMGUR_URL } from '@/shared/config'
-import { usePersistedStorage } from '@/shared/storage/persist'
-import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
+import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -19,13 +16,12 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Separator } from '@/shared/ui/separator'
-import { Spin } from '@/shared/ui/spin'
 import { Textarea } from '@/shared/ui/textarea'
-import { NavigateToNewTab, toast } from '@/shared/utils'
+import { toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
-import AddressDisplay from './AddressDisplay.vue'
+import ShippingAddressPicker from './ShippingAddressPicker.vue'
+import { evaluateSelection, usePointCart, type BuySubItem } from './usePointCart'
 
 const props = defineProps<{
   /** 直播间主播 ID */
@@ -35,30 +31,23 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  /** 兑换成功后通知父级刷新积分与礼物列表 */
-  success: []
+  /** 兑换成功后通知父级展示订单并刷新积分与礼物列表 */
+  success: [orders: ResponsePointOrder2UserModel[]]
 }>()
 
-const router = useRouter()
 const useAuth = useBiliAuth()
-const biliAuth = computed(() => useAuth.biliAuth)
+const cart = usePointCart(props.vId)
 
 const show = defineModel<boolean>('show', { required: true })
 const goods = defineModel<ResponsePointGoodModel | undefined>('goods', { required: true })
 
 // --- 状态 ---
 const isLoading = ref(false)
-const showAddressModal = ref(false)
-const currentAddress = ref<ShippingAddressInfo>({} as ShippingAddressInfo)
-const userAgree = ref(false)
 const buyCount = ref(1)
+const selectedSubItems = ref<BuySubItem[]>([])
 const selectedAddress = ref<ShippingAddressInfo>()
 const remark = ref('')
 const serviceAnswers = ref<Record<string, string | string[] | number | undefined>>({})
-type BuySubItem = { subItemId: number; quantity: number }
-const selectedSubItems = ref<BuySubItem[]>([])
-const successOrder = ref<ResponsePointOrder2UserModel>()
-const showSuccessModal = ref(false)
 
 const emptyCover = `${IMGUR_URL}None.png`
 
@@ -66,7 +55,7 @@ const emptyCover = `${IMGUR_URL}None.png`
 const hasSubItems = computed(() => (goods.value?.subItems?.length ?? 0) > 0)
 const isService = computed(() => goods.value?.type === GoodsTypes.Service)
 const serviceConfig = computed(() => (isService.value ? goods.value?.serviceConfig : undefined))
-const isPhysical = computed(() => goods.value?.type === GoodsTypes.Physical)
+const inCart = computed(() => !!goods.value && !!cart.find(goods.value.id))
 
 const typeLabel = computed(() => {
   switch (goods.value?.type) {
@@ -79,12 +68,13 @@ const typeLabel = computed(() => {
   }
 })
 
+const availableSubs = computed(() => goods.value?.subItems?.filter((s) => s.count == null || s.count > 0) ?? [])
+
 /** 头部价格:多款式取区间,单商品取自身价 */
 const priceText = computed(() => {
   if (!goods.value) return ''
-  const list = goods.value.subItems?.filter((s) => s.count == null || s.count > 0) ?? []
-  if (!hasSubItems.value || !list.length) return String(goods.value.price)
-  const prices = list.map((s) => Number(s.price))
+  if (!hasSubItems.value || !availableSubs.value.length) return String(goods.value.price)
+  const prices = availableSubs.value.map((s) => Number(s.price))
   const min = Math.min(...prices)
   const max = Math.max(...prices)
   return min === max ? String(min) : `${min}~${max}`
@@ -96,68 +86,67 @@ const stockText = computed(() => {
   if (!hasSubItems.value) {
     return goods.value.count === 0 ? '缺货' : goods.value.count ? `余 ${goods.value.count}` : '库存不限'
   }
-  const available = (goods.value.subItems ?? []).filter((s) => s.count == null || s.count > 0)
-  if (!available.length) return '缺货'
-  const limited = available.filter((s) => s.count != null)
+  if (!availableSubs.value.length) return '缺货'
+  const limited = availableSubs.value.filter((s) => s.count != null)
   if (!limited.length) return '库存不限'
   return `余 ${limited.reduce((acc, s) => acc + (s.count ?? 0), 0)}`
 })
 
-const cost = computed(() => {
-  if (!goods.value) return 0
-  if (goods.value.canFreeBuy) return 0
+/** 当前选择,加入购物车与直接兑换共用 */
+const selection = computed(() =>
+  hasSubItems.value
+    ? {
+        count: selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0),
+        selectedSubItems: selectedSubItems.value,
+        remark: remark.value || undefined,
+      }
+    : { count: buyCount.value, remark: remark.value || undefined },
+)
+
+const evaluated = computed(() =>
+  goods.value ? evaluateSelection(goods.value, selection.value) : { cost: 0, needAddress: false },
+)
+const cost = computed(() => evaluated.value.cost)
+const needAddress = computed(() => evaluated.value.needAddress)
+
+/** 款式/数量/服务表单错误,不含积分与地址;加入购物车只需此项通过 */
+const selectionError = computed(() => {
+  const good = goods.value
+  if (!good) return ''
+  if (!good.canPurchase) return good.cannotPurchaseReason || '当前无法兑换'
 
   if (hasSubItems.value) {
-    const subMap = new Map((goods.value.subItems ?? []).map((s) => [String(s.id), s]))
-    const sum = selectedSubItems.value.reduce(
-      (acc, s) => acc + (Number(subMap.get(String(s.subItemId))?.price) || 0) * (Number(s.quantity) || 0),
-      0,
-    )
-    return Number(sum.toFixed(2))
-  }
-  return Number(((goods.value.price > 0 ? goods.value.price : 0) * (buyCount.value || 1)).toFixed(2))
-})
-
-const needAddress = computed(() => {
-  if (!goods.value) return false
-  if (!hasSubItems.value) return isPhysical.value && !goods.value.collectUrl
-
-  const selectedIds = new Set(selectedSubItems.value.map((s) => String(s.subItemId)))
-  return (goods.value.subItems ?? []).some(
-    (s) => selectedIds.has(String(s.id)) && s.type === GoodsTypes.Physical && !s.collectUrl,
-  )
-})
-
-const canDoBuy = computed(() => {
-  if (!goods.value?.canPurchase) return false
-
-  const pointsOk = goods.value.canFreeBuy || cost.value <= props.currentPoint
-
-  if (hasSubItems.value) {
-    const maxSelections = goods.value.maxSubItemSelections
-    if (!selectedSubItems.value.length) return false
-    if (maxSelections && maxSelections > 0 && selectedSubItems.value.length > maxSelections) return false
-    if (selectedSubItems.value.some((s) => s.quantity < 1 || !Number.isInteger(s.quantity))) return false
-
-    const subMap = new Map((goods.value.subItems ?? []).map((s) => [String(s.id), s]))
+    if (!selectedSubItems.value.length) return '请选择至少一个款式'
+    const max = good.maxSubItemSelections
+    if (max && max > 0 && selectedSubItems.value.length > max) return `最多选择 ${max} 种款式`
+    const subMap = new Map((good.subItems ?? []).map((s) => [Number(s.id), s]))
     for (const s of selectedSubItems.value) {
-      const sub = subMap.get(String(s.subItemId))
-      if (!sub || sub.count === 0) return false
-      if (sub.count != null && s.quantity > sub.count) return false
+      const sub = subMap.get(Number(s.subItemId))
+      if (!sub) return '款式数据异常,请刷新后重试'
+      if (sub.count === 0) return `${sub.name} 缺货`
+      if (s.quantity < 1 || !Number.isInteger(s.quantity)) return '款式数量必须为正整数'
+      if (sub.count != null && s.quantity > sub.count) return `${sub.name} 库存不足`
     }
-    return pointsOk && (!needAddress.value || !!selectedAddress.value)
+  } else {
+    if (buyCount.value < 1 || !Number.isInteger(buyCount.value)) return '兑换数量必须为正整数'
+    if ((good.purchasedCount ?? 0) + buyCount.value > (good.maxBuyCount ?? Number.MAX_VALUE))
+      return `超出最大兑换次数限制(${good.maxBuyCount})`
+    if (good.count != null && buyCount.value > good.count) return '库存不足'
   }
 
-  if ((goods.value.purchasedCount ?? 0) + buyCount.value > (goods.value.maxBuyCount ?? Number.MAX_VALUE)) return false
-  if (goods.value.count != null && buyCount.value > goods.value.count) return false
-  return pointsOk && (!needAddress.value || !!selectedAddress.value)
+  const missing = (serviceConfig.value?.fields ?? []).find((field) => {
+    const answer = serviceAnswers.value[field.id]
+    return field.required && (Array.isArray(answer) ? !answer.length : !String(answer ?? '').trim())
+  })
+  return missing ? `请填写${missing.label}` : ''
 })
 
-/** 无法兑换时展示在 footer 的原因 */
-const blockedReason = computed(() => {
-  if (!goods.value || canDoBuy.value) return ''
-  return goods.value.cannotPurchaseReason || '积分不足或条件不满足'
-})
+const buyError = computed(
+  () =>
+    selectionError.value ||
+    (cost.value > props.currentPoint ? '积分不足' : '') ||
+    (needAddress.value && !selectedAddress.value ? '请选择收货地址' : ''),
+)
 
 /** 已售 / 已购合并为一行摘要 */
 const statusSummary = computed(() => {
@@ -177,225 +166,77 @@ const rebuyWarning = computed(() =>
 
 // --- 款式选择 ---
 function isSubItemChecked(id: number) {
-  return selectedSubItems.value.some((s) => String(s.subItemId) === String(id))
+  return selectedSubItems.value.some((s) => Number(s.subItemId) === Number(id))
 }
 
 function isSubItemDisabled(id: number) {
-  const sub = goods.value?.subItems?.find((s) => String(s.id) === String(id))
+  const sub = goods.value?.subItems?.find((s) => Number(s.id) === Number(id))
   if (!sub || sub.count === 0) return true
-  const maxSelections = goods.value?.maxSubItemSelections
-  if (!maxSelections || maxSelections <= 0) return false
-  return selectedSubItems.value.length >= maxSelections && !isSubItemChecked(id)
+  const max = goods.value?.maxSubItemSelections
+  if (!max || max <= 0) return false
+  return selectedSubItems.value.length >= max && !isSubItemChecked(id)
 }
 
 function toggleSubItem(id: number, checked: boolean) {
-  if (isSubItemDisabled(id)) return
   const targetId = Number(id)
   if (!checked) {
     selectedSubItems.value = selectedSubItems.value.filter((s) => Number(s.subItemId) !== targetId)
     return
   }
-  if (selectedSubItems.value.some((s) => Number(s.subItemId) === targetId)) return
+  if (isSubItemDisabled(targetId) || isSubItemChecked(targetId)) return
   selectedSubItems.value = [...selectedSubItems.value, { subItemId: targetId, quantity: 1 }]
 }
 
 function updateSubItemQuantity(id: number, quantity: number | null) {
-  const targetId = Number(id)
   selectedSubItems.value = selectedSubItems.value.map((s) =>
-    Number(s.subItemId) === targetId ? { ...s, quantity: Number(quantity ?? 1) } : s,
+    Number(s.subItemId) === Number(id) ? { ...s, quantity: Number(quantity ?? 1) } : s,
   )
 }
 
-const subItemMax = computed(
-  () => (sub: { maxBuyCount?: number | null; count?: number | null }) =>
-    Math.min(sub.maxBuyCount ?? 100000, sub.count == null ? 100000 : sub.count),
-)
-
-// --- 地址 ---
-interface AreaData {
-  [province: string]: { [city: string]: { [district: string]: string[] } }
+function subItemMax(sub: { maxBuyCount?: number | null; count?: number | null }) {
+  return Math.min(sub.maxBuyCount ?? 100000, sub.count ?? 100000)
 }
 
-const areas = usePersistedStorage<{ createAt: number; data: AreaData }>('Data.Areas', { createAt: 0, data: {} })
-
-async function getArea() {
-  if (areas.value && Date.now() - areas.value.createAt < 1000 * 60 * 60 * 24 * 7) return
-  const res = await fetch('https://oss.suki.club/vtsuru/area_data.json')
-  if (!res.ok) throw new Error('获取地区数据失败')
-  areas.value = { createAt: Date.now(), data: await res.json() }
-}
-
-const addressList = computed(() => biliAuth.value.address ?? [])
-const provinceOptions = computed(() => Object.keys(areas.value?.data ?? {}).map((p) => ({ label: p, value: p })))
-const cityOptions = (province?: string) =>
-  province ? Object.keys(areas.value?.data?.[province] ?? {}).map((c) => ({ label: c, value: c })) : []
-const districtOptions = (province?: string, city?: string) =>
-  province && city ? Object.keys(areas.value?.data?.[province]?.[city] ?? {}).map((d) => ({ label: d, value: d })) : []
-const streetOptions = (province?: string, city?: string, district?: string) =>
-  (province && city && district ? areas.value?.data?.[province]?.[city]?.[district] : undefined)?.map((s) => ({
-    label: s,
-    value: s,
-  })) ?? []
-
-function onAreaSelectChange(level: number) {
-  if (!currentAddress.value) return
-  if (level === 0) {
-    currentAddress.value.city = undefined
-    currentAddress.value.district = undefined
-    currentAddress.value.street = undefined
-  } else if (level === 1) {
-    currentAddress.value.district = undefined
-    currentAddress.value.street = undefined
-  } else {
-    currentAddress.value.street = undefined
-  }
-}
-
-async function openAddressModal() {
-  currentAddress.value = {} as ShippingAddressInfo
-  userAgree.value = false
-  showAddressModal.value = true
-  await getArea()
-}
-
-async function refreshAddressList() {
-  if (!useAuth.isAuthed || !biliAuth.value.id) return
-  await useAuth.getAuthInfo()
-}
-
-async function updateAddress() {
-  if (!currentAddress.value.province || !currentAddress.value.city || !currentAddress.value.district) {
-    toast.warning('请选择完整的省市区')
-    return
-  }
-  if (!currentAddress.value.address?.trim()) {
-    toast.warning('请输入详细地址')
-    return
-  }
-  if (!currentAddress.value.name?.trim()) {
-    toast.warning('请输入联系人姓名')
-    return
-  }
-  if (!currentAddress.value.phone) {
-    toast.warning('请输入联系电话')
-    return
-  }
-  if (!userAgree.value) {
-    toast.warning('请确认信息真实有效')
-    return
-  }
-
-  isLoading.value = true
-  try {
-    const data = (await postApiPointUserUpdateAddress(currentAddress.value as any, {
-      headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ShippingAddressInfo
-    }
-    if (data.code !== 200) {
-      toast.error(`保存失败: ${data.message}`)
-      return
-    }
-    toast.success('地址已保存')
-    showAddressModal.value = false
-    const list = biliAuth.value.address
-    if (list) {
-      const index = list.findIndex((a) => a.id === data.data.id)
-      if (index >= 0) list[index] = data.data
-      else list.push(data.data)
-    } else {
-      biliAuth.value.address = [data.data]
-    }
-    selectedAddress.value = data.data
-  } finally {
-    isLoading.value = false
-  }
-}
-
-/** 表单校验:返回错误文案,通过则返回空串 */
-function validateForm(): string {
-  const good = goods.value
-  if (!good) return '礼物数据异常,请刷新后重试'
-
-  if (hasSubItems.value) {
-    if (!selectedSubItems.value.length) return '请选择至少一个款式'
-    const subMap = new Map((good.subItems ?? []).map((s) => [String(s.id), s]))
-    for (const s of selectedSubItems.value) {
-      const sub = subMap.get(String(s.subItemId))
-      if (!sub) return '款式数据异常,请刷新后重试'
-      if (s.quantity < 1) return '款式数量不能小于1'
-      if (!Number.isInteger(s.quantity)) return '款式数量必须为整数'
-    }
-  } else {
-    if (buyCount.value < 1) return '兑换数量不能小于1'
-    if (!Number.isInteger(buyCount.value)) return '兑换数量必须为整数'
-    if ((good.purchasedCount ?? 0) + buyCount.value > (good.maxBuyCount ?? Number.MAX_VALUE))
-      return `超出最大兑换次数限制(${good.maxBuyCount})`
-    if (good.count != null && buyCount.value > good.count) return '库存不足'
-  }
-
-  if (needAddress.value && !selectedAddress.value) return '请选择收货地址'
-
-  if (isService.value) {
-    const missing = (serviceConfig.value?.fields ?? []).find((field) => {
-      const answer = serviceAnswers.value[field.id]
-      return field.required && (Array.isArray(answer) ? !answer.length : !String(answer ?? '').trim())
-    })
-    if (missing) return `请填写${missing.label}`
-  }
-
-  return ''
+function addToCart() {
+  const updated = inCart.value
+  cart.put({ goodsId: goods.value!.id, ...selection.value })
+  toast.success(updated ? '已更新购物车' : '已加入购物车')
+  show.value = false
 }
 
 async function buyGoods() {
-  const good = goods.value
-  if (!good) return
-
-  const invalid = validateForm()
-  if (invalid) {
-    toast.error(invalid)
-    return
-  }
-
+  const good = goods.value!
   isLoading.value = true
   try {
     const data = (await postApiPointBuy(
       {
         vId: props.vId,
         goodsId: good.id,
-        count: hasSubItems.value ? selectedSubItems.value.reduce((acc, s) => acc + s.quantity, 0) : buyCount.value,
+        count: selection.value.count,
         addressId: selectedAddress.value?.id ?? null,
         remark: remark.value,
-        ...(isService.value
-          ? {
-              serviceAnswers: Object.fromEntries(
-                Object.entries(serviceAnswers.value).map(([id, value]) => [
-                  id,
-                  Array.isArray(value) ? value.join('\n') : value == null ? '' : String(value),
-                ]),
-              ),
-            }
-          : {}),
-        ...(hasSubItems.value ? { selectedSubItems: selectedSubItems.value } : {}),
-      } as any,
+        selectedSubItems: hasSubItems.value ? selectedSubItems.value : null,
+        serviceAnswers: isService.value
+          ? Object.fromEntries(
+              Object.entries(serviceAnswers.value).map(([id, value]) => [
+                id,
+                Array.isArray(value) ? value.join('\n') : value == null ? '' : String(value),
+              ]),
+            )
+          : undefined,
+      },
       { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
-    )) as unknown as {
-      code: number
-      message?: string
-      data: ResponsePointOrder2UserModel
-    }
+    )) as unknown as { code: number; message?: string; data: ResponsePointOrder2UserModel }
 
     if (data.code !== 200) {
       toast.error(`兑换失败: ${data.message}`)
       return
     }
 
+    // 已直接兑换的礼物从购物车移除,避免重复兑换
+    cart.remove(good.id)
     show.value = false
-    successOrder.value = data.data
-    showSuccessModal.value = true
-    emit('success')
+    emit('success', [data.data])
   } catch (error) {
     toast.error(error instanceof Error ? error.message : `兑换出错: ${error}`)
   } finally {
@@ -403,15 +244,15 @@ async function buyGoods() {
   }
 }
 
-// 关闭即重置
+// 打开时按购物车中的选择回填,否则重置
 watch(show, (visible) => {
-  if (visible) return
-  selectedSubItems.value = []
+  if (!visible || !goods.value) return
+  const saved = cart.find(goods.value.id)
+  buyCount.value = saved?.count ?? 1
+  selectedSubItems.value = saved?.selectedSubItems?.map((s) => ({ ...s })) ?? []
+  remark.value = saved?.remark ?? ''
   selectedAddress.value = undefined
-  buyCount.value = 1
-  remark.value = ''
   serviceAnswers.value = {}
-  showAddressModal.value = false
 })
 
 const requestClose = () => {
@@ -584,7 +425,7 @@ const requestClose = () => {
               <div
                 v-for="sub in goods.subItems ?? []"
                 :key="sub.id"
-                class="p-2.5 rounded-lg border flex items-center justify-between gap-2.5 transition cursor-pointer select-none"
+                class="p-2.5 rounded-lg border flex flex-col gap-2 transition cursor-pointer select-none"
                 :class="
                   isSubItemChecked(sub.id)
                     ? 'border-primary bg-primary/5 shadow-2xs'
@@ -625,13 +466,15 @@ const requestClose = () => {
 
                 <div
                   v-if="isSubItemChecked(sub.id) && !isService"
-                  class="w-20 shrink-0"
+                  class="flex items-center justify-between gap-2 pt-2 border-t border-primary/15 cursor-default"
                   @click.stop
                 >
+                  <span class="text-[11px] text-muted-foreground">数量</span>
                   <NumberField
                     :model-value="selectedSubItems.find((s) => s.subItemId === sub.id)?.quantity ?? 1"
                     :min="1"
                     :max="subItemMax(sub)"
+                    class="w-28"
                     @update:model-value="updateSubItemQuantity(sub.id, $event)"
                   />
                 </div>
@@ -654,75 +497,18 @@ const requestClose = () => {
                 }}
               </span>
             </div>
-            <div class="w-32">
-              <NumberField
-                v-model="buyCount"
-                :min="1"
-                :max="
-                  Math.min(
-                    goods.maxBuyCount ?? 100000,
-                    (goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0),
-                    goods.count ?? 100000,
-                  )
-                "
-              />
-            </div>
+            <NumberField
+              v-model="buyCount"
+              :min="1"
+              :max="Math.min((goods.maxBuyCount ?? 100000) - (goods.purchasedCount ?? 0), goods.count ?? 100000)"
+              class="w-32"
+            />
           </div>
 
-          <!-- 收货地址 -->
-          <div
+          <ShippingAddressPicker
             v-if="needAddress"
-            class="space-y-1.5"
-          >
-            <span class="font-medium text-foreground text-xs">收货地址 *</span>
-            <div class="flex items-center gap-2">
-              <Select
-                :model-value="selectedAddress?.id ? String(selectedAddress.id) : ''"
-                class="flex-1"
-                @update:model-value="selectedAddress = addressList.find((a) => String(a.id) === $event)"
-              >
-                <SelectTrigger class="flex-1">
-                  <SelectValue placeholder="请选择收货地址" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="addr in addressList"
-                    :key="addr.id"
-                    :value="String(addr.id)"
-                    class="text-xs"
-                  >
-                    {{ addr.name }} ({{ addr.phone }}) · {{ addr.province }}{{ addr.city }}{{ addr.district
-                    }}{{ addr.address }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="outline"
-                size="icon"
-                class="size-8 shrink-0"
-                aria-label="新增收货地址"
-                @click="openAddressModal"
-              >
-                <component
-                  :is="Add24Regular"
-                  class="size-3.5"
-                />
-              </Button>
-              <Button
-                variant="outline"
-                size="icon"
-                class="size-8 shrink-0"
-                aria-label="刷新地址列表"
-                @click="refreshAddressList"
-              >
-                <component
-                  :is="ArrowSync24Regular"
-                  class="size-3.5"
-                />
-              </Button>
-            </div>
-          </div>
+            v-model="selectedAddress"
+          />
 
           <!-- 留言 -->
           <div class="space-y-1">
@@ -753,16 +539,24 @@ const requestClose = () => {
           >
             取消
           </Button>
+          <Button
+            v-if="!isService"
+            variant="secondary"
+            :disabled="!!selectionError || isLoading"
+            @click="addToCart"
+          >
+            {{ inCart ? '更新购物车' : '加入购物车' }}
+          </Button>
 
           <Popconfirm
             title="确认兑换"
             positive-text="确认"
             negative-text="取消"
-            :disabled="!canDoBuy || isLoading"
+            :disabled="!!buyError || isLoading"
             @positive-click="buyGoods"
           >
             <template #trigger>
-              <Button :disabled="!canDoBuy || isLoading"> 确认兑换 </Button>
+              <Button :disabled="!!buyError || isLoading"> 确认兑换 </Button>
             </template>
             确定要花费 {{ cost }} 积分兑换 "{{ goods.name }}" 吗？
           </Popconfirm>
@@ -770,211 +564,11 @@ const requestClose = () => {
       </DialogFooter>
 
       <p
-        v-if="blockedReason"
+        v-if="buyError"
         class="text-destructive text-xs text-right -mt-1 m-0"
       >
-        {{ blockedReason }}
+        {{ buyError }}
       </p>
-    </DialogContent>
-  </Dialog>
-
-  <!-- 新增收货地址弹窗 -->
-  <Dialog v-model:open="showAddressModal">
-    <DialogContent class="sm:max-w-md p-4 space-y-3">
-      <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold">新增收货地址</DialogTitle>
-      </DialogHeader>
-
-      <div class="space-y-3 text-xs">
-        <div class="grid grid-cols-2 gap-2">
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">省份</label>
-            <Select
-              :model-value="currentAddress.province || ''"
-              @update:model-value="((currentAddress.province = String($event)), onAreaSelectChange(0))"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="省份" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="p in provinceOptions"
-                  :key="p.value"
-                  :value="p.value"
-                  class="text-xs"
-                >
-                  {{ p.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">城市</label>
-            <Select
-              :model-value="currentAddress.city || ''"
-              :disabled="!currentAddress.province"
-              @update:model-value="((currentAddress.city = String($event)), onAreaSelectChange(1))"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="城市" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="c in cityOptions(currentAddress.province)"
-                  :key="c.value"
-                  :value="c.value"
-                  class="text-xs"
-                >
-                  {{ c.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">区县</label>
-            <Select
-              :model-value="currentAddress.district || ''"
-              :disabled="!currentAddress.city"
-              @update:model-value="((currentAddress.district = String($event)), onAreaSelectChange(2))"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="区/县" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="d in districtOptions(currentAddress.province, currentAddress.city)"
-                  :key="d.value"
-                  :value="d.value"
-                  class="text-xs"
-                >
-                  {{ d.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">街道 (选填)</label>
-            <Select
-              :model-value="currentAddress.street || ''"
-              :disabled="!currentAddress.district"
-              @update:model-value="currentAddress.street = $event ? String($event) : undefined"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="街道" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="s in streetOptions(currentAddress.province, currentAddress.city, currentAddress.district)"
-                  :key="s.value"
-                  :value="s.value"
-                  class="text-xs"
-                >
-                  {{ s.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div class="space-y-1">
-          <label class="text-muted-foreground text-[11px]">详细地址</label>
-          <Textarea
-            v-model="currentAddress.address"
-            rows="2"
-            placeholder="楼栋号、单元号、门牌号等"
-            class="text-xs resize-none"
-          />
-        </div>
-
-        <div class="grid grid-cols-2 gap-2">
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">联系电话</label>
-            <Input
-              :model-value="currentAddress.phone ? String(currentAddress.phone) : ''"
-              type="tel"
-              placeholder="手机号"
-              class="font-mono"
-              @update:model-value="currentAddress.phone = Number($event) || undefined"
-            />
-          </div>
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">联系人</label>
-            <Input
-              v-model="currentAddress.name"
-              placeholder="姓名"
-            />
-          </div>
-        </div>
-
-        <label class="flex items-center gap-1.5 cursor-pointer pt-1">
-          <Checkbox v-model:checked="userAgree" />
-          <span class="text-xs text-foreground">我确认以上收件信息真实有效</span>
-        </label>
-      </div>
-
-      <DialogFooter class="pt-2 border-t border-border/60">
-        <Button
-          variant="outline"
-          @click="showAddressModal = false"
-        >
-          取消
-        </Button>
-        <Button
-          :disabled="!userAgree || isLoading"
-          @click="updateAddress"
-        >
-          保存地址
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-
-  <!-- 兑换成功弹窗 -->
-  <Dialog
-    v-if="successOrder"
-    v-model:open="showSuccessModal"
-  >
-    <DialogContent class="sm:max-w-md p-4 space-y-3">
-      <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold text-emerald-600 flex items-center gap-1.5"> 兑换成功！ </DialogTitle>
-      </DialogHeader>
-
-      <div class="space-y-3 text-xs">
-        <p class="text-muted-foreground font-mono">订单号: #{{ successOrder.id }}</p>
-
-        <template v-if="successOrder.selectedSubItems?.length">
-          <Separator />
-          <div class="space-y-1">
-            <span class="text-[11px] font-medium text-muted-foreground block">已选款式</span>
-            <p class="text-foreground">
-              {{ successOrder.selectedSubItems.map((s) => `${s.nameSnapshot}×${s.quantity}`).join('、') }}
-            </p>
-          </div>
-        </template>
-
-        <template v-if="successOrder.type === GoodsTypes.Virtual && successOrder.goods?.content">
-          <Separator />
-          <div class="space-y-1">
-            <span class="text-[11px] font-medium text-muted-foreground block">礼物内容</span>
-            <Alert class="text-xs bg-muted/40 whitespace-pre-wrap break-words">
-              <AlertDescription class="text-xs">{{ successOrder.goods.content }}</AlertDescription>
-            </Alert>
-          </div>
-        </template>
-      </div>
-
-      <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
-        <Button
-          variant="outline"
-          @click="showSuccessModal = false"
-        >
-          关闭
-        </Button>
-        <Button @click="((showSuccessModal = false), router.push({ name: 'bili-user-orders' }))"> 查看我的订单 </Button>
-      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>

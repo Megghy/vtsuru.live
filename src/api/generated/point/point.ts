@@ -24,6 +24,7 @@ import type {
   PostApiPointUserDeleteAddressParams,
   RequestApplyPointGuardDuplicateFixModel,
   RequestBatchUpdateOrderStatusModel,
+  RequestBuyBatchModel,
   RequestBuyPointGoodsModel,
   RequestPointGoodsModel,
   RequestSetOrderStatusModel,
@@ -37,6 +38,7 @@ import type {
   ResponseResultOfInt32Array,
   ResponseResultOfListOfResponseBasePointGoodsModel,
   ResponseResultOfListOfResponsePointHistoryModel,
+  ResponseResultOfListOfResponsePointOrder2UserModel,
   ResponseResultOfListOfResponsePointUserModel,
   ResponseResultOfPointGuardDuplicateApplyResult,
   ResponseResultOfResponseAllPointsModelArray,
@@ -145,6 +147,39 @@ export const postApiPointBatchUpdateOrderStatus = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(requestBatchUpdateOrderStatusModel),
+  })
+}
+
+export const getPostApiPointBuyBatchUrl = () => {
+  return `/api/point/buy-batch`
+}
+
+/**
+ * @summary 购物车结算:全部成功或全部不生效,每个礼物一张订单
+ */
+export const postApiPointBuyBatch = async (
+  requestBuyBatchModel?: RequestBuyBatchModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfListOfResponsePointOrder2UserModel> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfListOfResponsePointOrder2UserModel>(getPostApiPointBuyBatchUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(requestBuyBatchModel),
   })
 }
 
