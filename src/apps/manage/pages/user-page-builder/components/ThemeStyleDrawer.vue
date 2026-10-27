@@ -284,8 +284,7 @@ function applyCustomSwatch(colorHex: string) {
 
 // 从当前已上传背景提取
 const currentBackgroundImageUrl = computed(() => {
-  const bg = backgroundTarget.value.get()
-  return bg?.pageBackgroundImageFile || ''
+  return backgroundTarget.value.get()?.pageBackgroundImageFile?.path ?? ''
 })
 
 function clearCurrentTheme() {

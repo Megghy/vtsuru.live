@@ -36,7 +36,7 @@ const type = computed<PageBackgroundType>({
     const t = props.target.ensure()
     if (!t) return
     t.pageBackgroundType = v
-    if (v === 'color' && typeof t.pageBackgroundColor !== 'string') t.pageBackgroundColor = 'rgba(255, 255, 255, 1)'
+    if (v === 'color' && typeof t.pageBackgroundColor !== 'string') t.pageBackgroundColor = '#ffffff'
     if (v !== 'image') delete t.pageBackgroundImageFile
   },
 })
@@ -44,7 +44,7 @@ const type = computed<PageBackgroundType>({
 const color = computed<string>({
   get() {
     const t = props.target.get()
-    return typeof t?.pageBackgroundColor === 'string' ? t.pageBackgroundColor : 'rgba(255, 255, 255, 1)'
+    return typeof t?.pageBackgroundColor === 'string' ? t.pageBackgroundColor : '#ffffff'
   },
   set(v) {
     const t = props.target.ensure()
