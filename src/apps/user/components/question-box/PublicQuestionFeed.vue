@@ -8,6 +8,7 @@ import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/m
 import { AVATAR_URL } from '@/shared/config'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Empty } from '@/shared/ui/empty'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Pagination } from '@/shared/ui/pagination'
 import { Spin } from '@/shared/ui/spin'
 
@@ -202,13 +203,14 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
                   v-if="item.questionImages?.length"
                   class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 mt-2.5 @[max-width:480px]:grid-cols-2"
                 >
-                  <img
-                    v-for="image in item.questionImages"
-                    :key="image.path"
-                    :src="image.path"
-                    alt=""
-                    class="w-full aspect-[4/3] object-cover rounded-md border border-border bg-secondary/50 cursor-pointer"
-                    loading="lazy"
+                  <ImagePreview
+                    v-for="(image, imgIdx) in item.questionImages"
+                    :key="image.path || imgIdx"
+                    :src="image.path || ''"
+                    :alt="image.name || '提问附图'"
+                    :gallery="item.questionImages"
+                    :index="imgIdx"
+                    class="w-full aspect-[4/3] h-auto"
                   />
                 </div>
 

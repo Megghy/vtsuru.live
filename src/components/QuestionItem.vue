@@ -8,6 +8,7 @@ import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -183,12 +184,14 @@ function formatRelative(time: number) {
           v-if="item.questionImages && item.questionImages.length > 0"
           class="flex items-center gap-2 flex-wrap"
         >
-          <img
+          <ImagePreview
             v-for="(img, index) in item.questionImages"
-            :key="index"
-            :src="img.path"
-            class="h-20 rounded border border-border/60 object-cover"
-            alt=""
+            :key="img.id || index"
+            :src="img.path || ''"
+            :alt="img.name || '提问附图'"
+            :gallery="item.questionImages"
+            :index="index"
+            class="h-20 w-24"
           />
         </div>
 

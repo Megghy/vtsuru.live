@@ -5,6 +5,7 @@ import { computed } from 'vue'
 const props = withDefaults(
   defineProps<{
     type?: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'error'
+    variant?: 'default' | 'secondary' | 'destructive' | 'outline'
     size?: 'tiny' | 'small' | 'medium' | 'large'
     round?: boolean
     bordered?: boolean
@@ -26,6 +27,21 @@ const emit = defineEmits<{
 }>()
 
 const typeClasses = computed(() => {
+  if (props.variant) {
+    switch (props.variant) {
+      case 'secondary':
+        return 'border-transparent bg-secondary text-secondary-foreground'
+      case 'destructive':
+        return 'border-destructive/40 bg-destructive/10 text-destructive'
+      case 'outline':
+        return 'border-border bg-transparent text-foreground'
+      case 'default':
+        return props.bordered
+          ? 'border-brand/40 bg-brand/10 text-brand'
+          : 'bg-brand text-brand-foreground border-transparent'
+    }
+  }
+
   switch (props.type) {
     case 'primary':
     case 'info':

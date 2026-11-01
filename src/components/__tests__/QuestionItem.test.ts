@@ -55,4 +55,27 @@ describe('QuestionItem.vue', () => {
     expect(wrapper.find('.question-item__answer-box').exists()).toBe(true)
     expect(wrapper.text()).toContain('周六晚上八点开！')
   })
+
+  it('渲染附带图片并支持大图预览', async () => {
+    const question = createMockQuestion({
+      questionImages: [
+        { id: 101, path: 'https://example.com/pic1.jpg', name: '图片1', size: 1024, hash: '' },
+        { id: 102, path: 'https://example.com/pic2.jpg', name: '图片2', size: 2048, hash: '' },
+      ],
+    })
+
+    const wrapper = mount(QuestionItem, {
+      props: { item: question },
+      attachTo: document.body,
+    })
+
+    const images = wrapper.findAll('img')
+    expect(images.length).toBe(2)
+    expect(images[0].attributes('src')).toBe('https://example.com/pic1.jpg')
+
+    // 缩略图带有放大触发按钮与样式
+    const zoomButton = wrapper.find('button.cursor-zoom-in')
+    expect(zoomButton.exists()).toBe(true)
+    expect(zoomButton.attributes('title')).toBe('图片1')
+  })
 })

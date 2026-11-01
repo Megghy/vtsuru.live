@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Separator } from '@/shared/ui/separator'
 import { Textarea } from '@/shared/ui/textarea'
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -51,6 +52,21 @@ function handleKeydown(e: KeyboardEvent) {
             class="p-3 rounded-lg bg-muted/40 text-xs text-foreground whitespace-pre-wrap max-h-36 overflow-y-auto border border-border"
           >
             {{ useQB.currentQuestion.question?.message }}
+          </div>
+
+          <div
+            v-if="useQB.currentQuestion.questionImages && useQB.currentQuestion.questionImages.length > 0"
+            class="flex items-center gap-2 flex-wrap"
+          >
+            <ImagePreview
+              v-for="(img, imgIdx) in useQB.currentQuestion.questionImages"
+              :key="img.id || imgIdx"
+              :src="img.path || ''"
+              :alt="img.name || '提问附图'"
+              :gallery="useQB.currentQuestion.questionImages"
+              :index="imgIdx"
+              class="h-16 w-20"
+            />
           </div>
 
           <Separator />

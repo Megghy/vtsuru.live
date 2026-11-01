@@ -154,25 +154,25 @@ function addTag() {
         >
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
-              v-model="accountInfo.settings.questionBox.allowUnregistedUser"
+              v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
               :disabled="useQB.isLoading"
-              @update:model-value="saveQuestionBoxSettings"
+              @update:checked="saveQuestionBoxSettings"
             />
             <span>允许未注册/未登录用户提问</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
-              v-model="accountInfo.settings.questionBox.allowAnonymous"
+              v-model:checked="accountInfo.settings.questionBox.allowAnonymous"
               :disabled="useQB.isLoading"
-              @update:model-value="saveQuestionBoxSettings"
+              @update:checked="saveQuestionBoxSettings"
             />
             <span>允许已登录用户隐藏身份</span>
           </label>
           <label class="flex items-center gap-2 cursor-pointer text-xs">
             <Checkbox
-              v-model="accountInfo.settings.questionBox.allowImageUpload"
+              v-model:checked="accountInfo.settings.questionBox.allowImageUpload"
               :disabled="useQB.isLoading"
-              @update:model-value="saveQuestionBoxSettings"
+              @update:checked="saveQuestionBoxSettings"
             />
             <span>允许上传图片</span>
           </label>

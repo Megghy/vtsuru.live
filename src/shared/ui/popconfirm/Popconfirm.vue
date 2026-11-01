@@ -103,7 +103,6 @@ function onCancel(e: MouseEvent) {
         <Button
           size="xs"
           variant="ghost"
-          class="h-6 px-2 text-[11px]"
           @click="onCancel"
         >
           {{ resolvedNegativeText }}
@@ -111,7 +110,6 @@ function onCancel(e: MouseEvent) {
         <Button
           size="xs"
           variant="default"
-          class="h-6 px-2 text-[11px]"
           @click="onConfirm"
         >
           {{ resolvedPositiveText }}

@@ -30,6 +30,8 @@ import {
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader } from '@/shared/ui/card'
+import { ImagePreview } from '@/shared/ui/image-preview'
+import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -265,6 +267,22 @@ onMounted(async () => {
                 {{ item.question?.message }}
               </p>
 
+              <!-- 提问图片 -->
+              <div
+                v-if="item.questionImages && item.questionImages.length > 0"
+                class="flex items-center gap-2 flex-wrap"
+              >
+                <ImagePreview
+                  v-for="(img, imgIdx) in item.questionImages"
+                  :key="img.id || imgIdx"
+                  :src="img.path || ''"
+                  :alt="img.name || '提问附图'"
+                  :gallery="item.questionImages"
+                  :index="imgIdx"
+                  class="h-16 w-20"
+                />
+              </div>
+
               <!-- 对方回复 -->
               <div
                 v-if="item.answer"
@@ -319,14 +337,37 @@ onMounted(async () => {
                 >
                   标记为正常
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
-                  @click="useQB.blacklist(item)"
+                <Popconfirm
+                  v-if="!item.isAnonymous && item.sender?.id"
+                  title="确认拉黑？"
+                  :description="`确认拉黑 ${item.sender.name} 吗？该用户的所有提问将被清理。`"
+                  @confirm="useQB.blacklist(item)"
                 >
-                  拉黑提问者
-                </Button>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
+                  >
+                    拉黑提问者
+                  </Button>
+                </Popconfirm>
+
+                <TooltipProvider v-else>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        disabled
+                      >
+                        拉黑
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p class="text-xs">匿名提问无法拉黑账号</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
 
                 <AlertDialog>
                   <AlertDialogTrigger as-child>

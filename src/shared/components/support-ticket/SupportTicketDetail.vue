@@ -28,6 +28,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { getPendingUploadFiles, ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { Empty } from '@/shared/ui/empty'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -240,12 +241,14 @@ function formatRelative(time: number) {
                 v-if="imagesForMessage(ticket, item, index).length"
                 class="ticket-message__images flex flex-wrap gap-1.5"
               >
-                <img
-                  v-for="image in imagesForMessage(ticket, item, index)"
+                <ImagePreview
+                  v-for="(image, imgIdx) in imagesForMessage(ticket, item, index)"
                   :key="image.id"
-                  class="ticket-message__image size-16 rounded object-cover border border-border/60"
                   :src="image.path"
-                  :alt="image.name"
+                  :alt="image.name || '工单附件'"
+                  :gallery="imagesForMessage(ticket, item, index)"
+                  :index="imgIdx"
+                  class="size-16"
                 />
               </div>
               <p

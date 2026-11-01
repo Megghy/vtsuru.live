@@ -11,6 +11,7 @@ import {
 import { reactive } from 'vue'
 
 import { Button } from '@/shared/ui/button'
+import { ImagePreview } from '@/shared/ui/image-preview'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -209,12 +210,14 @@ function formatTokens(value?: number): string {
             v-if="msg.images?.length"
             class="msg-images flex flex-wrap gap-1.5"
           >
-            <img
+            <ImagePreview
               v-for="(img, i) in msg.images"
               :key="i"
               :src="img"
-              class="msg-image max-w-40 max-h-40 rounded-lg object-cover"
-              alt="附件"
+              alt="消息附件"
+              :gallery="msg.images"
+              :index="i"
+              class="max-w-40 max-h-40 rounded-lg"
             />
           </div>
           <span
