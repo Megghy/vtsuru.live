@@ -47,6 +47,14 @@ class RealtimeBusService {
       this.dispatchEvent(topic, eventName, payload)
     })
 
+    conn.on('Subscribed', (_topic: string, _success?: boolean) => {
+      // 服务端订阅确认 ACK，消费避免客户端报 No client method with the name 'subscribed'
+    })
+
+    conn.on('Unsubscribed', (_topic: string) => {
+      // 服务端退订确认 ACK，消费避免客户端报 No client method with the name 'unsubscribed'
+    })
+
     conn.onreconnecting(() => {
       this.status.value.connected = false
       this.status.value.connecting = true

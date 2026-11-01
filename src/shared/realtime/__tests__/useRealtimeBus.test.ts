@@ -99,6 +99,9 @@ describe('RealtimeBus and useRealtimeTopic', () => {
     await Promise.resolve()
 
     expect(mockConnection).not.toBeNull()
+    expect(mockConnection?.handlers.has('Event')).toBe(true)
+    expect(mockConnection?.handlers.has('Subscribed')).toBe(true)
+    expect(mockConnection?.handlers.has('Unsubscribed')).toBe(true)
     expect(mockConnection?.start).toHaveBeenCalled()
     expect(mockConnection?.invoke).toHaveBeenCalledWith('Subscribe', 'pngtuber:room:R12345', null)
 

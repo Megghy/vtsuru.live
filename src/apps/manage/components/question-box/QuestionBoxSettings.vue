@@ -395,14 +395,15 @@ function addTag() {
                 </Button>
 
                 <Popconfirm
-                  title="确认删除标签？"
-                  :description="`确认删除标签「${item.name}」吗？`"
+                  title="确认删除话题？"
+                  :description="`确认删除话题「${item.name}」吗？`"
                   @confirm="useQB.delTag(item.name)"
                 >
                   <Button
                     size="icon"
                     variant="ghost"
                     class="size-6 text-muted-foreground hover:text-destructive"
+                    title="删除话题"
                   >
                     <Delete24Regular class="size-3.5" />
                   </Button>

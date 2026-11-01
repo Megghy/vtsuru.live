@@ -1,51 +1,75 @@
 <script setup lang="ts">
 import { AlertCircle } from 'lucide-vue-next'
-import { ref } from 'vue'
+import { computed, ref, useSlots } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    positiveText?: string
-    negativeText?: string
-    showIcon?: boolean
     title?: string
+    description?: string
+    positiveText?: string
+    okText?: string
+    negativeText?: string
+    cancelText?: string
+    showIcon?: boolean
+    align?: 'center' | 'start' | 'end'
+    side?: 'top' | 'right' | 'bottom' | 'left'
   }>(),
   {
-    positiveText: '确定',
-    negativeText: '取消',
+    title: undefined,
+    description: undefined,
+    positiveText: undefined,
+    okText: undefined,
+    negativeText: undefined,
+    cancelText: undefined,
     showIcon: true,
+    align: 'center',
+    side: 'top',
   },
 )
 
 const emit = defineEmits<{
   'positive-click': [e: MouseEvent]
   'negative-click': [e: MouseEvent]
+  confirm: [e: MouseEvent]
+  cancel: [e: MouseEvent]
 }>()
 
+const slots = useSlots()
 const open = ref(false)
+
+const hasTriggerSlot = computed(() => Boolean(slots.trigger))
+const resolvedPositiveText = computed(() => props.positiveText ?? props.okText ?? '确定')
+const resolvedNegativeText = computed(() => props.negativeText ?? props.cancelText ?? '取消')
 
 function onConfirm(e: MouseEvent) {
   open.value = false
   emit('positive-click', e)
+  emit('confirm', e)
 }
 
 function onCancel(e: MouseEvent) {
   open.value = false
   emit('negative-click', e)
+  emit('cancel', e)
 }
 </script>
 
 <template>
   <Popover v-model:open="open">
     <PopoverTrigger as-child>
-      <slot name="trigger" />
+      <slot
+        v-if="hasTriggerSlot"
+        name="trigger"
+      />
+      <slot v-else />
     </PopoverTrigger>
     <PopoverContent
       class="w-64 p-3 text-xs"
-      align="center"
-      side="top"
+      :align="align"
+      :side="side"
     >
       <div class="flex items-start gap-2.5">
         <AlertCircle
@@ -59,8 +83,19 @@ function onCancel(e: MouseEvent) {
           >
             {{ title }}
           </div>
-          <div class="text-muted-foreground text-xs leading-relaxed">
-            <slot />
+          <div
+            v-if="hasTriggerSlot"
+            class="text-muted-foreground text-xs leading-relaxed"
+          >
+            <slot>{{ description }}</slot>
+          </div>
+          <div
+            v-else-if="description || slots.description"
+            class="text-muted-foreground text-xs leading-relaxed"
+          >
+            <slot name="description">
+              {{ description }}
+            </slot>
           </div>
         </div>
       </div>
@@ -71,7 +106,7 @@ function onCancel(e: MouseEvent) {
           class="h-6 px-2 text-[11px]"
           @click="onCancel"
         >
-          {{ negativeText }}
+          {{ resolvedNegativeText }}
         </Button>
         <Button
           size="xs"
@@ -79,7 +114,7 @@ function onCancel(e: MouseEvent) {
           class="h-6 px-2 text-[11px]"
           @click="onConfirm"
         >
-          {{ positiveText }}
+          {{ resolvedPositiveText }}
         </Button>
       </div>
     </PopoverContent>
