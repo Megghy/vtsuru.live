@@ -254,7 +254,7 @@ function submit() {
                 <Input
                   size="xs"
                   v-model="partitionInput"
-                  placeholder="例如：单机游戏，回车添加"
+                  placeholder="B 站新版主分区或子分区，如：游戏、翻唱，回车添加"
                   class="flex-1"
                   @keyup.enter="addPartition"
                 />

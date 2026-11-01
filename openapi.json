@@ -6656,6 +6656,87 @@
         }
       }
     },
+    "/api/obs-store/pngtuber/collab/create-room": {
+      "post": {
+        "tags": [
+          "ObsStore"
+        ],
+        "operationId": "postApiObsStorePngtuberCollabCreateRoom",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfObject"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/obs-store/pngtuber/collab/room-info": {
+      "get": {
+        "tags": [
+          "ObsStore"
+        ],
+        "operationId": "getApiObsStorePngtuberCollabRoomInfo",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfObject"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfObject"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfObject"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/obs-store/sync/get-state": {
       "get": {
         "tags": [
@@ -25565,6 +25646,26 @@
           "data": {
             "$ref": "#/components/schemas/MyUserPagesStateResponse"
           }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfObject": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": { }
         },
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"

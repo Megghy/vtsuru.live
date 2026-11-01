@@ -177,19 +177,22 @@ function recordKey(event: KeyboardEvent) {
         <div class="space-y-1">
           <label class="text-xs text-muted-foreground font-medium">暂离表情</label>
           <Select
-            :model-value="state.awayExpressionId"
+            :model-value="state.awayExpressionId || '__default__'"
             :disabled="disabled"
-            @update:model-value="emit('change', { awayExpressionId: $event ? String($event) : undefined })"
+            @update:model-value="
+              emit('change', { awayExpressionId: $event && $event !== '__default__' ? String($event) : undefined })
+            "
           >
             <SelectTrigger class="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem
-                value=""
+                value="__default__"
                 class="text-xs"
-                >使用默认表情</SelectItem
               >
+                使用默认表情
+              </SelectItem>
               <SelectItem
                 v-for="opt in options"
                 :key="opt.value"

@@ -250,18 +250,21 @@ function dropPrank(p: VtsPrankBinding) {
                 </div>
                 <div class="w-[200px]">
                   <Select
-                    :model-value="p.hotkeyID || ''"
-                    @update:model-value="(val) => savePrank({ ...p, hotkeyID: val ? String(val) : undefined })"
+                    :model-value="p.hotkeyID || '__none__'"
+                    @update:model-value="
+                      (val) => savePrank({ ...p, hotkeyID: val && val !== '__none__' ? String(val) : undefined })
+                    "
                   >
                     <SelectTrigger class="w-full">
                       <SelectValue placeholder="或绑定热键 (可选)" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem
-                        value=""
+                        value="__none__"
                         class="text-xs"
-                        >无热键</SelectItem
                       >
+                        无热键
+                      </SelectItem>
                       <SelectItem
                         v-for="opt in hotkeyOptions"
                         :key="opt.value"

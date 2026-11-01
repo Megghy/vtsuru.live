@@ -137,8 +137,8 @@ function applyPreviewFont() {
       <div class="font-field grid gap-2 w-full">
         <div class="font-picker flex items-center gap-1.5">
           <Select
-            :model-value="model ?? ''"
-            @update:model-value="model = $event ? String($event) : null"
+            :model-value="model || '__default__'"
+            @update:model-value="model = $event && $event !== '__default__' ? String($event) : null"
           >
             <SelectTrigger class="flex-1">
               <SelectValue :placeholder="placeholder" />
@@ -146,7 +146,7 @@ function applyPreviewFont() {
             <SelectContent class="max-h-60">
               <SelectItem
                 v-if="clearable"
-                value=""
+                value="__default__"
                 class="text-xs text-muted-foreground"
               >
                 默认字体

@@ -160,4 +160,20 @@ describe('OBS owner-scoped synchronization', () => {
     expect(bridge.lastSyncError.value).toBe(false)
     expect(JSON.parse(mocks.update.mock.calls[1][2]).count).toBe(8)
   })
+  it('applies remote StateChanged event pushed from realtime bus', async () => {
+    const bridge = setup('viewer')
+    await flushPromises()
+    expect(bridge.state.value.count).toBe(5)
+
+    // 模拟服务端通过 RealtimeGateway 推送 StateChanged
+    const { getRealtimeBus } = await import('@/shared/realtime')
+    const bus = getRealtimeBus()
+    // 调用私有派发或者通过 dispatchEvent
+    // @ts-expect-error testing private dispatch
+    bus.dispatchEvent('obs-store:state:1:counter:default', 'statechanged', makeSnapshot({ count: 99, title: 'pushed' }, 'push-hash'))
+    await nextTick()
+    expect(bridge.state.value.count).toBe(99)
+    expect(bridge.state.value.title).toBe('pushed')
+    expect(bridge.currentHash.value).toBe('push-hash')
+  })
 })

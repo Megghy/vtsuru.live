@@ -1,6 +1,9 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref } from 'vue'
 
+import { useAccount } from '@/api/account'
+import { parsePositiveId } from '@/shared/obs/obsUrl'
+import { useRealtimeBus } from '@/shared/realtime'
 import { useVTsuruHub } from './useVTsuruHub'
 
 export interface ObsNotificationPayload {
@@ -21,7 +24,10 @@ const sourceLabelMap: Record<string, string> = {
 export const useOBSNotification = defineStore('obs-notification', () => {
   const isInited = ref(false)
   const hub = useVTsuruHub()
+  const realtimeBus = useRealtimeBus()
+  const account = useAccount()
   const listeners = new Map<string, (payload: ObsNotificationPayload) => void>()
+  let currentSubscribedTopic = ''
 
   function resolveMeta(payload: ObsNotificationPayload): string | undefined {
     const userName = payload.UserName?.trim()
@@ -68,8 +74,9 @@ export const useOBSNotification = defineStore('obs-notification', () => {
   /**
    * 初始化 OBS 通知系统
    * @param sources 可选的source过滤列表，如果提供则只显示这些类型的通知
+   * @param ownerId 可选的目标主播用户 ID（若在 OBS 页面上，默认从路由 ?id= 解析）
    */
-  async function init(sources?: string[]) {
+  async function init(sources?: string[], ownerId?: number) {
     const listenerId = sources ? [...sources].toSorted().join(',') : 'all'
 
     // 如果已经为这个过滤器初始化过，直接返回
@@ -79,7 +86,6 @@ export const useOBSNotification = defineStore('obs-notification', () => {
 
     const listener = (payload: ObsNotificationPayload) => {
       // 如果指定了sources过滤器，检查通知是否匹配
-
       if (sources && sources.length > 0) {
         if (!payload.Source || !sources.includes(payload.Source)) {
           return // 不匹配，忽略此通知
@@ -90,29 +96,66 @@ export const useOBSNotification = defineStore('obs-notification', () => {
 
     listeners.set(listenerId, listener)
 
-    if (!isInited.value) {
-      isInited.value = true
-      await hub.Init()
+    // 解析目标用户 ID（支持公开 OBS 挂件免密接收）
+    const targetId = ownerId ?? parsePositiveId(window.$route?.query?.id) ?? account.value.id
+
+    if (targetId) {
+      const topic = `obs:notify:${targetId}`
+      if (currentSubscribedTopic !== topic) {
+        if (currentSubscribedTopic) {
+          void realtimeBus.bus.unsubscribe(currentSubscribedTopic)
+        }
+        currentSubscribedTopic = topic
+        void realtimeBus.bus.subscribe(topic)
+        realtimeBus.on(topic, 'ObsNotification', (payload) => {
+          if (payload) {
+            listener(payload as ObsNotificationPayload)
+          }
+        })
+      }
     }
 
-    await hub.on('ObsNotification', listener)
+    if (!isInited.value && account.value.id) {
+      isInited.value = true
+      try {
+        await hub.Init()
+        await hub.on('ObsNotification', listener)
+      } catch (err) {
+        console.warn('[OBSNotification] VTsuruHub 连接失败，已回退至 RealtimeGateway:', err)
+      }
+    }
 
     const filterInfo = sources && sources.length > 0 ? `(过滤: ${sources.join(', ')})` : '(所有类型)'
     console.log(`[OBS] OBS 通知模块已初始化 ${filterInfo}`)
   }
 
-  async function publish(payload: ObsNotificationPayload) {
+  async function publish(payload: ObsNotificationPayload, targetUserId?: number) {
     const message = payload.Message?.trim()
     if (!message) {
       return
     }
 
-    await hub.Init()
-    await hub.invoke('PublishObsNotification', {
-      ...payload,
-      Message: message,
-      Timestamp: payload.Timestamp ?? Date.now(),
-    })
+    const targetId = targetUserId ?? account.value.id
+    if (targetId) {
+      const topic = `obs:notify:${targetId}`
+      try {
+        await realtimeBus.publish(topic, 'PublishObsNotification', {
+          ...payload,
+          Message: message,
+          Timestamp: payload.Timestamp ?? Date.now(),
+        })
+      } catch {
+        // 尝试老 Hub
+        try {
+          await hub.Init()
+          await hub.invoke('PublishObsNotification', {
+            ...payload,
+            Message: message,
+            Timestamp: payload.Timestamp ?? Date.now(),
+          })
+        } catch {}
+      }
+    }
   }
 
   return {

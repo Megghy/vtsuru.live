@@ -13,6 +13,7 @@ import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
 import ClientPageHeader from '../components/ClientPageHeader.vue'
+import PngtuberCollabCard from '@/shared/pngtuber/PngtuberCollabCard.vue'
 import { useOBSStore } from '../store/useOBSStore'
 import { usePngtuberDriver } from '../store/usePngtuberDriver'
 
@@ -23,8 +24,8 @@ const locked = computed(() => driver.running || driver.starting)
 const deviceOptions = computed(() => [
   { label: '系统默认麦克风', value: 'default' },
   ...driver.devices
-    .filter((device) => device.deviceId !== 'default')
-    .map((device) => ({ label: device.label, value: device.deviceId })),
+    .filter((device) => Boolean(device.deviceId) && device.deviceId !== 'default')
+    .map((device) => ({ label: device.label || device.deviceId, value: device.deviceId })),
 ])
 const inputOptions = computed(() => obs.obsInputs.map((name) => ({ label: name, value: name })))
 const expressions = computed(() =>
@@ -196,6 +197,8 @@ onMounted(() => {
         </p>
       </CardContent>
     </Card>
+
+    <PngtuberCollabCard :state="driver.config" />
 
     <Card>
       <CardHeader class="py-3 px-4">

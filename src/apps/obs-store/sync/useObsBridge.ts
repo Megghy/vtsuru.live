@@ -9,6 +9,7 @@ import { parsePositiveId } from '@/shared/obs/obsUrl'
 
 import { isObsSyncChannel } from './channel'
 import type { ObsBridgeOptions } from './types'
+import { useRealtimeTopic } from '@/shared/realtime'
 
 export function useObsBridge<TState extends Record<string, any>, TAction = unknown>(options: ObsBridgeOptions<TState>) {
   const account = useAccount()
@@ -154,16 +155,28 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
     actionHandlers.add(handler)
     return () => actionHandlers.delete(handler)
   }
+  const realtimeTopic = computed(() =>
+    userId.value && isObsSyncChannel(channelId.value)
+      ? `obs-store:state:${userId.value}:${options.componentId}:${channelId.value}`
+      : '',
+  )
+  const { on: onRealtimeEvent } = useRealtimeTopic(realtimeTopic)
+  onRealtimeEvent<ResponseObsSyncState>('StateChanged', (snapshot) => {
+    if (snapshot) {
+      apply(snapshot)
+    }
+  })
+
   function cleanup() {
     generation++
     clearTimeout(timer)
+    timer = undefined
     channel?.close()
     channel = undefined
     writeTask = undefined
   }
-  async function cycle(epoch: number) {
+  async function refresh(epoch = generation) {
     await poll(epoch)
-    if (active && epoch === generation && !destroyed) timer = setTimeout(() => void cycle(epoch), 1200)
   }
 
   function pausePolling() {
@@ -175,7 +188,7 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
   function resumePolling() {
     if (destroyed || active) return
     active = true
-    if (userId.value) void cycle(generation)
+    if (userId.value) void refresh(generation)
   }
   watch(
     [userId, channelId],
@@ -205,7 +218,8 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
           if (data.type === 'action') actionHandlers.forEach((handler) => handler(data.action))
         }
       }
-      void cycle(generation)
+
+      void refresh(generation)
     },
     { immediate: true },
   )

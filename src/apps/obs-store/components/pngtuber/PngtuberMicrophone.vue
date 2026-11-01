@@ -102,7 +102,7 @@ const currentDeviceLabel = computed(() => {
             >系统默认麦克风</SelectItem
           >
           <SelectItem
-            v-for="d in deviceList.filter((item) => item.deviceId !== 'default')"
+            v-for="d in deviceList.filter((item) => Boolean(item.deviceId) && item.deviceId !== 'default')"
             :key="d.deviceId"
             :value="d.deviceId"
             class="text-xs"

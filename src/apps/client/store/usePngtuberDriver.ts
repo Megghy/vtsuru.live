@@ -10,7 +10,9 @@ import { createAudioGate } from '@/shared/pngtuber/audioGate'
 import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
 import { DEFAULT_PNGTUBER_RUNTIME } from '@/shared/pngtuber/types'
 import { useAudioReactive } from '@/shared/pngtuber/useAudioReactive'
+import { usePngtuberCollab } from '@/shared/pngtuber/usePngtuberCollab'
 import { usePngtuberRuntime } from '@/shared/pngtuber/usePngtuberRuntime'
+import { getRealtimeBus } from '@/shared/realtime'
 
 import { useOBSStore } from './useOBSStore'
 
@@ -18,6 +20,7 @@ import { useOBSStore } from './useOBSStore'
 export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
   const account = useAccount()
   const obs = useOBSStore()
+  const collab = usePngtuberCollab()
   const channel = ref('default')
   const audioMode = ref<'microphone' | 'obs'>('microphone')
   const deviceId = ref('default')
@@ -81,6 +84,15 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
   async function control(patch: Parameters<ReturnType<typeof usePngtuberRuntime>['control']>[0], durationMs = 0) {
     if (!running.value || !live.value) throw new Error('请先启动 PNGtuber 驱动')
     await live.value.control(patch, durationMs)
+    if (collab.currentRoomCode.value && account.value.id) {
+      getRealtimeBus()
+        .publish(`pngtuber:room:${collab.currentRoomCode.value}`, 'control', {
+          userId: account.value.id,
+          ...patch,
+          durationMs,
+        })
+        .catch(() => {})
+    }
   }
 
   async function switchExpression(expressionId: string, durationMs = 0, targetChannel = 'default') {
@@ -148,6 +160,15 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
           void liveRuntime.publish(volume.value, speaking.value, source).catch((cause) => {
             if (current()) error.value = String(cause)
           })
+          if (collab.currentRoomCode.value) {
+            getRealtimeBus()
+              .publish(`pngtuber:room:${collab.currentRoomCode.value}`, 'audio', {
+                userId: owner,
+                volume: volume.value,
+                isSpeaking: speaking.value,
+              })
+              .catch(() => {})
+          }
         }
         if (audioMode.value === 'obs') {
           const gate = createAudioGate()

@@ -5,12 +5,12 @@ import type { ObsComponentDefinition } from '../types'
 export const pngtuberComponent: ObsComponentDefinition = {
   id: 'pngtuber',
   name: 'PNGtuber 反应立绘',
-  shortDescription: '麦克风驱动双图立绘，说话时切换张嘴图并附带动效',
+  shortDescription: '麦克风驱动双图立绘，支持单人及 6 位房间码多人组队联动同屏展示',
   description:
-    '上传静止与说话立绘（另有静止眨眼、说话眨眼槽位，共 4 张，可不填），由麦克风音量切换。支持多套表情与快捷键、配件贴饰，以及弹跳、果冻、摇摆等说话动效与呼吸、漂浮待机。',
+    '上传静止与说话立绘（另有静止眨眼、说话眨眼槽位，共 4 张，可不填），由麦克风音量切换。支持多套表情与快捷键、配件贴饰，以及弹跳、果冻、摇摆等说话动效与呼吸、漂浮待机。支持 6 位房间码多人组队联动，同一 OBS 画面内自适应排版与麦克风动态高亮。',
   category: 'interactive',
   status: 'ready',
-  tags: ['PNGtuber', '反应立绘', '麦克风', '弹跳'],
+  tags: ['PNGtuber', '反应立绘', '麦克风', '弹跳', '多人组队', '房间码联动'],
   icon: PersonOutline,
   obsPath: '/obs-store/pngtuber',
   requiresAccount: true,
@@ -22,6 +22,7 @@ export const pngtuberComponent: ObsComponentDefinition = {
     { width: 320, height: 380, label: '迷你 Q 版 (320×380 px)' },
   ],
   features: [
+    '6 位房间码多人组队联动（同屏多立绘并排呈现、麦克风聚光灯高亮）',
     '麦克风音量检测，说话时切换立绘',
     '弹跳 / 果冻 / 摇摆等说话动效，可关闭',
     '待机呼吸与漂浮',

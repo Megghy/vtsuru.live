@@ -26,12 +26,14 @@ import PngtuberDisplay from './PngtuberDisplay.vue'
 import PngtuberExpressions from './PngtuberExpressions.vue'
 import PngtuberInputSettings from './PngtuberInputSettings.vue'
 import PngtuberMicrophone from './PngtuberMicrophone.vue'
+import PngtuberCollabCard from '@/shared/pngtuber/PngtuberCollabCard.vue'
 import { usePngtuberHotkeys } from './usePngtuberHotkeys'
 
 const account = useAccount()
 const route = useRoute()
 const router = useRouter()
 const standalone = computed(() => route.name !== 'client-pngtuber-model')
+const showInlineBack = computed(() => route.name !== 'manage-obsStore')
 function goBack() {
   if (window.history.state?.back) {
     router.back()
@@ -234,6 +236,7 @@ function changeChannel() {
     :class="{ standalone }"
   >
     <Button
+      v-if="showInlineBack"
       variant="ghost"
       class="w-fit gap-1.5"
       @click="goBack"
@@ -485,6 +488,8 @@ function changeChannel() {
               </div>
             </CardContent>
           </Card>
+
+          <PngtuberCollabCard :state="state" />
 
           <Card class="p-3">
             <CardHeader class="p-0 pb-2">

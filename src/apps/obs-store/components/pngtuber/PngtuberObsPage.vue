@@ -12,10 +12,12 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 
+import PngtuberCollabPage from './PngtuberCollabPage.vue'
 import PngtuberDisplay from './PngtuberDisplay.vue'
 import PngtuberMicrophone from './PngtuberMicrophone.vue'
 
 const route = useRoute()
+const isCollabRoom = computed(() => Boolean(route.query.room))
 const channel = computed(() => resolveObsSyncChannel(route.query.channel))
 const debug = computed(() => 'debug' in route.query && firstQueryValue(route.query.debug) !== '0')
 const bridge = useObsBridge<PngtuberState>({
@@ -49,15 +51,17 @@ function retry() {
 </script>
 
 <template>
-  <PngtuberDisplay
-    :state="state"
-    :is-speaking="microphone ? localSpeaking : runtime.isSpeaking"
-    :volume="microphone ? localVolume : runtime.volume"
-    :expression-id="runtime.expressionId"
-    :muted="runtime.muted"
-    :away="runtime.away"
-    @asset-error="assetError = $event"
-  />
+  <PngtuberCollabPage v-if="isCollabRoom" />
+  <template v-else>
+    <PngtuberDisplay
+      :state="state"
+      :is-speaking="microphone ? localSpeaking : runtime.isSpeaking"
+      :volume="microphone ? localVolume : runtime.volume"
+      :expression-id="runtime.expressionId"
+      :muted="runtime.muted"
+      :away="runtime.away"
+      @asset-error="assetError = $event"
+    />
   <div :class="{ diagnostics: debug }">
     <Card
       v-if="debug"
@@ -130,7 +134,8 @@ function retry() {
         @sample="sample"
       />
     </div>
-  </div>
+    </div>
+  </template>
 </template>
 
 <style scoped>

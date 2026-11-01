@@ -7,15 +7,18 @@ import {
   whenPersistedReady,
 } from '@/shared/storage/persist'
 
-const debugAPI: string =
-  import.meta.env.VITE_API == 'dev'
-    ? (import.meta.env.VITE_DEBUG_DEV_API as string)
-    : (import.meta.env.VITE_DEBUG_RELEASE_API as string)
 const releaseAPI = `https://api.vtsuru.suki.club/`
 const failoverAPI = `https://failover-api.vtsuru.suki.club/`
 
+export const isDev = import.meta.env.DEV || import.meta.env.MODE === 'development'
+
+const devBackendUrl = (import.meta.env.VITE_DEBUG_DEV_API as string) || 'http://localhost:5010/'
+const releaseBackendUrl = (import.meta.env.VITE_DEBUG_RELEASE_API as string) || releaseAPI
+
+// 仅当明确声明 VITE_API === 'dev' 时才使用本地开发后端；默认未配置时一律连接线上 releaseAPI，避免本地未启动后端导致无法显示内容
+const debugAPI: string = import.meta.env.VITE_API === 'dev' ? devBackendUrl : releaseBackendUrl
+
 export const apiFail = ref(false)
-export const isDev = import.meta.env.MODE === 'development'
 
 const API_MANUAL_SELECTION_KEY = 'vtsuru:settings:api-selection-manual'
 const API_FAILOVER_SESSION_KEY = 'vtsuru:runtime:api-failover'
@@ -93,7 +96,7 @@ export function isManagedAPIUrl(url: string): boolean {
 }
 
 export function getCurrentAPIUrl(): string {
-  if (import.meta.env.NODE_ENV === 'development') {
+  if (isDev) {
     return debugAPI
   }
   return getAPIUrl(currentAPIKey.value)
@@ -109,14 +112,14 @@ export function resolveFileUrl(path: string | null | undefined): string {
 }
 
 export function mapToCurrentAPI(url: string): string {
-  if (import.meta.env.NODE_ENV === 'development') {
-    return url
+  if (isDev) {
+    return url.replace(releaseAPI, debugAPI).replace(failoverAPI, debugAPI)
   }
   const currentAPI = getCurrentAPIUrl()
   return url.replace(releaseAPI, currentAPI).replace(failoverAPI, currentAPI)
 }
 
-export const BASE_URL = import.meta.env.NODE_ENV === 'development' ? debugAPI : apiFail.value ? failoverAPI : releaseAPI
+export const BASE_URL = isDev ? debugAPI : apiFail.value ? failoverAPI : releaseAPI
 
 export const BASE_API_URL = `${BASE_URL}api/`
 export const BASE_HUB_URL = `${BASE_URL}hub/`

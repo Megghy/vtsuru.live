@@ -75,5 +75,14 @@ export default {
         forceReload: true,
       },
     },
+    {
+      path: 'pngtuber-collab',
+      name: 'obs-store-pngtuber-collab',
+      component: async () => import('@/apps/obs-store/components/pngtuber/PngtuberCollabPage.vue'),
+      meta: {
+        title: 'PNGtuber 联动',
+        forceReload: true,
+      },
+    },
   ],
 }
