@@ -2,6 +2,7 @@ import JSZip from 'jszip'
 
 import { uploadPngtuberAsset } from '@/api/pngtuber-assets'
 
+import { DEFAULT_COLLAB_SETTINGS } from './collabSettings'
 import { normalizePngtuberState } from './normalize'
 import { inflateBounded, inspectPackageZip, PACKAGE_LIMITS } from './packageZip'
 import { DEFAULT_PNGTUBER_STATE, IMAGE_SLOTS } from './types'
@@ -34,7 +35,9 @@ function shape(value: unknown, template: object) {
 function validateManifest(value: unknown) {
   const manifest = shape(value, { format: '', version: 1, state: {} })
   if (manifest.format !== FORMAT || manifest.version !== 1) throw new Error('不支持的 PNGTuber 模型包格式或版本')
-  const raw = shape(manifest.state, DEFAULT_PNGTUBER_STATE)
+  const stateObj = object(manifest.state)
+  if (stateObj.collab === undefined) stateObj.collab = { ...DEFAULT_COLLAB_SETTINGS }
+  const raw = shape(stateObj, DEFAULT_PNGTUBER_STATE)
   for (const expression of raw.expressions as unknown[]) {
     const e = shape(expression, DEFAULT_PNGTUBER_STATE.expressions[0])
     const ids = new Set<string>()

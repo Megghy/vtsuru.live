@@ -94,7 +94,7 @@ const obsCollabUrl = computed(() => {
     params: {
       room: currentRoomCode.value || undefined,
       channel: props.channel,
-      mock: isMockCollab.value ? 1 : undefined,
+      mock: !currentRoomCode.value && isMockCollab.value ? 1 : undefined,
     },
   })
 })

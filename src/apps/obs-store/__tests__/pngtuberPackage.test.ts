@@ -107,6 +107,30 @@ describe('模型包', () => {
     )
     expect(uploadPngtuberAsset).not.toHaveBeenCalled()
   })
+  it('导入缺少 collab 的旧模型包时补默认组队设置', async () => {
+    const snapshot = structuredClone(state())
+    vi.mocked(uploadPngtuberAsset).mockResolvedValue({
+      url: 'https://api.example/pngtuber/assets/1/new',
+      userId: 1,
+      assetId: 'new',
+      width: 1,
+      height: 1,
+      frameCount: 1,
+      byteSize: png.length,
+    })
+    const imported = await importPngtuberPackage(
+      await archive({
+        'manifest.json': JSON.stringify({
+          format: 'vtsuru-pngtuber',
+          version: 1,
+          state: { ...snapshot, collab: undefined },
+        }),
+        [path]: png,
+      }),
+    )
+    expect(imported.collab).toEqual(DEFAULT_PNGTUBER_STATE.collab)
+    expect(uploadPngtuberAsset).toHaveBeenCalled()
+  })
   it('拒绝外部素材引用及错误字段类型', async () => {
     const s = state()
     s.expressions[0].idleImage = 'https://example.com/a.png'
