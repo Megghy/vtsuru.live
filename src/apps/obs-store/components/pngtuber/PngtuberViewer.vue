@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular } from '@vicons/fluent'
+import { ArrowLeft24Regular, Wrench24Regular } from '@vicons/fluent'
 import { useClipboard } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import { computed, onActivated, onDeactivated, onScopeDispose, ref, watch } from 'vue'
@@ -11,8 +11,10 @@ import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useO
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { exportPngtuberPackage, importPngtuberPackage } from '@/shared/pngtuber/modelPackage'
 import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
+import PngtuberCollabCard from '@/shared/pngtuber/PngtuberCollabCard.vue'
 import { DEFAULT_PNGTUBER_STATE } from '@/shared/pngtuber/types'
 import type { PngtuberExpression, PngtuberRuntime, PngtuberState } from '@/shared/pngtuber/types'
+import { usePngtuberDebugger } from '@/shared/pngtuber/usePngtuberDebugger'
 import { usePngtuberRuntime } from '@/shared/pngtuber/usePngtuberRuntime'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
@@ -20,13 +22,13 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Slider } from '@/shared/ui/slider'
 
 import PngtuberAppearance from './PngtuberAppearance.vue'
 import PngtuberDisplay from './PngtuberDisplay.vue'
 import PngtuberExpressions from './PngtuberExpressions.vue'
 import PngtuberInputSettings from './PngtuberInputSettings.vue'
 import PngtuberMicrophone from './PngtuberMicrophone.vue'
-import PngtuberCollabCard from '@/shared/pngtuber/PngtuberCollabCard.vue'
 import { usePngtuberHotkeys } from './usePngtuberHotkeys'
 
 const account = useAccount()
@@ -73,8 +75,33 @@ const assetError = ref('')
 const localVolume = ref(0)
 const localSpeaking = ref(false)
 const localInput = computed(() => ['microphone', 'controller'].includes(state.value.inputMode))
-const previewVolume = computed(() => (localInput.value ? localVolume.value : runtime.value.volume))
-const previewSpeaking = computed(() => (localInput.value ? localSpeaking.value : runtime.value.isSpeaking))
+const {
+  isSimulating,
+  simulatedSpeaking,
+  simulatedVolume,
+  simulatedExpressionId,
+  simulatedMuted,
+  simulatedAway,
+  autoSpeakingWave,
+  toggleSingleSimulation,
+  setSimulatedSpeaking,
+  setSimulatedVolume,
+  toggleAutoWave,
+} = usePngtuberDebugger()
+const previewVolume = computed(() => {
+  if (isSimulating.value) return simulatedVolume.value
+  return localInput.value ? localVolume.value : runtime.value.volume
+})
+const previewSpeaking = computed(() => {
+  if (isSimulating.value) return simulatedSpeaking.value
+  return localInput.value ? localSpeaking.value : runtime.value.isSpeaking
+})
+const previewExpressionId = computed(() => {
+  if (isSimulating.value && simulatedExpressionId.value) return simulatedExpressionId.value
+  return runtime.value.expressionId
+})
+const previewMuted = computed(() => (isSimulating.value ? simulatedMuted.value : runtime.value.muted))
+const previewAway = computed(() => (isSimulating.value ? simulatedAway.value : runtime.value.away))
 const bg = ref('checker')
 const packageInput = ref<HTMLInputElement>()
 const obsUrl = computed(() =>
@@ -319,8 +346,20 @@ function changeChannel() {
 
         <div class="stage flex flex-col gap-4">
           <Card class="p-3">
-            <CardHeader class="p-0 pb-2">
+            <CardHeader class="p-0 pb-2 flex flex-row items-center justify-between">
               <CardTitle class="text-sm font-semibold">实时预览</CardTitle>
+              <Button
+                variant="ghost"
+                size="xs"
+                class="gap-1"
+                :class="{
+                  'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30': isSimulating,
+                }"
+                @click="toggleSingleSimulation"
+              >
+                <Wrench24Regular class="size-3" />
+                {{ isSimulating ? '退出调试模拟' : '调试模拟' }}
+              </Button>
             </CardHeader>
             <CardContent class="p-0 space-y-3">
               <div class="flex items-center gap-2 flex-wrap">
@@ -328,15 +367,95 @@ function changeChannel() {
                   :variant="previewSpeaking ? 'default' : 'secondary'"
                   class="text-xs"
                 >
-                  {{ runtime.away ? '暂离' : runtime.muted ? '静音' : previewSpeaking ? '说话中' : '待机' }}
+                  {{ previewAway ? '暂离' : previewMuted ? '静音' : previewSpeaking ? '说话中' : '待机' }}
                 </Badge>
                 <Badge
+                  v-if="isSimulating"
+                  variant="outline"
+                  class="border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10 text-xs"
+                >
+                  模拟运行中
+                </Badge>
+                <Badge
+                  v-else
                   variant="outline"
                   class="text-xs"
                 >
                   {{ isSyncing ? '保存中' : lastSyncError ? '保存失败' : isReady ? '配置已就绪' : '加载中' }}
                 </Badge>
                 <span class="text-xs text-muted-foreground">音量 {{ Math.round(previewVolume) }}%</span>
+              </div>
+
+              <div
+                v-if="isSimulating"
+                class="p-2.5 rounded-md border border-amber-500/30 bg-amber-500/5 space-y-2.5 text-xs"
+              >
+                <div class="flex items-center justify-between gap-2">
+                  <span class="text-muted-foreground font-medium">模拟说话状态</span>
+                  <div class="flex items-center gap-1.5">
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      :class="{
+                        'bg-primary text-primary-foreground': simulatedSpeaking && !autoSpeakingWave,
+                      }"
+                      @click="setSimulatedSpeaking(!simulatedSpeaking)"
+                    >
+                      {{ simulatedSpeaking ? '停止说话' : '模拟持续说话' }}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="xs"
+                      :class="{ 'border-primary text-primary': autoSpeakingWave }"
+                      @click="toggleAutoWave"
+                    >
+                      {{ autoSpeakingWave ? '停止自动波形' : '自动语调波形' }}
+                    </Button>
+                  </div>
+                </div>
+
+                <div class="space-y-1">
+                  <div class="flex justify-between items-center text-muted-foreground text-[11px]">
+                    <span>模拟音量调节</span>
+                    <span class="font-mono text-foreground">{{ Math.round(simulatedVolume) }}%</span>
+                  </div>
+                  <Slider
+                    :min="0"
+                    :max="100"
+                    :step="1"
+                    :model-value="[simulatedVolume]"
+                    @update:model-value="setSimulatedVolume($event?.[0] ?? 0)"
+                  />
+                </div>
+
+                <div class="space-y-1">
+                  <span class="text-muted-foreground text-[11px]">快速测试表情：</span>
+                  <div class="flex items-center gap-1 flex-wrap">
+                    <Button
+                      v-for="expr in state.expressions"
+                      :key="expr.id"
+                      variant="ghost"
+                      size="xs"
+                      class="px-1.5 border border-border/60"
+                      :class="{
+                        'bg-primary/10 border-primary text-primary font-medium':
+                          previewExpressionId === expr.id ||
+                          (!previewExpressionId && expr.id === state.defaultExpressionId),
+                      }"
+                      @click="simulatedExpressionId = expr.id"
+                    >
+                      {{ expr.name }}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      class="px-1.5 text-muted-foreground"
+                      @click="simulatedExpressionId = ''"
+                    >
+                      重置
+                    </Button>
+                  </div>
+                </div>
               </div>
 
               <Select v-model="bg">
@@ -375,9 +494,9 @@ function changeChannel() {
                   :state="state"
                   :is-speaking="previewSpeaking"
                   :volume="previewVolume"
-                  :expression-id="runtime.expressionId"
-                  :muted="runtime.muted"
-                  :away="runtime.away"
+                  :expression-id="previewExpressionId"
+                  :muted="previewMuted"
+                  :away="previewAway"
                   inline-mode
                   @asset-error="assetError = $event"
                 />
@@ -395,22 +514,22 @@ function changeChannel() {
               <div class="flex items-center gap-2 flex-wrap">
                 <Button
                   variant="outline"
-                  :disabled="controlDisabled"
-                  @click="control({ muted: !runtime.muted })"
+                  :disabled="controlDisabled && !isSimulating"
+                  @click="isSimulating ? (simulatedMuted = !simulatedMuted) : control({ muted: !runtime.muted })"
                 >
-                  {{ runtime.muted ? '取消静音' : '静音' }}
+                  {{ (isSimulating ? simulatedMuted : runtime.muted) ? '取消静音' : '静音' }}
                 </Button>
                 <Button
                   variant="outline"
-                  :disabled="controlDisabled"
-                  @click="control({ away: !runtime.away })"
+                  :disabled="controlDisabled && !isSimulating"
+                  @click="isSimulating ? (simulatedAway = !simulatedAway) : control({ away: !runtime.away })"
                 >
-                  {{ runtime.away ? '结束暂离' : '暂离' }}
+                  {{ (isSimulating ? simulatedAway : runtime.away) ? '结束暂离' : '暂离' }}
                 </Button>
                 <Button
                   variant="outline"
-                  :disabled="controlDisabled"
-                  @click="control({ expressionId: '' })"
+                  :disabled="controlDisabled && !isSimulating"
+                  @click="isSimulating ? (simulatedExpressionId = '') : control({ expressionId: '' })"
                 >
                   默认表情
                 </Button>
@@ -489,7 +608,11 @@ function changeChannel() {
             </CardContent>
           </Card>
 
-          <PngtuberCollabCard :state="state" />
+          <PngtuberCollabCard
+            :state="state"
+            :channel="channel"
+            @patch="patch"
+          />
 
           <Card class="p-3">
             <CardHeader class="p-0 pb-2">

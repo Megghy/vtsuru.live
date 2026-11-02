@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { effectScope, ref } from 'vue'
+import { ref } from 'vue'
 
 const mockAccount = ref({ id: 101, name: '测试主播', token: 'token-101' })
 vi.mock('@/api/account', () => ({
@@ -48,7 +48,10 @@ describe('usePngtuberCollab', () => {
     const code = await collab.createRoom()
 
     expect(code).toBe('ROOM88')
-    expect(mockPostAPI).toHaveBeenCalledWith(expect.stringMatching(/\/api\/obs-store\/pngtuber\/collab\/create-room$/), {})
+    expect(mockPostAPI).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/obs-store\/pngtuber\/collab\/create-room$/),
+      {},
+    )
     expect(mockPostAPI).not.toHaveBeenCalledWith(expect.stringContaining('/api/api/'), expect.anything())
     expect(collab.currentRoomCode.value).toBe('ROOM88')
     expect(collab.isHost.value).toBe(true)
@@ -75,9 +78,7 @@ describe('usePngtuberCollab', () => {
     const snapshotHandler = topicListeners.get('room_snapshot')
     expect(snapshotHandler).toBeDefined()
     snapshotHandler!({
-      members: [
-        { userId: 202, name: '嘉宾小明', volume: 0, isSpeaking: false },
-      ],
+      members: [{ userId: 202, name: '嘉宾小明', volume: 0, isSpeaking: false }],
     })
     expect(collab.members.value.length).toBe(1)
     expect(collab.members.value[0].name).toBe('嘉宾小明')

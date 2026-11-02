@@ -1,3 +1,4 @@
+import { normalizeCollabSettings } from './collabSettings'
 import { createExpression, DEFAULT_PNGTUBER_STATE, IMAGE_SLOTS } from './types'
 import type { PngtuberExpression, PngtuberState } from './types'
 
@@ -16,22 +17,28 @@ function text(value: unknown, fallback = '') {
   if (typeof value !== 'string' || value.length > 4096) throw new Error('无效的文字字段')
   return value
 }
-function image(value: unknown) {
-  const url = text(value)
-  if (!url || /^(data|blob):/i.test(url)) return ''
-  if (!/^https?:\/\//i.test(url)) throw new Error('立绘图片必须是 HTTP(S) 地址')
-  return url
+function image(value: unknown, allowInline = false) {
+  if (value === undefined) return ''
+  if (typeof value !== 'string') throw new Error('无效的文字字段')
+  if (!value) return ''
+  if (/^(data|blob):/i.test(value)) {
+    if (!allowInline) return ''
+    return value
+  }
+  if (value.length > 4096) throw new Error('无效的文字字段')
+  if (!/^https?:\/\//i.test(value)) throw new Error('立绘图片必须是 HTTP(S) 地址')
+  return value
 }
 function choice<T extends string>(value: unknown, fallback: T, allowed: readonly T[]): T {
   if (value === undefined) return fallback
   if (!allowed.includes(value as T)) throw new Error(`不支持的配置值：${value}`)
   return value as T
 }
-function expression(value: unknown): PngtuberExpression {
+function expression(value: unknown, allowInline = false): PngtuberExpression {
   const raw = record(value)
   const result = createExpression(text(raw.name, '表情'), text(raw.id, 'default'))
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(result.id)) throw new Error('无效的表情 ID')
-  for (const slot of IMAGE_SLOTS) result[slot] = image(raw[slot])
+  for (const slot of IMAGE_SLOTS) result[slot] = image(raw[slot], allowInline)
   result.hotkey = text(raw.hotkey)
   result.hotkeyMode = choice(raw.hotkeyMode, 'toggle', ['toggle', 'hold', 'timed'])
   result.durationMs = number(raw.durationMs, 5000, 100, 600000)
@@ -43,7 +50,7 @@ function expression(value: unknown): PngtuberExpression {
       return {
         id: text(a.id),
         name: text(a.name, '配件'),
-        image: image(a.image),
+        image: image(a.image, allowInline),
         x: number(a.x, 0, -2000, 2000),
         y: number(a.y, 0, -2000, 2000),
         scale: number(a.scale, 1, 0.05, 10),
@@ -55,8 +62,9 @@ function expression(value: unknown): PngtuberExpression {
   }
   return result
 }
-export function normalizePngtuberState(value: unknown): PngtuberState {
+export function normalizePngtuberState(value: unknown, options?: { allowInlineImages?: boolean }): PngtuberState {
   const raw = record(value)
+  const allowInline = options?.allowInlineImages === true
   const state = structuredClone(DEFAULT_PNGTUBER_STATE)
   const ranges = {
     threshold: [1, 100],
@@ -104,10 +112,13 @@ export function normalizePngtuberState(value: unknown): PngtuberState {
   if (raw.expressions !== undefined) {
     if (!Array.isArray(raw.expressions) || !raw.expressions.length || raw.expressions.length > 32)
       throw new Error('需要 1–32 个表情')
-    state.expressions = raw.expressions.map(expression)
+    state.expressions = raw.expressions.map((item) => expression(item, allowInline))
   } else
     state.expressions = [
-      expression({ id: 'default', name: '默认', idleImage: raw.idleImage, speakingImage: raw.speakingImage }),
+      expression(
+        { id: 'default', name: '默认', idleImage: raw.idleImage, speakingImage: raw.speakingImage },
+        allowInline,
+      ),
     ]
   if (new Set(state.expressions.map((e) => e.id)).size !== state.expressions.length) throw new Error('表情 ID 重复')
   state.defaultExpressionId = text(raw.defaultExpressionId, state.expressions[0].id)
@@ -116,6 +127,7 @@ export function normalizePngtuberState(value: unknown): PngtuberState {
     if (!state.expressions.some((e) => e.id === id)) throw new Error('所选表情不存在')
   if (state.blinkMax < state.blinkMin) throw new Error('眨眼最大间隔不能小于最小间隔')
   state.closeThreshold = Math.min(state.closeThreshold, state.threshold)
+  state.collab = normalizeCollabSettings(raw.collab)
   return state
 }
 export const sanitizePngtuberState = normalizePngtuberState

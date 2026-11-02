@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import PngtuberCollabCard from '@/shared/pngtuber/PngtuberCollabCard.vue'
 import { Alert, AlertTitle, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -13,7 +14,6 @@ import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
 import ClientPageHeader from '../components/ClientPageHeader.vue'
-import PngtuberCollabCard from '@/shared/pngtuber/PngtuberCollabCard.vue'
 import { useOBSStore } from '../store/useOBSStore'
 import { usePngtuberDriver } from '../store/usePngtuberDriver'
 
@@ -198,7 +198,10 @@ onMounted(() => {
       </CardContent>
     </Card>
 
-    <PngtuberCollabCard :state="driver.config" />
+    <PngtuberCollabCard
+      :state="driver.config"
+      :channel="driver.channel"
+    />
 
     <Card>
       <CardHeader class="py-3 px-4">

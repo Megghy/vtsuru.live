@@ -1,3 +1,6 @@
+import type { PngtuberCollabSettings } from './collabSettings'
+import { DEFAULT_COLLAB_SETTINGS } from './collabSettings'
+
 export type SpeakingAnimationType = 'bounce' | 'jelly' | 'shake' | 'pulse' | 'float' | 'none'
 export type IdleAnimationType = 'none' | 'breathe' | 'sway' | 'float'
 export type AnimationIntensity = 'subtle' | 'normal' | 'energetic'
@@ -56,6 +59,7 @@ export interface PngtuberState {
   padding: number
   transitionMs: number
   pixelated: boolean
+  collab: PngtuberCollabSettings
 }
 export function createExpression(name = '默认', id: string = crypto.randomUUID()): PngtuberExpression {
   return {
@@ -102,6 +106,7 @@ export const DEFAULT_PNGTUBER_STATE: PngtuberState = {
   padding: 40,
   transitionMs: 0,
   pixelated: false,
+  collab: { ...DEFAULT_COLLAB_SETTINGS },
 }
 export interface PngtuberRuntime {
   expressionId: string

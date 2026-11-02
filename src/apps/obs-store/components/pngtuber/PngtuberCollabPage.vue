@@ -1,147 +1,144 @@
 <script setup lang="ts">
+import { Wrench24Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
+import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
+import { firstQueryValue } from '@/shared/obs/obsUrl'
+import { normalizeCollabSettings, type PngtuberCollabSettings } from '@/shared/pngtuber/collabSettings'
+import { DEFAULT_PNGTUBER_STATE } from '@/shared/pngtuber/types'
 import type { PngtuberState } from '@/shared/pngtuber/types'
-import { useRealtimeTopic } from '@/shared/realtime'
+import { watchCollabRoom, type CollabMemberItem } from '@/shared/pngtuber/usePngtuberCollab'
+import { usePngtuberDebugger } from '@/shared/pngtuber/usePngtuberDebugger'
+import { Button } from '@/shared/ui/button'
+import { Progress } from '@/shared/ui/progress'
+import { Slider } from '@/shared/ui/slider'
 
 import PngtuberDisplay from './PngtuberDisplay.vue'
 
-interface MemberState {
-  userId: number
-  name: string
-  avatar: string
-  isSpeaking: boolean
-  volume: number
-  expressionId: string
-  muted: boolean
-  away: boolean
-  config: PngtuberState
+const route = useRoute()
+const channel = computed(() => resolveObsSyncChannel(route.query.channel))
+
+const bridge = useObsBridge<PngtuberState>({
+  componentId: 'pngtuber',
+  channelId: channel,
+  defaultState: structuredClone(DEFAULT_PNGTUBER_STATE),
+  role: 'viewer',
+})
+
+const { isMockCollab, mockMembers, startMockCollab, toggleMockCollab, cycleCollabSpeaker, addMockMember } =
+  usePngtuberDebugger()
+
+function queryFlag(key: string) {
+  const v = firstQueryValue(route.query[key]).toLowerCase()
+  return v === '1' || v === 'true'
 }
 
-const route = useRoute()
-const roomCode = computed(() => {
-  const r = route.query.room
-  return (Array.isArray(r) ? r[0] : r || '').toString().trim().toUpperCase()
-})
-const spotlight = computed(() => route.query.spotlight !== '0')
-const layout = computed(() => (route.query.layout === 'grid' ? 'grid' : 'row'))
+const roomCode = computed(() => firstQueryValue(route.query.room).trim().toUpperCase())
+const realMembers = ref<CollabMemberItem[]>([])
+const showDebugPanel = ref(queryFlag('debug') || queryFlag('mock'))
+const debugOverride = ref<Partial<PngtuberCollabSettings>>({})
 
-const members = ref<MemberState[]>([])
+const effectiveSettings = computed(() =>
+  normalizeCollabSettings({ ...bridge.state.value.collab, ...debugOverride.value }),
+)
 
-function parseConfig(raw: unknown): PngtuberState {
-  try {
-    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw
-    return normalizePngtuberState(obj || {})
-  } catch {
-    return normalizePngtuberState({})
-  }
+function patchDebugSetting(patch: Partial<PngtuberCollabSettings>) {
+  debugOverride.value = { ...debugOverride.value, ...patch }
 }
 
 if (roomCode.value) {
-  const topic = useRealtimeTopic(`pngtuber:room:${roomCode.value}`)
-
-  topic.on('room_snapshot', (payload: any) => {
-    if (!payload || !Array.isArray(payload.members)) return
-    members.value = payload.members.map((m: any) => ({
-      userId: m.userId,
-      name: m.name || `用户 ${m.userId}`,
-      avatar: m.avatar || '',
-      isSpeaking: Boolean(m.isSpeaking),
-      volume: Number(m.volume) || 0,
-      expressionId: m.expressionId || '',
-      muted: Boolean(m.muted),
-      away: Boolean(m.away),
-      config: parseConfig(m.config),
-    }))
-  })
-
-  topic.on('member_joined', (payload: any) => {
-    if (!payload || !payload.userId) return
-    const idx = members.value.findIndex((m) => m.userId === payload.userId)
-    const item: MemberState = {
-      userId: payload.userId,
-      name: payload.name || `用户 ${payload.userId}`,
-      avatar: payload.avatar || '',
-      isSpeaking: Boolean(payload.isSpeaking),
-      volume: Number(payload.volume) || 0,
-      expressionId: payload.expressionId || '',
-      muted: Boolean(payload.muted),
-      away: Boolean(payload.away),
-      config: parseConfig(payload.config),
-    }
-    if (idx >= 0) {
-      members.value[idx] = item
-    } else {
-      members.value.push(item)
-    }
-  })
-
-  topic.on('member_audio', (payload: any) => {
-    if (!payload || !payload.userId) return
-    const m = members.value.find((item) => item.userId === payload.userId)
-    if (m) {
-      m.volume = Number(payload.volume) || 0
-      m.isSpeaking = Boolean(payload.isSpeaking)
-    }
-  })
-
-  topic.on('member_control', (payload: any) => {
-    if (!payload || !payload.userId) return
-    const m = members.value.find((item) => item.userId === payload.userId)
-    if (m) {
-      if (payload.expressionId !== undefined) m.expressionId = payload.expressionId
-      if (payload.muted !== undefined) m.muted = Boolean(payload.muted)
-      if (payload.away !== undefined) m.away = Boolean(payload.away)
-      if (m.muted || m.away) {
-        m.volume = 0
-        m.isSpeaking = false
-      }
-    }
-  })
-
-  topic.on('member_left', (payload: any) => {
-    if (!payload || !payload.userId) return
-    members.value = members.value.filter((item) => item.userId !== payload.userId)
-  })
+  watchCollabRoom(roomCode.value, realMembers)
 }
 
+if (queryFlag('mock')) {
+  startMockCollab()
+}
+
+const members = computed(() => (isMockCollab.value ? mockMembers.value : realMembers.value))
+
 const hasActiveSpeaker = computed(() => {
-  return spotlight.value && members.value.some((m) => m.isSpeaking)
+  return effectiveSettings.value.spotlight && members.value.some((m) => m.isSpeaking)
 })
+
+const containerLayoutClasses = computed(() => {
+  const s = effectiveSettings.value
+  if (s.layout === 'grid') return 'grid grid-cols-2 place-items-center'
+  if (s.layout === 'column') {
+    const alignClass =
+      s.alignment === 'top' ? 'justify-start' : s.alignment === 'center' ? 'justify-center' : 'justify-end'
+    return `flex flex-col items-center ${alignClass}`
+  }
+  const alignClass = s.alignment === 'top' ? 'items-start' : s.alignment === 'center' ? 'items-center' : 'items-end'
+  return `flex flex-row justify-center ${alignClass}`
+})
+
+const transformOriginClass = computed(() => {
+  const s = effectiveSettings.value
+  if (s.alignment === 'top') return 'origin-top'
+  if (s.alignment === 'center') return 'origin-center'
+  return 'origin-bottom'
+})
+
+function getMemberTransform(m: CollabMemberItem) {
+  const s = effectiveSettings.value
+  if (s.spotlight && m.isSpeaking) {
+    return `scale(${Number((s.scale * s.activeScale).toFixed(3))})`
+  }
+  return `scale(${s.scale})`
+}
+
+function getMemberOpacity(m: CollabMemberItem) {
+  if (hasActiveSpeaker.value && !m.isSpeaking) return effectiveSettings.value.inactiveOpacity
+  return 1
+}
 </script>
 
 <template>
   <div
     class="pngtuber-collab-viewport fixed inset-0 overflow-hidden select-none pointer-events-none"
-    :class="[
-      layout === 'grid'
-        ? 'grid grid-cols-2 place-items-center gap-6 p-4'
-        : 'flex items-end justify-center gap-8 pb-4 px-4',
-    ]"
+    :class="containerLayoutClasses"
+    :style="{
+      gap: `${effectiveSettings.gap}px`,
+      padding: `${effectiveSettings.padding}px`,
+    }"
   >
     <div
-      v-if="!roomCode"
-      class="text-xs text-muted-foreground/60 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded"
+      v-if="!roomCode && !isMockCollab"
+      class="text-xs text-muted-foreground/80 bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-lg border border-white/10 pointer-events-auto"
     >
-      OBS 联动源已加载 · 请在 URL 中附加 ?room=房间码
+      OBS 组队画面已就绪 · 请附加 ?room=房间码
+      <Button
+        variant="link"
+        class="ml-1 h-auto px-1 text-xs"
+        @click="startMockCollab()"
+      >
+        开启前端模拟测试
+      </Button>
     </div>
 
     <div
       v-else-if="members.length === 0"
-      class="text-xs text-muted-foreground/60 bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded"
+      class="text-xs text-muted-foreground/80 bg-black/40 backdrop-blur-md px-3.5 py-2 rounded-lg border border-white/10 pointer-events-auto"
     >
       联动房间 [{{ roomCode }}] 就绪 · 等待成员加入...
+      <Button
+        variant="link"
+        class="ml-1 h-auto px-1 text-xs"
+        @click="startMockCollab()"
+      >
+        模拟多人入房
+      </Button>
     </div>
 
     <div
       v-for="member in members"
       :key="member.userId"
-      class="collab-slot transition-all duration-200 ease-out flex flex-col items-center justify-end"
-      :class="{
-        'scale-[1.03] z-10': spotlight && member.isSpeaking,
-        'opacity-75 scale-[0.98]': hasActiveSpeaker && !member.isSpeaking,
+      class="collab-slot transition-all duration-200 ease-out flex flex-col items-center"
+      :class="[transformOriginClass, { 'z-10': member.isSpeaking }]"
+      :style="{
+        transform: getMemberTransform(member),
+        opacity: getMemberOpacity(member),
       }"
     >
       <PngtuberDisplay
@@ -152,12 +149,105 @@ const hasActiveSpeaker = computed(() => {
         :muted="member.muted"
         :away="member.away"
       />
+
+      <div
+        v-if="effectiveSettings.showNames"
+        class="member-nametag mt-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/15 flex flex-col items-center gap-1 shadow-lg transition-all"
+        :class="{
+          'border-primary/80 ring-1 ring-primary/50 scale-105': member.isSpeaking,
+        }"
+      >
+        <div class="flex items-center gap-1.5 text-[11px] text-white/90 font-medium">
+          <span
+            class="size-2 rounded-full shrink-0 transition-colors"
+            :class="member.isSpeaking ? 'bg-emerald-400 animate-pulse' : 'bg-white/30'"
+          />
+          <span class="truncate max-w-[120px]">{{ member.name }}</span>
+        </div>
+
+        <Progress
+          v-if="effectiveSettings.showVolumeBar && member.isSpeaking"
+          :model-value="Math.min(100, Math.max(0, Math.round(member.volume)))"
+          class="h-1 w-16 bg-white/20"
+        />
+      </div>
+    </div>
+
+    <div
+      v-if="showDebugPanel"
+      class="fixed bottom-3 right-3 z-50 pointer-events-auto bg-black/80 backdrop-blur-lg border border-white/20 rounded-xl p-3 shadow-2xl text-white text-xs max-w-xs space-y-2.5"
+    >
+      <div class="flex items-center justify-between border-b border-white/10 pb-1.5">
+        <span class="font-semibold flex items-center gap-1 text-amber-400">
+          <Wrench24Regular class="size-3.5" />
+          组队画面调试控制器
+        </span>
+        <Button
+          variant="ghost"
+          size="xs"
+          class="p-0 text-white/60 hover:text-white"
+          @click="showDebugPanel = false"
+        >
+          关闭
+        </Button>
+      </div>
+
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <Button
+          variant="outline"
+          size="xs"
+          class="bg-white/10 text-white border-white/20 hover:bg-white/20"
+          @click="toggleMockCollab()"
+        >
+          {{ isMockCollab ? '退出模拟' : '开启 3 人模拟' }}
+        </Button>
+        <Button
+          v-if="isMockCollab"
+          variant="outline"
+          size="xs"
+          class="bg-white/10 text-white border-white/20 hover:bg-white/20"
+          @click="cycleCollabSpeaker()"
+        >
+          轮流发言
+        </Button>
+        <Button
+          v-if="isMockCollab"
+          variant="outline"
+          size="xs"
+          class="bg-white/10 text-white border-white/20 hover:bg-white/20"
+          @click="addMockMember()"
+        >
+          + 队友
+        </Button>
+      </div>
+
+      <div class="space-y-1.5 pt-1 border-t border-white/10">
+        <div class="flex justify-between items-center text-[11px] text-white/80">
+          <span>间距 (Gap)</span>
+          <span class="font-mono text-amber-300">{{ effectiveSettings.gap }}px</span>
+        </div>
+        <Slider
+          :min="0"
+          :max="160"
+          :step="4"
+          :model-value="[effectiveSettings.gap]"
+          @update:model-value="patchDebugSetting({ gap: $event?.[0] })"
+        />
+      </div>
+
+      <div class="space-y-1.5">
+        <div class="flex justify-between items-center text-[11px] text-white/80">
+          <span>大小 (Scale)</span>
+          <span class="font-mono text-amber-300">{{ Math.round(effectiveSettings.scale * 100) }}%</span>
+        </div>
+        <Slider
+          :min="0.5"
+          :max="1.6"
+          :step="0.05"
+          :model-value="[effectiveSettings.scale]"
+          @update:model-value="patchDebugSetting({ scale: $event?.[0] })"
+        />
+      </div>
     </div>
   </div>
 </template>
-
-<style scoped>
-.collab-slot {
-  transform-origin: bottom center;
-}
-</style>
