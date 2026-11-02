@@ -126,6 +126,9 @@ function switchLanguage(language: 'html' | 'css') {
   editor.setModel(modelFor(language))
   editor.restoreViewState(language === 'html' ? htmlViewState : cssViewState)
   editor.focus()
+  requestAnimationFrame(() => {
+    editor?.focus()
+  })
 }
 
 function setMarkers() {
@@ -147,17 +150,47 @@ function setMarkers() {
 
 function insertText(value: string) {
   if (!editor) return
-  const selection = editor.getSelection()
-  if (!selection) return
-  editor.executeEdits('vtsuru-resource', [{ range: selection, text: value, forceMoveMarkers: true }])
+  let range: monaco.IRange | null = editor.getSelection()
+  if (!range) {
+    const model = editor.getModel()
+    if (model) {
+      const lineCount = model.getLineCount()
+      const maxCol = model.getLineMaxColumn(lineCount)
+      range = new monaco.Range(lineCount, maxCol, lineCount, maxCol)
+    }
+  }
+  if (!range) return
+  editor.executeEdits('vtsuru-custom-html', [{ range, text: value, forceMoveMarkers: true }])
   editor.focus()
+}
+
+function setContent(value: string, targetLanguage?: 'html' | 'css') {
+  if (!editor) return
+  if (targetLanguage && targetLanguage !== activeLanguage) {
+    switchLanguage(targetLanguage)
+  }
+  const model = editor.getModel()
+  if (!model) return
+  const fullRange = model.getFullModelRange()
+  editor.executeEdits('vtsuru-custom-html', [{ range: fullRange, text: value, forceMoveMarkers: true }])
+  editor.setPosition({ lineNumber: 1, column: 1 })
+  editor.revealPosition({ lineNumber: 1, column: 1 })
+  editor.focus()
+}
+
+function clearContent() {
+  setContent('')
+}
+
+function focus() {
+  editor?.focus()
 }
 
 async function formatDocument() {
   await editor?.getAction('editor.action.formatDocument')?.run()
 }
 
-defineExpose({ insertText, formatDocument })
+defineExpose({ insertText, setContent, clearContent, formatDocument, focus })
 
 onMounted(() => {
   const instance = crypto.randomUUID()
@@ -221,6 +254,7 @@ onBeforeUnmount(() => {
   <div
     ref="container"
     class="code-editor"
+    @click="focus"
   />
 </template>
 

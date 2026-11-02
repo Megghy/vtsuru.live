@@ -273,10 +273,12 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     return clipboardBlocks.value.length
   }
 
-  function copyBlocksToClipboard(blockIds: string[]) {
+  function copyBlocksToClipboard(blockIds: string[]): boolean {
     const p = opts.currentProject.value
-    if (!p) return
-    if (!blockIds.length) return
+    if (!p || !blockIds.length) {
+      clipboardBlocks.value = []
+      return false
+    }
     const set = new Set(blockIds)
     const blocks: BlockNode[] = []
     const visit = (list: BlockNode[], ancestorSelected: boolean) => {
@@ -294,17 +296,22 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
       })
     }
     visit(p.blocks, false)
+    if (!blocks.length) {
+      clipboardBlocks.value = []
+      return false
+    }
     clipboardBlocks.value = blocks
     opts.notify.success(`已复制 ${blocks.length} 个区块`)
+    return true
   }
 
-  function pasteBlocksAfter(afterBlockId: string | null) {
+  function pasteBlocksAfter(afterBlockId: string | null): boolean {
     const p = opts.currentProject.value
-    if (!p) return
+    if (!p) return false
     const blocks = clipboardBlocks.value
     if (!blocks.length) {
-      opts.notify.warning('剪贴板为空')
-      return
+      opts.notify.warning('区块剪贴板为空，请先复制区块')
+      return false
     }
 
     opts.history.batch(() => {
@@ -316,6 +323,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
       opts.selectedBlockIds.value = copied.map((b) => b.id)
     })
     opts.notify.success(`已粘贴 ${blocks.length} 个区块`)
+    return true
   }
 
   function getBlockById(blockId: string): BlockNode | null {
