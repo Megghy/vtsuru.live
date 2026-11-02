@@ -1,4 +1,4 @@
-import { computed, effectScope, ref, watch } from 'vue'
+import { computed, effectScope, ref, type Ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { QueryPostAPI } from '@/api/query'
@@ -26,18 +26,87 @@ const members = ref<CollabMemberItem[]>([])
 const collabError = ref('')
 let activeScope: ReturnType<typeof effectScope> | null = null
 
+export function parseMemberConfig(raw: unknown): PngtuberState {
+  try {
+    const obj = typeof raw === 'string' ? JSON.parse(raw) : raw
+    return normalizePngtuberState(obj || {})
+  } catch {
+    return normalizePngtuberState({})
+  }
+}
+
+function mapMember(payload: any): CollabMemberItem {
+  return {
+    userId: payload.userId,
+    name: payload.name || `用户 ${payload.userId}`,
+    avatar: payload.avatar || '',
+    isSpeaking: Boolean(payload.isSpeaking),
+    volume: Number(payload.volume) || 0,
+    expressionId: payload.expressionId || '',
+    muted: Boolean(payload.muted),
+    away: Boolean(payload.away),
+    config: parseMemberConfig(payload.config),
+  }
+}
+
+export function watchCollabRoom(code: string, list: Ref<CollabMemberItem[]>) {
+  const topic = useRealtimeTopic(`pngtuber:room:${code}`)
+
+  topic.on('room_snapshot', (payload: any) => {
+    if (!payload || !Array.isArray(payload.members)) return
+    list.value = payload.members.map(mapMember)
+  })
+
+  topic.on('member_joined', (payload: any) => {
+    if (!payload || !payload.userId) return
+    const item = mapMember(payload)
+    const idx = list.value.findIndex((m) => m.userId === payload.userId)
+    if (idx >= 0) list.value[idx] = item
+    else list.value.push(item)
+  })
+
+  topic.on('member_audio', (payload: any) => {
+    if (!payload || !payload.userId) return
+    const m = list.value.find((item) => item.userId === payload.userId)
+    if (m) {
+      m.volume = Number(payload.volume) || 0
+      m.isSpeaking = Boolean(payload.isSpeaking)
+    }
+  })
+
+  topic.on('member_control', (payload: any) => {
+    if (!payload || !payload.userId) return
+    const m = list.value.find((item) => item.userId === payload.userId)
+    if (m) {
+      if (payload.expressionId !== undefined) m.expressionId = payload.expressionId
+      if (payload.muted !== undefined) m.muted = Boolean(payload.muted)
+      if (payload.away !== undefined) m.away = Boolean(payload.away)
+      if (m.muted || m.away) {
+        m.volume = 0
+        m.isSpeaking = false
+      }
+    }
+  })
+
+  topic.on('member_left', (payload: any) => {
+    if (!payload || !payload.userId) return
+    list.value = list.value.filter((item) => item.userId !== payload.userId)
+  })
+
+  return topic
+}
+
 export function usePngtuberCollab() {
   const account = useAccount()
   const inRoom = computed(() => Boolean(currentRoomCode.value))
 
-  async function createRoom(preferredCode?: string): Promise<string> {
+  async function createRoom(currentConfig?: PngtuberState): Promise<string> {
     try {
       collabError.value = ''
       const url = new URL(`${OBS_STORE_API_URL}pngtuber/collab/create-room`)
-      if (preferredCode) url.searchParams.set('code', preferredCode)
       const res = await QueryPostAPI<{ roomCode: string; hostUserId: number }>(url.toString(), {})
       const code = res.data.roomCode
-      await joinRoom(code, true)
+      await joinRoom(code, true, currentConfig)
       return code
     } catch (cause) {
       const msg = cause instanceof Error ? cause.message : String(cause)
@@ -60,73 +129,7 @@ export function usePngtuberCollab() {
     activeScope = scope
 
     scope.run(() => {
-      const topic = useRealtimeTopic(`pngtuber:room:${cleanCode}`)
-
-      topic.on('room_snapshot', (payload: any) => {
-        if (!payload || !Array.isArray(payload.members)) return
-        members.value = payload.members.map((m: any) => ({
-          userId: m.userId,
-          name: m.name || `用户 ${m.userId}`,
-          avatar: m.avatar || '',
-          isSpeaking: Boolean(m.isSpeaking),
-          volume: Number(m.volume) || 0,
-          expressionId: m.expressionId || '',
-          muted: Boolean(m.muted),
-          away: Boolean(m.away),
-          config: parseMemberConfig(m.config),
-        }))
-      })
-
-      topic.on('member_joined', (payload: any) => {
-        if (!payload || !payload.userId) return
-        const idx = members.value.findIndex((m) => m.userId === payload.userId)
-        const item: CollabMemberItem = {
-          userId: payload.userId,
-          name: payload.name || `用户 ${payload.userId}`,
-          avatar: payload.avatar || '',
-          isSpeaking: Boolean(payload.isSpeaking),
-          volume: Number(payload.volume) || 0,
-          expressionId: payload.expressionId || '',
-          muted: Boolean(payload.muted),
-          away: Boolean(payload.away),
-          config: parseMemberConfig(payload.config),
-        }
-        if (idx >= 0) {
-          members.value[idx] = item
-        } else {
-          members.value.push(item)
-        }
-      })
-
-      topic.on('member_audio', (payload: any) => {
-        if (!payload || !payload.userId) return
-        const m = members.value.find((item) => item.userId === payload.userId)
-        if (m) {
-          m.volume = Number(payload.volume) || 0
-          m.isSpeaking = Boolean(payload.isSpeaking)
-        }
-      })
-
-      topic.on('member_control', (payload: any) => {
-        if (!payload || !payload.userId) return
-        const m = members.value.find((item) => item.userId === payload.userId)
-        if (m) {
-          if (payload.expressionId !== undefined) m.expressionId = payload.expressionId
-          if (payload.muted !== undefined) m.muted = Boolean(payload.muted)
-          if (payload.away !== undefined) m.away = Boolean(payload.away)
-          if (m.muted || m.away) {
-            m.volume = 0
-            m.isSpeaking = false
-          }
-        }
-      })
-
-      topic.on('member_left', (payload: any) => {
-        if (!payload || !payload.userId) return
-        members.value = members.value.filter((item) => item.userId !== payload.userId)
-      })
-
-      // 加入时上报本人的基础信息与当前立绘配置
+      const topic = watchCollabRoom(cleanCode, members)
       if (account.value.id) {
         void topic.publish('join', {
           userId: account.value.id,
@@ -136,15 +139,6 @@ export function usePngtuberCollab() {
         })
       }
     })
-  }
-
-  function parseMemberConfig(raw: any): PngtuberState {
-    try {
-      const obj = typeof raw === 'string' ? JSON.parse(raw) : raw
-      return normalizePngtuberState(obj || {})
-    } catch {
-      return normalizePngtuberState({})
-    }
   }
 
   function leaveRoom() {

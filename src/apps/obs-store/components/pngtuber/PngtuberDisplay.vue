@@ -17,7 +17,7 @@ const props = defineProps<{
   inlineMode?: boolean
 }>()
 const emit = defineEmits<{ 'asset-error': [message: string] }>()
-const viewState = computed(() => normalizePngtuberState(props.state))
+const viewState = computed(() => normalizePngtuberState(props.state, { allowInlineImages: true }))
 const speaking = computed(() => !!props.isSpeaking && !props.muted && !props.away)
 const expression = computed(() => selectExpression(viewState.value, props.expressionId, props.away))
 const blinking = ref(false)

@@ -32,6 +32,13 @@ describe('立绘新状态契约', () => {
     expect(s).not.toHaveProperty('idleImage')
     expect(s).not.toHaveProperty('isSpeaking')
   })
+  it('展示路径保留内联立绘，持久化路径仍清除', () => {
+    const raw = { idleImage: 'data:image/svg+xml;utf8,test', speakingImage: hosted('talk') }
+    expect(normalizePngtuberState(raw).expressions[0].idleImage).toBe('')
+    expect(normalizePngtuberState(raw, { allowInlineImages: true }).expressions[0].idleImage).toBe(
+      'data:image/svg+xml;utf8,test',
+    )
+  })
   it('四槽、配件及播放模式归一化后保留，且不修改输入', () => {
     const input = state()
     input.expressions[0].playback = 'once'
