@@ -69,10 +69,15 @@ describe('usePngtuberDebugger', () => {
     // 动态添加成员
     dbg.addMockMember()
     expect(dbg.mockMembers.value.length).toBe(4)
+    expect(dbg.mockMembers.value.map((m) => m.userId)).toEqual([90000, 90001, 90002, 90003])
 
     // 动态移除成员
     dbg.removeMockMember(dbg.mockMembers.value[1].userId)
     expect(dbg.mockMembers.value.length).toBe(3)
+    dbg.addMockMember()
+    const ids = dbg.mockMembers.value.map((m) => m.userId)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(ids).toContain(90001)
 
     dbg.stopMockCollab()
     expect(dbg.isMockCollab.value).toBe(false)

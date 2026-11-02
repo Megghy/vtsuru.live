@@ -23,7 +23,6 @@ function image(value: unknown, allowInline = false) {
   if (!value) return ''
   if (/^(data|blob):/i.test(value)) {
     if (!allowInline) return ''
-    if (value.length > 262144) throw new Error('内联立绘过大')
     return value
   }
   if (value.length > 4096) throw new Error('无效的文字字段')

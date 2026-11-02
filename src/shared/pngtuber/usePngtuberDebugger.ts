@@ -212,6 +212,13 @@ export function usePngtuberDebugger() {
     }
   }
 
+  function nextMockUserId() {
+    const used = new Set(mockMembers.value.map((m) => m.userId))
+    let id = 90000
+    while (used.has(id)) id += 1
+    return id
+  }
+
   function addMockMember() {
     const currentCount = mockMembers.value.length
     if (currentCount >= 6) return
@@ -219,7 +226,7 @@ export function usePngtuberDebugger() {
     const name = `嘉宾 ${currentCount + 1} (模拟)`
     mockMembers.value = [
       ...mockMembers.value,
-      mockMember(90000 + currentCount + 1, name, createMockPngtuberConfig(name, color, color)),
+      mockMember(nextMockUserId(), name, createMockPngtuberConfig(name, color, color)),
     ]
   }
 

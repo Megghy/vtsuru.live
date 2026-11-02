@@ -39,6 +39,12 @@ describe('立绘新状态契约', () => {
       'data:image/svg+xml;utf8,test',
     )
   })
+  it('展示路径超大内联立绘不抛错，持久化仍清除', () => {
+    const huge = `data:image/png;base64,${'A'.repeat(262145)}`
+    expect(() => normalizePngtuberState({ idleImage: huge }, { allowInlineImages: true })).not.toThrow()
+    expect(normalizePngtuberState({ idleImage: huge }, { allowInlineImages: true }).expressions[0].idleImage).toBe(huge)
+    expect(normalizePngtuberState({ idleImage: huge }).expressions[0].idleImage).toBe('')
+  })
   it('四槽、配件及播放模式归一化后保留，且不修改输入', () => {
     const input = state()
     input.expressions[0].playback = 'once'
