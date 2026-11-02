@@ -20,6 +20,31 @@ function isBlockedElement(target: unknown): boolean {
   return element instanceof Element && Boolean(element.closest(BLOCKED_TARGET_SELECTOR))
 }
 
+export function isModalElementActive(el: Element, doc?: Document): boolean {
+  if (
+    el.getAttribute('aria-hidden') === 'true' ||
+    el.getAttribute('data-state') === 'closed' ||
+    el.hasAttribute('hidden')
+  ) {
+    return false
+  }
+
+  if (el instanceof HTMLElement) {
+    if (el.style.display === 'none' || el.style.visibility === 'hidden' || el.hidden) {
+      return false
+    }
+    const win = doc?.defaultView ?? (typeof window !== 'undefined' ? window : undefined)
+    if (win?.getComputedStyle) {
+      const style = win.getComputedStyle(el)
+      if (style.display === 'none' || style.visibility === 'hidden') {
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
 export function isEditorShortcutBlocked(
   event: KeyboardEvent,
   context: ShortcutGuardContext,
@@ -28,8 +53,13 @@ export function isEditorShortcutBlocked(
   if (!context.isReady || context.hasOpenModal) return true
 
   const documentRef = resolveDocument(doc)
-  if (documentRef?.querySelector(ACTIVE_MODAL_SELECTOR)) {
-    return true
+  if (documentRef) {
+    const candidateModals = documentRef.querySelectorAll(ACTIVE_MODAL_SELECTOR)
+    for (const modal of candidateModals) {
+      if (isModalElementActive(modal, documentRef)) {
+        return true
+      }
+    }
   }
 
   if (isBlockedElement(event.target) || isBlockedElement(documentRef?.activeElement)) {

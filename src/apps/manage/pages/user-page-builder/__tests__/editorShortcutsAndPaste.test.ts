@@ -137,6 +137,14 @@ describe('editor shortcut guard', () => {
     closedDialog.removeAttribute('data-state')
     closedDialog.setAttribute('aria-hidden', 'true')
     expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(false)
+
+    closedDialog.removeAttribute('aria-hidden')
+    closedDialog.style.display = 'none'
+    expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(false)
+
+    closedDialog.style.display = ''
+    closedDialog.style.visibility = 'hidden'
+    expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(false)
   })
 
   it('blocks shortcuts for alertdialog role', () => {
