@@ -28,9 +28,38 @@ describe('editor blocks clipboard and paste feedback', () => {
       },
     })
 
-    blocksApi.pasteBlocksAfter(null)
+    const pasted = blocksApi.pasteBlocksAfter(null)
 
+    expect(pasted).toBe(false)
     expect(notifyWarning).toHaveBeenCalledWith('区块剪贴板为空，请先复制区块')
+    expect(notifySuccess).not.toHaveBeenCalled()
+  })
+
+  it('does not copy when blockIds is empty or blocks not found', () => {
+    const notifyWarning = vi.fn()
+    const notifySuccess = vi.fn()
+
+    const project = ref<BlockPageProject>({
+      version: 1,
+      blocks: [{ id: 'b1', type: 'customHtml', props: {} }],
+    })
+
+    const blocksApi = useUserPageBlocks({
+      currentProject: computed(() => project.value),
+      selectedBlockIds: ref<string[]>([]),
+      history: {
+        batch: (fn: () => void) => fn(),
+      },
+      notify: {
+        success: notifySuccess,
+        warning: notifyWarning,
+      },
+    })
+
+    blocksApi.copyBlocksToClipboard([])
+    expect(notifySuccess).not.toHaveBeenCalled()
+
+    blocksApi.copyBlocksToClipboard(['non-existent'])
     expect(notifySuccess).not.toHaveBeenCalled()
   })
 
@@ -59,7 +88,8 @@ describe('editor blocks clipboard and paste feedback', () => {
     blocksApi.copyBlocksToClipboard(['b1'])
     expect(notifySuccess).toHaveBeenCalledWith('已复制 1 个区块')
 
-    blocksApi.pasteBlocksAfter('b1')
+    const pasted = blocksApi.pasteBlocksAfter('b1')
+    expect(pasted).toBe(true)
     expect(notifySuccess).toHaveBeenCalledWith('已粘贴 1 个区块')
     expect(project.value.blocks.length).toBe(2)
     expect(project.value.blocks[1].id).not.toBe('b1')
@@ -80,6 +110,38 @@ describe('editor shortcut guard', () => {
     doc.body.appendChild(dialog)
 
     const dummyEvent = new KeyboardEvent('keydown', { key: 'z', ctrlKey: true })
+    expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(true)
+  })
+
+  it('does not block shortcuts when dialog is closed or hidden', () => {
+    const doc = document.implementation.createHTMLDocument('test')
+    const closedDialog = doc.createElement('div')
+    closedDialog.setAttribute('role', 'dialog')
+    closedDialog.setAttribute('data-state', 'closed')
+    doc.body.appendChild(closedDialog)
+
+    const canvas = doc.createElement('div')
+    canvas.className = 'user-page-canvas'
+    doc.body.appendChild(canvas)
+
+    const dummyEvent = { target: canvas } as unknown as KeyboardEvent
+    expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(false)
+
+    closedDialog.removeAttribute('data-state')
+    closedDialog.setAttribute('aria-hidden', 'true')
+    expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(false)
+  })
+
+  it('blocks shortcuts for alertdialog role', () => {
+    const doc = document.implementation.createHTMLDocument('test')
+    const alertDialog = doc.createElement('div')
+    alertDialog.setAttribute('role', 'alertdialog')
+    doc.body.appendChild(alertDialog)
+
+    const canvas = doc.createElement('div')
+    doc.body.appendChild(canvas)
+
+    const dummyEvent = { target: canvas } as unknown as KeyboardEvent
     expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(true)
   })
 
@@ -123,5 +185,8 @@ describe('editor shortcut guard', () => {
     doc.body.appendChild(plainDiv)
     Object.defineProperty(doc, 'activeElement', { value: plainDiv, configurable: true })
     expect(shouldIgnoreDeleteKey(doc)).toBe(false)
+
+    // When target is a button, it should also be ignored
+    expect(shouldIgnoreDeleteKey(doc, button)).toBe(true)
   })
 })

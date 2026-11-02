@@ -226,7 +226,11 @@ async function handleUpload(files: File[]) {
 watch(
   show,
   (visible) => {
-    if (!visible) return
+    if (!visible) {
+      manualPasteOpen.value = false
+      manualPasteText.value = ''
+      return
+    }
     resetDraft()
     void resources.loadResources()
   },
@@ -260,6 +264,10 @@ async function handlePasteFromClipboard() {
       editor.message.warning('剪贴板中没有文本内容')
       return
     }
+    if (text.length > 1024 * 1024) {
+      editor.message.warning('剪贴板文本超过 1MB 限制')
+      return
+    }
     applyCodeText(text)
     editor.message.success(`已粘贴剪贴板文本 (${text.length} 字符)`)
   } catch {
@@ -276,20 +284,25 @@ async function onCodeFileSelected(event: Event) {
   const file = input.files?.[0]
   if (!file) return
   try {
+    if (file.size > 1024 * 1024) {
+      editor.message.warning('文件大小超过 1MB 限制')
+      return
+    }
     const content = await file.text()
     if (!content.trim()) {
       editor.message.warning('所选文件内容为空')
       return
     }
-    if (file.name.endsWith('.css')) {
-      activeLanguage.value = 'css'
-    } else if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
-      activeLanguage.value = 'html'
+    const lowerName = file.name.toLowerCase()
+    let targetLang: 'html' | 'css' = activeLanguage.value
+    if (lowerName.endsWith('.css')) {
+      targetLang = 'css'
+    } else if (lowerName.endsWith('.html') || lowerName.endsWith('.htm')) {
+      targetLang = 'html'
     }
-    requestAnimationFrame(() => {
-      codeEditor.value?.setContent(content)
-      editor.message.success(`已导入 ${file.name} (${content.length} 字符)`)
-    })
+    activeLanguage.value = targetLang
+    codeEditor.value?.setContent(content, targetLang)
+    editor.message.success(`已导入 ${file.name} (${content.length} 字符)`)
   } catch {
     editor.message.error('读取文件失败')
   } finally {
@@ -304,8 +317,16 @@ function handleClearCode() {
     editor.message.info(`当前 ${lang} 代码已为空`)
     return
   }
-  codeEditor.value?.clearContent()
-  editor.message.success(`已清空当前 ${lang} 代码 (可按 Ctrl+Z 撤销)`)
+  dialog.warning({
+    title: `清空 ${lang} 代码`,
+    content: `确定要清空当前的 ${lang} 代码吗？清空后仍可在编辑器中按 Ctrl+Z 撤销。`,
+    positiveText: '确定清空',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      codeEditor.value?.clearContent()
+      editor.message.success(`已清空当前 ${lang} 代码 (可按 Ctrl+Z 撤销)`)
+    },
+  })
 }
 
 function openManualPasteDialog() {
@@ -316,6 +337,10 @@ function openManualPasteDialog() {
 function confirmManualPaste() {
   const text = manualPasteText.value
   if (!text.trim()) return
+  if (text.length > 1024 * 1024) {
+    editor.message.warning('粘贴文本超过 1MB 限制')
+    return
+  }
   applyCodeText(text)
   manualPasteOpen.value = false
   manualPasteText.value = ''
@@ -517,7 +542,7 @@ function confirmManualPaste() {
           </div>
           <div class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0 flex items-center justify-between">
             <span>HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes</span>
-            <span class="opacity-80">支持 Ctrl+V 直接粘贴</span>
+            <span class="opacity-80">支持快捷键直接粘贴</span>
           </div>
           <div class="flex-1 min-h-0">
             <CustomHtmlCodeEditor
@@ -605,7 +630,7 @@ function confirmManualPaste() {
       <DialogHeader>
         <DialogTitle class="text-sm font-semibold">粘贴代码</DialogTitle>
         <DialogDescription class="text-xs text-muted-foreground">
-          浏览器剪贴板自动读取受限，请在下方输入框按 Ctrl+V 粘贴代码后导入：
+          浏览器剪贴板自动读取受限，请在下方输入框粘贴代码（Ctrl/⌘+V）后导入：
         </DialogDescription>
       </DialogHeader>
       <Textarea
@@ -614,17 +639,17 @@ function confirmManualPaste() {
         placeholder="在此粘贴代码..."
         aria-label="粘贴代码内容"
         autofocus
+        @keydown.ctrl.enter.prevent="confirmManualPaste"
+        @keydown.meta.enter.prevent="confirmManualPaste"
       />
       <DialogFooter class="flex justify-end gap-2">
         <Button
           variant="outline"
-          size="xs"
           @click="manualPasteOpen = false"
         >
           取消
         </Button>
         <Button
-          size="xs"
           :disabled="!manualPasteText.trim()"
           @click="confirmManualPaste"
         >

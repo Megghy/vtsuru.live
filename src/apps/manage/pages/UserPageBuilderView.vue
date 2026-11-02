@@ -202,7 +202,8 @@ function handleEditorShortcut(event: KeyboardEvent) {
     layoutModal.value ||
     themeDrawerVisible.value ||
     editor.publishModal.value ||
-    editor.pageThemeModal.value
+    editor.pageThemeModal.value ||
+    editor.resourcesModal.value
 
   if (
     isEditorShortcutBlocked(event, {
@@ -234,13 +235,14 @@ function handleEditorShortcut(event: KeyboardEvent) {
     key === 'c' &&
     !window.getSelection()?.toString()
   ) {
+    if (!editor.selectedBlockIds.value.length) return
     event.preventDefault()
     editor.copyBlocksToClipboard(editor.selectedBlockIds.value)
     announceKeyboardAction('已复制所选区块')
   } else if (editor.currentPage.value.mode === 'block' && command && key === 'v') {
     event.preventDefault()
-    editor.pasteBlocksAfter(editor.selectedBlockIds.value.at(-1) ?? null)
-    announceKeyboardAction('已粘贴区块')
+    const pasted = editor.pasteBlocksAfter(editor.selectedBlockIds.value.at(-1) ?? null)
+    if (pasted) announceKeyboardAction('已粘贴区块')
   } else if (editor.currentPage.value.mode === 'block' && command && key === 'd') {
     event.preventDefault()
     const ids = editor.selectedBlockIds.value
@@ -255,7 +257,7 @@ function handleEditorShortcut(event: KeyboardEvent) {
     event.key === 'Delete' &&
     editor.selectedBlockIds.value.length
   ) {
-    if (shouldIgnoreDeleteKey()) return
+    if (shouldIgnoreDeleteKey(undefined, event.target)) return
     event.preventDefault()
     editor.removeBlocks(editor.selectedBlockIds.value)
     announceKeyboardAction('已删除所选区块，可使用撤销恢复')

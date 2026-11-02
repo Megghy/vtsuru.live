@@ -160,16 +160,21 @@ function insertText(value: string) {
     }
   }
   if (!range) return
-  editor.executeEdits('vtsuru-resource', [{ range, text: value, forceMoveMarkers: true }])
+  editor.executeEdits('vtsuru-custom-html', [{ range, text: value, forceMoveMarkers: true }])
   editor.focus()
 }
 
-function setContent(value: string) {
+function setContent(value: string, targetLanguage?: 'html' | 'css') {
   if (!editor) return
+  if (targetLanguage && targetLanguage !== activeLanguage) {
+    switchLanguage(targetLanguage)
+  }
   const model = editor.getModel()
   if (!model) return
   const fullRange = model.getFullModelRange()
   editor.executeEdits('vtsuru-custom-html', [{ range: fullRange, text: value, forceMoveMarkers: true }])
+  editor.setPosition({ lineNumber: 1, column: 1 })
+  editor.revealPosition({ lineNumber: 1, column: 1 })
   editor.focus()
 }
 
