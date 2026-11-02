@@ -246,12 +246,14 @@ function handleEditorShortcut(event: KeyboardEvent) {
   } else if (editor.currentPage.value.mode === 'block' && command && key === 'd') {
     event.preventDefault()
     const ids = editor.selectedBlockIds.value
-    if (ids.length === 1) editor.duplicateBlockAt(ids[0], 1)
-    else if (ids.length > 1) {
+    if (ids.length === 1) {
+      editor.duplicateBlockAt(ids[0], 1)
+      announceKeyboardAction('已创建区块副本')
+    } else if (ids.length > 1) {
       editor.copyBlocksToClipboard(ids)
-      editor.pasteBlocksAfter(ids.at(-1) ?? null)
+      const pasted = editor.pasteBlocksAfter(ids.at(-1) ?? null)
+      if (pasted) announceKeyboardAction('已创建区块副本')
     }
-    announceKeyboardAction('已创建区块副本')
   } else if (
     editor.currentPage.value.mode === 'block' &&
     event.key === 'Delete' &&

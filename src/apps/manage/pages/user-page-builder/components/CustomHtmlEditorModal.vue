@@ -223,6 +223,10 @@ async function handleUpload(files: File[]) {
   }
 }
 
+const codeFileInputRef = ref<HTMLInputElement | null>(null)
+const manualPasteOpen = ref(false)
+const manualPasteText = ref('')
+
 watch(
   show,
   (visible) => {
@@ -240,9 +244,6 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
   debounce: 180,
   deep: true,
 })
-const codeFileInputRef = ref<HTMLInputElement | null>(null)
-const manualPasteOpen = ref(false)
-const manualPasteText = ref('')
 
 function applyCodeText(text: string) {
   const current = activeLanguage.value === 'html' ? draft.value.html : draft.value.css

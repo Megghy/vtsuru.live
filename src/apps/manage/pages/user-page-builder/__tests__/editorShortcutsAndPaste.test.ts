@@ -35,7 +35,7 @@ describe('editor blocks clipboard and paste feedback', () => {
     expect(notifySuccess).not.toHaveBeenCalled()
   })
 
-  it('does not copy when blockIds is empty or blocks not found', () => {
+  it('clears clipboard when copying empty or non-existent blockIds', () => {
     const notifyWarning = vi.fn()
     const notifySuccess = vi.fn()
 
@@ -56,11 +56,18 @@ describe('editor blocks clipboard and paste feedback', () => {
       },
     })
 
-    blocksApi.copyBlocksToClipboard([])
-    expect(notifySuccess).not.toHaveBeenCalled()
+    // First populate clipboard
+    blocksApi.copyBlocksToClipboard(['b1'])
+    expect(notifySuccess).toHaveBeenCalledWith('已复制 1 个区块')
+    expect(blocksApi.pasteBlocksAfter(null)).toBe(true)
 
+    // Now copy invalid ID: should reset clipboard and prevent subsequent paste
+    notifySuccess.mockClear()
+    notifyWarning.mockClear()
     blocksApi.copyBlocksToClipboard(['non-existent'])
     expect(notifySuccess).not.toHaveBeenCalled()
+    expect(blocksApi.pasteBlocksAfter(null)).toBe(false)
+    expect(notifyWarning).toHaveBeenCalledWith('区块剪贴板为空，请先复制区块')
   })
 
   it('allows pasting after copying blocks', () => {

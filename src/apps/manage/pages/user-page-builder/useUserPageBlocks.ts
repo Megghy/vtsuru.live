@@ -294,7 +294,10 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
       })
     }
     visit(p.blocks, false)
-    if (!blocks.length) return
+    if (!blocks.length) {
+      clipboardBlocks.value = []
+      return
+    }
     clipboardBlocks.value = blocks
     opts.notify.success(`已复制 ${blocks.length} 个区块`)
   }
