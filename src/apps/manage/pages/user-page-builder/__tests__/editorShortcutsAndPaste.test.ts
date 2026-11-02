@@ -163,6 +163,24 @@ describe('editor shortcut guard', () => {
     expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(true)
   })
 
+  it('does not block shortcuts when target or activeElement is inside a closed or hidden dialog', () => {
+    const doc = document.implementation.createHTMLDocument('test')
+    const closedDialog = doc.createElement('div')
+    closedDialog.setAttribute('role', 'dialog')
+    closedDialog.setAttribute('data-state', 'closed')
+    const buttonInside = doc.createElement('button')
+    closedDialog.appendChild(buttonInside)
+    doc.body.appendChild(closedDialog)
+
+    Object.defineProperty(doc, 'activeElement', { value: buttonInside, configurable: true })
+    const dummyEvent = {
+      target: buttonInside,
+      composedPath: () => [buttonInside, closedDialog, doc.body, doc],
+    } as unknown as KeyboardEvent
+
+    expect(isEditorShortcutBlocked(dummyEvent, { isReady: true, hasOpenModal: false }, doc)).toBe(false)
+  })
+
   it('blocks shortcuts when event target or activeElement is editable or code editor', () => {
     const doc = document.implementation.createHTMLDocument('test')
     const container = doc.createElement('div')
