@@ -9,6 +9,7 @@ import {
   SunnyOutline,
 } from '@vicons/ionicons5'
 import { watchDebounced } from '@vueuse/core'
+import { ClipboardPaste, FileUp, Trash2 } from 'lucide-vue-next'
 import { computed, inject, ref, watch } from 'vue'
 
 import type { APIFileModel } from '@/api/generated/model'
@@ -33,10 +34,11 @@ import { useFilePicker } from '@/composables/useFilePicker'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { Button } from '@/shared/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
+import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode, useDialog } from '@/shared/utils'
 
@@ -234,6 +236,91 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
   debounce: 180,
   deep: true,
 })
+const codeFileInputRef = ref<HTMLInputElement | null>(null)
+const manualPasteOpen = ref(false)
+const manualPasteText = ref('')
+
+function applyCodeText(text: string) {
+  const current = activeLanguage.value === 'html' ? draft.value.html : draft.value.css
+  if (!current.trim()) {
+    codeEditor.value?.setContent(text)
+  } else {
+    codeEditor.value?.insertText(text)
+  }
+}
+
+async function handlePasteFromClipboard() {
+  try {
+    if (!navigator.clipboard?.readText) {
+      openManualPasteDialog()
+      return
+    }
+    const text = await navigator.clipboard.readText()
+    if (!text?.trim()) {
+      editor.message.warning('剪贴板中没有文本内容')
+      return
+    }
+    applyCodeText(text)
+    editor.message.success(`已粘贴剪贴板文本 (${text.length} 字符)`)
+  } catch {
+    openManualPasteDialog()
+  }
+}
+
+function triggerCodeFileInput() {
+  codeFileInputRef.value?.click()
+}
+
+async function onCodeFileSelected(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+  try {
+    const content = await file.text()
+    if (!content.trim()) {
+      editor.message.warning('所选文件内容为空')
+      return
+    }
+    if (file.name.endsWith('.css')) {
+      activeLanguage.value = 'css'
+    } else if (file.name.endsWith('.html') || file.name.endsWith('.htm')) {
+      activeLanguage.value = 'html'
+    }
+    requestAnimationFrame(() => {
+      codeEditor.value?.setContent(content)
+      editor.message.success(`已导入 ${file.name} (${content.length} 字符)`)
+    })
+  } catch {
+    editor.message.error('读取文件失败')
+  } finally {
+    input.value = ''
+  }
+}
+
+function handleClearCode() {
+  const lang = activeLanguage.value.toUpperCase()
+  const current = activeLanguage.value === 'html' ? draft.value.html : draft.value.css
+  if (!current.trim()) {
+    editor.message.info(`当前 ${lang} 代码已为空`)
+    return
+  }
+  codeEditor.value?.clearContent()
+  editor.message.success(`已清空当前 ${lang} 代码 (可按 Ctrl+Z 撤销)`)
+}
+
+function openManualPasteDialog() {
+  manualPasteText.value = ''
+  manualPasteOpen.value = true
+}
+
+function confirmManualPaste() {
+  const text = manualPasteText.value
+  if (!text.trim()) return
+  applyCodeText(text)
+  manualPasteOpen.value = false
+  manualPasteText.value = ''
+  editor.message.success(`已载入文本 (${text.length} 字符)`)
+}
 </script>
 
 <template>
@@ -347,6 +434,13 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
               </TabsList>
             </Tabs>
             <div class="flex items-center gap-1">
+              <input
+                ref="codeFileInputRef"
+                type="file"
+                accept=".css,.html,.htm,.txt"
+                class="hidden"
+                @change="onCodeFileSelected"
+              />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
@@ -354,13 +448,41 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                       size="icon"
                       variant="ghost"
                       class="size-7"
-                      aria-label="切换资源栏"
-                      @click="resourcesVisible = !resourcesVisible"
+                      aria-label="从剪贴板粘贴"
+                      @click="handlePasteFromClipboard"
                     >
-                      <FolderOpenOutline class="size-4" />
+                      <ClipboardPaste class="size-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent> {{ resourcesVisible ? '收起资源栏' : '展开资源栏' }} </TooltipContent>
+                  <TooltipContent> 从剪贴板粘贴 </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="导入代码文件"
+                      @click="triggerCodeFileInput"
+                    >
+                      <FileUp class="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent> 导入代码文件 (.css / .html) </TooltipContent>
+                </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="清空当前代码"
+                      @click="handleClearCode"
+                    >
+                      <Trash2 class="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent> 清空当前代码 </TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
@@ -376,11 +498,26 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
                   </TooltipTrigger>
                   <TooltipContent> 格式化代码 </TooltipContent>
                 </Tooltip>
+                <Tooltip>
+                  <TooltipTrigger as-child>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="切换资源栏"
+                      @click="resourcesVisible = !resourcesVisible"
+                    >
+                      <FolderOpenOutline class="size-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent> {{ resourcesVisible ? '收起资源栏' : '展开资源栏' }} </TooltipContent>
+                </Tooltip>
               </TooltipProvider>
             </div>
           </div>
-          <div class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0">
-            HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes
+          <div class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0 flex items-center justify-between">
+            <span>HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes</span>
+            <span class="opacity-80">支持 Ctrl+V 直接粘贴</span>
           </div>
           <div class="flex-1 min-h-0">
             <CustomHtmlCodeEditor
@@ -460,6 +597,40 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
           </div>
         </section>
       </div>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog v-model:open="manualPasteOpen">
+    <DialogContent class="max-w-md p-4 flex flex-col gap-3">
+      <DialogHeader>
+        <DialogTitle class="text-sm font-semibold">粘贴代码</DialogTitle>
+        <DialogDescription class="text-xs text-muted-foreground">
+          浏览器剪贴板自动读取受限，请在下方输入框按 Ctrl+V 粘贴代码后导入：
+        </DialogDescription>
+      </DialogHeader>
+      <Textarea
+        v-model="manualPasteText"
+        class="h-36 font-mono text-xs resize-none"
+        placeholder="在此粘贴代码..."
+        aria-label="粘贴代码内容"
+        autofocus
+      />
+      <DialogFooter class="flex justify-end gap-2">
+        <Button
+          variant="outline"
+          size="xs"
+          @click="manualPasteOpen = false"
+        >
+          取消
+        </Button>
+        <Button
+          size="xs"
+          :disabled="!manualPasteText.trim()"
+          @click="confirmManualPaste"
+        >
+          确定载入
+        </Button>
+      </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>

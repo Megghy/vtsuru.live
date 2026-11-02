@@ -22,6 +22,7 @@ import { UserPageEditorKey } from './user-page-builder/context'
 import { COLUMN_META, DEFAULT_COLUMNS_ORDER, useBuilderLayout } from './user-page-builder/useBuilderLayout'
 import type { BuilderColumnId } from './user-page-builder/useBuilderLayout'
 import { useUserPageEditor } from './user-page-builder/useUserPageEditor'
+import { isEditorShortcutBlocked, shouldIgnoreDeleteKey } from './user-page-builder/editorShortcutGuard'
 import type { UserPageValidationIssue } from './user-page-builder/validateUserPagesSettings'
 
 const editor = useUserPageEditor()
@@ -189,11 +190,6 @@ function beforeUnloadHandler(e: BeforeUnloadEvent) {
   e.returnValue = ''
 }
 
-function isEditableTarget(target: EventTarget | null) {
-  const element = target instanceof HTMLElement ? target : null
-  return Boolean(element?.closest('input, textarea, select, [contenteditable="true"], .w-e-text-container'))
-}
-
 function announceKeyboardAction(text: string) {
   keyboardStatus.value = ''
   requestAnimationFrame(() => {
@@ -202,7 +198,21 @@ function announceKeyboardAction(text: string) {
 }
 
 function handleEditorShortcut(event: KeyboardEvent) {
-  if (editor.loadStatus.value !== 'ready' || isEditableTarget(event.target)) return
+  const hasOpenModal =
+    layoutModal.value ||
+    themeDrawerVisible.value ||
+    editor.publishModal.value ||
+    editor.pageThemeModal.value
+
+  if (
+    isEditorShortcutBlocked(event, {
+      isReady: editor.loadStatus.value === 'ready',
+      hasOpenModal,
+    })
+  ) {
+    return
+  }
+
   const command = event.ctrlKey || event.metaKey
   const key = event.key.toLowerCase()
   if (command && key === 'z') {
@@ -245,6 +255,7 @@ function handleEditorShortcut(event: KeyboardEvent) {
     event.key === 'Delete' &&
     editor.selectedBlockIds.value.length
   ) {
+    if (shouldIgnoreDeleteKey()) return
     event.preventDefault()
     editor.removeBlocks(editor.selectedBlockIds.value)
     announceKeyboardAction('已删除所选区块，可使用撤销恢复')

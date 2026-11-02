@@ -303,7 +303,7 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     if (!p) return
     const blocks = clipboardBlocks.value
     if (!blocks.length) {
-      opts.notify.warning('剪贴板为空')
+      opts.notify.warning('区块剪贴板为空，请先复制区块')
       return
     }
 
