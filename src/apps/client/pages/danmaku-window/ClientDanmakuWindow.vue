@@ -24,70 +24,6 @@ type TempDanmakuType = EventModel & {
   timestamp?: number // 添加：记录插入时间戳
 }
 
-interface ParsedColor {
-  rgb: string
-  alpha: number
-}
-
-function parseColorToRgba(color?: string): ParsedColor | null {
-  if (!color) return null
-  const value = color.trim()
-
-  const rgbaMatch = value.match(/^rgba?\(([^)]+)\)$/i)
-  if (rgbaMatch) {
-    const parts = rgbaMatch[1].split(',').map((part) => part.trim())
-    if (parts.length >= 3) {
-      const r = Number(parts[0])
-      const g = Number(parts[1])
-      const b = Number(parts[2])
-      const a = parts[3] !== undefined ? Number(parts[3]) : 1
-      return {
-        rgb: `${Number.isFinite(r) ? r : 0}, ${Number.isFinite(g) ? g : 0}, ${Number.isFinite(b) ? b : 0}`,
-        alpha: Number.isFinite(a) ? Math.max(0, Math.min(1, a)) : 1,
-      }
-    }
-    return null
-  }
-
-  if (value.startsWith('#')) {
-    const hex = value.slice(1)
-    const normalizeHex = (segment: string) => (segment.length === 1 ? segment + segment : segment)
-    let r = 0
-    let g = 0
-    let b = 0
-    let a = 255
-
-    if (hex.length === 3 || hex.length === 4) {
-      r = Number.parseInt(normalizeHex(hex[0]), 16)
-      g = Number.parseInt(normalizeHex(hex[1]), 16)
-      b = Number.parseInt(normalizeHex(hex[2]), 16)
-      if (hex.length === 4) {
-        a = Number.parseInt(normalizeHex(hex[3]), 16)
-      }
-    } else if (hex.length === 6 || hex.length === 8) {
-      r = Number.parseInt(hex.slice(0, 2), 16)
-      g = Number.parseInt(hex.slice(2, 4), 16)
-      b = Number.parseInt(hex.slice(4, 6), 16)
-      if (hex.length === 8) {
-        a = Number.parseInt(hex.slice(6, 8), 16)
-      }
-    } else {
-      return null
-    }
-
-    if ([r, g, b, a].some((component) => Number.isNaN(component))) {
-      return null
-    }
-
-    return {
-      rgb: `${r}, ${g}, ${b}`,
-      alpha: Math.max(0, Math.min(1, a / 255)),
-    }
-  }
-
-  return null
-}
-
 let bc: BroadcastChannel | undefined
 let checkInterval: ReturnType<typeof setInterval> | undefined
 const setting = ref<DanmakuWindowSettings>()
@@ -145,16 +81,8 @@ function updateCssVariables() {
   root.style.setProperty('--dw-leave-offset-x', '14px')
 
   // 背景和文字颜色
-  const bgColor = setting.value.backgroundColor || 'rgba(0,0,0,0.6)'
-  root.style.setProperty('--dw-bg-color', bgColor)
-  const parsedColor = parseColorToRgba(bgColor)
-  if (parsedColor) {
-    root.style.setProperty('--dw-bg-color-rgb', parsedColor.rgb)
-    root.style.setProperty('--dw-bg-alpha', `${parsedColor.alpha}`)
-  } else {
-    root.style.setProperty('--dw-bg-color-rgb', '0, 0, 0')
-    root.style.setProperty('--dw-bg-alpha', '0.6')
-  }
+  root.style.setProperty('--dw-bg-color', setting.value.backgroundColor || 'rgba(0,0,0,0.6)')
+
   root.style.setProperty('--dw-window-bg-color', setting.value.windowBackgroundColor || 'transparent')
   root.style.setProperty('--dw-text-color', setting.value.textColor || '#ffffff')
 
@@ -424,12 +352,12 @@ body {
 
 :root {
   --dw-bg-color: rgba(0, 0, 0, 0.6);
-  --dw-bg-color-rgb: 0, 0, 0;
-  --dw-bg-alpha: 0.6;
   --dw-window-bg-color: transparent;
   --dw-text-color: #ffffff;
   --dw-border-radius: 0px;
   --dw-opacity: 1;
+  /* 弹幕气泡底色: 用户设定色(含 alpha) 再乘整体透明度 */
+  --dw-item-bg: color-mix(in srgb, var(--dw-bg-color) calc(var(--dw-opacity) * 100%), transparent);
   --dw-font-size: 14px;
   --dw-avatar-size: 20px;
   --dw-emoji-size: 24px;
@@ -461,7 +389,6 @@ body {
   inset: 0;
   border-radius: var(--dw-border-radius, 0);
   background-color: var(--dw-window-bg-color, transparent);
-  backdrop-filter: blur(0);
   pointer-events: none;
 }
 

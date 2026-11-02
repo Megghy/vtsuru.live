@@ -2,7 +2,7 @@ import fs from 'fs'
 
 import { chromium } from 'playwright'
 
-const BASE_URL = 'http://localhost:51000'
+const BASE_URL = 'http://localhost:5100'
 const SCREENSHOTS_DIR = 'F:\\Temp'
 
 ;(async () => {

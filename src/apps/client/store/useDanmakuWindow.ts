@@ -335,18 +335,9 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
       window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。')
       return
     }
-    // 移除窗口默认黑色背景，使其完全透明
-    try {
-      await danmakuWindow.value.setBackgroundColor(null)
-    } catch (err) {
-      console.warn('[danmaku-window] 设置透明背景失败，可能是客户端版本过旧:', err)
-      window.$notification.warning({
-        title: '弹幕窗口透明背景不可用',
-        content: '当前客户端版本不支持透明背景特性，请更新到最新版本以获得更好体验',
-        duration: 8000,
-      })
-    }
     console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value)
+    // WebView2 默认底色不透明, CSS 全透明时会露出黑底, 需显式清空窗口与 webview 背景
+    await danmakuWindow.value.setBackgroundColor([0, 0, 0, 0])
 
     danmakuWindow.value.onCloseRequested((event) => {
       event.preventDefault() // 阻止默认关闭行为

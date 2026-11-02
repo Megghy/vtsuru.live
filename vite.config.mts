@@ -95,7 +95,7 @@ export default defineConfig({
         ],
       },
     }),
-    Markdown(),
+    Markdown({}),
     AutoImport({
       imports: ['vue', 'vue-router', '@vueuse/core', 'pinia', 'date-fns'],
       dts: 'src/auto-imports.d.ts',
@@ -107,7 +107,7 @@ export default defineConfig({
       include: [/\.vue$/, /\.vue\?vue/, /\.md$/],
     }),
   ],
-  server: { host: '0.0.0.0', port: 51000 },
+  server: { host: '0.0.0.0', port: 5100 },
   resolve: {
     alias: {
       '@': import.meta.dirname + '/src',

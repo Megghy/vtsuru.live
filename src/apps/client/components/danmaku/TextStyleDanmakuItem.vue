@@ -169,7 +169,7 @@ const {
   display: block;
   width: 100%;
   padding: 3px 8px;
-  background-color: rgba(var(--dw-bg-color-rgb, 0, 0, 0), calc(0.6 * var(--dw-opacity, 1)));
+  background-color: var(--dw-item-bg);
   border-radius: var(--dw-border-radius);
   line-height: 1.4;
   box-sizing: border-box;

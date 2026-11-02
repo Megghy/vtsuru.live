@@ -1,10 +1,30 @@
 <script setup lang="ts">
-import { Pipette } from 'lucide-vue-next'
+import {
+  ColorAreaArea,
+  ColorAreaRoot,
+  ColorAreaThumb,
+  ColorFieldInput,
+  ColorFieldRoot,
+  ColorSliderRoot,
+  ColorSliderThumb,
+  ColorSliderTrack,
+  ColorSwatch,
+  ColorSwatchPickerItem,
+  ColorSwatchPickerItemSwatch,
+  ColorSwatchPickerRoot,
+} from 'reka-ui'
 import { computed, ref, watch } from 'vue'
 
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+
+import {
+  DEFAULT_SOLID_SWATCHES,
+  normalizePickerColor,
+  parseUserColorInput,
+  TRANSPARENT_SWATCH,
+} from './colorUtils'
 
 const props = withDefaults(
   defineProps<{
@@ -21,20 +41,7 @@ const props = withDefaults(
     value: null,
     disabled: false,
     showAlpha: true,
-    swatches: () => [
-      '#000000',
-      '#ffffff',
-      '#ef4444',
-      '#f97316',
-      '#f59e0b',
-      '#10b981',
-      '#06b6d4',
-      '#3b82f6',
-      '#6366f1',
-      '#8b5cf6',
-      '#ec4899',
-      '#64748b',
-    ],
+    swatches: undefined,
     size: 'small',
   },
 )
@@ -47,38 +54,48 @@ const emit = defineEmits<{
 
 const open = ref(false)
 
+const effectiveSwatches = computed(() => {
+  if (props.swatches) return props.swatches
+  return props.showAlpha
+    ? [TRANSPARENT_SWATCH, ...DEFAULT_SOLID_SWATCHES.slice(0, 11)]
+    : [...DEFAULT_SOLID_SWATCHES]
+})
+
 const currentColor = computed({
-  get: () => props.value ?? props.modelValue ?? '#000000',
+  get: () => normalizePickerColor(props.value ?? props.modelValue, props.showAlpha),
   set: (val: string) => {
-    emit('update:modelValue', val)
-    emit('update:value', val)
-    emit('change', val)
+    const normalized = normalizePickerColor(val, props.showAlpha, currentColor.value)
+    emit('update:modelValue', normalized)
+    emit('update:value', normalized)
+    emit('change', normalized)
   },
 })
 
 const textInput = ref(currentColor.value)
 
 watch(
-  () => currentColor.value,
+  currentColor,
   (val) => {
-    textInput.value = val || '#000000'
+    textInput.value = val
   },
+  { immediate: true },
 )
 
-function onTextChange(e: Event) {
-  const val = (e.target as HTMLInputElement).value.trim()
-  if (/^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(val)) {
-    currentColor.value = val
+function onTextCommit() {
+  const parsed = parseUserColorInput(textInput.value, props.showAlpha)
+  if (parsed) {
+    currentColor.value = parsed
+    textInput.value = parsed
+  } else {
+    textInput.value = currentColor.value
   }
 }
 
-function onNativeColorChange(e: Event) {
-  const val = (e.target as HTMLInputElement).value
-  currentColor.value = val
-}
-
-function selectSwatch(swatch: string) {
-  currentColor.value = swatch
+function onSwatchUpdate(val: string | string[]) {
+  const next = Array.isArray(val) ? val[0] : val
+  if (next) {
+    currentColor.value = next
+  }
 }
 </script>
 
@@ -86,56 +103,115 @@ function selectSwatch(swatch: string) {
   <div class="inline-flex items-center">
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
-        <button
+        <Button
           type="button"
-          class="inline-flex items-center gap-1.5 h-8 px-2 rounded-md border border-input bg-background hover:bg-muted/50 transition-colors cursor-pointer select-none disabled:opacity-50 disabled:pointer-events-none"
+          variant="outline"
+          class="w-full justify-start gap-1.5 px-2 font-normal"
           :disabled="disabled"
         >
-          <span
-            class="size-4.5 rounded border border-black/15 shadow-inner"
-            :style="{ backgroundColor: currentColor || 'transparent' }"
+          <ColorSwatch
+            :color="currentColor"
+            class="size-4 shrink-0 rounded-xs border border-black/15 shadow-inner [background-image:linear-gradient(var(--reka-color-swatch-color),var(--reka-color-swatch-color)),repeating-conic-gradient(#ccc_0%_25%,#fff_0%_50%)] [background-size:100%_100%,8px_8px]"
           />
-          <span class="text-xs font-mono uppercase text-foreground min-w-[60px] text-left">
-            {{ currentColor || '无' }}
+          <span class="font-mono uppercase text-foreground min-w-[60px] text-left truncate">
+            {{ currentColor }}
           </span>
-        </button>
+        </Button>
       </PopoverTrigger>
       <PopoverContent
-        class="w-60 p-3 text-xs"
+        class="w-64 p-3 space-y-3"
         align="start"
       >
-        <div class="space-y-3">
-          <div class="flex items-center gap-2">
-            <div class="relative size-8 shrink-0 overflow-hidden rounded border border-input shadow-inner">
-              <input
-                type="color"
-                class="absolute -inset-2 size-12 cursor-pointer border-0 bg-transparent"
-                :value="currentColor.slice(0, 7)"
-                @input="onNativeColorChange"
-              />
-            </div>
-            <Input
-              v-model="textInput"
-              class="font-mono uppercase"
-              placeholder="#000000"
-              @blur="onTextChange"
-              @keyup.enter="onTextChange"
+        <ColorAreaRoot
+          v-model="currentColor"
+          color-space="hsb"
+          x-channel="saturation"
+          y-channel="brightness"
+          :disabled="disabled"
+          class="relative block h-36 w-full rounded-md border border-border overflow-hidden touch-none select-none cursor-crosshair"
+        >
+          <ColorAreaArea class="block size-full">
+            <ColorAreaThumb
+              class="block size-4 rounded-full border-2 border-white shadow-[0_0_0_1px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
             />
-          </div>
+          </ColorAreaArea>
+        </ColorAreaRoot>
 
-          <div v-if="swatches && swatches.length > 0">
-            <div class="text-[11px] font-medium text-muted-foreground mb-1.5">预设颜色</div>
-            <div class="grid grid-cols-6 gap-1.5">
-              <button
-                v-for="swatch in swatches"
-                :key="swatch"
-                type="button"
-                class="size-6 rounded border border-black/10 hover:scale-110 transition-transform cursor-pointer shadow-sm"
-                :style="{ backgroundColor: swatch }"
-                @click="selectSwatch(swatch)"
+        <div class="space-y-2">
+          <ColorSliderRoot
+            v-model="currentColor"
+            channel="hue"
+            color-space="hsb"
+            :disabled="disabled"
+            class="relative flex h-3.5 w-full touch-none select-none items-center"
+          >
+            <ColorSliderTrack class="relative h-2.5 w-full grow overflow-hidden rounded-full border border-black/10" />
+            <ColorSliderThumb
+              class="block size-4 rounded-full border-2 border-white bg-transparent shadow-[0_0_0_1px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+            />
+          </ColorSliderRoot>
+
+          <ColorSliderRoot
+            v-if="showAlpha"
+            v-model="currentColor"
+            channel="alpha"
+            color-space="hsb"
+            :disabled="disabled"
+            class="relative flex h-3.5 w-full touch-none select-none items-center"
+          >
+            <ColorSliderTrack class="relative h-2.5 w-full grow overflow-hidden rounded-full border border-black/10" />
+            <ColorSliderThumb
+              class="block size-4 rounded-full border-2 border-white bg-transparent shadow-[0_0_0_1px_rgba(0,0,0,0.35)] focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer"
+            />
+          </ColorSliderRoot>
+        </div>
+
+        <div class="flex items-center gap-1.5">
+          <ColorSwatch
+            :color="currentColor"
+            class="size-8 shrink-0 rounded-md border border-border shadow-inner [background-image:linear-gradient(var(--reka-color-swatch-color),var(--reka-color-swatch-color)),repeating-conic-gradient(#ccc_0%_25%,#fff_0%_50%)] [background-size:100%_100%,8px_8px]"
+          />
+          <Input
+            v-model="textInput"
+            class="flex-1 min-w-0 font-mono uppercase px-2"
+            :placeholder="showAlpha ? '#000000FF' : '#000000'"
+            :disabled="disabled"
+            @blur="onTextCommit"
+            @keyup.enter="onTextCommit"
+          />
+          <ColorFieldRoot
+            v-if="showAlpha"
+            v-model="currentColor"
+            channel="alpha"
+            color-space="hsb"
+            :disabled="disabled"
+            class="w-14 shrink-0"
+          >
+            <ColorFieldInput
+              aria-label="透明度百分比"
+              class="flex h-[var(--control-h-sm)] w-full rounded-md border border-input bg-transparent px-1.5 py-1 text-center font-mono text-xs text-foreground shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </ColorFieldRoot>
+        </div>
+
+        <div v-if="effectiveSwatches.length > 0">
+          <ColorSwatchPickerRoot
+            :model-value="currentColor"
+            class="grid grid-cols-6 gap-1.5"
+            @update:model-value="onSwatchUpdate"
+          >
+            <ColorSwatchPickerItem
+              v-for="swatch in effectiveSwatches"
+              :key="swatch"
+              :value="swatch"
+              :disabled="disabled"
+              class="relative size-6 rounded-xs border border-black/15 hover:scale-105 transition-transform cursor-pointer shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring overflow-hidden"
+            >
+              <ColorSwatchPickerItemSwatch
+                class="block size-full [background-image:linear-gradient(var(--reka-color-swatch-color),var(--reka-color-swatch-color)),repeating-conic-gradient(#ccc_0%_25%,#fff_0%_50%)] [background-size:100%_100%,8px_8px]"
               />
-            </div>
-          </div>
+            </ColorSwatchPickerItem>
+          </ColorSwatchPickerRoot>
         </div>
       </PopoverContent>
     </Popover>

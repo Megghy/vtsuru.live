@@ -280,7 +280,7 @@ const {
   flex-direction: column;
   width: 100%;
   border-left: 3px solid transparent;
-  background-color: rgba(0, 0, 0, calc(0.6 * var(--dw-opacity, 1)));
+  background-color: var(--dw-item-bg);
   transition: background-color 0.2s;
   box-sizing: border-box; /* 确保padding不会增加元素的实际尺寸 */
 }
@@ -483,11 +483,6 @@ const {
 /* --- 普通消息卡片样式 --- */
 .message-card {
   border-left-color: #409eff;
-  background: linear-gradient(
-    90deg,
-    rgba(40, 40, 40, calc(0.85 * var(--dw-opacity, 1))) 0%,
-    rgba(30, 30, 30, calc(0.85 * var(--dw-opacity, 1))) 100%
-  );
 }
 
 .guard-icon {
