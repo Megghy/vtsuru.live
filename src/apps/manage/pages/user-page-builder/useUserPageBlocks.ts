@@ -273,10 +273,12 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     return clipboardBlocks.value.length
   }
 
-  function copyBlocksToClipboard(blockIds: string[]) {
+  function copyBlocksToClipboard(blockIds: string[]): boolean {
     const p = opts.currentProject.value
-    if (!p) return
-    if (!blockIds.length) return
+    if (!p || !blockIds.length) {
+      clipboardBlocks.value = []
+      return false
+    }
     const set = new Set(blockIds)
     const blocks: BlockNode[] = []
     const visit = (list: BlockNode[], ancestorSelected: boolean) => {
@@ -296,10 +298,11 @@ export function useUserPageBlocks(opts: UseUserPageBlocksOptions) {
     visit(p.blocks, false)
     if (!blocks.length) {
       clipboardBlocks.value = []
-      return
+      return false
     }
     clipboardBlocks.value = blocks
     opts.notify.success(`已复制 ${blocks.length} 个区块`)
+    return true
   }
 
   function pasteBlocksAfter(afterBlockId: string | null): boolean {

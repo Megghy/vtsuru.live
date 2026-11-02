@@ -236,9 +236,11 @@ function handleEditorShortcut(event: KeyboardEvent) {
     !window.getSelection()?.toString()
   ) {
     if (!editor.selectedBlockIds.value.length) return
-    event.preventDefault()
-    editor.copyBlocksToClipboard(editor.selectedBlockIds.value)
-    announceKeyboardAction('已复制所选区块')
+    const copied = editor.copyBlocksToClipboard(editor.selectedBlockIds.value)
+    if (copied) {
+      event.preventDefault()
+      announceKeyboardAction('已复制所选区块')
+    }
   } else if (editor.currentPage.value.mode === 'block' && command && key === 'v') {
     event.preventDefault()
     const pasted = editor.pasteBlocksAfter(editor.selectedBlockIds.value.at(-1) ?? null)

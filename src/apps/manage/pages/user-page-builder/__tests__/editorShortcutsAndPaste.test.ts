@@ -57,17 +57,20 @@ describe('editor blocks clipboard and paste feedback', () => {
     })
 
     // First populate clipboard
-    blocksApi.copyBlocksToClipboard(['b1'])
+    expect(blocksApi.copyBlocksToClipboard(['b1'])).toBe(true)
     expect(notifySuccess).toHaveBeenCalledWith('已复制 1 个区块')
     expect(blocksApi.pasteBlocksAfter(null)).toBe(true)
 
     // Now copy invalid ID: should reset clipboard and prevent subsequent paste
     notifySuccess.mockClear()
     notifyWarning.mockClear()
-    blocksApi.copyBlocksToClipboard(['non-existent'])
+    expect(blocksApi.copyBlocksToClipboard(['non-existent'])).toBe(false)
     expect(notifySuccess).not.toHaveBeenCalled()
     expect(blocksApi.pasteBlocksAfter(null)).toBe(false)
     expect(notifyWarning).toHaveBeenCalledWith('区块剪贴板为空，请先复制区块')
+
+    // Empty list copy should also return false
+    expect(blocksApi.copyBlocksToClipboard([])).toBe(false)
   })
 
   it('allows pasting after copying blocks', () => {
