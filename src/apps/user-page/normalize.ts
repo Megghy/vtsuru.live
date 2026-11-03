@@ -110,7 +110,7 @@ function validatePageModes(settings: JsonObject) {
   const validatePage = (value: unknown, path: string) => {
     const page = asObject(value)
     if (!page) throw new Error(`${path} 必须是 object`)
-    if (page.mode !== 'legacy' && page.mode !== 'block' && page.mode !== 'contrib') {
+    if (!['legacy', 'block', 'contrib', 'custom'].includes(String(page.mode))) {
       throw new Error(`${path}.mode 不支持: ${String(page.mode)}`)
     }
   }

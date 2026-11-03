@@ -45,7 +45,7 @@ export const BLOCK_TYPES = [
 export type BlockType = (typeof BLOCK_TYPES)[number]
 
 export const BLOCK_PAGE_VERSION = 1 as const
-export const MAX_PAGE_IMAGES = 50
+export const MAX_PAGE_IMAGES = 100
 
 export type PageBackgroundType = 'none' | 'color' | 'image'
 export type PageBackgroundBlurMode = 'none' | 'background' | 'glass'

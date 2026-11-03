@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
 
+import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
@@ -43,6 +44,8 @@ export function useUserPagePages(opts: UseUserPagePagesOptions) {
         opts.settings.value.pages[slug] = { mode: 'block', block: opts.createDefaultProject() }
       } else if (mode === 'contrib') {
         opts.settings.value.pages[slug] = { mode: 'contrib', contrib: { scope: 'global', pageId: '' } }
+      } else if (mode === 'custom') {
+        opts.settings.value.pages[slug] = { mode, custom: createDefaultCustomPageProps() }
       } else {
         opts.settings.value.pages[slug] = { mode: 'legacy' }
       }

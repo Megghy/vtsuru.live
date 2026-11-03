@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, ref, watch } from 'vue'
 
-import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
+import { GLOBAL_CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
@@ -24,8 +24,8 @@ const cssBytes = computed(() => utf8ByteLength(draft.value))
 const issues = computed(() => {
   const result = inspectCustomCss(draft.value)
   const next = [...result.issues]
-  if (cssBytes.value > CUSTOM_CSS_MAX_BYTES)
-    next.push({ field: 'css', message: `CSS 不能超过 ${CUSTOM_CSS_MAX_BYTES / 1024} KiB`, line: 1, column: 1 })
+  if (cssBytes.value > GLOBAL_CUSTOM_CSS_MAX_BYTES)
+    next.push({ field: 'css', message: `CSS 不能超过 ${GLOBAL_CUSTOM_CSS_MAX_BYTES / 1024} KiB`, line: 1, column: 1 })
   return next
 })
 const isDirty = computed(() => draft.value !== initialSnapshot.value)
@@ -119,12 +119,13 @@ watch(
         </div>
         <div class="flex justify-between items-center px-3.5 py-2 text-xs text-muted-foreground shrink-0">
           <span>公开页全局样式</span>
-          <span>{{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes</span>
+          <span>{{ cssBytes }}/{{ GLOBAL_CUSTOM_CSS_MAX_BYTES }} bytes</span>
         </div>
         <div class="flex-1 min-h-0">
           <CustomHtmlCodeEditor
             ref="codeEditor"
             html=""
+            js=""
             :css="draft"
             active-language="css"
             theme="vs"

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { createDefaultCustomPageProps } from '../block/customHtmlContract'
 import { migrateUserPagesSettings } from '../normalize'
 
 describe('migrateUserPagesSettings', () => {
@@ -54,5 +55,24 @@ describe('migrateUserPagesSettings', () => {
 
     expect(migrated.pages?.now.block?.theme).toBeUndefined()
     expect(current.pages?.now.block?.theme?.primaryColor).toBe('#18a058')
+  })
+
+  it('保留自定义页代码、资源和沉浸设置，也保留非法值供校验器拒绝', () => {
+    const custom = createDefaultCustomPageProps()
+    custom.js = 'window.vtsuru.getContext()'
+    custom.assets = [{ key: 'cover', file: { id: 1, path: '/file/1' } as any }]
+    custom.immersive = true
+    const source = { version: 2, home: { mode: 'custom', custom }, pages: {} }
+    const result = migrateUserPagesSettings(source)
+
+    expect(result.home?.custom).toEqual(custom)
+    expect(result.home?.custom).not.toBe(custom)
+    expect(source.home.custom).toEqual(custom)
+
+    const invalid = structuredClone(source) as any
+    invalid.home.custom.js = 1
+    invalid.home.custom.assets = 'broken'
+    invalid.home.custom.immersive = 'yes'
+    expect(migrateUserPagesSettings(invalid).home?.custom).toEqual(invalid.home.custom)
   })
 })

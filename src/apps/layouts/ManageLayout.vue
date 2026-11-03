@@ -80,7 +80,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="manage-theme bg-background text-foreground h-screen w-full flex flex-col overflow-hidden"
+    class="manage-theme bg-background text-foreground text-xs h-screen w-full flex flex-col overflow-hidden"
     :style="manageCssVars"
   >
     <div

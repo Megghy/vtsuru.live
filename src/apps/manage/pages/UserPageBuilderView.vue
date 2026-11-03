@@ -7,6 +7,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -19,10 +20,10 @@ import BuilderResourcesModal from './user-page-builder/components/BuilderResourc
 import BuilderToolbar from './user-page-builder/components/BuilderToolbar.vue'
 import ThemeStyleDrawer from './user-page-builder/components/ThemeStyleDrawer.vue'
 import { UserPageEditorKey } from './user-page-builder/context'
+import { isEditorShortcutBlocked, shouldIgnoreDeleteKey } from './user-page-builder/editorShortcutGuard'
 import { COLUMN_META, DEFAULT_COLUMNS_ORDER, useBuilderLayout } from './user-page-builder/useBuilderLayout'
 import type { BuilderColumnId } from './user-page-builder/useBuilderLayout'
 import { useUserPageEditor } from './user-page-builder/useUserPageEditor'
-import { isEditorShortcutBlocked, shouldIgnoreDeleteKey } from './user-page-builder/editorShortcutGuard'
 import type { UserPageValidationIssue } from './user-page-builder/validateUserPagesSettings'
 
 const editor = useUserPageEditor()
@@ -287,11 +288,15 @@ function focusPublishValidationIssue(issue: UserPageValidationIssue) {
 onMounted(async () => {
   builderLayout.mount()
   await editor.init()
+  const page = route.query.page
+  if (typeof page === 'string' && (page === 'home' || editor.settings.value.pages?.[page]))
+    editor.currentKey.value = page
 
   const mode = route.query.mode
-  if (mode === 'legacy' || mode === 'block' || mode === 'contrib') {
+  if (mode === 'legacy' || mode === 'block' || mode === 'contrib' || mode === 'custom') {
     editor.currentKey.value = 'home'
     editor.currentPage.value.mode = mode
+    if (mode === 'custom') editor.currentPage.value.custom ??= createDefaultCustomPageProps()
     await router.replace({ name: 'manage-userPageBuilder' })
   }
 

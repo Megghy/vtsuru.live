@@ -23,6 +23,7 @@ import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackgroun
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
+import ImmersivePageDock from '@/apps/user-page/components/ImmersivePageDock.vue'
 import {
   getEnabledUserFunctions,
   isUserFeatureEnabled,
@@ -188,6 +189,10 @@ const currentUserPageMode = computed(() => {
   if (!userPageSlug.value) return (currentUserPageConfig.value as any)?.mode ?? 'legacy'
   return (currentUserPageConfig.value as any)?.mode ?? null
 })
+
+const isImmersiveCustomPage = computed(
+  () => currentUserPageConfig.value?.mode === 'custom' && currentUserPageConfig.value.custom?.immersive === true,
+)
 
 const currentBlockValidation = computed(() => {
   if (currentUserPageMode.value !== 'block') return null
@@ -532,11 +537,14 @@ function scrollToTop() {
   <div
     v-else
     class="page-root"
-    :class="layoutPageBgClass"
+    :class="[layoutPageBgClass, { 'page-root--immersive': isImmersiveCustomPage }]"
     :style="[layoutUiVars, layoutPageBgVars]"
   >
     <!-- 顶部导航栏 -->
-    <header class="layout-header">
+    <header
+      v-if="!isImmersiveCustomPage"
+      class="layout-header"
+    >
       <div class="layout-header__inner">
         <div class="layout-header__left">
           <img
@@ -627,6 +635,7 @@ function scrollToTop() {
     <div class="main-layout-body">
       <!-- 左侧边栏 -->
       <aside
+        v-if="!isImmersiveCustomPage"
         ref="sider"
         class="user-sider"
         :class="{ collapsed: siderCollapsed }"
@@ -898,8 +907,9 @@ function scrollToTop() {
               <KeepAlive :max="4">
                 <div
                   v-if="viewRoute.meta.pageContainer !== 'none'"
-                  class="w-full max-w-[var(--vtsuru-page-max-width,820px)] mx-auto flex flex-col gap-[var(--vtsuru-page-spacing,16px)]"
+                  class="w-full mx-auto flex flex-col gap-[var(--vtsuru-page-spacing,16px)]"
                   :class="{
+                    'max-w-[var(--vtsuru-page-max-width,820px)]': !isImmersiveCustomPage,
                     '[--vtsuru-page-max-width:880px]': viewRoute.meta.pageWidth === 'md',
                     '[--vtsuru-page-max-width:1440px]': viewRoute.meta.pageWidth === 'xl',
                   }"
@@ -926,6 +936,16 @@ function scrollToTop() {
         </div>
       </div>
     </div>
+    <ImmersivePageDock
+      v-if="isImmersiveCustomPage && loadStatus === 'ready'"
+      :nav-groups="navGroups"
+      :is-owner="isOwner"
+      :page-slug="userPageSlug"
+      :is-dark="effectiveIsDark"
+      :theme-locked="pageThemeMode !== 'auto'"
+      :theme-switch-title="themeSwitchTitle"
+      @toggle-theme="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
+    />
   </div>
 
   <!-- 注册/登录弹窗 -->
@@ -1279,6 +1299,27 @@ function scrollToTop() {
 .viewer-page-content {
   min-height: 100%;
   padding: var(--vtsuru-content-padding);
+}
+
+.page-root--immersive .viewer-page-content {
+  min-height: 100dvh;
+  padding: 0;
+}
+
+.page-root--immersive .main-layout-body,
+.page-root--immersive .viewer-scroll,
+.page-root--immersive .content-layout-container {
+  min-width: 0;
+  width: 100%;
+}
+
+.page-root--immersive .main-layout-body {
+  min-height: 100dvh;
+}
+
+.page-root.bg-host > :deep(.immersive-dock) {
+  position: fixed;
+  z-index: 110;
 }
 
 @media (min-width: 769px) {

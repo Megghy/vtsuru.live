@@ -1,5 +1,6 @@
-import { CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
+import { GLOBAL_CUSTOM_CSS_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
 import { inspectCustomCss } from '@/apps/user-page/block/customHtmlRuntime'
+import { validateCustomHtmlConfig } from '@/apps/user-page/block/customHtmlValidation'
 import { validateBlockPageProject, validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { isValidGoogleFontFamily } from '@/apps/user-page/googleFonts'
 import { isUserPageNavIcon } from '@/apps/user-page/pageIcons'
@@ -173,7 +174,7 @@ function validatePage(
 ) {
   if (!page) return
   const pageTarget: IssueTarget = { scope: 'page', pageKey, blockId: null }
-  if (!['legacy', 'block', 'contrib'].includes(page.mode)) {
+  if (!['legacy', 'block', 'contrib', 'custom'].includes(page.mode)) {
     report(issues, pageTarget, 'mode', `页面模式不合法：${String(page.mode)}`)
     return
   }
@@ -202,6 +203,8 @@ function validatePage(
       if (page.contrib.scope === 'streamer' && !page.contrib.streamerId)
         report(issues, pageTarget, 'contrib.streamerId', '主播 ID 不能为空')
     }
+  } else if (page.mode === 'custom') {
+    validateCustomHtmlConfig(page.custom).forEach((issue) => report(issues, pageTarget, issue.fieldPath, issue.message))
   }
 }
 
@@ -212,8 +215,8 @@ function validateSettings(settings: UserPagesSettings, validateBlockProject: Blo
   if (customCss !== undefined) {
     if (typeof customCss !== 'string') report(issues, settingsTarget, 'customCss', '全局 CSS 必须是 string')
     else {
-      if (utf8ByteLength(customCss) > CUSTOM_CSS_MAX_BYTES)
-        report(issues, settingsTarget, 'customCss', `全局 CSS 不能超过 ${CUSTOM_CSS_MAX_BYTES / 1024} KiB`)
+      if (utf8ByteLength(customCss) > GLOBAL_CUSTOM_CSS_MAX_BYTES)
+        report(issues, settingsTarget, 'customCss', `全局 CSS 不能超过 ${GLOBAL_CUSTOM_CSS_MAX_BYTES / 1024} KiB`)
       inspectCustomCss(customCss).issues.forEach((item) =>
         report(issues, settingsTarget, `customCss:${item.line}:${item.column}`, item.message),
       )

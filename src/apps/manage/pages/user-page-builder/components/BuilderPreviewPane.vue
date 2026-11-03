@@ -16,6 +16,7 @@ import { fetchBiliProfile } from '@/apps/user-page/api'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
+import CustomPageRenderer from '@/apps/user-page/components/CustomPageRenderer.vue'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
@@ -332,6 +333,13 @@ watch(
                 />
               </div>
             </template>
+            <CustomPageRenderer
+              v-else-if="editor.currentPage.value.mode === 'custom' && editor.currentPage.value.custom"
+              :config="editor.currentPage.value.custom"
+              :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
+              :user-info="editor.account.value"
+              :bili-info="biliProfileQuery.data.value ?? undefined"
+            />
             <template v-else-if="editor.currentPage.value.mode === 'legacy'">
               <component
                 :is="legacyIndexTemplate"

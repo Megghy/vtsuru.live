@@ -28,36 +28,17 @@ const resolvedContentStyle = computed<string | CSSProperties>(() => {
 const isUnframed = computed(() => props.framed === false)
 const isUnbackgrounded = computed(() => props.backgrounded === false)
 
-const palette = computed(() => {
-  const foreground = isUnbackgrounded.value ? 'var(--foreground)' : 'var(--card-foreground)'
-  return {
-    foreground,
-    muted: isUnbackgrounded.value
-      ? 'var(--muted-foreground)'
-      : 'color-mix(in srgb, var(--card-foreground) 75%, transparent)',
-    mutedBackground: isUnbackgrounded.value ? 'var(--muted)' : 'var(--secondary)',
-  }
-})
-
-const cardStyle = computed<ThemeStyle>(() => ({
-  '--foreground': palette.value.foreground,
-  '--card-foreground': palette.value.foreground,
-  '--muted-foreground': palette.value.muted,
-  '--muted': palette.value.mutedBackground,
-}))
-
-provideThemeScope(
-  computed(() => ({
-    ...cardStyle.value,
-    ...(isUnbackgrounded.value
-      ? {
-          '--foreground': 'var(--foreground)',
-          '--card-foreground': 'var(--foreground)',
-          '--muted-foreground': 'var(--muted-foreground)',
-        }
-      : {}),
-  })),
+const cardStyle = computed<ThemeStyle>(() =>
+  isUnbackgrounded.value
+    ? {}
+    : {
+        '--foreground': 'var(--card-foreground)',
+        '--muted-foreground': 'color-mix(in srgb, var(--card-foreground) 75%, transparent)',
+        '--muted': 'var(--secondary)',
+      },
 )
+
+provideThemeScope(cardStyle)
 
 const borderTitleText = computed(() => (typeof props.borderTitle === 'string' ? props.borderTitle.trim() : ''))
 const showBorderTitle = computed(() => !isUnframed.value && borderTitleText.value.length > 0)
@@ -71,8 +52,10 @@ const borderTitleAlignClass = computed(() => {
 
 <template>
   <div
-    class="vtsuru-block-card relative flex flex-col h-full min-w-0 rounded-[var(--radius)] text-card-foreground bg-card border shadow-[var(--ui-shadow,none)] overflow-hidden backdrop-blur-[var(--user-page-card-blur,12px)]"
+    class="vtsuru-block-card relative flex flex-col h-full min-w-0 rounded-[var(--radius)] bg-card border shadow-[var(--ui-shadow,none)] overflow-hidden backdrop-blur-[var(--user-page-card-blur,12px)]"
     :class="{
+      'text-foreground': isUnbackgrounded,
+      'text-card-foreground': !isUnbackgrounded,
       'overflow-visible': showBorderTitle,
       '!border-0 !shadow-none': isUnframed,
       '!bg-transparent !shadow-none backdrop-blur-none': isUnbackgrounded,

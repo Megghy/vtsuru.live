@@ -27,6 +27,8 @@ describe('CustomHtmlEditorModal setup and initial mount', () => {
         info: vi.fn(),
       },
       fileRefs: ref([]),
+      currentKey: ref('home'),
+      account: ref(undefined),
       currentProject: ref({
         version: 1,
         blocks: [],
@@ -48,6 +50,7 @@ describe('CustomHtmlEditorModal setup and initial mount', () => {
             [UserPageEditorKey as symbol]: mockEditor,
           },
           stubs: {
+            CustomHtmlBlock: true,
             Dialog: { template: '<div><slot /></div>' },
             DialogContent: { template: '<div><slot /></div>' },
             DialogHeader: { template: '<div><slot /></div>' },

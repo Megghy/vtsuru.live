@@ -2,24 +2,35 @@ import { generate, parse, walk } from 'css-tree'
 import type { CssNode } from 'css-tree'
 import DOMPurify from 'dompurify'
 
+import { FILE_BASE_URL, getCurrentAPIUrl, resolveFileUrl } from '@/shared/config'
+
+import { createSandboxSdkSource } from '../runtime/customHtmlBridge'
 import type { CustomHtmlAsset, CustomHtmlProps } from './customHtmlContract'
 
 const ALLOWED_TAGS = [
   'a',
   'article',
+  'abbr',
+  'aside',
   'b',
   'blockquote',
   'br',
   'caption',
+  'canvas',
   'code',
   'dd',
   'div',
   'dl',
+  'dialog',
+  'details',
   'dt',
   'em',
+  'fieldset',
   'figcaption',
   'figure',
+  'form',
   'footer',
+  'legend',
   'h1',
   'h2',
   'h3',
@@ -33,15 +44,26 @@ const ALLOWED_TAGS = [
   'li',
   'main',
   'mark',
+  'meter',
   'nav',
+  'optgroup',
+  'option',
   'ol',
   'p',
   'pre',
+  'progress',
+  'rp',
+  'rt',
+  'ruby',
+  'samp',
   's',
   'section',
   'small',
+  'select',
   'span',
   'strong',
+  'summary',
+  'textarea',
   'table',
   'tbody',
   'td',
@@ -49,11 +71,108 @@ const ALLOWED_TAGS = [
   'th',
   'thead',
   'tr',
+  'time',
+  'var',
   'u',
   'ul',
+  'button',
+  'input',
+  'label',
+  'lineargradient',
+  'radialgradient',
+  'svg',
+  'g',
+  'path',
+  'circle',
+  'ellipse',
+  'line',
+  'polygon',
+  'polyline',
+  'rect',
+  'text',
+  'tspan',
+  'defs',
+  'stop',
+  'clippath',
+  'mask',
+  'pattern',
+  'use',
+  'symbol',
+  'view',
 ] as const
 const ALLOWED_TAG_SET = new Set<string>(ALLOWED_TAGS)
-const GLOBAL_ATTRIBUTES = new Set(['aria-describedby', 'aria-label', 'aria-labelledby', 'class', 'id', 'role', 'title'])
+const GLOBAL_ATTRIBUTES = new Set([
+  'aria-describedby',
+  'aria-label',
+  'aria-labelledby',
+  'aria-hidden',
+  'aria-expanded',
+  'aria-current',
+  'aria-selected',
+  'aria-controls',
+  'aria-live',
+  'class',
+  'id',
+  'role',
+  'tabindex',
+  'title',
+])
+const FORM_ATTRIBUTES = new Set([
+  'type',
+  'value',
+  'placeholder',
+  'disabled',
+  'readonly',
+  'checked',
+  'selected',
+  'multiple',
+  'name',
+  'for',
+  'min',
+  'max',
+  'step',
+  'maxlength',
+  'minlength',
+  'rows',
+  'cols',
+  'autocomplete',
+])
+const SVG_ATTRIBUTES = new Set([
+  'viewbox',
+  'xmlns',
+  'fill',
+  'stroke',
+  'stroke-width',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-dasharray',
+  'stroke-dashoffset',
+  'd',
+  'cx',
+  'cy',
+  'r',
+  'rx',
+  'ry',
+  'x',
+  'y',
+  'x1',
+  'y1',
+  'x2',
+  'y2',
+  'points',
+  'transform',
+  'opacity',
+  'fill-opacity',
+  'stroke-opacity',
+  'fill-rule',
+  'clip-rule',
+  'gradientunits',
+  'gradienttransform',
+  'offset',
+  'stop-color',
+  'stop-opacity',
+  'preserveaspectratio',
+])
 const TAG_ATTRIBUTES: Record<string, Set<string>> = {
   a: new Set(['href']),
   img: new Set(['alt', 'data-vtsuru-asset', 'height', 'width']),
@@ -61,11 +180,11 @@ const TAG_ATTRIBUTES: Record<string, Set<string>> = {
   th: new Set(['colspan', 'rowspan', 'scope']),
 }
 const ALLOWED_AT_RULES = new Set(['container', 'keyframes', 'media', 'supports'])
-const MAX_CSS_RULES = 200
-const MAX_CSS_DECLARATIONS = 500
+const MAX_CSS_RULES = 2000
+const MAX_CSS_DECLARATIONS = 8000
 
 export interface CustomCodeIssue {
-  field: 'html' | 'css' | 'assets'
+  field: 'html' | 'css' | 'js' | 'assets'
   message: string
   line: number
   column: number
@@ -119,7 +238,11 @@ function isSafeAssetPath(value: string) {
 }
 
 function assetMap(assets: CustomHtmlAsset[]) {
-  return new Map(assets.filter((asset) => isSafeAssetPath(asset.file.path)).map((asset) => [asset.key, asset.file]))
+  return new Map(
+    assets
+      .filter((asset) => isSafeAssetPath(asset.file.path))
+      .map((asset) => [asset.key, { ...asset.file, path: resolveFileUrl(asset.file.path) }]),
+  )
 }
 
 export function inspectCustomHtml(html: string, assets: CustomHtmlAsset[]): CustomCodeIssue[] {
@@ -134,7 +257,12 @@ export function inspectCustomHtml(html: string, assets: CustomHtmlAsset[]): Cust
 
     for (const attribute of element.attributes) {
       const name = attribute.name.toLowerCase()
-      const allowed = GLOBAL_ATTRIBUTES.has(name) || TAG_ATTRIBUTES[tag]?.has(name)
+      const allowed =
+        GLOBAL_ATTRIBUTES.has(name) ||
+        FORM_ATTRIBUTES.has(name) ||
+        SVG_ATTRIBUTES.has(name) ||
+        /^data-[a-z0-9_-]+$/.test(name) ||
+        TAG_ATTRIBUTES[tag]?.has(name)
       if (!allowed) issues.push(issue('html', `<${tag}> 不允许使用属性 ${name}`))
     }
 
@@ -237,24 +365,28 @@ function sanitizeHtml(html: string, assets: CustomHtmlAsset[]) {
   const fragment = DOMPurify.sanitize(html, {
     ALLOWED_TAGS: [...ALLOWED_TAGS],
     ALLOWED_ATTR: [
-      'alt',
-      'aria-label',
-      'aria-labelledby',
-      'aria-describedby',
-      'class',
-      'colspan',
-      'data-vtsuru-asset',
-      'height',
-      'href',
-      'id',
-      'role',
-      'rowspan',
-      'scope',
-      'title',
-      'width',
+      ...new Set([
+        'alt',
+        'aria-label',
+        'aria-labelledby',
+        'aria-describedby',
+        ...GLOBAL_ATTRIBUTES,
+        ...FORM_ATTRIBUTES,
+        ...SVG_ATTRIBUTES,
+        'class',
+        'colspan',
+        'data-vtsuru-asset',
+        'height',
+        'href',
+        'id',
+        'rowspan',
+        'scope',
+        'title',
+        'width',
+      ]),
     ],
     ALLOW_ARIA_ATTR: true,
-    ALLOW_DATA_ATTR: false,
+    ALLOW_DATA_ATTR: true,
     RETURN_DOM_FRAGMENT: true,
   })
 
@@ -287,6 +419,10 @@ function escapeStyleText(value: string) {
   return value.replaceAll('<', '\\3C ')
 }
 
+function escapeScriptText(value: string) {
+  return value.replace(/<\/script/gi, '<\\/script')
+}
+
 function escapeCssString(value: string) {
   return value
     .replaceAll('\\', '\\\\')
@@ -295,7 +431,18 @@ function escapeCssString(value: string) {
 }
 
 function createNonce() {
-  return globalThis.crypto?.randomUUID?.().replaceAll('-', '') ?? Math.random().toString(36).slice(2)
+  return crypto.randomUUID().replaceAll('-', '')
+}
+
+function imageSources(assets: CustomHtmlAsset[]) {
+  const urls = [...assetMap(assets).values()].map((file) => {
+    const url = new URL(file.path, location.href)
+    if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password)
+      throw new Error('Invalid asset URL')
+    return url.href.replace(/[?#].*$/, '')
+  })
+  const apiFilePath = new URL('/f/', getCurrentAPIUrl()).href
+  return ['data:', 'blob:', 'https://*.hdslb.com', FILE_BASE_URL, apiFilePath, ...urls].join(' ')
 }
 
 export function buildCustomHtmlDocument(props: CustomHtmlProps, theme: CustomHtmlTheme) {
@@ -322,11 +469,16 @@ export function buildCustomHtmlDocument(props: CustomHtmlProps, theme: CustomHtm
     .filter(Boolean)
     .join(';')
   const nonce = createNonce()
-  const bridge = `(()=>{let frame=0;const send=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>parent.postMessage({type:'vtsuru-custom-html-height',height:Math.ceil(Math.max(document.body.scrollHeight,document.body.getBoundingClientRect().height))},'*'))};new ResizeObserver(send).observe(document.body);addEventListener('load',send);send()})()`
-  const baseCss = `:root{${themeVariables};color-scheme:${theme.colorScheme}}*{box-sizing:border-box}html,body{min-width:0;margin:0;padding:0}body{color:var(--foreground);background:transparent;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;overflow-wrap:anywhere}img{max-width:100%;height:auto}a{color:var(--primary-readable)}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}`
+  const channelId = createNonce()
+  const bridge = `(()=>{let frame=0;const send=()=>{cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>vtsuru.reportHeight(Math.ceil(Math.max(document.body.scrollHeight,document.body.getBoundingClientRect().height))))};new ResizeObserver(send).observe(document.body);addEventListener('load',send);send()})()`
+  const assets = Object.fromEntries([...assetMap(props.assets)].map(([key, file]) => [key, file.path]))
+  const reportError = `(()=>{const send=error=>parent.postMessage({__vtsuruBridge:true,channelId:${JSON.stringify(channelId)},direction:'error',error:String(error)},'*');addEventListener('error',event=>send(event.message));addEventListener('unhandledrejection',event=>send(event.reason))})()`
+  const userScript = `(async()=>{\n${props.js}\n})().catch(error=>{parent.postMessage({__vtsuruBridge:true,channelId:${JSON.stringify(channelId)},direction:'error',error:String(error)},'*')})`
+  const baseCss = `:root{${themeVariables};color-scheme:${theme.colorScheme}}*{box-sizing:border-box}html,body{min-width:0;margin:0;padding:0}body{color:var(--foreground);background:transparent;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:0.875rem;line-height:1.5;overflow-wrap:anywhere}img{max-width:100%;height:auto}a{color:var(--primary-readable)}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}`
 
   return {
     issues: [...htmlIssues, ...cssResult.issues],
-    srcdoc: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src http: https: data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; font-src 'none'; media-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'"><style>${escapeStyleText(baseCss)}\n${escapeStyleText(cssResult.css)}</style></head><body>${safeHtml}<script nonce="${nonce}">${bridge}</script></body></html>`,
+    channelId,
+    srcdoc: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imageSources(props.assets)}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; font-src https://fonts.gstatic.com data:; media-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'"><style>${escapeStyleText(baseCss)}\n${escapeStyleText(cssResult.css)}</style></head><body>${safeHtml}<script nonce="${nonce}">${createSandboxSdkSource(channelId, assets)}</script><script nonce="${nonce}">${reportError}</script><script nonce="${nonce}">${bridge}</script><script nonce="${nonce}">${escapeScriptText(userScript)}</script></body></html>`,
   }
 }

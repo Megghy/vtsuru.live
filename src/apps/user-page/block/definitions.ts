@@ -1,6 +1,7 @@
 import { USER_FEATURE_KEYS } from '../featureNavigation'
 import {
   CUSTOM_CSS_MAX_BYTES,
+  CUSTOM_JS_MAX_BYTES,
   CUSTOM_HTML_ASSET_KEY_PATTERN,
   CUSTOM_HTML_MAX_ASSETS,
   CUSTOM_HTML_MAX_BYTES,
@@ -17,6 +18,7 @@ import { BLOCK_TYPES } from './schemaTypes'
 import type { BlockType } from './schemaTypes'
 import { SOCIAL_PLATFORM_IDS } from './socialPlatforms'
 import {
+  asObject,
   isHttpsUrl,
   isNonEmptyString,
   optionalBoolean,
@@ -102,15 +104,18 @@ const validateRichText = withProps((props, path, errors) => {
   }
 })
 
-const validateCustomHtml = withProps((props, path, errors) => {
+export const validateCustomHtml = withProps((props, path, errors) => {
   if (typeof props.html !== 'string') errors.push(`${path}: html 必须是 string`, 'html')
-  else if (utf8ByteLength(props.html) > CUSTOM_HTML_MAX_BYTES) errors.push(`${path}: html 不能超过 32 KiB`, 'html')
+  else if (utf8ByteLength(props.html) > CUSTOM_HTML_MAX_BYTES) errors.push(`${path}: html 不能超过 256 KiB`, 'html')
   if (typeof props.css !== 'string') errors.push(`${path}: css 必须是 string`, 'css')
-  else if (utf8ByteLength(props.css) > CUSTOM_CSS_MAX_BYTES) errors.push(`${path}: css 不能超过 24 KiB`, 'css')
-  optionalEnum(props, 'heightMode', ['auto', 'fixed'], path, errors)
+  else if (utf8ByteLength(props.css) > CUSTOM_CSS_MAX_BYTES) errors.push(`${path}: css 不能超过 128 KiB`, 'css')
+  if (props.js !== undefined && typeof props.js !== 'string') errors.push(`${path}: js 必须是 string`, 'js')
+  else if (typeof props.js === 'string' && utf8ByteLength(props.js) > CUSTOM_JS_MAX_BYTES)
+    errors.push(`${path}: js 不能超过 256 KiB`, 'js')
+  optionalEnum(props, 'heightMode', ['auto', 'fixed', 'viewport'], path, errors)
   optionalNumber(props, 'height', CUSTOM_HTML_MIN_HEIGHT, CUSTOM_HTML_MAX_HEIGHT, path, errors, true)
   optionalNumber(props, 'maxHeight', CUSTOM_HTML_MIN_AUTO_HEIGHT, CUSTOM_HTML_MAX_HEIGHT, path, errors, true)
-  booleans(props, ['framed', 'backgrounded'], path, errors)
+  booleans(props, ['framed', 'backgrounded', 'immersive'], path, errors)
 
   if (!Array.isArray(props.assets)) {
     errors.push(`${path}: assets 必须是 array`, 'assets')
@@ -119,7 +124,13 @@ const validateCustomHtml = withProps((props, path, errors) => {
   if (props.assets.length > CUSTOM_HTML_MAX_ASSETS)
     errors.push(`${path}: assets 不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, 'assets')
   const keys = new Set<string>()
-  validateItems(props, path, errors, (item, itemPath) => {
+  props.assets.forEach((asset, index) => {
+    const itemPath = `${path}: assets[${index}]`
+    const item = asObject(asset)
+    if (!item) {
+      errors.push(`${itemPath} 必须是 object`, `assets[${index}]`)
+      return
+    }
     requiredString(item, 'key', itemPath, errors)
     if (typeof item.key === 'string' && !CUSTOM_HTML_ASSET_KEY_PATTERN.test(item.key)) {
       errors.push(`${itemPath}: key 只能使用小写字母、数字和连字符`, validationFieldPath(itemPath, 'key'))

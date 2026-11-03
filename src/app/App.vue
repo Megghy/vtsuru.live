@@ -101,6 +101,11 @@ body {
   color: var(--foreground);
   background-color: var(--background);
 }
+body {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
 html.transparent-shell,
 html.transparent-shell body {
   height: 100%;

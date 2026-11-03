@@ -37,6 +37,20 @@ describe('customHtmlRuntime', () => {
     expect(result.srcdoc).toContain('ResizeObserver')
   })
 
+  it('执行独立 JS 字段但保持无网络与无同源 sandbox 策略', () => {
+    const props = normalizeCustomHtmlProps({
+      html: '<button>go</button>',
+      css: '',
+      js: "document.querySelector('button').textContent='ready'",
+    })
+    const result = buildCustomHtmlDocument(props, theme)
+
+    expect(result.srcdoc).toContain("connect-src 'none'")
+    expect(result.srcdoc).toContain('<script nonce=')
+    expect(result.srcdoc).toContain("textContent='ready'")
+    expect(result.srcdoc).not.toContain('allow-same-origin')
+  })
+
   it('拒绝脚本、事件属性、内联样式和直接图片地址', () => {
     const issues = inspectCustomHtml(
       '<script>bad()</script><p onclick="bad()" style="color:red">x</p><img src="https://evil.test/x.png">',
@@ -46,6 +60,12 @@ describe('customHtmlRuntime', () => {
     expect(issues.map((item) => item.message).join('\n')).toContain('onclick')
     expect(issues.map((item) => item.message).join('\n')).toContain('style')
     expect(issues.map((item) => item.message).join('\n')).toContain('src')
+  })
+
+  it('允许表单、SVG、ARIA 和安全的 data 属性', () => {
+    const html =
+      '<form data-view="profile"><label for="name">Name</label><input id="name" aria-label="Name"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="red"></circle></svg></form>'
+    expect(inspectCustomHtml(html, [])).toEqual([])
   })
 
   it('拒绝 CSS 外部加载和不允许的规则', () => {

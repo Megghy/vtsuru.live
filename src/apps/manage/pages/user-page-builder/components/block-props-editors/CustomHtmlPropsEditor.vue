@@ -12,6 +12,7 @@ import {
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { Button } from '@/shared/ui/button'
 import { NumberField } from '@/shared/ui/number-field'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/shared/ui/select'
 
 import PropsGrid from '../PropsGrid.vue'
 import { useBlockPropsEditor } from './useBlockPropsEditor'
@@ -21,11 +22,13 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 const editorOpen = ref(false)
 const CustomHtmlEditorModal = defineAsyncComponent(() => import('../CustomHtmlEditorModal.vue'))
 const config = computed(() => normalizeCustomHtmlProps(blockProps.value))
-const codeBytes = computed(() => utf8ByteLength(config.value.html) + utf8ByteLength(config.value.css))
+const codeBytes = computed(
+  () => utf8ByteLength(config.value.html) + utf8ByteLength(config.value.css) + utf8ByteLength(config.value.js),
+)
 
 const heightMode = computed({
   get: () => config.value.heightMode,
-  set: (value: 'auto' | 'fixed') => {
+  set: (value: 'auto' | 'fixed' | 'viewport') => {
     blockProps.value.heightMode = value
   },
 })
@@ -54,30 +57,20 @@ const maxHeight = computed({
       打开代码编辑器
     </Button>
     <span class="text-xs text-muted-foreground">
-      HTML + CSS {{ codeBytes }} bytes · {{ config.assets.length }} 个资源
+      HTML + CSS + JS {{ codeBytes }} bytes · {{ config.assets.length }} 个资源
     </span>
 
     <PropsGrid :row-gap="0">
       <div class="space-y-1">
         <label class="text-xs text-muted-foreground">高度方式</label>
-        <div class="inline-flex rounded-md border border-input p-0.5 bg-muted/40">
-          <Button
-            size="xs"
-            :variant="heightMode === 'auto' ? 'secondary' : 'ghost'"
-            class="px-3"
-            @click="heightMode = 'auto'"
-          >
-            自动
-          </Button>
-          <Button
-            size="xs"
-            :variant="heightMode === 'fixed' ? 'secondary' : 'ghost'"
-            class="px-3"
-            @click="heightMode = 'fixed'"
-          >
-            固定
-          </Button>
-        </div>
+        <Select v-model="heightMode">
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="auto">自适应内容</SelectItem>
+            <SelectItem value="fixed">固定高度</SelectItem>
+            <SelectItem value="viewport">铺满视口</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       <div
         v-if="heightMode === 'fixed'"
@@ -93,7 +86,7 @@ const maxHeight = computed({
         />
       </div>
       <div
-        v-else
+        v-else-if="heightMode === 'auto'"
         class="space-y-1"
       >
         <label class="text-xs text-muted-foreground">最大高度</label>

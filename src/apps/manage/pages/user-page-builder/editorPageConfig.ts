@@ -1,3 +1,4 @@
+import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import type { BlockPageProject } from '@/apps/user-page/block/schema'
 import type { UserPageConfig, UserPagesSettings } from '@/apps/user-page/types'
 
@@ -20,6 +21,7 @@ export function isValidPageConfig(config: unknown): boolean {
   if (page.mode === 'legacy') return true
   if (page.mode === 'block') return !!page.block
   if (page.mode === 'contrib') return !!page.contrib
+  if (page.mode === 'custom') return !!page.custom
   return false
 }
 
@@ -38,12 +40,15 @@ export function isMeaningfulSettings(settings: UserPagesSettings | null): settin
 }
 
 export function ensurePageConfig(settings: UserPagesSettings, key: string): UserPageConfig {
+  const existing = key === 'home' ? settings.home : settings.pages?.[key]
+  if (existing?.mode === 'custom') existing.custom ??= createDefaultCustomPageProps()
   if (key === 'home') {
     settings.home ??= { mode: 'block', block: createDefaultProject() }
     if (!isValidPageConfig(settings.home)) {
       settings.home.mode = 'block'
       settings.home.block ??= createDefaultProject()
     }
+    if (settings.home.mode === 'custom') settings.home.custom ??= createDefaultCustomPageProps()
     return settings.home
   }
 
@@ -53,6 +58,7 @@ export function ensurePageConfig(settings: UserPagesSettings, key: string): User
     settings.pages[key].mode = 'block'
     settings.pages[key].block ??= createDefaultProject()
   }
+  if (settings.pages[key].mode === 'custom') settings.pages[key].custom ??= createDefaultCustomPageProps()
   return settings.pages[key]
 }
 
@@ -80,11 +86,13 @@ export const PAGE_MODE_OPTIONS: PageModeOption[] = [
     label: '扩展组件页',
     description: '加载社区开发者贡献的独立定制页面组件（如专属互动页、小游戏等，需配置页面 ID）。',
   },
+  { value: 'custom', label: '自定义代码页', description: '使用 HTML、CSS 与 JavaScript 编写完整页面。' },
 ]
 
 export function getPageModeLabel(mode: UserPageConfig['mode']) {
   if (mode === 'legacy') return '经典模板'
   if (mode === 'block') return '可视化搭建'
   if (mode === 'contrib') return '扩展组件页'
+  if (mode === 'custom') return '自定义代码页'
   return '未知模式'
 }

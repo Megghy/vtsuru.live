@@ -1,15 +1,32 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
+import type { ResponseUserInfo } from '@/api/generated/model'
+
+import { attachCustomHtmlBridge } from '../../runtime/customHtmlBridge'
+import type { VtsuruSandboxSdkTheme } from '../../runtime/customHtmlBridge'
+import CustomHtmlHostDialogs from '../../runtime/CustomHtmlHostDialogs.vue'
+import { useCustomHtmlBridge } from '../../runtime/useCustomHtmlBridge'
+import type { BiliProfile } from '../../types'
 import BlockCard from '../BlockCard.vue'
 import { CUSTOM_HTML_MIN_AUTO_HEIGHT, normalizeCustomHtmlProps } from '../customHtmlContract'
 import { buildCustomHtmlDocument } from '../customHtmlRuntime'
 import type { CustomHtmlTheme } from '../customHtmlRuntime'
 
-const props = defineProps<{ blockProps: unknown; theme?: CustomHtmlTheme }>()
+const props = defineProps<{
+  blockProps: unknown
+  theme?: CustomHtmlTheme
+  userInfo?: ResponseUserInfo
+  biliInfo?: BiliProfile
+  pageSlug?: string | null
+  pageMode?: 'block' | 'custom'
+}>()
+const route = useRoute()
 const host = ref<HTMLElement | null>(null)
 const frame = ref<HTMLIFrameElement | null>(null)
 const contentHeight = ref(CUSTOM_HTML_MIN_AUTO_HEIGHT)
+const runtimeError = ref('')
 const themeReady = ref(Boolean(props.theme))
 const detectedTheme = ref<CustomHtmlTheme>({
   fg: '#18181b',
@@ -26,15 +43,39 @@ const detectedTheme = ref<CustomHtmlTheme>({
   colorScheme: 'light',
 })
 let themeObserver: MutationObserver | null = null
+let detachBridge: ReturnType<typeof attachCustomHtmlBridge> | null = null
 
 const config = computed(() => normalizeCustomHtmlProps(props.blockProps))
 const activeTheme = computed(() => props.theme ?? detectedTheme.value)
-const documentResult = computed(() => buildCustomHtmlDocument(config.value, activeTheme.value))
-const iframeHeight = computed(() =>
-  config.value.heightMode === 'fixed'
+const sdkTheme = computed<VtsuruSandboxSdkTheme>(() => ({
+  isDark: activeTheme.value.colorScheme === 'dark',
+  primaryColor: activeTheme.value.primary,
+  accentColor: activeTheme.value.primaryReadable,
+  bgColor: activeTheme.value.bg,
+  fgColor: activeTheme.value.fg,
+  cardBg: activeTheme.value.bgElevated,
+  borderColor: activeTheme.value.border,
+  mutedColor: activeTheme.value.fgMuted,
+}))
+const { handlers, dialog, cancelPending } = useCustomHtmlBridge({
+  userInfo: () => props.userInfo,
+  biliInfo: () => props.biliInfo,
+  pageSlug: () => props.pageSlug ?? (typeof route?.params.pageSlug === 'string' ? route.params.pageSlug : null),
+  pageMode: () => props.pageMode ?? 'block',
+  immersive: () => config.value.immersive,
+  assets: () => config.value.assets,
+  theme: sdkTheme,
+})
+const initialTheme = shallowRef<CustomHtmlTheme | null>(props.theme ?? null)
+const documentResult = computed(() => buildCustomHtmlDocument(config.value, initialTheme.value ?? detectedTheme.value))
+const iframeHeight = computed(() => {
+  const measured = Math.max(CUSTOM_HTML_MIN_AUTO_HEIGHT, contentHeight.value)
+  return config.value.heightMode === 'fixed'
     ? config.value.height
-    : Math.min(config.value.maxHeight, Math.max(CUSTOM_HTML_MIN_AUTO_HEIGHT, contentHeight.value)),
-)
+    : config.value.heightMode === 'auto'
+      ? Math.min(config.value.maxHeight, measured)
+      : measured
+})
 
 function readTheme() {
   if (!host.value) return
@@ -61,31 +102,58 @@ function readTheme() {
     detectedTheme.value = nextTheme
   }
   themeReady.value = true
+  initialTheme.value ??= nextTheme
 }
 
-function handleMessage(event: MessageEvent) {
-  if (event.source !== frame.value?.contentWindow || event.data?.type !== 'vtsuru-custom-html-height') return
-  const height = Number(event.data.height)
-  if (Number.isFinite(height) && height > 0) contentHeight.value = Math.ceil(height)
+function connectBridge() {
+  cancelPending()
+  detachBridge?.()
+  detachBridge = frame.value
+    ? attachCustomHtmlBridge({
+        frame: frame.value,
+        channelId: documentResult.value.channelId,
+        handlers: handlers.value,
+        onHeight: (height) => {
+          contentHeight.value = height
+        },
+        onError: (error) => {
+          runtimeError.value = error
+        },
+      })
+    : null
 }
 
 watch(
   () => documentResult.value.srcdoc,
   () => {
     contentHeight.value = CUSTOM_HTML_MIN_AUTO_HEIGHT
+    runtimeError.value = ''
   },
+)
+watch(() => [frame.value, documentResult.value.channelId, handlers.value], connectBridge, { flush: 'post' })
+watch(sdkTheme, (theme) => detachBridge?.emitThemeChange(theme))
+watch(
+  () => [props.userInfo, props.biliInfo, props.pageSlug],
+  () => {
+    const getContext = handlers.value.getContext
+    if (getContext) detachBridge?.emitContextChange(getContext(undefined))
+  },
+  { deep: true },
 )
 
 onMounted(() => {
   readTheme()
-  window.addEventListener('message', handleMessage)
+  connectBridge()
   themeObserver = new MutationObserver(readTheme)
-  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'style'] })
+  for (let element = host.value; element; element = element.parentElement) {
+    themeObserver.observe(element, { attributes: true, attributeFilter: ['class', 'style'] })
+  }
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('message', handleMessage)
+  cancelPending()
   themeObserver?.disconnect()
+  detachBridge?.()
 })
 </script>
 
@@ -99,16 +167,28 @@ onBeforeUnmount(() => {
       ref="host"
       class="@container w-full min-w-0 [&_iframe]:block [&_iframe]:w-full [&_iframe]:min-h-20 [&_iframe]:border-0 [&_iframe]:bg-transparent"
     >
+      <div
+        v-if="runtimeError"
+        role="alert"
+        class="p-4 text-destructive"
+      >
+        自定义代码执行失败：{{ runtimeError }}
+      </div>
       <iframe
         v-if="themeReady"
         ref="frame"
         :srcdoc="documentResult.srcdoc"
-        :style="{ height: `${iframeHeight}px` }"
+        :style="{ height: `${iframeHeight}px`, minHeight: config.heightMode === 'viewport' ? '100dvh' : undefined }"
         title="自定义内容"
         sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         referrerpolicy="no-referrer"
         loading="lazy"
+        @load="connectBridge"
       />
     </div>
   </BlockCard>
+  <CustomHtmlHostDialogs
+    :dialog="dialog"
+    :user-info="userInfo"
+  />
 </template>

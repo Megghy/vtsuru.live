@@ -1,3 +1,4 @@
+import type { CustomHtmlProps } from './block/customHtmlContract'
 import type {
   BlockPageProject,
   PageBackgroundBlurMode,
@@ -8,7 +9,7 @@ import type {
 import type { UserPageNavIconId } from './pageIcons'
 import type { UserPageThemeConfig } from './themeConfig'
 
-export type UserPageRenderMode = 'legacy' | 'block' | 'contrib'
+export type UserPageRenderMode = 'legacy' | 'block' | 'contrib' | 'custom'
 export type BiliProfileStatus = 'idle' | 'loading' | 'empty' | 'error' | 'ready'
 
 export interface BiliProfile {
@@ -55,6 +56,7 @@ export interface UserPageConfig {
   navVisible?: boolean
   navOrder?: number
   contrib?: ContribPageRef
+  custom?: CustomHtmlProps
   block?: BlockPageProject
   /**
    * 可选：覆盖全局主题（仅对该页面生效）。

@@ -9,7 +9,7 @@ import { useUserPageEditorIO } from './useUserPageEditorIO'
 import { useUserPageEditorLifecycle } from './useUserPageEditorLifecycle'
 
 const MAX_PAGES_COUNT = 16
-const MAX_CONFIG_BYTES = 128 * 1024
+const MAX_CONFIG_BYTES = 2 * 1024 * 1024
 
 export function useUserPageEditor() {
   const message = useMessage()

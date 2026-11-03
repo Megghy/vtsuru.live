@@ -17,6 +17,8 @@ import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
 import {
   CUSTOM_CSS_MAX_BYTES,
   CUSTOM_HTML_MAX_BYTES,
+  CUSTOM_HTML_MAX_ASSETS,
+  CUSTOM_JS_MAX_BYTES,
   normalizeCustomHtmlProps,
   utf8ByteLength,
 } from '@/apps/user-page/block/customHtmlContract'
@@ -27,15 +29,19 @@ import {
   inspectCustomHtml,
 } from '@/apps/user-page/block/customHtmlRuntime'
 import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
+import { CUSTOM_CODE_TEMPLATES, applyCustomCodeTemplate } from '@/apps/user-page/block/customHtmlTemplates'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
+import { VTSURU_SANDBOX_DTS } from '@/apps/user-page/runtime/customHtmlBridge'
 import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import { useFilePicker } from '@/composables/useFilePicker'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/ui/sheet'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
@@ -49,16 +55,18 @@ import { findBlockById } from '../userPageBlockTree'
 import { isSupportedUserPageImagePath, validateUserPageImageFiles } from '../userPageImageUpload'
 import CustomHtmlCodeEditor from './CustomHtmlCodeEditor.vue'
 
-const props = defineProps<{ block: BlockNode }>()
+const props = defineProps<{ block?: BlockNode; page?: boolean }>()
 const show = defineModel<boolean>('show', { required: true })
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const dialog = useDialog()
-const draft = ref<CustomHtmlProps>(deepCloneJson(normalizeCustomHtmlProps(props.block.props)))
+const sourceConfig = computed(() => (props.page ? editor.currentPage.value.custom : props.block?.props))
+const draft = ref<CustomHtmlProps>(deepCloneJson(normalizeCustomHtmlProps(sourceConfig.value)))
 const initialSnapshot = ref('')
-const activeLanguage = ref<'html' | 'css'>('html')
+const activeLanguage = ref<'html' | 'css' | 'javascript'>('html')
 const resourcesVisible = ref(true)
+const apiReferenceOpen = ref(false)
 const resourceSearch = ref('')
 const previewDevice = ref<'desktop' | 'mobile'>('desktop')
 const previewDark = ref(isDarkMode.value)
@@ -81,15 +89,20 @@ const filteredResources = computed(() => {
 const attachedIds = computed(() => new Set(draft.value.assets.map((asset) => asset.file.id)))
 const htmlBytes = computed(() => utf8ByteLength(draft.value.html))
 const cssBytes = computed(() => utf8ByteLength(draft.value.css))
+const jsBytes = computed(() => utf8ByteLength(draft.value.js))
 const codeIssues = computed(() => {
   const issues = [
     ...inspectCustomHtml(draft.value.html, draft.value.assets),
     ...inspectCustomCss(draft.value.css, draft.value.assets).issues,
   ]
+  if (draft.value.assets.length > CUSTOM_HTML_MAX_ASSETS)
+    issues.push({ field: 'assets', message: `资源不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, line: 1, column: 1 })
   if (htmlBytes.value > CUSTOM_HTML_MAX_BYTES)
-    issues.push({ field: 'html', message: 'HTML 不能超过 32 KiB', line: 1, column: 1 })
+    issues.push({ field: 'html', message: 'HTML 不能超过 256 KiB', line: 1, column: 1 })
   if (cssBytes.value > CUSTOM_CSS_MAX_BYTES)
-    issues.push({ field: 'css', message: 'CSS 不能超过 24 KiB', line: 1, column: 1 })
+    issues.push({ field: 'css', message: 'CSS 不能超过 128 KiB', line: 1, column: 1 })
+  if (jsBytes.value > CUSTOM_JS_MAX_BYTES)
+    issues.push({ field: 'js', message: 'JavaScript 不能超过 256 KiB', line: 1, column: 1 })
   return issues
 })
 const isDirty = computed(() => JSON.stringify(draft.value) !== initialSnapshot.value)
@@ -123,13 +136,13 @@ const previewStyle = computed(() => ({
 }))
 
 function resetDraft() {
-  draft.value = deepCloneJson(normalizeCustomHtmlProps(props.block.props))
+  draft.value = deepCloneJson(normalizeCustomHtmlProps(sourceConfig.value))
   initialSnapshot.value = JSON.stringify(draft.value)
 }
 
 function projectWithDraft(): BlockPageProject | null {
   const project = editor.currentProject.value
-  if (!project) return null
+  if (!project || !props.block) return null
   const clone = deepCloneJson(project)
   const block = findBlockById(clone, props.block.id)
   if (!block) return null
@@ -139,6 +152,10 @@ function projectWithDraft(): BlockPageProject | null {
 
 function attachResource(file: APIFileModel, insert = true) {
   if (!attachedIds.value.has(file.id)) {
+    if (draft.value.assets.length >= CUSTOM_HTML_MAX_ASSETS) {
+      editor.message.error(`资源不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`)
+      return
+    }
     draft.value.assets.push({ key: `file-${file.id}`, file: { ...file } })
     const project = projectWithDraft()
     if (project && countImagesInBlocks(project.blocks) > MAX_PAGE_IMAGES) {
@@ -150,7 +167,11 @@ function attachResource(file: APIFileModel, insert = true) {
   if (!insert) return
   const key = draft.value.assets.find((asset) => asset.file.id === file.id)?.key ?? `file-${file.id}`
   codeEditor.value?.insertText(
-    activeLanguage.value === 'html' ? `\n<img data-vtsuru-asset="${key}" alt="">` : `var(--vtsuru-asset-${key})`,
+    activeLanguage.value === 'html'
+      ? `\n<img data-vtsuru-asset="${key}" alt="">`
+      : activeLanguage.value === 'css'
+        ? `var(--vtsuru-asset-${key})`
+        : `vtsuru.getAssetUrl('${key}')`,
   )
 }
 
@@ -166,14 +187,28 @@ function syncReferencedResources() {
 }
 
 function applyChanges() {
-  const usedKeys = collectCustomHtmlAssetKeys(draft.value.html, draft.value.css)
-  draft.value.assets = draft.value.assets.filter((asset) => usedKeys.has(asset.key))
+  if (codeIssues.value.length) return
   editor.batchHistory(() => {
-    props.block.props = deepCloneJson(draft.value)
+    if (props.page) editor.currentPage.value.custom = deepCloneJson(draft.value)
+    else if (props.block) props.block.props = deepCloneJson(draft.value)
   })
   initialSnapshot.value = JSON.stringify(draft.value)
   show.value = false
   editor.message.success('自定义代码已应用')
+}
+
+function insertTemplate(key: string) {
+  const apply = () => {
+    draft.value = applyCustomCodeTemplate(draft.value, key)
+  }
+  if (!isDirty.value) return apply()
+  dialog.warning({
+    title: '替换代码',
+    content: '模板将替换当前 HTML、CSS 和 JavaScript。',
+    positiveText: '替换',
+    negativeText: '取消',
+    onPositiveClick: apply,
+  })
 }
 
 function closeEditor() {
@@ -246,7 +281,12 @@ watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], 
 })
 
 function applyCodeText(text: string) {
-  const current = activeLanguage.value === 'html' ? draft.value.html : draft.value.css
+  const current =
+    activeLanguage.value === 'html'
+      ? draft.value.html
+      : activeLanguage.value === 'css'
+        ? draft.value.css
+        : draft.value.js
   if (!current.trim()) {
     codeEditor.value?.setContent(text)
   } else {
@@ -295,9 +335,11 @@ async function onCodeFileSelected(event: Event) {
       return
     }
     const lowerName = file.name.toLowerCase()
-    let targetLang: 'html' | 'css' = activeLanguage.value
+    let targetLang: 'html' | 'css' | 'javascript' = activeLanguage.value
     if (lowerName.endsWith('.css')) {
       targetLang = 'css'
+    } else if (lowerName.endsWith('.js')) {
+      targetLang = 'javascript'
     } else if (lowerName.endsWith('.html') || lowerName.endsWith('.htm')) {
       targetLang = 'html'
     }
@@ -313,7 +355,12 @@ async function onCodeFileSelected(event: Event) {
 
 function handleClearCode() {
   const lang = activeLanguage.value.toUpperCase()
-  const current = activeLanguage.value === 'html' ? draft.value.html : draft.value.css
+  const current =
+    activeLanguage.value === 'html'
+      ? draft.value.html
+      : activeLanguage.value === 'css'
+        ? draft.value.css
+        : draft.value.js
   if (!current.trim()) {
     editor.message.info(`当前 ${lang} 代码已为空`)
     return
@@ -356,8 +403,24 @@ function confirmManualPaste() {
   >
     <DialogContent class="max-w-[min(1600px,96vw)] h-[min(920px,94dvh)] p-0 flex flex-col gap-0 overflow-hidden">
       <DialogHeader class="p-3.5 border-b flex flex-row items-center justify-between shrink-0">
-        <DialogTitle class="text-base font-semibold"> 自定义 HTML/CSS </DialogTitle>
+        <DialogTitle class="text-base font-semibold"> 自定义代码 </DialogTitle>
         <div class="flex items-center gap-2 pr-6">
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child><Button variant="outline">插入模板 / 片段</Button></DropdownMenuTrigger>
+            <DropdownMenuContent
+              ><DropdownMenuItem
+                v-for="template in CUSTOM_CODE_TEMPLATES"
+                :key="template.key"
+                @select="insertTemplate(template.key)"
+                >{{ template.label }}</DropdownMenuItem
+              ></DropdownMenuContent
+            >
+          </DropdownMenu>
+          <Button
+            variant="ghost"
+            @click="apiReferenceOpen = true"
+            >API 速查</Button
+          >
           <Tag
             v-if="codeIssues.length"
             variant="destructive"
@@ -394,9 +457,9 @@ function confirmManualPaste() {
                       variant="ghost"
                       class="size-7"
                       :disabled="uploading"
-                        aria-label="上传图片"
-                        @click="openImageUpload()"
-                      >
+                      aria-label="上传图片"
+                      @click="openImageUpload()"
+                    >
                       <CloudUploadOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -404,12 +467,12 @@ function confirmManualPaste() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-              <Input
-                v-model="resourceSearch"
-                size="xs"
-                placeholder="搜索文件"
-              />
-            </div>
+            <Input
+              v-model="resourceSearch"
+              size="xs"
+              placeholder="搜索文件"
+            />
+          </div>
           <div class="flex-1 min-h-0 overflow-y-auto p-2">
             <div
               v-if="filteredResources.length"
@@ -457,13 +520,14 @@ function confirmManualPaste() {
               <TabsList size="xs">
                 <TabsTrigger value="html"> HTML </TabsTrigger>
                 <TabsTrigger value="css"> CSS </TabsTrigger>
+                <TabsTrigger value="javascript"> JavaScript </TabsTrigger>
               </TabsList>
             </Tabs>
             <div class="flex items-center gap-1">
               <input
                 ref="codeFileInputRef"
                 type="file"
-                accept=".css,.html,.htm,.txt"
+                accept=".css,.html,.htm,.js,.txt"
                 class="hidden"
                 @change="onCodeFileSelected"
               />
@@ -541,8 +605,15 @@ function confirmManualPaste() {
               </TooltipProvider>
             </div>
           </div>
-          <div class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0 flex items-center justify-between">
-            <span>HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{ CUSTOM_CSS_MAX_BYTES }} bytes</span>
+          <div
+            class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0 flex items-center justify-between"
+          >
+            <span
+              >HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{
+                CUSTOM_CSS_MAX_BYTES
+              }}
+              bytes · JS {{ jsBytes }}/{{ CUSTOM_JS_MAX_BYTES }} bytes</span
+            >
             <span class="opacity-80">支持快捷键直接粘贴</span>
           </div>
           <div class="flex-1 min-h-0">
@@ -550,6 +621,7 @@ function confirmManualPaste() {
               ref="codeEditor"
               :html="draft.html"
               :css="draft.css"
+              :js="draft.js"
               :active-language="activeLanguage"
               :theme="monacoTheme"
               :assets="draft.assets"
@@ -557,6 +629,7 @@ function confirmManualPaste() {
               :issues="codeIssues"
               @update:html="draft.html = $event"
               @update:css="draft.css = $event"
+              @update:js="draft.js = $event"
             />
           </div>
         </section>
@@ -617,6 +690,9 @@ function confirmManualPaste() {
                 <CustomHtmlBlock
                   :block-props="draft"
                   :theme="previewTheme"
+                  :user-info="editor.account.value"
+                  :page-mode="props.page ? 'custom' : 'block'"
+                  :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
                 />
               </div>
             </div>
@@ -659,6 +735,15 @@ function confirmManualPaste() {
       </DialogFooter>
     </DialogContent>
   </Dialog>
+  <Sheet v-model:open="apiReferenceOpen">
+    <SheetContent class="w-full sm:max-w-2xl overflow-y-auto scrollbar-thin">
+      <SheetHeader
+        ><SheetTitle>window.vtsuru API</SheetTitle
+        ><SheetDescription>在 JavaScript 中使用 await vtsuru.method() 调用宿主能力。</SheetDescription></SheetHeader
+      >
+      <pre class="whitespace-pre-wrap break-words leading-relaxed">{{ VTSURU_SANDBOX_DTS }}</pre>
+    </SheetContent>
+  </Sheet>
 </template>
 
 <style scoped>

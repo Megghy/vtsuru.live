@@ -1,10 +1,14 @@
 import type { APIFileModel } from '@/api/generated/model'
 
-export const CUSTOM_HTML_MAX_BYTES = 32 * 1024
-export const CUSTOM_CSS_MAX_BYTES = 24 * 1024
-export const CUSTOM_HTML_MAX_ASSETS = 50
+import { CUSTOM_CODE_TEMPLATES } from './customHtmlTemplates'
+
+export const CUSTOM_HTML_MAX_BYTES = 256 * 1024
+export const CUSTOM_CSS_MAX_BYTES = 128 * 1024
+export const CUSTOM_JS_MAX_BYTES = 256 * 1024
+export const GLOBAL_CUSTOM_CSS_MAX_BYTES = 64 * 1024
+export const CUSTOM_HTML_MAX_ASSETS = 100
 export const CUSTOM_HTML_MIN_HEIGHT = 80
-export const CUSTOM_HTML_MAX_HEIGHT = 1600
+export const CUSTOM_HTML_MAX_HEIGHT = 10000
 export const CUSTOM_HTML_MIN_AUTO_HEIGHT = 160
 export const CUSTOM_HTML_ASSET_KEY_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/
 
@@ -16,23 +20,32 @@ export interface CustomHtmlAsset {
 export interface CustomHtmlProps {
   html: string
   css: string
-  heightMode: 'auto' | 'fixed'
+  js: string
+  heightMode: 'auto' | 'fixed' | 'viewport'
   height: number
   maxHeight: number
   assets: CustomHtmlAsset[]
   framed: boolean
   backgrounded: boolean
+  immersive: boolean
 }
 
 export const DEFAULT_CUSTOM_HTML_PROPS: Readonly<CustomHtmlProps> = {
-  html: '<section class="custom-panel">\n  <h2>自定义内容</h2>\n  <p>在代码编辑器中修改 HTML 和 CSS。</p>\n</section>',
+  html: '<section class="custom-panel">\n  <h2>自定义内容</h2>\n  <p>在代码编辑器中修改 HTML、CSS 和 JavaScript。</p>\n</section>',
   css: '.custom-panel {\n  padding: 24px;\n  border: var(--border-width) var(--border-style) var(--border);\n  border-radius: var(--radius);\n  color: var(--foreground);\n  background: var(--popover);\n  box-shadow: var(--ui-shadow);\n}\n\n.custom-panel h2 {\n  margin: 0 0 8px;\n  font-size: 22px;\n}\n\n.custom-panel p {\n  margin: 0;\n  color: var(--muted-foreground);\n}',
+  js: '',
   heightMode: 'auto',
   height: 320,
   maxHeight: 1200,
   assets: [],
   framed: false,
   backgrounded: false,
+  immersive: false,
+}
+
+export function createDefaultCustomPageProps(): CustomHtmlProps {
+  const { html, css, js } = CUSTOM_CODE_TEMPLATES[0]
+  return { ...DEFAULT_CUSTOM_HTML_PROPS, assets: [], html, css, js, heightMode: 'viewport' }
 }
 
 function asObject(value: unknown): Record<string, unknown> | null {
@@ -64,7 +77,8 @@ export function normalizeCustomHtmlProps(value: unknown): CustomHtmlProps {
   return {
     html: typeof source.html === 'string' ? source.html : '',
     css: typeof source.css === 'string' ? source.css : '',
-    heightMode: source.heightMode === 'fixed' ? 'fixed' : 'auto',
+    js: typeof source.js === 'string' ? source.js : '',
+    heightMode: source.heightMode === 'fixed' || source.heightMode === 'viewport' ? source.heightMode : 'auto',
     height: boundedInteger(
       source.height,
       DEFAULT_CUSTOM_HTML_PROPS.height,
@@ -80,6 +94,7 @@ export function normalizeCustomHtmlProps(value: unknown): CustomHtmlProps {
     assets,
     framed: typeof source.framed === 'boolean' ? source.framed : false,
     backgrounded: typeof source.backgrounded === 'boolean' ? source.backgrounded : false,
+    immersive: typeof source.immersive === 'boolean' ? source.immersive : false,
   }
 }
 

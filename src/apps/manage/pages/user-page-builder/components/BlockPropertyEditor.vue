@@ -10,6 +10,7 @@ import {
 import { computed, inject, ref, watch } from 'vue'
 
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
+import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import { getUserPageNavIconLabel, resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import type { UserPageConfig } from '@/apps/user-page/types'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
@@ -37,6 +38,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import { UserPageEditorKey } from '../context'
 import { PAGE_MODE_OPTIONS, createDefaultProject } from '../editorPageConfig'
 import BlockTypeEditor from './BlockTypeEditor.vue'
+import CustomPageSettings from './CustomPageSettings.vue'
 import ErrorBoundary from './ErrorBoundary.vue'
 import LegacyIndexSettings from './LegacyIndexSettings.vue'
 import PageAppearanceOverrides from './PageAppearanceOverrides.vue'
@@ -79,6 +81,8 @@ function handleModeChange(newMode: UserPageConfig['mode']) {
     editor.currentPage.value.block = createDefaultProject()
   } else if (newMode === 'contrib' && !editor.currentPage.value.contrib) {
     editor.currentPage.value.contrib = { scope: 'global', pageId: '' }
+  } else if (newMode === 'custom' && !editor.currentPage.value.custom) {
+    editor.currentPage.value.custom = createDefaultCustomPageProps()
   }
   editor.clearSelection()
 }
@@ -321,7 +325,8 @@ function groupSelection() {
       >
         <div :key="`${editor.currentPage.value.mode}:${!!editor.currentProject.value}:${isSelectingBlock}`">
           <!-- 1. 经典模板模式 -->
-          <template v-if="editor.currentPage.value.mode === 'legacy'">
+          <CustomPageSettings v-if="editor.currentPage.value.mode === 'custom'" />
+          <template v-else-if="editor.currentPage.value.mode === 'legacy'">
             <div class="text-xs font-semibold text-muted-foreground uppercase pt-2 pb-1 border-t border-border">
               经典模板配置
             </div>

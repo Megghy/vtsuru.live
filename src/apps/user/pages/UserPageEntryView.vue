@@ -7,6 +7,7 @@ import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackgroun
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
+import CustomPageRenderer from '@/apps/user-page/components/CustomPageRenderer.vue'
 import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vue'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
@@ -148,6 +149,14 @@ const contentClass = computed(() => ({
       :page="pageConfig.contrib"
       :user-info="userInfo"
       :bili-info="biliInfo"
+    />
+
+    <CustomPageRenderer
+      v-else-if="renderMode === 'custom'"
+      :config="pageConfig?.custom"
+      :user-info="userInfo"
+      :bili-info="biliInfo"
+      :page-slug="pageSlug"
     />
 
     <div

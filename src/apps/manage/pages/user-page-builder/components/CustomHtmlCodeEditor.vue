@@ -6,11 +6,13 @@ import type { APIFileModel } from '@/api/generated/model'
 import { configureMonacoEnvironment } from '@/apps/manage/components/monacoEnvironment'
 import type { CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
 import type { CustomCodeIssue } from '@/apps/user-page/block/customHtmlRuntime'
+import { VTSURU_SANDBOX_DTS } from '@/apps/user-page/runtime/customHtmlBridge'
 
 const props = defineProps<{
   html: string
   css: string
-  activeLanguage: 'html' | 'css'
+  js: string
+  activeLanguage: 'html' | 'css' | 'javascript'
   theme: 'vs' | 'vs-dark'
   assets: CustomHtmlAsset[]
   resources: APIFileModel[]
@@ -19,6 +21,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: 'update:html', value: string): void
   (event: 'update:css', value: string): void
+  (event: 'update:js', value: string): void
 }>()
 
 configureMonacoEnvironment()
@@ -26,9 +29,11 @@ const container = ref<HTMLElement | null>(null)
 let editor: monaco.editor.IStandaloneCodeEditor | null = null
 let htmlModel: monaco.editor.ITextModel | null = null
 let cssModel: monaco.editor.ITextModel | null = null
+let jsModel: monaco.editor.ITextModel | null = null
 let activeLanguage = props.activeLanguage
 let htmlViewState: monaco.editor.ICodeEditorViewState | null = null
 let cssViewState: monaco.editor.ICodeEditorViewState | null = null
+let jsViewState: monaco.editor.ICodeEditorViewState | null = null
 let completions: monaco.IDisposable[] = []
 
 const THEME_VARIABLES = [
@@ -114,17 +119,18 @@ function registerCompletions() {
   ]
 }
 
-function modelFor(language: 'html' | 'css') {
-  return language === 'html' ? htmlModel : cssModel
+function modelFor(language: 'html' | 'css' | 'javascript') {
+  return language === 'html' ? htmlModel : language === 'css' ? cssModel : jsModel
 }
 
-function switchLanguage(language: 'html' | 'css') {
+function switchLanguage(language: 'html' | 'css' | 'javascript') {
   if (!editor || language === activeLanguage) return
   if (activeLanguage === 'html') htmlViewState = editor.saveViewState()
-  else cssViewState = editor.saveViewState()
+  else if (activeLanguage === 'css') cssViewState = editor.saveViewState()
+  else jsViewState = editor.saveViewState()
   activeLanguage = language
   editor.setModel(modelFor(language))
-  editor.restoreViewState(language === 'html' ? htmlViewState : cssViewState)
+  editor.restoreViewState(language === 'html' ? htmlViewState : language === 'css' ? cssViewState : jsViewState)
   editor.focus()
   requestAnimationFrame(() => {
     editor?.focus()
@@ -132,8 +138,8 @@ function switchLanguage(language: 'html' | 'css') {
 }
 
 function setMarkers() {
-  if (!htmlModel || !cssModel) return
-  const mapMarkers = (field: 'html' | 'css') =>
+  if (!htmlModel || !cssModel || !jsModel) return
+  const mapMarkers = (field: 'html' | 'css' | 'js') =>
     props.issues
       .filter((item) => item.field === field || (field === 'html' && item.field === 'assets'))
       .map((item) => ({
@@ -146,6 +152,7 @@ function setMarkers() {
       }))
   monaco.editor.setModelMarkers(htmlModel, 'vtsuru-custom-html', mapMarkers('html'))
   monaco.editor.setModelMarkers(cssModel, 'vtsuru-custom-html', mapMarkers('css'))
+  monaco.editor.setModelMarkers(jsModel, 'vtsuru-custom-html', mapMarkers('js'))
 }
 
 function insertText(value: string) {
@@ -164,7 +171,7 @@ function insertText(value: string) {
   editor.focus()
 }
 
-function setContent(value: string, targetLanguage?: 'html' | 'css') {
+function setContent(value: string, targetLanguage?: 'html' | 'css' | 'javascript') {
   if (!editor) return
   if (targetLanguage && targetLanguage !== activeLanguage) {
     switchLanguage(targetLanguage)
@@ -204,6 +211,11 @@ onMounted(() => {
     'css',
     monaco.Uri.parse(`user-page-custom://component/${instance}.css`),
   )
+  jsModel = monaco.editor.createModel(
+    props.js,
+    'javascript',
+    monaco.Uri.parse(`user-page-custom://component/${instance}.js`),
+  )
   editor = monaco.editor.create(container.value!, {
     model: modelFor(activeLanguage),
     theme: props.theme,
@@ -219,7 +231,9 @@ onMounted(() => {
   })
   htmlModel.onDidChangeContent(() => emit('update:html', htmlModel!.getValue()))
   cssModel.onDidChangeContent(() => emit('update:css', cssModel!.getValue()))
+  jsModel.onDidChangeContent(() => emit('update:js', jsModel!.getValue()))
   registerCompletions()
+  completions.push(monaco.typescript.javascriptDefaults.addExtraLib(VTSURU_SANDBOX_DTS, 'file:///vtsuru-sdk.d.ts'))
   setMarkers()
 })
 
@@ -240,6 +254,12 @@ watch(
     if (cssModel && value !== cssModel.getValue()) cssModel.setValue(value)
   },
 )
+watch(
+  () => props.js,
+  (value) => {
+    if (jsModel && value !== jsModel.getValue()) jsModel.setValue(value)
+  },
+)
 watch(() => props.issues, setMarkers, { deep: true })
 
 onBeforeUnmount(() => {
@@ -247,6 +267,7 @@ onBeforeUnmount(() => {
   editor?.dispose()
   htmlModel?.dispose()
   cssModel?.dispose()
+  jsModel?.dispose()
 })
 </script>
 

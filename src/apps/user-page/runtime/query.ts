@@ -62,7 +62,7 @@ async function consumePending<T>(entry: PendingEntry, signal: AbortSignal) {
   })
 }
 
-async function loadCached<T>(
+export async function loadCached<T>(
   key: string,
   loader: (signal: AbortSignal) => Promise<T>,
   signal: AbortSignal,
