@@ -12,6 +12,7 @@ import { computed, onBeforeUnmount, ref } from 'vue'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 const props = withDefaults(
   defineProps<{
@@ -194,52 +195,47 @@ onBeforeUnmount(() => {
 
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground font-medium block">开播提醒</span>
-            <div class="flex flex-wrap gap-1">
-              <button
+            <ToggleGroup
+              type="single"
+              size="xs"
+              :model-value="String(reminder)"
+              @update:model-value="(val) => { if (val !== undefined && val !== '') reminder = val === 'null' ? null : Number(val) }"
+            >
+              <ToggleGroupItem
                 v-for="opt in reminderOptions"
                 :key="`dock-r-${opt.value}`"
-                type="button"
-                class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-                :class="
-                  reminder === opt.value
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                "
-                :aria-pressed="reminder === opt.value"
-                @click="reminder = opt.value"
+                :value="String(opt.value)"
               >
                 {{ opt.label }}
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground font-medium block">标题标签</span>
-            <div class="flex flex-wrap gap-1">
-              <button
+            <ToggleGroup
+              type="single"
+              size="xs"
+              :model-value="String(withTag)"
+              @update:model-value="(val) => { if (val !== undefined && val !== '') withTag = val === 'true' }"
+            >
+              <ToggleGroupItem
                 v-for="opt in tagOptions"
                 :key="`dock-t-${opt.value}`"
-                type="button"
-                class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-                :class="
-                  withTag === opt.value
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                "
-                :aria-pressed="withTag === opt.value"
-                @click="withTag = opt.value"
+                :value="String(opt.value)"
               >
                 {{ opt.label }}
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <div class="pt-1">
-            <input
-              :value="url"
+            <Input
+              :model-value="url"
               readonly
+              size="xs"
               aria-label="日历订阅链接"
-              class="w-full h-7 text-[11px] font-mono px-2 rounded border border-border bg-background outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              class="font-mono"
               @focus="selectUrl"
               @click="selectUrl"
             />
@@ -252,9 +248,10 @@ onBeforeUnmount(() => {
     <template v-if="!docked">
       <div class="flex items-center justify-between w-full text-xs pt-2.5 border-t border-border/60">
         <span class="text-[11px] text-muted-foreground truncate">{{ settingsSummary }}</span>
-        <button
-          type="button"
-          class="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground cursor-pointer transition-colors"
+        <Button
+          variant="ghost"
+          size="xs"
+          class="h-auto p-0 gap-1 text-[11px] text-muted-foreground"
           :aria-expanded="settingsOpen"
           aria-controls="schedule-subscription-settings"
           @click="settingsOpen = !settingsOpen"
@@ -270,7 +267,7 @@ onBeforeUnmount(() => {
             :class="{ 'rotate-180': settingsOpen }"
             aria-hidden="true"
           />
-        </button>
+        </Button>
       </div>
 
       <div
@@ -280,40 +277,38 @@ onBeforeUnmount(() => {
       >
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="text-[11px] text-muted-foreground mr-1">开播提醒:</span>
-          <button
-            v-for="opt in reminderOptions"
-            :key="`r-${opt.value}`"
-            type="button"
-            class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-            :class="
-              reminder === opt.value
-                ? 'bg-primary text-primary-foreground font-medium'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            "
-            :aria-pressed="reminder === opt.value"
-            @click="reminder = opt.value"
+          <ToggleGroup
+            type="single"
+            size="xs"
+            :model-value="String(reminder)"
+            @update:model-value="(val) => { if (val !== undefined && val !== '') reminder = val === 'null' ? null : Number(val) }"
           >
-            {{ opt.label }}
-          </button>
+            <ToggleGroupItem
+              v-for="opt in reminderOptions"
+              :key="`r-${opt.value}`"
+              :value="String(opt.value)"
+            >
+              {{ opt.label }}
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="text-[11px] text-muted-foreground mr-1">标题标签:</span>
-          <button
-            v-for="opt in tagOptions"
-            :key="`t-${opt.value}`"
-            type="button"
-            class="px-2 py-0.5 rounded text-[11px] transition cursor-pointer"
-            :class="
-              withTag === opt.value
-                ? 'bg-primary text-primary-foreground font-medium'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            "
-            :aria-pressed="withTag === opt.value"
-            @click="withTag = opt.value"
+          <ToggleGroup
+            type="single"
+            size="xs"
+            :model-value="String(withTag)"
+            @update:model-value="(val) => { if (val !== undefined && val !== '') withTag = val === 'true' }"
           >
-            {{ opt.label }}
-          </button>
+            <ToggleGroupItem
+              v-for="opt in tagOptions"
+              :key="`t-${opt.value}`"
+              :value="String(opt.value)"
+            >
+              {{ opt.label }}
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </div>
     </template>

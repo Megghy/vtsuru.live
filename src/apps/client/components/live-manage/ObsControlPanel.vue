@@ -31,13 +31,14 @@ const handleToggleConnect = () => {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
-            <button
-              type="button"
-              class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-help"
+            <Button
+              variant="ghost"
+              size="xs"
+              class="gap-1 text-muted-foreground hover:text-foreground cursor-help"
             >
               <HelpCircle class="size-3.5" />
               使用说明
-            </button>
+            </Button>
           </TooltipTrigger>
           <TooltipContent class="max-w-[280px] text-xs space-y-1.5 p-3">
             <p class="font-semibold text-foreground">在 OBS 中开启 WebSocket 服务：</p>

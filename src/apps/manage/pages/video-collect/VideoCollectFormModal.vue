@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
+import { Textarea } from '@/shared/ui/textarea'
 import { useMessage } from '@/shared/utils'
 
 const props = defineProps<{
@@ -152,12 +153,11 @@ function submit() {
 
         <div class="space-y-1.5">
           <label class="font-semibold text-foreground">征集说明</label>
-          <textarea
+          <Textarea
             v-model="model.description"
             rows="2"
             placeholder="填写主题、投稿要求或注意事项（选填）"
             maxlength="300"
-            class="w-full text-xs rounded-md border border-input bg-transparent px-3 py-2 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
 
@@ -203,23 +203,23 @@ function submit() {
 
         <!-- 高级折叠面板 -->
         <div class="border border-border rounded-lg overflow-hidden">
-          <button
-            type="button"
-            class="w-full flex items-center justify-between p-2.5 bg-muted/30 hover:bg-muted/50 text-left font-semibold text-foreground transition-colors"
+          <Button
+            variant="ghost"
+            class="w-full h-auto justify-between p-2.5 bg-muted/30 rounded-none font-semibold"
             @click="showAdvanced = !showAdvanced"
           >
             <div class="flex items-center gap-1.5">
               <component
                 :is="Filter24Regular"
-                class="h-3.5 w-3.5 text-brand"
+                class="size-3.5 text-brand"
               />
               <span>高级过滤与投稿限制</span>
             </div>
             <component
               :is="showAdvanced ? ChevronUp24Regular : ChevronDown24Regular"
-              class="h-3.5 w-3.5 text-muted-foreground"
+              class="size-3.5 text-muted-foreground"
             />
-          </button>
+          </Button>
 
           <div
             v-if="showAdvanced"

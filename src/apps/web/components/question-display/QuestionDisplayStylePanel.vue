@@ -24,6 +24,7 @@ import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 const setting = defineModel<SettingQuestionDisplay>({ required: true })
 
@@ -128,11 +129,11 @@ function resetToDefault() {
       </div>
 
       <div class="preset-grid grid grid-cols-2 gap-2">
-        <button
+        <Button
           v-for="preset in QUESTION_DISPLAY_PRESETS"
           :key="preset.name"
-          type="button"
-          class="preset-card p-2 rounded-lg border text-left flex flex-col gap-1 transition cursor-pointer"
+          variant="outline"
+          class="preset-card h-auto p-2 rounded-lg text-left flex flex-col gap-1 items-stretch justify-start font-normal"
           :class="[
             isPresetSelected(preset.value)
               ? 'border-primary bg-primary/5 shadow-xs'
@@ -176,7 +177,7 @@ function resetToDefault() {
           </div>
           <strong class="preset-name text-xs text-foreground mt-0.5">{{ preset.name }}</strong>
           <small class="preset-desc text-[10px] text-muted-foreground line-clamp-1">{{ preset.description }}</small>
-        </button>
+        </Button>
       </div>
     </div>
 
@@ -294,49 +295,49 @@ function resetToDefault() {
       <div class="grid grid-cols-2 gap-3">
         <div class="space-y-1">
           <label class="text-[11px] text-muted-foreground font-medium">水平对齐</label>
-          <div class="flex items-center bg-muted/60 p-0.5 rounded-md">
-            <button
+          <ToggleGroup
+            type="single"
+            size="xs"
+            class="w-full"
+            :model-value="String(setting.align ?? QuestionDisplayAlign.Left)"
+            @update:model-value="(val) => { if (val) setting.align = Number(val) }"
+          >
+            <ToggleGroupItem
               v-for="al in [
                 { label: '左', value: QuestionDisplayAlign.Left },
                 { label: '中', value: QuestionDisplayAlign.Center },
                 { label: '右', value: QuestionDisplayAlign.Right },
               ]"
               :key="al.value"
-              type="button"
-              class="flex-1 py-1 text-center rounded transition"
-              :class="
-                setting.align === al.value
-                  ? 'bg-background shadow-xs text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              "
-              @click="setting.align = al.value"
+              :value="String(al.value)"
+              class="flex-1"
             >
               {{ al.label }}
-            </button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
         <div class="space-y-1">
           <label class="text-[11px] text-muted-foreground font-medium">垂直对齐</label>
-          <div class="flex items-center bg-muted/60 p-0.5 rounded-md">
-            <button
+          <ToggleGroup
+            type="single"
+            size="xs"
+            class="w-full"
+            :model-value="String(setting.verticalAlign ?? QuestionDisplayVerticalAlign.Top)"
+            @update:model-value="(val) => { if (val) setting.verticalAlign = Number(val) }"
+          >
+            <ToggleGroupItem
               v-for="val in [
                 { label: '上', value: QuestionDisplayVerticalAlign.Top },
                 { label: '中', value: QuestionDisplayVerticalAlign.Center },
                 { label: '下', value: QuestionDisplayVerticalAlign.Bottom },
               ]"
               :key="val.value"
-              type="button"
-              class="flex-1 py-1 text-center rounded transition"
-              :class="
-                setting.verticalAlign === val.value
-                  ? 'bg-background shadow-xs text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              "
-              @click="setting.verticalAlign = val.value"
+              :value="String(val.value)"
+              class="flex-1"
             >
               {{ val.label }}
-            </button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
       </div>
 

@@ -16,10 +16,10 @@ describe('CustomPageRenderer', () => {
 
   it.each([
     undefined,
-    { ...createDefaultCustomPageProps(), js: null },
+    { ...createDefaultCustomPageProps(), source: null },
     {
       ...createDefaultCustomPageProps(),
-      html: '<script>alert(1)</script>',
+      source: '<style>@import url(https://evil.example/a.css);</style>',
     },
   ])('rejects invalid published configuration before creating the sandbox', (config) => {
     const wrapper = mount(CustomPageRenderer, { props: { config: config as never } })

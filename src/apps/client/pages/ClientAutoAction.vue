@@ -328,16 +328,11 @@ const triggerTypeOptions = [
               {{ group.label }}
             </span>
             <div class="space-y-0.5">
-              <button
+              <Button
                 v-for="item in group.children"
                 :key="item.key"
-                type="button"
-                class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-colors text-left"
-                :class="
-                  currentMenuKey === item.key
-                    ? 'bg-primary text-primary-foreground font-medium shadow-sm'
-                    : 'text-foreground hover:bg-muted'
-                "
+                :variant="currentMenuKey === item.key ? 'default' : 'ghost'"
+                class="w-full justify-between text-xs px-2.5"
                 @click="handleMenuUpdate(item.key)"
               >
                 <div class="flex items-center gap-2 truncate">
@@ -372,7 +367,7 @@ const triggerTypeOptions = [
                     "
                   />
                 </div>
-              </button>
+              </Button>
             </div>
           </div>
         </div>

@@ -266,14 +266,10 @@ async function setAsDisplayTemplate() {
 </script>
 
 <template>
-  <div class="relative flex flex-col gap-3">
-    <div
-      v-if="isSaving"
-      class="absolute inset-0 bg-background/60 backdrop-blur-sm z-50 flex items-center justify-center"
-    >
-      <Spin />
-    </div>
-
+  <Spin
+    :show="isSaving"
+    class="relative flex flex-col gap-3"
+  >
     <Alert class="bg-primary/5 border-primary/20 text-xs py-2 text-primary">
       <AlertDescription> 如果有合适的设计稿或者想法可以给我说然后做成模板捏 </AlertDescription>
     </Alert>
@@ -350,12 +346,10 @@ async function setAsDisplayTemplate() {
       v-if="capabilityGroups.length"
       class="py-2.5 px-3.5 rounded-lg bg-muted border border-border"
     >
-      <div
-        class="flex items-center gap-1.5 cursor-pointer select-none"
-        role="button"
-        tabindex="0"
+      <Button
+        variant="ghost"
+        class="w-full h-auto p-0 justify-start gap-1.5"
         @click="capabilityExpanded = !capabilityExpanded"
-        @keydown.enter="capabilityExpanded = !capabilityExpanded"
       >
         <component
           :is="ChevronDown20Regular"
@@ -366,7 +360,7 @@ async function setAsDisplayTemplate() {
         <span class="text-[11px] text-muted-foreground">
           共 {{ capabilityCount }} 项{{ capabilityExpanded ? '' : ' · 点击展开' }}
         </span>
-      </div>
+      </Button>
       <div
         v-show="capabilityExpanded"
         class="flex flex-wrap gap-3.5 mt-2.5"
@@ -476,7 +470,7 @@ async function setAsDisplayTemplate() {
         </Transition>
       </div>
     </div>
-  </div>
+  </Spin>
 </template>
 
 <style scoped>

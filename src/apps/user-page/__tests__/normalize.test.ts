@@ -59,7 +59,7 @@ describe('migrateUserPagesSettings', () => {
 
   it('保留自定义页代码、资源和沉浸设置，也保留非法值供校验器拒绝', () => {
     const custom = createDefaultCustomPageProps()
-    custom.js = 'window.vtsuru.getContext()'
+    custom.source = '<script setup>await vtsuru.getContext()</script>'
     custom.assets = [{ key: 'cover', file: { id: 1, path: '/file/1' } as any }]
     custom.immersive = true
     const source = { version: 2, home: { mode: 'custom', custom }, pages: {} }
@@ -70,7 +70,7 @@ describe('migrateUserPagesSettings', () => {
     expect(source.home.custom).toEqual(custom)
 
     const invalid = structuredClone(source) as any
-    invalid.home.custom.js = 1
+    invalid.home.custom.source = 1
     invalid.home.custom.assets = 'broken'
     invalid.home.custom.immersive = 'yes'
     expect(migrateUserPagesSettings(invalid).home?.custom).toEqual(invalid.home.custom)

@@ -505,19 +505,19 @@ defineExpose({ Config, DefaultConfig })
         aria-label="周次切换与导出"
       >
         <div class="timegrid-controls__nav">
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             class="timegrid-ctrl-btn"
-            type="button"
             :disabled="!hasPreviousWeek"
             aria-label="上一周"
-            title="上一周"
             @click="moveWeek(-1)"
           >
             <component
               :is="ChevronLeft20Regular"
               class="size-4"
             />
-          </button>
+          </Button>
 
           <div class="timegrid-controls__range">
             <Select
@@ -547,34 +547,36 @@ defineExpose({ Config, DefaultConfig })
             </span>
           </div>
 
-          <button
+          <Button
+            variant="ghost"
+            size="icon-xs"
             class="timegrid-ctrl-btn"
-            type="button"
             :disabled="!hasNextWeek"
             aria-label="下一周"
-            title="下一周"
             @click="moveWeek(1)"
           >
             <component
               :is="ChevronRight20Regular"
               class="size-4"
             />
-          </button>
+          </Button>
 
-          <button
+          <Button
             v-if="!isViewingCurrentRealWeek && weekOptions.length"
+            variant="outline"
+            size="xs"
             class="timegrid-ctrl-btn timegrid-ctrl-btn--today"
-            type="button"
             @click="goToThisWeek"
           >
             <span>本周</span>
-          </button>
+          </Button>
         </div>
 
         <div class="timegrid-controls__actions">
-          <button
+          <Button
+            variant="outline"
+            size="xs"
             class="timegrid-ctrl-btn timegrid-ctrl-btn--export"
-            type="button"
             :disabled="saving"
             @click="saveScheduleImage"
           >
@@ -583,7 +585,7 @@ defineExpose({ Config, DefaultConfig })
               class="size-4"
             />
             <span>{{ saving ? '生成中...' : '导出海报' }}</span>
-          </button>
+          </Button>
         </div>
       </nav>
 
@@ -835,11 +837,12 @@ defineExpose({ Config, DefaultConfig })
         <div class="timegrid-legend">
           <span class="timegrid-legend__label">活动分类 (点击筛选):</span>
           <div class="timegrid-legend__items">
-            <button
+            <Button
               v-for="cat in legendItems"
               :key="cat.key"
-              type="button"
-              class="timegrid-legend-pill"
+              variant="outline"
+              size="xs"
+              class="timegrid-legend-pill font-normal"
               :class="{ 'is-active': activeCategoryFilter === cat.key }"
               :style="{
                 '--legend-color': cat.color,
@@ -852,15 +855,16 @@ defineExpose({ Config, DefaultConfig })
               />
               <span class="timegrid-legend-pill__name">{{ cat.name }}</span>
               <span class="timegrid-legend-pill__count">{{ cat.count }}</span>
-            </button>
-            <button
+            </Button>
+            <Button
               v-if="activeCategoryFilter"
-              type="button"
-              class="timegrid-legend-pill timegrid-legend-pill--clear"
+              variant="ghost"
+              size="xs"
+              class="timegrid-legend-pill timegrid-legend-pill--clear font-normal"
               @click="activeCategoryFilter = null"
             >
               重置筛选
-            </button>
+            </Button>
           </div>
         </div>
       </footer>

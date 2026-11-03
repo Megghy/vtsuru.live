@@ -2,6 +2,7 @@
 import { EyeOff16Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
+import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 import { formatClock } from '../core/format'
@@ -35,22 +36,24 @@ const victim = computed(() => grid.value.nextVictim())
             :event="card.display"
             :show-medal="false"
           />
-          <button
-            class="appearance-none bg-transparent border-0 p-0 cursor-pointer overflow-hidden text-ellipsis whitespace-nowrap min-w-0"
+          <Button
+            variant="ghost"
+            size="xs"
+            class="h-auto p-0 min-w-0 max-w-full justify-start text-muted-foreground hover:text-foreground text-[0.8em] font-normal"
             data-user-trigger
-            type="button"
             @click.stop="ui.openUserMenu(card.display, $event)"
           >
-            {{ card.display.uname }}
-          </button>
+            <span class="truncate">{{ card.display.uname }}</span>
+          </Button>
           <Popover v-if="card.count > 1">
             <PopoverTrigger as-child>
-              <button
-                class="appearance-none bg-transparent border-0 cursor-pointer ml-auto px-1.5 rounded-full bg-[var(--brand-soft)] text-[var(--brand)] font-semibold"
-                type="button"
+              <Button
+                variant="secondary"
+                size="xs"
+                class="h-auto py-0.5 px-1.5 ml-auto rounded-full font-semibold text-[0.8em]"
               >
                 ×{{ card.count }}
-              </button>
+              </Button>
             </PopoverTrigger>
             <PopoverContent class="max-h-[280px] overflow-y-auto p-2 w-auto">
               <div class="grid gap-1 text-xs min-w-[200px]">
@@ -65,17 +68,18 @@ const victim = computed(() => grid.value.nextVictim())
               </div>
             </PopoverContent>
           </Popover>
-          <button
-            class="appearance-none bg-transparent border-0 cursor-pointer inline-flex opacity-0 group-hover/slot:opacity-80 ml-auto"
-            type="button"
-            title="隐藏这条弹幕（刷新后恢复）"
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            class="size-5 p-0 opacity-0 group-hover/slot:opacity-80 ml-auto text-muted-foreground hover:text-foreground"
+            aria-label="隐藏这条弹幕"
             @click="grid.hide(index)"
           >
             <component
               :is="EyeOff16Regular"
-              class="h-4 w-4"
+              class="size-3"
             />
-          </button>
+          </Button>
         </div>
         <div class="mt-1 font-semibold wrap-anywhere">
           <EventMessage

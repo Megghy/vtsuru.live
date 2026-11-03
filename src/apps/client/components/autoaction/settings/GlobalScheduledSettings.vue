@@ -6,6 +6,7 @@ import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { NumberField } from '@/shared/ui/number-field'
+import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const autoActionStore = useAutoAction()
@@ -61,23 +62,20 @@ watch(
 
       <div class="space-y-1.5 p-2.5 rounded border bg-muted/20">
         <span class="text-xs font-medium text-foreground block">全局发送模式</span>
-        <div class="flex flex-col gap-2">
+        <RadioGroup
+          :model-value="autoActionStore.globalSchedulingMode"
+          class="flex flex-col gap-2"
+          @update:model-value="(val) => (autoActionStore.globalSchedulingMode = val as any)"
+        >
           <label
             v-for="option in schedulingModeOptions"
             :key="option.value"
             class="flex items-center gap-2 cursor-pointer text-xs"
           >
-            <input
-              type="radio"
-              name="globalSchedulingMode"
-              :value="option.value"
-              :checked="autoActionStore.globalSchedulingMode === option.value"
-              class="accent-primary"
-              @change="autoActionStore.globalSchedulingMode = option.value as any"
-            />
+            <RadioGroupItem :value="option.value" />
             <span>{{ option.label }}</span>
           </label>
-        </div>
+        </RadioGroup>
       </div>
     </CardContent>
   </Card>

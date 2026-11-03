@@ -327,14 +327,14 @@ async function addUploadFileSong() {
 
     <!-- 上传区域 -->
     <div class="space-y-2">
-      <button
+      <Button
         ref="dropZoneRef"
-        type="button"
-        class="w-full border border-dashed rounded-lg p-6 flex-col-center cursor-pointer transition-colors"
+        variant="outline"
+        class="w-full h-auto border-dashed rounded-lg p-6 flex-col-center font-normal"
         :class="
           isOverDropZone
             ? 'border-primary bg-primary/5'
-            : 'border-input hover:border-primary bg-card hover:bg-muted/30'
+            : 'bg-card'
         "
         @click="openSheetPicker()"
       >
@@ -343,7 +343,7 @@ async function addUploadFileSong() {
           {{ selectedFile ? selectedFile.name : '点击选择 Excel (.xlsx, .xls) 或 CSV 文件' }}
         </span>
         <span class="text-[11px] text-muted-foreground mt-1">支持拖拽或直接点击选择</span>
-      </button>
+      </Button>
 
       <div class="flex justify-end">
         <Button

@@ -176,13 +176,15 @@ const macroProgress = computed(() => {
         <AlertDescription class="text-xs m-0">
           {{ vts.lastError }}
         </AlertDescription>
-        <button
-          type="button"
-          class="text-xs ml-2 hover:opacity-80"
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          class="size-5 ml-2 text-destructive hover:bg-destructive/10"
+          aria-label="关闭提示"
           @click="vts.lastError = null"
         >
           ✕
-        </button>
+        </Button>
       </Alert>
 
       <Transition name="vts-slide">

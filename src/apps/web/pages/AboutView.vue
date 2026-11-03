@@ -96,13 +96,14 @@ const timelineData: TimelineRecord[] = [
                 873260337
               </a>
               <span>或者</span>
-              <button
-                type="button"
-                class="text-primary hover:underline cursor-pointer"
+              <Button
+                variant="link"
+                size="xs"
+                class="h-auto p-0"
                 @click="$router.push({ name: 'manage-feedback' })"
               >
                 反馈页面
-              </button>
+              </Button>
               <Separator
                 orientation="vertical"
                 class="h-3"

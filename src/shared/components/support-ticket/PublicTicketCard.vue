@@ -6,6 +6,7 @@ import { computed } from 'vue'
 import type { SupportTicketModel } from '@/api/generated/model'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
 import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 
 const props = defineProps<{
   ticket: SupportTicketModel
@@ -28,9 +29,9 @@ const badgeVariant = computed(() => {
 </script>
 
 <template>
-  <button
-    type="button"
-    class="flex min-w-0 min-h-24 overflow-hidden p-0 border border-border rounded-lg text-foreground bg-background text-left cursor-pointer transition-colors hover:border-[var(--brand)] hover:bg-muted"
+  <Button
+    variant="outline"
+    class="flex min-w-0 min-h-24 h-auto overflow-hidden p-0 rounded-lg text-left font-normal items-stretch justify-start"
   >
     <img
       v-if="ticket.images[0]"
@@ -42,7 +43,6 @@ const badgeVariant = computed(() => {
       <div class="flex items-center justify-between gap-2.5 text-muted-foreground text-xs">
         <Badge
           :variant="badgeVariant"
-          class="text-[10px] h-4.5 px-1.5 font-normal"
         >
           {{ supportTicketStatusMeta[ticket.status].label }}
         </Badge>
@@ -56,5 +56,5 @@ const badgeVariant = computed(() => {
         <span>{{ relativeTime }}</span>
       </div>
     </div>
-  </button>
+  </Button>
 </template>

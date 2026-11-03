@@ -341,15 +341,16 @@ async function handleBatchDelete() {
                 v-if="row.author?.length"
                 class="flex items-center gap-1 flex-wrap"
               >
-                <button
+                <Button
                   v-for="a in row.author"
                   :key="a"
-                  type="button"
-                  class="px-1.5 py-0.5 rounded text-[10px] bg-muted/60 hover:bg-primary/10 hover:text-primary transition"
+                  variant="ghost"
+                  size="xs"
+                  class="h-auto px-1.5 py-0.5 rounded text-[10px] bg-muted/60 hover:bg-primary/10 hover:text-primary font-normal"
                   @click="selectedAuthorFilter = selectedAuthorFilter === a ? null : a"
                 >
                   {{ a }}
-                </button>
+                </Button>
               </div>
               <span
                 v-else

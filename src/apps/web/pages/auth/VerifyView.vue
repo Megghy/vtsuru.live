@@ -144,7 +144,7 @@ onUnmounted(() => {
       <div class="grid w-full gap-2">
         <Button
           v-if="phase === 'success'"
-          class="w-full flex items-center justify-center gap-2"
+          class="w-full"
           @click="goManage"
         >
           进入主播后台

@@ -71,7 +71,7 @@ function onScroll(e: Event) {
   <div class="flex flex-col h-full min-h-0 gap-2">
     <Button
       variant="outline"
-      class="conv-list__new w-full border-dashed flex items-center justify-center gap-1.5"
+      class="conv-list__new w-full border-dashed"
       @click="store.newConversation"
     >
       <component

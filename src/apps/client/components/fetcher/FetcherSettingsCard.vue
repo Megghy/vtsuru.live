@@ -13,6 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -137,54 +138,45 @@ async function handleForceRestartDanmaku() {
 
       <div class="h-px bg-border" />
 
-      <!-- 弹幕客户端模式选择 -->
-      <div class="space-y-2">
-        <span class="text-xs font-semibold text-foreground block">弹幕客户端模式</span>
-        <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-          <button
-            type="button"
-            :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
-            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="
-              settings.settings.useDanmakuClientType === 'openlive'
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:text-foreground'
-            "
-            @click="onSwitchDanmakuClientMode('openlive')"
+        <!-- 弹幕客户端模式选择 -->
+        <div class="space-y-2">
+          <span class="text-xs font-semibold text-foreground block">弹幕客户端模式</span>
+          <ToggleGroup
+            type="single"
+            :model-value="settings.settings.useDanmakuClientType"
+            @update:model-value="(val) => { if (val) onSwitchDanmakuClientMode(val as any) }"
           >
-            开放平台
-          </button>
-
-          <TooltipProvider>
-            <Tooltip v-if="!biliCookie.isCookieValid">
-              <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  disabled
-                  class="px-2.5 py-1 text-xs font-medium rounded-sm opacity-50 cursor-not-allowed"
-                >
-                  直接连接
-                </button>
-              </TooltipTrigger>
-              <TooltipContent class="text-xs"> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
-            </Tooltip>
-            <button
-              v-else
-              type="button"
+            <ToggleGroupItem
+              value="openlive"
               :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
-              class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-              :class="
-                settings.settings.useDanmakuClientType === 'direct'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'hover:text-foreground'
-              "
-              @click="onSwitchDanmakuClientMode('direct')"
             >
-              直接连接
-            </button>
-          </TooltipProvider>
+              开放平台
+            </ToggleGroupItem>
+
+            <TooltipProvider>
+              <Tooltip v-if="!biliCookie.isCookieValid">
+                <TooltipTrigger as-child>
+                  <span>
+                    <ToggleGroupItem
+                      value="direct"
+                      disabled
+                    >
+                      直接连接
+                    </ToggleGroupItem>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent class="text-xs"> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
+              </Tooltip>
+              <ToggleGroupItem
+                v-else
+                value="direct"
+                :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
+              >
+                直接连接
+              </ToggleGroupItem>
+            </TooltipProvider>
+          </ToggleGroup>
         </div>
-      </div>
 
       <div>
         <Popconfirm

@@ -4,6 +4,7 @@ import { Check, ChevronsUpDown, Loader2, X } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
 
 import { getApiUserAutocomplete } from '@/api/generated/user/user'
+import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
@@ -144,14 +145,17 @@ watch(
             >{{ placeholder || '输入B站UID/用户名搜索(可选)' }}</span
           >
           <div class="flex items-center gap-1 ml-1 text-muted-foreground">
-            <button
+            <Button
               v-if="model && !disabled"
               type="button"
-              class="hover:text-foreground p-0.5 rounded"
+              variant="ghost"
+              size="icon-xs"
+              class="size-4 p-0 text-muted-foreground hover:text-foreground"
+              aria-label="清空选择"
               @click.stop="clearSelection"
             >
               <X class="size-3" />
-            </button>
+            </Button>
             <ChevronsUpDown class="size-3.5 opacity-50" />
           </div>
         </div>

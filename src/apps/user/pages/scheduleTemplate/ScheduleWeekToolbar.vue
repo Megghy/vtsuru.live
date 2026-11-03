@@ -10,6 +10,7 @@ import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
 import type { ResponseScheduleModel } from '@/api/generated/model'
+import { Button } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { toast } from '@/shared/utils'
 
@@ -96,19 +97,19 @@ async function saveScheduleImage() {
     aria-label="日程周次与导出"
   >
     <div class="flex items-center gap-2 flex-1 min-w-0">
-      <button
-        class="size-9 rounded-md bg-secondary border border-border text-card-foreground flex-center cursor-pointer transition-colors hover:not-disabled:bg-secondary/80 hover:not-disabled:border-primary disabled:opacity-35 disabled:cursor-not-allowed"
-        type="button"
+      <Button
+        variant="secondary"
+        size="icon"
+        class="size-9 text-card-foreground border border-border"
         :disabled="!hasPreviousWeek"
         aria-label="上一周"
-        title="上一周"
         @click="moveWeek(-1)"
       >
         <component
           :is="ChevronLeft20Regular"
           class="size-4"
         />
-      </button>
+      </Button>
 
       <div class="flex flex-col gap-1.5 flex-1 min-w-0">
         <div class="flex items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -146,25 +147,26 @@ async function saveScheduleImage() {
         </span>
       </div>
 
-      <button
-        class="size-9 rounded-md bg-secondary border border-border text-card-foreground flex-center cursor-pointer transition-colors hover:not-disabled:bg-secondary/80 hover:not-disabled:border-primary disabled:opacity-35 disabled:cursor-not-allowed"
-        type="button"
+      <Button
+        variant="secondary"
+        size="icon"
+        class="size-9 text-card-foreground border border-border"
         :disabled="!hasNextWeek"
         aria-label="下一周"
-        title="下一周"
         @click="moveWeek(1)"
       >
         <component
           :is="ChevronRight20Regular"
           class="size-4"
         />
-      </button>
+      </Button>
     </div>
 
-    <button
+    <Button
       v-if="captureTarget"
-      class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-md bg-primary text-primary-foreground border-0 cursor-pointer transition-opacity whitespace-nowrap hover:not-disabled:opacity-90 disabled:opacity-50 disabled:cursor-wait"
-      type="button"
+      variant="default"
+      size="sm"
+      class="gap-1.5 whitespace-nowrap"
       :disabled="saving"
       :aria-busy="saving"
       @click="saveScheduleImage"
@@ -174,6 +176,6 @@ async function saveScheduleImage() {
         class="size-4"
       />
       <span>{{ saving ? '正在生成' : '保存图片' }}</span>
-    </button>
+    </Button>
   </nav>
 </template>

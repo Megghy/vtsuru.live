@@ -86,7 +86,7 @@ export const PAGE_MODE_OPTIONS: PageModeOption[] = [
     label: '扩展组件页',
     description: '加载社区开发者贡献的独立定制页面组件（如专属互动页、小游戏等，需配置页面 ID）。',
   },
-  { value: 'custom', label: '自定义代码页', description: '使用 HTML、CSS 与 JavaScript 编写完整页面。' },
+  { value: 'custom', label: '自定义代码页', description: '使用 Vue 单文件组件编写完整页面。' },
 ]
 
 export function getPageModeLabel(mode: UserPageConfig['mode']) {

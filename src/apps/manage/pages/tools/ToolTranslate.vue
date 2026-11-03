@@ -6,6 +6,8 @@ import { trackManageToolSuccess } from '@/shared/services/umami'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Textarea } from '@/shared/ui/textarea'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
@@ -107,15 +109,22 @@ async function copyResult() {
             </SelectContent>
           </Select>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            class="w-8 rounded-full"
-            title="交换原文和译文"
-            @click="swapTexts"
-          >
-            ⇄
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="rounded-full"
+                  aria-label="交换原文和译文"
+                  @click="swapTexts"
+                >
+                  ⇄
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>交换原文和译文</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <span class="text-xs text-muted-foreground"> 目标语言 </span>
           <Select v-model="targetLang">
@@ -145,9 +154,9 @@ async function copyResult() {
                 {{ charCount }}{{ mode === 'cloud' ? ' / 5000' : '' }}
               </span>
             </div>
-            <textarea
+            <Textarea
               v-model="sourceText"
-              class="w-full flex-1 min-h-[300px] resize-y p-3 rounded-md text-sm leading-[1.7] border border-border bg-muted font-inherit outline-none box-border focus:border-primary"
+              class="min-h-[300px]"
               placeholder="输入要翻译的文本..."
             />
           </div>
@@ -164,9 +173,9 @@ async function copyResult() {
                 复制
               </Button>
             </div>
-            <textarea
+            <Textarea
               v-model="resultText"
-              class="w-full flex-1 min-h-[300px] resize-y p-3 rounded-md text-sm leading-[1.7] border border-border bg-muted font-inherit outline-none box-border focus:border-primary"
+              class="min-h-[300px]"
               placeholder="翻译结果..."
               readonly
             />

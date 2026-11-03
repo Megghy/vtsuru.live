@@ -16,6 +16,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 
 const message = useMessage()
@@ -315,44 +316,41 @@ async function onRemoveBgConfirm(blob: Blob) {
               </div>
               <div class="prop-row">
                 <span>样式</span>
-                <div class="inline-flex rounded-md shadow-xs border border-input overflow-hidden">
-                  <button
-                    type="button"
-                    class="h-7 px-2.5 text-xs font-bold transition-colors border-r border-input last:border-r-0 cursor-pointer"
-                    :class="
-                      (selectedLayer as TextLayer).bold
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background hover:bg-muted'
-                    "
-                    @click="(selectedLayer as TextLayer).bold = !(selectedLayer as TextLayer).bold"
+                <ToggleGroup
+                  type="multiple"
+                  size="xs"
+                  :model-value="[
+                    (selectedLayer as TextLayer).bold ? 'bold' : '',
+                    (selectedLayer as TextLayer).italic ? 'italic' : '',
+                    (selectedLayer as TextLayer).underline ? 'underline' : '',
+                  ].filter(Boolean)"
+                  @update:model-value="(val) => {
+                    const arr = (val as string[]) || []
+                    const l = selectedLayer as TextLayer
+                    l.bold = arr.includes('bold')
+                    l.italic = arr.includes('italic')
+                    l.underline = arr.includes('underline')
+                  }"
+                >
+                  <ToggleGroupItem
+                    value="bold"
+                    class="px-2.5 font-bold"
                   >
                     B
-                  </button>
-                  <button
-                    type="button"
-                    class="h-7 px-2.5 text-xs italic transition-colors border-r border-input last:border-r-0 cursor-pointer"
-                    :class="
-                      (selectedLayer as TextLayer).italic
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background hover:bg-muted'
-                    "
-                    @click="(selectedLayer as TextLayer).italic = !(selectedLayer as TextLayer).italic"
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="italic"
+                    class="px-2.5 italic"
                   >
                     I
-                  </button>
-                  <button
-                    type="button"
-                    class="h-7 px-2.5 text-xs underline transition-colors cursor-pointer"
-                    :class="
-                      (selectedLayer as TextLayer).underline
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-background hover:bg-muted'
-                    "
-                    @click="(selectedLayer as TextLayer).underline = !(selectedLayer as TextLayer).underline"
+                  </ToggleGroupItem>
+                  <ToggleGroupItem
+                    value="underline"
+                    class="px-2.5 underline"
                   >
                     U
-                  </button>
-                </div>
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
               <div class="prop-row">
                 <span>颜色</span>

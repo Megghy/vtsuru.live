@@ -19,6 +19,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tag } from '@/shared/ui/tag'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
 const settingsStore = useTranscriptionSettings()
@@ -586,22 +587,16 @@ function removeHotword(index: number) {
         <div class="flex items-start gap-3">
           <span class="w-24 text-muted-foreground shrink-0 pt-1.5">热词</span>
           <div class="flex-1 flex flex-wrap items-center gap-1.5">
-            <Badge
+            <Tag
               v-for="(word, wIdx) in activeProfile.hotwords || []"
               :key="wIdx"
               variant="secondary"
-              class="text-xs h-6 px-2 gap-1"
+              :closable="!isRunning"
+              :disabled="isRunning"
+              @close="removeHotword(wIdx)"
             >
-              <span>{{ word }}</span>
-              <button
-                type="button"
-                :disabled="isRunning"
-                class="hover:text-destructive transition-colors ml-0.5 text-muted-foreground"
-                @click="removeHotword(wIdx)"
-              >
-                ✕
-              </button>
-            </Badge>
+              {{ word }}
+            </Tag>
             <div class="flex items-center gap-1">
               <Input
                 v-model="newHotword"

@@ -22,6 +22,7 @@ import type { BiliAccountItem } from '@/apps/client/store/useBiliAccountManager'
 import { useBiliAccountManager } from '@/apps/client/store/useBiliAccountManager'
 import type { CookieCloudConfig } from '@/apps/client/store/useBiliCookie'
 import { useTauriStore } from '@/apps/client/store/useTauriStore'
+import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -415,11 +416,15 @@ async function handleRemoveAccount(id: string) {
           <div class="flex flex-wrap items-center justify-between gap-3">
             <!-- 账号头像与信息 -->
             <div class="flex items-center gap-3">
-              <img
-                :src="acc.face || 'https://static.hdslb.com/images/member/noface.gif'"
-                class="size-11 rounded-full border object-cover shrink-0"
-                alt="avatar"
-              />
+              <Avatar class="size-11 border shrink-0">
+                <AvatarImage
+                  :src="acc.face"
+                  :alt="acc.name"
+                />
+                <AvatarFallback>
+                  <PersonOutline class="size-5 text-muted-foreground" />
+                </AvatarFallback>
+              </Avatar>
               <div>
                 <div class="flex items-center gap-1.5 flex-wrap">
                   <span class="font-semibold text-sm text-foreground">
@@ -434,12 +439,12 @@ async function handleRemoveAccount(id: string) {
                     <Input
                       v-model="editingAliasText"
                       placeholder="输入备注"
-                      class="h-6 w-24"
+                      size="xs"
+                      class="w-24"
                       @keyup.enter="saveEditAlias(acc)"
                     />
                     <Button
                       size="xs"
-                      class="h-6 px-2"
                       @click="saveEditAlias(acc)"
                     >
                       保存
@@ -447,7 +452,6 @@ async function handleRemoveAccount(id: string) {
                     <Button
                       size="xs"
                       variant="ghost"
-                      class="h-6 px-2"
                       @click="editingAccountId = null"
                     >
                       取消
@@ -456,7 +460,7 @@ async function handleRemoveAccount(id: string) {
                   <Badge
                     v-else-if="acc.alias"
                     variant="outline"
-                    class="text-[10px] h-5 px-1.5 cursor-pointer border-sky-500/40 text-sky-600 bg-sky-500/10"
+                    class="cursor-pointer border-sky-500/40 text-sky-600 bg-sky-500/10"
                     @click="startEditAlias(acc)"
                   >
                     {{ acc.alias }}
@@ -465,7 +469,7 @@ async function handleRemoveAccount(id: string) {
                     v-else
                     size="xs"
                     variant="ghost"
-                    class="h-5 px-1.5 text-[11px] text-muted-foreground gap-1"
+                    class="text-muted-foreground gap-1"
                     @click="startEditAlias(acc)"
                   >
                     <CreateOutline class="size-3" />
@@ -476,7 +480,7 @@ async function handleRemoveAccount(id: string) {
                   <Badge
                     v-if="acc.isValid"
                     variant="outline"
-                    class="text-[10px] h-4.5 px-1.5 border-emerald-500/40 text-emerald-600 bg-emerald-500/10 gap-0.5"
+                    class="border-emerald-500/40 text-emerald-600 bg-emerald-500/10 gap-0.5"
                   >
                     <CheckmarkCircleOutline class="size-3" />
                     有效

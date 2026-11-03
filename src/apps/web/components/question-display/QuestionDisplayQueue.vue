@@ -188,10 +188,12 @@ defineExpose({ scrollToCurrent })
               !item.isReaded ? 'font-medium' : '',
             ]"
           >
-            <button
-              type="button"
-              class="question-main flex-1 min-w-0 text-left cursor-pointer space-y-1.5"
+            <div
+              role="button"
+              tabindex="0"
+              class="question-main flex-1 min-w-0 text-left cursor-pointer space-y-1.5 focus:outline-hidden"
               @click="item.id === currentId ? emit('clear') : emit('show', item)"
+              @keydown.enter="item.id === currentId ? emit('clear') : emit('show', item)"
             >
               <div class="question-meta flex items-center justify-between text-[11px] text-muted-foreground gap-2">
                 <strong class="text-foreground truncate">{{ questionSenderLabel(item) }}</strong>
@@ -257,7 +259,7 @@ defineExpose({ scrollToCurrent })
                   {{ item.questionImages.length }}
                 </span>
               </div>
-            </button>
+            </div>
 
             <div
               class="question-actions flex flex-col items-center justify-between gap-1 border-l border-border/60 pl-1.5"

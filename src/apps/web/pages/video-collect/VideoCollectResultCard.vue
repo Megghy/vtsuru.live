@@ -14,6 +14,7 @@ import { computed } from 'vue'
 
 import type { VideoCollectInfo, VideoData } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 
 const props = withDefaults(
   defineProps<{
@@ -102,11 +103,11 @@ function handleCardClick() {
           </span>
 
           <!-- 快速已看切换按钮 -->
-          <button
-            type="button"
-            class="watch-toggle-btn"
+          <Button
+            variant="ghost"
+            size="xs"
+            class="watch-toggle-btn h-auto py-1 px-2.5 rounded-full"
             :class="{ 'is-active': watched }"
-            :title="watched ? '标记为未看' : '标记为已看'"
             :aria-label="watched ? '标记为未看' : '标记为已看'"
             @click.stop.prevent="emit('toggleWatched')"
           >
@@ -115,7 +116,7 @@ function handleCardClick() {
               class="size-3.5"
             />
             <span>{{ watched ? '已看' : '未看' }}</span>
-          </button>
+          </Button>
         </div>
 
         <div class="video-result-card__details">
@@ -127,10 +128,10 @@ function handleCardClick() {
             >
               {{ item.video.title }}
             </strong>
-            <button
-              type="button"
-              class="open-link-btn"
-              title="在哔哩哔哩打开"
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="open-link-btn size-7 text-muted-foreground hover:text-foreground"
               aria-label="在哔哩哔哩打开"
               @click.stop.prevent="emit('select')"
             >
@@ -138,7 +139,7 @@ function handleCardClick() {
                 :is="Open24Regular"
                 class="size-4"
               />
-            </button>
+            </Button>
           </div>
 
           <!-- UP 主与 BV 号 -->
@@ -220,10 +221,11 @@ function handleCardClick() {
           @click.stop
         >
           <span class="flip-order">#{{ String(index + 1).padStart(2, '0') }}</span>
-          <button
-            type="button"
-            class="flip-back-btn"
-            title="重新盖上"
+          <Button
+            variant="ghost"
+            size="xs"
+            class="flip-back-btn h-auto py-0.5 px-2"
+            aria-label="重新盖上"
             @click.stop="emit('toggleReveal')"
           >
             <component
@@ -231,16 +233,18 @@ function handleCardClick() {
               class="size-3.5"
             />
             盖上
-          </button>
+          </Button>
         </div>
       </div>
 
       <!-- 背面内容（翻牌盲盒面） -->
-      <button
-        type="button"
-        class="mystery-face"
+      <div
+        role="button"
+        tabindex="0"
+        class="mystery-face cursor-pointer focus:outline-hidden"
         :aria-label="`点击翻开第 ${index + 1} 个视频`"
         @click.stop="emit('toggleReveal')"
+        @keydown.enter.stop="emit('toggleReveal')"
       >
         <div class="mystery-pattern" />
         <span class="mystery-number">{{ String(index + 1).padStart(2, '0') }}</span>
@@ -254,7 +258,7 @@ function handleCardClick() {
           <strong class="mystery-text">点击揭晓</strong>
           <span class="mystery-hint">TAP TO REVEAL</span>
         </div>
-      </button>
+      </div>
     </div>
   </article>
 </template>

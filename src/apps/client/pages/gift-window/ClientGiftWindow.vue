@@ -15,6 +15,8 @@ import type {
 } from '@/apps/client/store/useGiftWindow'
 import { GIFT_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useGiftWindow'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
+import { Spin } from '@/shared/ui/spin'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 let bc: BroadcastChannel | undefined
 const setting = ref<GiftWindowSettings>()
@@ -164,7 +166,7 @@ watch(
     v-if="!setting"
     class="flex items-center justify-center w-full h-full min-h-[100px]"
   >
-    <div class="size-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+    <Spin size="medium" />
   </div>
   <div
     v-else
@@ -187,7 +189,10 @@ watch(
         </span>
       </div>
     </div>
-    <div class="gw-body">
+    <div
+      class="gw-body"
+      :class="setting.showScrollbar ? 'scrollbar-thin' : 'no-scrollbar'"
+    >
       <!-- 礼物列表 -->
       <template v-if="setting.showGiftList">
         <TransitionGroup
@@ -268,33 +273,35 @@ watch(
 
         <!-- 排行榜顶部模式切换器 -->
         <div class="gw-rank-nav">
-          <button
-            type="button"
-            class="gw-rank-tab"
-            :class="{ active: activeRankTab === 'thank_summary' }"
-            @click="activeRankTab = 'thank_summary'"
+          <ToggleGroup
+            type="single"
+            size="xs"
+            class="w-full"
+            :model-value="activeRankTab"
+            @update:model-value="(val) => { if (val) activeRankTab = val as RankViewMode }"
           >
-            <Gift20Regular class="gw-tab-icon size-3.5" />
-            <span>下播感谢</span>
-          </button>
-          <button
-            type="button"
-            class="gw-rank-tab"
-            :class="{ active: activeRankTab === 'rank' }"
-            @click="activeRankTab = 'rank'"
-          >
-            <Trophy20Regular class="gw-tab-icon size-3.5" />
-            <span>打赏榜 ({{ rankList.length }})</span>
-          </button>
-          <button
-            type="button"
-            class="gw-rank-tab"
-            :class="{ active: activeRankTab === 'online_guard' }"
-            @click="activeRankTab = 'online_guard'"
-          >
-            <VehicleShip20Regular class="gw-tab-icon size-3.5" />
-            <span>在场舰长 ({{ onlineGuardList.length }})</span>
-          </button>
+            <ToggleGroupItem
+              value="thank_summary"
+              class="flex-1 gap-1 text-[11px]"
+            >
+              <Gift20Regular class="gw-tab-icon size-3.5" />
+              <span>下播感谢</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="rank"
+              class="flex-1 gap-1 text-[11px]"
+            >
+              <Trophy20Regular class="gw-tab-icon size-3.5" />
+              <span>打赏榜 ({{ rankList.length }})</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="online_guard"
+              class="flex-1 gap-1 text-[11px]"
+            >
+              <VehicleShip20Regular class="gw-tab-icon size-3.5" />
+              <span>在场舰长 ({{ onlineGuardList.length }})</span>
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
         <!-- 视图 1: 下播感谢合集 (Top 50 + 在场舰长) -->
@@ -567,34 +574,6 @@ body {
   overflow-x: hidden;
   padding: 8px;
   -webkit-app-region: no-drag;
-}
-
-/* 优雅半透明细滚动条 */
-.gw.has-scrollbar .gw-body {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
-}
-.gw.has-scrollbar .gw-body::-webkit-scrollbar {
-  width: 5px;
-  display: block;
-}
-.gw.has-scrollbar .gw-body::-webkit-scrollbar-track {
-  background: transparent;
-}
-.gw.has-scrollbar .gw-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 9999px;
-  transition: background 0.2s ease;
-}
-.gw.has-scrollbar .gw-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.45);
-}
-
-.gw:not(.has-scrollbar) .gw-body {
-  scrollbar-width: none;
-}
-.gw:not(.has-scrollbar) .gw-body::-webkit-scrollbar {
-  display: none;
 }
 
 .gw-empty {

@@ -79,8 +79,9 @@ watch(
           custom
         >
           <Button
-            variant="ghost"
-            class="text-primary font-medium p-0"
+            variant="link"
+            size="xs"
+            class="h-auto p-0"
             @click="navigate"
           >
             完整排行

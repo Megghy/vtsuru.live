@@ -529,21 +529,23 @@ const displayMembers = computed(() => {
               v-if="isMockCollab"
               class="flex items-center justify-between pt-1 text-[11px] text-muted-foreground"
             >
-              <button
-                type="button"
-                class="hover:text-foreground underline underline-offset-2"
+              <Button
+                variant="link"
+                size="xs"
+                class="h-auto p-0 text-muted-foreground hover:text-foreground underline underline-offset-2 text-[11px]"
                 @click="setMemberSpeaking(member.userId, !member.isSpeaking)"
               >
                 {{ member.isSpeaking ? '停止说话' : '模拟发言' }}
-              </button>
-              <button
+              </Button>
+              <Button
                 v-if="displayMembers.length > 2"
-                type="button"
-                class="hover:text-destructive text-[10px]"
+                variant="link"
+                size="xs"
+                class="h-auto p-0 text-muted-foreground hover:text-destructive text-[10px]"
                 @click="removeMockMember(member.userId)"
               >
                 移除
-              </button>
+              </Button>
             </div>
           </div>
         </div>

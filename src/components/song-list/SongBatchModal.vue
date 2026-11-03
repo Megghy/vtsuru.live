@@ -7,6 +7,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
+import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { toast } from '@/shared/utils'
 
@@ -140,24 +141,19 @@ defineExpose({ open, close })
           value="author"
           class="pt-3 space-y-3 text-xs"
         >
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input
-                type="radio"
-                value="append"
-                v-model="authorMode"
-              />
+          <RadioGroup
+            v-model="authorMode"
+            class="flex items-center gap-3"
+          >
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <RadioGroupItem value="append" />
               <span>追加</span>
             </label>
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input
-                type="radio"
-                value="replace"
-                v-model="authorMode"
-              />
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <RadioGroupItem value="replace" />
               <span>替换</span>
             </label>
-          </div>
+          </RadioGroup>
           <Input
             v-model="batchAuthorText"
             placeholder="输入作者，多个用空格或逗号分隔"
@@ -171,24 +167,19 @@ defineExpose({ open, close })
           value="tag"
           class="pt-3 space-y-3 text-xs"
         >
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input
-                type="radio"
-                value="append"
-                v-model="tagMode"
-              />
+          <RadioGroup
+            v-model="tagMode"
+            class="flex items-center gap-3"
+          >
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <RadioGroupItem value="append" />
               <span>追加</span>
             </label>
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input
-                type="radio"
-                value="replace"
-                v-model="tagMode"
-              />
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <RadioGroupItem value="replace" />
               <span>替换</span>
             </label>
-          </div>
+          </RadioGroup>
           <Input
             v-model="batchTagText"
             placeholder="输入标签，多个用空格或逗号分隔"
@@ -202,24 +193,19 @@ defineExpose({ open, close })
           value="language"
           class="pt-3 space-y-3 text-xs"
         >
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input
-                type="radio"
-                value="append"
-                v-model="languageMode"
-              />
+          <RadioGroup
+            v-model="languageMode"
+            class="flex items-center gap-3"
+          >
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <RadioGroupItem value="append" />
               <span>追加</span>
             </label>
-            <label class="flex items-center gap-1 cursor-pointer">
-              <input
-                type="radio"
-                value="replace"
-                v-model="languageMode"
-              />
+            <label class="flex items-center gap-1.5 cursor-pointer">
+              <RadioGroupItem value="replace" />
               <span>替换</span>
             </label>
-          </div>
+          </RadioGroup>
           <Input
             v-model="batchLanguageText"
             placeholder="输入语言，多个用空格或逗号分隔"

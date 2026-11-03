@@ -129,10 +129,11 @@ const {
                     />
                     <span v-else>{{ opt.label }}</span>
                   </div>
-                  <button
+                  <Button
                     v-else
-                    type="button"
-                    class="flex items-center gap-2 w-full p-1.5 rounded hover:bg-muted text-left text-xs transition-colors cursor-pointer select-none"
+                    variant="ghost"
+                    size="xs"
+                    class="flex items-center justify-start gap-2 w-full h-auto p-1.5 rounded text-left text-xs font-normal"
                     @click="handleAddBlockMenuSelect(String(opt.key))"
                   >
                     <component
@@ -141,7 +142,7 @@ const {
                       class="size-4 text-muted-foreground shrink-0"
                     />
                     <span>{{ typeof opt.label === 'function' ? opt.key : opt.label }}</span>
-                  </button>
+                  </Button>
                 </template>
               </template>
               <div

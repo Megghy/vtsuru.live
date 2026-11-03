@@ -14,6 +14,7 @@ import { useRouter } from 'vue-router'
 
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
@@ -226,54 +227,70 @@ function toggleGiftWindow() {
     <!-- 右侧：浮窗快捷状态与一键开关 -->
     <div class="flex items-center gap-1.5 whitespace-nowrap shrink-0">
       <!-- 弹幕机浮窗开关 -->
-      <button
-        type="button"
-        class="inline-flex items-center justify-center gap-1.25 h-5 px-1.5 border rounded text-[11px] leading-none cursor-pointer transition-all duration-150 align-middle hover:bg-white/8 hover:text-foreground"
-        :class="
-          danmakuWindow.isDanmakuWindowOpen
-            ? 'border-emerald-500/35 bg-emerald-500/10 text-foreground'
-            : 'border-border bg-white/3 text-muted-foreground'
-        "
-        :title="danmakuWindow.isDanmakuWindowOpen ? '弹幕浮窗运行中 (点击关闭)' : '弹幕浮窗已关闭 (点击打开)'"
-        @click="toggleDanmakuWindow"
-      >
-        <component
-          :is="Chat20Regular"
-          class="size-3.25"
-        />
-        <span>弹幕浮窗</span>
-        <span
-          class="inline-flex items-center justify-center h-3.5 min-w-4 px-1 rounded text-[9px] font-semibold leading-none box-border"
-          :class="danmakuWindow.isDanmakuWindowOpen ? 'bg-emerald-500 text-white' : 'bg-white/12 text-muted-foreground'"
-        >
-          {{ danmakuWindow.isDanmakuWindowOpen ? '开' : '关' }}
-        </span>
-      </button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              type="button"
+              size="xs"
+              variant="outline"
+              class="gap-1.5"
+              :class="
+                danmakuWindow.isDanmakuWindowOpen
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-foreground'
+                  : 'text-muted-foreground'
+              "
+              :aria-label="danmakuWindow.isDanmakuWindowOpen ? '关闭弹幕浮窗' : '打开弹幕浮窗'"
+              @click="toggleDanmakuWindow"
+            >
+              <component
+                :is="Chat20Regular"
+                class="size-3.5"
+              />
+              <span>弹幕浮窗</span>
+              <span
+                class="inline-flex items-center justify-center px-1 rounded text-[9px] font-semibold leading-tight"
+                :class="danmakuWindow.isDanmakuWindowOpen ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'"
+              >
+                {{ danmakuWindow.isDanmakuWindowOpen ? '开' : '关' }}
+              </span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ danmakuWindow.isDanmakuWindowOpen ? '弹幕浮窗运行中 (点击关闭)' : '弹幕浮窗已关闭 (点击打开)' }}</TooltipContent>
+        </Tooltip>
 
-      <!-- 礼物与排行浮窗开关 -->
-      <button
-        type="button"
-        class="inline-flex items-center justify-center gap-1.25 h-5 px-1.5 border rounded text-[11px] leading-none cursor-pointer transition-all duration-150 align-middle hover:bg-white/8 hover:text-foreground"
-        :class="
-          giftWindow.isGiftWindowOpen
-            ? 'border-emerald-500/35 bg-emerald-500/10 text-foreground'
-            : 'border-border bg-white/3 text-muted-foreground'
-        "
-        :title="giftWindow.isGiftWindowOpen ? '礼物与排行浮窗运行中 (点击关闭)' : '礼物与排行浮窗已关闭 (点击打开)'"
-        @click="toggleGiftWindow"
-      >
-        <component
-          :is="Gift20Regular"
-          class="size-3.25"
-        />
-        <span>礼物排行</span>
-        <span
-          class="inline-flex items-center justify-center h-3.5 min-w-4 px-1 rounded text-[9px] font-semibold leading-none box-border"
-          :class="giftWindow.isGiftWindowOpen ? 'bg-emerald-500 text-white' : 'bg-white/12 text-muted-foreground'"
-        >
-          {{ giftWindow.isGiftWindowOpen ? '开' : '关' }}
-        </span>
-      </button>
+        <!-- 礼物与排行浮窗开关 -->
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              type="button"
+              size="xs"
+              variant="outline"
+              class="gap-1.5"
+              :class="
+                giftWindow.isGiftWindowOpen
+                  ? 'border-emerald-500/40 bg-emerald-500/10 text-foreground'
+                  : 'text-muted-foreground'
+              "
+              :aria-label="giftWindow.isGiftWindowOpen ? '关闭礼物排行浮窗' : '打开礼物排行浮窗'"
+              @click="toggleGiftWindow"
+            >
+              <component
+                :is="Gift20Regular"
+                class="size-3.5"
+              />
+              <span>礼物排行</span>
+              <span
+                class="inline-flex items-center justify-center px-1 rounded text-[9px] font-semibold leading-tight"
+                :class="giftWindow.isGiftWindowOpen ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'"
+              >
+                {{ giftWindow.isGiftWindowOpen ? '开' : '关' }}
+              </span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ giftWindow.isGiftWindowOpen ? '礼物与排行浮窗运行中 (点击关闭)' : '礼物与排行浮窗已关闭 (点击打开)' }}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   </footer>
 </template>

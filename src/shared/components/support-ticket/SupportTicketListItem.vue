@@ -7,6 +7,7 @@ import type { SupportTicketModel } from '@/api/generated/model'
 import { SupportTicketStatus } from '@/api/generated/model'
 import { supportTicketStatusMeta, supportTicketTypeLabel } from '@/shared/supportTicket'
 import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 
 const props = defineProps<{
   ticket: SupportTicketModel
@@ -36,9 +37,9 @@ const badgeVariant = computed(() => {
 </script>
 
 <template>
-  <button
-    type="button"
-    class="grid gap-2 w-full py-3 px-3.5 border-0 border-b border-border text-foreground bg-transparent text-left cursor-pointer transition-colors hover:bg-muted"
+  <Button
+    variant="ghost"
+    class="grid gap-2 w-full h-auto py-3 px-3.5 border-0 border-b border-border rounded-none text-left font-normal"
     :class="{ 'bg-muted shadow-[inset_3px_0_var(--brand)]': active }"
   >
     <span class="flex items-center gap-2 min-w-0">
@@ -50,7 +51,7 @@ const badgeVariant = computed(() => {
       <span class="flex-1 overflow-hidden text-sm font-semibold truncate">{{ ticket.title }}</span>
       <Badge
         :variant="badgeVariant"
-        class="text-[10px] h-4.5 px-1.5 font-normal shrink-0"
+        class="shrink-0"
       >
         {{ supportTicketStatusMeta[ticket.status].label }}
       </Badge>
@@ -59,5 +60,5 @@ const badgeVariant = computed(() => {
       <span>#{{ ticket.id }} · {{ supportTicketTypeLabel(ticket.type) }}</span>
       <span>{{ relativeTime }}</span>
     </span>
-  </button>
+  </Button>
 </template>

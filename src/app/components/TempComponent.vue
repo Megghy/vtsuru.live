@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { useDialog, useLoadingBar, useMessage, useNotification } from '@/shared/utils'
+import { Spin } from '@/shared/ui/spin'
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 const accountInfo = useAccount()
@@ -26,7 +27,7 @@ onMounted(() => {
     v-if="($route.query.token || cookie) && accountInfo.id < 1"
     class="flex items-center justify-center min-h-screen w-full"
   >
-    <div class="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+    <Spin size="large" />
   </div>
   <slot v-else />
 </template>

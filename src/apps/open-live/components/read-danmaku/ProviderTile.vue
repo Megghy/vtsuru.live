@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { Button } from '@/shared/ui/button'
+
 defineProps<{
   active: boolean
   title: string
@@ -9,9 +11,9 @@ defineEmits<{ (e: 'click'): void }>()
 </script>
 
 <template>
-  <button
-    type="button"
-    class="appearance-none bg-background border-[1.5px] border-border rounded-lg py-2.5 px-3 cursor-pointer text-left flex flex-col gap-1 transition-colors min-h-14 w-full font-inherit text-inherit hover:border-primary"
+  <Button
+    variant="outline"
+    class="h-auto min-h-14 w-full py-2.5 px-3 flex flex-col items-start gap-1 text-left font-normal border-[1.5px] hover:border-primary"
     :class="{ 'border-primary bg-primary/10 shadow-[inset_0_0_0_1.5px_var(--primary)]': active }"
     @click="$emit('click')"
   >
@@ -29,5 +31,5 @@ defineEmits<{ (e: 'click'): void }>()
     >
       {{ description }}
     </p>
-  </button>
+  </Button>
 </template>

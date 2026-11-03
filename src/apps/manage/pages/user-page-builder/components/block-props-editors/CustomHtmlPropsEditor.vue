@@ -6,6 +6,7 @@ import {
   CUSTOM_HTML_MAX_HEIGHT,
   CUSTOM_HTML_MIN_AUTO_HEIGHT,
   CUSTOM_HTML_MIN_HEIGHT,
+  CUSTOM_VUE_MAX_BYTES,
   normalizeCustomHtmlProps,
   utf8ByteLength,
 } from '@/apps/user-page/block/customHtmlContract'
@@ -22,9 +23,7 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
 const editorOpen = ref(false)
 const CustomHtmlEditorModal = defineAsyncComponent(() => import('../CustomHtmlEditorModal.vue'))
 const config = computed(() => normalizeCustomHtmlProps(blockProps.value))
-const codeBytes = computed(
-  () => utf8ByteLength(config.value.html) + utf8ByteLength(config.value.css) + utf8ByteLength(config.value.js),
-)
+const codeBytes = computed(() => utf8ByteLength(config.value.source))
 
 const heightMode = computed({
   get: () => config.value.heightMode,
@@ -57,7 +56,7 @@ const maxHeight = computed({
       打开代码编辑器
     </Button>
     <span class="text-xs text-muted-foreground">
-      HTML + CSS + JS {{ codeBytes }} bytes · {{ config.assets.length }} 个资源
+      Vue SFC {{ codeBytes }}/{{ CUSTOM_VUE_MAX_BYTES }} bytes · {{ config.assets.length }} 个资源
     </span>
 
     <PropsGrid :row-gap="0">

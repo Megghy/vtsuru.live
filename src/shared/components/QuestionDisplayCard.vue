@@ -239,7 +239,7 @@ defineExpose({ setScrollProgress })
             <div class="question-display-content-wrapper">
               <div
                 ref="contentRef"
-                class="question-display-content"
+                class="question-display-content no-scrollbar"
                 :class="{
                   'has-images': displayedImages.length > 0,
                   'has-single-image': displayedImages.length === 1,
@@ -389,11 +389,6 @@ defineExpose({ setScrollProgress })
   min-width: 0;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: none;
-}
-
-.question-display-content::-webkit-scrollbar {
-  display: none;
 }
 
 .overflow-indicator {

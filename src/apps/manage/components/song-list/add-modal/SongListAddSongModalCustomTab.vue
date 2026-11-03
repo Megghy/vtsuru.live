@@ -9,6 +9,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
@@ -139,20 +140,14 @@ async function addCustomSong() {
           v-if="addSongModel.author && addSongModel.author.length > 0"
           class="flex flex-wrap gap-1 pt-1"
         >
-          <span
+          <Tag
             v-for="(a, idx) in addSongModel.author"
             :key="idx"
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-[11px] text-foreground border"
+            closable
+            @close="removeTagItem('author', idx)"
           >
             {{ a }}
-            <button
-              type="button"
-              class="hover:text-destructive"
-              @click="removeTagItem('author', idx)"
-            >
-              ×
-            </button>
-          </span>
+          </Tag>
         </div>
       </div>
 
@@ -187,20 +182,14 @@ async function addCustomSong() {
           v-if="addSongModel.language && addSongModel.language.length > 0"
           class="flex flex-wrap gap-1 pt-1"
         >
-          <span
+          <Tag
             v-for="(l, idx) in addSongModel.language"
             :key="idx"
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-[11px] text-foreground border"
+            closable
+            @close="removeTagItem('language', idx)"
           >
             {{ l }}
-            <button
-              type="button"
-              class="hover:text-destructive"
-              @click="removeTagItem('language', idx)"
-            >
-              ×
-            </button>
-          </span>
+          </Tag>
         </div>
       </div>
 
@@ -216,20 +205,14 @@ async function addCustomSong() {
           v-if="addSongModel.tags && addSongModel.tags.length > 0"
           class="flex flex-wrap gap-1 pt-1"
         >
-          <span
+          <Tag
             v-for="(t, idx) in addSongModel.tags"
             :key="idx"
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted text-[11px] text-foreground border"
+            closable
+            @close="removeTagItem('tags', idx)"
           >
             {{ t }}
-            <button
-              type="button"
-              class="hover:text-destructive"
-              @click="removeTagItem('tags', idx)"
-            >
-              ×
-            </button>
-          </span>
+          </Tag>
         </div>
       </div>
 

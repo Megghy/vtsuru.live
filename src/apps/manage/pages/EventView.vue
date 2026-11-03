@@ -767,16 +767,17 @@ function onTabChange(value: string | number) {
                 >
                   <AlertDialog>
                     <AlertDialogTrigger as-child>
-                      <button
-                        type="button"
-                        class="p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        title="删除"
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        class="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        aria-label="删除"
                       >
                         <component
                           :is="Delete24Regular"
-                          class="h-3 w-3"
+                          class="size-3"
                         />
-                      </button>
+                      </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent class="sm:max-w-md">
                       <AlertDialogHeader>

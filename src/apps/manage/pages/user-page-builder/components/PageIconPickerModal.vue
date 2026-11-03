@@ -13,6 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Spin } from '@/shared/ui/spin'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 type IconStyle = 'common' | 'all' | 'outline' | 'filled' | 'sharp' | 'logo'
 
@@ -123,20 +124,21 @@ watch(show, (visible) => {
         </div>
 
         <div class="overflow-x-auto pb-0.5">
-          <div class="inline-flex rounded-lg border bg-muted p-0.5 text-muted-foreground text-xs">
-            <button
+          <ToggleGroup
+            type="single"
+            size="sm"
+            :model-value="styleFilter"
+            @update:model-value="(v) => { if (v) styleFilter = v as IconStyle }"
+          >
+            <ToggleGroupItem
               v-for="option in styleOptions"
               :key="option.value"
-              type="button"
-              class="inline-flex items-center justify-center whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all"
-              :class="
-                styleFilter === option.value ? 'bg-background text-foreground shadow-sm' : 'hover:text-foreground'
-              "
-              @click="styleFilter = option.value"
+              :value="option.value"
+              class="text-xs px-2.5"
             >
               {{ option.label }}
-            </button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
         <div
@@ -153,11 +155,11 @@ watch(show, (visible) => {
               class="grid gap-2 min-h-[76px]"
               :style="{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }"
             >
-              <button
+              <Button
                 v-for="icon in row.icons"
                 :key="icon"
-                type="button"
-                class="icon-option flex flex-col items-center justify-center p-2 rounded-md hover:bg-muted/70 transition-colors border border-transparent"
+                variant="ghost"
+                class="icon-option h-auto flex-col p-2 border border-transparent"
                 :class="{ 'icon-option--selected !border-primary bg-primary/10 text-primary': icon === props.value }"
                 :aria-label="getUserPageNavIconLabel(icon)"
                 :aria-pressed="icon === props.value"
@@ -168,7 +170,7 @@ watch(show, (visible) => {
                   class="size-6 shrink-0 mb-1"
                 />
                 <span class="text-[11px] truncate w-full text-center">{{ getUserPageNavIconLabel(icon) }}</span>
-              </button>
+              </Button>
             </div>
           </div>
           <div

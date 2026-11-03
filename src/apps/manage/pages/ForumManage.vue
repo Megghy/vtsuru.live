@@ -28,6 +28,7 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Textarea } from '@/shared/ui/textarea'
 import { useMessage } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
@@ -259,12 +260,11 @@ onMounted(async () => {
 
         <div class="space-y-1.5">
           <label class="text-xs font-semibold text-foreground">公告 / 描述 (可选)</label>
-          <textarea
+          <Textarea
             v-model="create_Description"
             rows="3"
             placeholder="简要介绍讨论区的主题或入区规则"
             maxlength="200"
-            class="w-full text-xs rounded-md border border-input bg-transparent px-3 py-2 shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
 
@@ -273,15 +273,15 @@ onMounted(async () => {
             :checked="readedAgreement"
             @update:checked="(val) => (readedAgreement = val)"
           />
-          <span class="text-xs text-muted-foreground">
+          <span class="text-xs text-muted-foreground inline-flex items-center gap-1">
             已阅读并同意
-            <button
-              type="button"
-              class="text-brand hover:underline font-medium"
+            <Button
+              variant="link"
+              class="h-auto p-0 text-brand"
               @click="showAgreement = true"
             >
               《开通粉丝讨论区服务协议》
-            </button>
+            </Button>
           </span>
         </div>
 

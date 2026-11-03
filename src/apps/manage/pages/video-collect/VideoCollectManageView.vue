@@ -51,6 +51,7 @@ import {
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
+import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { useMessage } from '@/shared/utils'
@@ -445,12 +446,10 @@ async function confirmDelete() {
               <span>名额占用</span>
               <strong class="font-mono text-foreground">{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
             </div>
-            <div class="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-              <div
-                class="h-full bg-brand transition-all rounded-full"
-                :style="{ width: `${capacityPercentage(table)}%` }"
-              />
-            </div>
+            <Progress
+              :model-value="capacityPercentage(table)"
+              class="h-1.5"
+            />
           </div>
 
           <!-- 行内操作 -->

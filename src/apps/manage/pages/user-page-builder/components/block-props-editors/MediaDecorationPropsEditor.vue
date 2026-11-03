@@ -155,10 +155,9 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">目标时间</label>
-        <input
+        <Input
           v-model="countdownTarget"
           type="datetime-local"
-          class="flex h-8 w-full rounded-md border border-input bg-background px-2.5 py-1 text-xs text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
       </div>
       <div class="space-y-1">

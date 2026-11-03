@@ -6,6 +6,7 @@ import { useRouter } from 'vue-router'
 
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
 import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const router = useRouter()
@@ -153,33 +154,54 @@ function goToLiveManage() {
     </div>
 
     <!-- 窗口控制按钮 -->
-    <div class="flex items-center gap-1">
-      <button
-        class="flex items-center justify-center w-7 h-6 border-0 bg-transparent text-muted-foreground rounded cursor-pointer transition-colors duration-150 hover:bg-muted hover:text-foreground"
-        title="最小化"
-        @click="minimizeWindow"
-      >
-        <Minus class="size-3.5" />
-      </button>
+    <TooltipProvider>
+      <div class="flex items-center gap-0.5">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              aria-label="最小化"
+              @click="minimizeWindow"
+            >
+              <Minus class="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>最小化</TooltipContent>
+        </Tooltip>
 
-      <button
-        class="flex items-center justify-center w-7 h-6 border-0 bg-transparent text-muted-foreground rounded cursor-pointer transition-colors duration-150 hover:bg-muted hover:text-foreground"
-        :title="isMaximized ? '还原' : '最大化'"
-        @click="toggleMaximizeWindow"
-      >
-        <component
-          :is="isMaximized ? SquareMultiple24Regular : Maximize24Filled"
-          class="size-3.5"
-        />
-      </button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              :aria-label="isMaximized ? '还原' : '最大化'"
+              @click="toggleMaximizeWindow"
+            >
+              <component
+                :is="isMaximized ? SquareMultiple24Regular : Maximize24Filled"
+                class="size-3.5"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ isMaximized ? '还原' : '最大化' }}</TooltipContent>
+        </Tooltip>
 
-      <button
-        class="flex items-center justify-center w-7 h-6 border-0 bg-transparent text-muted-foreground rounded cursor-pointer transition-colors duration-150 hover:bg-destructive hover:text-white"
-        title="关闭到后台"
-        @click="closeWindow"
-      >
-        <Close class="size-3.5" />
-      </button>
-    </div>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="hover:bg-destructive hover:text-white"
+              aria-label="关闭到后台"
+              @click="closeWindow"
+            >
+              <Close class="size-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>关闭到后台</TooltipContent>
+        </Tooltip>
+      </div>
+    </TooltipProvider>
   </header>
 </template>

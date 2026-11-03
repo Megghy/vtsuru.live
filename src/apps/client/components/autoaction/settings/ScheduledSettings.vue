@@ -5,6 +5,7 @@ import { computed } from 'vue'
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { NumberField } from '@/shared/ui/number-field'
+import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -93,25 +94,22 @@ const schedulingModeOptions = [
 
         <div class="space-y-1.5 p-2.5 rounded border bg-muted/20">
           <span class="text-xs font-medium text-foreground block">发送模式</span>
-          <div class="flex flex-col gap-2">
+          <RadioGroup
+            :model-value="action.triggerConfig.schedulingMode"
+            :disabled="useGlobalTimer"
+            class="flex flex-col gap-2"
+            @update:model-value="(val) => (action.triggerConfig.schedulingMode = val as any)"
+          >
             <label
               v-for="opt in schedulingModeOptions"
               :key="opt.value"
               class="flex items-center gap-2 cursor-pointer text-xs"
-              :class="useGlobalTimer ? 'cursor-not-allowed' : ''"
+              :class="useGlobalTimer ? 'cursor-not-allowed opacity-50' : ''"
             >
-              <input
-                type="radio"
-                name="schedulingMode"
-                :value="opt.value"
-                :checked="action.triggerConfig.schedulingMode === opt.value"
-                :disabled="useGlobalTimer"
-                class="accent-primary"
-                @change="action.triggerConfig.schedulingMode = opt.value"
-              />
+              <RadioGroupItem :value="opt.value" />
               <span>{{ opt.label }}</span>
             </label>
-          </div>
+          </RadioGroup>
         </div>
       </div>
     </div>

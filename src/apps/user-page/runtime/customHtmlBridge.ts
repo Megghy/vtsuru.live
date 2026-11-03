@@ -1,3 +1,5 @@
+import { toCloneable } from '@/shared/utils/broadcastChannel'
+
 export type CustomHtmlBridgeMethod =
   | 'getContext'
   | 'getSongs'
@@ -107,7 +109,10 @@ export function attachCustomHtmlBridge(options: {
     updatedAt = performance.now(),
     active = true
   const send = (message: Record<string, unknown>) =>
-    options.frame.contentWindow?.postMessage({ __vtsuruBridge: true, channelId: options.channelId, ...message }, '*')
+    options.frame.contentWindow?.postMessage(
+      toCloneable({ __vtsuruBridge: true, channelId: options.channelId, ...message }),
+      '*',
+    )
   const listener = (event: MessageEvent) => {
     if (event.source !== options.frame.contentWindow) return
     const request = event.data as BridgeRequest
@@ -145,10 +150,8 @@ export function attachCustomHtmlBridge(options: {
     }
     Promise.resolve()
       .then(() => handler(request.params))
-      .then(
-        (data) => respond(true, data),
-        (error: unknown) => respond(false, undefined, error instanceof Error ? error.message : String(error)),
-      )
+      .then((data) => respond(true, data))
+      .catch((error: unknown) => respond(false, undefined, error instanceof Error ? error.message : String(error)))
   }
   window.addEventListener('message', listener)
   return Object.assign(

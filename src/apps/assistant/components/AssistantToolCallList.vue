@@ -2,6 +2,8 @@
 import { CheckmarkCircle16Regular, ChevronDown12Regular, ErrorCircle16Regular, Toolbox16Regular } from '@vicons/fluent'
 import { computed, reactive } from 'vue'
 
+import { Button } from '@/shared/ui/button'
+
 import type { AssistantToolEvent } from '../api/assistant'
 
 const props = defineProps<{ tools: AssistantToolEvent[] }>()
@@ -40,9 +42,9 @@ function formatDuration(ms?: number): string {
       class="min-w-0 rounded-[7px] bg-muted/60"
       :class="`tool-line--${tool.status}`"
     >
-      <button
-        type="button"
-        class="w-full min-h-[30px] grid grid-cols-[18px_minmax(0,1fr)_auto_14px] items-center gap-1.5 py-[5px] px-[7px] border-0 rounded-[7px] bg-transparent text-inherit cursor-pointer text-left hover:bg-[rgba(128,128,128,0.07)]"
+      <Button
+        variant="ghost"
+        class="w-full h-auto min-h-[30px] grid grid-cols-[18px_minmax(0,1fr)_auto_14px] items-center gap-1.5 py-1 px-2 rounded-[7px] text-left font-normal"
         :aria-expanded="isOpen(tool)"
         @click="toggle(tool)"
       >
@@ -71,7 +73,7 @@ function formatDuration(ms?: number): string {
           class="size-3 text-muted-foreground transition-transform duration-200"
           :class="{ 'rotate-180': isOpen(tool) }"
         />
-      </button>
+      </Button>
 
       <div
         v-if="isOpen(tool)"

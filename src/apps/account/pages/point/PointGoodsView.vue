@@ -19,6 +19,7 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { NavigateToNewTab, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -309,22 +310,21 @@ onMounted(async () => {
             class="flex items-center gap-2 flex-wrap"
           >
             <span class="text-muted-foreground text-[11px] shrink-0">分类:</span>
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <button
+            <ToggleGroup
+              type="single"
+              size="xs"
+              :model-value="selectedTag"
+              @update:model-value="(v) => (selectedTag = (v as string) || undefined)"
+            >
+              <ToggleGroupItem
                 v-for="tag in tags"
                 :key="tag"
-                type="button"
-                class="px-2.5 py-0.5 rounded-full text-xs transition cursor-pointer"
-                :class="
-                  tag === selectedTag
-                    ? 'bg-primary text-primary-foreground font-medium shadow-xs'
-                    : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground'
-                "
-                @click="selectedTag = selectedTag === tag ? undefined : tag"
+                :value="tag"
+                class="rounded-full px-2.5"
               >
                 {{ tag }}
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
 
           <!-- 搜索与排序 -->

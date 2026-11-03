@@ -8,6 +8,7 @@ import RegisterAndLogin from '@/components/RegisterAndLogin.vue'
 import { currentAPIKey, setSelectedAPIKey } from '@/shared/config'
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import VtsuruLogo from '@/svgs/ic_vtuber.svg?component'
 
@@ -139,7 +140,7 @@ async function switchToBackupAPI() {
       aria-live="polite"
     >
       <div class="flex flex-col items-center gap-3 py-6">
-        <div class="w-8 h-8 rounded-full border-2 border-brand border-t-transparent animate-spin" />
+        <Spin size="large" />
         <span class="text-xs text-muted-foreground">正在请求账户数据...</span>
       </div>
 

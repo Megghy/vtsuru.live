@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Spin } from '@/shared/ui/spin'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 
 const props = withDefaults(
@@ -493,68 +494,18 @@ defineExpose({
           <!-- 价格与排序 -->
           <div class="flex flex-wrap items-center gap-2.5">
             <span class="text-xs text-muted-foreground">最低打赏:</span>
-            <div class="flex items-center gap-1">
-              <button
-                type="button"
-                class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="
-                  price === undefined
-                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                "
-                @click="handlePriceQuickSelect(undefined)"
-              >
-                不限
-              </button>
-              <button
-                type="button"
-                class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="
-                  price === 0.1
-                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                "
-                @click="handlePriceQuickSelect(0.1)"
-              >
-                ≥0.1
-              </button>
-              <button
-                type="button"
-                class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="
-                  price === 1
-                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                "
-                @click="handlePriceQuickSelect(1)"
-              >
-                ≥1
-              </button>
-              <button
-                type="button"
-                class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="
-                  price === 30
-                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                "
-                @click="handlePriceQuickSelect(30)"
-              >
-                ≥30
-              </button>
-              <button
-                type="button"
-                class="px-1.5 py-0.5 rounded text-[11px] border transition-colors select-none"
-                :class="
-                  price === 100
-                    ? 'bg-primary text-primary-foreground border-primary font-semibold'
-                    : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
-                "
-                @click="handlePriceQuickSelect(100)"
-              >
-                ≥100
-              </button>
-            </div>
+            <ToggleGroup
+              type="single"
+              size="xs"
+              :model-value="price !== undefined ? String(price) : 'all'"
+              @update:model-value="(val) => handlePriceQuickSelect(val === 'all' ? undefined : Number(val))"
+            >
+              <ToggleGroupItem value="all">不限</ToggleGroupItem>
+              <ToggleGroupItem value="0.1">≥0.1</ToggleGroupItem>
+              <ToggleGroupItem value="1">≥1</ToggleGroupItem>
+              <ToggleGroupItem value="30">≥30</ToggleGroupItem>
+              <ToggleGroupItem value="100">≥100</ToggleGroupItem>
+            </ToggleGroup>
 
             <div class="h-4 w-px bg-border" />
 

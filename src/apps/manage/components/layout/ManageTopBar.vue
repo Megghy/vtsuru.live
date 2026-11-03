@@ -9,6 +9,8 @@ import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
 import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Button } from '@/shared/ui/button'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
@@ -58,17 +60,24 @@ async function goToUserPage(accountName?: string) {
     class="h-[var(--vtsuru-header-height)] px-3 max-[600px]:px-2 flex items-center justify-between gap-3 max-[600px]:gap-2 bg-card border-b border-border box-border"
   >
     <div class="min-w-0 flex items-center gap-2.5 max-[600px]:gap-1.5">
-      <button
-        class="size-7 p-0 rounded-lg border border-[rgba(127,127,127,0.18)] bg-[rgba(127,127,127,0.06)] text-foreground inline-flex-center cursor-pointer transition-colors hover:bg-[rgba(127,127,127,0.08)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
-        type="button"
-        :title="siderCollapsed ? '展开侧栏' : '收起侧栏'"
-        @click="siderCollapsed = !siderCollapsed"
-      >
-        <component
-          :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
-          class="size-[18px] block"
-        />
-      </button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="outline"
+              size="icon-xs"
+              aria-label="展开或收起侧栏"
+              @click="siderCollapsed = !siderCollapsed"
+            >
+              <component
+                :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
+                class="size-4 block"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ siderCollapsed ? '展开侧栏' : '收起侧栏' }}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <img
         class="size-[22px] rounded-md shrink-0"
         :src="logoUrl"
@@ -99,43 +108,49 @@ async function goToUserPage(accountName?: string) {
     </div>
 
     <div class="flex items-center gap-2.5 max-[600px]:gap-1.5 shrink-0">
-      <button
-        class="h-[26px] px-2.5 rounded-lg border border-[var(--brand)] bg-[var(--brand)] text-[var(--brand-foreground)] text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer transition-[filter,transform] duration-150 hover:brightness-110 active:translate-y-px"
-        type="button"
-        title="VTsuru 助手"
+      <Button
+        variant="brand"
+        size="xs"
+        class="gap-1.5"
         @click="openAssistant"
       >
         <component
           :is="Bot24Regular"
-          class="size-[15px]"
+          class="size-3.5"
         />
         <span class="max-[600px]:hidden">助手</span>
-      </button>
+      </Button>
 
       <NotificationsPopover v-if="workspace === 'streamer'" />
 
-      <button
-        class="size-7 p-0 rounded-lg border border-border bg-transparent text-foreground inline-flex-center cursor-pointer transition-colors hover:bg-[rgba(127,127,127,0.08)] active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
-        type="button"
-        :title="themeToggleTitle"
-        @click="toggleTheme"
-      >
-        <component
-          :is="themeToggleIcon"
-          class="size-[18px] block"
-        />
-      </button>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="outline"
+              size="icon-xs"
+              :aria-label="themeToggleTitle"
+              @click="toggleTheme"
+            >
+              <component
+                :is="themeToggleIcon"
+                class="size-4 block"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{{ themeToggleTitle }}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
-      <button
+      <Button
         v-if="workspace === 'streamer' && accountName"
-        class="h-7 px-2.5 max-[600px]:p-0 max-[600px]:size-7 rounded-lg border border-input bg-muted text-foreground text-xs font-semibold cursor-pointer transition-colors hover:bg-[rgba(127,127,127,0.08)] active:scale-[0.98] inline-flex-center"
-        type="button"
-        title="回到展示页"
+        variant="outline"
+        size="xs"
         @click="goToUserPage(accountName)"
       >
-        <ArrowLeft24Regular class="size-4 hidden max-[600px]:block" />
+        <ArrowLeft24Regular class="size-3.5 hidden max-[600px]:block" />
         <span class="max-[600px]:hidden">回到展示页</span>
-      </button>
+      </Button>
     </div>
   </header>
 </template>

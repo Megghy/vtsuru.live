@@ -14,6 +14,7 @@ import type { Component } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { EventDataTypes } from '@/api/generated/model'
+import { Button } from '@/shared/ui/button'
 import { copyToClipboard } from '@/shared/utils'
 
 import { useEventActions } from '../store/eventActions'
@@ -101,19 +102,20 @@ onUnmounted(() => {
     class="item-context-menu fixed z-50 min-w-[160px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
     :style="{ left: `${menu.x}px`, top: `${menu.y}px` }"
   >
-    <button
+    <Button
       v-for="item in items"
       :key="item.key"
-      type="button"
-      class="relative flex w-full cursor-pointer select-none items-center gap-2 rounded-sm px-2 py-1.5 text-xs outline-none hover:bg-accent hover:text-accent-foreground"
+      variant="ghost"
+      size="xs"
+      class="w-full justify-start gap-2 h-auto py-1.5 px-2 font-normal"
       :class="item.key === 'block' && !actions.isBlocked(menu.event) ? 'text-destructive hover:text-destructive' : ''"
       @click="onSelect(item)"
     >
       <component
         :is="item.icon"
-        class="h-4 w-4 shrink-0"
+        class="size-4 shrink-0"
       />
       <span>{{ item.label }}</span>
-    </button>
+    </Button>
   </div>
 </template>

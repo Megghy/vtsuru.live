@@ -99,11 +99,12 @@ async function handleCopyKey() {
               placeholder="开播后自动获取推流码"
               class="font-mono text-xs select-all pr-8 bg-muted/30"
             />
-            <button
+            <Button
               v-if="c.rtmpCode.value"
-              type="button"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5"
-              title="切换明文显示"
+              variant="ghost"
+              size="icon-xs"
+              class="absolute right-1 top-1/2 -translate-y-1/2 size-6 text-muted-foreground hover:text-foreground"
+              aria-label="切换明文显示"
               @click="showStreamKey = !showStreamKey"
             >
               <EyeOff
@@ -114,7 +115,7 @@ async function handleCopyKey() {
                 v-else
                 class="size-3.5"
               />
-            </button>
+            </Button>
           </div>
 
           <Button

@@ -65,6 +65,7 @@ import {
 } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -624,12 +625,10 @@ function openVideoInBili(bvid: string) {
             <span>名额</span>
             <strong class="font-mono text-foreground">{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
           </div>
-          <div class="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-            <div
-              class="h-full bg-brand rounded-full transition-all"
-              :style="{ width: `${Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))}%` }"
-            />
-          </div>
+          <Progress
+            :model-value="Math.min(100, Math.round((table.videoCount / table.maxVideoCount) * 100))"
+            class="h-1.5"
+          />
         </div>
       </Card>
 
@@ -637,41 +636,34 @@ function openVideoInBili(bvid: string) {
       <div class="space-y-3">
         <!-- Tab 栏与工具条 -->
         <Card class="p-3 flex items-center justify-between flex-wrap gap-3">
-          <div class="inline-flex rounded-md border border-border p-0.5 bg-muted/40">
-            <Button
-              size="xs"
-              :variant="activeStatus === VideoStatus.Pending ? 'brand' : 'ghost'"
-              class="h-6 px-2.5 flex items-center gap-1.5"
-              @click="activeStatus = VideoStatus.Pending"
+          <ToggleGroup
+            type="single"
+            size="xs"
+            :model-value="String(activeStatus)"
+            @update:model-value="(val) => { if (val !== undefined && val !== '') activeStatus = Number(val) }"
+          >
+            <ToggleGroupItem
+              :value="String(VideoStatus.Pending)"
+              class="gap-1.5"
             >
               <span>待审核</span>
-              <span class="px-1 py-0 rounded-full text-[10px] bg-background text-foreground font-mono font-bold">{{
-                pendingVideos.length
-              }}</span>
-            </Button>
-            <Button
-              size="xs"
-              :variant="activeStatus === VideoStatus.Accepted ? 'brand' : 'ghost'"
-              class="h-6 px-2.5 flex items-center gap-1.5"
-              @click="activeStatus = VideoStatus.Accepted"
+              <Badge variant="secondary">{{ pendingVideos.length }}</Badge>
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              :value="String(VideoStatus.Accepted)"
+              class="gap-1.5"
             >
               <span>已通过</span>
-              <span class="px-1 py-0 rounded-full text-[10px] bg-background text-foreground font-mono font-bold">{{
-                acceptedVideos.length
-              }}</span>
-            </Button>
-            <Button
-              size="xs"
-              :variant="activeStatus === VideoStatus.Rejected ? 'brand' : 'ghost'"
-              class="h-6 px-2.5 flex items-center gap-1.5"
-              @click="activeStatus = VideoStatus.Rejected"
+              <Badge variant="secondary">{{ acceptedVideos.length }}</Badge>
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              :value="String(VideoStatus.Rejected)"
+              class="gap-1.5"
             >
               <span>已拒绝</span>
-              <span class="px-1 py-0 rounded-full text-[10px] bg-background text-foreground font-mono font-bold">{{
-                rejectedVideos.length
-              }}</span>
-            </Button>
-          </div>
+              <Badge variant="secondary">{{ rejectedVideos.length }}</Badge>
+            </ToggleGroupItem>
+          </ToggleGroup>
 
           <!-- 右侧工具 -->
           <div class="flex items-center gap-2 flex-wrap">

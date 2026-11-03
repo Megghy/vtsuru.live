@@ -7,6 +7,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'
 import { AVATAR_URL } from '@/shared/config'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { Pagination } from '@/shared/ui/pagination'
@@ -135,22 +136,26 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
           class="filter-indicator"
           :style="indicatorStyle"
         />
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="xs"
+          class="rounded-full font-normal"
           :class="{ 'is-active': selectedTag === null }"
           @click="selectTag(null)"
         >
           全部
-        </button>
-        <button
+        </Button>
+        <Button
           v-for="tag in availableTags"
           :key="tag"
-          type="button"
+          variant="outline"
+          size="xs"
+          class="rounded-full font-normal"
           :class="{ 'is-active': selectedTag === tag }"
           @click="selectTag(tag)"
         >
           {{ tag }}
-        </button>
+        </Button>
       </div>
     </div>
 

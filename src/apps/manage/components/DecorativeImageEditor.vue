@@ -9,6 +9,7 @@ import { Empty } from '@/shared/ui/empty'
 import { ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { NumberField } from '@/shared/ui/number-field'
 import { Slider } from '@/shared/ui/slider'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
   images: DecorativeImageProperties[]
@@ -106,38 +107,57 @@ function moveImage(id: number, offset: -1 | 1) {
             </span>
           </div>
 
-          <div class="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-6 text-muted-foreground hover:text-foreground"
-              title="下移一层"
-              :disabled="disabled"
-              @click.stop="moveImage(image.id, -1)"
-            >
-              <ArrowDown20Filled class="size-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-6 text-muted-foreground hover:text-foreground"
-              title="上移一层"
-              :disabled="disabled"
-              @click.stop="moveImage(image.id, 1)"
-            >
-              <ArrowUp20Filled class="size-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-6 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
-              title="删除"
-              :disabled="disabled"
-              @click.stop="removeImage(image.id)"
-            >
-              <Delete20Filled class="size-3.5" />
-            </Button>
-          </div>
+          <TooltipProvider>
+            <div class="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="text-muted-foreground hover:text-foreground"
+                    aria-label="下移一层"
+                    :disabled="disabled"
+                    @click.stop="moveImage(image.id, -1)"
+                  >
+                    <ArrowDown20Filled class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>下移一层</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="text-muted-foreground hover:text-foreground"
+                    aria-label="上移一层"
+                    :disabled="disabled"
+                    @click.stop="moveImage(image.id, 1)"
+                  >
+                    <ArrowUp20Filled class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>上移一层</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                    aria-label="删除"
+                    :disabled="disabled"
+                    @click.stop="removeImage(image.id)"
+                  >
+                    <Delete20Filled class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>删除</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
         </div>
       </CardHeader>
 

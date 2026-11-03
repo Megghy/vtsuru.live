@@ -6,180 +6,83 @@ import type { APIFileModel } from '@/api/generated/model'
 import { configureMonacoEnvironment } from '@/apps/manage/components/monacoEnvironment'
 import type { CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
 import type { CustomCodeIssue } from '@/apps/user-page/block/customHtmlRuntime'
-import { VTSURU_SANDBOX_DTS } from '@/apps/user-page/runtime/customHtmlBridge'
+
+import { registerCustomHtmlEditorProviders } from './customHtmlEditorLanguage'
+import { registerCustomHtmlHighlighter } from '../monaco-vue/highlight'
+import { activateCustomHtmlVolar } from '../monaco-vue/volar'
 
 const props = defineProps<{
-  html: string
-  css: string
-  js: string
-  activeLanguage: 'html' | 'css' | 'javascript'
+  source: string
   theme: 'vs' | 'vs-dark'
   assets: CustomHtmlAsset[]
   resources: APIFileModel[]
   issues: CustomCodeIssue[]
+  language?: 'vue' | 'css'
 }>()
 const emit = defineEmits<{
-  (event: 'update:html', value: string): void
-  (event: 'update:css', value: string): void
-  (event: 'update:js', value: string): void
+  (event: 'update:source', value: string): void
 }>()
 
 configureMonacoEnvironment()
 const container = ref<HTMLElement | null>(null)
 let editor: monaco.editor.IStandaloneCodeEditor | null = null
-let htmlModel: monaco.editor.ITextModel | null = null
-let cssModel: monaco.editor.ITextModel | null = null
-let jsModel: monaco.editor.ITextModel | null = null
-let activeLanguage = props.activeLanguage
-let htmlViewState: monaco.editor.ICodeEditorViewState | null = null
-let cssViewState: monaco.editor.ICodeEditorViewState | null = null
-let jsViewState: monaco.editor.ICodeEditorViewState | null = null
-let completions: monaco.IDisposable[] = []
+let model: monaco.editor.ITextModel | null = null
+let providers: monaco.IDisposable[] = []
+let widgetsHost: HTMLDivElement | null = null
+let shikiThemes = { light: 'light-plus', dark: 'dark-plus' }
 
-const THEME_VARIABLES = [
-  '--foreground',
-  '--muted-foreground',
-  '--background',
-  '--popover',
-  '--border',
-  '--primary',
-  '--radius',
-  '--border-width',
-  '--border-style',
-  '--ui-shadow',
-]
-
-function currentAssetEntries() {
-  const entries = new Map(props.assets.map((asset) => [asset.key, asset.file]))
-  props.resources.forEach((file) => entries.set(`file-${file.id}`, file))
-  return [...entries].map(([key, file]) => ({ key, file }))
+function editorTheme() {
+  return props.theme === 'vs-dark' ? shikiThemes.dark : shikiThemes.light
 }
 
-function replaceRange(model: monaco.editor.ITextModel, position: monaco.Position) {
-  const word = model.getWordUntilPosition(position)
-  return new monaco.Range(position.lineNumber, word.startColumn, position.lineNumber, word.endColumn)
+function monacoThemeClass() {
+  return props.theme === 'vs-dark' ? 'vs-dark' : 'vs'
 }
 
-function registerCompletions() {
-  completions = [
-    monaco.languages.registerCompletionItemProvider('html', {
-      triggerCharacters: ['"', "'", '-'],
-      provideCompletionItems(model, position) {
-        if (model.uri.scheme !== 'user-page-custom') return { suggestions: [] }
-        const prefix = model.getLineContent(position.lineNumber).slice(0, position.column - 1)
-        const insideAsset = /data-vtsuru-asset\s*=\s*["'][^"']*$/.test(prefix)
-        const range = replaceRange(model, position)
-        const assetItems = currentAssetEntries().map(({ key, file }) => ({
-          label: `${key} · ${file.name}`,
-          detail: file.path,
-          kind: monaco.languages.CompletionItemKind.File,
-          insertText: insideAsset ? key : `<img data-vtsuru-asset="${key}" alt="">`,
-          range,
-        }))
-        if (insideAsset) return { suggestions: assetItems }
-        return {
-          suggestions: [
-            {
-              label: 'data-vtsuru-asset',
-              detail: '绑定已上传图片',
-              kind: monaco.languages.CompletionItemKind.Property,
-              insertText: `data-vtsuru-asset="\${1:file-id}"`,
-              insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
-              range,
-            },
-            ...assetItems,
-          ],
-        }
-      },
-    }),
-    monaco.languages.registerCompletionItemProvider('css', {
-      triggerCharacters: ['-', '('],
-      provideCompletionItems(model, position) {
-        if (model.uri.scheme !== 'user-page-custom') return { suggestions: [] }
-        const range = replaceRange(model, position)
-        return {
-          suggestions: [
-            ...THEME_VARIABLES.map((variable) => ({
-              label: variable,
-              kind: monaco.languages.CompletionItemKind.Variable,
-              insertText: `var(${variable})`,
-              range,
-            })),
-            ...currentAssetEntries().map(({ key, file }) => ({
-              label: `--vtsuru-asset-${key}`,
-              detail: file.name,
-              kind: monaco.languages.CompletionItemKind.File,
-              insertText: `var(--vtsuru-asset-${key})`,
-              range,
-            })),
-          ],
-        }
-      },
-    }),
-  ]
-}
-
-function modelFor(language: 'html' | 'css' | 'javascript') {
-  return language === 'html' ? htmlModel : language === 'css' ? cssModel : jsModel
-}
-
-function switchLanguage(language: 'html' | 'css' | 'javascript') {
-  if (!editor || language === activeLanguage) return
-  if (activeLanguage === 'html') htmlViewState = editor.saveViewState()
-  else if (activeLanguage === 'css') cssViewState = editor.saveViewState()
-  else jsViewState = editor.saveViewState()
-  activeLanguage = language
-  editor.setModel(modelFor(language))
-  editor.restoreViewState(language === 'html' ? htmlViewState : language === 'css' ? cssViewState : jsViewState)
-  editor.focus()
-  requestAnimationFrame(() => {
-    editor?.focus()
-  })
+function syncWidgetsHostTheme() {
+  if (!widgetsHost) return
+  widgetsHost.className = `monaco-editor ${monacoThemeClass()}`
 }
 
 function setMarkers() {
-  if (!htmlModel || !cssModel || !jsModel) return
-  const mapMarkers = (field: 'html' | 'css' | 'js') =>
-    props.issues
-      .filter((item) => item.field === field || (field === 'html' && item.field === 'assets'))
-      .map((item) => ({
-        severity: monaco.MarkerSeverity.Error,
-        message: item.message,
-        startLineNumber: Math.max(1, item.line),
-        startColumn: Math.max(1, item.column),
-        endLineNumber: Math.max(1, item.line),
-        endColumn: Math.max(2, item.column + 1),
-      }))
-  monaco.editor.setModelMarkers(htmlModel, 'vtsuru-custom-html', mapMarkers('html'))
-  monaco.editor.setModelMarkers(cssModel, 'vtsuru-custom-html', mapMarkers('css'))
-  monaco.editor.setModelMarkers(jsModel, 'vtsuru-custom-html', mapMarkers('js'))
+  if (!model) return
+  monaco.editor.setModelMarkers(
+    model,
+    'vtsuru-custom-html',
+    props.issues.map((item) => ({
+      severity: monaco.MarkerSeverity.Error,
+      message: item.message,
+      startLineNumber: Math.max(1, item.line),
+      startColumn: Math.max(1, item.column),
+      endLineNumber: Math.max(1, item.line),
+      endColumn: Math.max(2, item.column + 1),
+    })),
+  )
 }
 
 function insertText(value: string) {
   if (!editor) return
-  let range: monaco.IRange | null = editor.getSelection()
-  if (!range) {
-    const model = editor.getModel()
-    if (model) {
-      const lineCount = model.getLineCount()
-      const maxCol = model.getLineMaxColumn(lineCount)
-      range = new monaco.Range(lineCount, maxCol, lineCount, maxCol)
-    }
-  }
+  const current = editor.getModel()
+  const selection = editor.getSelection()
+  const range =
+    selection ??
+    (current
+      ? new monaco.Range(
+          current.getLineCount(),
+          current.getLineMaxColumn(current.getLineCount()),
+          current.getLineCount(),
+          current.getLineMaxColumn(current.getLineCount()),
+        )
+      : null)
   if (!range) return
   editor.executeEdits('vtsuru-custom-html', [{ range, text: value, forceMoveMarkers: true }])
   editor.focus()
 }
 
-function setContent(value: string, targetLanguage?: 'html' | 'css' | 'javascript') {
-  if (!editor) return
-  if (targetLanguage && targetLanguage !== activeLanguage) {
-    switchLanguage(targetLanguage)
-  }
-  const model = editor.getModel()
-  if (!model) return
-  const fullRange = model.getFullModelRange()
-  editor.executeEdits('vtsuru-custom-html', [{ range: fullRange, text: value, forceMoveMarkers: true }])
+function setContent(value: string) {
+  const current = editor?.getModel()
+  if (!editor || !current) return
+  editor.executeEdits('vtsuru-custom-html', [{ range: current.getFullModelRange(), text: value, forceMoveMarkers: true }])
   editor.setPosition({ lineNumber: 1, column: 1 })
   editor.revealPosition({ lineNumber: 1, column: 1 })
   editor.focus()
@@ -200,25 +103,25 @@ async function formatDocument() {
 defineExpose({ insertText, setContent, clearContent, formatDocument, focus })
 
 onMounted(() => {
-  const instance = crypto.randomUUID()
-  htmlModel = monaco.editor.createModel(
-    props.html,
-    'html',
-    monaco.Uri.parse(`user-page-custom://component/${instance}.html`),
-  )
-  cssModel = monaco.editor.createModel(
-    props.css,
-    'css',
-    monaco.Uri.parse(`user-page-custom://component/${instance}.css`),
-  )
-  jsModel = monaco.editor.createModel(
-    props.js,
-    'javascript',
-    monaco.Uri.parse(`user-page-custom://component/${instance}.js`),
+  shikiThemes = registerCustomHtmlHighlighter()
+  const monacoLanguage = props.language === 'css' ? 'css' : 'vue'
+  if (monacoLanguage === 'vue') void activateCustomHtmlVolar()
+  widgetsHost = document.createElement('div')
+  widgetsHost.style.cssText = 'position:absolute;z-index:2147483647;overflow:visible;background:transparent'
+  syncWidgetsHostTheme()
+  document.body.append(widgetsHost)
+  model = monaco.editor.createModel(
+    props.source,
+    monacoLanguage,
+    monaco.Uri.parse(
+      props.language === 'css'
+        ? `file:///style-${crypto.randomUUID()}.css`
+        : `file:///App-${crypto.randomUUID()}.vue`,
+    ),
   )
   editor = monaco.editor.create(container.value!, {
-    model: modelFor(activeLanguage),
-    theme: props.theme,
+    model,
+    theme: editorTheme(),
     automaticLayout: true,
     minimap: { enabled: false },
     wordWrap: 'on',
@@ -228,46 +131,40 @@ onMounted(() => {
     scrollBeyondLastLine: false,
     tabSize: 2,
     insertSpaces: true,
+    fixedOverflowWidgets: true,
+    overflowWidgetsDomNode: widgetsHost,
+    quickSuggestions: { other: true, comments: true, strings: true },
+    suggestOnTriggerCharacters: true,
+    snippetSuggestions: 'inline',
+    wordBasedSuggestions: 'currentDocument',
+    tabCompletion: 'on',
+    parameterHints: { enabled: true },
   })
-  htmlModel.onDidChangeContent(() => emit('update:html', htmlModel!.getValue()))
-  cssModel.onDidChangeContent(() => emit('update:css', cssModel!.getValue()))
-  jsModel.onDidChangeContent(() => emit('update:js', jsModel!.getValue()))
-  registerCompletions()
-  completions.push(monaco.typescript.javascriptDefaults.addExtraLib(VTSURU_SANDBOX_DTS, 'file:///vtsuru-sdk.d.ts'))
+  model.onDidChangeContent(() => emit('update:source', model!.getValue()))
+  providers = registerCustomHtmlEditorProviders(monaco, monacoLanguage, () => props)
   setMarkers()
 })
 
-watch(() => props.activeLanguage, switchLanguage)
 watch(
   () => props.theme,
-  (value) => monaco.editor.setTheme(value),
-)
-watch(
-  () => props.html,
-  (value) => {
-    if (htmlModel && value !== htmlModel.getValue()) htmlModel.setValue(value)
+  () => {
+    monaco.editor.setTheme(editorTheme())
+    syncWidgetsHostTheme()
   },
 )
 watch(
-  () => props.css,
+  () => props.source,
   (value) => {
-    if (cssModel && value !== cssModel.getValue()) cssModel.setValue(value)
-  },
-)
-watch(
-  () => props.js,
-  (value) => {
-    if (jsModel && value !== jsModel.getValue()) jsModel.setValue(value)
+    if (model && value !== model.getValue()) model.setValue(value)
   },
 )
 watch(() => props.issues, setMarkers, { deep: true })
 
 onBeforeUnmount(() => {
-  completions.forEach((item) => item.dispose())
+  providers.forEach((item) => item.dispose())
   editor?.dispose()
-  htmlModel?.dispose()
-  cssModel?.dispose()
-  jsModel?.dispose()
+  model?.dispose()
+  widgetsHost?.remove()
 })
 </script>
 
@@ -278,11 +175,3 @@ onBeforeUnmount(() => {
     @click="focus"
   />
 </template>
-
-<style scoped>
-.code-editor {
-  width: 100%;
-  height: 100%;
-  min-height: 320px;
-}
-</style>

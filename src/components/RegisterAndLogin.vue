@@ -578,13 +578,14 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center justify-between pt-1">
-            <button
-              type="button"
-              class="text-xs text-muted-foreground hover:text-foreground transition underline-offset-4 hover:underline"
+            <Button
+              variant="link"
+              size="xs"
+              class="h-auto p-0 text-muted-foreground"
               @click="onForgetPasswordClick"
             >
               忘记密码
-            </button>
+            </Button>
 
             <div class="flex items-center gap-2">
               <Button
@@ -695,13 +696,14 @@ onUnmounted(() => {
           </div>
 
           <div class="flex items-center justify-between pt-1">
-            <button
-              type="button"
-              class="text-xs text-muted-foreground hover:text-foreground transition underline-offset-4 hover:underline"
+            <Button
+              variant="link"
+              size="xs"
+              class="h-auto p-0 text-muted-foreground"
               @click="backToLogin"
             >
               返回登录
-            </button>
+            </Button>
 
             <div class="flex items-center gap-2">
               <Button

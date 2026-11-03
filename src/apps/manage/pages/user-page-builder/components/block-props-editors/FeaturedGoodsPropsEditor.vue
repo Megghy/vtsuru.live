@@ -5,6 +5,7 @@ import type { ResponsePointGoodModel } from '@/api/client-types'
 import { GoodsStatus } from '@/api/generated/model'
 import { fetchPublicPointGoods } from '@/apps/user-page/api'
 import type { BlockNode } from '@/apps/user-page/block/schema'
+import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -100,16 +101,16 @@ watch(
         <label class="text-xs text-muted-foreground">手动选择礼物 (最多6个)</label>
         <Popover>
           <PopoverTrigger as-child>
-            <button
-              type="button"
-              class="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-1 text-xs text-foreground ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            <Button
+              variant="outline"
+              class="w-full justify-between font-normal text-xs"
             >
               <span class="truncate">
                 {{
                   selectedGoodsIds.length ? `已选 ${selectedGoodsIds.length} 个商品` : '不选择时使用上面的自动选择方式'
                 }}
               </span>
-            </button>
+            </Button>
           </PopoverTrigger>
           <PopoverContent class="w-64 p-2 space-y-1 max-h-60 overflow-y-auto">
             <div

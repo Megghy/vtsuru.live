@@ -586,16 +586,18 @@ onUnmounted(() => {
                     readonly
                     class="pr-8 font-mono"
                   />
-                  <button
-                    type="button"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 size-6 text-muted-foreground hover:text-foreground"
+                    aria-label="切换密码显示"
                     @click="showToken = !showToken"
                   >
                     <component
                       :is="showToken ? EyeOffOutline : EyeOutline"
-                      class="h-4 w-4"
+                      class="size-3.5"
                     />
-                  </button>
+                  </Button>
                 </div>
 
                 <Button

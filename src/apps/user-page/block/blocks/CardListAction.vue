@@ -39,7 +39,6 @@ const router = useRouter()
     v-if="label && internalPath"
     :variant="secondary ? 'outline' : 'default'"
     size="xs"
-    class="font-medium"
     @click="router.push(internalPath)"
   >
     {{ label }}
@@ -49,7 +48,7 @@ const router = useRouter()
     as="a"
     :variant="secondary ? 'outline' : 'default'"
     size="xs"
-    class="font-medium inline-flex items-center justify-center text-inherit no-underline"
+    class="text-inherit no-underline"
     :href="url"
     target="_blank"
     rel="noopener noreferrer"

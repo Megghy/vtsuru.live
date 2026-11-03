@@ -101,7 +101,6 @@ function downloadPng() {
           target="_blank"
           rel="noopener noreferrer"
           variant="outline"
-          class="font-medium"
         >
           <component
             :is="OpenOutline"
@@ -111,7 +110,6 @@ function downloadPng() {
         </Button>
         <Button
           variant="outline"
-          class="font-medium"
           :disabled="!canRender"
           @click="downloadPng"
         >

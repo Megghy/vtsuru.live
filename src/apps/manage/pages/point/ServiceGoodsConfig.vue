@@ -11,6 +11,7 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
+import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -366,20 +367,14 @@ function removeOption(field: ServiceField, optIndex: number) {
                 v-if="field.options && field.options.length > 0"
                 class="flex flex-wrap gap-1.5 pt-1"
               >
-                <span
+                <Tag
                   v-for="(opt, optIdx) in field.options"
                   :key="optIdx"
-                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] bg-muted text-foreground border border-border"
+                  closable
+                  @close="removeOption(field, optIdx)"
                 >
                   {{ opt }}
-                  <button
-                    type="button"
-                    class="hover:text-destructive"
-                    @click="removeOption(field, optIdx)"
-                  >
-                    ×
-                  </button>
-                </span>
+                </Tag>
               </div>
             </div>
 

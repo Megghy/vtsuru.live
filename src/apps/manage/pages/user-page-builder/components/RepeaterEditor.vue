@@ -125,9 +125,9 @@ function duplicateItem(index: number) {
             class="repeater-drag-handle size-4.5 cursor-grab text-muted-foreground"
             title="拖拽排序"
           />
-          <button
-            class="flex flex-1 gap-1.5 items-center min-w-0 p-1 border-0 text-inherit bg-transparent text-left cursor-pointer"
-            type="button"
+          <Button
+            variant="ghost"
+            class="flex flex-1 justify-start gap-1.5 items-center min-w-0 h-auto p-1 text-left font-normal"
             @click="toggle(item._id)"
           >
             <component
@@ -144,7 +144,7 @@ function duplicateItem(index: number) {
                 项目 {{ index + 1 }}
               </slot>
             </span>
-          </button>
+          </Button>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>

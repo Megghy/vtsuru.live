@@ -111,11 +111,11 @@ const previewBoxStyle = computed(() => {
             <div class="flex flex-col gap-2">
               <div class="text-[13px] font-medium text-foreground">显示版型</div>
               <div class="grid grid-cols-2 gap-1.5 w-full">
-                <button
+                <Button
                   v-for="opt in modeOptions"
                   :key="opt.value"
-                  type="button"
-                  class="flex-between py-1.5 px-2.5 rounded-md border border-border bg-background text-foreground cursor-pointer outline-none box-border transition hover:bg-popover hover:border-[var(--brand-tint,rgba(56,189,248,0.4))]"
+                  variant="outline"
+                  class="flex-between py-1.5 px-2.5 h-auto font-normal"
                   :class="{
                     'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold':
                       selectedMode === opt.value,
@@ -124,7 +124,7 @@ const previewBoxStyle = computed(() => {
                 >
                   <span class="text-xs">{{ opt.label }}</span>
                   <span class="text-[10px] text-muted-foreground bg-muted py-px px-1.5 rounded">{{ opt.desc }}</span>
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -132,11 +132,11 @@ const previewBoxStyle = computed(() => {
             <div class="flex flex-col gap-2">
               <div class="text-[13px] font-medium text-foreground">视觉风格</div>
               <div class="grid grid-cols-2 gap-1.5 w-full">
-                <button
+                <Button
                   v-for="opt in styleOptions"
                   :key="opt.value"
-                  type="button"
-                  class="flex-between py-1.5 px-2.5 rounded-md border border-border bg-background text-foreground cursor-pointer outline-none box-border transition hover:bg-popover hover:border-[var(--brand-tint,rgba(56,189,248,0.4))]"
+                  variant="outline"
+                  class="flex-between py-1.5 px-2.5 h-auto font-normal"
                   :class="{
                     'bg-[var(--brand-soft,rgba(56,189,248,0.12))] border-[var(--brand,#38bdf8)] text-[var(--brand,#38bdf8)] font-semibold':
                       selectedStyle === opt.value,
@@ -145,7 +145,7 @@ const previewBoxStyle = computed(() => {
                 >
                   <span class="text-xs">{{ opt.label }}</span>
                   <span class="text-[10px] text-muted-foreground bg-muted py-px px-1.5 rounded">{{ opt.desc }}</span>
-                </button>
+                </Button>
               </div>
             </div>
 

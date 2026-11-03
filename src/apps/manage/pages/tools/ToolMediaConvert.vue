@@ -18,6 +18,7 @@ import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 
 import { buildCommands, defaultSettings, formatMap, formats, positive, presets, type Rotate } from './mediaConvert'
@@ -458,13 +459,14 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <button
-            type="button"
-            class="advanced-toggle text-xs text-foreground/80 hover:text-foreground text-left"
+          <Button
+            variant="ghost"
+            size="xs"
+            class="advanced-toggle h-auto p-0 text-foreground/80 justify-start"
             @click="showAdvanced = !showAdvanced"
           >
             {{ showAdvanced ? '▾' : '▸' }} 高级设置（编码 / 画面 / 速度 / 音频）
-          </button>
+          </Button>
 
           <div
             v-if="showAdvanced"
@@ -624,32 +626,18 @@ onBeforeUnmount(() => {
                 </div>
 
                 <div class="flex justify-center mt-2">
-                  <div class="inline-flex rounded-md border border-input p-0.5 bg-muted">
-                    <button
-                      type="button"
-                      class="px-3 py-1 text-xs rounded transition-colors cursor-pointer"
-                      :class="
-                        settings.rateMode === 'crf'
-                          ? 'bg-background shadow-xs font-medium text-foreground'
-                          : 'text-muted-foreground hover:text-foreground'
-                      "
-                      @click="settings.rateMode = 'crf'"
-                    >
+                  <ToggleGroup
+                    type="single"
+                    :model-value="settings.rateMode"
+                    @update:model-value="(val) => { if (val) settings.rateMode = val as any }"
+                  >
+                    <ToggleGroupItem value="crf">
                       画质优先 (CRF)
-                    </button>
-                    <button
-                      type="button"
-                      class="px-3 py-1 text-xs rounded transition-colors cursor-pointer"
-                      :class="
-                        settings.rateMode === 'targetSize'
-                          ? 'bg-background shadow-xs font-medium text-foreground'
-                          : 'text-muted-foreground hover:text-foreground'
-                      "
-                      @click="settings.rateMode = 'targetSize'"
-                    >
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="targetSize">
                       目标体积
-                    </button>
-                  </div>
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 </div>
 
                 <div

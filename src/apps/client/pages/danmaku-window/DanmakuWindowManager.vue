@@ -28,6 +28,7 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useLiveEmoji } from '@/store/useLiveEmoji'
 
@@ -248,22 +249,19 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle class="text-sm font-semibold">呈现模式</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
-            <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-              <button
+            <ToggleGroup
+              type="single"
+              :model-value="danmakuWindow.danmakuWindowSetting.displayStyle"
+              @update:model-value="(val) => { if (val) danmakuWindow.danmakuWindowSetting.displayStyle = val as any }"
+            >
+              <ToggleGroupItem
                 v-for="opt in displayStyleOptions"
                 :key="opt.value"
-                type="button"
-                class="px-3 py-1 text-xs font-medium rounded-sm transition-all"
-                :class="
-                  danmakuWindow.danmakuWindowSetting.displayStyle === opt.value
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'hover:text-foreground'
-                "
-                @click="danmakuWindow.danmakuWindowSetting.displayStyle = opt.value as any"
+                :value="opt.value"
               >
                 {{ opt.label }}
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
             <template v-if="danmakuWindow.danmakuWindowSetting.displayStyle === 'text'">
               <div class="flex flex-col gap-2 pt-2 border-t">

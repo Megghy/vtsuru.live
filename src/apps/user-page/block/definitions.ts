@@ -1,13 +1,11 @@
 import { USER_FEATURE_KEYS } from '../featureNavigation'
 import {
-  CUSTOM_CSS_MAX_BYTES,
-  CUSTOM_JS_MAX_BYTES,
   CUSTOM_HTML_ASSET_KEY_PATTERN,
   CUSTOM_HTML_MAX_ASSETS,
-  CUSTOM_HTML_MAX_BYTES,
   CUSTOM_HTML_MAX_HEIGHT,
   CUSTOM_HTML_MIN_AUTO_HEIGHT,
   CUSTOM_HTML_MIN_HEIGHT,
+  CUSTOM_VUE_MAX_BYTES,
   DEFAULT_CUSTOM_HTML_PROPS,
   utf8ByteLength,
 } from './customHtmlContract'
@@ -105,13 +103,9 @@ const validateRichText = withProps((props, path, errors) => {
 })
 
 export const validateCustomHtml = withProps((props, path, errors) => {
-  if (typeof props.html !== 'string') errors.push(`${path}: html 必须是 string`, 'html')
-  else if (utf8ByteLength(props.html) > CUSTOM_HTML_MAX_BYTES) errors.push(`${path}: html 不能超过 256 KiB`, 'html')
-  if (typeof props.css !== 'string') errors.push(`${path}: css 必须是 string`, 'css')
-  else if (utf8ByteLength(props.css) > CUSTOM_CSS_MAX_BYTES) errors.push(`${path}: css 不能超过 128 KiB`, 'css')
-  if (props.js !== undefined && typeof props.js !== 'string') errors.push(`${path}: js 必须是 string`, 'js')
-  else if (typeof props.js === 'string' && utf8ByteLength(props.js) > CUSTOM_JS_MAX_BYTES)
-    errors.push(`${path}: js 不能超过 256 KiB`, 'js')
+  if (typeof props.source !== 'string') errors.push(`${path}: source 必须是 string`, 'source')
+  else if (utf8ByteLength(props.source) > CUSTOM_VUE_MAX_BYTES)
+    errors.push(`${path}: source 不能超过 ${CUSTOM_VUE_MAX_BYTES / 1024} KiB`, 'source')
   optionalEnum(props, 'heightMode', ['auto', 'fixed', 'viewport'], path, errors)
   optionalNumber(props, 'height', CUSTOM_HTML_MIN_HEIGHT, CUSTOM_HTML_MAX_HEIGHT, path, errors, true)
   optionalNumber(props, 'maxHeight', CUSTOM_HTML_MIN_AUTO_HEIGHT, CUSTOM_HTML_MAX_HEIGHT, path, errors, true)
@@ -516,9 +510,9 @@ export const SHARED_BLOCK_DEFINITIONS = [
   ),
   definition(
     'customHtml',
-    '自定义 HTML/CSS',
+    '自定义 Vue',
     'content',
-    ['代码', 'HTML', 'CSS', '组件'],
+    ['代码', 'Vue', 'SFC', '组件'],
     DEFAULT_CUSTOM_HTML_PROPS,
     validateCustomHtml,
     true,

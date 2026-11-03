@@ -24,6 +24,7 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
 import { Textarea } from '@/shared/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { toast } from '@/shared/utils'
 
 import PublicTicketCard from './support-ticket/PublicTicketCard.vue'
@@ -199,32 +200,26 @@ watch(
     :class="{ 'ticket-page--manage': inManage, 'ticket-page--detail': isDetailRoute }"
   >
     <header class="ticket-page__toolbar flex items-center justify-between gap-3 pb-3 border-b border-border/60">
-      <div
-        v-if="isLoggedIn"
-        class="flex items-center gap-1 bg-muted p-0.5 rounded-lg text-xs"
-      >
-        <button
-          type="button"
-          class="px-3 py-1 rounded-md transition font-medium"
-          :class="
-            view === 'mine' ? 'bg-background text-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground'
-          "
-          @click="view = 'mine'"
+      <div v-if="isLoggedIn">
+        <ToggleGroup
+          type="single"
+          size="sm"
+          :model-value="view"
+          @update:model-value="(v) => { if (v) view = v as 'mine' | 'public' }"
         >
-          我的工单
-        </button>
-        <button
-          type="button"
-          class="px-3 py-1 rounded-md transition font-medium"
-          :class="
-            view === 'public'
-              ? 'bg-background text-foreground shadow-xs'
-              : 'text-muted-foreground hover:text-foreground'
-          "
-          @click="view = 'public'"
-        >
-          公开工单
-        </button>
+          <ToggleGroupItem
+            value="mine"
+            class="text-xs px-3"
+          >
+            我的工单
+          </ToggleGroupItem>
+          <ToggleGroupItem
+            value="public"
+            class="text-xs px-3"
+          >
+            公开工单
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
       <strong
         v-else

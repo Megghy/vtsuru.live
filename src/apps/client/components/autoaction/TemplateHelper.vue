@@ -2,6 +2,7 @@
 import { Add16Regular, Copy16Regular, Search16Regular } from '@vicons/fluent'
 import { computed, ref } from 'vue'
 
+import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { useMessage } from '@/shared/utils'
@@ -68,22 +69,24 @@ function handleInsert(text: string) {
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0 opacity-40 transition-opacity group-hover:opacity-100">
-            <button
-              type="button"
-              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-card hover:text-foreground"
-              title="复制"
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="size-6 text-muted-foreground hover:text-foreground"
+              aria-label="复制"
               @click.stop="copyToClipboard(item.name)"
             >
-              <Copy16Regular class="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              class="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-card hover:text-foreground"
-              title="插入"
+              <Copy16Regular class="size-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              class="size-6 text-muted-foreground hover:text-foreground"
+              aria-label="插入"
               @click.stop="handleInsert(item.name)"
             >
-              <Add16Regular class="h-4 w-4" />
-            </button>
+              <Add16Regular class="size-3.5" />
+            </Button>
           </div>
         </div>
         <div

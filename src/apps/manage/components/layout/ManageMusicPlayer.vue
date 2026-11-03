@@ -18,6 +18,8 @@ import APlayer from 'vue3-aplayer'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Slider } from '@/shared/ui/slider'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
@@ -43,6 +45,13 @@ const playerVolume = computed({
 })
 
 const aplayer = ref<any>()
+
+const sliderVolume = computed({
+  get: () => [playerVolume.value * 100],
+  set: (val) => {
+    if (val && val.length > 0) playerVolume.value = val[0] / 100
+  },
+})
 watch(aplayer, () => {
   musicRquestStore.aplayerRef = aplayer.value
 })
@@ -298,7 +307,7 @@ function togglePlayerMinimize() {
           </div>
 
           <!-- 音量控制 -->
-          <div class="flex flex-col items-center gap-1 min-w-[90px]">
+          <div class="flex flex-col items-center gap-1.5 min-w-[90px]">
             <div class="flex items-center gap-1 text-[11px] text-muted-foreground">
               <component
                 :is="VolumeHigh"
@@ -306,13 +315,11 @@ function togglePlayerMinimize() {
               />
               <span>音量 {{ Math.round(playerVolume * 100) }}%</span>
             </div>
-            <input
-              v-model.number="playerVolume"
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              class="h-1.5 w-20 accent-brand bg-muted rounded cursor-pointer"
+            <Slider
+              v-model="sliderVolume"
+              :max="100"
+              :step="1"
+              class="w-20"
             />
           </div>
         </div>

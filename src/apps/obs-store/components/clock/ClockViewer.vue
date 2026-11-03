@@ -22,6 +22,7 @@ import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Slider } from '@/shared/ui/slider'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import ClockDisplay from './ClockDisplay.vue'
@@ -186,20 +187,21 @@ const modeOptions: { label: string; value: ClockMode }[] = [
           </div>
 
           <!-- 模式切换控制器 -->
-          <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-            <button
+          <ToggleGroup
+            type="single"
+            size="xs"
+            :model-value="state.mode"
+            @update:model-value="(v) => { if (v) updateState({ mode: v as ClockMode }) }"
+          >
+            <ToggleGroupItem
               v-for="opt in modeOptions"
               :key="opt.value"
-              type="button"
-              class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-              :class="
-                state.mode === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
-              "
-              @click="updateState({ mode: opt.value })"
+              :value="opt.value"
+              class="px-2.5"
             >
               {{ opt.label }}
-            </button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
 
           <!-- 快捷操作按钮 -->
           <div class="flex items-center gap-1.5">
@@ -266,70 +268,71 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                 class="quick-time-row"
               >
                 <span class="quick-label">预设时长:</span>
-                <button
-                  type="button"
-                  class="btn-quick"
+                <Button
+                  variant="outline"
+                  size="xs"
                   @click="quickSetMinutes(3)"
                 >
                   3分钟
-                </button>
-                <button
-                  type="button"
-                  class="btn-quick"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xs"
                   @click="quickSetMinutes(5)"
                 >
                   5分钟
-                </button>
-                <button
-                  type="button"
-                  class="btn-quick"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xs"
                   @click="quickSetMinutes(10)"
                 >
                   10分钟
-                </button>
-                <button
-                  type="button"
-                  class="btn-quick"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xs"
                   @click="quickSetMinutes(15)"
                 >
                   15分钟
-                </button>
-                <button
-                  type="button"
-                  class="btn-quick"
+                </Button>
+                <Button
+                  variant="outline"
+                  size="xs"
                   @click="quickSetMinutes(30)"
                 >
                   30分钟
-                </button>
+                </Button>
               </div>
 
               <!-- 开始 / 暂停 / 重置大按钮 -->
               <div class="action-button-grid">
-                <button
-                  type="button"
-                  class="btn-action btn-main"
-                  :class="{ 'is-running': state.timerRunning }"
+                <Button
+                  :variant="state.timerRunning ? 'destructive' : 'brand'"
+                  size="lg"
+                  class="h-10 font-semibold gap-1.5 flex-1"
                   @click="toggleTimer"
                 >
                   <Pause24Regular
                     v-if="state.timerRunning"
-                    class="btn-icon"
+                    class="size-4"
                   />
                   <Play24Regular
                     v-else
-                    class="btn-icon"
+                    class="size-4"
                   />
-                  <span class="btn-text">{{ state.timerRunning ? '暂停计时' : '开始计时' }}</span>
-                </button>
+                  <span>{{ state.timerRunning ? '暂停计时' : '开始计时' }}</span>
+                </Button>
 
-                <button
-                  type="button"
-                  class="btn-action btn-reset"
+                <Button
+                  variant="outline"
+                  size="lg"
+                  class="h-10 font-semibold gap-1.5 flex-1"
                   @click="resetTimer"
                 >
-                  <ArrowCounterclockwise24Regular class="btn-icon" />
-                  <span class="btn-text">重置归零</span>
-                </button>
+                  <ArrowCounterclockwise24Regular class="size-4" />
+                  <span>重置归零</span>
+                </Button>
               </div>
 
               <!-- 自定义倒计时秒数 -->
@@ -355,11 +358,11 @@ const modeOptions: { label: string; value: ClockMode }[] = [
               </div>
 
               <div class="theme-preset-grid">
-                <button
+                <Button
                   v-for="preset in CLOCK_THEME_PRESETS"
                   :key="preset.id"
-                  type="button"
-                  class="theme-preset-card"
+                  variant="outline"
+                  class="theme-preset-card h-auto p-2.5 flex flex-col items-stretch text-left font-normal"
                   :class="{ active: state.theme === preset.id }"
                   @click="updateState({ theme: preset.id })"
                 >
@@ -368,7 +371,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                     <span class="preset-tag">{{ preset.tag }}</span>
                   </div>
                   <span class="preset-archetype">{{ preset.archetype }}</span>
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -446,70 +449,76 @@ const modeOptions: { label: string; value: ClockMode }[] = [
               <div class="compact-toggle-matrix">
                 <!-- 时钟专有开关 -->
                 <template v-if="state.mode === 'clock'">
-                  <button
-                    type="button"
-                    class="toggle-chip"
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="toggle-chip font-normal"
                     :class="{ active: state.is24Hour }"
                     @click="updateState({ is24Hour: !state.is24Hour })"
                   >
                     <span class="chip-dot" />
                     24小时制
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
-                    class="toggle-chip"
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="toggle-chip font-normal"
                     :class="{ active: state.showSeconds }"
                     @click="updateState({ showSeconds: !state.showSeconds })"
                   >
                     <span class="chip-dot" />
                     显示秒数
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
-                    class="toggle-chip"
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="toggle-chip font-normal"
                     :class="{ active: state.showDate }"
                     @click="updateState({ showDate: !state.showDate })"
                   >
                     <span class="chip-dot" />
                     显示日期
-                  </button>
+                  </Button>
 
-                  <button
-                    type="button"
-                    class="toggle-chip"
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="toggle-chip font-normal"
                     :class="{ active: state.showDayOfWeek }"
                     @click="updateState({ showDayOfWeek: !state.showDayOfWeek })"
                   >
                     <span class="chip-dot" />
                     显示星期
-                  </button>
+                  </Button>
                 </template>
 
                 <!-- 倒计时专有开关 -->
                 <template v-if="state.mode === 'countdown'">
-                  <button
-                    type="button"
-                    class="toggle-chip"
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    class="toggle-chip font-normal"
                     :class="{ active: state.showProgress }"
                     @click="updateState({ showProgress: !state.showProgress })"
                   >
                     <span class="chip-dot" />
                     进度条
-                  </button>
+                  </Button>
                 </template>
 
                 <!-- 所有模式通用开关 -->
-                <button
-                  type="button"
-                  class="toggle-chip"
+                <Button
+                  variant="outline"
+                  size="xs"
+                  class="toggle-chip font-normal"
                   :class="{ active: state.showMilliseconds }"
                   @click="updateState({ showMilliseconds: !state.showMilliseconds })"
                 >
                   <span class="chip-dot" />
                   微秒/毫秒
-                </button>
+                </Button>
               </div>
             </div>
           </div>
@@ -519,32 +528,16 @@ const modeOptions: { label: string; value: ClockMode }[] = [
             <div class="monitor-panel-box">
               <div class="flex items-center justify-between mb-2">
                 <span class="deck-label">OBS 画面实时监视器</span>
-                <div class="flex items-center gap-1.5">
-                  <Button
-                    size="xs"
-                    class="h-6 text-[11px] px-2"
-                    :variant="previewBg === 'checker' ? 'default' : 'outline'"
-                    @click="previewBg = 'checker'"
-                  >
-                    网格底
-                  </Button>
-                  <Button
-                    size="xs"
-                    class="h-6 text-[11px] px-2"
-                    :variant="previewBg === 'dark' ? 'default' : 'outline'"
-                    @click="previewBg = 'dark'"
-                  >
-                    暗黑底
-                  </Button>
-                  <Button
-                    size="xs"
-                    class="h-6 text-[11px] px-2"
-                    :variant="previewBg === 'transparent' ? 'default' : 'outline'"
-                    @click="previewBg = 'transparent'"
-                  >
-                    透明底
-                  </Button>
-                </div>
+                <ToggleGroup
+                  type="single"
+                  size="xs"
+                  :model-value="previewBg"
+                  @update:model-value="(val) => { if (val) previewBg = val as any }"
+                >
+                  <ToggleGroupItem value="checker">网格底</ToggleGroupItem>
+                  <ToggleGroupItem value="dark">暗黑底</ToggleGroupItem>
+                  <ToggleGroupItem value="transparent">透明底</ToggleGroupItem>
+                </ToggleGroup>
               </div>
 
               <!-- 舞台监视器 -->
@@ -681,67 +674,11 @@ const modeOptions: { label: string; value: ClockMode }[] = [
   color: var(--muted-foreground);
 }
 
-.btn-quick {
-  background: var(--background);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 3px 8px;
-  font-size: 12px;
-  color: var(--foreground);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.btn-quick:hover {
-  background: var(--popover);
-  border-color: var(--brand);
-  color: var(--brand);
-}
-
 .action-button-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 8px;
   margin-bottom: 10px;
-}
-
-.btn-action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 40px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  background: var(--background);
-  color: var(--foreground);
-  user-select: none;
-}
-
-.btn-action:hover {
-  background: var(--popover);
-  border-color: var(--brand);
-  color: var(--brand);
-}
-
-.btn-action.btn-main {
-  background: var(--brand);
-  color: #fff;
-  border-color: var(--brand);
-}
-
-.btn-action.btn-main.is-running {
-  background: #f59e0b;
-  border-color: #f59e0b;
-}
-
-.btn-icon {
-  width: 16px;
-  height: 16px;
 }
 
 .custom-duration-row {

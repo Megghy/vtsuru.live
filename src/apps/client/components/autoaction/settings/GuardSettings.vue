@@ -10,6 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
+import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
@@ -172,21 +173,14 @@ function getGuardLevelName(level: number): string {
           </Badge>
 
           <div class="flex flex-wrap items-center gap-1.5 flex-1">
-            <Badge
+            <Tag
               v-for="(code, codeIndex) in levelCodes.codes"
               :key="codeIndex"
-              variant="secondary"
-              class="text-xs h-6 px-2 gap-1.5 font-normal"
+              closable
+              @close="removeGiftCode(levelIndex, codeIndex)"
             >
-              <span>{{ code }}</span>
-              <button
-                type="button"
-                class="hover:text-destructive transition-colors text-muted-foreground"
-                @click="removeGiftCode(levelIndex, codeIndex)"
-              >
-                ✕
-              </button>
-            </Badge>
+              {{ code }}
+            </Tag>
           </div>
         </div>
       </div>

@@ -13,6 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { NumberField } from '@/shared/ui/number-field'
 import { Spin } from '@/shared/ui/spin'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useDialog, useMessage } from '@/shared/utils'
 
 import BuilderPaneHost from './user-page-builder/components/BuilderPaneHost.vue'
@@ -417,21 +418,22 @@ onBeforeRouteLeave(() => {
             aria-live="polite"
             >{{ keyboardStatus }}</span
           >
-          <div
+          <ToggleGroup
             v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1"
-            class="shrink-0 max-w-full overflow-x-auto inline-flex rounded-md border border-input p-0.5 bg-muted/40"
+            type="single"
+            size="xs"
+            :model-value="selectedResponsivePane"
+            class="shrink-0 max-w-full overflow-x-auto"
+            @update:model-value="(val) => { if (val) selectResponsivePane(val as any) }"
           >
-            <Button
-              size="xs"
+            <ToggleGroupItem
               v-for="id in responsivePaneIds"
               :key="id"
-              :variant="selectedResponsivePane === id ? 'secondary' : 'ghost'"
-              class="px-3"
-              @click="selectResponsivePane(id)"
+              :value="id"
             >
               {{ COLUMN_META[id].label }}
-            </Button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
 
           <div
             class="builder-pane-grid grid gap-1.5 flex-1 min-w-0 min-h-0"
@@ -572,15 +574,16 @@ onBeforeRouteLeave(() => {
                 <AlertCircle class="h-4 w-4" />
                 <AlertTitle>存在必须修复的问题</AlertTitle>
                 <AlertDescription class="mt-2 flex flex-col gap-1">
-                  <button
+                  <Button
                     v-for="(issue, idx) in editor.publishCheckIssues.value"
                     :key="`${issue.pageKey}:${issue.blockId}:${issue.fieldPath}:${idx}`"
-                    type="button"
-                    class="flex w-full h-auto justify-start my-0.5 text-left whitespace-normal text-xs underline hover:opacity-80"
+                    variant="link"
+                    size="xs"
+                    class="h-auto p-0 justify-start my-0.5 text-left whitespace-normal text-destructive hover:opacity-80"
                     @click="focusPublishValidationIssue(issue)"
                   >
                     {{ issue.message }}
-                  </button>
+                  </Button>
                 </AlertDescription>
               </Alert>
               <Alert

@@ -42,7 +42,7 @@ describe('CustomHtmlEditorModal setup and initial mount', () => {
           block: {
             id: 'b1',
             type: 'customHtml',
-            props: { html: '', css: '', assets: [] },
+            props: { source: '', assets: [] },
           },
         },
         global: {

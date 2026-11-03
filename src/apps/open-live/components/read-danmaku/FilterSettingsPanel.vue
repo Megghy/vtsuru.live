@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled, Dismiss20Filled } from '@vicons/fluent'
+import { Add20Filled, Delete20Filled } from '@vicons/fluent'
 import { ref } from 'vue'
 
 import { Badge } from '@/shared/ui/badge'
@@ -9,6 +9,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
+import { Tag } from '@/shared/ui/tag'
 import { useSpeechService } from '@/store/useSpeechService'
 
 import SectionField from './SectionField.vue'
@@ -59,21 +60,15 @@ function removeReplacement(index: number) {
     >
       <div class="flex flex-col gap-2">
         <div class="flex flex-wrap gap-1.5 min-h-7 items-center">
-          <Badge
+          <Tag
             v-for="(u, idx) in settings.blacklistUsers"
             :key="idx"
-            variant="secondary"
-            class="gap-1 text-xs py-0.5"
+            closable
+            class="text-xs"
+            @close="removeUser(idx)"
           >
             {{ u }}
-            <button
-              type="button"
-              class="hover:text-destructive cursor-pointer"
-              @click="removeUser(idx)"
-            >
-              <Dismiss20Filled class="size-3" />
-            </button>
-          </Badge>
+          </Tag>
           <span
             v-if="settings.blacklistUsers.length === 0"
             class="text-xs text-muted-foreground"
@@ -103,21 +98,15 @@ function removeReplacement(index: number) {
     >
       <div class="flex flex-col gap-2">
         <div class="flex flex-wrap gap-1.5 min-h-7 items-center">
-          <Badge
+          <Tag
             v-for="(kw, idx) in settings.blacklistKeywords"
             :key="idx"
-            variant="secondary"
-            class="gap-1 text-xs py-0.5"
+            closable
+            class="text-xs"
+            @close="removeKeyword(idx)"
           >
             {{ kw }}
-            <button
-              type="button"
-              class="hover:text-destructive cursor-pointer"
-              @click="removeKeyword(idx)"
-            >
-              <Dismiss20Filled class="size-3" />
-            </button>
-          </Badge>
+          </Tag>
           <span
             v-if="settings.blacklistKeywords.length === 0"
             class="text-xs text-muted-foreground"

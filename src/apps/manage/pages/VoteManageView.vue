@@ -51,6 +51,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -898,12 +899,12 @@ onUnmounted(() => {
               </Button>
             </div>
 
-            <div
+            <Empty
               v-if="savedTemplates.length === 0"
-              class="text-xs text-muted-foreground py-4 text-center border border-dashed rounded-md"
-            >
-              暂无保存的模板
-            </div>
+              size="small"
+              description="暂无保存的模板"
+              class="py-4 border border-dashed rounded-md"
+            />
             <div
               v-else
               class="space-y-1.5 max-h-48 overflow-y-auto"
@@ -944,12 +945,12 @@ onUnmounted(() => {
             <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 历史投票记录 </CardTitle>
           </CardHeader>
           <CardContent class="p-3.5">
-            <div
+            <Empty
               v-if="voteHistory.length === 0"
-              class="text-xs text-muted-foreground py-4 text-center border border-dashed rounded-md"
-            >
-              暂无历史记录
-            </div>
+              size="small"
+              description="暂无历史记录"
+              class="py-4 border border-dashed rounded-md"
+            />
             <div
               v-else
               class="space-y-1.5 max-h-64 overflow-y-auto"

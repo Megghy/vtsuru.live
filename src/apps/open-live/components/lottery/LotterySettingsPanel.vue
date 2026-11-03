@@ -13,6 +13,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 defineProps<{
   option: LotteryOption
@@ -68,30 +69,16 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
             <!-- 参与方式 -->
             <div class="flex items-center gap-3">
               <span class="text-xs text-muted-foreground w-16 shrink-0">参与方式</span>
-              <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-                <button
-                  type="button"
-                  :disabled="isLottering || isStartLottery"
-                  class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                  :class="
-                    option.type === 'danmaku' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
-                  "
-                  @click="option.type = 'danmaku'"
-                >
-                  弹幕
-                </button>
-                <button
-                  type="button"
-                  :disabled="isLottering || isStartLottery"
-                  class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                  :class="
-                    option.type === 'gift' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
-                  "
-                  @click="option.type = 'gift'"
-                >
-                  礼物
-                </button>
-              </div>
+              <ToggleGroup
+                type="single"
+                size="xs"
+                :model-value="option.type"
+                :disabled="isLottering || isStartLottery"
+                @update:model-value="(val) => { if (val) option.type = val as any }"
+              >
+                <ToggleGroupItem value="danmaku">弹幕</ToggleGroupItem>
+                <ToggleGroupItem value="gift">礼物</ToggleGroupItem>
+              </ToggleGroup>
             </div>
 
             <!-- 弹幕规则 -->
@@ -111,47 +98,17 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                 class="flex items-center gap-3"
               >
                 <span class="text-xs text-muted-foreground w-16 shrink-0">匹配规则</span>
-                <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-                  <button
-                    type="button"
-                    :disabled="isStartLottery"
-                    class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                    :class="
-                      option.danmakuFilterType === 'all'
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'hover:text-foreground'
-                    "
-                    @click="option.danmakuFilterType = 'all'"
-                  >
-                    完全一致
-                  </button>
-                  <button
-                    type="button"
-                    :disabled="isStartLottery"
-                    class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                    :class="
-                      option.danmakuFilterType === 'contains'
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'hover:text-foreground'
-                    "
-                    @click="option.danmakuFilterType = 'contains'"
-                  >
-                    包含
-                  </button>
-                  <button
-                    type="button"
-                    :disabled="isStartLottery"
-                    class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                    :class="
-                      option.danmakuFilterType === 'regex'
-                        ? 'bg-primary text-primary-foreground shadow-sm'
-                        : 'hover:text-foreground'
-                    "
-                    @click="option.danmakuFilterType = 'regex'"
-                  >
-                    正则
-                  </button>
-                </div>
+                <ToggleGroup
+                  type="single"
+                  size="xs"
+                  :model-value="option.danmakuFilterType"
+                  :disabled="isStartLottery"
+                  @update:model-value="(val) => { if (val) option.danmakuFilterType = val as any }"
+                >
+                  <ToggleGroupItem value="all">完全一致</ToggleGroupItem>
+                  <ToggleGroupItem value="contains">包含</ToggleGroupItem>
+                  <ToggleGroupItem value="regex">正则</ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </template>
 

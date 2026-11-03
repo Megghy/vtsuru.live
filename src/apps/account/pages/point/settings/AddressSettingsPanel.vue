@@ -437,13 +437,14 @@ defineExpose({ reset })
           <Checkbox v-model:checked="agreed" />
           <span>
             我已阅读并同意
-            <button
-              type="button"
-              class="text-primary hover:underline font-medium inline"
+            <Button
+              variant="link"
+              size="xs"
+              class="h-auto p-0 inline font-medium"
               @click.prevent="emit('showAgreement')"
             >
               用户协议
-            </button>
+            </Button>
           </span>
         </label>
       </div>

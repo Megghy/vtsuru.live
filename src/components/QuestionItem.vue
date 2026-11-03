@@ -6,6 +6,7 @@ import { computed, ref } from 'vue'
 
 import type { ResponseQAInfoToTarget } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
+import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { ImagePreview } from '@/shared/ui/image-preview'
@@ -207,10 +208,11 @@ function formatRelative(time: number) {
           {{ message }}
         </div>
 
-        <button
+        <Button
           v-if="shouldClampMessage"
-          type="button"
-          class="text-primary hover:underline text-[11px] inline-flex items-center gap-1 font-medium"
+          variant="link"
+          size="xs"
+          class="h-auto p-0 text-[11px] gap-1"
           @click="showFullMessage = !showFullMessage"
         >
           <component
@@ -218,7 +220,7 @@ function formatRelative(time: number) {
             class="size-3"
           />
           {{ showFullMessage ? '收起内容' : '展开全部' }}
-        </button>
+        </Button>
 
         <template v-if="item.answer">
           <Separator class="my-2" />

@@ -9,6 +9,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
+import { Textarea } from '@/shared/ui/textarea'
 import { useMessage } from '@/shared/utils'
 
 ort.env.wasm.numThreads = 1
@@ -283,22 +284,22 @@ async function translateTask(task: ImageTask) {
           v-if="tasks.length > 1"
           class="tab-bar"
         >
-          <button
+          <Button
             v-for="task in tasks"
             :key="task.id"
-            class="tab-btn"
-            :class="{ active: task.id === activeTaskId }"
-            type="button"
+            :variant="task.id === activeTaskId ? 'default' : 'outline'"
+            size="xs"
+            class="tab-btn gap-1.5"
             @click="activeTaskId = task.id"
           >
             <span class="tab-name">{{ task.file.name.slice(0, 14) }}</span>
             <span
               v-if="task.lines.length"
-              class="tab-badge"
+              class="tab-badge text-[10px]"
             >
               ✓
             </span>
-          </button>
+          </Button>
         </div>
 
         <!-- Active task content -->
@@ -360,9 +361,9 @@ async function translateTask(task: ImageTask) {
                   v-if="task.lines.length"
                   class="split-right"
                 >
-                  <textarea
+                  <Textarea
                     v-model="task.fullText"
-                    class="result-textarea"
+                    class="min-h-[240px] max-h-[450px]"
                     placeholder="识别结果（可编辑）"
                   />
                   <div class="flex items-center gap-1.5 translate-bar flex-wrap">
@@ -405,7 +406,6 @@ async function translateTask(task: ImageTask) {
                     <Button
                       size="xs"
                       variant="outline"
-                      class="px-2"
                       :loading="translating"
                       :disabled="!task.fullText"
                       @click="translateTask(task)"
@@ -413,10 +413,10 @@ async function translateTask(task: ImageTask) {
                       翻译
                     </Button>
                   </div>
-                  <textarea
+                  <Textarea
                     v-if="task.translatedText"
                     v-model="task.translatedText"
-                    class="result-textarea translated"
+                    class="min-h-[240px] max-h-[450px]"
                     readonly
                     placeholder="翻译结果"
                   />
@@ -556,26 +556,6 @@ async function translateTask(task: ImageTask) {
   left: 0;
   pointer-events: none;
   border-radius: 6px;
-}
-
-.result-textarea {
-  width: 100%;
-  min-height: 240px;
-  max-height: 450px;
-  resize: vertical;
-  flex: 1;
-  padding: 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  line-height: 1.8;
-  border: 1px solid var(--border);
-  background: var(--muted);
-  font-family: inherit;
-  color: inherit;
-  outline: none;
-}
-.result-textarea:focus {
-  border-color: var(--primary-color, #18a058);
 }
 
 .line-details {

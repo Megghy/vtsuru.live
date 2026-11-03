@@ -153,17 +153,18 @@ onBeforeUnmount(() => recognition?.abort())
             alt="附件"
             class="size-full object-cover block"
           />
-          <button
-            class="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/65 text-white border-0 cursor-pointer inline-flex-center p-0 hover:bg-black/85"
-            type="button"
-            title="移除"
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            class="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/65 text-white p-0 hover:bg-black/85"
+            aria-label="移除图片"
             @click="removeImage(i)"
           >
             <component
               :is="Dismiss12Regular"
               class="size-3"
             />
-          </button>
+          </Button>
         </div>
       </div>
 

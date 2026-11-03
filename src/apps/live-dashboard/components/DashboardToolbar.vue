@@ -20,6 +20,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
+import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 
@@ -147,14 +148,16 @@ const SEARCH_HELP = [
           class="toolbar__search-input pl-8 pr-6"
         />
 
-        <button
+        <Button
           v-if="dashboard.search"
-          type="button"
-          class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          variant="ghost"
+          size="icon-xs"
+          class="absolute right-1 top-1/2 -translate-y-1/2 size-5 text-muted-foreground hover:text-foreground"
+          aria-label="清除搜索"
           @click="dashboard.search = ''"
         >
           <Dismiss16Regular class="size-3" />
-        </button>
+        </Button>
       </div>
 
       <!-- 历史筛选：Popover 按钮 -->
@@ -243,20 +246,14 @@ const SEARCH_HELP = [
         </PopoverContent>
       </Popover>
 
-      <Badge
+      <Tag
         v-if="dashboard.userFilter"
-        variant="outline"
-        class="text-xs h-6 px-2 gap-1.5 border-primary/40 text-primary bg-primary/10"
+        closable
+        class="text-xs"
+        @close="dashboard.backToContext()"
       >
-        <span>仅看 {{ dashboard.userFilter.uname }}</span>
-        <button
-          type="button"
-          class="hover:text-destructive cursor-pointer"
-          @click="dashboard.backToContext()"
-        >
-          <Dismiss16Regular class="size-3" />
-        </button>
-      </Badge>
+        仅看 {{ dashboard.userFilter.uname }}
+      </Tag>
     </div>
 
     <VueDraggable
@@ -273,16 +270,16 @@ const SEARCH_HELP = [
         <TooltipProvider v-if="key === 'duration'">
           <Tooltip>
             <TooltipTrigger as-child>
-              <button
-                class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 select-none appearance-none border-0 font-inherit text-inherit cursor-pointer text-left hover:bg-popover"
-                type="button"
+              <Button
+                variant="ghost"
+                class="h-auto flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 text-left font-normal"
                 @click="stats.reset()"
               >
                 <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">统计时长</span>
                 <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
                   formatDuration(stats.duration)
                 }}</span>
-              </button>
+              </Button>
             </TooltipTrigger>
             <TooltipContent class="text-xs">点击重置统计（仅影响顶部数据）</TooltipContent>
           </Tooltip>

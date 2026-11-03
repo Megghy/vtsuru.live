@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Info24Filled } from '@vicons/fluent'
 
+import { Button } from '@/shared/ui/button'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 
 defineProps<{
@@ -16,12 +17,14 @@ defineProps<{
       <span class="text-xs font-medium text-foreground">{{ label }}</span>
       <Popover v-if="hint || $slots.hint">
         <PopoverTrigger as-child>
-          <button
-            type="button"
-            class="text-muted-foreground hover:text-foreground cursor-help inline-flex items-center"
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            class="size-4 p-0 text-muted-foreground hover:text-foreground cursor-help"
+            aria-label="查看帮助"
           >
             <Info24Filled class="size-3.5" />
-          </button>
+          </Button>
         </PopoverTrigger>
         <PopoverContent class="max-w-[360px] text-xs p-3">
           <slot name="hint">

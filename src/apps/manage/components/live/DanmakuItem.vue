@@ -86,10 +86,11 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
         {{ format(danmaku.time, 'HH:mm:ss') }}
       </span>
 
-      <button
+      <Button
         v-if="showName"
-        type="button"
-        class="font-medium hover:underline text-xs cursor-pointer truncate max-w-[160px]"
+        variant="link"
+        size="xs"
+        class="h-auto p-0 truncate max-w-[160px] text-foreground gap-1"
         @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
       >
         <span
@@ -99,7 +100,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
           {{ danmaku.uName }}
         </span>
         <span v-else>{{ danmaku.uName }}</span>
-      </button>
+      </Button>
 
       <span class="ml-auto bg-black/25 px-1.5 py-0.5 rounded text-[11px] font-bold"> ¥{{ danmaku.price }} </span>
     </div>
@@ -141,9 +142,10 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
 
     <!-- 3. 用户名 -->
     <template v-if="showName && danmaku.uId !== -1">
-      <button
-        type="button"
-        class="danmaku-name-btn text-xs hover:underline cursor-pointer flex items-center gap-1"
+      <Button
+        variant="link"
+        size="xs"
+        class="danmaku-name-btn h-auto p-0 gap-1 text-foreground"
         @click="$emit('onClickName', danmaku.uId, danmaku.ouId)"
       >
         <span
@@ -158,7 +160,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
         >
           {{ danmaku.uName }}<span class="danmaku-colon text-muted-foreground">:</span>
         </span>
-      </button>
+      </Button>
     </template>
 
     <!-- 4. 事件内容（弹幕 / 礼物 / 舰长 / 进场） -->

@@ -32,7 +32,9 @@ import { Empty } from '@/shared/ui/empty'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
+import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 
 const giftWindow = useGiftWindow()
@@ -771,22 +773,19 @@ function toggleFilterType(val: string, checked: boolean) {
                 <span class="font-medium text-foreground">浮窗默认排行视图</span>
                 <span class="text-[11px] text-muted-foreground">打开浮窗时默认聚焦的排行板块</span>
               </div>
-              <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-                <button
+              <ToggleGroup
+                type="single"
+                :model-value="giftWindow.settings.rankViewMode"
+                @update:model-value="(val) => { if (val) giftWindow.settings.rankViewMode = val as any }"
+              >
+                <ToggleGroupItem
                   v-for="opt in rankViewOptions"
                   :key="opt.value"
-                  type="button"
-                  class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                  :class="
-                    giftWindow.settings.rankViewMode === opt.value
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'hover:text-foreground'
-                  "
-                  @click="giftWindow.settings.rankViewMode = opt.value as any"
+                  :value="opt.value"
                 >
                   {{ opt.label }}
-                </button>
-              </div>
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
           </CardContent>
         </Card>
@@ -855,22 +854,19 @@ function toggleFilterType(val: string, checked: boolean) {
             <CardTitle class="text-sm font-semibold">礼物排序方式</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
-            <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-              <button
+            <ToggleGroup
+              type="single"
+              :model-value="giftWindow.settings.sortBy"
+              @update:model-value="(val) => { if (val) giftWindow.settings.sortBy = val as any }"
+            >
+              <ToggleGroupItem
                 v-for="opt in sortOptions"
                 :key="opt.value"
-                type="button"
-                class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-                :class="
-                  giftWindow.settings.sortBy === opt.value
-                    ? 'bg-primary text-primary-foreground shadow-sm'
-                    : 'hover:text-foreground'
-                "
-                @click="giftWindow.settings.sortBy = opt.value as any"
+                :value="opt.value"
               >
                 {{ opt.label }}
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
             <LabelItem label="倒序呈现 (新消息排在前面)">
               <Switch v-model:checked="giftWindow.settings.reverseOrder" />
             </LabelItem>
@@ -1026,7 +1022,7 @@ function toggleFilterType(val: string, checked: boolean) {
               v-if="isHistoryLoading"
               class="py-12 flex items-center justify-center"
             >
-              <div class="size-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <Spin size="medium" />
             </div>
 
             <Empty

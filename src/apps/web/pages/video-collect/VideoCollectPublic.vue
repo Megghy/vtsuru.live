@@ -230,9 +230,10 @@ onUnmounted(() => turnstile.value?.remove())
                 '--muted-foreground': 'var(--vtsuru-page-text-muted)',
               }"
             >
-              <button
-                type="button"
-                class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
+              <Button
+                variant="link"
+                size="xs"
+                class="owner-link h-auto p-0 flex items-center gap-1.5 text-muted-foreground hover:text-foreground font-normal"
                 @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
               >
                 <component
@@ -240,7 +241,7 @@ onUnmounted(() => turnstile.value?.remove())
                   class="size-4"
                 />
                 {{ table.owner.name }} 的视频征集
-              </button>
+              </Button>
               <div class="collect-title-row flex items-center gap-3 mt-2">
                 <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
                 <Badge

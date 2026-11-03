@@ -446,11 +446,11 @@ function clearCurrentTheme() {
         <div class="presets-section">
           <div class="text-xs font-semibold text-muted-foreground mb-2">推荐预设配色</div>
           <div class="grid grid-cols-3 gap-2">
-            <button
+            <Button
               v-for="preset in PRESET_THEMES"
               :key="preset.id"
-              type="button"
-              class="flex flex-col bg-popover border border-border rounded-md p-1.5 cursor-pointer text-left transition hover:border-primary hover:-translate-y-px"
+              variant="outline"
+              class="h-auto flex-col items-stretch bg-popover p-1.5 text-left font-normal"
               @click="applyPreset(preset)"
             >
               <div
@@ -469,7 +469,7 @@ function clearCurrentTheme() {
                 </span>
               </div>
               <div class="text-[11px] text-foreground text-center font-medium">{{ preset.name }}</div>
-            </button>
+            </Button>
           </div>
         </div>
 

@@ -54,6 +54,7 @@ import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { Tag } from '@/shared/ui/tag'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 import { copyToClipboard } from '@/shared/utils'
@@ -860,21 +861,16 @@ onUnmounted(() => {
               v-if="settings.blacklist && settings.blacklist.length > 0"
               class="flex flex-wrap gap-2"
             >
-              <Badge
+              <Tag
                 v-for="kw in settings.blacklist"
                 :key="kw"
-                variant="destructive"
-                class="text-xs gap-1 py-1 px-2.5"
+                type="error"
+                closable
+                class="text-xs"
+                @close="removeBlacklist(kw)"
               >
                 {{ kw }}
-                <button
-                  type="button"
-                  class="hover:opacity-75 cursor-pointer ml-1 font-bold"
-                  @click="removeBlacklist(kw)"
-                >
-                  &times;
-                </button>
-              </Badge>
+              </Tag>
             </div>
             <div
               v-else
@@ -1044,21 +1040,16 @@ onUnmounted(() => {
                 v-if="activeCooldowns.length > 0"
                 class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto"
               >
-                <Badge
+                <Tag
                   v-for="cd in activeCooldowns"
                   :key="cd.uid"
-                  variant="warning"
-                  class="text-[11px] gap-1"
+                  type="warning"
+                  closable
+                  class="text-[11px]"
+                  @close="cleanCooldown(cd.uid)"
                 >
                   {{ cd.name }} (剩 {{ cd.remain }}s)
-                  <button
-                    type="button"
-                    class="hover:opacity-75 cursor-pointer ml-1 font-bold"
-                    @click="cleanCooldown(cd.uid)"
-                  >
-                    &times;
-                  </button>
-                </Badge>
+                </Tag>
               </div>
               <div
                 v-else

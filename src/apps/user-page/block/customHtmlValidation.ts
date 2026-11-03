@@ -1,5 +1,5 @@
 import type { CustomHtmlProps } from './customHtmlContract'
-import { inspectCustomCss, inspectCustomHtml } from './customHtmlRuntime'
+import { inspectCustomSource } from './customHtmlRuntime'
 import { validateCustomHtml } from './definitions'
 import { asObject } from './validationUtils'
 
@@ -18,9 +18,9 @@ export function validateCustomHtmlConfig(value: unknown) {
     { hidden: false },
   )
   if (issues.length) return issues
-  const { html, css, assets } = value as CustomHtmlProps
-  for (const issue of [...inspectCustomHtml(html, assets), ...inspectCustomCss(css, assets).issues]) {
-    issues.push({ fieldPath: `custom.${issue.field}:${issue.line}:${issue.column}`, message: issue.message })
+  const { source, assets } = value as CustomHtmlProps
+  for (const item of inspectCustomSource(source, assets)) {
+    issues.push({ fieldPath: `custom.${item.field}:${item.line}:${item.column}`, message: item.message })
   }
   return issues
 }

@@ -11,6 +11,12 @@ export function configureMonacoEnvironment() {
   configured = true
   ;(globalThis as any).MonacoEnvironment = {
     getWorker(_: string, label: string) {
+      if (label === 'vue') {
+        return new Worker(new URL('../pages/user-page-builder/monaco-vue/vue.worker.ts', import.meta.url), {
+          type: 'module',
+          name: 'vue',
+        })
+      }
       if (label === 'json') return new JsonWorker()
       if (label === 'css' || label === 'scss' || label === 'less') return new CssWorker()
       if (label === 'html' || label === 'handlebars' || label === 'razor') return new HtmlWorker()

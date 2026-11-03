@@ -649,16 +649,17 @@ function scrollToTop() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
                     class="sider-collapse-btn"
-                    type="button"
                     @click="siderCollapsed = !siderCollapsed"
                   >
                     <component
                       :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
                       class="sider-collapse-icon"
                     />
-                  </button>
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent side="right">
                   {{ siderCollapsed ? '展开侧栏' : '收起侧栏' }}
@@ -673,11 +674,11 @@ function scrollToTop() {
             class="sider-profile"
           >
             <div class="flex flex-col items-center justify-center">
-              <button
+              <Button
                 v-if="siderAvatarUrl"
-                class="sider-avatar-button"
-                type="button"
-                title="前往用户B站主页"
+                variant="ghost"
+                class="sider-avatar-button p-0 h-auto rounded-full hover:opacity-90"
+                aria-label="前往用户B站主页"
                 @click="NavigateToNewTab(`https://space.bilibili.com/${userInfo?.biliId}`)"
               >
                 <Avatar
@@ -696,7 +697,7 @@ function scrollToTop() {
                   aria-hidden="true"
                   referrerpolicy="no-referrer"
                 />
-              </button>
+              </Button>
               <div
                 v-if="siderWidth > 100"
                 class="truncate max-w-full mt-1.5 flex items-center gap-1 text-xs font-medium"

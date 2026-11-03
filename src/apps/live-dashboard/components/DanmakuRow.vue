@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import { EventDataTypes } from '@/api/generated/model'
+import { Button } from '@/shared/ui/button'
 
 import { avatarUrl, formatClock } from '../core/format'
 import type { DashboardEvent } from '../core/types'
@@ -53,15 +54,16 @@ const INTERACTION_TEXT: Partial<Record<EventDataTypes, string>> = {
           :event="event"
           :show-medal="settings.showMedal"
         />
-        <button
-          class="dm-name appearance-none bg-transparent border-0 p-0 font-semibold cursor-pointer wrap-anywhere hover:underline"
+        <Button
+          variant="link"
+          size="xs"
+          class="dm-name h-auto p-0 font-semibold text-inherit"
+          :class="{ '!text-[var(--brand)]': hasNote }"
           data-user-trigger
-          :class="{ 'text-[var(--brand)]': hasNote }"
-          type="button"
           @click.stop="ui.openUserMenu(event, $event)"
         >
           {{ event.uname || '匿名用户' }}
-        </button>
+        </Button>
         <span
           v-if="compact"
           class="text-muted-foreground"

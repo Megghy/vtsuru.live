@@ -567,8 +567,8 @@ watch(
                 <TooltipTrigger as-child>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    class="size-7 text-muted-foreground"
+                    size="icon-xs"
+                    class="text-muted-foreground"
                   >
                     <component
                       :is="Info24Filled"
@@ -648,24 +648,20 @@ watch(
                 v-if="setting.enableDailyFirstGift"
                 class="pl-6 space-y-2"
               >
-                <div class="flex items-center gap-3">
-                  <label class="flex items-center gap-1 cursor-pointer text-xs">
-                    <input
-                      type="radio"
-                      :checked="!setting.useDailyFirstGiftPercent"
-                      @change="((setting.useDailyFirstGiftPercent = false), updateSettings())"
-                    />
+                <RadioGroup
+                  :model-value="setting.useDailyFirstGiftPercent ? 'percent' : 'fixed'"
+                  class="flex items-center gap-3"
+                  @update:model-value="(val) => { setting.useDailyFirstGiftPercent = val === 'percent'; updateSettings() }"
+                >
+                  <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+                    <RadioGroupItem value="fixed" />
                     <span>固定积分</span>
                   </label>
-                  <label class="flex items-center gap-1 cursor-pointer text-xs">
-                    <input
-                      type="radio"
-                      :checked="setting.useDailyFirstGiftPercent"
-                      @change="((setting.useDailyFirstGiftPercent = true), updateSettings())"
-                    />
+                  <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+                    <RadioGroupItem value="percent" />
                     <span>按礼物价值比例</span>
                   </label>
-                </div>
+                </RadioGroup>
 
                 <div class="flex items-center gap-2">
                   <span class="text-muted-foreground text-[11px]">
@@ -708,24 +704,20 @@ watch(
             <CardTitle class="text-xs font-semibold">礼物积分配置</CardTitle>
           </CardHeader>
           <CardContent class="p-3.5 pt-0 space-y-3 text-xs">
-            <div class="flex items-center gap-4">
-              <label class="flex items-center gap-1 cursor-pointer text-xs">
-                <input
-                  type="radio"
-                  :checked="setting.giftAllowType === GiftPointType.WhiteList"
-                  @change="((setting.giftAllowType = GiftPointType.WhiteList), updateSettings())"
-                />
+            <RadioGroup
+              :model-value="String(setting.giftAllowType)"
+              class="flex items-center gap-4"
+              @update:model-value="(val) => { setting.giftAllowType = Number(val) as any; updateSettings() }"
+            >
+              <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+                <RadioGroupItem :value="String(GiftPointType.WhiteList)" />
                 <span>仅包含自定义列表中的礼物</span>
               </label>
-              <label class="flex items-center gap-1 cursor-pointer text-xs">
-                <input
-                  type="radio"
-                  :checked="setting.giftAllowType === GiftPointType.All"
-                  @change="((setting.giftAllowType = GiftPointType.All), updateSettings())"
-                />
+              <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+                <RadioGroupItem :value="String(GiftPointType.All)" />
                 <span>包含所有礼物</span>
               </label>
-            </div>
+            </RadioGroup>
 
             <div
               v-if="setting.giftAllowType === GiftPointType.All"

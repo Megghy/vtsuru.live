@@ -1,12 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { normalizeCustomHtmlProps } from '../customHtmlContract'
-import {
-  buildCustomHtmlDocument,
-  collectCustomHtmlAssetKeys,
-  inspectCustomCss,
-  inspectCustomHtml,
-} from '../customHtmlRuntime'
+import { buildCustomHtmlDocument } from '../customHtmlDocument'
+import { collectCustomHtmlAssetKeys, inspectCustomCss, inspectCustomSource } from '../customHtmlRuntime'
 
 const file = { id: 7, path: '/api/files/cover.webp', name: 'cover.webp', hash: 'hash' }
 const theme = {
@@ -22,50 +18,23 @@ const theme = {
 }
 
 describe('customHtmlRuntime', () => {
-  it('生成隔离文档并解析受控图片资源', () => {
+  it('生成隔离文档并注入 Vue runtime', () => {
     const props = normalizeCustomHtmlProps({
-      html: '<section class="hero"><img data-vtsuru-asset="cover" alt="封面"></section>',
-      css: '.hero{background-image:var(--vtsuru-asset-cover);color:var(--foreground)}',
+      source: `<template><section class="hero"><img data-vtsuru-asset="cover" alt="封面"></section></template>\n<style>.hero{background-image:var(--vtsuru-asset-cover);color:var(--foreground)}</style>`,
       assets: [{ key: 'cover', file }],
     })
-    const result = buildCustomHtmlDocument(props, theme)
+    const result = buildCustomHtmlDocument(props, theme, {
+      js: 'Vue.createApp({}).mount("#app")',
+      css: '.hero{color:red}',
+    })
 
     expect(result.issues).toEqual([])
     expect(result.srcdoc).toContain('Content-Security-Policy')
-    expect(result.srcdoc).toContain('src="/api/files/cover.webp"')
     expect(result.srcdoc).toContain('--vtsuru-asset-cover:url')
     expect(result.srcdoc).toContain('ResizeObserver')
-  })
-
-  it('执行独立 JS 字段但保持无网络与无同源 sandbox 策略', () => {
-    const props = normalizeCustomHtmlProps({
-      html: '<button>go</button>',
-      css: '',
-      js: "document.querySelector('button').textContent='ready'",
-    })
-    const result = buildCustomHtmlDocument(props, theme)
-
     expect(result.srcdoc).toContain("connect-src 'none'")
-    expect(result.srcdoc).toContain('<script nonce=')
-    expect(result.srcdoc).toContain("textContent='ready'")
+    expect(result.srcdoc).toContain('Vue.createApp')
     expect(result.srcdoc).not.toContain('allow-same-origin')
-  })
-
-  it('拒绝脚本、事件属性、内联样式和直接图片地址', () => {
-    const issues = inspectCustomHtml(
-      '<script>bad()</script><p onclick="bad()" style="color:red">x</p><img src="https://evil.test/x.png">',
-      [],
-    )
-    expect(issues.map((item) => item.message).join('\n')).toContain('<script>')
-    expect(issues.map((item) => item.message).join('\n')).toContain('onclick')
-    expect(issues.map((item) => item.message).join('\n')).toContain('style')
-    expect(issues.map((item) => item.message).join('\n')).toContain('src')
-  })
-
-  it('允许表单、SVG、ARIA 和安全的 data 属性', () => {
-    const html =
-      '<form data-view="profile"><label for="name">Name</label><input id="name" aria-label="Name"><svg viewBox="0 0 10 10"><circle cx="5" cy="5" r="4" fill="red"></circle></svg></form>'
-    expect(inspectCustomHtml(html, [])).toEqual([])
   })
 
   it('拒绝 CSS 外部加载和不允许的规则', () => {
@@ -79,21 +48,24 @@ describe('customHtmlRuntime', () => {
 
   it('标记 CSS 中没有绑定的资源键', () => {
     const issues = inspectCustomCss('.x{background:var(--vtsuru-asset-missing)}', [])
-
     expect(issues.issues.map((item) => item.message)).toContain('找不到资源键：missing')
   })
 
-  it('从 HTML 和 CSS 收集资源键', () => {
+  it('从 Vue SFC 收集资源键', () => {
     const keys = collectCustomHtmlAssetKeys(
-      '<img data-vtsuru-asset="cover"><img data-vtsuru-asset="avatar">',
-      '.x{background:var(--vtsuru-asset-background)}',
+      `<template><img data-vtsuru-asset="cover"><img data-vtsuru-asset="avatar"></template>\n<style>.x{background:var(--vtsuru-asset-background)}</style>\n<script setup>vtsuru.getAssetUrl('banner')</script>`,
     )
-    expect([...keys].toSorted()).toEqual(['avatar', 'background', 'cover'])
+    expect([...keys].toSorted()).toEqual(['avatar', 'background', 'banner', 'cover'])
   })
 
   it('css 尚未写完时仍保留资源引用', () => {
-    const keys = collectCustomHtmlAssetKeys('', '.cover { background: var(--vtsuru-asset-cover)')
+    expect([...collectCustomHtmlAssetKeys('<style>.cover { background: var(--vtsuru-asset-cover)</style>')]).toEqual([
+      'cover',
+    ])
+  })
 
-    expect([...keys]).toEqual(['cover'])
+  it('标记 SFC 中缺失的资源键', () => {
+    const issues = inspectCustomSource('<template><img data-vtsuru-asset="missing"></template>', [])
+    expect(issues.map((item) => item.message)).toContain('找不到资源键：missing')
   })
 })

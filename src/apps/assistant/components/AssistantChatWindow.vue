@@ -2,6 +2,7 @@
 import { Alert24Regular, ArrowSync20Regular, Sparkle24Regular } from '@vicons/fluent'
 import { nextTick, onMounted, ref, watch } from 'vue'
 
+import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
 
 import type { AssistantDigestItem } from '../api/assistant'
@@ -214,11 +215,12 @@ function onPickSuggestion(text: string) {
           v-if="digest.length"
           class="flex flex-col gap-1.5 w-full max-w-[440px] mt-2"
         >
-          <button
+          <Button
             v-for="d in digest"
             :key="d.kind + d.text"
-            type="button"
-            class="flex items-center gap-2 py-2 px-3 rounded-lg bg-muted border border-border text-foreground text-xs text-left cursor-pointer transition hover:enabled:border-[var(--brand)] hover:enabled:bg-[var(--brand-soft)]"
+            variant="outline"
+            size="xs"
+            class="h-auto py-2 px-3 justify-start gap-2 bg-muted text-left font-normal"
             :disabled="store.sending"
             @click="onPickSuggestion(d.prompt)"
           >
@@ -227,24 +229,26 @@ function onPickSuggestion(text: string) {
               class="size-3.5 text-amber-500 shrink-0"
             />
             <span>{{ d.text }}</span>
-          </button>
+          </Button>
         </div>
         <div class="flex flex-wrap gap-2 justify-center max-w-[520px] mt-3">
-          <button
+          <Button
             v-for="s in suggestions"
             :key="s"
-            type="button"
-            class="py-1.5 px-3 rounded-2xl bg-muted border border-border text-foreground text-xs cursor-pointer transition hover:enabled:border-[var(--brand)] hover:enabled:text-[var(--brand)]"
+            variant="outline"
+            size="xs"
+            class="rounded-full bg-muted font-normal"
             :disabled="store.sending"
             @click="onPickSuggestion(s)"
           >
             {{ s }}
-          </button>
-          <button
-            type="button"
-            class="inline-flex items-center gap-1 py-1.5 px-3 rounded-2xl bg-muted border border-border text-muted-foreground text-xs cursor-pointer transition hover:enabled:text-foreground hover:enabled:border-[var(--brand)]"
+          </Button>
+          <Button
+            variant="outline"
+            size="xs"
+            class="rounded-full bg-muted gap-1 text-muted-foreground"
             :disabled="store.sending"
-            title="换一批"
+            aria-label="换一批"
             @click="rollSuggestions"
           >
             <component
@@ -252,7 +256,7 @@ function onPickSuggestion(text: string) {
               class="size-3.5"
             />
             换一批
-          </button>
+          </Button>
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ import { Empty } from '@/shared/ui/empty'
 import { Progress } from '@/shared/ui/progress'
 import { Spin } from '@/shared/ui/spin'
 import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 import { useOrgAnalyze } from '../../composables/useOrgAnalyze'
 import { useOrgContext } from '../../composables/useOrgContext'
@@ -177,22 +178,21 @@ onUnmounted(disposeChart)
           class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2"
         >
           <CardTitle class="text-xs font-semibold">趋势图表</CardTitle>
-          <div class="flex items-center gap-1.5 flex-wrap">
-            <button
+          <ToggleGroup
+            type="multiple"
+            size="xs"
+            :model-value="selectedMetrics"
+            @update:model-value="(val) => { selectedMetrics = val as string[] }"
+          >
+            <ToggleGroupItem
               v-for="m in chartMetrics"
               :key="m.value"
-              type="button"
-              class="px-2 py-0.5 rounded text-[11px] transition-colors border"
-              :class="
-                selectedMetrics.includes(m.value)
-                  ? 'bg-primary/10 border-primary/40 text-primary font-medium'
-                  : 'bg-muted/40 border-border/60 text-muted-foreground hover:bg-muted/70'
-              "
-              @click="toggleMetric(m.value)"
+              :value="m.value"
+              class="px-2 text-[11px]"
             >
               {{ m.label }}
-            </button>
-          </div>
+            </ToggleGroupItem>
+          </ToggleGroup>
         </CardHeader>
 
         <CardContent class="p-3">

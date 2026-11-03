@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Add24Regular, ArrowImport24Regular, Checkmark24Regular, Delete24Regular, Edit24Regular } from '@vicons/fluent'
+import { Loader2 } from 'lucide-vue-next'
 import { computed, reactive, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -171,23 +172,25 @@ function addExpressions() {
           <span class="text-[11px] text-muted-foreground">
             {{ isTargetMissing(tile.type, tile.targetId) ? '目标不存在' : DECK_TYPE_META[tile.type].label }}
           </span>
-          <div
+          <Loader2
             v-if="running.has(tile.id)"
-            class="absolute top-1.5 left-1.5 size-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"
+            class="absolute top-1.5 left-1.5 size-3 text-primary animate-spin"
           />
           <kbd
             v-if="tile.shortcut"
             class="absolute right-1 bottom-1 px-1 border border-border rounded font-inherit text-[10px] text-muted-foreground"
             >{{ tile.shortcut.replaceAll('Digit', '').replaceAll('Key', '') }}</kbd
           >
-          <button
+          <Button
             v-if="editing"
-            type="button"
-            class="absolute top-1 right-1 size-5 rounded-full flex items-center justify-center bg-destructive/10 text-destructive hover:bg-destructive hover:text-white transition-colors"
+            variant="ghost"
+            size="icon-xs"
+            class="absolute top-1 right-1 size-5 p-0 rounded-full text-destructive hover:bg-destructive hover:text-white"
+            aria-label="删除"
             @click.stop="run(() => vts.removeDeckTile(tile.id))"
           >
             <Delete24Regular class="size-3" />
-          </button>
+          </Button>
         </div>
       </VueDraggable>
     </CardContent>

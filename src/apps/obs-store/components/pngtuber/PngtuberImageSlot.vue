@@ -86,9 +86,9 @@ function apply() {
       </Popconfirm>
     </div>
 
-    <button
-      type="button"
-      class="image-preview"
+    <Button
+      variant="outline"
+      class="image-preview h-auto min-h-[96px] w-full p-2 border-dashed border-2 flex flex-col items-center justify-center font-normal"
       :disabled="disabled || busy"
       :aria-label="`上传${label}`"
       @click="input?.click()"
@@ -97,13 +97,15 @@ function apply() {
         v-if="value"
         :src="value"
         :alt="label"
+        class="max-h-24 max-w-full object-contain"
       />
       <span
         v-else
         class="text-xs text-muted-foreground"
-        >拖放或选择图片</span
       >
-    </button>
+        拖放或选择图片
+      </span>
+    </Button>
 
     <input
       ref="input"

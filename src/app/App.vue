@@ -7,6 +7,7 @@ import TempComponent from '@/app/components/TempComponent.vue'
 import { applyThemeCssVars, buildSiteTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Toaster } from '@/shared/ui/sonner'
+import { Spin } from '@/shared/ui/spin'
 import { isDarkMode } from '@/shared/utils'
 
 // 将大型布局组件改为异步组件，避免打入入口包
@@ -80,7 +81,7 @@ watchEffect(() => {
       </TempComponent>
       <template #fallback>
         <div class="flex items-center justify-center min-h-screen">
-          <div class="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+          <Spin size="large" />
         </div>
       </template>
     </Suspense>

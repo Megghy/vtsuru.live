@@ -223,20 +223,19 @@ onMounted(() => {
           <div class="space-y-2">
             <div class="flex items-center justify-between">
               <span class="text-xs font-medium text-foreground">Token</span>
-              <button
-                type="button"
-                class="text-xs text-primary hover:underline cursor-pointer inline-flex items-center gap-0.5"
+              <Button
+                variant="link"
+                class="h-auto p-0 text-xs gap-0.5"
                 @click="openManagePage"
               >
                 <span>前往管理后台获取</span>
                 <span class="text-[10px]">&nearr;</span>
-              </button>
+              </Button>
             </div>
             <Input
               v-model="token"
               type="password"
               placeholder="请输入 Token"
-              class="h-9"
               @keyup.enter="login"
             />
             <p class="text-[11px] text-muted-foreground leading-relaxed">
@@ -245,7 +244,7 @@ onMounted(() => {
           </div>
 
           <Button
-            class="w-full h-9 font-medium"
+            class="w-full"
             :disabled="isLoadingAccount"
             @click="login"
           >
@@ -288,9 +287,11 @@ onMounted(() => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <button
-                      type="button"
-                      class="fetcher-status-button size-7 rounded-full flex items-center justify-center transition-colors hover:bg-muted"
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      class="rounded-full"
+                      aria-label="EventFetcher 状态"
                     >
                       <CheckmarkCircle
                         v-if="webfetcher.state === 'connected'"
@@ -300,7 +301,7 @@ onMounted(() => {
                         v-else
                         class="size-4 text-destructive"
                       />
-                    </button>
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent class="text-xs">
                     <div>EventFetcher 状态</div>
@@ -309,28 +310,38 @@ onMounted(() => {
                     </div>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
 
-              <button
-                v-if="!siderCollapsed"
-                type="button"
-                class="size-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition"
-                title="折叠边栏"
-                @click="siderCollapsed = true"
-              >
-                <ChevronLeft16Regular class="size-3.5" />
-              </button>
+                <Tooltip v-if="!siderCollapsed">
+                  <TooltipTrigger as-child>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label="折叠边栏"
+                      @click="siderCollapsed = true"
+                    >
+                      <ChevronLeft16Regular class="size-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>折叠边栏</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
 
-            <button
-              v-if="siderCollapsed"
-              type="button"
-              class="size-6 mt-1 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition"
-              title="展开边栏"
-              @click="siderCollapsed = false"
-            >
-              <ChevronRight16Regular class="size-3.5" />
-            </button>
+            <TooltipProvider v-if="siderCollapsed">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="展开边栏"
+                    @click="siderCollapsed = false"
+                  >
+                    <ChevronRight16Regular class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>展开边栏</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
 
           <!-- 导航菜单 -->
@@ -344,9 +355,9 @@ onMounted(() => {
                 v-if="item.isGroup"
                 class="space-y-1"
               >
-                <button
-                  type="button"
-                  class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition text-muted-foreground hover:text-foreground hover:bg-muted/50 cursor-pointer"
+                <Button
+                  variant="ghost"
+                  class="w-full justify-start gap-2.5 text-muted-foreground"
                   :class="{ 'justify-center !px-0': siderCollapsed }"
                   @click="liveWindowsOpen = !liveWindowsOpen"
                 >
@@ -364,7 +375,7 @@ onMounted(() => {
                     class="size-3 transition-transform"
                     :class="{ '-rotate-90': !liveWindowsOpen }"
                   />
-                </button>
+                </Button>
 
                 <div
                   v-if="liveWindowsOpen && !siderCollapsed"

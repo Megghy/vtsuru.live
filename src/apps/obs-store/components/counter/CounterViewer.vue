@@ -22,6 +22,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 import CounterDisplay from './CounterDisplay.vue'
@@ -259,41 +260,45 @@ activateKeyboard()
 
             <!-- 核心加减控制按钮群 -->
             <div class="action-button-grid">
-              <button
-                type="button"
-                class="btn-action btn-main-plus"
+              <Button
+                variant="brand"
+                size="lg"
+                class="h-11 font-semibold gap-1.5"
                 @click="handleIncrement(1)"
               >
-                <Add24Regular class="btn-icon" />
-                <span class="btn-text">+1 次</span>
-              </button>
+                <Add24Regular class="size-4.5" />
+                <span>+1 次</span>
+              </Button>
 
-              <button
-                type="button"
-                class="btn-action btn-step-plus"
+              <Button
+                variant="outline"
+                size="lg"
+                class="h-11 font-semibold"
                 @click="handleIncrement(5)"
               >
                 +5
-              </button>
+              </Button>
 
-              <button
-                type="button"
-                class="btn-action btn-minus"
+              <Button
+                variant="outline"
+                size="lg"
+                class="h-11 font-semibold gap-1.5"
                 :disabled="state.count <= 0"
                 @click="handleDecrement(1)"
               >
-                <Subtract24Regular class="btn-icon" />
-                <span class="btn-text">-1</span>
-              </button>
+                <Subtract24Regular class="size-4.5" />
+                <span>-1</span>
+              </Button>
 
-              <button
-                type="button"
-                class="btn-action btn-reset"
+              <Button
+                variant="outline"
+                size="lg"
+                class="h-11 font-semibold gap-1.5"
                 @click="handleReset"
               >
-                <ArrowCounterclockwise24Regular class="btn-icon" />
-                <span class="btn-text">归零</span>
-              </button>
+                <ArrowCounterclockwise24Regular class="size-4.5" />
+                <span>归零</span>
+              </Button>
             </div>
 
             <!-- 直接设定数值 -->
@@ -312,32 +317,16 @@ activateKeyboard()
           <div class="monitor-panel-box">
             <div class="flex items-center justify-between mb-2">
               <span class="deck-label">OBS 画面实时监视器</span>
-              <div class="flex items-center gap-1.5">
-                <Button
-                  size="xs"
-                  class="h-6 text-[11px] px-2"
-                  :variant="previewBg === 'checker' ? 'default' : 'outline'"
-                  @click="previewBg = 'checker'"
-                >
-                  网格底
-                </Button>
-                <Button
-                  size="xs"
-                  class="h-6 text-[11px] px-2"
-                  :variant="previewBg === 'dark' ? 'default' : 'outline'"
-                  @click="previewBg = 'dark'"
-                >
-                  暗黑底
-                </Button>
-                <Button
-                  size="xs"
-                  class="h-6 text-[11px] px-2"
-                  :variant="previewBg === 'transparent' ? 'default' : 'outline'"
-                  @click="previewBg = 'transparent'"
-                >
-                  透明底
-                </Button>
-              </div>
+              <ToggleGroup
+                type="single"
+                size="xs"
+                :model-value="previewBg"
+                @update:model-value="(val) => { if (val) previewBg = val as any }"
+              >
+                <ToggleGroupItem value="checker">网格底</ToggleGroupItem>
+                <ToggleGroupItem value="dark">暗黑底</ToggleGroupItem>
+                <ToggleGroupItem value="transparent">透明底</ToggleGroupItem>
+              </ToggleGroup>
             </div>
 
             <!-- 舞台监视器 -->
@@ -564,55 +553,6 @@ activateKeyboard()
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 8px;
-}
-
-.btn-action {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 44px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  background: var(--background);
-  color: var(--foreground);
-  user-select: none;
-}
-
-.btn-action:hover:not(:disabled) {
-  background: var(--popover);
-  border-color: var(--brand);
-  color: var(--brand);
-}
-
-.btn-action:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.btn-action:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.btn-main-plus {
-  background: var(--brand);
-  color: #fff;
-  border-color: var(--brand);
-}
-
-.btn-main-plus:hover:not(:disabled) {
-  background: var(--brand, #0284c7);
-  color: #fff;
-  border-color: var(--brand, #0284c7);
-}
-
-.btn-icon {
-  width: 18px;
-  height: 18px;
 }
 
 .monitor-panel-box {

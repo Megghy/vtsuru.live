@@ -8,6 +8,8 @@ import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
+import { Tag } from '@/shared/ui/tag'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 const props = defineProps({
   action: {
@@ -98,63 +100,27 @@ function removeBlockword(index: number) {
 
       <div class="flex items-center gap-3">
         <span class="text-xs text-muted-foreground">匹配方式:</span>
-        <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-          <button
-            type="button"
-            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="
-              action.triggerConfig.keywordMatchType === KeywordMatchType.Full
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:text-foreground'
-            "
-            @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Full"
-          >
-            完全
-          </button>
-          <button
-            type="button"
-            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="
-              action.triggerConfig.keywordMatchType === KeywordMatchType.Contains
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:text-foreground'
-            "
-            @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Contains"
-          >
-            包含
-          </button>
-          <button
-            type="button"
-            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="
-              action.triggerConfig.keywordMatchType === KeywordMatchType.Regex
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:text-foreground'
-            "
-            @click="action.triggerConfig.keywordMatchType = KeywordMatchType.Regex"
-          >
-            正则
-          </button>
-        </div>
+        <ToggleGroup
+          type="single"
+          :model-value="action.triggerConfig.keywordMatchType"
+          @update:model-value="(val) => { if (val) action.triggerConfig.keywordMatchType = val as any }"
+        >
+          <ToggleGroupItem :value="KeywordMatchType.Full">完全</ToggleGroupItem>
+          <ToggleGroupItem :value="KeywordMatchType.Contains">包含</ToggleGroupItem>
+          <ToggleGroupItem :value="KeywordMatchType.Regex">正则</ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       <div class="tag-container flex flex-wrap items-center gap-1.5 p-2 rounded-md border bg-muted/20 min-h-[36px]">
         <template v-if="action.triggerConfig.keywords && action.triggerConfig.keywords.length > 0">
-          <Badge
+          <Tag
             v-for="(keyword, index) in action.triggerConfig.keywords"
             :key="index"
-            variant="secondary"
-            class="text-xs h-6 px-2 gap-1.5 font-normal"
+            closable
+            @close="removeKeyword(index)"
           >
-            <span>{{ keyword }}</span>
-            <button
-              type="button"
-              class="hover:text-destructive transition-colors text-muted-foreground"
-              @click="removeKeyword(index)"
-            >
-              ✕
-            </button>
-          </Badge>
+            {{ keyword }}
+          </Tag>
         </template>
         <span
           v-else
@@ -188,63 +154,29 @@ function removeBlockword(index: number) {
 
       <div class="flex items-center gap-3">
         <span class="text-xs text-muted-foreground">匹配方式:</span>
-        <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-          <button
-            type="button"
-            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="
-              action.triggerConfig.blockwordMatchType === KeywordMatchType.Full
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:text-foreground'
-            "
-            @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Full"
-          >
-            完全
-          </button>
-          <button
-            type="button"
-            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="
-              action.triggerConfig.blockwordMatchType === KeywordMatchType.Contains
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:text-foreground'
-            "
-            @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Contains"
-          >
-            包含
-          </button>
-          <button
-            type="button"
-            class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-            :class="
-              action.triggerConfig.blockwordMatchType === KeywordMatchType.Regex
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'hover:text-foreground'
-            "
-            @click="action.triggerConfig.blockwordMatchType = KeywordMatchType.Regex"
-          >
-            正则
-          </button>
-        </div>
+        <ToggleGroup
+          type="single"
+          :model-value="action.triggerConfig.blockwordMatchType"
+          @update:model-value="(val) => { if (val) action.triggerConfig.blockwordMatchType = val as any }"
+        >
+          <ToggleGroupItem :value="KeywordMatchType.Full">完全</ToggleGroupItem>
+          <ToggleGroupItem :value="KeywordMatchType.Contains">包含</ToggleGroupItem>
+          <ToggleGroupItem :value="KeywordMatchType.Regex">正则</ToggleGroupItem>
+        </ToggleGroup>
       </div>
 
       <div class="tag-container flex flex-wrap items-center gap-1.5 p-2 rounded-md border bg-muted/20 min-h-[36px]">
         <template v-if="action.triggerConfig.blockwords && action.triggerConfig.blockwords.length > 0">
-          <Badge
+          <Tag
             v-for="(blockword, index) in action.triggerConfig.blockwords"
             :key="index"
             variant="outline"
-            class="text-xs h-6 px-2 gap-1.5 font-normal border-amber-500/40 text-amber-600 bg-amber-500/10"
+            closable
+            class="border-amber-500/40 text-amber-600 bg-amber-500/10"
+            @close="removeBlockword(index)"
           >
-            <span>{{ blockword }}</span>
-            <button
-              type="button"
-              class="hover:text-destructive transition-colors text-amber-600/70"
-              @click="removeBlockword(index)"
-            >
-              ✕
-            </button>
-          </Badge>
+            {{ blockword }}
+          </Tag>
         </template>
         <span
           v-else

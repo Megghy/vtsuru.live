@@ -209,13 +209,14 @@ function formatFullTime(time: number) {
                   v-if="row.from === PointFrom.Use && row.extra?.goods"
                   class="space-y-0.5"
                 >
-                  <button
-                    type="button"
-                    class="text-primary hover:underline font-medium cursor-pointer text-left block"
+                  <Button
+                    variant="link"
+                    size="xs"
+                    class="h-auto p-0 text-left block"
                     @click="openGoods(row)"
                   >
                     {{ row.extra.goods.name }}
-                  </button>
+                  </Button>
                   <span
                     v-if="detailText(row) !== row.extra.goods.name"
                     class="text-[11px] text-muted-foreground block"

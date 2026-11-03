@@ -244,16 +244,11 @@ function handleTitleClick() {
       <div class="md:col-span-1">
         <Card class="p-1">
           <nav class="flex flex-col gap-1">
-            <button
+            <Button
               v-for="item in navItems"
               :key="item.key"
-              type="button"
-              class="flex items-center gap-2.5 px-3 py-2 text-xs font-medium rounded-md transition-colors text-left"
-              :class="
-                currentTab === item.key
-                  ? 'bg-primary text-primary-foreground font-semibold'
-                  : 'text-[var(--foreground)] hover:bg-[var(--popover)]'
-              "
+              :variant="currentTab === item.key ? 'default' : 'ghost'"
+              class="w-full justify-start gap-2.5 text-xs font-medium"
               @click="currentTab = item.key"
             >
               <component
@@ -261,7 +256,7 @@ function handleTitleClick() {
                 class="w-4 h-4"
               />
               <span>{{ item.label }}</span>
-            </button>
+            </Button>
           </nav>
         </Card>
       </div>

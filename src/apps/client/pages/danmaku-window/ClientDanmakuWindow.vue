@@ -17,6 +17,8 @@ import type { DanmakuWindowBCData, DanmakuWindowSettings, LiveStatsData } from '
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { getDanmakuWindowFilterType, removeDeletedSuperChats } from '@/shared/utils/danmakuWindowEvents'
+import { Button } from '@/shared/ui/button'
+import { Spin } from '@/shared/ui/spin'
 
 type TempDanmakuType = EventModel & {
   randomId: string
@@ -237,7 +239,7 @@ watch(
     v-if="!setting"
     class="flex items-center justify-center w-full h-full"
   >
-    <div class="size-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+    <Spin size="medium" />
   </div>
 
   <div
@@ -302,11 +304,12 @@ watch(
       </div>
 
       <!-- Mini 穿透切换按钮 (锁定/解锁) -->
-      <button
-        type="button"
+      <Button
+        variant="ghost"
+        size="icon-xs"
         class="status-mini-btn"
         :class="{ 'is-locked': setting.interactive }"
-        :title="setting.interactive ? '鼠标穿透：已开启（点击关闭穿透）' : '鼠标穿透：已关闭（点击开启穿透）'"
+        :aria-label="setting.interactive ? '鼠标穿透：已开启（点击关闭穿透）' : '鼠标穿透：已关闭（点击开启穿透）'"
         @click="toggleInteractive"
       >
         <LockClosed20Regular
@@ -317,10 +320,10 @@ watch(
           v-else
           class="mini-btn-icon size-3.5"
         />
-      </button>
+      </Button>
     </div>
 
-    <div class="danmaku-list">
+    <div class="danmaku-list scrollbar-thin">
       <TransitionGroup
         name="danmaku-list"
         appear
@@ -500,19 +503,6 @@ body {
 
 .danmaku-list.reverse {
   flex-direction: column-reverse;
-}
-
-.danmaku-list::-webkit-scrollbar {
-  width: 4px;
-}
-
-.danmaku-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.danmaku-list::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.3);
-  border-radius: 4px;
 }
 
 .danmaku-list-move {

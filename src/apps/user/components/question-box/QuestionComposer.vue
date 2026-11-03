@@ -218,27 +218,29 @@ async function submit() {
             >
               <span class="topic-banner-kicker">CURRENT TOPIC</span>
               <strong>{{ draft.tag }}</strong>
-              <button
-                type="button"
-                class="topic-banner-clear"
+              <Button
+                variant="ghost"
+                size="xs"
+                class="topic-banner-clear h-auto p-0 text-muted-foreground hover:text-foreground font-normal"
                 @click="draft = { ...draft, tag: null }"
               >
                 取消
-              </button>
+              </Button>
             </div>
           </Transition>
           <div class="topic-list">
-            <button
+            <Button
               v-for="tag in tags"
               :key="tag"
-              type="button"
-              class="topic-chip"
+              variant="outline"
+              size="xs"
+              class="topic-chip rounded-full font-normal"
               :class="{ 'is-active': draft.tag === tag }"
               :aria-pressed="draft.tag === tag"
               @click="draft = { ...draft, tag: draft.tag === tag ? null : tag }"
             >
               {{ tag }}
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -301,14 +303,15 @@ async function submit() {
                 :src="url"
                 alt=""
               />
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="absolute top-1 right-1 size-6 rounded-full bg-black/60 text-white p-0 hover:bg-black/80"
                 :aria-label="`移除第 ${index + 1} 张图片`"
-                :title="`移除第 ${index + 1} 张图片`"
                 @click="removeImage(index)"
               >
-                <Dismiss24Regular class="size-4" />
-              </button>
+                <Dismiss24Regular class="size-3.5" />
+              </Button>
             </figure>
           </TransitionGroup>
         </div>

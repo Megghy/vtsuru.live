@@ -321,7 +321,7 @@ onBeforeUnmount(() => {
 
             <Button
               size="lg"
-              class="w-full bg-[#fb7299] hover:bg-[#fb7299]/90 text-white flex items-center justify-center gap-2"
+              class="w-full bg-[#fb7299] hover:bg-[#fb7299]/90 text-white"
               :disabled="isStarting"
               @click="startVerify"
             >
@@ -357,24 +357,24 @@ onBeforeUnmount(() => {
               <span class="overflow-hidden font-mono text-2xl font-bold text-center truncate max-[520px]:text-xl">{{
                 startModel?.code
               }}</span>
-              <button
-                type="button"
-                class="size-8 rounded-full flex items-center justify-center hover:bg-muted/80 text-muted-foreground hover:text-foreground transition"
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="size-8 rounded-full text-muted-foreground hover:text-foreground"
                 aria-label="复制认证码"
-                title="复制认证码"
                 @click="copyText(startModel?.code ?? '', '已复制认证码')"
               >
                 <component
                   :is="Copy24Regular"
                   class="size-4"
                 />
-              </button>
+              </Button>
             </div>
 
             <Button
               as-child
               size="lg"
-              class="w-full bg-[#00aeec] hover:bg-[#00aeec]/90 text-white flex items-center justify-center gap-2"
+              class="w-full bg-[#00aeec] hover:bg-[#00aeec]/90 text-white"
             >
               <a
                 :href="`https://live.bilibili.com/${startModel?.targetRoomId}`"
@@ -454,28 +454,30 @@ onBeforeUnmount(() => {
                   class="pr-16 font-mono"
                 />
                 <div class="absolute right-1.5 flex items-center gap-1">
-                  <button
-                    type="button"
-                    class="size-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                    title="显示/隐藏"
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="size-6 text-muted-foreground hover:text-foreground"
+                    aria-label="显示/隐藏"
                     @click="showPasswordLink = !showPasswordLink"
                   >
                     <component
                       :is="showPasswordLink ? EyeOff24Regular : Eye24Regular"
                       class="size-3.5"
                     />
-                  </button>
-                  <button
-                    type="button"
-                    class="size-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
-                    title="复制登录链接"
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="size-6 text-muted-foreground hover:text-foreground"
+                    aria-label="复制登录链接"
                     @click="copyText(authUrl, '已复制登录链接')"
                   >
                     <component
                       :is="Copy24Regular"
                       class="size-3.5"
                     />
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -496,7 +498,7 @@ onBeforeUnmount(() => {
             <div class="success-actions flex flex-col gap-2 pt-2">
               <Button
                 size="lg"
-                class="w-full bg-[#18a058] hover:bg-[#18a058]/90 text-white flex items-center justify-center gap-2"
+                class="w-full bg-[#18a058] hover:bg-[#18a058]/90 text-white"
                 @click="$router.push({ name: 'bili-user-points' })"
               >
                 查看我的积分

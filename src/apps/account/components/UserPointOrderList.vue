@@ -180,11 +180,11 @@ function formatDateTime(ts: number) {
     </div>
 
     <div class="hidden max-md:flex flex-col gap-2.5">
-      <button
+      <Button
         v-for="order in pagedOrders"
         :key="order.id"
-        class="mobile-order-card text-left p-3 rounded-lg border border-border bg-card hover:bg-accent/50 transition-colors"
-        type="button"
+        variant="ghost"
+        class="mobile-order-card h-auto flex flex-col items-stretch text-left p-3 rounded-lg border border-border bg-card hover:bg-accent/50 font-normal"
         @click="openDetail(order)"
       >
         <span class="flex items-center justify-between mb-1.5 text-xs">
@@ -215,7 +215,7 @@ function formatDateTime(ts: number) {
           <span>{{ formatRelativeTime(order.createAt) }}</span>
           <b class="text-foreground font-semibold">{{ Number(order.point.toFixed(1)) }} 积分</b>
         </span>
-      </button>
+      </Button>
 
       <Pagination
         v-if="orders.length > pageSize"

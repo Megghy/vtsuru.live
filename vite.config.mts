@@ -123,6 +123,9 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@vicons/fluent', '@vicons/ionicons5', 'vue', 'vue-router'],
   },
+  worker: {
+    format: 'es',
+  },
   build: {
     manifest: true,
     // 生产环境建议关闭以减少产物体积与网络请求

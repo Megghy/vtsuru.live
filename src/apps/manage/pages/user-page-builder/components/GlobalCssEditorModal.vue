@@ -124,15 +124,13 @@ watch(
         <div class="flex-1 min-h-0">
           <CustomHtmlCodeEditor
             ref="codeEditor"
-            html=""
-            js=""
-            :css="draft"
-            active-language="css"
+            :source="draft"
+            language="css"
             theme="vs"
             :assets="[]"
             :resources="[]"
             :issues="issues"
-            @update:css="draft = $event"
+            @update:source="draft = $event"
           />
         </div>
       </div>

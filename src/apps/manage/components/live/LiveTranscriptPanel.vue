@@ -405,17 +405,18 @@ defineExpose({ load })
                 <td class="p-2.5">
                   <div class="flex items-center justify-between gap-2">
                     <span class="leading-relaxed">{{ row.text }}</span>
-                    <button
-                      type="button"
-                      class="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted shrink-0"
-                      title="复制单句"
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      class="size-6 text-muted-foreground hover:text-foreground shrink-0"
+                      aria-label="复制单句"
                       @click="copySegment(row)"
                     >
                       <component
                         :is="Copy24Regular"
                         class="size-3.5"
                       />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>

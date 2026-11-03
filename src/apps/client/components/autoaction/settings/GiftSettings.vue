@@ -11,6 +11,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
+import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
@@ -104,21 +105,14 @@ function removeGiftName(index: number) {
 
       <div class="tag-container flex flex-wrap items-center gap-1.5 p-2 rounded border bg-muted/20 min-h-[36px]">
         <template v-if="action.triggerConfig.filterGiftNames && action.triggerConfig.filterGiftNames.length > 0">
-          <Badge
+          <Tag
             v-for="(giftName, index) in action.triggerConfig.filterGiftNames"
             :key="index"
-            variant="secondary"
-            class="text-xs h-6 px-2 gap-1.5 font-normal"
+            closable
+            @close="removeGiftName(index)"
           >
-            <span>{{ giftName }}</span>
-            <button
-              type="button"
-              class="hover:text-destructive transition-colors text-muted-foreground"
-              @click="removeGiftName(index)"
-            >
-              ✕
-            </button>
-          </Badge>
+            {{ giftName }}
+          </Tag>
         </template>
         <span
           v-else

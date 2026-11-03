@@ -225,15 +225,16 @@ function tagChipStyle(color?: string | null) {
                       </span>
                     </div>
 
-                    <button
+                    <Button
                       v-if="isSelf"
-                      type="button"
-                      class="size-4 rounded-full text-muted-foreground hover:text-destructive flex items-center justify-center opacity-0 group-hover:opacity-100 transition shrink-0"
-                      title="删除单条"
+                      variant="ghost"
+                      size="icon-xs"
+                      class="size-4 p-0 rounded-full text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition shrink-0"
+                      aria-label="删除单条"
                       @click.stop="emit('onDeleteItem', item, index, schedule)"
                     >
                       ×
-                    </button>
+                    </Button>
                   </div>
 
                   <p

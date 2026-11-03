@@ -169,22 +169,23 @@ watch(
     @update:open="onPopoverUpdate"
   >
     <PopoverTrigger as-child>
-      <button
-        class="relative h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-        type="button"
-        title="通知中心"
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        class="relative"
+        aria-label="通知中心"
       >
         <component
           :is="NotificationsOutline"
-          class="h-4 w-4"
+          class="size-4"
         />
         <span
           v-if="notificationStore.unreadCount > 0"
-          class="absolute top-1.5 right-1.5 min-w-[14px] h-[14px] px-0.5 rounded-full bg-brand text-brand-foreground text-[10px] font-mono font-bold flex items-center justify-center leading-none"
+          class="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-brand text-brand-foreground text-[10px] font-mono font-bold flex items-center justify-center leading-none"
         >
           {{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}
         </span>
-      </button>
+      </Button>
     </PopoverTrigger>
 
     <PopoverContent

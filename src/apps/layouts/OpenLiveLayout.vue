@@ -129,9 +129,9 @@ watch(
     <!-- 顶部导航栏 -->
     <header class="h-[60px] border-b border-border flex items-center justify-between px-5 shrink-0 bg-card">
       <div class="flex items-center gap-3">
-        <button
-          type="button"
-          class="flex items-center gap-2 text-left cursor-pointer select-none"
+        <Button
+          variant="ghost"
+          class="h-auto p-1.5 flex items-center gap-2 text-left hover:bg-transparent"
           @click="router.push({ name: authInfo?.Code ? 'open-live-index' : 'open-live-tools', query: route.query })"
         >
           <img
@@ -140,7 +140,7 @@ watch(
             class="h-6 w-auto"
           />
           <span class="font-bold text-lg text-primary">VTsuru 开放平台</span>
-        </button>
+        </Button>
         <span class="text-muted-foreground text-xs border-l pl-3 ml-1">
           {{ ($route.meta.title as string) ?? '功能模块' }}
         </span>
@@ -191,10 +191,11 @@ watch(
         :class="siderCollapsed ? 'w-16' : 'w-[180px]'"
       >
         <div class="flex items-center justify-end p-2 border-b">
-          <button
-            type="button"
-            class="size-6 rounded flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition cursor-pointer"
-            :title="siderCollapsed ? '展开边栏' : '折叠边栏'"
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            class="size-6 text-muted-foreground hover:text-foreground"
+            :aria-label="siderCollapsed ? '展开边栏' : '折叠边栏'"
             @click="siderCollapsed = !siderCollapsed"
           >
             <ChevronRight16Regular
@@ -205,7 +206,7 @@ watch(
               v-else
               class="size-3.5"
             />
-          </button>
+          </Button>
         </div>
 
         <div
@@ -254,13 +255,14 @@ watch(
           class="p-2 border-t text-[11px] text-center text-muted-foreground"
         >
           有建议请
-          <button
-            type="button"
-            class="text-primary hover:underline ml-0.5 cursor-pointer"
+          <Button
+            variant="link"
+            size="xs"
+            class="h-auto p-0 text-primary font-normal text-[11px]"
             @click="$router.push({ name: 'about' })"
           >
             反馈
-          </button>
+          </Button>
         </div>
       </aside>
 
@@ -271,13 +273,14 @@ watch(
           class="m-3 p-3 rounded-md border border-destructive/40 bg-destructive/10 text-destructive text-xs flex items-center justify-between"
         >
           <span>{{ danmakuClientError }}</span>
-          <button
-            type="button"
-            class="text-xs underline ml-2 cursor-pointer"
+          <Button
+            variant="ghost"
+            size="xs"
+            class="h-auto px-2 py-0.5 text-xs text-destructive hover:bg-destructive/10"
             @click="danmakuClientError = undefined"
           >
             关闭
-          </button>
+          </Button>
         </div>
 
         <RouterView v-slot="{ Component, route: viewRoute }">

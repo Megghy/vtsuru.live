@@ -1,10 +1,6 @@
 import type { APIFileModel } from '@/api/generated/model'
 
-import { CUSTOM_CODE_TEMPLATES } from './customHtmlTemplates'
-
-export const CUSTOM_HTML_MAX_BYTES = 256 * 1024
-export const CUSTOM_CSS_MAX_BYTES = 128 * 1024
-export const CUSTOM_JS_MAX_BYTES = 256 * 1024
+export const CUSTOM_VUE_MAX_BYTES = 512 * 1024
 export const GLOBAL_CUSTOM_CSS_MAX_BYTES = 64 * 1024
 export const CUSTOM_HTML_MAX_ASSETS = 100
 export const CUSTOM_HTML_MIN_HEIGHT = 80
@@ -18,9 +14,7 @@ export interface CustomHtmlAsset {
 }
 
 export interface CustomHtmlProps {
-  html: string
-  css: string
-  js: string
+  source: string
   heightMode: 'auto' | 'fixed' | 'viewport'
   height: number
   maxHeight: number
@@ -30,10 +24,45 @@ export interface CustomHtmlProps {
   immersive: boolean
 }
 
+export const DEFAULT_CUSTOM_VUE_SOURCE = `<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+
+const ctx = ref(null)
+
+onMounted(async () => {
+  ctx.value = await vtsuru.getContext()
+})
+</script>
+
+<template>
+  <section class="custom-panel">
+    <h2>{{ ctx?.streamer?.name || '自定义内容' }}</h2>
+    <p>用 Vue SFC 编写页面。可通过 window.vtsuru 读取公开数据并触发点歌、提问等交互。</p>
+  </section>
+</template>
+
+<style>
+.custom-panel {
+  padding: 24px;
+  border: var(--border-width) var(--border-style) var(--border);
+  border-radius: var(--radius);
+  color: var(--foreground);
+  background: var(--popover);
+  box-shadow: var(--ui-shadow);
+}
+.custom-panel h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+.custom-panel p {
+  margin: 0;
+  color: var(--muted-foreground);
+}
+</style>
+`
+
 export const DEFAULT_CUSTOM_HTML_PROPS: Readonly<CustomHtmlProps> = {
-  html: '<section class="custom-panel">\n  <h2>自定义内容</h2>\n  <p>在代码编辑器中修改 HTML、CSS 和 JavaScript。</p>\n</section>',
-  css: '.custom-panel {\n  padding: 24px;\n  border: var(--border-width) var(--border-style) var(--border);\n  border-radius: var(--radius);\n  color: var(--foreground);\n  background: var(--popover);\n  box-shadow: var(--ui-shadow);\n}\n\n.custom-panel h2 {\n  margin: 0 0 8px;\n  font-size: 22px;\n}\n\n.custom-panel p {\n  margin: 0;\n  color: var(--muted-foreground);\n}',
-  js: '',
+  source: DEFAULT_CUSTOM_VUE_SOURCE,
   heightMode: 'auto',
   height: 320,
   maxHeight: 1200,
@@ -44,8 +73,7 @@ export const DEFAULT_CUSTOM_HTML_PROPS: Readonly<CustomHtmlProps> = {
 }
 
 export function createDefaultCustomPageProps(): CustomHtmlProps {
-  const { html, css, js } = CUSTOM_CODE_TEMPLATES[0]
-  return { ...DEFAULT_CUSTOM_HTML_PROPS, assets: [], html, css, js, heightMode: 'viewport' }
+  return { ...DEFAULT_CUSTOM_HTML_PROPS, assets: [], heightMode: 'viewport' }
 }
 
 function asObject(value: unknown): Record<string, unknown> | null {
@@ -75,9 +103,7 @@ export function normalizeCustomHtmlProps(value: unknown): CustomHtmlProps {
     : []
 
   return {
-    html: typeof source.html === 'string' ? source.html : '',
-    css: typeof source.css === 'string' ? source.css : '',
-    js: typeof source.js === 'string' ? source.js : '',
+    source: typeof source.source === 'string' ? source.source : '',
     heightMode: source.heightMode === 'fixed' || source.heightMode === 'viewport' ? source.heightMode : 'auto',
     height: boundedInteger(
       source.height,

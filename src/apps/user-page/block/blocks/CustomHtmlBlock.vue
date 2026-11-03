@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watchDebounced } from '@vueuse/core'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -10,8 +11,9 @@ import CustomHtmlHostDialogs from '../../runtime/CustomHtmlHostDialogs.vue'
 import { useCustomHtmlBridge } from '../../runtime/useCustomHtmlBridge'
 import type { BiliProfile } from '../../types'
 import BlockCard from '../BlockCard.vue'
+import type { CompiledCustomVue } from '../customHtmlCompile'
 import { CUSTOM_HTML_MIN_AUTO_HEIGHT, normalizeCustomHtmlProps } from '../customHtmlContract'
-import { buildCustomHtmlDocument } from '../customHtmlRuntime'
+import { buildCustomHtmlDocument } from '../customHtmlDocument'
 import type { CustomHtmlTheme } from '../customHtmlRuntime'
 
 const props = defineProps<{
@@ -28,6 +30,7 @@ const frame = ref<HTMLIFrameElement | null>(null)
 const contentHeight = ref(CUSTOM_HTML_MIN_AUTO_HEIGHT)
 const runtimeError = ref('')
 const themeReady = ref(Boolean(props.theme))
+const compiled = shallowRef<CompiledCustomVue>({ js: '', css: '', issues: [] })
 const detectedTheme = ref<CustomHtmlTheme>({
   fg: '#18181b',
   fgMuted: '#71717a',
@@ -67,7 +70,11 @@ const { handlers, dialog, cancelPending } = useCustomHtmlBridge({
   theme: sdkTheme,
 })
 const initialTheme = shallowRef<CustomHtmlTheme | null>(props.theme ?? null)
-const documentResult = computed(() => buildCustomHtmlDocument(config.value, initialTheme.value ?? detectedTheme.value))
+const compileError = computed(() => compiled.value.issues.map((item) => item.message).join('；'))
+const documentResult = computed(() => {
+  if (compiled.value.issues.length) return { srcdoc: '', channelId: '', issues: compiled.value.issues }
+  return buildCustomHtmlDocument(config.value, initialTheme.value ?? detectedTheme.value, compiled.value)
+})
 const iframeHeight = computed(() => {
   const measured = Math.max(CUSTOM_HTML_MIN_AUTO_HEIGHT, contentHeight.value)
   return config.value.heightMode === 'fixed'
@@ -76,6 +83,15 @@ const iframeHeight = computed(() => {
       ? Math.min(config.value.maxHeight, measured)
       : measured
 })
+
+watchDebounced(
+  () => config.value.source,
+  async (source) => {
+    const { compileCustomVueSfc } = await import('../customHtmlCompile')
+    compiled.value = compileCustomVueSfc(source)
+  },
+  { debounce: 200, immediate: true },
+)
 
 function readTheme() {
   if (!host.value) return
@@ -168,14 +184,14 @@ onBeforeUnmount(() => {
       class="@container w-full min-w-0 [&_iframe]:block [&_iframe]:w-full [&_iframe]:min-h-20 [&_iframe]:border-0 [&_iframe]:bg-transparent"
     >
       <div
-        v-if="runtimeError"
+        v-if="runtimeError || compileError"
         role="alert"
         class="p-4 text-destructive"
       >
-        自定义代码执行失败：{{ runtimeError }}
+        自定义代码执行失败：{{ runtimeError || compileError }}
       </div>
       <iframe
-        v-if="themeReady"
+        v-if="themeReady && documentResult.srcdoc"
         ref="frame"
         :srcdoc="documentResult.srcdoc"
         :style="{ height: `${iframeHeight}px`, minHeight: config.heightMode === 'viewport' ? '100dvh' : undefined }"

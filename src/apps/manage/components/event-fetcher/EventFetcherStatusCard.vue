@@ -104,15 +104,17 @@ function goBindBili() {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <button
-                  type="button"
-                  class="inline-flex items-center justify-center bg-transparent border-0 p-0 cursor-pointer text-muted-foreground hover:text-foreground transition-colors"
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  class="size-4 p-0 text-muted-foreground hover:text-foreground"
+                  aria-label="查看说明"
                 >
                   <component
                     :is="Info24Filled"
                     class="size-3.5"
                   />
-                </button>
+                </Button>
               </TooltipTrigger>
               <TooltipContent class="max-w-xs text-xs leading-relaxed space-y-1.5 p-3">
                 <p>持续监听直播间内的 Superchat 和上舰事件并上传到本站记录。</p>

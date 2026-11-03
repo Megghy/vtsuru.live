@@ -33,6 +33,7 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -819,7 +820,7 @@ onMounted(() => {
     v-else
     class="border bg-card p-12 text-center"
   >
-    <div class="size-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+    <Spin size="medium" />
     <span class="text-xs text-muted-foreground block mt-2">正在加载设置...</span>
   </Card>
 </template>

@@ -3,6 +3,7 @@ import { useNow } from '@vueuse/core'
 import { computed } from 'vue'
 
 import { EventDataTypes } from '@/api/generated/model'
+import { Button } from '@/shared/ui/button'
 import { getGuardColor } from '@/shared/utils/queue'
 
 import { avatarUrl, formatClock, formatPrice, formatRelative, paidSummary, superChatTier } from '../core/format'
@@ -59,14 +60,15 @@ const timeText = computed(() => {
             :event="event"
             :show-medal="dashboard.settings.showMedal"
           />
-          <button
-            class="paid__name appearance-none bg-transparent border-0 p-0 font-semibold cursor-pointer wrap-anywhere hover:underline"
+          <Button
+            variant="link"
+            size="xs"
+            class="paid__name h-auto p-0 font-semibold text-inherit wrap-anywhere"
             data-user-trigger
-            type="button"
             @click.stop="ui.openUserMenu(event, $event)"
           >
             {{ event.uname || '匿名用户' }}
-          </button>
+          </Button>
         </div>
         <div class="flex items-center gap-2 flex-wrap">
           <span class="font-bold tabular-nums">{{ event.price > 0 ? formatPrice(event.price) : '免费' }}</span>

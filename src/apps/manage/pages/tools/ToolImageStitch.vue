@@ -442,16 +442,16 @@ onBeforeUnmount(clearAll)
             <div class="panel-block">
               <span class="font-medium text-foreground text-sm"> 布局预设 </span>
               <div class="preset-grid">
-                <button
+                <Button
                   v-for="preset in layoutPresets"
                   :key="preset.key"
-                  class="preset-card"
+                  variant="outline"
+                  class="preset-card h-auto p-2.5 flex flex-col items-center justify-center text-center font-normal"
                   :class="{
                     active:
                       settings.layout === preset.layout &&
                       (preset.columns ? settings.columns === preset.columns : true),
                   }"
-                  type="button"
                   @click="applyPreset(preset)"
                 >
                   <span
@@ -465,7 +465,7 @@ onBeforeUnmount(clearAll)
                   </span>
                   <span>{{ preset.label }}</span>
                   <small>{{ preset.desc }}</small>
-                </button>
+                </Button>
               </div>
             </div>
 

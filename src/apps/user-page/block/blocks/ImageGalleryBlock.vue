@@ -2,6 +2,7 @@
 import { ChevronBackOutline, ChevronForwardOutline } from '@vicons/ionicons5'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
+import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 
 import BlockCard from '../BlockCard.vue'
@@ -238,9 +239,10 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
 
           <!-- Arrows -->
           <template v-if="model.showArrow && model.items.length > 1">
-            <button
-              type="button"
-              class="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 size-8 rounded-full bg-background/80 hover:bg-background border border-border flex items-center justify-center text-foreground opacity-0 group-hover:opacity-100 transition shadow-sm"
+            <Button
+              variant="outline"
+              size="icon-xs"
+              class="absolute left-2.5 top-1/2 -translate-y-1/2 z-20 size-8 rounded-full bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 shadow-sm"
               aria-label="上一张"
               @click.stop="prevSlide"
             >
@@ -248,10 +250,11 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
                 :is="ChevronBackOutline"
                 class="size-4"
               />
-            </button>
-            <button
-              type="button"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 size-8 rounded-full bg-background/80 hover:bg-background border border-border flex items-center justify-center text-foreground opacity-0 group-hover:opacity-100 transition shadow-sm"
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-xs"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 z-20 size-8 rounded-full bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 shadow-sm"
               aria-label="下一张"
               @click.stop="nextSlide"
             >
@@ -259,7 +262,7 @@ const activeCaption = computed(() => model.value.items[activeIndex.value]?.desc 
                 :is="ChevronForwardOutline"
                 class="size-4"
               />
-            </button>
+            </Button>
           </template>
 
           <!-- Dots -->

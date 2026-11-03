@@ -32,6 +32,7 @@ import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { toast } from '@/shared/utils'
 
 import VideoCollectPageShell from './VideoCollectPageShell.vue'
@@ -413,9 +414,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
               '--muted-foreground': 'var(--vtsuru-page-text-muted)',
             }"
           >
-            <button
-              type="button"
-              class="owner-link flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition cursor-pointer"
+            <Button
+              variant="link"
+              size="xs"
+              class="owner-link h-auto p-0 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground font-normal"
               @click="router.push({ name: 'user-index', params: { id: table.owner.name } })"
             >
               <component
@@ -424,7 +426,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
               />
               <span>{{ table.owner.name }}</span>
               <span class="owner-suffix opacity-75">的视频征集</span>
-            </button>
+            </Button>
             <div class="title-row flex items-center gap-2.5">
               <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
               <Badge
@@ -543,72 +545,40 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             class="workspace-toolbar flex flex-wrap items-center justify-between gap-3 p-2.5 rounded-xl border border-border/80 bg-muted/20"
           >
             <!-- 模式 Segmented 选择器 -->
-            <div class="mode-segmented-control flex items-center bg-muted/60 p-1 rounded-lg gap-1">
-              <button
-                type="button"
-                class="px-2.5 py-1 text-xs rounded-md font-medium transition flex items-center gap-1.5"
-                :class="
-                  mode === 'list'
-                    ? 'bg-background shadow-xs text-foreground font-semibold'
-                    : 'text-muted-foreground hover:text-foreground'
-                "
-                @click="mode = 'list'"
-              >
+            <ToggleGroup
+              type="single"
+              :model-value="mode"
+              @update:model-value="(val) => { if (val) mode = val as any }"
+            >
+              <ToggleGroupItem value="list" class="gap-1.5">
                 <component
                   :is="Grid24Regular"
                   class="size-3.5"
                 />
                 全部视频
-              </button>
-              <button
-                type="button"
-                class="px-2.5 py-1 text-xs rounded-md font-medium transition flex items-center gap-1.5"
-                :class="
-                  mode === 'draw'
-                    ? 'bg-background shadow-xs text-foreground font-semibold'
-                    : 'text-muted-foreground hover:text-foreground'
-                "
-                @click="mode = 'draw'"
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="draw" class="gap-1.5">
                 <component
                   :is="ArrowSwap24Regular"
                   class="size-3.5"
                 />
                 随机抽取
-              </button>
-              <button
-                type="button"
-                class="px-2.5 py-1 text-xs rounded-md font-medium transition flex items-center gap-1.5"
-                :class="
-                  mode === 'sequence'
-                    ? 'bg-background shadow-xs text-foreground font-semibold'
-                    : 'text-muted-foreground hover:text-foreground'
-                "
-                @click="mode = 'sequence'"
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="sequence" class="gap-1.5">
                 <component
                   :is="PlayCircle24Regular"
                   class="size-3.5"
                 />
                 逐个观看
-              </button>
-              <button
-                type="button"
-                class="px-2.5 py-1 text-xs rounded-md font-medium transition flex items-center gap-1.5"
-                :class="
-                  mode === 'flip'
-                    ? 'bg-background shadow-xs text-foreground font-semibold'
-                    : 'text-muted-foreground hover:text-foreground'
-                "
-                @click="mode = 'flip'"
-              >
+              </ToggleGroupItem>
+              <ToggleGroupItem value="flip" class="gap-1.5">
                 <component
                   :is="Apps24Regular"
                   class="size-3.5"
                 />
                 随机翻牌
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
             <!-- 各模式对应的快捷操作区 -->
             <div class="toolbar-actions flex items-center gap-2 flex-wrap text-xs">
@@ -626,44 +596,16 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                   />
                 </div>
 
-                <div class="flex items-center bg-muted/60 p-0.5 rounded-md">
-                  <button
-                    type="button"
-                    class="px-2 py-0.5 text-xs rounded transition"
-                    :class="
-                      watchFilter === 'all'
-                        ? 'bg-background shadow-xs text-foreground font-medium'
-                        : 'text-muted-foreground hover:text-foreground'
-                    "
-                    @click="watchFilter = 'all'"
-                  >
-                    全部
-                  </button>
-                  <button
-                    type="button"
-                    class="px-2 py-0.5 text-xs rounded transition"
-                    :class="
-                      watchFilter === 'unwatched'
-                        ? 'bg-background shadow-xs text-foreground font-medium'
-                        : 'text-muted-foreground hover:text-foreground'
-                    "
-                    @click="watchFilter = 'unwatched'"
-                  >
-                    未看
-                  </button>
-                  <button
-                    type="button"
-                    class="px-2 py-0.5 text-xs rounded transition"
-                    :class="
-                      watchFilter === 'watched'
-                        ? 'bg-background shadow-xs text-foreground font-medium'
-                        : 'text-muted-foreground hover:text-foreground'
-                    "
-                    @click="watchFilter = 'watched'"
-                  >
-                    已看
-                  </button>
-                </div>
+                <ToggleGroup
+                  type="single"
+                  size="xs"
+                  :model-value="watchFilter"
+                  @update:model-value="(val) => { if (val) watchFilter = val as any }"
+                >
+                  <ToggleGroupItem value="all">全部</ToggleGroupItem>
+                  <ToggleGroupItem value="unwatched">未看</ToggleGroupItem>
+                  <ToggleGroupItem value="watched">已看</ToggleGroupItem>
+                </ToggleGroup>
 
                 <div class="w-36">
                   <Select v-model="sortBy">
@@ -827,10 +769,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                     @select="drawnVideo && openVideo(drawnVideo)"
                     @toggle-watched="drawnVideo && toggleWatched(drawnVideo.info.bvid)"
                   />
-                  <button
+                  <Button
                     v-else
-                    type="button"
-                    class="draw-trigger-placeholder w-full aspect-video rounded-xl border-2 border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-muted/40 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground cursor-pointer"
+                    variant="outline"
+                    class="draw-trigger-placeholder w-full aspect-video rounded-xl border-2 border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-muted/40 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground h-auto p-4 cursor-pointer"
                     @click="drawRandomVideo"
                   >
                     <div
@@ -843,7 +785,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                     </div>
                     <strong class="text-sm">点击开始随机抽取</strong>
                     <span class="text-xs text-muted-foreground">或按键盘空格键</span>
-                  </button>
+                  </Button>
                 </div>
 
                 <div class="draw-actions-row flex items-center justify-center gap-3 pt-2">
@@ -976,11 +918,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 <div class="sequence-filmstrip space-y-2 pt-4 border-t border-border/60">
                   <div class="filmstrip-label text-xs font-semibold text-muted-foreground">播放列表</div>
                   <div class="filmstrip-track flex gap-2 overflow-x-auto pb-2">
-                    <button
+                    <Button
                       v-for="(item, idx) in acceptedVideos"
                       :key="`strip-${item.info.bvid}`"
-                      type="button"
-                      class="filmstrip-item flex items-center gap-2 p-1.5 pr-2.5 rounded-lg border border-border/80 bg-card hover:border-primary/50 text-left shrink-0 transition"
+                      variant="outline"
+                      class="filmstrip-item h-auto flex items-center gap-2 p-1.5 pr-2.5 rounded-lg border border-border/80 bg-card hover:border-primary/50 text-left shrink-0 transition font-normal"
                       :class="{
                         'border-primary bg-primary/5': idx === sequenceIndex,
                         'opacity-60': watchedIds.includes(item.info.bvid),
@@ -1001,7 +943,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                           formatDuration(item.video.length)
                         }}</span>
                       </div>
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>

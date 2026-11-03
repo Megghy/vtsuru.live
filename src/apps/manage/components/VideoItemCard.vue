@@ -19,6 +19,7 @@ import { VideoStatus } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = withDefaults(
   defineProps<{
@@ -176,27 +177,35 @@ function triggerPreview() {
     <div class="min-w-0 flex-1 space-y-1">
       <!-- 标题行 -->
       <div class="flex items-center gap-1.5 flex-wrap">
-        <button
-          type="button"
-          class="text-xs font-semibold text-foreground hover:text-brand transition-colors text-left truncate max-w-sm"
+        <Button
+          variant="link"
+          size="xs"
+          class="h-auto p-0 font-semibold text-foreground hover:text-brand text-left truncate max-w-sm justify-start"
           :title="videoData.title"
           @click="triggerPreview"
         >
           {{ videoData.title }}
-        </button>
+        </Button>
 
-        <button
-          type="button"
-          class="text-muted-foreground hover:text-foreground p-0.5 transition-colors"
-          title="在哔哩哔哩新窗口打开"
-          aria-label="在哔哩哔哩新窗口打开"
-          @click.stop="openVideo"
-        >
-          <component
-            :is="Open24Regular"
-            class="h-3.5 w-3.5"
-          />
-        </button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="shrink-0"
+                aria-label="在哔哩哔哩新窗口打开"
+                @click.stop="openVideo"
+              >
+                <component
+                  :is="Open24Regular"
+                  class="size-3.5"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>在哔哩哔哩新窗口打开</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         <code class="px-1 py-0.5 rounded bg-muted/60 text-[10px] font-mono text-muted-foreground border border-border">
           {{ videoInfo.bvid }}
@@ -293,7 +302,6 @@ function triggerPreview() {
         size="xs"
         :variant="action.variant"
         :loading="loading"
-        class="px-2"
         @click="emit('updateStatus', action.status, videoInfo)"
       >
         <component
@@ -378,25 +386,34 @@ function triggerPreview() {
     <div class="p-3 flex-1 flex flex-col justify-between space-y-2">
       <div class="space-y-1.5">
         <div class="flex items-start justify-between gap-1">
-          <button
-            type="button"
-            class="text-xs font-semibold text-foreground hover:text-brand transition-colors text-left line-clamp-2"
+          <Button
+            variant="link"
+            size="xs"
+            class="h-auto p-0 font-semibold text-foreground hover:text-brand text-left line-clamp-2 justify-start whitespace-normal"
             :title="videoData.title"
             @click="triggerPreview"
           >
             {{ videoData.title }}
-          </button>
-          <button
-            type="button"
-            class="text-muted-foreground hover:text-foreground shrink-0 p-0.5"
-            title="在哔哩哔哩打开"
-            @click.stop="openVideo"
-          >
-            <component
-              :is="Open24Regular"
-              class="h-3.5 w-3.5"
-            />
-          </button>
+          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  class="shrink-0"
+                  aria-label="在哔哩哔哩新窗口打开"
+                  @click.stop="openVideo"
+                >
+                  <component
+                    :is="Open24Regular"
+                    class="size-3.5"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>在哔哩哔哩新窗口打开</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
 
         <div class="flex items-center justify-between text-[11px] text-muted-foreground">

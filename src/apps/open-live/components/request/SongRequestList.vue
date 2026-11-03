@@ -14,6 +14,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 import SongRequestItem from './SongRequestItem.vue'
 
@@ -112,21 +113,21 @@ async function updateSettings() {
             </div>
 
             <!-- 排序单选条 -->
-            <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground">
-              <button
+            <ToggleGroup
+              type="single"
+              size="xs"
+              :model-value="String(sortType)"
+              :disabled="!songRequest.configCanEdit"
+              @update:model-value="(val) => { if (val) { sortType = Number(val) as any; updateSettings() } }"
+            >
+              <ToggleGroupItem
                 v-for="opt in sortOptions"
                 :key="opt.value"
-                type="button"
-                :disabled="!songRequest.configCanEdit"
-                class="px-2 py-1 text-xs font-medium rounded-sm transition-all"
-                :class="
-                  sortType === opt.value ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'
-                "
-                @click="((sortType = opt.value), updateSettings())"
+                :value="String(opt.value)"
               >
                 {{ opt.label }}
-              </button>
-            </div>
+              </ToggleGroupItem>
+            </ToggleGroup>
 
             <label class="flex items-center gap-1.5 cursor-pointer text-xs select-none">
               <Checkbox

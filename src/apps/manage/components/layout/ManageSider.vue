@@ -609,9 +609,10 @@ async function go(name: string, query?: Record<string, string>) {
               v-if="!collapsed"
               class="flex-between gap-1.5 pt-0.5 px-1 pb-1.5"
             >
-              <button
-                class="border-0 bg-transparent text-muted-foreground text-[11px] font-normal tracking-wider uppercase inline-flex items-center gap-1.5 cursor-pointer py-0.5 px-0"
-                type="button"
+              <Button
+                variant="ghost"
+                size="xs"
+                class="h-auto p-0 text-muted-foreground text-[11px] tracking-wider uppercase"
                 :disabled="g.key === 'group-user'"
                 @click="toggleGroup(g.key)"
               >
@@ -622,21 +623,21 @@ async function go(name: string, query?: Record<string, string>) {
                   :class="isGroupExpanded(g.key) ? '-rotate-90' : 'rotate-90'"
                   >›</span
                 >
-              </button>
+              </Button>
 
               <TooltipProvider v-if="g.key === 'group-danmaku'">
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <button
-                      class="size-[22px] rounded-[7px] border border-border bg-transparent text-muted-foreground inline-flex-center cursor-pointer hover:bg-[rgba(127,127,127,0.08)]"
-                      type="button"
-                      :title="g.hint || '提示'"
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label="可用性警告"
                     >
                       <component
                         :is="Info24Filled"
                         class="size-3.5"
                       />
-                    </button>
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent
                     side="right"
@@ -684,25 +685,26 @@ async function go(name: string, query?: Record<string, string>) {
                     >{{ item.label }}</span
                   >
 
-                  <button
+                  <Button
                     v-if="!collapsed"
-                    class="size-[22px] rounded-[7px] border border-[rgba(127,127,127,0.54)] bg-[rgba(127,127,127,0.04)] inline-flex-center cursor-pointer opacity-50 transition-opacity group-hover/row:opacity-100 group-hover/row:bg-[rgba(127,127,127,0.08)]"
+                    variant="ghost"
+                    size="icon-xs"
+                    class="opacity-50 group-hover/row:opacity-100"
                     :class="{
-                      'opacity-100 bg-amber-500/25 border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                      'opacity-100 bg-amber-500/25 border border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
                         isFavorite(item.key),
                     }"
-                    type="button"
-                    :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                    :aria-label="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
                     <component
                       :is="Bookmark"
-                      class="nav-item__fav-icon w-3 h-3 transition-colors"
+                      class="nav-item__fav-icon size-3 transition-colors"
                       :class="
                         isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
                       "
                     />
-                  </button>
+                  </Button>
                 </RouterLink>
 
                 <div
@@ -722,25 +724,26 @@ async function go(name: string, query?: Record<string, string>) {
                     class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
                     >{{ item.label }}</span
                   >
-                  <button
+                  <Button
                     v-if="!collapsed"
-                    class="size-[22px] rounded-[7px] border border-[rgba(127,127,127,0.54)] bg-[rgba(127,127,127,0.04)] inline-flex-center cursor-pointer opacity-50 transition-opacity group-hover/row:opacity-100 group-hover/row:bg-[rgba(127,127,127,0.08)]"
+                    variant="ghost"
+                    size="icon-xs"
+                    class="opacity-50 group-hover/row:opacity-100"
                     :class="{
-                      'opacity-100 bg-amber-500/25 border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                      'opacity-100 bg-amber-500/25 border border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
                         isFavorite(item.key),
                     }"
-                    type="button"
-                    :title="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                    :aria-label="isFavorite(item.key) ? '取消收藏' : '收藏'"
                     @click.stop.prevent="toggleFavorite(item.key)"
                   >
                     <component
                       :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
-                      class="nav-item__fav-icon w-3 h-3 transition-colors"
+                      class="nav-item__fav-icon size-3 transition-colors"
                       :class="
                         isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
                       "
                     />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -753,24 +756,24 @@ async function go(name: string, query?: Record<string, string>) {
       v-if="!collapsed"
       class="border-t border-border py-2.5 px-3 flex flex-col gap-1.5 items-center"
     >
-      <div class="text-xs text-muted-foreground text-center">
+      <div class="text-xs text-muted-foreground text-center inline-flex items-center gap-1">
         有更多功能建议请
-        <button
-          type="button"
-          class="text-xs text-brand hover:underline cursor-pointer bg-transparent border-0 p-0 font-medium"
+        <Button
+          variant="link"
+          class="h-auto p-0 text-brand"
           @click="go('manage-feedback')"
         >
           反馈
-        </button>
+        </Button>
       </div>
       <div class="text-xs text-muted-foreground text-center">
-        <button
-          type="button"
-          class="text-xs text-brand hover:underline cursor-pointer bg-transparent border-0 p-0 font-medium"
+        <Button
+          variant="link"
+          class="h-auto p-0 text-brand"
           @click="go('about')"
         >
           关于本站
-        </button>
+        </Button>
       </div>
     </div>
   </aside>

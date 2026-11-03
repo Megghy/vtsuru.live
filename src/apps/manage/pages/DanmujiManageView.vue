@@ -537,7 +537,6 @@ onActivated(() => {
               <Switch
                 :model-value="autoEnabled"
                 :disabled="!previewReady"
-                class="h-5 w-9"
                 @update:model-value="(val) => toggleAuto(Boolean(val))"
               />
               <span class="text-muted-foreground select-none">自动轮播</span>

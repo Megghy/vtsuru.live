@@ -14,20 +14,15 @@ import { computed, inject, ref, watch } from 'vue'
 
 import type { APIFileModel } from '@/api/generated/model'
 import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
+import { compileCustomVueSfc } from '@/apps/user-page/block/customHtmlCompile'
 import {
-  CUSTOM_CSS_MAX_BYTES,
-  CUSTOM_HTML_MAX_BYTES,
   CUSTOM_HTML_MAX_ASSETS,
-  CUSTOM_JS_MAX_BYTES,
+  CUSTOM_VUE_MAX_BYTES,
   normalizeCustomHtmlProps,
   utf8ByteLength,
 } from '@/apps/user-page/block/customHtmlContract'
 import type { CustomHtmlProps } from '@/apps/user-page/block/customHtmlContract'
-import {
-  collectCustomHtmlAssetKeys,
-  inspectCustomCss,
-  inspectCustomHtml,
-} from '@/apps/user-page/block/customHtmlRuntime'
+import { collectCustomHtmlAssetKeys, inspectCustomSource } from '@/apps/user-page/block/customHtmlRuntime'
 import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
 import { CUSTOM_CODE_TEMPLATES, applyCustomCodeTemplate } from '@/apps/user-page/block/customHtmlTemplates'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
@@ -42,7 +37,6 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/ui/sheet'
-import { Tabs, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -64,7 +58,6 @@ const dialog = useDialog()
 const sourceConfig = computed(() => (props.page ? editor.currentPage.value.custom : props.block?.props))
 const draft = ref<CustomHtmlProps>(deepCloneJson(normalizeCustomHtmlProps(sourceConfig.value)))
 const initialSnapshot = ref('')
-const activeLanguage = ref<'html' | 'css' | 'javascript'>('html')
 const resourcesVisible = ref(true)
 const apiReferenceOpen = ref(false)
 const resourceSearch = ref('')
@@ -87,22 +80,16 @@ const filteredResources = computed(() => {
   return imageResources.value.filter((file) => `${file.id} ${file.name} ${file.path}`.toLowerCase().includes(query))
 })
 const attachedIds = computed(() => new Set(draft.value.assets.map((asset) => asset.file.id)))
-const htmlBytes = computed(() => utf8ByteLength(draft.value.html))
-const cssBytes = computed(() => utf8ByteLength(draft.value.css))
-const jsBytes = computed(() => utf8ByteLength(draft.value.js))
+const sourceBytes = computed(() => utf8ByteLength(draft.value.source))
 const codeIssues = computed(() => {
   const issues = [
-    ...inspectCustomHtml(draft.value.html, draft.value.assets),
-    ...inspectCustomCss(draft.value.css, draft.value.assets).issues,
+    ...inspectCustomSource(draft.value.source, draft.value.assets),
+    ...compileCustomVueSfc(draft.value.source).issues,
   ]
   if (draft.value.assets.length > CUSTOM_HTML_MAX_ASSETS)
-    issues.push({ field: 'assets', message: `资源不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, line: 1, column: 1 })
-  if (htmlBytes.value > CUSTOM_HTML_MAX_BYTES)
-    issues.push({ field: 'html', message: 'HTML 不能超过 256 KiB', line: 1, column: 1 })
-  if (cssBytes.value > CUSTOM_CSS_MAX_BYTES)
-    issues.push({ field: 'css', message: 'CSS 不能超过 128 KiB', line: 1, column: 1 })
-  if (jsBytes.value > CUSTOM_JS_MAX_BYTES)
-    issues.push({ field: 'js', message: 'JavaScript 不能超过 256 KiB', line: 1, column: 1 })
+    issues.push({ field: 'assets' as const, message: `资源不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, line: 1, column: 1 })
+  if (sourceBytes.value > CUSTOM_VUE_MAX_BYTES)
+    issues.push({ field: 'source' as const, message: `Vue SFC 不能超过 ${CUSTOM_VUE_MAX_BYTES / 1024} KiB`, line: 1, column: 1 })
   return issues
 })
 const isDirty = computed(() => JSON.stringify(draft.value) !== initialSnapshot.value)
@@ -166,17 +153,11 @@ function attachResource(file: APIFileModel, insert = true) {
   }
   if (!insert) return
   const key = draft.value.assets.find((asset) => asset.file.id === file.id)?.key ?? `file-${file.id}`
-  codeEditor.value?.insertText(
-    activeLanguage.value === 'html'
-      ? `\n<img data-vtsuru-asset="${key}" alt="">`
-      : activeLanguage.value === 'css'
-        ? `var(--vtsuru-asset-${key})`
-        : `vtsuru.getAssetUrl('${key}')`,
-  )
+  codeEditor.value?.insertText(`\n<img data-vtsuru-asset="${key}" alt="">`)
 }
 
 function syncReferencedResources() {
-  const keys = collectCustomHtmlAssetKeys(draft.value.html, draft.value.css)
+  const keys = collectCustomHtmlAssetKeys(draft.value.source)
   const attachedKeys = new Set(draft.value.assets.map((asset) => asset.key))
   keys.forEach((key) => {
     if (attachedKeys.has(key)) return
@@ -204,7 +185,7 @@ function insertTemplate(key: string) {
   if (!isDirty.value) return apply()
   dialog.warning({
     title: '替换代码',
-    content: '模板将替换当前 HTML、CSS 和 JavaScript。',
+    content: '模板将替换当前 Vue SFC。',
     positiveText: '替换',
     negativeText: '取消',
     onPositiveClick: apply,
@@ -275,23 +256,14 @@ watch(
   },
   { immediate: true },
 )
-watchDebounced([() => draft.value.html, () => draft.value.css, imageResources], syncReferencedResources, {
+watchDebounced([() => draft.value.source, imageResources], syncReferencedResources, {
   debounce: 180,
   deep: true,
 })
 
 function applyCodeText(text: string) {
-  const current =
-    activeLanguage.value === 'html'
-      ? draft.value.html
-      : activeLanguage.value === 'css'
-        ? draft.value.css
-        : draft.value.js
-  if (!current.trim()) {
-    codeEditor.value?.setContent(text)
-  } else {
-    codeEditor.value?.insertText(text)
-  }
+  if (!draft.value.source.trim()) codeEditor.value?.setContent(text)
+  else codeEditor.value?.insertText(text)
 }
 
 async function handlePasteFromClipboard() {
@@ -334,17 +306,7 @@ async function onCodeFileSelected(event: Event) {
       editor.message.warning('所选文件内容为空')
       return
     }
-    const lowerName = file.name.toLowerCase()
-    let targetLang: 'html' | 'css' | 'javascript' = activeLanguage.value
-    if (lowerName.endsWith('.css')) {
-      targetLang = 'css'
-    } else if (lowerName.endsWith('.js')) {
-      targetLang = 'javascript'
-    } else if (lowerName.endsWith('.html') || lowerName.endsWith('.htm')) {
-      targetLang = 'html'
-    }
-    activeLanguage.value = targetLang
-    codeEditor.value?.setContent(content, targetLang)
+    codeEditor.value?.setContent(content)
     editor.message.success(`已导入 ${file.name} (${content.length} 字符)`)
   } catch {
     editor.message.error('读取文件失败')
@@ -354,25 +316,18 @@ async function onCodeFileSelected(event: Event) {
 }
 
 function handleClearCode() {
-  const lang = activeLanguage.value.toUpperCase()
-  const current =
-    activeLanguage.value === 'html'
-      ? draft.value.html
-      : activeLanguage.value === 'css'
-        ? draft.value.css
-        : draft.value.js
-  if (!current.trim()) {
-    editor.message.info(`当前 ${lang} 代码已为空`)
+  if (!draft.value.source.trim()) {
+    editor.message.info('当前代码已为空')
     return
   }
   dialog.warning({
-    title: `清空 ${lang} 代码`,
-    content: `确定要清空当前的 ${lang} 代码吗？清空后仍可在编辑器中按 Ctrl+Z 撤销。`,
+    title: '清空代码',
+    content: '确定要清空当前的 Vue SFC 吗？清空后仍可在编辑器中按 Ctrl+Z 撤销。',
     positiveText: '确定清空',
     negativeText: '取消',
     onPositiveClick: () => {
       codeEditor.value?.clearContent()
-      editor.message.success(`已清空当前 ${lang} 代码 (可按 Ctrl+Z 撤销)`)
+      editor.message.success('已清空当前代码 (可按 Ctrl+Z 撤销)')
     },
   })
 }
@@ -403,7 +358,8 @@ function confirmManualPaste() {
   >
     <DialogContent class="max-w-[min(1600px,96vw)] h-[min(920px,94dvh)] p-0 flex flex-col gap-0 overflow-hidden">
       <DialogHeader class="p-3.5 border-b flex flex-row items-center justify-between shrink-0">
-        <DialogTitle class="text-base font-semibold"> 自定义代码 </DialogTitle>
+        <DialogTitle class="text-base font-semibold"> 自定义 Vue </DialogTitle>
+        <DialogDescription class="sr-only">使用 Vue 单文件组件编写自定义页面。</DialogDescription>
         <div class="flex items-center gap-2 pr-6">
           <DropdownMenu>
             <DropdownMenuTrigger as-child><Button variant="outline">插入模板 / 片段</Button></DropdownMenuTrigger>
@@ -478,11 +434,11 @@ function confirmManualPaste() {
               v-if="filteredResources.length"
               class="resource-list space-y-1"
             >
-              <button
+              <Button
                 v-for="file in filteredResources"
                 :key="file.id"
-                type="button"
-                class="resource-row w-full flex items-center gap-2 p-1.5 rounded text-left hover:bg-muted text-xs transition-colors"
+                variant="ghost"
+                class="resource-row w-full h-auto justify-start gap-2 p-1.5"
                 @click="attachResource(file)"
               >
                 <img
@@ -499,7 +455,7 @@ function confirmManualPaste() {
                     >#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small
                   >
                 </span>
-              </button>
+              </Button>
             </div>
             <div
               v-else-if="!resources.isLoading.value"
@@ -512,22 +468,12 @@ function confirmManualPaste() {
 
         <section class="code-pane flex flex-col min-h-0 border-r">
           <div class="pane-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0">
-            <Tabs
-              :model-value="activeLanguage"
-              class="w-auto"
-              @update:model-value="(val) => (activeLanguage = val as any)"
-            >
-              <TabsList size="xs">
-                <TabsTrigger value="html"> HTML </TabsTrigger>
-                <TabsTrigger value="css"> CSS </TabsTrigger>
-                <TabsTrigger value="javascript"> JavaScript </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <span class="text-xs font-semibold text-foreground">App.vue</span>
             <div class="flex items-center gap-1">
               <input
                 ref="codeFileInputRef"
                 type="file"
-                accept=".css,.html,.htm,.js,.txt"
+                accept=".vue,.txt"
                 class="hidden"
                 @change="onCodeFileSelected"
               />
@@ -558,7 +504,7 @@ function confirmManualPaste() {
                       <FileUp class="size-4" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent> 导入代码文件 (.css / .html) </TooltipContent>
+                  <TooltipContent> 导入 .vue 文件 </TooltipContent>
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
@@ -608,28 +554,18 @@ function confirmManualPaste() {
           <div
             class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0 flex items-center justify-between"
           >
-            <span
-              >HTML {{ htmlBytes }}/{{ CUSTOM_HTML_MAX_BYTES }} bytes · CSS {{ cssBytes }}/{{
-                CUSTOM_CSS_MAX_BYTES
-              }}
-              bytes · JS {{ jsBytes }}/{{ CUSTOM_JS_MAX_BYTES }} bytes</span
-            >
+            <span>Vue SFC {{ sourceBytes }}/{{ CUSTOM_VUE_MAX_BYTES }} bytes</span>
             <span class="opacity-80">支持快捷键直接粘贴</span>
           </div>
           <div class="flex-1 min-h-0">
             <CustomHtmlCodeEditor
               ref="codeEditor"
-              :html="draft.html"
-              :css="draft.css"
-              :js="draft.js"
-              :active-language="activeLanguage"
+              :source="draft.source"
               :theme="monacoTheme"
               :assets="draft.assets"
               :resources="imageResources"
               :issues="codeIssues"
-              @update:html="draft.html = $event"
-              @update:css="draft.css = $event"
-              @update:js="draft.js = $event"
+              @update:source="draft.source = $event"
             />
           </div>
         </section>
@@ -739,7 +675,7 @@ function confirmManualPaste() {
     <SheetContent class="w-full sm:max-w-2xl overflow-y-auto scrollbar-thin">
       <SheetHeader
         ><SheetTitle>window.vtsuru API</SheetTitle
-        ><SheetDescription>在 JavaScript 中使用 await vtsuru.method() 调用宿主能力。</SheetDescription></SheetHeader
+        ><SheetDescription>在 &lt;script setup&gt; 中使用 await vtsuru.method() 调用宿主能力。</SheetDescription></SheetHeader
       >
       <pre class="whitespace-pre-wrap break-words leading-relaxed">{{ VTSURU_SANDBOX_DTS }}</pre>
     </SheetContent>

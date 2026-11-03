@@ -278,9 +278,9 @@ onMounted(() => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <button
-                      type="button"
-                      class="entry-card tone-cyan"
+                    <Button
+                      variant="outline"
+                      class="entry-card tone-cyan h-auto p-4 flex flex-col text-center"
                       @click="$router.push({ name: 'manage-index' })"
                     >
                       <component
@@ -289,7 +289,7 @@ onMounted(() => {
                       />
                       <strong>我是主播</strong>
                       <span>开始使用</span>
-                    </button>
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom"> 进入主播后台，管理直播相关工具与设置 </TooltipContent>
                 </Tooltip>
@@ -298,9 +298,9 @@ onMounted(() => {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <button
-                      type="button"
-                      class="entry-card tone-yellow"
+                    <Button
+                      variant="outline"
+                      class="entry-card tone-yellow h-auto p-4 flex flex-col text-center"
                       @click="openAudience"
                     >
                       <component
@@ -309,7 +309,7 @@ onMounted(() => {
                       />
                       <strong>我是观众</strong>
                       <span>查看积分</span>
-                    </button>
+                    </Button>
                   </TooltipTrigger>
                   <TooltipContent side="bottom"> 用 Bilibili 认证查看积分和订单，不用注册 </TooltipContent>
                 </Tooltip>
@@ -355,11 +355,11 @@ onMounted(() => {
           <p class="section-subtitle">为主播和观众提供丰富的互动工具</p>
         </header>
         <div class="feature-grid">
-          <button
+          <Button
             v-for="(item, index) in functions"
             :key="item.name"
-            type="button"
-            class="feature-card"
+            variant="outline"
+            class="feature-card h-auto p-4 flex flex-col items-stretch text-left font-normal"
             :class="getFeatureTone(index)"
             @click="handleFunctionClick(item)"
           >
@@ -379,7 +379,7 @@ onMounted(() => {
               </span>
             </span>
             <span class="feature-card-desc">{{ item.desc }}</span>
-          </button>
+          </Button>
         </div>
       </section>
 
@@ -517,46 +517,66 @@ onMounted(() => {
             <RouterLink to="/live">
               <Button variant="outline">直播与关注</Button>
             </RouterLink>
-            <button
-              type="button"
-              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="向左滚动"
-              title="向左滚动"
-              :disabled="!canScrollRoomsLeft"
-              @click="scrollRooms(-1)"
-            >
-              <component
-                :is="ChevronLeft24Regular"
-                class="size-4"
-              />
-            </button>
-            <button
-              type="button"
-              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40 disabled:cursor-not-allowed"
-              aria-label="向右滚动"
-              title="向右滚动"
-              :disabled="!canScrollRoomsRight"
-              @click="scrollRooms(1)"
-            >
-              <component
-                :is="ChevronRight24Regular"
-                class="size-4"
-              />
-            </button>
-            <button
-              type="button"
-              class="size-8 rounded-full border border-border flex items-center justify-center hover:bg-muted/80 text-foreground transition disabled:opacity-40"
-              aria-label="刷新主播列表"
-              title="刷新主播列表"
-              :disabled="isRefreshingRooms"
-              @click="loadIndexData"
-            >
-              <component
-                :is="ArrowClockwise24Regular"
-                class="size-4"
-                :class="{ 'animate-spin': isRefreshingRooms }"
-              />
-            </button>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    class="rounded-full"
+                    aria-label="向左滚动"
+                    :disabled="!canScrollRoomsLeft"
+                    @click="scrollRooms(-1)"
+                  >
+                    <component
+                      :is="ChevronLeft24Regular"
+                      class="size-4"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>向左滚动</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    class="rounded-full"
+                    aria-label="向右滚动"
+                    :disabled="!canScrollRoomsRight"
+                    @click="scrollRooms(1)"
+                  >
+                    <component
+                      :is="ChevronRight24Regular"
+                      class="size-4"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>向右滚动</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    class="rounded-full"
+                    aria-label="刷新主播列表"
+                    :disabled="isRefreshingRooms"
+                    @click="loadIndexData"
+                  >
+                    <component
+                      :is="ArrowClockwise24Regular"
+                      class="size-4"
+                      :class="{ 'animate-spin': isRefreshingRooms }"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>刷新主播列表</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </header>
 
@@ -662,13 +682,14 @@ onMounted(() => {
               />
               <span>
                 不想被展示？前往
-                <button
-                  type="button"
-                  class="text-primary hover:underline cursor-pointer"
+                <Button
+                  variant="link"
+                  size="xs"
+                  class="h-auto p-0 inline font-normal text-xs"
                   @click="$router.push({ name: 'manage-userPageBuilder', query: { mode: 'legacy' } })"
                 >
                   设置页面（渲染模式-传统-允许展示在主页）
-                </button>
+                </Button>
                 关闭展示
               </span>
             </div>

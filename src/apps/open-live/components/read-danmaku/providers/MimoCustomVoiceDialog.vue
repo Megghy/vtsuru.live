@@ -14,6 +14,7 @@ import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useSpeechService } from '@/store/useSpeechService'
 
 interface EditVoice {
@@ -268,24 +269,16 @@ function reset() {
           class="space-y-1"
         >
           <label class="text-xs font-semibold text-foreground">类型</label>
-          <div class="inline-flex rounded-md border border-input p-0.5 bg-background text-muted-foreground w-fit">
-            <button
-              type="button"
-              class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-              :class="type === 'clone' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
-              @click="type = 'clone'"
-            >
-              音频克隆
-            </button>
-            <button
-              type="button"
-              class="px-2.5 py-1 text-xs font-medium rounded-sm transition-all"
-              :class="type === 'design' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:text-foreground'"
-              @click="type = 'design'"
-            >
-              文字描述
-            </button>
-          </div>
+          <ToggleGroup
+            type="single"
+            size="xs"
+            :model-value="type"
+            class="w-fit"
+            @update:model-value="(val) => { if (val) type = val as any }"
+          >
+            <ToggleGroupItem value="clone">音频克隆</ToggleGroupItem>
+            <ToggleGroupItem value="design">文字描述</ToggleGroupItem>
+          </ToggleGroup>
         </div>
 
         <template v-if="type === 'clone'">

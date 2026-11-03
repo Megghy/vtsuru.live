@@ -12,6 +12,7 @@ import {
   listCosyVoiceCustomVoices,
 } from '@/apps/open-live/voice-providers/cosyvoice'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -139,12 +140,12 @@ watch(hasUserKey, (value) => {
                 </div>
                 <span class="text-[11px] text-muted-foreground line-clamp-1 font-normal">{{ modelNote(opt) }}</span>
               </div>
-              <span
-                class="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                :class="opt.disabled ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'"
+              <Badge
+                :variant="opt.disabled ? 'secondary' : 'default'"
+                class="shrink-0"
               >
                 {{ opt.price }}
-              </span>
+              </Badge>
             </div>
           </SelectItem>
         </SelectContent>
@@ -168,7 +169,8 @@ watch(hasUserKey, (value) => {
               <TooltipTrigger as-child>
                 <Button
                   variant="outline"
-                  class="w-8 p-0 shrink-0"
+                  size="icon-xs"
+                  class="shrink-0"
                   :disabled="!hasUserKey || customVoiceLoading"
                   @click="refreshCustomVoices"
                 >

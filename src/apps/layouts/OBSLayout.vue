@@ -5,6 +5,7 @@ import { useAccount } from '@/api/account'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { useOBSNotification } from '@/store/useOBSNotification'
 import { useWebFetcher } from '@/store/useWebFetcher'
+import { Spin } from '@/shared/ui/spin'
 
 const timer = ref<any>()
 const visible = ref(true)
@@ -58,7 +59,7 @@ onUnmounted(() => {
           />
           <template #fallback>
             <div class="flex items-center justify-center w-full h-full min-h-[100px]">
-              <div class="size-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <Spin size="medium" />
             </div>
           </template>
         </Suspense>
