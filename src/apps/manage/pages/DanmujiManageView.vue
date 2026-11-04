@@ -412,12 +412,12 @@ onActivated(() => {
           <div class="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <div class="flex items-center gap-1">
               <span>宽</span>
-              <NumberField size="xs" v-model="sourceWidth" min="200" max="3840" class="w-16 font-mono" / :show-buttons="false">
+              <NumberField size="xs" v-model="sourceWidth" min="200" max="3840" class="w-16 font-mono" :show-buttons="false" />
             </div>
             <span>×</span>
             <div class="flex items-center gap-1">
               <span>高</span>
-              <NumberField size="xs" v-model="sourceHeight" min="200" max="2160" class="w-16 font-mono" / :show-buttons="false">
+              <NumberField size="xs" v-model="sourceHeight" min="200" max="2160" class="w-16 font-mono" :show-buttons="false" />
             </div>
             <label class="flex items-center gap-1.5 cursor-pointer ml-auto select-none text-foreground font-medium">
               <Checkbox v-model="fullCanvas" />
@@ -487,7 +487,7 @@ onActivated(() => {
               />
               <span class="text-muted-foreground select-none">自动轮播</span>
               <div class="flex items-center gap-1">
-                <NumberField size="xs" v-model="interval" step="0.2" min="0.3" max="5" class="w-16 font-mono" / :show-buttons="false">
+                <NumberField size="xs" v-model="interval" step="0.2" min="0.3" max="5" class="w-16 font-mono" :show-buttons="false" />
                 <span class="text-muted-foreground">秒</span>
               </div>
             </div>
@@ -518,7 +518,7 @@ onActivated(() => {
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">金额 (元)</span>
-                <NumberField size="xs" v-model="testPrice" min="0" class="font-mono" / :show-buttons="false">
+                <NumberField size="xs" v-model="testPrice" min="0" class="font-mono" :show-buttons="false" />
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">大航海等级</span>

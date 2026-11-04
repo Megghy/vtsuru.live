@@ -832,7 +832,7 @@ onUnmounted(() => {
               <div class="flex items-center gap-4 flex-wrap">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs text-muted-foreground">时长:</span>
-                  <NumberField v-model="formDuration" min="0" max="3600" step="30" class="w-20 font-mono" / :show-buttons="false">
+                  <NumberField v-model="formDuration" min="0" max="3600" step="30" class="w-20 font-mono" :show-buttons="false" />
                   <span class="text-xs text-muted-foreground">秒</span>
                 </div>
 
@@ -1178,7 +1178,7 @@ onUnmounted(() => {
 
             <div class="flex-between">
               <span class="text-xs text-muted-foreground">排行榜最大显示行数:</span>
-              <NumberField v-model="previewMaxDisplay" min="2" max="20" class="w-20 font-mono" / :show-buttons="false">
+              <NumberField v-model="previewMaxDisplay" min="2" max="20" class="w-20 font-mono" :show-buttons="false" />
             </div>
           </CardContent>
         </Card>

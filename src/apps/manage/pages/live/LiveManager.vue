@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
                 :checked="enableAutoRefresh"
                 @update:checked="(val) => (enableAutoRefresh = val)"
               />
-              <NumberField v-if="enableAutoRefresh" v-model="refreshSeconds" min="10" max="300" class="w-16" / :show-buttons="false">
+              <NumberField v-if="enableAutoRefresh" v-model="refreshSeconds" min="10" max="300" class="w-16" :show-buttons="false" />
             </div>
           </div>
         </div>

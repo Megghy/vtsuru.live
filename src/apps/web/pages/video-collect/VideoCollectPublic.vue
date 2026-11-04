@@ -428,7 +428,7 @@ onUnmounted(() => turnstile.value?.remove())
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-xs font-medium text-foreground">哔哩哔哩 UID</label>
-                    <NumberField :model-value="addModel.uid != null ? String(addModel.uid) : ''" placeholder="选填" size="default" @update:model-value="addModel.uid = $event ? Number($event) : undefined" / :show-buttons="false">
+                    <NumberField :model-value="addModel.uid != null ? String(addModel.uid) : ''" placeholder="选填" size="default" @update:model-value="addModel.uid = $event ? Number($event) : undefined" :show-buttons="false" />
                   </div>
                 </div>
 

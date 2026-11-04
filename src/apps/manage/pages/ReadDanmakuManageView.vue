@@ -88,7 +88,7 @@ async function fetchAudioOutputDevices() {
     audioOutputDevices.value = [
       { label: '默认设备', value: 'default' },
       ...devices
-        .filter((d) => d.kind === 'audiooutput')
+        .filter((d) => d.kind === 'audiooutput' && d.deviceId && d.deviceId !== 'default')
         .map((d) => ({
           label: d.label || `设备 ${d.deviceId.substring(0, 8)}`,
           value: d.deviceId,

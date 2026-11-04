@@ -8,6 +8,7 @@ import { applyThemeCssVars, buildSiteTokens, getThemeCssVars } from '@/shared/co
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Toaster } from '@/shared/ui/sonner'
 import { Spin } from '@/shared/ui/spin'
+import { TooltipProvider } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 
 // 将大型布局组件改为异步组件，避免打入入口包
@@ -63,34 +64,36 @@ watchEffect(() => {
     :style="shellStyle"
     :class="['app-root text-foreground antialiased', { 'bg-background': !isTransparentShell }]"
   >
-    <Suspense>
-      <TempComponent>
-        <div
-          :style="shellStyle"
-          class="app-shell w-full h-full"
-        >
-          <UserLayout v-if="layout === 'user'" />
-          <ManageLayout v-else-if="layout === 'manage'" />
-          <OpenLiveLayout v-else-if="layout === 'open-live'" />
-          <OBSLayout v-else-if="layout === 'obs'" />
-          <ClientLayout v-else-if="layout === 'client'" />
-          <template v-else>
-            <RouterView />
-          </template>
-        </div>
-      </TempComponent>
-      <template #fallback>
-        <div class="flex-center min-h-screen">
-          <Spin size="large" />
-        </div>
-      </template>
-    </Suspense>
-    <AppDialogHost />
-    <Toaster
-      richColors
-      position="top-right"
-      :theme="isDarkMode ? 'dark' : 'light'"
-    />
+    <TooltipProvider :delay-duration="200">
+      <Suspense>
+        <TempComponent>
+          <div
+            :style="shellStyle"
+            class="app-shell w-full h-full"
+          >
+            <UserLayout v-if="layout === 'user'" />
+            <ManageLayout v-else-if="layout === 'manage'" />
+            <OpenLiveLayout v-else-if="layout === 'open-live'" />
+            <OBSLayout v-else-if="layout === 'obs'" />
+            <ClientLayout v-else-if="layout === 'client'" />
+            <template v-else>
+              <RouterView />
+            </template>
+          </div>
+        </TempComponent>
+        <template #fallback>
+          <div class="flex-center min-h-screen">
+            <Spin size="large" />
+          </div>
+        </template>
+      </Suspense>
+      <AppDialogHost />
+      <Toaster
+        richColors
+        position="top-right"
+        :theme="isDarkMode ? 'dark' : 'light'"
+      />
+    </TooltipProvider>
   </div>
 </template>
 

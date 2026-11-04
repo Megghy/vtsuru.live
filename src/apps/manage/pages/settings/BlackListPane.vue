@@ -86,7 +86,7 @@ function unblockUser(id: number) {
       </CardHeader>
       <CardContent class="space-y-3">
         <div class="flex items-center gap-2 flex-wrap">
-          <NumberField v-model="biliId" placeholder="B 站 UID" class="w-40 font-mono" / :show-buttons="false">
+          <NumberField v-model="biliId" placeholder="B 站 UID" class="w-40 font-mono" :show-buttons="false" />
           <Input
             v-model="biliName"
             placeholder="备注名（可选）"

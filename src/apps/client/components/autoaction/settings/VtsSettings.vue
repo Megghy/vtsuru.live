@@ -203,7 +203,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                 />
               </div>
             </div>
-          </div>
+          </SettingRow>
         </template>
 
         <!-- 宏 -->

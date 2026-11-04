@@ -664,8 +664,8 @@ function onTabChange(value: string | number) {
                 type="datetime-local"
                 class="w-48"
               />
-              <NumberField v-model="manualGuardNum" min="1" placeholder="数量" class="w-20" / :show-buttons="false">
-              <NumberField v-model="manualGuardPrice" min="0" placeholder="价格(可选)" class="w-28" / :show-buttons="false">
+              <NumberField v-model="manualGuardNum" min="1" placeholder="数量" class="w-20" :show-buttons="false" />
+              <NumberField v-model="manualGuardPrice" min="0" placeholder="价格(可选)" class="w-28" :show-buttons="false" />
 
               <Button
                 variant="default"

@@ -847,7 +847,7 @@ onUnmounted(() => {
               <CardContent class="space-y-3.5">
                 <div class="flex-between gap-3">
                   <span class="text-xs font-medium text-foreground">抽取人数</span>
-                  <NumberField v-model="dynamicOption.resultCount" min="1" class="w-24 font-mono" / :show-buttons="false">
+                  <NumberField v-model="dynamicOption.resultCount" min="1" class="w-24 font-mono" :show-buttons="false" />
                 </div>
 
                 <Separator />
@@ -871,7 +871,7 @@ onUnmounted(() => {
                     class="pl-6 pt-1 flex items-center gap-2"
                   >
                     <span class="text-xs text-muted-foreground">最低等级:</span>
-                    <NumberField size="xs" v-model="dynamicOption.fanCardLevel" min="1" max="40" class="w-20 font-mono" / :show-buttons="false">
+                    <NumberField size="xs" v-model="dynamicOption.fanCardLevel" min="1" max="40" class="w-20 font-mono" :show-buttons="false" />
                   </div>
                 </div>
               </CardContent>

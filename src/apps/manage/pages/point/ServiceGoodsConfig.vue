@@ -190,13 +190,13 @@ function removeOption(field: ServiceField, optIndex: number) {
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">预计完成周期</label>
           <div class="relative">
-            <NumberField v-model="estimatedDaysInput" min="1" step="1" placeholder="可选，例如 7" class="pr-7" @update:model-value="updateNumber('estimatedDays', String($event))" / :show-buttons="false">
+            <NumberField v-model="estimatedDaysInput" min="1" step="1" placeholder="可选，例如 7" class="pr-7" @update:model-value="updateNumber('estimatedDays', String($event))" :show-buttons="false" />
             <span class="absolute right-2.5 top-2 text-[11px] text-muted-foreground">天</span>
           </div>
         </div>
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">最大未完成订单数</label>
-          <NumberField v-model="maxActiveOrdersInput" min="1" step="1" placeholder="不限制" @update:model-value="updateNumber('maxActiveOrders', String($event))" / :show-buttons="false">
+          <NumberField v-model="maxActiveOrdersInput" min="1" step="1" placeholder="不限制" @update:model-value="updateNumber('maxActiveOrders', String($event))" :show-buttons="false" />
         </div>
       </div>
     </div>

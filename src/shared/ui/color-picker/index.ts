@@ -1,7 +1,20 @@
 export { default as ColorPicker } from './ColorPicker.vue'
 export {
   DEFAULT_SOLID_SWATCHES,
+  getAreaBackgroundStyle,
+  hexToRgb,
+  hsbToHex,
+  hsbToHsl,
+  hsbToRgb,
+  hslToHsb,
   normalizePickerColor,
+  parseColorToHsb,
   parseUserColorInput,
+  rgbToHex,
+  rgbToHsb,
   TRANSPARENT_SWATCH,
+  type ColorMode,
+  type HSBColor,
+  type HSLColor,
+  type RGBColor,
 } from './colorUtils'
