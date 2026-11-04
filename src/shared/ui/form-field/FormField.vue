@@ -30,8 +30,8 @@ const props = defineProps<{
   min?: number | string
   max?: number | string
   step?: number | string
-  rows?: number
-  maxlength?: number
+  rows?: number | string
+  maxlength?: number | string
   options?: Array<FormSelectOption | string>
   controlClass?: HTMLAttributes['class']
   class?: HTMLAttributes['class']

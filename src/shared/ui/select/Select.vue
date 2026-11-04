@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { SelectRootEmits, SelectRootProps } from 'reka-ui'
-import { SelectRoot } from 'reka-ui'
+import { SelectRoot, useForwardPropsEmits } from 'reka-ui'
 import { computed } from 'vue'
 
 import { SELECT_EMPTY_VALUE } from './index'
@@ -24,27 +24,25 @@ function fromRekaValue(val: any) {
   return val
 }
 
+const forwarded = useForwardPropsEmits(props, emit)
+
 const mappedProps = computed(() => {
-  const res: any = { ...props }
-  if ('modelValue' in props && props.modelValue !== undefined) {
-    res.modelValue = toRekaValue(props.modelValue)
+  const res: any = { ...forwarded.value }
+  if ('modelValue' in res && res.modelValue !== undefined) {
+    res.modelValue = toRekaValue(res.modelValue)
   }
-  if ('defaultValue' in props && props.defaultValue !== undefined) {
-    res.defaultValue = toRekaValue(props.defaultValue)
+  if ('defaultValue' in res && res.defaultValue !== undefined) {
+    res.defaultValue = toRekaValue(res.defaultValue)
+  }
+  res['onUpdate:modelValue'] = (val: any) => {
+    emit('update:modelValue', fromRekaValue(val))
   }
   return res
 })
-
-function onUpdateModelValue(val: any) {
-  emit('update:modelValue', fromRekaValue(val))
-}
 </script>
 
 <template>
-  <SelectRoot
-    v-bind="mappedProps"
-    @update:model-value="onUpdateModelValue"
-  >
+  <SelectRoot v-bind="mappedProps">
     <slot />
   </SelectRoot>
 </template>

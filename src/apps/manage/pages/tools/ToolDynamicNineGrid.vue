@@ -11,6 +11,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { canvasToBlob, useMessage } from '@/shared/utils'
 
@@ -404,68 +405,52 @@ watchEffect(async () => {
               <!-- Export settings -->
               <div class="space-y-3 p-4 rounded-lg border border-border bg-card text-xs">
                 <h4 class="font-semibold text-sm text-foreground">导出设置</h4>
-                <div class="space-y-3">
-                  <div class="flex-between">
-                    <span class="text-muted-foreground">单张尺寸</span>
-                    <div class="flex items-center gap-1.5 w-32">
-                      <NumberField
-                        v-model="exportSettings.tileSize"
-                        :min="128"
-                        :max="currentMaxTileSize"
-                        :step="128"
-                      />
-                      <span class="text-muted-foreground">px</span>
-                    </div>
-                  </div>
-                  <div class="flex-between">
-                    <span class="text-muted-foreground">允许放大</span>
-                    <Switch v-model:checked="allowUpscale" />
-                  </div>
-                  <div class="flex-between">
-                    <span class="text-muted-foreground">格式</span>
-                    <div class="w-32">
-                      <Select v-model="exportSettings.format">
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem
-                            v-for="opt in formatOptions"
-                            :key="opt.value"
-                            :value="opt.value"
-                          >
-                            {{ opt.label }}
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div
+                <div class="space-y-2">
+                  <SettingRow
+                    type="number"
+                    variant="none"
+                    title="单张尺寸"
+                    :min="128"
+                    :max="currentMaxTileSize"
+                    :step="128"
+                    v-model="exportSettings.tileSize"
+                  />
+
+                  <SettingRow
+                    type="switch"
+                    variant="none"
+                    title="允许放大"
+                    v-model="allowUpscale"
+                  />
+
+                  <SettingRow
+                    type="select"
+                    variant="none"
+                    title="格式"
+                    :options="formatOptions"
+                    v-model="exportSettings.format"
+                  />
+
+                  <SettingRow
                     v-if="exportSettings.format === 'jpeg'"
-                    class="flex-between"
-                  >
-                    <span class="text-muted-foreground">质量</span>
-                    <div class="w-32">
-                      <NumberField
-                        v-model="exportSettings.jpegQuality"
-                        :min="0.1"
-                        :max="1"
-                        :step="0.05"
-                      />
-                    </div>
-                  </div>
-                  <div class="flex-between">
-                    <span class="text-muted-foreground">图片间距</span>
-                    <div class="flex items-center gap-1.5 w-32">
-                      <NumberField
-                        v-model="exportSettings.gap"
-                        :min="0"
-                        :max="200"
-                        :step="4"
-                      />
-                      <span class="text-muted-foreground">px</span>
-                    </div>
-                  </div>
+                    type="number"
+                    variant="none"
+                    title="质量"
+                    :min="0.1"
+                    :max="1"
+                    :step="0.05"
+                    v-model="exportSettings.jpegQuality"
+                  />
+
+                  <SettingRow
+                    type="number"
+                    variant="none"
+                    title="图片间距"
+                    :min="0"
+                    :max="200"
+                    :step="4"
+                    v-model="exportSettings.gap"
+                  />
                 </div>
                 <span class="block text-[11px] text-muted-foreground pt-1">
                   建议最大: {{ maxTileSize }}px（基于源图）

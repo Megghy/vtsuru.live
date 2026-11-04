@@ -12,6 +12,7 @@ import { TTS_API_URL } from '@/shared/config'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Textarea } from '@/shared/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -255,20 +256,19 @@ function reset() {
       </DialogHeader>
 
       <div class="space-y-3.5 my-2">
-        <div class="space-y-1">
-          <label class="text-xs font-semibold text-foreground">名称</label>
-          <Input
-            v-model="name"
-            placeholder="给音色起个名字"
-            :disabled="isEdit"
-          />
-        </div>
+        <FormField
+          type="text"
+          label="名称"
+          required
+          placeholder="给音色起个名字"
+          :disabled="isEdit"
+          v-model="name"
+        />
 
-        <div
+        <FormField
           v-if="!isEdit"
-          class="space-y-1"
+          label="类型"
         >
-          <label class="text-xs font-semibold text-foreground">类型</label>
           <ToggleGroup
             type="single"
             size="xs"
@@ -279,70 +279,43 @@ function reset() {
             <ToggleGroupItem value="clone">音频克隆</ToggleGroupItem>
             <ToggleGroupItem value="design">文字描述</ToggleGroupItem>
           </ToggleGroup>
-        </div>
+        </FormField>
 
         <template v-if="type === 'clone'">
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-foreground">
-              参考音频{{ isEdit ? '（留空保持不变）' : '' }}
-            </label>
-            <div class="flex items-center gap-2">
-              <Button
-                variant="outline"
-                @click="openAudioPicker()"
-              >
-                {{ audioFile ? audioFile.name : '选择文件 (mp3/wav, 最大 10MB)' }}
-              </Button>
-            </div>
-            <div
-              v-if="!isEdit"
-              class="text-[11px] text-muted-foreground leading-relaxed"
+          <FormField
+            :label="`参考音频${isEdit ? '（留空保持不变）' : ''}`"
+            :description="!isEdit ? '要求：清晰的单人语音，时长 5~30 秒为佳，避免背景音乐/噪声/混响。建议用手机录音 App 在安静环境下录一段正常语速的朗读。' : undefined"
+          >
+            <Button
+              variant="outline"
+              @click="openAudioPicker()"
             >
-              要求：清晰的单人语音，时长 5~30 秒为佳，避免背景音乐/噪声/混响。
-              <br />
-              建议用手机录音 App 在安静环境下录一段正常语速的朗读。
-            </div>
-          </div>
+              {{ audioFile ? audioFile.name : '选择文件 (mp3/wav, 最大 10MB)' }}
+            </Button>
+          </FormField>
         </template>
 
         <template v-if="type === 'design'">
-          <div class="space-y-1.5">
-            <label class="text-xs font-semibold text-foreground">音色描述</label>
-            <Textarea
-              v-model="description"
-              :rows="3"
-              placeholder="用自然语言描述想要的音色特征，1-4 句即可"
-              
-            />
-            <div class="text-[11px] text-muted-foreground leading-relaxed">
-              关键维度：性别/年龄、音色质感（磁性/醇厚/清亮/沙哑）、情绪语气、语速节奏。
-              <br />
-              可选加入：角色人设、说话风格、场景描写。描述越具体越好，但避免矛盾特征。
-              <br />
-              示例：一位年迈的老先生，带北方口音，语速缓慢沉稳，嗓音略带沙哑和沧桑感，仿佛饱经风霜的老爷爷在讲故事
-            </div>
-          </div>
+          <FormField
+            type="textarea"
+            label="音色描述"
+            :rows="3"
+            placeholder="用自然语言描述想要的音色特征，1-4 句即可"
+            description="关键维度：性别/年龄、音色质感（磁性/醇厚/清亮/沙哑）、情绪语气、语速节奏。示例：一位年迈的老先生，带北方口音，语速缓慢沉稳，嗓音略带沙哑和沧桑感，仿佛饱经风霜的老爷爷在讲故事"
+            v-model="description"
+          />
         </template>
 
-        <div class="space-y-1.5">
-          <label class="text-xs font-semibold text-foreground">导演指令 (可选)</label>
-          <Textarea
-            v-model="directorNote"
-            :rows="2"
-            placeholder="像给演员写指导：语速、气息、停顿、重音、情绪起伏"
-            
-          />
-          <div class="text-[11px] text-muted-foreground leading-relaxed">
-            用自然语言描述朗读方式，支持多风格切换、复合情绪、字粒度控制。
-            <br />
-            简单示例：用轻快上扬的语调，语速稍快，带着压抑不住的激动与小骄傲
-            <br />
-            导演模式：可从【角色】【场景】【指导】三个维度详细刻画，适合角色配音等高要求场景
-          </div>
-        </div>
+        <FormField
+          type="textarea"
+          label="导演指令 (可选)"
+          :rows="2"
+          placeholder="像给演员写指导：语速、气息、停顿、重音、情绪起伏"
+          description="用自然语言描述朗读方式，支持多风格切换、复合情绪、字粒度控制。简单示例：用轻快上扬的语调，语速稍快，带着压抑不住的激动与小骄傲"
+          v-model="directorNote"
+        />
 
-        <div class="space-y-1">
-          <label class="text-xs font-semibold text-foreground">试听文本</label>
+        <FormField label="试听文本">
           <div class="flex items-center gap-2">
             <Input
               v-model="previewText"
@@ -357,12 +330,11 @@ function reset() {
               {{ previewing ? '试听中...' : '试听' }}
             </Button>
           </div>
-        </div>
-
+        </FormField>
+      </div>
         <Alert size="sm" variant="warning" v-if="!account">
           <AlertDescription class="m-0"> 需要登录才能保存自定义音色 </AlertDescription>
         </Alert>
-      </div>
 
       <DialogFooter class="gap-2">
         <Button

@@ -29,12 +29,10 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
-import { NumberField } from '@/shared/ui/number-field'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
-import { Switch } from '@/shared/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -424,53 +422,50 @@ onMounted(() => {
             >
               <span class="font-semibold text-xs text-foreground block">积分奖励配置</span>
 
-              <SettingRow title="启用积分奖励">
-                <Switch
-                  v-model:checked="serverSetting.givePointsForCheckIn"
-                  @update:checked="updateServerSettings"
-                />
-              </SettingRow>
+              <SettingRow
+                type="switch"
+                title="启用积分奖励"
+                v-model="serverSetting.givePointsForCheckIn"
+                @change="updateServerSettings"
+              />
 
               <div
                 v-if="serverSetting.givePointsForCheckIn"
                 class="space-y-3 pt-1"
               >
-                <SettingRow title="基础签到积分">
-                  <NumberField
-                    :model-value="serverSetting.baseCheckInPoints"
-                    :min="0"
-                    class="w-32"
-                    @update:model-value="((serverSetting.baseCheckInPoints = $event || 0), updateServerSettings())"
-                  />
-                </SettingRow>
+                <SettingRow
+                  type="number"
+                  title="基础签到积分"
+                  :min="0"
+                  v-model="serverSetting.baseCheckInPoints"
+                  @change="updateServerSettings"
+                />
 
-                <SettingRow title="连续签到奖励">
-                  <Switch
-                    v-model:checked="serverSetting.enableConsecutiveBonus"
-                    @update:checked="updateServerSettings"
-                  />
-                </SettingRow>
+                <SettingRow
+                  type="switch"
+                  title="连续签到奖励"
+                  v-model="serverSetting.enableConsecutiveBonus"
+                  @change="updateServerSettings"
+                />
 
                 <div
                   v-if="serverSetting.enableConsecutiveBonus"
                   class="grid grid-cols-1 sm:grid-cols-2 gap-2"
                 >
-                  <SettingRow title="每日额外奖励">
-                    <NumberField
-                      :model-value="serverSetting.bonusPointsPerDay"
-                      :min="0"
-                      class="w-28"
-                      @update:model-value="((serverSetting.bonusPointsPerDay = $event || 0), updateServerSettings())"
-                    />
-                  </SettingRow>
-                  <SettingRow title="奖励积分上限">
-                    <NumberField
-                      :model-value="serverSetting.maxBonusPoints"
-                      :min="0"
-                      class="w-28"
-                      @update:model-value="((serverSetting.maxBonusPoints = $event || 0), updateServerSettings())"
-                    />
-                  </SettingRow>
+                  <SettingRow
+                    type="number"
+                    title="每日额外奖励"
+                    :min="0"
+                    v-model="serverSetting.bonusPointsPerDay"
+                    @change="updateServerSettings"
+                  />
+                  <SettingRow
+                    type="number"
+                    title="奖励积分上限"
+                    :min="0"
+                    v-model="serverSetting.maxBonusPoints"
+                    @change="updateServerSettings"
+                  />
                 </div>
               </div>
             </div>
@@ -480,10 +475,11 @@ onMounted(() => {
               v-if="serverSetting.enableCheckIn"
               class="col-span-1 md:col-span-2 border rounded-md p-3 bg-muted/10 space-y-3"
             >
-              <div class="flex-between p-2 rounded border bg-card">
-                <span class="text-xs font-medium text-foreground">发送签到回复</span>
-                <Switch v-model:checked="config.sendReply" />
-              </div>
+              <SettingRow
+                type="switch"
+                title="发送签到回复"
+                v-model="config.sendReply"
+              />
 
               <div
                 v-if="config.sendReply"

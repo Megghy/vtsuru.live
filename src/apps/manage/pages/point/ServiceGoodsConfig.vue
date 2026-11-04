@@ -8,9 +8,11 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
@@ -160,58 +162,53 @@ function removeOption(field: ServiceField, optIndex: number) {
     </Alert>
 
     <!-- 接单状态卡片 -->
-    <Card>
-      <CardContent class="flex-between">
-        <div>
-          <span class="text-xs font-semibold text-foreground block">接单状态</span>
-          <span class="text-[11px] text-muted-foreground mt-0.5 block">
-            暂停后不会接受新的兑换，已有订单仍可继续处理。
-          </span>
-        </div>
-        <div class="flex items-center gap-2">
-          <span
-            class="text-xs font-medium"
-            :class="!draft.paused ? 'text-primary' : 'text-muted-foreground'"
-          >
-            {{ !draft.paused ? '接单中' : '已暂停' }}
-          </span>
-          <Switch
-            :checked="!draft.paused"
-            @update:checked="draft.paused = !$event"
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <SettingRow
+      type="switch"
+      variant="card"
+      title="接单状态"
+      description="暂停后不会接受新的兑换，已有订单仍可继续处理。"
+      :model-value="!draft.paused"
+      @change="draft.paused = !$event"
+    />
 
     <!-- 履约边界 -->
     <div class="space-y-3">
       <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">履约边界</h4>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div class="space-y-1">
-          <label class="text-xs font-medium text-foreground">预计完成周期</label>
-          <div class="relative">
-            <NumberField v-model="estimatedDaysInput" min="1" step="1" placeholder="可选，例如 7" class="pr-7" @update:model-value="updateNumber('estimatedDays', String($event))" :show-buttons="false" />
-            <span class="absolute right-2.5 top-2 text-[11px] text-muted-foreground">天</span>
-          </div>
-        </div>
-        <div class="space-y-1">
-          <label class="text-xs font-medium text-foreground">最大未完成订单数</label>
-          <NumberField v-model="maxActiveOrdersInput" min="1" step="1" placeholder="不限制" @update:model-value="updateNumber('maxActiveOrders', String($event))" :show-buttons="false" />
-        </div>
+        <FormField
+          type="number"
+          label="预计完成周期"
+          placeholder="可选，例如 7"
+          :min="1"
+          :step="1"
+          :show-buttons="false"
+          :model-value="estimatedDaysInput"
+          @change="updateNumber('estimatedDays', String($event))"
+        >
+          <template #suffix>天</template>
+        </FormField>
+        <FormField
+          type="number"
+          label="最大未完成订单数"
+          placeholder="不限制"
+          :min="1"
+          :step="1"
+          :show-buttons="false"
+          :model-value="maxActiveOrdersInput"
+          @change="updateNumber('maxActiveOrders', String($event))"
+        />
       </div>
     </div>
 
     <!-- 规则说明 -->
-    <div class="space-y-1">
-      <label class="text-xs font-medium text-foreground">服务规则与交付说明</label>
-      <Textarea
-        v-model="draft.rules"
-        :rows="3"
-        maxlength="3000"
-        placeholder="例如：包含几次修改、如何确认时间、哪些需求无法承接，以及成品交付方式。"
-        
-      />
-    </div>
+    <FormField
+      type="textarea"
+      label="服务规则与交付说明"
+      :rows="3"
+      maxlength="3000"
+      placeholder="例如：包含几次修改、如何确认时间、哪些需求无法承接，以及成品交付方式。"
+      v-model="draft.rules"
+    />
 
     <!-- 需求收集字段配置 -->
     <div class="space-y-3 pt-2">
@@ -273,17 +270,15 @@ function removeOption(field: ServiceField, optIndex: number) {
           class="p-3 space-y-3"
         >
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground"
-                >字段名称 <span class="text-destructive">*</span></label
-              >
-              <Input
-                v-model="field.label"
-                placeholder="例如：需求描述"
-                maxlength="100"
-                @blur="normalizeField(field)"
-              />
-            </div>
+            <FormField
+              type="text"
+              label="字段名称"
+              required
+              placeholder="例如：需求描述"
+              maxlength="100"
+              v-model="field.label"
+              @change="normalizeField(field)"
+            />
 
             <div class="space-y-1">
               <label class="text-xs font-medium text-foreground">字段类型</label>

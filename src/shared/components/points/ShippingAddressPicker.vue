@@ -8,6 +8,7 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Textarea } from '@/shared/ui/textarea'
@@ -156,7 +157,7 @@ async function save() {
 
       <div class="space-y-3 text-xs">
         <div class="grid grid-cols-2 gap-2">
-          <div
+          <FormField
             v-for="field in [
               { key: 'province', label: '省份', options: provinceOptions, disabled: false },
               { key: 'city', label: '城市', options: cityOptions, disabled: !current.province },
@@ -164,9 +165,8 @@ async function save() {
               { key: 'street', label: '街道 (选填)', options: streetOptions, disabled: !current.district },
             ] as const"
             :key="field.key"
-            class="space-y-1"
+            :label="field.label"
           >
-            <label class="text-muted-foreground text-[11px]">{{ field.label }}</label>
             <Select
               :model-value="current[field.key] || ''"
               :disabled="field.disabled"
@@ -185,37 +185,29 @@ async function save() {
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </div>
 
-        <div class="space-y-1">
-          <label class="text-muted-foreground text-[11px]">详细地址</label>
-          <Textarea
-            v-model="current.address"
-            rows="2"
-            placeholder="楼栋号、单元号、门牌号等"
-            class="resize-none"
-          />
-        </div>
+        <FormField
+          type="textarea"
+          label="详细地址"
+          placeholder="楼栋号、单元号、门牌号等"
+          v-model="current.address"
+        />
 
         <div class="grid grid-cols-2 gap-2">
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">联系电话</label>
-            <Input
-              :model-value="current.phone ? String(current.phone) : ''"
-              type="tel"
-              placeholder="手机号"
-              class="font-mono"
-              @update:model-value="current.phone = Number($event) || undefined"
-            />
-          </div>
-          <div class="space-y-1">
-            <label class="text-muted-foreground text-[11px]">联系人</label>
-            <Input
-              v-model="current.name"
-              placeholder="姓名"
-            />
-          </div>
+          <FormField
+            label="联系电话"
+            placeholder="手机号"
+            class="font-mono"
+            :model-value="current.phone ? String(current.phone) : ''"
+            @change="(val) => (current.phone = Number(val) || undefined)"
+          />
+          <FormField
+            label="联系人"
+            placeholder="姓名"
+            v-model="current.name"
+          />
         </div>
 
         <label class="flex items-center gap-1.5 cursor-pointer pt-1">

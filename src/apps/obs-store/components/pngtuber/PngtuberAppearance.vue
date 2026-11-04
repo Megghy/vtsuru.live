@@ -2,9 +2,8 @@
 import type { PngtuberState } from '@/shared/pngtuber/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
-import { NumberField } from '@/shared/ui/number-field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
+import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 defineProps<{ state: PngtuberState; disabled: boolean }>()
 const emit = defineEmits<{ change: [patch: Partial<PngtuberState>] }>()
@@ -80,72 +79,54 @@ const switches = [
     </CardHeader>
     <CardContent class="p-0 space-y-3">
       <div class="fields">
-        <div
+        <FormField
           v-for="f in selects"
           :key="f.key"
-          class="space-y-1"
-        >
-          <label class="text-xs text-muted-foreground font-medium">{{ f.label }}</label>
-          <Select
-            :model-value="state[f.key]"
-            :disabled="disabled"
-            @update:model-value="emit('change', { [f.key]: $event as any })"
-          >
-            <SelectTrigger class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="[value, label] in f.options" :key="value" :value="value">
-                {{ label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          type="select"
+          :label="f.label"
+          :disabled="disabled"
+          :options="f.options.map(([value, label]) => ({ value, label }))"
+          :model-value="state[f.key]"
+          @change="emit('change', { [f.key]: $event as any })"
+        />
 
-        <div
+        <FormField
           v-for="f in numbers"
           :key="f.key"
-          class="space-y-1"
-        >
-          <label class="text-xs text-muted-foreground font-medium">{{ f.label }}</label>
-          <NumberField
-            :model-value="state[f.key]"
-            :disabled="disabled"
-            :min="f.min"
-            :max="f.max"
-            :step="f.step"
-            class="w-full"
-            @update:model-value="(value) => value !== null && emit('change', { [f.key]: value })"
-          />
-        </div>
+          type="number"
+          :label="f.label"
+          :disabled="disabled"
+          :min="f.min"
+          :max="f.max"
+          :step="f.step"
+          :model-value="state[f.key]"
+          @change="(value) => value !== null && emit('change', { [f.key]: value })"
+        />
       </div>
 
       <div class="fields">
-        <div
+        <SettingRow
           v-for="[key, label] in switches"
           :key="key"
-          class="toggle flex-between p-1.5 border rounded-md"
-        >
-          <span class="text-xs font-medium">{{ label }}</span>
-          <Switch
-            :checked="state[key]"
-            :disabled="disabled"
-            @update:checked="emit('change', { [key]: $event })"
-          />
-        </div>
+          type="switch"
+          variant="card"
+          :title="label"
+          :disabled="disabled"
+          :model-value="state[key]"
+          @change="emit('change', { [key]: $event })"
+        />
       </div>
 
-      <div
+      <FormField
         v-if="state.showGlow"
-        class="space-y-1"
+        label="光晕颜色"
       >
-        <label class="text-xs text-muted-foreground font-medium">光晕颜色</label>
         <ColorPicker
           :model-value="state.glowColor"
           :disabled="disabled"
           @update:model-value="emit('change', { glowColor: $event })"
         />
-      </div>
+      </FormField>
     </CardContent>
   </Card>
 </template>

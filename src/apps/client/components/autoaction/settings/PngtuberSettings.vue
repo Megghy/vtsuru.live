@@ -9,9 +9,8 @@ import { createDefaultRuntimeState } from '@/apps/client/store/autoAction/utils'
 import { usePngtuberDriver } from '@/apps/client/store/usePngtuberDriver'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
-import { Input } from '@/shared/ui/input'
-import { NumberField } from '@/shared/ui/number-field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 const props = defineProps<{ action: AutoActionItem }>()
 const driver = usePngtuberDriver()
@@ -57,47 +56,37 @@ function test() {
       </AlertDescription>
     </Alert>
 
-    <div class="space-y-1">
-      <span class="text-xs text-muted-foreground">频道</span>
-      <Input
-        v-model="action.actionConfig.pngtuberChannel"
-        placeholder="default"
-      />
-    </div>
+    <FormField
+      label="频道"
+      placeholder="default"
+      v-model="action.actionConfig.pngtuberChannel"
+    />
 
-    <div class="space-y-1">
-      <span class="text-xs text-muted-foreground">表情 ID</span>
-      <div v-if="expressionOptions.length > 0">
-        <Select v-model="action.actionConfig.pngtuberExpressionId">
-          <SelectTrigger class="w-full">
-            <SelectValue placeholder="选择已加载表情或填写表情 ID" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem v-for="opt in expressionOptions" :key="opt.value" :value="opt.value">
-              {{ opt.label }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div v-else>
-        <Input
-          v-model="action.actionConfig.pngtuberExpressionId"
-          placeholder="填写表情 ID"
-        />
-      </div>
-    </div>
+    <FormField
+      v-if="expressionOptions.length > 0"
+      type="select"
+      label="表情 ID"
+      placeholder="选择已加载表情"
+      :options="expressionOptions"
+      v-model="action.actionConfig.pngtuberExpressionId"
+    />
+    <FormField
+      v-else
+      label="表情 ID"
+      placeholder="填写表情 ID"
+      v-model="action.actionConfig.pngtuberExpressionId"
+    />
 
-    <div class="flex-between p-2.5 rounded border bg-muted/20">
-      <span class="text-xs font-medium text-foreground">持续时间（毫秒）</span>
-      <NumberField
-        :model-value="action.actionConfig.pngtuberDurationMs"
-        :min="0"
-        :step="100"
-        placeholder="5000"
-        class="w-32"
-        @update:model-value="action.actionConfig.pngtuberDurationMs = $event"
-      />
-    </div>
+    <SettingRow
+      type="number"
+      title="持续时间（毫秒）"
+      hint="持续时间为 0 时保持表情，其他值到期后恢复默认"
+      :min="0"
+      :step="100"
+      placeholder="5000"
+      :model-value="action.actionConfig.pngtuberDurationMs"
+      @change="(val) => (action.actionConfig.pngtuberDurationMs = Number(val) || 0)"
+    />
 
     <div class="flex items-center gap-4 text-xs pt-1">
       <RouterLink
@@ -110,16 +99,18 @@ function test() {
         :to="{ name: 'client-pngtuber-model', query: { channel: targetChannel } }"
         class="text-primary hover:underline"
       >
-        编辑目标频道表情 →
+        前往模型配置 →
       </RouterLink>
+      <Button
+        size="xs"
+        variant="outline"
+        class="ml-auto"
+        :loading="testing"
+        :disabled="testing || !action.actionConfig.pngtuberExpressionId"
+        @click="test"
+      >
+        测试触发
+      </Button>
     </div>
-
-    <Button
-      class="w-full"
-      :disabled="testing || !action.actionConfig.pngtuberExpressionId?.trim()"
-      @click="test"
-    >
-      {{ testing ? '切换中...' : '测试切换表情' }}
-    </Button>
   </div>
 </template>

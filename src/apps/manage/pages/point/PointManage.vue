@@ -35,6 +35,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/shared/u
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { fromRemoteImageList, getPendingUploadFiles, ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
@@ -727,29 +728,23 @@ function resetGoods() {
               <div class="space-y-3">
                 <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">基本信息</h4>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div class="space-y-1">
-                    <label class="text-xs font-medium text-foreground"
-                      >礼物名称 <span class="text-destructive">*</span></label
-                    >
-                    <Input
-                      v-model="currentGoodsModel.goods.name"
-                      placeholder="如：舰长专属定制抱枕"
-                      maxlength="200"
-                    />
-                  </div>
-                  <div class="space-y-1">
-                    <label class="text-xs font-medium text-foreground"
-                      >所需积分 <span class="text-destructive">*</span></label
-                    >
-                    <NumberField
-                      v-model="currentGoodsModel.goods.price"
-                      placeholder="兑换所需的积分数"
-                      :min="0"
-                      class="w-full"
-                    />
-                  </div>
-                  <div class="space-y-1">
-                    <label class="text-xs font-medium text-foreground">库存设置</label>
+                  <FormField
+                    type="text"
+                    label="礼物名称"
+                    required
+                    placeholder="如：舰长专属定制抱枕"
+                    maxlength="200"
+                    v-model="currentGoodsModel.goods.name"
+                  />
+                  <FormField
+                    type="number"
+                    label="所需积分"
+                    required
+                    placeholder="兑换所需的积分数"
+                    :min="0"
+                    v-model="currentGoodsModel.goods.price"
+                  />
+                  <FormField label="库存设置">
                     <div class="flex items-center gap-3 h-8">
                       <label class="flex items-center gap-1.5 cursor-pointer text-xs">
                         <Checkbox
@@ -765,9 +760,8 @@ function resetGoods() {
                         class="flex-1"
                       />
                     </div>
-                  </div>
-                  <div class="space-y-1">
-                    <label class="text-xs font-medium text-foreground">展示设置</label>
+                  </FormField>
+                  <FormField label="展示设置">
                     <div class="flex items-center h-8">
                       <label class="flex items-center gap-1.5 cursor-pointer text-xs">
                         <Checkbox
@@ -777,7 +771,7 @@ function resetGoods() {
                         <span>在礼物列表顶部置顶显示</span>
                       </label>
                     </div>
-                  </div>
+                  </FormField>
                 </div>
 
                 <!-- 封面上传 -->
@@ -805,10 +799,10 @@ function resetGoods() {
               <!-- 交付与内容配置 -->
               <div class="space-y-3">
                 <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">交付与类型配置</h4>
-                <div class="space-y-1">
-                  <label class="text-xs font-medium text-foreground"
-                    >礼物类型 <span class="text-destructive">*</span></label
-                  >
+                <FormField
+                  label="礼物类型"
+                  required
+                >
                   <div class="flex items-center gap-2">
                     <Button
                       size="xs"
@@ -832,7 +826,7 @@ function resetGoods() {
                       服务兑换 (约稿/预约/定制)
                     </Button>
                   </div>
-                </div>
+                </FormField>
 
                 <!-- 虚拟礼物 -->
                 <div
@@ -915,34 +909,27 @@ function resetGoods() {
                   </div>
 
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div class="space-y-1">
-                      <label class="text-xs font-medium text-foreground"
-                        >款式名称 <span class="text-destructive">*</span></label
-                      >
-                      <Input
-                        v-model="sub.name"
-                        placeholder="如：黑色 XL 码"
-                      />
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-xs font-medium text-foreground">所需积分</label>
-                      <NumberField
-                        v-model="sub.price"
-                        :min="0"
-                        class="w-full"
-                      />
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-xs font-medium text-foreground">款式库存</label>
-                      <NumberField
-                        v-model="sub.stock"
-                        placeholder="留空沿用主商品"
-                        :min="0"
-                        class="w-full"
-                      />
-                    </div>
-                    <div class="space-y-1">
-                      <label class="text-xs font-medium text-foreground">款式封面</label>
+                    <FormField
+                      type="text"
+                      label="款式名称"
+                      required
+                      placeholder="如：黑色 XL 码"
+                      v-model="sub.name"
+                    />
+                    <FormField
+                      type="number"
+                      label="所需积分"
+                      :min="0"
+                      v-model="sub.price"
+                    />
+                    <FormField
+                      type="number"
+                      label="款式库存"
+                      placeholder="留空沿用主商品"
+                      :min="0"
+                      v-model="sub.stock"
+                    />
+                    <FormField label="款式封面">
                       <ImageUpload
                         v-model="subItemFileLists[getSubItemKey(sub)]"
                         :max-files="1"
@@ -950,7 +937,7 @@ function resetGoods() {
                         size="xs"
                         placeholder="上传款式封面"
                       />
-                    </div>
+                    </FormField>
                   </div>
                 </Card>
               </div>

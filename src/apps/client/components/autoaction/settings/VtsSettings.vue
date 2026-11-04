@@ -12,7 +12,6 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { SettingRow } from '@/shared/ui/setting-row'
-import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
@@ -92,19 +91,12 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
         <!-- 机位预设 -->
         <FormField
           v-if="action.actionType === ActionType.VTS_PRESET"
+          type="select"
           label="机位预设"
-        >
-          <Select v-model="action.actionConfig.vtsPresetId">
-            <SelectTrigger class="w-full">
-              <SelectValue placeholder="选择预设" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="opt in presetOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </FormField>
+          placeholder="选择预设"
+          :options="presetOptions"
+          v-model="action.actionConfig.vtsPresetId"
+        />
 
         <!-- 掉落道具 -->
         <template v-if="action.actionType === ActionType.VTS_DROP_ITEM">
@@ -168,12 +160,11 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
 
         <!-- 参数调节 -->
         <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
-          <FormField label="参数 ID">
-            <Input
-              v-model="action.actionConfig.vtsParamId"
-              placeholder="如 Blush, EyeOpen"
-            />
-          </FormField>
+          <FormField
+            label="参数 ID"
+            placeholder="如 Blush, EyeOpen"
+            v-model="action.actionConfig.vtsParamId"
+          />
 
           <SettingRow
             variant="compact"
@@ -207,45 +198,30 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
         </template>
 
         <!-- 宏 -->
-        <div
+        <FormField
           v-if="action.actionType === ActionType.VTS_MACRO"
-          class="space-y-1"
-        >
-          <span class="text-xs text-muted-foreground">宏</span>
-          <Select v-model="action.actionConfig.vtsMacroId">
-            <SelectTrigger class="w-full">
-              <SelectValue placeholder="选择要运行的宏" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem v-for="opt in macroOptions" :key="opt.value" :value="opt.value">
-                {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+          type="select"
+          label="宏"
+          placeholder="选择要运行的宏"
+          :options="macroOptions"
+          v-model="action.actionConfig.vtsMacroId"
+        />
 
         <!-- 配饰 -->
         <template v-if="action.actionType === ActionType.VTS_ACCESSORY">
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">配饰</span>
-            <Select v-model="action.actionConfig.vtsAccessoryId">
-              <SelectTrigger class="w-full">
-                <SelectValue placeholder="选择配饰" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem v-for="opt in accessoryOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            type="select"
+            label="配饰"
+            placeholder="选择配饰"
+            :options="accessoryOptions"
+            v-model="action.actionConfig.vtsAccessoryId"
+          />
 
-          <div class="flex-between p-2.5 rounded border bg-muted/20">
-            <span class="text-xs font-medium text-foreground">
-              {{ action.actionConfig.vtsAccessoryVisible ? '操作: 显示' : '操作: 隐藏' }}
-            </span>
-            <Switch v-model:checked="action.actionConfig.vtsAccessoryVisible" />
-          </div>
+          <SettingRow
+            type="switch"
+            :title="action.actionConfig.vtsAccessoryVisible ? '操作: 显示' : '操作: 隐藏'"
+            v-model="action.actionConfig.vtsAccessoryVisible"
+          />
         </template>
       </CardContent>
     </Card>

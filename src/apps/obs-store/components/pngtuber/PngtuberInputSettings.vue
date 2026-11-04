@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { PngtuberState } from '@/shared/pngtuber/types'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
-import { NumberField } from '@/shared/ui/number-field'
+import { FormField } from '@/shared/ui/form-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 defineProps<{ state: PngtuberState; disabled: boolean }>()
 const emit = defineEmits<{ change: [patch: Partial<PngtuberState>] }>()
@@ -54,32 +54,28 @@ const fields = [
     </Alert>
 
     <div class="fields">
-      <div
+      <FormField
         v-for="f in fields"
         :key="f.key"
-        class="space-y-1"
-      >
-        <label class="text-[11px] text-muted-foreground font-medium">{{ f.label }}</label>
-        <NumberField
-          :model-value="state[f.key]"
-          :min="f.min"
-          :max="f.max"
-          :step="f.step"
-          :disabled="disabled"
-          class="w-full"
-          @update:model-value="(value) => value !== null && emit('change', { [f.key]: value })"
-        />
-      </div>
-    </div>
-
-    <div class="flex-between p-1.5 border rounded-md">
-      <span class="text-xs font-medium">噪声抑制</span>
-      <Switch
-        :checked="state.noiseSuppression"
+        type="number"
+        :label="f.label"
+        :min="f.min"
+        :max="f.max"
+        :step="f.step"
         :disabled="disabled"
-        @update:checked="emit('change', { noiseSuppression: $event })"
+        :model-value="state[f.key]"
+        @change="(value) => value !== null && emit('change', { [f.key]: value })"
       />
     </div>
+
+    <SettingRow
+      type="switch"
+      variant="card"
+      title="噪声抑制"
+      :disabled="disabled"
+      :model-value="state.noiseSuppression"
+      @change="emit('change', { noiseSuppression: $event })"
+    />
   </div>
 </template>
 

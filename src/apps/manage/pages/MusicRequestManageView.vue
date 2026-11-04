@@ -979,15 +979,20 @@ onUnmounted(() => {
 
               <Separator />
 
-              <div class="space-y-2.5">
-                <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground select-none">
-                  <Checkbox v-model="settings.orderMusicFirst" />
-                  <span>优先播放点歌（新点歌立即插队或优先播完）</span>
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer text-xs font-medium text-foreground select-none">
-                  <Checkbox v-model="settings.playMusicWhenFree" />
-                  <span>空闲时自动播放闲置歌单</span>
-                </label>
+              <div class="space-y-2">
+                <SettingRow
+                  type="switch"
+                  variant="none"
+                  title="优先播放点歌"
+                  description="新点歌立即插队或优先播完"
+                  v-model="settings.orderMusicFirst"
+                />
+                <SettingRow
+                  type="switch"
+                  variant="none"
+                  title="空闲时自动播放闲置歌单"
+                  v-model="settings.playMusicWhenFree"
+                />
               </div>
             </CardContent>
           </Card>

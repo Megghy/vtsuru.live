@@ -7,6 +7,7 @@ import { SongPlatform } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Textarea } from '@/shared/ui/textarea'
@@ -81,66 +82,59 @@ defineExpose({ open, close, loading })
 
         <div class="space-y-3 text-xs">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">歌曲名称 *</label>
-              <Input
-                v-model="model.name"
-                placeholder="请输入歌曲名称"
-              />
-            </div>
+            <FormField
+              type="text"
+              label="歌曲名称"
+              required
+              placeholder="请输入歌曲名称"
+              v-model="model.name"
+            />
 
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">翻译 / 别名</label>
-              <Input
-                v-model="model.translateName"
-                placeholder="可选翻译或别名"
-              />
-            </div>
+            <FormField
+              type="text"
+              label="翻译 / 别名"
+              placeholder="可选翻译或别名"
+              v-model="model.translateName"
+            />
 
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">作者 (多个用逗号隔开)</label>
-              <Input
-                v-model="authorText"
-                placeholder="例如: 周杰伦, 方文山"
-              />
-            </div>
+            <FormField
+              type="text"
+              label="作者 (多个用逗号隔开)"
+              placeholder="例如: 周杰伦, 方文山"
+              v-model="authorText"
+            />
 
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">语言 (多个用逗号隔开)</label>
-              <Input
-                v-model="languageText"
-                placeholder="例如: 中文, 日语"
-              />
-            </div>
+            <FormField
+              type="text"
+              label="语言 (多个用逗号隔开)"
+              placeholder="例如: 中文, 日语"
+              v-model="languageText"
+            />
 
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">标签 (多个用逗号隔开)</label>
-              <Input
-                v-model="tagText"
-                placeholder="例如: 流行, 治愈"
-              />
-            </div>
+            <FormField
+              type="text"
+              label="标签 (多个用逗号隔开)"
+              placeholder="例如: 流行, 治愈"
+              v-model="tagText"
+            />
 
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">试听 / 伴奏链接</label>
-              <Input
-                v-model="model.url"
-                placeholder="音频直链"
-                :disabled="model.from !== SongPlatform.Custom"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">备注说明</label>
-            <Textarea
-              v-model="model.description"
-              rows="2"
-              maxlength="250"
-              placeholder="可选备注说明"
-              class="resize-none"
+            <FormField
+              type="text"
+              label="试听 / 伴奏链接"
+              placeholder="音频直链"
+              :disabled="model.from !== SongPlatform.Custom"
+              v-model="model.url"
             />
           </div>
+
+          <FormField
+            type="textarea"
+            label="备注说明"
+            rows="2"
+            maxlength="250"
+            placeholder="可选备注说明"
+            v-model="model.description"
+          />
 
           <!-- 独立点歌门槛 -->
           <div class="space-y-2 pt-1 border-t border-border/60">

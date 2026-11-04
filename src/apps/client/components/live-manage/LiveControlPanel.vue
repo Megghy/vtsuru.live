@@ -6,6 +6,7 @@ import type { LiveControl } from '@/apps/client/composables/useLiveControl'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -219,19 +220,11 @@ function handleSubAreaChange(val: any) {
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <!-- 标题 -->
-          <div class="space-y-1.5">
-            <div class="flex-between">
-              <label class="text-xs text-muted-foreground flex items-center gap-1.5">
-                直播间标题
-                <span
-                  v-if="c.titleChanged.value"
-                  class="text-[10px] text-amber-500 font-medium"
-                >
-                  (已修改未同步)
-                </span>
-              </label>
-              <span class="text-[11px] text-muted-foreground">{{ (c.liveTitle.value || '').length }} / 40</span>
-            </div>
+          <FormField
+            label="直播间标题"
+            :hint="c.titleChanged.value ? '已修改未同步到 B 站' : undefined"
+            :extra="`${(c.liveTitle.value || '').length} / 40`"
+          >
             <Input
               :model-value="c.liveTitle.value"
               placeholder="输入直播间标题"
@@ -239,21 +232,13 @@ function handleSubAreaChange(val: any) {
               :class="c.titleChanged.value ? 'border-amber-500/50' : ''"
               @update:model-value="((c.liveTitle.value = String($event)), c.markTitleEdited())"
             />
-          </div>
+          </FormField>
 
           <!-- 分区 (大类 + 子分区) -->
-          <div class="space-y-1.5">
-            <div class="flex-between">
-              <label class="text-xs text-muted-foreground flex items-center gap-1.5">
-                直播分区
-                <span
-                  v-if="c.areaChanged.value"
-                  class="text-[10px] text-amber-500 font-medium"
-                >
-                  (已修改未同步)
-                </span>
-              </label>
-            </div>
+          <FormField
+            label="直播分区"
+            :hint="c.areaChanged.value ? '已修改未同步到 B 站' : undefined"
+          >
             <div class="grid grid-cols-2 gap-2">
               <!-- 一级大类 -->
               <Select
@@ -297,7 +282,7 @@ function handleSubAreaChange(val: any) {
                 </SelectContent>
               </Select>
             </div>
-          </div>
+          </FormField>
         </div>
       </div>
 

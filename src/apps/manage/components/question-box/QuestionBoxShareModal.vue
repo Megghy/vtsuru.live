@@ -9,8 +9,8 @@ import { useAccount } from '@/api/account'
 import { CURRENT_HOST } from '@/shared/config'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { copyToClipboard, downloadImage, useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -105,31 +105,19 @@ function saveQRCode() {
         </div>
 
         <!-- 选项设置 -->
-        <div class="space-y-1.5">
-          <label class="text-xs text-muted-foreground">附加话题 (可选)</label>
-          <Select
-            :model-value="selectedShareTag || '__none__'"
-            @update:model-value="selectedShareTag = $event === '__none__' ? '' : String($event)"
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="不附加话题" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__none__">不附加话题</SelectItem>
-              <SelectItem
-                v-for="t in useQB.tags.filter((t) => t.visiable)"
-                :key="t.name"
-                :value="t.name"
-              >
-                #{{ t.name }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FormField
+          type="select"
+          label="附加话题 (可选)"
+          :options="[
+            { label: '不附加话题', value: '__none__' },
+            ...useQB.tags.filter((t) => t.visiable).map((t) => ({ label: `#${t.name}`, value: t.name })),
+          ]"
+          :model-value="selectedShareTag || '__none__'"
+          @change="selectedShareTag = $event === '__none__' ? '' : String($event)"
+        />
 
         <!-- 分享链接 -->
-        <div class="space-y-1.5">
-          <label class="text-xs text-muted-foreground">分享链接</label>
+        <FormField label="分享链接">
           <div class="flex items-center gap-2">
             <Input
               :model-value="modalShareUrl"
@@ -144,7 +132,7 @@ function saveQRCode() {
               复制
             </Button>
           </div>
-        </div>
+        </FormField>
 
         <Separator />
 

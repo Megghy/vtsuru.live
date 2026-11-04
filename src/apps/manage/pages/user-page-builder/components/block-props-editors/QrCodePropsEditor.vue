@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -23,17 +24,15 @@ const levelOptions = [
 <template>
   <div class="space-y-3">
     <PropsGrid>
-      <div class="span-full space-y-1">
-        <label class="text-xs text-muted-foreground flex items-center gap-1">
-          内容 <span class="text-destructive">*</span>
-        </label>
-        <Textarea
-          v-model="blockProps.content"
-          maxlength="500"
-          placeholder="文本或 https 链接"
-          class="min-h-[60px]"
-        />
-      </div>
+      <FormField
+        type="textarea"
+        label="内容"
+        required
+        maxlength="500"
+        placeholder="文本或 https 链接"
+        class="span-full"
+        v-model="blockProps.content"
+      />
       <div class="span-full space-y-1">
         <label class="text-xs text-muted-foreground">标题</label>
         <Input

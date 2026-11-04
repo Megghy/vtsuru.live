@@ -6,6 +6,7 @@ import type { ResponseSongModel, SongRequestOption } from '@/api/generated/model
 import { SongPlatform } from '@/api/generated/model'
 import { addSongsToSongList } from '@/apps/manage/components/song-list/useSongListAddSongs'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -119,18 +120,17 @@ async function addCustomSong() {
   <div class="space-y-4 text-xs">
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
       <!-- 歌曲名称 -->
-      <div class="space-y-1">
-        <label class="text-xs font-medium text-foreground">歌曲名称 <span class="text-destructive">*</span></label>
-        <Input
-          v-model="addSongModel.name"
-          placeholder="请输入歌曲名称"
-          maxlength="200"
-        />
-      </div>
+      <FormField
+        type="text"
+        label="歌曲名称"
+        required
+        placeholder="请输入歌曲名称"
+        maxlength="200"
+        v-model="addSongModel.name"
+      />
 
       <!-- 作者 (多选) -->
-      <div class="space-y-1">
-        <label class="text-xs font-medium text-foreground">作者 (回车添加)</label>
+      <FormField label="作者 (回车添加)">
         <Input
           v-model="authorInput"
           placeholder="输入作者后按回车新增"
@@ -149,11 +149,10 @@ async function addCustomSong() {
             {{ a }}
           </Tag>
         </div>
-      </div>
+      </FormField>
 
       <!-- 语言 (多选) -->
-      <div class="space-y-1">
-        <label class="text-xs font-medium text-foreground">语言 (可快捷添加或输入)</label>
+      <FormField label="语言 (可快捷添加或输入)">
         <div class="flex items-center gap-2">
           <Input
             v-model="languageInput"
@@ -191,11 +190,10 @@ async function addCustomSong() {
             {{ l }}
           </Tag>
         </div>
-      </div>
+      </FormField>
 
       <!-- 标签 (多选) -->
-      <div class="space-y-1">
-        <label class="text-xs font-medium text-foreground">标签 (回车添加)</label>
+      <FormField label="标签 (回车添加)">
         <Input
           v-model="tagInput"
           placeholder="输入标签后按回车新增"
@@ -214,26 +212,24 @@ async function addCustomSong() {
             {{ t }}
           </Tag>
         </div>
-      </div>
+      </FormField>
 
       <!-- 试听 / 伴奏链接 -->
-      <div class="space-y-1">
-        <label class="text-xs font-medium text-foreground">试听 / 伴奏链接</label>
-        <Input
-          v-model="addSongModel.url"
-          placeholder="可选，音频直链可直接播放"
-        />
-      </div>
+      <FormField
+        type="text"
+        label="试听 / 伴奏链接"
+        placeholder="可选，音频直链可直接播放"
+        v-model="addSongModel.url"
+      />
 
       <!-- 备注说明 -->
-      <div class="space-y-1">
-        <label class="text-xs font-medium text-foreground">备注说明</label>
-        <Input
-          v-model="addSongModel.description"
-          placeholder="可选备注说明"
-          maxlength="250"
-        />
-      </div>
+      <FormField
+        type="text"
+        label="备注说明"
+        placeholder="可选备注说明"
+        maxlength="250"
+        v-model="addSongModel.description"
+      />
 
       <!-- 独立点歌门槛 -->
       <div class="col-span-full space-y-2 pt-2 border-t">

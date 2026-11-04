@@ -16,10 +16,10 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
@@ -361,96 +361,60 @@ async function checkEligibility() {
       <div>
         <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">测试事件模拟</h4>
         <div class="space-y-3 max-w-lg">
-          <div class="space-y-1">
-            <label class="text-xs font-medium text-foreground">事件类型 <span class="text-destructive">*</span></label>
-            <Select
-              :model-value="String(testForm.type)"
-              @update:model-value="testForm.type = Number($event) as any"
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="opt in eventTypeOptions"
-                  :key="opt.value"
-                  :value="String(opt.value)"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            type="select"
+            label="事件类型"
+            required
+            :options="eventTypeOptions.map((opt) => ({ label: opt.label, value: String(opt.value) }))"
+            :model-value="String(testForm.type)"
+            @change="testForm.type = Number($event) as any"
+          />
 
           <!-- 礼物相关字段 -->
           <template v-if="showGiftFields">
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground"
-                >礼物名称 <span class="text-destructive">*</span></label
-              >
-              <Input
-                v-model="testForm.giftName"
-                placeholder="例如: 小心心、辣条"
-              />
-            </div>
+            <FormField
+              type="text"
+              label="礼物名称"
+              required
+              placeholder="例如: 小心心、辣条"
+              v-model="testForm.giftName"
+            />
 
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground"
-                >礼物价格（元） <span class="text-destructive">*</span></label
-              >
-              <NumberField
-                v-model="testForm.giftPrice"
-                :min="0"
-                class="w-full"
-              />
-            </div>
+            <FormField
+              type="number"
+              label="礼物价格（元）"
+              required
+              :min="0"
+              v-model="testForm.giftPrice"
+            />
 
-            <div class="space-y-1">
-              <label class="text-xs font-medium text-foreground">礼物数量</label>
-              <NumberField
-                v-model="testForm.giftCount"
-                :min="1"
-                class="w-full"
-              />
-            </div>
+            <FormField
+              type="number"
+              label="礼物数量"
+              :min="1"
+              v-model="testForm.giftCount"
+            />
           </template>
 
           <!-- 上舰相关字段 -->
-          <div
+          <FormField
             v-if="showGuardFields"
-            class="space-y-1"
-          >
-            <label class="text-xs font-medium text-foreground">舰长等级 <span class="text-destructive">*</span></label>
-            <Select v-model="testForm.guardLevel">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="opt in guardLevelOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            type="select"
+            label="舰长等级"
+            required
+            :options="guardLevelOptions"
+            v-model="testForm.guardLevel"
+          />
 
           <!-- SC 价格字段 -->
-          <div
+          <FormField
             v-if="testForm.type === EventDataTypes.SC"
-            class="space-y-1"
-          >
-            <label class="text-xs font-medium text-foreground"
-              >SC价格（元） <span class="text-destructive">*</span></label
-            >
-            <NumberField
-              v-model="testForm.giftPrice"
-              :min="0.01"
-              class="w-full"
-            />
-          </div>
+            type="number"
+            label="SC价格（元）"
+            required
+            :min="0.01"
+            v-model="testForm.giftPrice"
+          />
 
           <div class="flex justify-end pt-2">
             <Button
@@ -469,56 +433,33 @@ async function checkEligibility() {
       <div>
         <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">兑换资格查询</h4>
         <div class="rounded-lg border border-border bg-card p-4 max-w-lg space-y-3">
-          <div class="space-y-1">
-            <label class="text-xs font-medium text-foreground">目标用户 <span class="text-destructive">*</span></label>
-            <Select
-              :model-value="selectedUserKey ?? ''"
-              @update:model-value="selectedUserKey = $event ? ($event as EligibleUserKey) : null"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="请选择用户" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="opt in userOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            type="select"
+            label="目标用户"
+            required
+            placeholder="请选择用户"
+            :options="userOptions"
+            :model-value="selectedUserKey ?? ''"
+            @change="selectedUserKey = $event ? ($event as EligibleUserKey) : null"
+          />
 
-          <div class="space-y-1">
-            <label class="text-xs font-medium text-foreground">礼物 <span class="text-destructive">*</span></label>
-            <Select
-              :model-value="selectedGoodsId ? String(selectedGoodsId) : ''"
-              @update:model-value="selectedGoodsId = $event ? Number($event) : null"
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="请选择礼物" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="opt in goodsOptions"
-                  :key="opt.value"
-                  :value="String(opt.value)"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            type="select"
+            label="礼物"
+            required
+            placeholder="请选择礼物"
+            :options="goodsOptions.map((opt) => ({ label: opt.label, value: String(opt.value) }))"
+            :model-value="selectedGoodsId ? String(selectedGoodsId) : ''"
+            @change="selectedGoodsId = $event ? Number($event) : null"
+          />
 
-          <div class="space-y-1">
-            <label class="text-xs font-medium text-foreground">兑换数量 <span class="text-destructive">*</span></label>
-            <NumberField
-              v-model="eligibilityForm.count"
-              :min="1"
-              class="w-full"
-            />
-          </div>
+          <FormField
+            type="number"
+            label="兑换数量"
+            required
+            :min="1"
+            v-model="eligibilityForm.count"
+          />
 
           <div
             v-if="selectedGoods"

@@ -1,19 +1,22 @@
 <script setup lang="ts">
 import { AlertCircle, CheckCircle2, HelpCircle, Info, Play, RefreshCw, Square, Video } from 'lucide-vue-next'
 
+import { computed } from 'vue'
+
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
-import { Switch } from '@/shared/ui/switch'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{ control: LiveControl }>()
 const obsStore = props.control.obsStore
+const sceneOptions = computed(() => obsStore.obsScenes.map(s => ({ label: s, value: s })))
 
 const handleToggleConnect = () => {
   if (obsStore.obsConnected) {
@@ -86,26 +89,21 @@ const handleToggleConnect = () => {
       <!-- OBS WebSocket 连接参数配置 -->
       <div class="space-y-2 p-3 rounded-lg border border-border bg-muted/20">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div class="space-y-1">
-            <label class="text-[11px] text-muted-foreground block">WebSocket 地址</label>
-            <Input
-              v-model="obsStore.obsAddress"
-              placeholder="ws://127.0.0.1:4455"
-              :disabled="obsStore.obsConnected"
-              class="font-mono bg-background"
-            />
-          </div>
+          <FormField
+            label="WebSocket 地址"
+            placeholder="ws://127.0.0.1:4455"
+            :disabled="obsStore.obsConnected"
+            class="font-mono"
+            v-model="obsStore.obsAddress"
+          />
 
-          <div class="space-y-1">
-            <label class="text-[11px] text-muted-foreground block">连接密码（可选）</label>
-            <Input
-              v-model="obsStore.obsPassword"
-              type="password"
-              placeholder="无密码可留空"
-              :disabled="obsStore.obsConnected"
-              class="bg-background"
-            />
-          </div>
+          <FormField
+            type="password"
+            label="连接密码（可选）"
+            placeholder="无密码可留空"
+            :disabled="obsStore.obsConnected"
+            v-model="obsStore.obsPassword"
+          />
         </div>
 
         <div class="flex-between pt-1">
@@ -305,27 +303,21 @@ const handleToggleConnect = () => {
       <div class="space-y-3">
         <span class="text-xs font-semibold text-foreground block">场景联动设置</span>
 
-        <div class="space-y-2.5">
-          <div class="flex-between">
-            <span class="text-xs text-foreground">启用自动场景切换</span>
-            <Switch
-              :checked="obsStore.obsSceneConfig.autoSwitchEnabled"
-              @update:checked="((obsStore.obsSceneConfig.autoSwitchEnabled = $event), obsStore.saveSceneConfig())"
-            />
-          </div>
+        <div class="space-y-2">
+          <SettingRow
+            type="switch"
+            title="启用自动场景切换"
+            v-model="obsStore.obsSceneConfig.autoSwitchEnabled"
+            @change="obsStore.saveSceneConfig"
+          />
 
-          <div class="flex-between">
-            <div>
-              <span class="text-xs text-foreground block">开播/下播联动推流</span>
-              <span class="text-[11px] text-muted-foreground block mt-0.5">
-                开始直播时自动开始 OBS 推流，停止直播时自动停止推流
-              </span>
-            </div>
-            <Switch
-              :checked="obsStore.obsSceneConfig.autoToggleStream"
-              @update:checked="((obsStore.obsSceneConfig.autoToggleStream = $event), obsStore.saveSceneConfig())"
-            />
-          </div>
+          <SettingRow
+            type="switch"
+            title="开播/下播联动推流"
+            description="开始直播时自动开始 OBS 推流，停止直播时自动停止推流"
+            v-model="obsStore.obsSceneConfig.autoToggleStream"
+            @change="obsStore.saveSceneConfig"
+          />
         </div>
 
         <!-- 联动场景选择器 -->
@@ -333,74 +325,35 @@ const handleToggleConnect = () => {
           v-if="obsStore.obsSceneConfig.autoSwitchEnabled"
           class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-2"
         >
-          <!-- 开播场景 -->
-          <div class="space-y-1">
-            <label class="text-[11px] text-muted-foreground block">开播场景</label>
-            <Select
-              v-model="obsStore.obsSceneConfig.startScene"
-              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              @update:model-value="obsStore.saveSceneConfig"
-            >
-              <SelectTrigger class="w-full">
-                <SelectValue placeholder="选择开播场景" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="scene in obsStore.obsScenes"
-                  :key="scene"
-                  :value="scene"
-                >
-                  {{ scene }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            type="select"
+            label="开播场景"
+            placeholder="选择开播场景"
+            :options="sceneOptions"
+            :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+            v-model="obsStore.obsSceneConfig.startScene"
+            @change="obsStore.saveSceneConfig"
+          />
 
-          <!-- 下播场景 -->
-          <div class="space-y-1">
-            <label class="text-[11px] text-muted-foreground block">下播场景</label>
-            <Select
-              v-model="obsStore.obsSceneConfig.stopScene"
-              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              @update:model-value="obsStore.saveSceneConfig"
-            >
-              <SelectTrigger class="w-full">
-                <SelectValue placeholder="选择下播场景" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="scene in obsStore.obsScenes"
-                  :key="scene"
-                  :value="scene"
-                >
-                  {{ scene }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            type="select"
+            label="下播场景"
+            placeholder="选择下播场景"
+            :options="sceneOptions"
+            :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+            v-model="obsStore.obsSceneConfig.stopScene"
+            @change="obsStore.saveSceneConfig"
+          />
 
-          <!-- 等待场景 -->
-          <div class="space-y-1">
-            <label class="text-[11px] text-muted-foreground block">等待场景（可选）</label>
-            <Select
-              v-model="obsStore.obsSceneConfig.waitingScene"
-              :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
-              @update:model-value="obsStore.saveSceneConfig"
-            >
-              <SelectTrigger class="w-full">
-                <SelectValue placeholder="选择等待场景" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="scene in obsStore.obsScenes"
-                  :key="scene"
-                  :value="scene"
-                >
-                  {{ scene }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <FormField
+            type="select"
+            label="等待场景（可选）"
+            placeholder="选择等待场景"
+            :options="sceneOptions"
+            :disabled="!obsStore.obsConnected || obsStore.obsScenes.length === 0"
+            v-model="obsStore.obsSceneConfig.waitingScene"
+            @change="obsStore.saveSceneConfig"
+          />
         </div>
 
         <Alert size="sm" v-if="obsStore.obsSceneError" class="border-destructive/30 bg-destructive/10 text-destructive mt-2">

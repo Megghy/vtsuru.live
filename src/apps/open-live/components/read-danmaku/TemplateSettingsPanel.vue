@@ -384,16 +384,14 @@ function fireMock() {
                     </SelectContent>
                   </Select>
 
-                  <div
+                  <NumberField
                     v-if="!isTextField(cond.field)"
+                    size="xs"
                     class="w-[100px]"
-                  >
-                    <NumberField
-                      :model-value="cond.value as number"
-                      :min="0"
-                      @update:model-value="(v: number | null) => (cond.value = v ?? 0)"
-                    />
-                  </div>
+                    :model-value="cond.value as number"
+                    :min="0"
+                    @update:model-value="(v: number | null) => (cond.value = v ?? 0)"
+                  />
                   <Input
                     size="xs"
                     v-else
@@ -404,9 +402,9 @@ function fireMock() {
                   />
 
                   <Button
-                    size="xs"
+                    size="icon-xs"
                     variant="ghost"
-                    class="w-7 p-0 text-destructive hover:bg-destructive/10"
+                    class="text-destructive hover:bg-destructive/10 shrink-0"
                     @click="removeCondition(rule, ci)"
                   >
                     <Delete20Filled class="size-3.5" />
@@ -554,9 +552,9 @@ function fireMock() {
           placeholder="播报文本"
         />
         <Button
-          size="xs"
+          size="icon-xs"
           variant="ghost"
-          class="w-7 p-0 text-destructive hover:bg-destructive/10"
+          class="text-destructive hover:bg-destructive/10 shrink-0"
           @click="settings.timedBroadcast.texts.splice(i, 1)"
         >
           <Delete20Filled class="size-3.5" />

@@ -78,7 +78,7 @@ const iconSize: Record<string, string> = {
     v-bind="forwarded"
     :class="
       cn(
-        'inline-flex items-center rounded-md border border-input bg-background ring-offset-background transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
+        'inline-flex items-center w-full rounded-md border border-input bg-background ring-offset-background transition-colors focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50',
         sizeClasses[props.size] || sizeClasses.sm,
         props.class,
       )
@@ -88,27 +88,29 @@ const iconSize: Record<string, string> = {
       v-if="showButtons"
       :class="
         cn(
-          'inline-flex-center h-full shrink-0 text-muted-foreground hover:text-foreground disabled:opacity-30',
+          'inline-flex-center h-full shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-90 transition-all rounded-sm cursor-pointer select-none disabled:pointer-events-none disabled:opacity-30',
           btnPad[props.size],
         )
       "
     >
       <Minus :class="iconSize[props.size]" />
     </NumberFieldDecrement>
+    <slot name="prefix" />
     <NumberFieldInput
       :placeholder="placeholder"
       :class="
         cn(
-          'min-w-0 flex-1 bg-transparent text-center tabular-nums outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+          'w-full min-w-0 flex-1 bg-transparent text-center tabular-nums outline-none placeholder:text-muted-foreground [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
           showButtons ? 'px-0.5' : 'px-2.5',
         )
       "
     />
+    <slot name="suffix" />
     <NumberFieldIncrement
       v-if="showButtons"
       :class="
         cn(
-          'inline-flex-center h-full shrink-0 text-muted-foreground hover:text-foreground disabled:opacity-30',
+          'inline-flex-center h-full shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/50 active:scale-90 transition-all rounded-sm cursor-pointer select-none disabled:pointer-events-none disabled:opacity-30',
           btnPad[props.size],
         )
       "

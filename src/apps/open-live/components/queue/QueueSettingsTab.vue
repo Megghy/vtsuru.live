@@ -46,12 +46,12 @@ function onChange() {
         </CardHeader>
         <CardContent class="p-4 flex flex-col gap-3">
           <div class="flex items-center gap-2 flex-wrap">
-            <div class="flex items-center border rounded-md overflow-hidden text-xs w-[350px]">
-              <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">弹幕关键词</span>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="text-muted-foreground shrink-0">弹幕关键词</span>
               <Input
                 v-model="settings.keyword"
                 placeholder="留空则禁用弹幕加入"
-                class="border-0 shadow-none"
+                class="w-56"
                 @change="onChange"
               />
             </div>
@@ -83,16 +83,19 @@ function onChange() {
             </div>
           </div>
 
-          <div class="flex items-center border rounded-md overflow-hidden text-xs w-[250px]">
-            <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">最大队列长度</span>
-            <NumberField
-              v-model="settings.queueMaxSize"
-              :min="0"
-              :max="1000"
-              placeholder="0为不限制"
-              class="border-0 shadow-none flex-1"
-              @update:model-value="onChange"
-            />
+          <div class="flex items-center justify-between max-w-[280px] text-xs">
+            <span class="text-muted-foreground">最大队列长度</span>
+            <div class="flex items-center gap-1.5">
+              <NumberField
+                v-model="settings.queueMaxSize"
+                :min="0"
+                :max="1000"
+                placeholder="0为不限制"
+                class="w-28"
+                @update:model-value="onChange"
+              />
+              <span class="text-muted-foreground">人</span>
+            </div>
           </div>
 
           <label class="flex items-center gap-2 cursor-pointer text-xs">
@@ -130,14 +133,17 @@ function onChange() {
             v-if="!settings.allowAllDanmaku"
             class="flex flex-col gap-2.5 ml-5"
           >
-            <div class="flex items-center border rounded-md overflow-hidden text-xs w-[270px]">
-              <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">最低粉丝牌等级</span>
-              <NumberField
-                v-model="settings.fanMedalMinLevel"
-                :min="0"
-                class="border-0 shadow-none flex-1"
-                @update:model-value="onChange"
-              />
+            <div class="flex items-center justify-between max-w-[280px] text-xs">
+              <span class="text-muted-foreground">最低粉丝牌等级</span>
+              <div class="flex items-center gap-1.5">
+                <NumberField
+                  v-model="settings.fanMedalMinLevel"
+                  :min="0"
+                  class="w-24"
+                  @update:model-value="onChange"
+                />
+                <span class="text-muted-foreground">级</span>
+              </div>
             </div>
             <label class="flex items-center gap-2 cursor-pointer text-xs">
               <Checkbox
@@ -201,15 +207,18 @@ function onChange() {
             v-if="settings.allowGift"
             class="flex flex-col gap-2.5 ml-5"
           >
-            <div class="flex items-center border rounded-md overflow-hidden text-xs w-[250px]">
-              <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">最低礼物价值 (元)</span>
-              <NumberField
-                v-model="settings.minGiftPrice"
-                :min="0.1"
-                :step="0.1"
-                class="border-0 shadow-none flex-1"
-                @update:model-value="onChange"
-              />
+            <div class="flex items-center justify-between max-w-[280px] text-xs">
+              <span class="text-muted-foreground">最低礼物价值</span>
+              <div class="flex items-center gap-1.5">
+                <NumberField
+                  v-model="settings.minGiftPrice"
+                  :min="0.1"
+                  :step="0.1"
+                  class="w-24"
+                  @update:model-value="onChange"
+                />
+                <span class="text-muted-foreground">元</span>
+              </div>
             </div>
 
             <div class="flex items-center gap-2 text-xs">
@@ -341,43 +350,55 @@ function onChange() {
 
           <div
             v-if="settings.enableCooldown"
-            class="flex flex-col gap-2.5 ml-5 mt-1"
+            class="flex flex-col gap-2 ml-5 mt-1 max-w-[300px]"
           >
-            <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
-              <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">普通用户 CD (秒)</span>
-              <NumberField
-                v-model="settings.cooldownSecond"
-                :min="0"
-                class="border-0 shadow-none flex-1"
-                @update:model-value="onChange"
-              />
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">普通用户 CD</span>
+              <div class="flex items-center gap-1.5">
+                <NumberField
+                  v-model="settings.cooldownSecond"
+                  :min="0"
+                  class="w-24"
+                  @update:model-value="onChange"
+                />
+                <span class="text-muted-foreground">秒</span>
+              </div>
             </div>
-            <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
-              <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">舰长 CD (秒)</span>
-              <NumberField
-                v-model="settings.jianzhangCooldownSecond"
-                :min="0"
-                class="border-0 shadow-none flex-1"
-                @update:model-value="onChange"
-              />
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">舰长 CD</span>
+              <div class="flex items-center gap-1.5">
+                <NumberField
+                  v-model="settings.jianzhangCooldownSecond"
+                  :min="0"
+                  class="w-24"
+                  @update:model-value="onChange"
+                />
+                <span class="text-muted-foreground">秒</span>
+              </div>
             </div>
-            <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
-              <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">提督 CD (秒)</span>
-              <NumberField
-                v-model="settings.tiduCooldownSecond"
-                :min="0"
-                class="border-0 shadow-none flex-1"
-                @update:model-value="onChange"
-              />
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">提督 CD</span>
+              <div class="flex items-center gap-1.5">
+                <NumberField
+                  v-model="settings.tiduCooldownSecond"
+                  :min="0"
+                  class="w-24"
+                  @update:model-value="onChange"
+                />
+                <span class="text-muted-foreground">秒</span>
+              </div>
             </div>
-            <div class="flex items-center border rounded-md overflow-hidden text-xs w-[280px]">
-              <span class="bg-muted px-2.5 py-1.5 text-muted-foreground border-r shrink-0">总督 CD (秒)</span>
-              <NumberField
-                v-model="settings.zongduCooldownSecond"
-                :min="0"
-                class="border-0 shadow-none flex-1"
-                @update:model-value="onChange"
-              />
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-muted-foreground">总督 CD</span>
+              <div class="flex items-center gap-1.5">
+                <NumberField
+                  v-model="settings.zongduCooldownSecond"
+                  :min="0"
+                  class="w-24"
+                  @update:model-value="onChange"
+                />
+                <span class="text-muted-foreground">秒</span>
+              </div>
             </div>
           </div>
         </CardContent>

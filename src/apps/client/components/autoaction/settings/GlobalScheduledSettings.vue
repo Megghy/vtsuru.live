@@ -1,13 +1,10 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
 import { watch } from 'vue'
 
 import { useAutoAction } from '@/apps/client/store/useAutoAction'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { NumberField } from '@/shared/ui/number-field'
-import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 const autoActionStore = useAutoAction()
 
@@ -39,43 +36,24 @@ watch(
         </AlertDescription>
       </Alert>
 
-      <div class="flex-between p-2.5 rounded border bg-muted/20">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <div class="flex items-center gap-1 cursor-help">
-                <span class="text-xs font-medium text-foreground">全局发送间隔</span>
-                <Info16Regular class="size-3.5 text-muted-foreground" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent> 每隔多少秒触发一次全局定时任务 </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <NumberField
-          :model-value="autoActionStore.globalIntervalSeconds"
+      <div class="space-y-2">
+        <SettingRow
+          type="number"
+          title="全局发送间隔"
+          hint="每隔多少秒触发一次全局定时任务"
           :min="10"
           :max="7200"
-          class="w-32"
-          @update:model-value="autoActionStore.globalIntervalSeconds = $event || 300"
+          :model-value="autoActionStore.globalIntervalSeconds"
+          @change="(val) => (autoActionStore.globalIntervalSeconds = Number(val) || 300)"
         />
-      </div>
 
-      <div class="space-y-1.5 p-2.5 rounded border bg-muted/20">
-        <span class="text-xs font-medium text-foreground block">全局发送模式</span>
-        <RadioGroup
+        <SettingRow
+          type="select"
+          title="全局发送模式"
+          :options="schedulingModeOptions"
           :model-value="autoActionStore.globalSchedulingMode"
-          class="flex flex-col gap-2"
-          @update:model-value="(val) => (autoActionStore.globalSchedulingMode = val as any)"
-        >
-          <label
-            v-for="option in schedulingModeOptions"
-            :key="option.value"
-            class="flex items-center gap-2 cursor-pointer text-xs"
-          >
-            <RadioGroupItem :value="option.value" />
-            <span>{{ option.label }}</span>
-          </label>
-        </RadioGroup>
+          @change="(val) => (autoActionStore.globalSchedulingMode = val as any)"
+        />
       </div>
     </CardContent>
   </Card>

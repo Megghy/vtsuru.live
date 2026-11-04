@@ -4,8 +4,7 @@ import { computed, reactive, watch } from 'vue'
 import type { ManualUserFormModel } from '@/apps/open-live/components/lottery/lotteryTypes'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
-import { Input } from '@/shared/ui/input'
-import { NumberField } from '@/shared/ui/number-field'
+import { FormField } from '@/shared/ui/form-field'
 
 const props = defineProps<{
   show: boolean
@@ -54,62 +53,51 @@ function submit() {
         <DialogTitle class="text-base">手动添加用户</DialogTitle>
       </DialogHeader>
 
-      <div class="flex flex-col gap-3 py-2 text-xs">
-        <div class="flex items-center gap-3">
-          <span class="w-20 text-muted-foreground shrink-0 text-right">
-            <span class="text-destructive mr-0.5">*</span>用户名
-          </span>
-          <Input
-            v-model="form.name"
+      <div class="space-y-3 py-2 text-xs">
+        <FormField
+          type="text"
+          label="用户名"
+          required
+          :disabled="disabled"
+          placeholder="请输入用户名"
+          v-model="form.name"
+        />
+
+        <FormField
+          type="text"
+          label="头像链接"
+          :disabled="disabled"
+          placeholder="可选，留空则使用内置默认头像"
+          v-model="form.avatar"
+        />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <FormField
+            type="number"
+            label="粉丝牌等级"
             :disabled="disabled"
-            placeholder="请输入用户名"
-            class="flex-1"
+            :min="0"
+            :max="50"
+            v-model="form.fans_medal_level"
           />
-        </div>
 
-        <div class="flex items-center gap-3">
-          <span class="w-20 text-muted-foreground shrink-0 text-right">头像链接</span>
-          <Input
-            v-model="form.avatar"
-            :disabled="disabled"
-            placeholder="可选，留空则使用内置默认头像"
-            class="flex-1"
-          />
-        </div>
-
-        <div class="flex items-center gap-3">
-          <span class="w-20 text-muted-foreground shrink-0 text-right">粉丝牌等级</span>
-          <div class="w-[140px]">
-            <NumberField
-              v-model="form.fans_medal_level"
-              :disabled="disabled"
-              :min="0"
-              :max="50"
-            />
-          </div>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <span class="w-20 text-muted-foreground shrink-0 text-right">粉丝牌名称</span>
-          <Input
-            v-model="form.fans_medal_name"
+          <FormField
+            type="text"
+            label="粉丝牌名称"
             :disabled="disabled"
             placeholder="粉丝牌名称"
-            class="flex-1"
+            v-model="form.fans_medal_name"
           />
         </div>
 
-        <div class="flex items-center gap-3">
-          <span class="w-20 text-muted-foreground shrink-0 text-right">舰长等级</span>
-          <div class="w-[140px]">
-            <NumberField
-              v-model="form.guard_level"
-              :disabled="disabled"
-              :min="0"
-              :max="3"
-            />
-          </div>
-        </div>
+        <FormField
+          type="number"
+          label="舰长等级"
+          :disabled="disabled"
+          :min="0"
+          :max="3"
+          v-model="form.guard_level"
+        />
       </div>
 
       <DialogFooter class="flex justify-end gap-2 pt-2">

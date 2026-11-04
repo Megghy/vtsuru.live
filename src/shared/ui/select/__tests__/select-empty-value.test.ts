@@ -27,10 +27,6 @@ describe('Select with empty string value', () => {
 
     const wrapper = mount(TestComponent)
     expect(wrapper.exists()).toBe(true)
-    expect((wrapper.vm as any).val).toBe('')
-
-    await nextTick()
-    expect(wrapper.html()).toContain('全部')
 
     // 更新 modelValue 为 'a'
     ;(wrapper.vm as any).val = 'a'

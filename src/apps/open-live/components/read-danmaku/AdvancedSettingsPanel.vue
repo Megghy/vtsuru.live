@@ -1,13 +1,11 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { Badge } from '@/shared/ui/badge'
-import { Checkbox } from '@/shared/ui/checkbox'
-import { NumberField } from '@/shared/ui/number-field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Separator } from '@/shared/ui/separator'
+import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { useSpeechService } from '@/store/useSpeechService'
-
-import SectionField from './SectionField.vue'
 
 defineProps<{
   audioOutputDevices: Array<{ label: string; value: string }>
@@ -24,6 +22,18 @@ const eventOptions = [
   { label: '弹幕', value: 'message' },
   { label: '进入', value: 'enter' },
 ]
+
+const queueFullStrategyOptions = [
+  { label: '丢弃最旧', value: 'drop-oldest' },
+  { label: '拒绝新消息', value: 'reject-new' },
+]
+
+const isCombineGiftEnabled = computed({
+  get: () => settings.value.combineGiftDelay != null,
+  set: (val: boolean) => {
+    settings.value.combineGiftDelay = val ? 2 : undefined
+  },
+})
 
 function togglePriorityEvent(val: string) {
   const idx = settings.value.priorityEvents.indexOf(val)
@@ -47,118 +57,114 @@ function toggleNotificationEvent(val: string) {
 
 <template>
   <div class="flex flex-col gap-3">
-    <SectionField label="音频输出设备">
-      <Select
-        v-model="settings.outputDeviceId"
-        @update:model-value="emit('deviceChange')"
-      >
-        <SelectTrigger class="w-full">
-          <SelectValue placeholder="默认设备" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem v-for="d in audioOutputDevices" :key="d.value" :value="d.value">
-            {{ d.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </SectionField>
+    <!-- 音频输出设备 -->
+    <SettingRow
+      type="select"
+      variant="line"
+      title="音频输出设备"
+      description="选择播报语音的声卡输出通道"
+      :options="audioOutputDevices"
+      v-model="settings.outputDeviceId"
+      @change="emit('deviceChange')"
+    />
 
-    <Separator class="my-1" />
+    <!-- 礼物合并 -->
+    <SettingRow
+      type="switch"
+      variant="line"
+      title="礼物合并"
+      description="短时间内连续赠送的相同礼物合并为一条播报"
+      v-model="isCombineGiftEnabled"
+    />
+    <SettingRow
+      v-if="settings.combineGiftDelay != null"
+      type="number"
+      variant="compact"
+      title="合并间隔 (秒)"
+      description="在此间隔内收到的相同礼物将自动合并"
+      :min="1"
+      :max="10"
+      control-class="w-24 font-mono"
+      v-model="settings.combineGiftDelay"
+    />
 
-    <SectionField label="礼物合并">
-      <div class="flex items-center gap-3">
-        <label class="flex items-center gap-2 cursor-pointer text-xs">
-          <Checkbox
-            :checked="settings.combineGiftDelay != null"
-            @update:checked="(c: boolean) => (settings.combineGiftDelay = c ? 2 : undefined)"
-          />
-          <span>启用</span>
-        </label>
-        <div
-          v-if="settings.combineGiftDelay != null"
-          class="flex items-center border rounded-md overflow-hidden text-xs w-[180px]"
-        >
-          <span class="bg-muted px-2 py-1 text-muted-foreground border-r shrink-0">间隔(秒)</span>
-          <NumberField
-            v-model="settings.combineGiftDelay"
-            :min="1"
-            :max="10"
-            class="border-0 shadow-none flex-1"
-          />
-        </div>
-      </div>
-    </SectionField>
-
-    <SectionField
+    <!-- 优先级插队 -->
+    <FormField
       label="优先级插队"
-      hint="这些事件类型会插到队列最前面"
+      hint="这些事件类型会插到队列最前面优先播报"
     >
-      <div class="flex flex-wrap gap-1.5">
-        <Badge v-for="opt in eventOptions" :key="opt.value" :variant="settings.priorityEvents.includes(opt.value) ? 'default' : 'outline'" class="cursor-pointer py-0.5" @click="togglePriorityEvent(opt.value)">
+      <div class="flex flex-wrap gap-1.5 pt-1">
+        <Badge
+          v-for="opt in eventOptions"
+          :key="opt.value"
+          :variant="settings.priorityEvents.includes(opt.value) ? 'default' : 'outline'"
+          class="cursor-pointer py-0.5 select-none"
+          @click="togglePriorityEvent(opt.value)"
+        >
           {{ opt.label }}
         </Badge>
       </div>
-    </SectionField>
+    </FormField>
 
-    <Separator class="my-1" />
-
-    <SectionField label="提示音">
-      <div class="flex flex-col gap-2.5">
-        <label class="flex items-center gap-2 cursor-pointer text-xs">
-          <Checkbox
-            :checked="settings.notificationSound.enabled"
-            @update:checked="settings.notificationSound.enabled = $event"
-          />
-          <span>播报前播放提示音</span>
-        </label>
-        <template v-if="settings.notificationSound.enabled">
-          <div class="flex flex-wrap gap-1.5">
-            <Badge v-for="opt in eventOptions" :key="opt.value" :variant="(settings.notificationSound.events as string[]).includes(opt.value) ? 'default' : 'outline'" class="cursor-pointer py-0.5" @click="toggleNotificationEvent(opt.value)">
-              {{ opt.label }}
-            </Badge>
-          </div>
-          <SectionField
-            label="提示音音量"
-            :value="`${(settings.notificationSound.volume * 100).toFixed(0)}%`"
+    <!-- 提示音 -->
+    <SettingRow
+      type="switch"
+      variant="line"
+      title="播报提示音"
+      description="在消息播报前播放提示音"
+      v-model="settings.notificationSound.enabled"
+    />
+    <template v-if="settings.notificationSound.enabled">
+      <FormField label="提示音触发事件">
+        <div class="flex flex-wrap gap-1.5 pt-1">
+          <Badge
+            v-for="opt in eventOptions"
+            :key="opt.value"
+            :variant="(settings.notificationSound.events as string[]).includes(opt.value) ? 'default' : 'outline'"
+            class="cursor-pointer py-0.5 select-none"
+            @click="toggleNotificationEvent(opt.value)"
           >
-            <Slider
-              :model-value="[settings.notificationSound.volume]"
-              :min="0"
-              :max="1"
-              :step="0.05"
-              @update:model-value="settings.notificationSound.volume = $event?.[0] ?? 0.5"
-            />
-          </SectionField>
-        </template>
-      </div>
-    </SectionField>
+            {{ opt.label }}
+          </Badge>
+        </div>
+      </FormField>
 
-    <Separator class="my-1" />
+      <FormField
+        label="提示音音量"
+        :extra="`${(settings.notificationSound.volume * 100).toFixed(0)}%`"
+      >
+        <div class="pt-2">
+          <Slider
+            :model-value="[settings.notificationSound.volume]"
+            :min="0"
+            :max="1"
+            :step="0.05"
+            @update:model-value="settings.notificationSound.volume = $event?.[0] ?? 0.5"
+          />
+        </div>
+      </FormField>
+    </template>
 
-    <SectionField label="队列上限">
-      <div class="max-w-[140px]">
-        <NumberField
-          v-model="settings.maxQueueSize"
-          :min="10"
-          :max="200"
-        />
-      </div>
-    </SectionField>
+    <!-- 队列上限与策略 -->
+    <SettingRow
+      type="number"
+      variant="line"
+      title="队列上限"
+      description="积压未播报的最大消息条数"
+      :min="10"
+      :max="200"
+      :step="5"
+      control-class="w-28 font-mono"
+      v-model="settings.maxQueueSize"
+    />
 
-    <SectionField label="队列满时策略">
-      <Select v-model="settings.queueFullStrategy">
-        <SelectTrigger class="w-[180px]">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="drop-oldest">
-            丢弃最旧
-          </SelectItem>
-          <SelectItem value="reject-new">
-            拒绝新消息
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </SectionField>
+    <SettingRow
+      type="select"
+      variant="line"
+      title="队列满时策略"
+      description="超出队列上限时的处理方式"
+      :options="queueFullStrategyOptions"
+      v-model="settings.queueFullStrategy"
+    />
   </div>
 </template>

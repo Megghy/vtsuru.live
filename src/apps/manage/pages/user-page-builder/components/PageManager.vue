@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Tag } from '@/shared/ui/tag'
@@ -206,13 +207,13 @@ function confirmDuplicatePage() {
           <DialogTitle class="text-sm">新建子页面</DialogTitle>
         </DialogHeader>
         <div class="flex flex-col gap-3 py-2">
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium">页面链接标识 (Slug) <span class="text-destructive">*</span></label>
-            <Input
-              v-model="newSlug"
-              placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）"
-            />
-          </div>
+          <FormField
+            type="text"
+            label="页面链接标识 (Slug)"
+            required
+            placeholder="例如 links / sponsor / faq（仅限字母、数字、短横线）"
+            v-model="newSlug"
+          />
 
           <div class="flex flex-col gap-1.5">
             <label class="text-xs font-medium">搭建模式</label>
@@ -279,13 +280,13 @@ function confirmDuplicatePage() {
           <Alert size="sm" class="bg-primary/5 border-primary/20">
             <AlertDescription>复制自：/{{ duplicateFromSlug || 'slug' }}</AlertDescription>
           </Alert>
-          <div class="flex flex-col gap-1.5">
-            <label class="text-xs font-medium">新页面标识 (Slug) <span class="text-destructive">*</span></label>
-            <Input
-              v-model="duplicateToSlug"
-              placeholder="例如 links-copy"
-            />
-          </div>
+          <FormField
+            type="text"
+            label="新页面标识 (Slug)"
+            required
+            placeholder="例如 links-copy"
+            v-model="duplicateToSlug"
+          />
           <span class="text-[11px] text-muted-foreground">会自动为复制后的页面生成新的区块 ID，避免与原页面冲突。</span>
         </div>
         <DialogFooter>
