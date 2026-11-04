@@ -7,7 +7,7 @@
  */
 
 export interface VoteOption {
-  text: string;
-  count: number;
-  voters: string[];
+  text: string
+  count: number
+  voters: string[]
 }

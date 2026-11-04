@@ -8,7 +8,7 @@
 
 export interface CreateOrgStreamerInviteModel {
   /** @nullable */
-  expireDays?: number | null;
+  expireDays?: number | null
   /** @nullable */
-  targetStreamerUserId?: number | null;
+  targetStreamerUserId?: number | null
 }

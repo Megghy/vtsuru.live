@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointOrderStatus } from './pointOrderStatus';
-import type { ServiceTimelineActor } from './serviceTimelineActor';
-import type { ServiceTimelineType } from './serviceTimelineType';
+import type { PointOrderStatus } from './pointOrderStatus'
+import type { ServiceTimelineActor } from './serviceTimelineActor'
+import type { ServiceTimelineType } from './serviceTimelineType'
 
 export interface ServiceTimelineEntry {
-  id: string;
-  createdAt: string;
-  actor: ServiceTimelineActor;
-  type: ServiceTimelineType;
-  message: string;
-  status?: PointOrderStatus;
+  id: string
+  createdAt: string
+  actor: ServiceTimelineActor
+  type: ServiceTimelineType
+  message: string
+  status?: PointOrderStatus
 }

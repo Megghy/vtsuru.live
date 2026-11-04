@@ -7,6 +7,6 @@
  */
 
 export interface TranslateRequest {
-  text: string;
-  targetLang: string;
+  text: string
+  targetLang: string
 }

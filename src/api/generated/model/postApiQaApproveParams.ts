@@ -7,6 +7,6 @@
  */
 
 export type PostApiQaApproveParams = {
-id?: number;
-approve?: boolean;
-};
+  id?: number
+  approve?: boolean
+}

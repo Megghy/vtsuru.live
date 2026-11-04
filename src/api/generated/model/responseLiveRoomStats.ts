@@ -8,15 +8,15 @@
 
 export interface ResponseLiveRoomStats {
   /** @nullable */
-  onlineRank?: number | null;
+  onlineRank?: number | null
   /** @nullable */
-  onlineRankText?: string | null;
+  onlineRankText?: string | null
   /** @nullable */
-  popularity?: number | null;
+  popularity?: number | null
   /** @nullable */
-  totalLikes?: number | null;
+  totalLikes?: number | null
   /** @nullable */
-  watchedCount?: number | null;
+  watchedCount?: number | null
   /** @nullable */
-  watchedText?: string | null;
+  watchedText?: string | null
 }

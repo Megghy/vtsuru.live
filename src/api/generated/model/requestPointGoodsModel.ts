@@ -5,61 +5,61 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
-import type { GoodsStatus } from './goodsStatus';
-import type { GoodsTypes } from './goodsTypes';
-import type { ServiceConfigData } from './serviceConfigData';
-import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting';
-import type { TempSubPointGoodsModel } from './tempSubPointGoodsModel';
-import type { VirtualKeySelectionMode } from './virtualKeySelectionMode';
+import type { APIFileModel } from './aPIFileModel'
+import type { GoodsStatus } from './goodsStatus'
+import type { GoodsTypes } from './goodsTypes'
+import type { ServiceConfigData } from './serviceConfigData'
+import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
+import type { TempSubPointGoodsModel } from './tempSubPointGoodsModel'
+import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
 
 export interface RequestPointGoodsModel {
   /** @nullable */
-  id?: number | null;
+  id?: number | null
   /**
-     * @minLength 0
-     * @maxLength 200
-     */
-  name: string;
+   * @minLength 0
+   * @maxLength 200
+   */
+  name: string
   /** @nullable */
-  count?: number | null;
-  price: number;
+  count?: number | null
+  price: number
   /** @nullable */
-  tags?: string[] | null;
-  cover?: APIFileModel;
-  status: GoodsStatus;
-  type: GoodsTypes;
+  tags?: string[] | null
+  cover?: APIFileModel
+  status: GoodsStatus
+  type: GoodsTypes
   /**
-     * @minLength 0
-     * @maxLength 300
-     * @nullable
-     */
-  collectUrl?: string | null;
+   * @minLength 0
+   * @maxLength 300
+   * @nullable
+   */
+  collectUrl?: string | null
   /** @nullable */
-  embedCollectUrl?: boolean | null;
+  embedCollectUrl?: boolean | null
   /**
-     * @minLength 0
-     * @maxLength 500
-     * @nullable
-     */
-  description?: string | null;
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
+  description?: string | null
   /**
-     * @minLength 0
-     * @maxLength 10000
-     * @nullable
-     */
-  content?: string | null;
+   * @minLength 0
+   * @maxLength 10000
+   * @nullable
+   */
+  content?: string | null
   /** @nullable */
-  virtualKeys?: string[] | null;
-  keySelectionMode: VirtualKeySelectionMode;
+  virtualKeys?: string[] | null
+  keySelectionMode: VirtualKeySelectionMode
   /** @nullable */
-  isPinned?: boolean | null;
-  isAllowRebuy: boolean;
-  maxBuyCount: number;
+  isPinned?: boolean | null
+  isAllowRebuy: boolean
+  maxBuyCount: number
   /** @nullable */
-  maxSubItemSelections?: number | null;
-  setting: TempRequestGoodsSetting;
-  serviceConfig?: ServiceConfigData;
+  maxSubItemSelections?: number | null
+  setting: TempRequestGoodsSetting
+  serviceConfig?: ServiceConfigData
   /** @nullable */
-  subItems?: TempSubPointGoodsModel[] | null;
+  subItems?: TempSubPointGoodsModel[] | null
 }

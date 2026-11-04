@@ -7,12 +7,12 @@
  */
 
 export interface ResponseLiveTranscriptSessionModel {
-  id: string;
-  liveId: string;
-  provider: string;
-  model: string;
-  language: string;
-  startedAt: number;
+  id: string
+  liveId: string
+  provider: string
+  model: string
+  language: string
+  startedAt: number
   /** @nullable */
-  endedAt?: number | null;
+  endedAt?: number | null
 }

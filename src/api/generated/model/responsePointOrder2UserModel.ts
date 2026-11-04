@@ -5,28 +5,28 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GoodsTypes } from './goodsTypes';
-import type { PointOrderStatus } from './pointOrderStatus';
-import type { ResponsePointGoodsModel } from './responsePointGoodsModel';
-import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo';
-import type { ServiceOrderData } from './serviceOrderData';
-import type { ShippingAddressInfo } from './shippingAddressInfo';
+import type { GoodsTypes } from './goodsTypes'
+import type { PointOrderStatus } from './pointOrderStatus'
+import type { ResponsePointGoodsModel } from './responsePointGoodsModel'
+import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo'
+import type { ServiceOrderData } from './serviceOrderData'
+import type { ShippingAddressInfo } from './shippingAddressInfo'
 
 export interface ResponsePointOrder2UserModel {
-  id: number;
-  point: number;
-  type: GoodsTypes;
-  address?: ShippingAddressInfo;
-  goods: ResponsePointGoodsModel;
-  status: PointOrderStatus;
+  id: number
+  point: number
+  type: GoodsTypes
+  address?: ShippingAddressInfo
+  goods: ResponsePointGoodsModel
+  status: PointOrderStatus
   /** @nullable */
-  remark?: string | null;
-  createAt: number;
+  remark?: string | null
+  createAt: number
   /** @nullable */
-  trackingNumber?: string | null;
+  trackingNumber?: string | null
   /** @nullable */
-  expressCompany?: string | null;
+  expressCompany?: string | null
   /** @nullable */
-  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null;
-  serviceData?: ServiceOrderData;
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null
+  serviceData?: ServiceOrderData
 }

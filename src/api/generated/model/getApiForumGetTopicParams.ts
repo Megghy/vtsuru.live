@@ -7,5 +7,5 @@
  */
 
 export type GetApiForumGetTopicParams = {
-topic?: number;
-};
+  topic?: number
+}

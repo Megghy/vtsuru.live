@@ -7,5 +7,5 @@
  */
 
 export type PostApiForumApplyParams = {
-owner?: number;
-};
+  owner?: number
+}

@@ -5,28 +5,28 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SupportTicketImageModel } from './supportTicketImageModel';
-import type { SupportTicketMessageModel } from './supportTicketMessageModel';
-import type { SupportTicketSource } from './supportTicketSource';
-import type { SupportTicketStatus } from './supportTicketStatus';
-import type { SupportTicketType } from './supportTicketType';
+import type { SupportTicketImageModel } from './supportTicketImageModel'
+import type { SupportTicketMessageModel } from './supportTicketMessageModel'
+import type { SupportTicketSource } from './supportTicketSource'
+import type { SupportTicketStatus } from './supportTicketStatus'
+import type { SupportTicketType } from './supportTicketType'
 
 export interface SupportTicketModel {
-  id: number;
-  title: string;
-  type: SupportTicketType;
-  status: SupportTicketStatus;
-  source: SupportTicketSource;
-  isPublic: boolean;
-  emailOnStaffReply: boolean;
-  createTime: number;
-  updateTime: number;
-  lastMessageTime: number;
+  id: number
+  title: string
+  type: SupportTicketType
+  status: SupportTicketStatus
+  source: SupportTicketSource
+  isPublic: boolean
+  emailOnStaffReply: boolean
+  createTime: number
+  updateTime: number
+  lastMessageTime: number
   /** @nullable */
-  userLastReadMessageId?: number | null;
+  userLastReadMessageId?: number | null
   /** @nullable */
-  lastMessageId?: number | null;
-  images: SupportTicketImageModel[];
+  lastMessageId?: number | null
+  images: SupportTicketImageModel[]
   /** @nullable */
-  messages?: SupportTicketMessageModel[] | null;
+  messages?: SupportTicketMessageModel[] | null
 }

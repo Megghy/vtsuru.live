@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgAnalyzePeriodSummary } from './orgAnalyzePeriodSummary';
+import type { OrgAnalyzePeriodSummary } from './orgAnalyzePeriodSummary'
 
 export interface OrgAnalyzeSummary {
-  last7Days: OrgAnalyzePeriodSummary;
-  last30Days: OrgAnalyzePeriodSummary;
+  last7Days: OrgAnalyzePeriodSummary
+  last30Days: OrgAnalyzePeriodSummary
 }

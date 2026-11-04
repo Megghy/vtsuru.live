@@ -8,18 +8,18 @@
 
 export interface RequestPointGuardDuplicatePointValues {
   /**
-     * @minimum 0
-     * @maximum 1000000
-     */
-  jianzhang: number;
+   * @minimum 0
+   * @maximum 1000000
+   */
+  jianzhang: number
   /**
-     * @minimum 0
-     * @maximum 1000000
-     */
-  tidu: number;
+   * @minimum 0
+   * @maximum 1000000
+   */
+  tidu: number
   /**
-     * @minimum 0
-     * @maximum 1000000
-     */
-  zongdu: number;
+   * @minimum 0
+   * @maximum 1000000
+   */
+  zongdu: number
 }

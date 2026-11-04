@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserCheckInModel } from './responseUserCheckInModel';
+import type { ResponseUserCheckInModel } from './responseUserCheckInModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseUserCheckInModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseUserCheckInModel[] | null;
+  data: ResponseUserCheckInModel[] | null
 }

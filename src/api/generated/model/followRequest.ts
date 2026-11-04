@@ -7,5 +7,5 @@
  */
 
 export interface FollowRequest {
-  following: boolean;
+  following: boolean
 }

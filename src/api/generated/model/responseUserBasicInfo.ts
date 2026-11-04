@@ -7,9 +7,9 @@
  */
 
 export interface ResponseUserBasicInfo {
-  name: string;
-  id: number;
-  isBiliAuthed: boolean;
+  name: string
+  id: number
+  isBiliAuthed: boolean
   /** @nullable */
-  faceUrl?: string | null;
+  faceUrl?: string | null
 }

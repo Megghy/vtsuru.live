@@ -7,5 +7,5 @@
  */
 
 export type GetApiUserPagesGetUserParams = {
-id?: number;
-};
+  id?: number
+}

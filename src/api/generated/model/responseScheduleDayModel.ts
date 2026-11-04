@@ -8,26 +8,26 @@
 
 export interface ResponseScheduleDayModel {
   /**
-     * @minLength 1
-     * @maxLength 50
-     * @nullable
-     */
-  title?: string | null;
+   * @minLength 1
+   * @maxLength 50
+   * @nullable
+   */
+  title?: string | null
   /**
-     * @minLength 1
-     * @maxLength 10
-     * @nullable
-     */
-  tag?: string | null;
+   * @minLength 1
+   * @maxLength 10
+   * @nullable
+   */
+  tag?: string | null
   /**
-     * @minLength 0
-     * @maxLength 5
-     * @nullable
-     * @pattern ^(?:[01]\d|2[0-3]):[0-5]\d$
-     */
-  time?: string | null;
+   * @minLength 0
+   * @maxLength 5
+   * @nullable
+   * @pattern ^(?:[01]\d|2[0-3]):[0-5]\d$
+   */
+  time?: string | null
   /** @nullable */
-  tagColor?: string | null;
+  tagColor?: string | null
   /** @nullable */
-  id?: string | null;
+  id?: string | null
 }

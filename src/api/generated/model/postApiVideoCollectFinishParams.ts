@@ -7,6 +7,6 @@
  */
 
 export type PostApiVideoCollectFinishParams = {
-id?: string;
-finish?: boolean;
-};
+  id?: string
+  finish?: boolean
+}

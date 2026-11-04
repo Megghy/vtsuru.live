@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VideoSender } from './videoSender';
-import type { VideoStatus } from './videoStatus';
+import type { VideoSender } from './videoSender'
+import type { VideoStatus } from './videoStatus'
 
 export interface VideoCollectInfo {
-  bvid?: string;
-  senders: VideoSender[];
-  status: VideoStatus;
+  bvid?: string
+  senders: VideoSender[]
+  status: VideoStatus
 }

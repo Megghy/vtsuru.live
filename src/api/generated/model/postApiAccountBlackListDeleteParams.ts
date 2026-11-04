@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountBlackListDeleteParams = {
-id?: number;
-};
+  id?: number
+}

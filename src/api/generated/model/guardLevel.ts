@@ -7,9 +7,8 @@
  */
 
 export enum GuardLevel {
-  None= 0,
-  Zongdu= 1,
-  Tidu= 2,
-  Jianzhang= 3,
-
+  None = 0,
+  Zongdu = 1,
+  Tidu = 2,
+  Jianzhang = 3,
 }

@@ -7,5 +7,5 @@
  */
 
 export type GetApiOrgOrgIdAnalyzeParams = {
-days?: number;
-};
+  days?: number
+}

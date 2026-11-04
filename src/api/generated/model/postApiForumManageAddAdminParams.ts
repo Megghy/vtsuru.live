@@ -7,6 +7,6 @@
  */
 
 export type PostApiForumManageAddAdminParams = {
-forum?: number;
-id?: number;
-};
+  forum?: number
+  id?: number
+}

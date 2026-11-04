@@ -5,54 +5,54 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
-import type { GoodsTypes } from './goodsTypes';
-import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting';
-import type { VirtualKeySelectionMode } from './virtualKeySelectionMode';
+import type { APIFileModel } from './aPIFileModel'
+import type { GoodsTypes } from './goodsTypes'
+import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
+import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
 
 export interface TempSubPointGoodsModel {
   /** @nullable */
-  id?: number | null;
+  id?: number | null
   /**
-     * @minLength 0
-     * @maxLength 200
-     */
-  name: string;
-  price: number;
+   * @minLength 0
+   * @maxLength 200
+   */
+  name: string
+  price: number
   /** @nullable */
-  stock?: number | null;
+  stock?: number | null
   /**
-     * @minLength 0
-     * @maxLength 500
-     * @nullable
-     */
-  description?: string | null;
-  type?: GoodsTypes;
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
+  description?: string | null
+  type?: GoodsTypes
   /** @nullable */
-  tags?: string[] | null;
-  cover?: APIFileModel;
+  tags?: string[] | null
+  cover?: APIFileModel
   /**
-     * @minLength 0
-     * @maxLength 300
-     * @nullable
-     */
-  collectUrl?: string | null;
+   * @minLength 0
+   * @maxLength 300
+   * @nullable
+   */
+  collectUrl?: string | null
   /** @nullable */
-  embedCollectUrl?: boolean | null;
+  embedCollectUrl?: boolean | null
   /** @nullable */
-  isAllowRebuy?: boolean | null;
+  isAllowRebuy?: boolean | null
   /** @nullable */
-  maxBuyCount?: number | null;
+  maxBuyCount?: number | null
   /**
-     * @minLength 0
-     * @maxLength 10000
-     * @nullable
-     */
-  content?: string | null;
+   * @minLength 0
+   * @maxLength 10000
+   * @nullable
+   */
+  content?: string | null
   /** @nullable */
-  virtualKeys?: string[] | null;
-  keySelectionMode?: VirtualKeySelectionMode;
-  setting?: TempRequestGoodsSetting;
+  virtualKeys?: string[] | null
+  keySelectionMode?: VirtualKeySelectionMode
+  setting?: TempRequestGoodsSetting
   /** @nullable */
-  defaultQuantity?: number | null;
+  defaultQuantity?: number | null
 }

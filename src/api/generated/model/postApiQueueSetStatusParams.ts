@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QueueStatus } from './queueStatus';
+import type { QueueStatus } from './queueStatus'
 
 export type PostApiQueueSetStatusParams = {
-id?: number;
-status?: QueueStatus;
-};
+  id?: number
+  status?: QueueStatus
+}

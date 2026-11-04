@@ -7,7 +7,7 @@
  */
 
 export type PutApiTtsMimoVoicesCustomIdBody = {
-  description?: string;
-  directorNote?: string;
-  audioFile?: Blob | File;
-};
+  description?: string
+  directorNote?: string
+  audioFile?: Blob | File
+}

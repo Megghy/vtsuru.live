@@ -7,6 +7,6 @@
  */
 
 export type PostApiForumLikeCommentParams = {
-comment?: number;
-like?: boolean;
-};
+  comment?: number
+  like?: boolean
+}

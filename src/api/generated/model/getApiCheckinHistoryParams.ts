@@ -7,7 +7,7 @@
  */
 
 export type GetApiCheckinHistoryParams = {
-uId?: number;
-oId?: string;
-authId?: number;
-};
+  uId?: number
+  oId?: string
+  authId?: number
+}

@@ -5,21 +5,21 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SupportTicketType } from './supportTicketType';
+import type { SupportTicketType } from './supportTicketType'
 
 export interface CreateSupportTicketModel {
   /**
-     * @minLength 1
-     * @maxLength 160
-     */
-  title: string;
+   * @minLength 1
+   * @maxLength 160
+   */
+  title: string
   /**
-     * @minLength 1
-     * @maxLength 5000
-     */
-  content: string;
-  type: SupportTicketType;
-  isPublic: boolean;
-  emailOnStaffReply: boolean;
-  imageFileIds: number[];
+   * @minLength 1
+   * @maxLength 5000
+   */
+  content: string
+  type: SupportTicketType
+  isPublic: boolean
+  emailOnStaffReply: boolean
+  imageFileIds: number[]
 }

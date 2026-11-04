@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ShippingAddressInfo } from './shippingAddressInfo';
+import type { ShippingAddressInfo } from './shippingAddressInfo'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfShippingAddressInfo {
-  message: string;
-  code: number;
-  data: ShippingAddressInfo;
+  message: string
+  code: number
+  data: ShippingAddressInfo
 }

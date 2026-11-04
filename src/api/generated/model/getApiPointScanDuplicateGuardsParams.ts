@@ -7,17 +7,17 @@
  */
 
 export type GetApiPointScanDuplicateGuardsParams = {
-/**
- * @minimum 1
- * @maximum 90
- */
-dayCount?: number;
-/**
- * @minimum 1
- * @maximum 30
- */
-windowSeconds?: number;
-includeLiving?: boolean;
-includeFinished?: boolean;
-excludeFixed?: boolean;
-};
+  /**
+   * @minimum 1
+   * @maximum 90
+   */
+  dayCount?: number
+  /**
+   * @minimum 1
+   * @maximum 30
+   */
+  windowSeconds?: number
+  includeLiving?: boolean
+  includeFinished?: boolean
+  excludeFixed?: boolean
+}

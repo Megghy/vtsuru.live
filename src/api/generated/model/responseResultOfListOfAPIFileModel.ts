@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel';
+import type { APIFileModel } from './aPIFileModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfAPIFileModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: APIFileModel[] | null;
+  data: APIFileModel[] | null
 }

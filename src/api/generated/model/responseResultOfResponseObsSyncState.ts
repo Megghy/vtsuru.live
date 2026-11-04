@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseObsSyncState } from './responseObsSyncState';
+import type { ResponseObsSyncState } from './responseObsSyncState'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseObsSyncState {
-  message: string;
-  code: number;
-  data: ResponseObsSyncState;
+  message: string
+  code: number
+  data: ResponseObsSyncState
 }

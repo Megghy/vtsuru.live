@@ -7,10 +7,10 @@
  */
 
 export type GetApiSongListGetNeteaseListParams = {
-/**
- * 歌单Id
- * @minimum 1
- * @maximum 9223372036854776000
- */
-id?: number;
-};
+  /**
+   * 歌单Id
+   * @minimum 1
+   * @maximum 9223372036854776000
+   */
+  id?: number
+}

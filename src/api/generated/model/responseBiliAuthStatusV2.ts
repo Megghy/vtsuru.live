@@ -7,8 +7,8 @@
  */
 
 export interface ResponseBiliAuthStatusV2 {
-  endAt: number;
-  startAt: number;
-  targetRoomId: number;
-  code: string;
+  endAt: number
+  startAt: number
+  targetRoomId: number
+  code: string
 }

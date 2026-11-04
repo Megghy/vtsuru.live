@@ -7,7 +7,7 @@
  */
 
 export interface FollowState {
-  id: number;
-  isFollowing: boolean;
-  followers: number;
+  id: number
+  isFollowing: boolean
+  followers: number
 }

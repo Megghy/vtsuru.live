@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ServiceField } from './serviceField';
+import type { ServiceField } from './serviceField'
 
 export interface ServiceConfigData {
-  fields: ServiceField[];
+  fields: ServiceField[]
   /** @nullable */
-  rules?: string | null;
+  rules?: string | null
   /** @nullable */
-  estimatedDays?: number | null;
-  paused: boolean;
+  estimatedDays?: number | null
+  paused: boolean
   /** @nullable */
-  maxActiveOrders?: number | null;
+  maxActiveOrders?: number | null
 }

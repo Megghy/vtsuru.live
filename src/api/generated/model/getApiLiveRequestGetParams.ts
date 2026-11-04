@@ -7,14 +7,14 @@
  */
 
 export type GetApiLiveRequestGetParams = {
-/**
- * @minimum 1
- * @maximum 100
- */
-pageSize?: number;
-/**
- * @minimum 0
- * @maximum 2147483647
- */
-pageNum?: number;
-};
+  /**
+   * @minimum 1
+   * @maximum 100
+   */
+  pageSize?: number
+  /**
+   * @minimum 0
+   * @maximum 2147483647
+   */
+  pageNum?: number
+}

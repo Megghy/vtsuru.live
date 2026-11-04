@@ -7,9 +7,8 @@
  */
 
 export enum NotifactionTypes {
-  System= 0,
-  QABox= 1,
-  Org= 2,
-  SupportTicket= 3,
-
+  System = 0,
+  QABox = 1,
+  Org = 2,
+  SupportTicket = 3,
 }

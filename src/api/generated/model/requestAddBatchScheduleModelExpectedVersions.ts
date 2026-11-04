@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type RequestAddBatchScheduleModelExpectedVersions = {[key: string]: string};
+export type RequestAddBatchScheduleModelExpectedVersions = { [key: string]: string }

@@ -5,30 +5,30 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { RequestAddBatchScheduleModelExpectedVersions } from './requestAddBatchScheduleModelExpectedVersions';
-import type { ResponseScheduleDayModel } from './responseScheduleDayModel';
+import type { RequestAddBatchScheduleModelExpectedVersions } from './requestAddBatchScheduleModelExpectedVersions'
+import type { ResponseScheduleDayModel } from './responseScheduleDayModel'
 
 export interface RequestAddBatchScheduleModel {
   /**
-     * @minimum 1
-     * @maximum 9998
-     */
-  startYear: number;
+   * @minimum 1
+   * @maximum 9998
+   */
+  startYear: number
   /**
-     * @minimum 1
-     * @maximum 53
-     */
-  startWeek: number;
+   * @minimum 1
+   * @maximum 53
+   */
+  startWeek: number
   /**
-     * @minimum 1
-     * @maximum 53
-     */
-  count: number;
+   * @minimum 1
+   * @maximum 53
+   */
+  count: number
   /**
-     * @minimum 0
-     * @maximum 6
-     */
-  dayOfWeek: number;
-  schedule: ResponseScheduleDayModel;
-  expectedVersions: RequestAddBatchScheduleModelExpectedVersions;
+   * @minimum 0
+   * @maximum 6
+   */
+  dayOfWeek: number
+  schedule: ResponseScheduleDayModel
+  expectedVersions: RequestAddBatchScheduleModelExpectedVersions
 }

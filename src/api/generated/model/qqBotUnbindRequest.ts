@@ -7,5 +7,5 @@
  */
 
 export interface QqBotUnbindRequest {
-  groupOpenId: string;
+  groupOpenId: string
 }

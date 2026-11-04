@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VoteConfig } from './voteConfig';
+import type { VoteConfig } from './voteConfig'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfVoteConfig {
-  message: string;
-  code: number;
-  data: VoteConfig;
+  message: string
+  code: number
+  data: VoteConfig
 }

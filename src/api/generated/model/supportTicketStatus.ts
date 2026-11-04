@@ -7,9 +7,8 @@
  */
 
 export enum SupportTicketStatus {
-  Open= 0,
-  InProgress= 1,
-  WaitingForUser= 2,
-  Resolved= 3,
-
+  Open = 0,
+  InProgress = 1,
+  WaitingForUser = 2,
+  Resolved = 3,
 }

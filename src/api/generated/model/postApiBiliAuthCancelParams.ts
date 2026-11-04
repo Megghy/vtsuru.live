@@ -7,8 +7,8 @@
  */
 
 export type PostApiBiliAuthCancelParams = {
-/**
- * 认证key
- */
-key?: string;
-};
+  /**
+   * 认证key
+   */
+  key?: string
+}

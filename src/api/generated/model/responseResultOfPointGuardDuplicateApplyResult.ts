@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointGuardDuplicateApplyResult } from './pointGuardDuplicateApplyResult';
+import type { PointGuardDuplicateApplyResult } from './pointGuardDuplicateApplyResult'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfPointGuardDuplicateApplyResult {
-  message: string;
-  code: number;
-  data: PointGuardDuplicateApplyResult;
+  message: string
+  code: number
+  data: PointGuardDuplicateApplyResult
 }

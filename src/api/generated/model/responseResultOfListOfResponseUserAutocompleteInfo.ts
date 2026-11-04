@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserAutocompleteInfo } from './responseUserAutocompleteInfo';
+import type { ResponseUserAutocompleteInfo } from './responseUserAutocompleteInfo'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseUserAutocompleteInfo {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseUserAutocompleteInfo[] | null;
+  data: ResponseUserAutocompleteInfo[] | null
 }

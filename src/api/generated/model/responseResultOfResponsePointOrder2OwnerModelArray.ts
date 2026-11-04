@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointOrder2OwnerModel } from './responsePointOrder2OwnerModel';
+import type { ResponsePointOrder2OwnerModel } from './responsePointOrder2OwnerModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponsePointOrder2OwnerModelArray {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponsePointOrder2OwnerModel[] | null;
+  data: ResponsePointOrder2OwnerModel[] | null
 }

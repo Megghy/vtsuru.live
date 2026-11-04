@@ -7,23 +7,23 @@
  */
 
 export interface AnalyzeSessionItem {
-  id: number;
-  title: string;
-  area: string;
-  parentArea: string;
-  coverUrl: string;
-  startTime: number;
+  id: number
+  title: string
+  area: string
+  parentArea: string
+  coverUrl: string
+  startTime: number
   /** @nullable */
-  endTime?: number | null;
-  liveMinutes: number;
-  totalIncome: number;
-  giftIncome: number;
-  scIncome: number;
-  guardIncome: number;
-  totalIncomeWithGuard: number;
-  danmakuCount: number;
-  interactionCount: number;
-  uniqueInteractionCount: number;
-  uniquePayingCount: number;
-  likeCount: number;
+  endTime?: number | null
+  liveMinutes: number
+  totalIncome: number
+  giftIncome: number
+  scIncome: number
+  guardIncome: number
+  totalIncomeWithGuard: number
+  danmakuCount: number
+  interactionCount: number
+  uniqueInteractionCount: number
+  uniquePayingCount: number
+  likeCount: number
 }

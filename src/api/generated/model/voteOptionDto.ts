@@ -7,8 +7,8 @@
  */
 
 export interface VoteOptionDto {
-  index: number;
-  text: string;
-  count: number;
-  percentage: number;
+  index: number
+  text: string
+  count: number
+  percentage: number
 }

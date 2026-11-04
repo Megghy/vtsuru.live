@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ServiceFieldType } from './serviceFieldType';
+import type { ServiceFieldType } from './serviceFieldType'
 
 export interface ServiceField {
-  id: string;
-  label: string;
-  type: ServiceFieldType;
-  required: boolean;
-  options: string[];
+  id: string
+  label: string
+  type: ServiceFieldType
+  required: boolean
+  options: string[]
 }

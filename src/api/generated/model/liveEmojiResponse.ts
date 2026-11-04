@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LiveEmojiResponseInline } from './liveEmojiResponseInline';
-import type { LiveEmojiResponsePlain } from './liveEmojiResponsePlain';
+import type { LiveEmojiResponseInline } from './liveEmojiResponseInline'
+import type { LiveEmojiResponsePlain } from './liveEmojiResponsePlain'
 
 export interface LiveEmojiResponse {
-  inline: LiveEmojiResponseInline;
-  plain: LiveEmojiResponsePlain;
+  inline: LiveEmojiResponseInline
+  plain: LiveEmojiResponsePlain
 }

@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { KeywordResponse } from './keywordResponse';
+import type { KeywordResponse } from './keywordResponse'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfKeywordResponse {
-  message: string;
-  code: number;
-  data: KeywordResponse;
+  message: string
+  code: number
+  data: KeywordResponse
 }

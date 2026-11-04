@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseForumBaseModel } from './responseForumBaseModel';
+import type { ResponseForumBaseModel } from './responseForumBaseModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseForumBaseModel {
-  message: string;
-  code: number;
-  data: ResponseForumBaseModel;
+  message: string
+  code: number
+  data: ResponseForumBaseModel
 }

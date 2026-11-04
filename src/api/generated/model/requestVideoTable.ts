@@ -5,47 +5,47 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DuplicateVideoPolicy } from './duplicateVideoPolicy';
+import type { DuplicateVideoPolicy } from './duplicateVideoPolicy'
 
 export interface RequestVideoTable {
   /** @nullable */
-  id?: string | null;
+  id?: string | null
   /**
-     * @minLength 0
-     * @maxLength 30
-     */
-  name: string;
+   * @minLength 0
+   * @maxLength 30
+   */
+  name: string
   /**
-     * @minLength 0
-     * @maxLength 300
-     * @nullable
-     */
-  description?: string | null;
-  startAt: number;
-  endAt: number;
+   * @minLength 0
+   * @maxLength 300
+   * @nullable
+   */
+  description?: string | null
+  startAt: number
+  endAt: number
   /**
-     * @minimum 1
-     * @maximum 10000
-     */
-  maxVideoCount: number;
+   * @minimum 1
+   * @maximum 10000
+   */
+  maxVideoCount: number
   /**
-     * @minimum 0
-     * @maximum 86400
-     */
-  minVideoDuration: number;
+   * @minimum 0
+   * @maximum 86400
+   */
+  minVideoDuration: number
   /**
-     * @minimum 0
-     * @maximum 86400
-     */
-  maxVideoDuration: number;
+   * @minimum 0
+   * @maximum 86400
+   */
+  maxVideoDuration: number
   /** @nullable */
-  allowedPartitions?: string[] | null;
-  allowUnregisteredUser: boolean;
+  allowedPartitions?: string[] | null
+  allowUnregisteredUser: boolean
   /**
-     * @minimum 0
-     * @maximum 100
-     */
-  maxVideoPerUser: number;
-  requireDescription: boolean;
-  duplicatePolicy: DuplicateVideoPolicy;
+   * @minimum 0
+   * @maximum 100
+   */
+  maxVideoPerUser: number
+  requireDescription: boolean
+  duplicatePolicy: DuplicateVideoPolicy
 }

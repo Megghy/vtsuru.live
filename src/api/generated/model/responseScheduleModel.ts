@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseScheduleDayModel } from './responseScheduleDayModel';
+import type { ResponseScheduleDayModel } from './responseScheduleDayModel'
 
 export interface ResponseScheduleModel {
-  year: number;
-  week: number;
-  version: string;
-  days: ResponseScheduleDayModel[][];
+  year: number
+  week: number
+  version: string
+  days: ResponseScheduleDayModel[][]
 }

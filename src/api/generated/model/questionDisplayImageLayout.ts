@@ -7,7 +7,6 @@
  */
 
 export enum QuestionDisplayImageLayout {
-  Contain= 0,
-  Grid= 1,
-
+  Contain = 0,
+  Grid = 1,
 }

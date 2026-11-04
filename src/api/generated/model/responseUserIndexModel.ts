@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseUserIndexModelLinks } from './responseUserIndexModelLinks';
-import type { VideoData } from './videoData';
+import type { ResponseUserIndexModelLinks } from './responseUserIndexModelLinks'
+import type { VideoData } from './videoData'
 
 export interface ResponseUserIndexModel {
-  videos: VideoData[];
-  notification: string;
-  links: ResponseUserIndexModelLinks;
+  videos: VideoData[]
+  notification: string
+  links: ResponseUserIndexModelLinks
 }

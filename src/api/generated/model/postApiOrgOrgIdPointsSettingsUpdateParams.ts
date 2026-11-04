@@ -7,5 +7,5 @@
  */
 
 export type PostApiOrgOrgIdPointsSettingsUpdateParams = {
-streamerId?: number;
-};
+  streamerId?: number
+}

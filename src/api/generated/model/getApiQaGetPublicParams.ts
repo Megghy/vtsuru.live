@@ -7,8 +7,8 @@
  */
 
 export type GetApiQaGetPublicParams = {
-/**
- * 用户id
- */
-id?: string;
-};
+  /**
+   * 用户id
+   */
+  id?: string
+}

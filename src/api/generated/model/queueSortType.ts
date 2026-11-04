@@ -7,9 +7,8 @@
  */
 
 export enum QueueSortType {
-  GuardFirst= 0,
-  PaymentFist= 1,
-  TimeFirst= 2,
-  FansMedalFirst= 3,
-
+  GuardFirst = 0,
+  PaymentFist = 1,
+  TimeFirst = 2,
+  FansMedalFirst = 3,
 }

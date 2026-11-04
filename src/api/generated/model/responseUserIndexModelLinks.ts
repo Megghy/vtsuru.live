@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type ResponseUserIndexModelLinks = {[key: string]: string};
+export type ResponseUserIndexModelLinks = { [key: string]: string }

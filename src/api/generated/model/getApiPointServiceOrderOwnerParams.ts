@@ -7,5 +7,5 @@
  */
 
 export type GetApiPointServiceOrderOwnerParams = {
-id?: number;
-};
+  id?: number
+}

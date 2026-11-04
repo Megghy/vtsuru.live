@@ -7,5 +7,5 @@
  */
 
 export type PostApiQaSetCurrentParams = {
-id?: number;
-};
+  id?: number
+}

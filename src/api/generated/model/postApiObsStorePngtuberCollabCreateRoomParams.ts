@@ -7,5 +7,5 @@
  */
 
 export type PostApiObsStorePngtuberCollabCreateRoomParams = {
-code?: string;
-};
+  code?: string
+}

@@ -7,14 +7,14 @@
  */
 
 export interface AnalyzeAreaStat {
-  parentArea: string;
-  area: string;
-  sessionCount: number;
-  totalLiveMinutes: number;
-  totalIncome: number;
-  totalDanmakuCount: number;
-  totalInteractions: number;
-  avgIncome: number;
-  avgDanmaku: number;
-  avgMinutes: number;
+  parentArea: string
+  area: string
+  sessionCount: number
+  totalLiveMinutes: number
+  totalIncome: number
+  totalDanmakuCount: number
+  totalInteractions: number
+  avgIncome: number
+  avgDanmaku: number
+  avgMinutes: number
 }

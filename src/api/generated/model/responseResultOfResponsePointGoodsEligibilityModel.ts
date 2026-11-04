@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointGoodsEligibilityModel } from './responsePointGoodsEligibilityModel';
+import type { ResponsePointGoodsEligibilityModel } from './responsePointGoodsEligibilityModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponsePointGoodsEligibilityModel {
-  message: string;
-  code: number;
-  data: ResponsePointGoodsEligibilityModel;
+  message: string
+  code: number
+  data: ResponsePointGoodsEligibilityModel
 }

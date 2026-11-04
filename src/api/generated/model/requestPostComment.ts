@@ -7,6 +7,6 @@
  */
 
 export interface RequestPostComment {
-  topic: number;
-  content: string;
+  topic: number
+  content: string
 }

@@ -7,11 +7,11 @@
  */
 
 export interface SendEmailRequest {
-  to: string;
-  email: string;
-  title: string;
-  subject: string;
-  body: string;
-  content: string;
-  isHtml: boolean;
+  to: string
+  email: string
+  title: string
+  subject: string
+  body: string
+  content: string
+  isHtml: boolean
 }

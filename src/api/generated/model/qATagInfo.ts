@@ -7,7 +7,7 @@
  */
 
 export interface QATagInfo {
-  name: string;
-  visiable: boolean;
-  createAt: number;
+  name: string
+  visiable: boolean
+  createAt: number
 }

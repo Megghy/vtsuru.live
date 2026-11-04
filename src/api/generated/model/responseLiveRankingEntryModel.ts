@@ -7,9 +7,9 @@
  */
 
 export interface ResponseLiveRankingEntryModel {
-  ouId?: string;
-  uName: string;
+  ouId?: string
+  uName: string
   /** @nullable */
-  uFace?: string | null;
-  totalPaid: number;
+  uFace?: string | null
+  totalPaid: number
 }

@@ -7,7 +7,7 @@
  */
 
 export type PostApiQaPublicParams = {
-id?: number;
-public?: boolean;
-force?: boolean;
-};
+  id?: number
+  public?: boolean
+  force?: boolean
+}

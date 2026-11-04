@@ -7,5 +7,5 @@
  */
 
 export type PostApiQaDeleteParams = {
-id?: number;
-};
+  id?: number
+}

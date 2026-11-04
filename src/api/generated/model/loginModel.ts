@@ -8,7 +8,7 @@
 
 export interface LoginModel {
   /** @minLength 1 */
-  nameOrEmail: string;
+  nameOrEmail: string
   /** @minLength 1 */
-  password: string;
+  password: string
 }

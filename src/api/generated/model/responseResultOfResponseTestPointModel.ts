@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseTestPointModel } from './responseTestPointModel';
+import type { ResponseTestPointModel } from './responseTestPointModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseTestPointModel {
-  message: string;
-  code: number;
-  data: ResponseTestPointModel;
+  message: string
+  code: number
+  data: ResponseTestPointModel
 }

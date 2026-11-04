@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VideoCollectInfo } from './videoCollectInfo';
-import type { VideoData } from './videoData';
+import type { VideoCollectInfo } from './videoCollectInfo'
+import type { VideoData } from './videoData'
 
 export interface ReponseVideoCollectVideo {
-  info: VideoCollectInfo;
-  video: VideoData;
+  info: VideoCollectInfo
+  video: VideoData
 }

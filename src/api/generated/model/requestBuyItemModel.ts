@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { RequestBuySubItemModel } from './requestBuySubItemModel';
+import type { RequestBuySubItemModel } from './requestBuySubItemModel'
 
 export interface RequestBuyItemModel {
-  goodsId: number;
-  count: number;
+  goodsId: number
+  count: number
   /** @nullable */
-  selectedSubItems?: RequestBuySubItemModel[] | null;
+  selectedSubItems?: RequestBuySubItemModel[] | null
   /** @nullable */
-  remark?: string | null;
+  remark?: string | null
 }

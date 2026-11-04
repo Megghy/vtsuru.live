@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DanmakuModel } from './danmakuModel';
-import type { ResponseLiveInfoModel } from './responseLiveInfoModel';
+import type { DanmakuModel } from './danmakuModel'
+import type { ResponseLiveInfoModel } from './responseLiveInfoModel'
 
 export interface ResponseLiveDetailModel {
-  live: ResponseLiveInfoModel;
-  danmakus: DanmakuModel[];
+  live: ResponseLiveInfoModel
+  danmakus: DanmakuModel[]
 }

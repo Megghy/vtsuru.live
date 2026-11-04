@@ -7,16 +7,16 @@
  */
 
 export interface LiveLotteryUserInfo {
-  name: string;
-  uId: number;
+  name: string
+  uId: number
   /** @nullable */
-  openId?: string | null;
-  open_id?: string;
+  openId?: string | null
+  open_id?: string
   /** @nullable */
-  level?: number | null;
-  avatar: string;
-  fans_medal_level: number;
-  fans_medal_name: string;
-  fans_medal_wearing_status: boolean;
-  guard_level: number;
+  level?: number | null
+  avatar: string
+  fans_medal_level: number
+  fans_medal_name: string
+  fans_medal_wearing_status: boolean
+  guard_level: number
 }

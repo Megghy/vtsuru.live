@@ -7,6 +7,6 @@
  */
 
 export type GetApiVoteObsDataParams = {
-user?: string;
-id?: number;
-};
+  user?: string
+  id?: number
+}

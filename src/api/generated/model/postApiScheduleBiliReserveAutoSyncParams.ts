@@ -7,5 +7,5 @@
  */
 
 export type PostApiScheduleBiliReserveAutoSyncParams = {
-enable?: boolean;
-};
+  enable?: boolean
+}

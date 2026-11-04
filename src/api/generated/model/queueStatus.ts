@@ -7,9 +7,8 @@
  */
 
 export enum QueueStatus {
-  Waiting= 0,
-  Progressing= 1,
-  Finish= 2,
-  Cancel= 3,
-
+  Waiting = 0,
+  Progressing = 1,
+  Finish = 2,
+  Cancel = 3,
 }

@@ -7,12 +7,12 @@
  */
 
 export type GetApiOrgOrgIdLivesParams = {
-/**
- * 开始时间(Unix), 不传默认60天
- */
-from?: number;
-/**
- * 结束时间(Unix), 不传默认当前
- */
-to?: number;
-};
+  /**
+   * 开始时间(Unix), 不传默认60天
+   */
+  from?: number
+  /**
+   * 结束时间(Unix), 不传默认当前
+   */
+  to?: number
+}

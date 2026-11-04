@@ -7,5 +7,5 @@
  */
 
 export type PostApiLiveRequestSingingParams = {
-id?: number;
-};
+  id?: number
+}

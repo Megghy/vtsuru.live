@@ -7,5 +7,5 @@
  */
 
 export interface ResponseCheckInHistoryModel {
-  checkInTime: number;
+  checkInTime: number
 }

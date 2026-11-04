@@ -7,8 +7,8 @@
  */
 
 export type PostApiUserIndexDeleteVideoParams = {
-/**
- * 视频bvid
- */
-video?: string;
-};
+  /**
+   * 视频bvid
+   */
+  video?: string
+}

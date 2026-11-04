@@ -7,10 +7,9 @@
  */
 
 export enum PointFrom {
-  Danmaku= 0,
-  Manual= 1,
-  Use= 2,
-  CheckIn= 3,
-  DailyFirstInteraction= 4,
-
+  Danmaku = 0,
+  Manual = 1,
+  Use = 2,
+  CheckIn = 3,
+  DailyFirstInteraction = 4,
 }

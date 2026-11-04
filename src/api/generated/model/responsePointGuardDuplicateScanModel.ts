@@ -5,20 +5,20 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointGuardDuplicatePointValues } from './responsePointGuardDuplicatePointValues';
-import type { ResponsePointGuardDuplicateUserModel } from './responsePointGuardDuplicateUserModel';
+import type { ResponsePointGuardDuplicatePointValues } from './responsePointGuardDuplicatePointValues'
+import type { ResponsePointGuardDuplicateUserModel } from './responsePointGuardDuplicateUserModel'
 
 export interface ResponsePointGuardDuplicateScanModel {
-  from: number;
-  to: number;
-  windowSeconds: number;
-  livesScanned: number;
-  guardEventsScanned: number;
-  liveGuardEventsScanned: number;
-  duplicatedUserCount: number;
-  duplicateGroupCount: number;
-  duplicateEventCount: number;
-  duplicateLiveCount: number;
-  currentPointValues: ResponsePointGuardDuplicatePointValues;
-  users: ResponsePointGuardDuplicateUserModel[];
+  from: number
+  to: number
+  windowSeconds: number
+  livesScanned: number
+  guardEventsScanned: number
+  liveGuardEventsScanned: number
+  duplicatedUserCount: number
+  duplicateGroupCount: number
+  duplicateEventCount: number
+  duplicateLiveCount: number
+  currentPointValues: ResponsePointGuardDuplicatePointValues
+  users: ResponsePointGuardDuplicateUserModel[]
 }

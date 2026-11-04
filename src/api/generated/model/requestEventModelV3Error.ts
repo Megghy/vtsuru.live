@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type RequestEventModelV3Error = {[key: string]: string};
+export type RequestEventModelV3Error = { [key: string]: string }

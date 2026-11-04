@@ -7,8 +7,8 @@
  */
 
 export interface LiveReserveInfo {
-  sid: number;
-  title: string;
-  planStart: number;
-  total: number;
+  sid: number
+  title: string
+  planStart: number
+  total: number
 }

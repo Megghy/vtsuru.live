@@ -7,8 +7,7 @@
  */
 
 export enum OrgMemberRoles {
-  Owner= 0,
-  Admin= 1,
-  Member= 2,
-
+  Owner = 0,
+  Admin = 1,
+  Member = 2,
 }

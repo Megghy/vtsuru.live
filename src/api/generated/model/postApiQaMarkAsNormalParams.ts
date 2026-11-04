@@ -7,5 +7,5 @@
  */
 
 export type PostApiQaMarkAsNormalParams = {
-id?: number;
-};
+  id?: number
+}

@@ -7,5 +7,5 @@
  */
 
 export type PostApiLiveRequestFinishParams = {
-id?: number;
-};
+  id?: number
+}

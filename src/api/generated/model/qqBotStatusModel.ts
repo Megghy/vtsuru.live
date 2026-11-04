@@ -7,6 +7,6 @@
  */
 
 export interface QqBotStatusModel {
-  configured: boolean;
-  ready: boolean;
+  configured: boolean
+  ready: boolean
 }

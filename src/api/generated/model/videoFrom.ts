@@ -7,7 +7,6 @@
  */
 
 export enum VideoFrom {
-  Collect= 0,
-  Spam= 1,
-
+  Collect = 0,
+  Spam = 1,
 }

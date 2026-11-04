@@ -5,17 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventDataTypes } from './eventDataTypes';
-import type { PointFrom } from './pointFrom';
+import type { EventDataTypes } from './eventDataTypes'
+import type { PointFrom } from './pointFrom'
 
 export interface ResponsePointHistoryModel {
-  id: number;
-  point: number;
-  ouId?: string;
-  type?: EventDataTypes;
-  from: PointFrom;
-  createAt: number;
+  id: number
+  point: number
+  ouId?: string
+  type?: EventDataTypes
+  from: PointFrom
+  createAt: number
   /** @nullable */
-  count?: number | null;
-  extra: unknown;
+  count?: number | null
+  extra: unknown
 }

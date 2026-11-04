@@ -7,8 +7,7 @@
  */
 
 export enum ForumTopicSortTypes {
-  Time= 0,
-  Comment= 1,
-  Like= 2,
-
+  Time = 0,
+  Comment = 1,
+  Like = 2,
 }

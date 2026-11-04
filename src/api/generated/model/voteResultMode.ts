@@ -7,7 +7,6 @@
  */
 
 export enum VoteResultMode {
-  ByCount= 0,
-  ByContribution= 1,
-
+  ByCount = 0,
+  ByContribution = 1,
 }

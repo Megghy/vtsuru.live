@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AddSongModel } from './addSongModel';
+import type { AddSongModel } from './addSongModel'
 
 export interface UpdateSongModel {
-  key: string;
-  song: AddSongModel;
+  key: string
+  song: AddSongModel
 }

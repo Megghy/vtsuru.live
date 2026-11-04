@@ -8,33 +8,33 @@
 
 export interface ResponseLiveInfoModel {
   /** 直播Id */
-  liveId: string;
+  liveId: string
   /** 是否结束 */
-  isFinish: boolean;
+  isFinish: boolean
   /** 父分区 (主分区) */
-  parentArea: string;
+  parentArea: string
   /** 分区 (子分区) */
-  area: string;
+  area: string
   /** 直播封面 */
-  coverUrl: string;
+  coverUrl: string
   /** 弹幕数 */
-  danmakusCount: number;
+  danmakusCount: number
   /** 开始时间 */
-  startAt: number;
+  startAt: number
   /**
-     * 结束时间
-     * @nullable
-     */
-  stopAt?: number | null;
+   * 结束时间
+   * @nullable
+   */
+  stopAt?: number | null
   /** 直播标题 */
-  title: string;
+  title: string
   /** 收益 */
-  totalIncome: number;
+  totalIncome: number
   /** 收益 */
-  totalIncomeWithGuard: number;
+  totalIncomeWithGuard: number
   /** 点赞人数 */
-  likeCount: number;
-  paymentCount: number;
+  likeCount: number
+  paymentCount: number
   /** 互动人数 */
-  interactionCount: number;
+  interactionCount: number
 }

@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { RequestBuyPointGoodsModelServiceAnswers } from './requestBuyPointGoodsModelServiceAnswers';
-import type { RequestBuySubItemModel } from './requestBuySubItemModel';
+import type { RequestBuyPointGoodsModelServiceAnswers } from './requestBuyPointGoodsModelServiceAnswers'
+import type { RequestBuySubItemModel } from './requestBuySubItemModel'
 
 export interface RequestBuyPointGoodsModel {
-  vId: number;
-  goodsId: number;
-  count: number;
+  vId: number
+  goodsId: number
+  count: number
   /** @nullable */
-  addressId?: string | null;
+  addressId?: string | null
   /** @nullable */
-  remark?: string | null;
+  remark?: string | null
   /** @nullable */
-  selectedSubItems?: RequestBuySubItemModel[] | null;
+  selectedSubItems?: RequestBuySubItemModel[] | null
   /** @nullable */
-  serviceAnswers?: RequestBuyPointGoodsModelServiceAnswers;
+  serviceAnswers?: RequestBuyPointGoodsModelServiceAnswers
 }

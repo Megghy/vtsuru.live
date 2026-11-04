@@ -7,11 +7,11 @@
  */
 
 export interface ResponseLiveTranscriptSegmentModel {
-  sessionId: string;
-  sequence: number;
-  startMs: number;
-  endMs: number;
-  text: string;
+  sessionId: string
+  sequence: number
+  startMs: number
+  endMs: number
+  text: string
   /** @nullable */
-  speaker?: string | null;
+  speaker?: string | null
 }

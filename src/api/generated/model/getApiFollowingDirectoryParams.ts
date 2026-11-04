@@ -7,6 +7,6 @@
  */
 
 export type GetApiFollowingDirectoryParams = {
-followingOnly?: boolean;
-liveOnly?: boolean;
-};
+  followingOnly?: boolean
+  liveOnly?: boolean
+}

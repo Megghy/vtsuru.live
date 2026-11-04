@@ -10,7 +10,6 @@
  * 目标是否接收用户上传。Disabled 后不再写入新对象，读取仍然可用。
  */
 export enum StorageTargetStatus {
-  Active= 0,
-  Disabled= 1,
-
+  Active = 0,
+  Disabled = 1,
 }

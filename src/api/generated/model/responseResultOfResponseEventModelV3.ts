@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseEventModelV3 } from './responseEventModelV3';
+import type { ResponseEventModelV3 } from './responseEventModelV3'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseEventModelV3 {
-  message: string;
-  code: number;
-  data: ResponseEventModelV3;
+  message: string
+  code: number
+  data: ResponseEventModelV3
 }

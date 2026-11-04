@@ -7,6 +7,6 @@
  */
 
 export type PostApiForumManageBanParams = {
-forum?: number;
-id?: number;
-};
+  forum?: number
+  id?: number
+}

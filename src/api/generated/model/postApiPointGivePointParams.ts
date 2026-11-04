@@ -7,13 +7,13 @@
  */
 
 export type PostApiPointGivePointParams = {
-authId?: number;
-oId?: string;
-uId?: number;
-count?: number;
-/**
- * @minLength 0
- * @maxLength 100
- */
-reason?: string;
-};
+  authId?: number
+  oId?: string
+  uId?: number
+  count?: number
+  /**
+   * @minLength 0
+   * @maxLength 100
+   */
+  reason?: string
+}

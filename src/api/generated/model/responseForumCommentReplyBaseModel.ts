@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumUserInfo } from './forumUserInfo';
+import type { ForumUserInfo } from './forumUserInfo'
 
 export interface ResponseForumCommentReplyBaseModel {
-  id: number;
-  user: ForumUserInfo;
+  id: number
+  user: ForumUserInfo
   /** @nullable */
-  replyTo?: number | null;
-  content: string;
-  sendAt: number;
+  replyTo?: number | null
+  content: string
+  sendAt: number
 }

@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseBasePointGoodsModel } from './responseBasePointGoodsModel';
+import type { ResponseBasePointGoodsModel } from './responseBasePointGoodsModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseBasePointGoodsModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseBasePointGoodsModel[] | null;
+  data: ResponseBasePointGoodsModel[] | null
 }

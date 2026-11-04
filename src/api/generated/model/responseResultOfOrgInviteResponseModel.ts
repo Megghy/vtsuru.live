@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgInviteResponseModel } from './orgInviteResponseModel';
+import type { OrgInviteResponseModel } from './orgInviteResponseModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfOrgInviteResponseModel {
-  message: string;
-  code: number;
-  data: OrgInviteResponseModel;
+  message: string
+  code: number
+  data: OrgInviteResponseModel
 }

@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseScheduleModel } from './responseScheduleModel';
+import type { ResponseScheduleModel } from './responseScheduleModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseScheduleModel {
-  message: string;
-  code: number;
-  data: ResponseScheduleModel;
+  message: string
+  code: number
+  data: ResponseScheduleModel
 }

@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { RequestEventModelV3Error } from './requestEventModelV3Error';
+import type { RequestEventModelV3Error } from './requestEventModelV3Error'
 
 export interface RequestEventModelV3 {
-  events: string[];
-  error: RequestEventModelV3Error;
+  events: string[]
+  error: RequestEventModelV3Error
   /** @nullable */
-  currentVersion?: string | null;
+  currentVersion?: string | null
 }

@@ -7,7 +7,6 @@
  */
 
 export enum DuplicateVideoPolicy {
-  MergeRecommendations= 0,
-  Reject= 1,
-
+  MergeRecommendations = 0,
+  Reject = 1,
 }

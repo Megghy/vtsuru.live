@@ -5,27 +5,27 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SongPlatform } from './songPlatform';
-import type { SongRequestOption } from './songRequestOption';
+import type { SongPlatform } from './songPlatform'
+import type { SongRequestOption } from './songRequestOption'
 
 export interface ResponseSongModel {
-  name: string;
-  createTime: number;
-  updateTime: number;
+  name: string
+  createTime: number
+  updateTime: number
   /** @nullable */
-  translateName?: string | null;
+  translateName?: string | null
   /** @nullable */
-  description?: string | null;
-  id: number;
-  key: string;
-  from: SongPlatform;
-  author: string[];
+  description?: string | null
+  id: number
+  key: string
+  from: SongPlatform
+  author: string[]
   /** @nullable */
-  url?: string | null;
+  url?: string | null
   /** @nullable */
-  language?: string[] | null;
-  tags: string[];
-  options?: SongRequestOption;
+  language?: string[] | null
+  tags: string[]
+  options?: SongRequestOption
   /** @nullable */
-  cover?: string | null;
+  cover?: string | null
 }

@@ -7,9 +7,8 @@
  */
 
 export enum QuestionDisplayTransition {
-  Fade= 0,
-  Slide= 1,
-  Scale= 2,
-  None= 3,
-
+  Fade = 0,
+  Slide = 1,
+  Scale = 2,
+  None = 3,
 }

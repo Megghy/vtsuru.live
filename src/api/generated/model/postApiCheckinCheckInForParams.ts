@@ -7,8 +7,8 @@
  */
 
 export type PostApiCheckinCheckInForParams = {
-name?: string;
-authId?: number;
-oId?: string;
-uId?: number;
-};
+  name?: string
+  authId?: number
+  oId?: string
+  uId?: number
+}

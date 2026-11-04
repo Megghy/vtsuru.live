@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumCommentSortTypes } from './forumCommentSortTypes';
+import type { ForumCommentSortTypes } from './forumCommentSortTypes'
 
 export type GetApiForumGetCommentsParams = {
-topic?: number;
-sort?: ForumCommentSortTypes;
-pageSize?: number;
-page?: number;
-};
+  topic?: number
+  sort?: ForumCommentSortTypes
+  pageSize?: number
+  page?: number
+}

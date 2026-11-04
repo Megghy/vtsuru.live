@@ -7,9 +7,9 @@
  */
 
 export interface RequestStartOpenLiveModel {
-  timestamp: string;
-  code: string;
-  mid: string;
-  caller: string;
-  codeSign: string;
+  timestamp: string
+  code: string
+  mid: string
+  caller: string
+  codeSign: string
 }

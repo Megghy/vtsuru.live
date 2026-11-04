@@ -7,5 +7,5 @@
  */
 
 export type PostApiForumManageRestoreTopicParams = {
-topic?: number;
-};
+  topic?: number
+}

@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseLiveTranscriptSegmentModel } from './responseLiveTranscriptSegmentModel';
+import type { ResponseLiveTranscriptSegmentModel } from './responseLiveTranscriptSegmentModel'
 
 export interface ResponseLiveTranscriptSegmentPage {
-  segments: ResponseLiveTranscriptSegmentModel[];
-  page: number;
-  pageSize: number;
-  total: number;
-  more: boolean;
+  segments: ResponseLiveTranscriptSegmentModel[]
+  page: number
+  pageSize: number
+  total: number
+  more: boolean
 }

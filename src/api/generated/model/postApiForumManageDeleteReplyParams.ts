@@ -7,5 +7,5 @@
  */
 
 export type PostApiForumManageDeleteReplyParams = {
-reply?: number;
-};
+  reply?: number
+}

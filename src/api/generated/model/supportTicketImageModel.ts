@@ -7,8 +7,8 @@
  */
 
 export interface SupportTicketImageModel {
-  id: number;
-  path: string;
-  name: string;
-  size: number;
+  id: number
+  path: string
+  name: string
+  size: number
 }

@@ -7,6 +7,6 @@
  */
 
 export type PostApiQaSendBody = {
-  data?: string;
-  files?: (Blob | File)[];
-};
+  data?: string
+  files?: (Blob | File)[]
+}

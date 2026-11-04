@@ -7,13 +7,13 @@
  */
 
 export interface ResponseBiliLiveReserveItem {
-  sid: number;
-  title: string;
-  planStart: number;
-  expire: number;
-  total: number;
-  year: number;
-  week: number;
-  dayOfWeek: number;
-  time: string;
+  sid: number
+  title: string
+  planStart: number
+  expire: number
+  total: number
+  year: number
+  week: number
+  dayOfWeek: number
+  time: string
 }

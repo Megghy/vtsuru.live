@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { PointOrderStatus } from './pointOrderStatus';
+import type { PointOrderStatus } from './pointOrderStatus'
 
 export interface RequestSetOrderStatusModel {
-  ids: number[];
-  status: PointOrderStatus;
+  ids: number[]
+  status: PointOrderStatus
 }

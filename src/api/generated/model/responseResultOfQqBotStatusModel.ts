@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QqBotStatusModel } from './qqBotStatusModel';
+import type { QqBotStatusModel } from './qqBotStatusModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfQqBotStatusModel {
-  message: string;
-  code: number;
-  data: QqBotStatusModel;
+  message: string
+  code: number
+  data: QqBotStatusModel
 }

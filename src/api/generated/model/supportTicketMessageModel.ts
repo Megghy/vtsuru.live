@@ -5,15 +5,15 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SupportTicketAuthorType } from './supportTicketAuthorType';
-import type { SupportTicketImageModel } from './supportTicketImageModel';
+import type { SupportTicketAuthorType } from './supportTicketAuthorType'
+import type { SupportTicketImageModel } from './supportTicketImageModel'
 
 export interface SupportTicketMessageModel {
-  id: number;
-  authorType: SupportTicketAuthorType;
+  id: number
+  authorType: SupportTicketAuthorType
   /** @nullable */
-  authorUserId?: number | null;
-  content: string;
-  createTime: number;
-  images: SupportTicketImageModel[];
+  authorUserId?: number | null
+  content: string
+  createTime: number
+  images: SupportTicketImageModel[]
 }

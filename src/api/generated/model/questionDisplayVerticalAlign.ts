@@ -7,8 +7,7 @@
  */
 
 export enum QuestionDisplayVerticalAlign {
-  Top= 0,
-  Center= 1,
-  Bottom= 2,
-
+  Top = 0,
+  Center = 1,
+  Bottom = 2,
 }

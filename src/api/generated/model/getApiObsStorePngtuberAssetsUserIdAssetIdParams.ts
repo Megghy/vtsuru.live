@@ -7,5 +7,5 @@
  */
 
 export type GetApiObsStorePngtuberAssetsUserIdAssetIdParams = {
-once?: boolean;
-};
+  once?: boolean
+}

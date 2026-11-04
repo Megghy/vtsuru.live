@@ -7,6 +7,6 @@
  */
 
 export type PostApiForumManageSetTopicTopParams = {
-topic?: number;
-top?: boolean;
-};
+  topic?: number
+  top?: boolean
+}

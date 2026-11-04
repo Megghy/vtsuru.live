@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseQueueModel } from './responseQueueModel';
+import type { ResponseQueueModel } from './responseQueueModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseQueueModel {
-  message: string;
-  code: number;
-  data: ResponseQueueModel;
+  message: string
+  code: number
+  data: ResponseQueueModel
 }

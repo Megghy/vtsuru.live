@@ -7,5 +7,5 @@
  */
 
 export type GetApiPointGetUserOrdersParams = {
-authId?: number;
-};
+  authId?: number
+}

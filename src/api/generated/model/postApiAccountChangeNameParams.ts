@@ -7,5 +7,5 @@
  */
 
 export type PostApiAccountChangeNameParams = {
-name?: string;
-};
+  name?: string
+}

@@ -7,7 +7,7 @@
  */
 
 export interface ResponsePointGuardDuplicatePointValues {
-  jianzhang: number;
-  tidu: number;
-  zongdu: number;
+  jianzhang: number
+  tidu: number
+  zongdu: number
 }

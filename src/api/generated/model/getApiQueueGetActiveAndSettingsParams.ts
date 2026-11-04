@@ -7,5 +7,5 @@
  */
 
 export type GetApiQueueGetActiveAndSettingsParams = {
-id?: number;
-};
+  id?: number
+}

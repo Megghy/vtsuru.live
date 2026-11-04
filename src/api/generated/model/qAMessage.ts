@@ -7,11 +7,11 @@
  */
 
 export interface QAMessage {
-  message: string;
+  message: string
   /**
-     * 图片文件ID (数据库存储)
-     * @nullable
-     */
-  imageIds?: number[] | null;
-  createdAt?: number;
+   * 图片文件ID (数据库存储)
+   * @nullable
+   */
+  imageIds?: number[] | null
+  createdAt?: number
 }

@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointGuardDuplicateScanModel } from './responsePointGuardDuplicateScanModel';
+import type { ResponsePointGuardDuplicateScanModel } from './responsePointGuardDuplicateScanModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponsePointGuardDuplicateScanModel {
-  message: string;
-  code: number;
-  data: ResponsePointGuardDuplicateScanModel;
+  message: string
+  code: number
+  data: ResponsePointGuardDuplicateScanModel
 }

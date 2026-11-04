@@ -7,13 +7,13 @@
  */
 
 export type GetApiLiveGetParams = {
-id?: string;
-/**
- * 是否将表情包转换为表情链接
- */
-useEmoji?: boolean;
-/**
- * 是否包含弹幕
- */
-includeDanmakus?: boolean;
-};
+  id?: string
+  /**
+   * 是否将表情包转换为表情链接
+   */
+  useEmoji?: boolean
+  /**
+   * 是否包含弹幕
+   */
+  includeDanmakus?: boolean
+}

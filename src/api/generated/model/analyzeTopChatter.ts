@@ -7,7 +7,7 @@
  */
 
 export interface AnalyzeTopChatter {
-  name: string;
-  danmakuCount: number;
-  lastTime: number;
+  name: string
+  danmakuCount: number
+  lastTime: number
 }

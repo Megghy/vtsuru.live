@@ -7,7 +7,6 @@
  */
 
 export enum QueueGiftFilterType {
-  Or= 0,
-  And= 1,
-
+  Or = 0,
+  And = 1,
 }

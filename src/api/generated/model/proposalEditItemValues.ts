@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type ProposalEditItemValues = {[key: string]: string};
+export type ProposalEditItemValues = { [key: string]: string }

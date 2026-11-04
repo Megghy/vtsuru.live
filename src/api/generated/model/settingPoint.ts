@@ -5,37 +5,37 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventDataTypes } from './eventDataTypes';
-import type { GiftPointType } from './giftPointType';
-import type { SettingPointGiftPercentMap } from './settingPointGiftPercentMap';
+import type { EventDataTypes } from './eventDataTypes'
+import type { GiftPointType } from './giftPointType'
+import type { SettingPointGiftPercentMap } from './settingPointGiftPercentMap'
 
 export interface SettingPoint {
-  allowType: EventDataTypes[];
-  jianzhangPoint: number;
-  tiduPoint: number;
-  zongduPoint: number;
-  giftPercentMap: SettingPointGiftPercentMap;
-  scPointPercent?: number;
-  giftPointPercent: number;
-  giftAllowType: GiftPointType;
+  allowType: EventDataTypes[]
+  jianzhangPoint: number
+  tiduPoint: number
+  zongduPoint: number
+  giftPercentMap: SettingPointGiftPercentMap
+  scPointPercent?: number
+  giftPointPercent: number
+  giftAllowType: GiftPointType
   /** 是否在售罄时下架 */
-  shouldDiscontinueWhenSoldOut: boolean;
-  enableCheckIn: boolean;
-  checkInKeyword: string;
-  givePointsForCheckIn: boolean;
-  baseCheckInPoints: number;
-  enableConsecutiveBonus: boolean;
-  bonusPointsPerDay: number;
+  shouldDiscontinueWhenSoldOut: boolean
+  enableCheckIn: boolean
+  checkInKeyword: string
+  givePointsForCheckIn: boolean
+  baseCheckInPoints: number
+  enableConsecutiveBonus: boolean
+  bonusPointsPerDay: number
   /** @nullable */
-  maxBonusPoints?: number | null;
-  allowSelfCheckIn: boolean;
-  requireAuth: boolean;
-  enableDailyFirstDanmaku: boolean;
-  dailyFirstDanmakuPoints: number;
-  enableDailyFirstGift: boolean;
-  dailyFirstGiftPoints: number;
-  useDailyFirstGiftPercent: boolean;
-  dailyFirstGiftPercent: number;
-  dailyFirstOnlyOnStreaming: boolean;
-  checkInOnlyOnStreaming: boolean;
+  maxBonusPoints?: number | null
+  allowSelfCheckIn: boolean
+  requireAuth: boolean
+  enableDailyFirstDanmaku: boolean
+  dailyFirstDanmakuPoints: number
+  enableDailyFirstGift: boolean
+  dailyFirstGiftPoints: number
+  useDailyFirstGiftPercent: boolean
+  dailyFirstGiftPercent: number
+  dailyFirstOnlyOnStreaming: boolean
+  checkInOnlyOnStreaming: boolean
 }

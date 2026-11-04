@@ -7,9 +7,8 @@
  */
 
 export enum EventFetcherType {
-  Application= 0,
-  OBS= 1,
-  Tauri= 2,
-  Server= 3,
-
+  Application = 0,
+  OBS = 1,
+  Tauri = 2,
+  Server = 3,
 }

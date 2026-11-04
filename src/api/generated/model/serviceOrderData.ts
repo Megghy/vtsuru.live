@@ -5,20 +5,20 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ServiceAnswer } from './serviceAnswer';
-import type { ServiceTimelineEntry } from './serviceTimelineEntry';
+import type { ServiceAnswer } from './serviceAnswer'
+import type { ServiceTimelineEntry } from './serviceTimelineEntry'
 
 export interface ServiceOrderData {
-  answers: ServiceAnswer[];
+  answers: ServiceAnswer[]
   /** @nullable */
-  appointmentAt?: string | null;
+  appointmentAt?: string | null
   /** @nullable */
-  deliveryUrl?: string | null;
+  deliveryUrl?: string | null
   /** @nullable */
-  cancelReason?: string | null;
+  cancelReason?: string | null
   /** @nullable */
-  refundedAt?: string | null;
+  refundedAt?: string | null
   /** @nullable */
-  refundHistoryId?: number | null;
-  timeline: ServiceTimelineEntry[];
+  refundHistoryId?: number | null
+  timeline: ServiceTimelineEntry[]
 }

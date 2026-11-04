@@ -7,7 +7,6 @@
  */
 
 export enum ForumCommentSortTypes {
-  Time= 0,
-  Like= 1,
-
+  Time = 0,
+  Like = 1,
 }

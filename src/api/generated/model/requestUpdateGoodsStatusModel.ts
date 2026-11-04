@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GoodsStatus } from './goodsStatus';
+import type { GoodsStatus } from './goodsStatus'
 
 export interface RequestUpdateGoodsStatusModel {
-  ids: number[];
-  status: GoodsStatus;
+  ids: number[]
+  status: GoodsStatus
 }

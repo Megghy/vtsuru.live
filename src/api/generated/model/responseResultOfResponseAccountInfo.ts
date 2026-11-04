@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseAccountInfo } from './responseAccountInfo';
+import type { ResponseAccountInfo } from './responseAccountInfo'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseAccountInfo {
-  message: string;
-  code: number;
-  data: ResponseAccountInfo;
+  message: string
+  code: number
+  data: ResponseAccountInfo
 }

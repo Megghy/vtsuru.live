@@ -7,7 +7,6 @@
  */
 
 export enum SupportTicketSource {
-  User= 0,
-  Assistant= 1,
-
+  User = 0,
+  Assistant = 1,
 }

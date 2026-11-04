@@ -7,5 +7,5 @@
  */
 
 export type GetApiObsStorePngtuberCollabRoomInfoParams = {
-code?: string;
-};
+  code?: string
+}

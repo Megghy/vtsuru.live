@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { CheckInResponse } from './checkInResponse';
+import type { CheckInResponse } from './checkInResponse'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfCheckInResponse {
-  message: string;
-  code: number;
-  data: CheckInResponse;
+  message: string
+  code: number
+  data: CheckInResponse
 }

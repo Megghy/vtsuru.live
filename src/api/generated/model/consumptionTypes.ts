@@ -7,8 +7,7 @@
  */
 
 export enum ConsumptionTypes {
-  None= 0,
-  Recharge= 1,
-  DanmakuStorage= 2,
-
+  None = 0,
+  Recharge = 1,
+  DanmakuStorage = 2,
 }

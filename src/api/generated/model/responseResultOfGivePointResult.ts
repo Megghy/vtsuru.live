@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GivePointResult } from './givePointResult';
+import type { GivePointResult } from './givePointResult'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfGivePointResult {
-  message: string;
-  code: number;
-  data: GivePointResult;
+  message: string
+  code: number
+  data: GivePointResult
 }

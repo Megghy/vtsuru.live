@@ -7,5 +7,5 @@
  */
 
 export type GetApiCheckinKeywordParams = {
-vId?: number;
-};
+  vId?: number
+}

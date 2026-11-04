@@ -7,12 +7,12 @@
  */
 
 export interface RequestAddVideo {
-  id: string;
-  video: string;
+  id: string
+  video: string
   /** @nullable */
-  name?: string | null;
+  name?: string | null
   /** @nullable */
-  uId?: number | null;
+  uId?: number | null
   /** @nullable */
-  description?: string | null;
+  description?: string | null
 }

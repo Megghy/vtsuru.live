@@ -7,6 +7,6 @@
  */
 
 export type PostApiLiveRequestAddFromWebParams = {
-target?: number;
-song?: string;
-};
+  target?: number
+  song?: string
+}

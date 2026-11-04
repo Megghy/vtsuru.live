@@ -7,6 +7,6 @@
  */
 
 export interface AppStartWebsocketInfo {
-  auth_body?: string;
-  wss_link?: string[];
+  auth_body?: string
+  wss_link?: string[]
 }

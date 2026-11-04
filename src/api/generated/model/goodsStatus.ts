@@ -7,8 +7,7 @@
  */
 
 export enum GoodsStatus {
-  Normal= 0,
-  Discontinued= 1,
-  Removed= 2,
-
+  Normal = 0,
+  Discontinued = 1,
+  Removed = 2,
 }

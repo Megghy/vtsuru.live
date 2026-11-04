@@ -7,8 +7,8 @@
  */
 
 export interface ResponseTestPointModel {
-  success: boolean;
-  message: string;
+  success: boolean
+  message: string
   /** @nullable */
-  pointsAwarded?: number | null;
+  pointsAwarded?: number | null
 }

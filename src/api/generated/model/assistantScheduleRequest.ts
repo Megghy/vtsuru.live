@@ -10,5 +10,5 @@
  * 定时执行提案请求: ScheduledTime 为目标执行时间 (Unix 毫秒, UTC)。
  */
 export interface AssistantScheduleRequest {
-  scheduledTime: number;
+  scheduledTime: number
 }

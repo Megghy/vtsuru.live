@@ -5,18 +5,18 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointOrder2OwnerModel } from './responsePointOrder2OwnerModel';
+import type { ResponsePointOrder2OwnerModel } from './responsePointOrder2OwnerModel'
 
 /**
  * 分页响应信封：code / message / data / pn / ps / total / more
  */
 export interface PaginationResponseOfListOfResponsePointOrder2OwnerModel {
-  ps: number;
-  pn: number;
-  total: number;
-  more: boolean;
-  message: string;
-  code: number;
+  ps: number
+  pn: number
+  total: number
+  more: boolean
+  message: string
+  code: number
   /** @nullable */
-  data: ResponsePointOrder2OwnerModel[] | null;
+  data: ResponsePointOrder2OwnerModel[] | null
 }

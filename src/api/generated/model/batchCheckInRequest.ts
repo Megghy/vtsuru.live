@@ -7,7 +7,7 @@
  */
 
 export interface BatchCheckInRequest {
-  authIds: number[];
-  uIds: number[];
-  oIds: string[];
+  authIds: number[]
+  uIds: number[]
+  oIds: string[]
 }

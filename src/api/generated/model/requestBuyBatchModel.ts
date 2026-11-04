@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { RequestBuyItemModel } from './requestBuyItemModel';
+import type { RequestBuyItemModel } from './requestBuyItemModel'
 
 export interface RequestBuyBatchModel {
-  vId: number;
-  items: RequestBuyItemModel[];
+  vId: number
+  items: RequestBuyItemModel[]
   /** @nullable */
-  addressId?: string | null;
+  addressId?: string | null
 }

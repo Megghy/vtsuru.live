@@ -8,27 +8,27 @@
 
 export interface RequestCopyScheduleModel {
   /**
-     * @minimum 1
-     * @maximum 9999
-     */
-  sourceYear: number;
+   * @minimum 1
+   * @maximum 9999
+   */
+  sourceYear: number
   /**
-     * @minimum 1
-     * @maximum 53
-     */
-  sourceWeek: number;
+   * @minimum 1
+   * @maximum 53
+   */
+  sourceWeek: number
   /**
-     * @minimum 1
-     * @maximum 9999
-     */
-  targetYear: number;
+   * @minimum 1
+   * @maximum 9999
+   */
+  targetYear: number
   /**
-     * @minimum 1
-     * @maximum 53
-     */
-  targetWeek: number;
-  sourceVersion: string;
-  targetVersion: string;
+   * @minimum 1
+   * @maximum 53
+   */
+  targetWeek: number
+  sourceVersion: string
+  targetVersion: string
   /** @minLength 1 */
-  mode: string;
+  mode: string
 }

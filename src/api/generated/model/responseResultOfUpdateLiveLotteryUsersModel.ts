@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { UpdateLiveLotteryUsersModel } from './updateLiveLotteryUsersModel';
+import type { UpdateLiveLotteryUsersModel } from './updateLiveLotteryUsersModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfUpdateLiveLotteryUsersModel {
-  message: string;
-  code: number;
-  data: UpdateLiveLotteryUsersModel;
+  message: string
+  code: number
+  data: UpdateLiveLotteryUsersModel
 }

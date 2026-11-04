@@ -7,11 +7,10 @@
  */
 
 export enum OrgInviteStatuses {
-  Active= 0,
-  Used= 1,
-  Accepted= 2,
-  Rejected= 3,
-  Expired= 4,
-  Revoked= 5,
-
+  Active = 0,
+  Used = 1,
+  Accepted = 2,
+  Rejected = 3,
+  Expired = 4,
+  Revoked = 5,
 }

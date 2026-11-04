@@ -5,18 +5,18 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponsePointGuardDuplicateEntryModel } from './responsePointGuardDuplicateEntryModel';
-import type { ResponsePointGuardDuplicateLevelCounts } from './responsePointGuardDuplicateLevelCounts';
+import type { ResponsePointGuardDuplicateEntryModel } from './responsePointGuardDuplicateEntryModel'
+import type { ResponsePointGuardDuplicateLevelCounts } from './responsePointGuardDuplicateLevelCounts'
 
 export interface ResponsePointGuardDuplicateGroupModel {
-  sourceType: string;
+  sourceType: string
   /** @nullable */
-  liveId?: string | null;
+  liveId?: string | null
   /** @nullable */
-  liveTitle?: string | null;
-  anchorAt: number;
-  lastAt: number;
-  duplicateCount: number;
-  levelCounts: ResponsePointGuardDuplicateLevelCounts;
-  entries: ResponsePointGuardDuplicateEntryModel[];
+  liveTitle?: string | null
+  anchorAt: number
+  lastAt: number
+  duplicateCount: number
+  levelCounts: ResponsePointGuardDuplicateLevelCounts
+  entries: ResponsePointGuardDuplicateEntryModel[]
 }

@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AssistantDigestItem } from './assistantDigestItem';
+import type { AssistantDigestItem } from './assistantDigestItem'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfAssistantDigestItem {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: AssistantDigestItem[] | null;
+  data: AssistantDigestItem[] | null
 }

@@ -7,8 +7,8 @@
  */
 
 export type GetApiScheduleBiliReserveParams = {
-/**
- * 用户Id
- */
-id?: string;
-};
+  /**
+   * 用户Id
+   */
+  id?: string
+}

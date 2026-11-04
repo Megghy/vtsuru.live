@@ -7,5 +7,5 @@
  */
 
 export type PostApiStorageTargetsTestParams = {
-id?: number;
-};
+  id?: number
+}

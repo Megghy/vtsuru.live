@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type ResponseNotifactionExtra = {[key: string]: string};
+export type ResponseNotifactionExtra = { [key: string]: string }

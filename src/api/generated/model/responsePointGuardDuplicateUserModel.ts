@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel';
-import type { ResponsePointGuardDuplicateLevelCounts } from './responsePointGuardDuplicateLevelCounts';
+import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel'
+import type { ResponsePointGuardDuplicateLevelCounts } from './responsePointGuardDuplicateLevelCounts'
 
 export interface ResponsePointGuardDuplicateUserModel {
-  guardOUId: string;
-  info: ResponseBiliAuthBasicModel;
-  duplicateGroups: number;
-  duplicateEventCount: number;
-  duplicateLiveCount: number;
-  duplicateCount: number;
-  affectedLiveCount: number;
-  levelCounts: ResponsePointGuardDuplicateLevelCounts;
-  estimatedPoints: number;
-  firstEventAt: number;
-  lastEventAt: number;
+  guardOUId: string
+  info: ResponseBiliAuthBasicModel
+  duplicateGroups: number
+  duplicateEventCount: number
+  duplicateLiveCount: number
+  duplicateCount: number
+  affectedLiveCount: number
+  levelCounts: ResponsePointGuardDuplicateLevelCounts
+  estimatedPoints: number
+  firstEventAt: number
+  lastEventAt: number
 }

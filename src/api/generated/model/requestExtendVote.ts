@@ -8,8 +8,8 @@
 
 export interface RequestExtendVote {
   /**
-     * @minimum 5
-     * @maximum 3600
-     */
-  seconds: number;
+   * @minimum 5
+   * @maximum 3600
+   */
+  seconds: number
 }

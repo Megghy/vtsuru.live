@@ -7,5 +7,5 @@
  */
 
 export type PostApiLiveRequestCancelParams = {
-id?: number;
-};
+  id?: number
+}

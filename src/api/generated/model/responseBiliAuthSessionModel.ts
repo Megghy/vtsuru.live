@@ -7,7 +7,7 @@
  */
 
 export interface ResponseBiliAuthSessionModel {
-  token: string;
+  token: string
   /** @nullable */
-  expiresAt?: number | null;
+  expiresAt?: number | null
 }

@@ -7,12 +7,12 @@
  */
 
 export type GetApiBiliRoomStatsParams = {
-/**
- * 直播间房间号
- */
-roomId?: number;
-/**
- * 主播B站UID(可选，用于查询高能榜)
- */
-uid?: number;
-};
+  /**
+   * 直播间房间号
+   */
+  roomId?: number
+  /**
+   * 主播B站UID(可选，用于查询高能榜)
+   */
+  uid?: number
+}

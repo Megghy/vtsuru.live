@@ -5,6 +5,6 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AnalyzeChartPoint } from './analyzeChartPoint';
+import type { AnalyzeChartPoint } from './analyzeChartPoint'
 
-export type AnalyzeAllResponseChartData = {[key: string]: AnalyzeChartPoint};
+export type AnalyzeAllResponseChartData = { [key: string]: AnalyzeChartPoint }

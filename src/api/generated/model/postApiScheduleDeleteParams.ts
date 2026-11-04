@@ -7,17 +7,17 @@
  */
 
 export type PostApiScheduleDeleteParams = {
-/**
- * 年份
- * @minimum 1
- * @maximum 9999
- */
-year?: number;
-/**
- * 第几周
- * @minimum 1
- * @maximum 53
- */
-week?: number;
-expectedVersion: string;
-};
+  /**
+   * 年份
+   * @minimum 1
+   * @maximum 9999
+   */
+  year?: number
+  /**
+   * 第几周
+   * @minimum 1
+   * @maximum 53
+   */
+  week?: number
+  expectedVersion: string
+}

@@ -7,5 +7,5 @@
  */
 
 export type PostApiStorageTargetsUpdateParams = {
-id?: number;
-};
+  id?: number
+}

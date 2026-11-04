@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AssistantProposalDto } from './assistantProposalDto';
+import type { AssistantProposalDto } from './assistantProposalDto'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfAssistantProposalDto {
-  message: string;
-  code: number;
-  data: AssistantProposalDto;
+  message: string
+  code: number
+  data: AssistantProposalDto
 }

@@ -7,8 +7,7 @@
  */
 
 export enum GoodsTypes {
-  Physical= 0,
-  Virtual= 1,
-  Service= 2,
-
+  Physical = 0,
+  Virtual = 1,
+  Service = 2,
 }

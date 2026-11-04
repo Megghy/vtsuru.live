@@ -7,10 +7,10 @@
  */
 
 export interface AvatarAsset {
-  userId: number;
-  assetId: string;
-  width: number;
-  height: number;
-  frameCount: number;
-  byteSize: number;
+  userId: number
+  assetId: string
+  width: number
+  height: number
+  frameCount: number
+  byteSize: number
 }

@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgInviteStreamerListItem } from './orgInviteStreamerListItem';
+import type { OrgInviteStreamerListItem } from './orgInviteStreamerListItem'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfOrgInviteStreamerListItem {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: OrgInviteStreamerListItem[] | null;
+  data: OrgInviteStreamerListItem[] | null
 }

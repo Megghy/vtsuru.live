@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseOrgMemberModel } from './responseOrgMemberModel';
+import type { ResponseOrgMemberModel } from './responseOrgMemberModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseOrgMemberModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseOrgMemberModel[] | null;
+  data: ResponseOrgMemberModel[] | null
 }

@@ -7,6 +7,6 @@
  */
 
 export type GetApiLotteryLiveGetUsersParams = {
-code?: string;
-id?: number;
-};
+  code?: string
+  id?: number
+}

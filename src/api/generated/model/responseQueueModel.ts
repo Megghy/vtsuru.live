@@ -5,25 +5,25 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DanmakuUserInfo } from './danmakuUserInfo';
-import type { QueueFrom } from './queueFrom';
-import type { QueueStatus } from './queueStatus';
+import type { DanmakuUserInfo } from './danmakuUserInfo'
+import type { QueueFrom } from './queueFrom'
+import type { QueueStatus } from './queueStatus'
 
 export interface ResponseQueueModel {
-  id: number;
-  status: QueueStatus;
-  from: QueueFrom;
+  id: number
+  status: QueueStatus
+  from: QueueFrom
   /** @nullable */
-  giftPrice?: number | null;
+  giftPrice?: number | null
   /** @nullable */
-  mysteryBoxName?: string | null;
+  mysteryBoxName?: string | null
   /** @nullable */
-  mysteryBoxPrice?: number | null;
+  mysteryBoxPrice?: number | null
   /** @nullable */
-  content?: string | null;
-  user?: DanmakuUserInfo;
-  createAt: number;
+  content?: string | null
+  user?: DanmakuUserInfo
+  createAt: number
   /** @nullable */
-  finishAt?: number | null;
-  requestBy: string;
+  finishAt?: number | null
+  requestBy: string
 }

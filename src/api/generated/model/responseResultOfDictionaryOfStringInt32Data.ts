@@ -9,4 +9,4 @@
 /**
  * @nullable
  */
-export type ResponseResultOfDictionaryOfStringInt32Data = {[key: string]: number} | null;
+export type ResponseResultOfDictionaryOfStringInt32Data = { [key: string]: number } | null

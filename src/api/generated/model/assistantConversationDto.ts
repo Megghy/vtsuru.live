@@ -10,8 +10,8 @@
  * 会话列表项
  */
 export interface AssistantConversationDto {
-  id: number;
-  title: string;
-  createTime: number;
-  updateTime: number;
+  id: number
+  title: string
+  createTime: number
+  updateTime: number
 }

@@ -7,8 +7,8 @@
  */
 
 export type GetApiObsStoreSyncGetStateParams = {
-component?: string;
-channel?: string;
-hash?: string;
-id?: number;
-};
+  component?: string
+  channel?: string
+  hash?: string
+  id?: number
+}

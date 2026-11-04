@@ -7,8 +7,8 @@
  */
 
 export type PostApiQaAddTagParams = {
-/**
- * @maxLength 20
- */
-tag?: string;
-};
+  /**
+   * @maxLength 20
+   */
+  tag?: string
+}

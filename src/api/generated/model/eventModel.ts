@@ -5,40 +5,40 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { EventDataTypes } from './eventDataTypes';
-import type { GuardLevel } from './guardLevel';
+import type { EventDataTypes } from './eventDataTypes'
+import type { GuardLevel } from './guardLevel'
 
 export interface EventModel {
-  id: number;
-  type: EventDataTypes;
+  id: number
+  type: EventDataTypes
   /**
-     * @minLength 0
-     * @maxLength 20
-     */
-  uname: string;
+   * @minLength 0
+   * @maxLength 20
+   */
+  uname: string
   /** @nullable */
-  uid?: number | null;
-  uface: string;
+  uid?: number | null
+  uface: string
   /** @nullable */
-  open_id?: string | null;
+  open_id?: string | null
   /**
-     * @minLength 0
-     * @maxLength 50
-     */
-  msg: string;
-  time: number;
-  num: number;
-  price: number;
+   * @minLength 0
+   * @maxLength 50
+   */
+  msg: string
+  time: number
+  num: number
+  price: number
   /** @nullable */
-  mystery_box_name?: string | null;
+  mystery_box_name?: string | null
   /** @nullable */
-  mystery_box_price?: number | null;
-  guard_level: GuardLevel;
-  fans_medal_level: number;
-  fans_medal_name: string;
-  fans_medal_wearing_status: boolean;
+  mystery_box_price?: number | null
+  guard_level: GuardLevel
+  fans_medal_level: number
+  fans_medal_name: string
+  fans_medal_wearing_status: boolean
   /** @nullable */
-  emoji?: string | null;
+  emoji?: string | null
   /** 通过GuidHelper判断是UserId还是OpenId */
-  readonly ouId?: string;
+  readonly ouId?: string
 }

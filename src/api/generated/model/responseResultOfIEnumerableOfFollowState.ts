@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { FollowState } from './followState';
+import type { FollowState } from './followState'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfIEnumerableOfFollowState {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: FollowState[] | null;
+  data: FollowState[] | null
 }

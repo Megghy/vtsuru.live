@@ -7,9 +7,8 @@
  */
 
 export enum SongRequestStatus {
-  Waiting= 0,
-  Singing= 1,
-  Finish= 2,
-  Cancel= 3,
-
+  Waiting = 0,
+  Singing = 1,
+  Finish = 2,
+  Cancel = 3,
 }

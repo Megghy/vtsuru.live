@@ -5,20 +5,20 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AnalyzeAllResponseChartData } from './analyzeAllResponseChartData';
-import type { AnalyzeAreaStat } from './analyzeAreaStat';
-import type { AnalyzeOfflineEvent } from './analyzeOfflineEvent';
-import type { AnalyzeSessionItem } from './analyzeSessionItem';
-import type { AnalyzeSummary } from './analyzeSummary';
-import type { AnalyzeTopChatter } from './analyzeTopChatter';
-import type { AnalyzeTopSpender } from './analyzeTopSpender';
+import type { AnalyzeAllResponseChartData } from './analyzeAllResponseChartData'
+import type { AnalyzeAreaStat } from './analyzeAreaStat'
+import type { AnalyzeOfflineEvent } from './analyzeOfflineEvent'
+import type { AnalyzeSessionItem } from './analyzeSessionItem'
+import type { AnalyzeSummary } from './analyzeSummary'
+import type { AnalyzeTopChatter } from './analyzeTopChatter'
+import type { AnalyzeTopSpender } from './analyzeTopSpender'
 
 export interface AnalyzeAllResponse {
-  summary: AnalyzeSummary;
-  chartData: AnalyzeAllResponseChartData;
-  sessions: AnalyzeSessionItem[];
-  areaStats: AnalyzeAreaStat[];
-  topSpenders: AnalyzeTopSpender[];
-  topChatters: AnalyzeTopChatter[];
-  offlineEvents: AnalyzeOfflineEvent[];
+  summary: AnalyzeSummary
+  chartData: AnalyzeAllResponseChartData
+  sessions: AnalyzeSessionItem[]
+  areaStats: AnalyzeAreaStat[]
+  topSpenders: AnalyzeTopSpender[]
+  topChatters: AnalyzeTopChatter[]
+  offlineEvents: AnalyzeOfflineEvent[]
 }

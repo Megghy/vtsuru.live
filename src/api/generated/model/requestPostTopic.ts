@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumTopicTypes } from './forumTopicTypes';
+import type { ForumTopicTypes } from './forumTopicTypes'
 
 export interface RequestPostTopic {
-  owner: number;
-  title: string;
-  content: string;
+  owner: number
+  title: string
+  content: string
   /** @nullable */
-  section?: number | null;
-  type: ForumTopicTypes;
+  section?: number | null
+  type: ForumTopicTypes
 }

@@ -7,5 +7,5 @@
  */
 
 export type GetApiLiveRequestGetTodayParams = {
-id?: number;
-};
+  id?: number
+}

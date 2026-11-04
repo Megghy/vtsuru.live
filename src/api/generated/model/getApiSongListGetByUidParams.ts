@@ -7,8 +7,8 @@
  */
 
 export type GetApiSongListGetByUidParams = {
-/**
- * 用户B站Id
- */
-uId?: number;
-};
+  /**
+   * 用户B站Id
+   */
+  uId?: number
+}

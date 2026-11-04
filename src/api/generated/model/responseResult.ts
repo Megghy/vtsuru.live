@@ -10,8 +10,8 @@
  * 统一响应信封：code / message / data
  */
 export interface ResponseResult {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** 业务数据，形状随接口而变 */
-  data: unknown;
+  data: unknown
 }

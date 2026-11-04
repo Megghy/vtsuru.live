@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseOrgLiveInfoModel } from './responseOrgLiveInfoModel';
+import type { ResponseOrgLiveInfoModel } from './responseOrgLiveInfoModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfResponseOrgLiveInfoModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: ResponseOrgLiveInfoModel[] | null;
+  data: ResponseOrgLiveInfoModel[] | null
 }

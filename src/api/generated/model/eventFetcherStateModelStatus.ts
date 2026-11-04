@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type EventFetcherStateModelStatus = {[key: string]: string};
+export type EventFetcherStateModelStatus = { [key: string]: string }

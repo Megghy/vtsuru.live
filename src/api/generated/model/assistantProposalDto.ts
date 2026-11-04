@@ -5,24 +5,24 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AssistantPreviewItem } from './assistantPreviewItem';
+import type { AssistantPreviewItem } from './assistantPreviewItem'
 
 /**
  * 返回给前端的提案 (审批卡片)
  */
 export interface AssistantProposalDto {
-  id: string;
-  kind: string;
-  title: string;
-  summary: string;
-  risk: string;
-  status: string;
-  preview: AssistantPreviewItem[];
+  id: string
+  kind: string
+  title: string
+  summary: string
+  risk: string
+  status: string
+  preview: AssistantPreviewItem[]
   /** @nullable */
-  error?: string | null;
+  error?: string | null
   /**
-     * 定时执行的目标时间 (Unix 毫秒); 仅 Status=scheduled 时有值。
-     * @nullable
-     */
-  scheduledTime?: number | null;
+   * 定时执行的目标时间 (Unix 毫秒); 仅 Status=scheduled 时有值。
+   * @nullable
+   */
+  scheduledTime?: number | null
 }

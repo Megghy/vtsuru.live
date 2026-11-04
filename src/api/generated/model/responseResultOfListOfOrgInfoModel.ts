@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgInfoModel } from './orgInfoModel';
+import type { OrgInfoModel } from './orgInfoModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfOrgInfoModel {
-  message: string;
-  code: number;
+  message: string
+  code: number
   /** @nullable */
-  data: OrgInfoModel[] | null;
+  data: OrgInfoModel[] | null
 }

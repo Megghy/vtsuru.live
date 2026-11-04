@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgAnalyzeResponseChartData } from './orgAnalyzeResponseChartData';
-import type { OrgAnalyzeSummary } from './orgAnalyzeSummary';
+import type { OrgAnalyzeResponseChartData } from './orgAnalyzeResponseChartData'
+import type { OrgAnalyzeSummary } from './orgAnalyzeSummary'
 
 export interface OrgAnalyzeResponse {
-  summary: OrgAnalyzeSummary;
-  chartData: OrgAnalyzeResponseChartData;
+  summary: OrgAnalyzeSummary
+  chartData: OrgAnalyzeResponseChartData
 }

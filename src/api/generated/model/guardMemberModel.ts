@@ -7,10 +7,10 @@
  */
 
 export interface GuardMemberModel {
-  guardOUId: string;
-  username: string;
-  guardLevel: string;
-  accompanyDays: number;
-  isActive: boolean;
-  lastUpdateTime: string;
+  guardOUId: string
+  username: string
+  guardLevel: string
+  accompanyDays: number
+  isActive: boolean
+  lastUpdateTime: string
 }

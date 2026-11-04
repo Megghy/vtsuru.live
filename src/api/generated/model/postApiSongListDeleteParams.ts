@@ -7,8 +7,8 @@
  */
 
 export type PostApiSongListDeleteParams = {
-/**
- * 歌曲键值
- */
-key?: string;
-};
+  /**
+   * 歌曲键值
+   */
+  key?: string
+}

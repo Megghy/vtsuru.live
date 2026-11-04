@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { TempResponseAloginModel } from './tempResponseAloginModel';
+import type { TempResponseAloginModel } from './tempResponseAloginModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfTempResponseAloginModel {
-  message: string;
-  code: number;
-  data: TempResponseAloginModel;
+  message: string
+  code: number
+  data: TempResponseAloginModel
 }

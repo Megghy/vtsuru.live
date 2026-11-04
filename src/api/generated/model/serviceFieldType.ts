@@ -7,12 +7,11 @@
  */
 
 export enum ServiceFieldType {
-  Text= 0,
-  Textarea= 1,
-  Select= 2,
-  Url= 3,
-  MultiSelect= 4,
-  Date= 5,
-  Number= 6,
-
+  Text = 0,
+  Textarea = 1,
+  Select = 2,
+  Url = 3,
+  MultiSelect = 4,
+  Date = 5,
+  Number = 6,
 }

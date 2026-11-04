@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseAllHistorySingleModel } from './responseAllHistorySingleModel';
-import type { ResponseAllHistoryUpstatSingleModel } from './responseAllHistoryUpstatSingleModel';
+import type { ResponseAllHistorySingleModel } from './responseAllHistorySingleModel'
+import type { ResponseAllHistoryUpstatSingleModel } from './responseAllHistoryUpstatSingleModel'
 
 export interface ResponseAllHistoryModel {
-  fan: ResponseAllHistorySingleModel;
-  guard: ResponseAllHistorySingleModel;
-  upstat: ResponseAllHistoryUpstatSingleModel;
-  like: ResponseAllHistorySingleModel;
+  fan: ResponseAllHistorySingleModel
+  guard: ResponseAllHistorySingleModel
+  upstat: ResponseAllHistoryUpstatSingleModel
+  like: ResponseAllHistorySingleModel
 }

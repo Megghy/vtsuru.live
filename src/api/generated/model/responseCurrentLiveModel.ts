@@ -5,8 +5,8 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseLiveInfoModel } from './responseLiveInfoModel';
+import type { ResponseLiveInfoModel } from './responseLiveInfoModel'
 
 export interface ResponseCurrentLiveModel {
-  live?: ResponseLiveInfoModel;
+  live?: ResponseLiveInfoModel
 }

@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ViolationTypes } from './violationTypes';
+import type { ViolationTypes } from './violationTypes'
 
 export interface ResponseQATextReviewInfo {
   /** @nullable */
-  isApproved?: boolean | null;
+  isApproved?: boolean | null
   /** @nullable */
-  saftyScore?: number | null;
-  violationType: ViolationTypes[];
+  saftyScore?: number | null
+  violationType: ViolationTypes[]
 }

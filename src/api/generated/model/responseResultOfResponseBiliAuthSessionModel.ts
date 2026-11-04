@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseBiliAuthSessionModel } from './responseBiliAuthSessionModel';
+import type { ResponseBiliAuthSessionModel } from './responseBiliAuthSessionModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseBiliAuthSessionModel {
-  message: string;
-  code: number;
-  data: ResponseBiliAuthSessionModel;
+  message: string
+  code: number
+  data: ResponseBiliAuthSessionModel
 }

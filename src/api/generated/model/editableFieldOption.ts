@@ -7,6 +7,6 @@
  */
 
 export interface EditableFieldOption {
-  label: string;
-  value: string;
+  label: string
+  value: string
 }

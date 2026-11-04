@@ -7,10 +7,10 @@
  */
 
 export interface OrgAnalyzeChartPoint {
-  income: number;
-  interactionCount: number;
-  danmakuCount: number;
-  payingUsers: number;
-  interactionUsers: number;
-  liveMinutes: number;
+  income: number
+  interactionCount: number
+  danmakuCount: number
+  payingUsers: number
+  interactionUsers: number
+  liveMinutes: number
 }

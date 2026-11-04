@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseNeteaseSongLyricModel } from './responseNeteaseSongLyricModel';
+import type { ResponseNeteaseSongLyricModel } from './responseNeteaseSongLyricModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseNeteaseSongLyricModel {
-  message: string;
-  code: number;
-  data: ResponseNeteaseSongLyricModel;
+  message: string
+  code: number
+  data: ResponseNeteaseSongLyricModel
 }

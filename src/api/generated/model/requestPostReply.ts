@@ -7,8 +7,8 @@
  */
 
 export interface RequestPostReply {
-  comment: number;
-  content: string;
+  comment: number
+  content: string
   /** @nullable */
-  replyTo?: number | null;
+  replyTo?: number | null
 }

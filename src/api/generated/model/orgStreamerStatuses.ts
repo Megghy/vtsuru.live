@@ -7,9 +7,8 @@
  */
 
 export enum OrgStreamerStatuses {
-  Pending= 0,
-  Active= 1,
-  Rejected= 2,
-  Removed= 3,
-
+  Pending = 0,
+  Active = 1,
+  Rejected = 2,
+  Removed = 3,
 }

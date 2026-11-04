@@ -7,9 +7,9 @@
  */
 
 export type PostApiQaUpdateTagVisibleParams = {
-/**
- * @maxLength 20
- */
-tag?: string;
-visiable?: boolean;
-};
+  /**
+   * @maxLength 20
+   */
+  tag?: string
+  visiable?: boolean
+}

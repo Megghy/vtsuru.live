@@ -7,5 +7,5 @@
  */
 
 export type PostApiPointDeleteGoodsParams = {
-id?: number;
-};
+  id?: number
+}

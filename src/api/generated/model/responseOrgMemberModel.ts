@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgMemberRoles } from './orgMemberRoles';
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
+import type { OrgMemberRoles } from './orgMemberRoles'
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 export interface ResponseOrgMemberModel {
-  user: ResponseUserBasicInfo;
-  role: OrgMemberRoles;
-  joinedAt: number;
+  user: ResponseUserBasicInfo
+  role: OrgMemberRoles
+  joinedAt: number
 }

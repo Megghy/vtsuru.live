@@ -5,23 +5,23 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VoteResultMode } from './voteResultMode';
+import type { VoteResultMode } from './voteResultMode'
 
 export interface VoteConfig {
-  isEnabled: boolean;
-  showResults: boolean;
-  voteDurationSeconds: number;
-  voteCommand: string;
-  voteEndCommand: string;
-  voteTitle: string;
-  allowMultipleVotes: boolean;
-  allowCustomOptions: boolean;
-  defaultOptions: string[];
-  theme: string;
-  roundedCorners: boolean;
-  displayPosition: string;
-  allowGiftVoting: boolean;
+  isEnabled: boolean
+  showResults: boolean
+  voteDurationSeconds: number
+  voteCommand: string
+  voteEndCommand: string
+  voteTitle: string
+  allowMultipleVotes: boolean
+  allowCustomOptions: boolean
+  defaultOptions: string[]
+  theme: string
+  roundedCorners: boolean
+  displayPosition: string
+  allowGiftVoting: boolean
   /** @nullable */
-  minGiftPrice?: number | null;
-  voteResultMode: VoteResultMode;
+  minGiftPrice?: number | null
+  voteResultMode: VoteResultMode
 }

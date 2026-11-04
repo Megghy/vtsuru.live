@@ -7,5 +7,5 @@
  */
 
 export type PostApiVoteEndParams = {
-id?: number;
-};
+  id?: number
+}

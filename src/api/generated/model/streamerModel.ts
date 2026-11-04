@@ -7,21 +7,21 @@
  */
 
 export interface StreamerModel {
-  isStreaming?: boolean;
-  totalDanmakuCount: number;
-  totalIncome: number;
-  totalStreamCount: number;
-  totalStreamTime: number;
-  lastDanmakuCount: number;
-  status: string;
-  name: string;
-  uId: number;
-  roomId: number;
-  faceUrl: string;
-  title: string;
-  coverUrl: string;
-  frameUrl: string;
-  area: string;
-  parentArea: string;
-  lastStreamAt: number;
+  isStreaming?: boolean
+  totalDanmakuCount: number
+  totalIncome: number
+  totalStreamCount: number
+  totalStreamTime: number
+  lastDanmakuCount: number
+  status: string
+  name: string
+  uId: number
+  roomId: number
+  faceUrl: string
+  title: string
+  coverUrl: string
+  frameUrl: string
+  area: string
+  parentArea: string
+  lastStreamAt: number
 }

@@ -7,5 +7,5 @@
  */
 
 export type PostApiVoteDeleteParams = {
-id?: number;
-};
+  id?: number
+}

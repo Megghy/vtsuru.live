@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { WitingListModel } from './witingListModel';
+import type { WitingListModel } from './witingListModel'
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfWitingListModel {
-  message: string;
-  code: number;
-  data: WitingListModel;
+  message: string
+  code: number
+  data: WitingListModel
 }

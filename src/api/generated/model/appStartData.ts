@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AppStartAnchorInfo } from './appStartAnchorInfo';
-import type { AppStartGameInfo } from './appStartGameInfo';
-import type { AppStartWebsocketInfo } from './appStartWebsocketInfo';
+import type { AppStartAnchorInfo } from './appStartAnchorInfo'
+import type { AppStartGameInfo } from './appStartGameInfo'
+import type { AppStartWebsocketInfo } from './appStartWebsocketInfo'
 
 export interface AppStartData {
-  game_info?: AppStartGameInfo;
-  websocket_info?: AppStartWebsocketInfo;
-  anchor_info?: AppStartAnchorInfo;
+  game_info?: AppStartGameInfo
+  websocket_info?: AppStartWebsocketInfo
+  anchor_info?: AppStartAnchorInfo
 }
