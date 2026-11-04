@@ -167,9 +167,9 @@ watch(
 </script>
 
 <template>
-  <Card class="pane-card w-full h-full flex flex-col border border-border">
+  <Card class="pane-card w-full h-full flex flex-col">
     <CardHeader class="p-3 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
-      <CardTitle class="text-sm font-semibold truncate max-w-[200px]">
+      <CardTitle class="truncate max-w-[200px]">
         预览 - {{ editor.currentLabel.value }}
       </CardTitle>
 
@@ -178,38 +178,28 @@ watch(
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  :variant="previewMode === 'select' ? 'default' : 'ghost'"
-                  class="size-7 p-0"
-                  aria-label="选择区块"
-                  @click="previewMode = 'select'"
-                >
+                <Button size="icon-xs" :variant="previewMode === 'select' ? 'default' : 'ghost'" aria-label="选择区块" @click="previewMode = 'select'">
                   <component
                     :is="NavigateOutline"
                     class="size-3.5"
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">选择区块</TooltipContent>
+              <TooltipContent>选择区块</TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  :variant="previewMode === 'interact' ? 'default' : 'ghost'"
-                  class="size-7 p-0"
-                  aria-label="操作页面"
-                  @click="previewMode = 'interact'"
-                >
+                <Button size="icon-xs" :variant="previewMode === 'interact' ? 'default' : 'ghost'" aria-label="操作页面" @click="previewMode = 'interact'">
                   <component
                     :is="HandLeftOutline"
                     class="size-3.5"
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">操作页面</TooltipContent>
+              <TooltipContent>操作页面</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -221,37 +211,28 @@ watch(
           >
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  :variant="viewport === option.value ? 'default' : 'ghost'"
-                  class="size-7 p-0"
-                  :aria-label="`${option.label}预览`"
-                  @click="viewport = option.value"
-                >
+                <Button size="icon-xs" :variant="viewport === option.value ? 'default' : 'ghost'" :aria-label="`${option.label}预览`" @click="viewport = option.value">
                   <component
                     :is="option.icon"
                     class="size-3.5"
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">{{ option.label }}预览</TooltipContent>
+              <TooltipContent>{{ option.label }}预览</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
 
         <Popover>
           <PopoverTrigger as-child>
-            <Button
-              variant="ghost"
-              class="size-7 p-0"
-              aria-label="预览条件"
-            >
+            <Button size="icon-xs" variant="ghost" aria-label="预览条件">
               <component
                 :is="OptionsOutline"
                 class="size-3.5"
               />
             </Button>
           </PopoverTrigger>
-          <PopoverContent class="w-64 p-3 text-xs flex flex-col gap-2.5">
+          <PopoverContent class="w-64 flex flex-col gap-2.5">
             <div class="flex flex-col gap-1">
               <label class="text-muted-foreground font-medium">直播状态</label>
               <Select v-model="simulatedLiveState">
@@ -271,19 +252,14 @@ watch(
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                class="size-7 p-0"
-                aria-label="在真实页面中预览草稿"
-                @click="editor.openPreview"
-              >
+              <Button size="icon-xs" variant="ghost" aria-label="在真实页面中预览草稿" @click="editor.openPreview">
                 <component
                   :is="OpenOutline"
                   class="size-3.5"
                 />
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">在真实页面中预览草稿</TooltipContent>
+            <TooltipContent>在真实页面中预览草稿</TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>
@@ -348,7 +324,7 @@ watch(
               />
             </template>
             <template v-else-if="editor.currentPage.value.mode === 'contrib'">
-              <div class="contrib-preview-placeholder flex items-center justify-center min-h-[320px] p-6">
+              <div class="contrib-preview-placeholder flex-center min-h-[320px] p-6">
                 <div
                   class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
                 >
@@ -376,7 +352,7 @@ watch(
               </div>
             </template>
             <template v-else>
-              <Alert class="text-xs py-2 m-4">
+              <Alert size="sm" class="m-4">
                 <AlertDescription>
                   当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
                 </AlertDescription>

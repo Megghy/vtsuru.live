@@ -6,6 +6,7 @@ import { applyAccountSession, completeBiliAccount, useAccount } from '@/api/acco
 import type { BiliAccountProof } from '@/api/account'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { useMessage } from '@/shared/utils'
 
@@ -94,17 +95,15 @@ async function submit() {
         class="space-y-3"
         @submit.prevent="submit"
       >
-        <div class="space-y-1.5">
-          <label class="text-xs font-medium text-muted-foreground">本站密码</label>
+        <FormField label="本站密码">
           <Input
             v-model="password"
             type="password"
             placeholder="6–63 位，包含英文和数字"
             autocomplete="new-password"
           />
-        </div>
-        <div class="space-y-1.5">
-          <label class="text-xs font-medium text-muted-foreground">确认密码</label>
+        </FormField>
+        <FormField label="确认密码">
           <Input
             v-model="confirmation"
             type="password"
@@ -112,7 +111,7 @@ async function submit() {
             autocomplete="new-password"
             @keydown.enter="submit"
           />
-        </div>
+        </FormField>
       </form>
       <Button
         class="w-full"

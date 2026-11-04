@@ -139,7 +139,7 @@ function getAdvancedSummary() {
         value="advanced"
         class="border-none"
       >
-        <AccordionTrigger class="py-3 text-sm font-medium hover:no-underline">
+        <AccordionTrigger class="py-3 text-sm hover:no-underline">
           <div class="flex items-center gap-2">
             <span>高级规则与触发条件</span>
             <span class="text-xs text-muted-foreground font-normal">

@@ -128,13 +128,7 @@ function handleCardClick() {
             >
               {{ item.video.title }}
             </strong>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              class="open-link-btn size-7 text-muted-foreground hover:text-foreground"
-              aria-label="在哔哩哔哩打开"
-              @click.stop.prevent="emit('select')"
-            >
+            <Button variant="ghost" size="xs" class="open-link-btn size-7 text-muted-foreground" aria-label="在哔哩哔哩打开" @click.stop.prevent="emit('select')">
               <component
                 :is="Open24Regular"
                 class="size-4"
@@ -170,8 +164,7 @@ function handleCardClick() {
                 />
                 <span class="sender-name">{{ primarySender.sender || '匿名粉丝' }}</span>
               </span>
-              <Badge
-                v-if="otherSendersCount > 0"
+              <Badge v-if="otherSendersCount> 0"
                 variant="secondary"
                 class="extra-senders-tag text-[10px] h-4.5 px-1 font-normal"
               >

@@ -143,7 +143,7 @@ function toggleTargetItem(val: string) {
   <div class="flex items-center gap-3 w-full h-[460px]">
     <!-- 左侧：源列表 -->
     <div class="flex-1 h-full flex flex-col rounded-lg border border-border bg-card overflow-hidden">
-      <div class="p-2.5 border-b flex items-center justify-between bg-muted/20">
+      <div class="p-2.5 border-b flex-between bg-muted/20">
         <div class="flex items-center gap-2">
           <Checkbox
             :checked="isSourceAllChecked"
@@ -228,7 +228,7 @@ function toggleTargetItem(val: string) {
 
     <!-- 右侧：目标列表 -->
     <div class="flex-1 h-full flex flex-col rounded-lg border border-border bg-card overflow-hidden">
-      <div class="p-2.5 border-b flex items-center justify-between bg-muted/20">
+      <div class="p-2.5 border-b flex-between bg-muted/20">
         <div class="flex items-center gap-2">
           <Checkbox
             :checked="isTargetAllChecked"

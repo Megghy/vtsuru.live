@@ -1,4 +1,7 @@
 <script lang="ts" setup>
+import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
+
 withDefaults(
   defineProps<{
     label: string
@@ -11,20 +14,18 @@ withDefaults(
 </script>
 
 <template>
-  <span
-    class="flex gap-3 py-1.5 min-w-0"
-    :class="
-      labelPlacement === 'top' ? 'flex-col items-stretch gap-1' : 'flex-row items-center justify-between flex-wrap'
-    "
+  <FormField
+    v-if="labelPlacement === 'top'"
+    :label="label"
   >
-    <span class="text-xs text-foreground">
-      {{ label }}
-    </span>
-    <span
-      class="inline-flex items-center min-w-0"
-      :class="labelPlacement === 'left' ? 'justify-end' : ''"
-    >
-      <slot />
-    </span>
-  </span>
+    <slot />
+  </FormField>
+  <SettingRow
+    v-else
+    variant="none"
+    :title="label"
+    class="py-1"
+  >
+    <slot />
+  </SettingRow>
 </template>

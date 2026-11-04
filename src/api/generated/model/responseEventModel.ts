@@ -7,6 +7,6 @@
  */
 
 export interface ResponseEventModel {
-  code: string
-  version: string
+  code: string;
+  version: string;
 }

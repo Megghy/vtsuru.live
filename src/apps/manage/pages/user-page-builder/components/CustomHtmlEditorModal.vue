@@ -2,6 +2,7 @@
 import {
   CloudUploadOutline,
   CodeWorkingOutline,
+  CopyOutline,
   DesktopOutline,
   FolderOpenOutline,
   MoonOutline,
@@ -12,22 +13,21 @@ import { watchDebounced } from '@vueuse/core'
 import { ClipboardPaste, FileUp, Trash2 } from 'lucide-vue-next'
 import { computed, inject, ref, watch } from 'vue'
 
+import { FileKind } from '@/api/generated/model'
 import type { APIFileModel } from '@/api/generated/model'
 import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
 import { compileCustomVueSfc } from '@/apps/user-page/block/customHtmlCompile'
 import {
   CUSTOM_HTML_MAX_ASSETS,
   CUSTOM_VUE_MAX_BYTES,
-  normalizeCustomHtmlProps,
   utf8ByteLength,
 } from '@/apps/user-page/block/customHtmlContract'
 import type { CustomHtmlProps } from '@/apps/user-page/block/customHtmlContract'
 import { collectCustomHtmlAssetKeys, inspectCustomSource } from '@/apps/user-page/block/customHtmlRuntime'
-import type { CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
+import type { CustomCodeIssue, CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
 import { CUSTOM_CODE_TEMPLATES, applyCustomCodeTemplate } from '@/apps/user-page/block/customHtmlTemplates'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
-import { VTSURU_SANDBOX_DTS } from '@/apps/user-page/runtime/customHtmlBridge'
 import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import { useFilePicker } from '@/composables/useFilePicker'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
@@ -37,16 +37,26 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
 import { Input } from '@/shared/ui/input'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/ui/sheet'
+import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 import { isDarkMode, useDialog } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
+import {
+  appliedCustomHtmlDraft,
+  getCustomHtmlWorkspaceKey,
+  restoreCustomHtmlWorkspace,
+} from '../customHtmlWorkspaceDraft'
+import type { CustomHtmlWorkspaceDraft } from '../customHtmlWorkspaceDraft'
 import { deepCloneJson } from '../editorHelpers'
 import { useBuilderResources } from '../useBuilderResources'
 import { findBlockById } from '../userPageBlockTree'
-import { isSupportedUserPageImagePath, validateUserPageImageFiles } from '../userPageImageUpload'
+import { validateUserPageImageFiles } from '../userPageImageUpload'
+import CustomHtmlApiReference from './CustomHtmlApiReference.vue'
 import CustomHtmlCodeEditor from './CustomHtmlCodeEditor.vue'
 
 const props = defineProps<{ block?: BlockNode; page?: boolean }>()
@@ -56,24 +66,36 @@ if (!editor) throw new Error('UserPageEditor context is missing')
 
 const dialog = useDialog()
 const sourceConfig = computed(() => (props.page ? editor.currentPage.value.custom : props.block?.props))
-const draft = ref<CustomHtmlProps>(deepCloneJson(normalizeCustomHtmlProps(sourceConfig.value)))
+const draft = ref<CustomHtmlProps>(deepCloneJson(appliedCustomHtmlDraft(sourceConfig.value)))
 const initialSnapshot = ref('')
 const resourcesVisible = ref(true)
 const apiReferenceOpen = ref(false)
 const resourceSearch = ref('')
+const resourceSources = ref<string[]>([FileStore.Configs])
 const previewDevice = ref<'desktop' | 'mobile'>('desktop')
 const previewDark = ref(isDarkMode.value)
+const livePreview = ref(true)
+const LIVE_PREVIEW_MS = 400
 const uploading = ref(false)
 const codeEditor = ref<InstanceType<typeof CustomHtmlCodeEditor> | null>(null)
+const hydratingWorkspace = ref(false)
+const accountId = computed(() => Number(editor.account?.value?.id ?? 0))
+const workspaceScope = computed(() => (props.page ? 'page' : `block:${props.block?.id ?? 'unknown'}`))
+const workspaceKey = computed(() =>
+  getCustomHtmlWorkspaceKey(accountId.value, editor.currentKey.value, workspaceScope.value),
+)
+const workspaceDraft = usePersistedStorage<CustomHtmlWorkspaceDraft | null>(workspaceKey, null, {
+  writeDefaults: false,
+})
 const resources = useBuilderResources({
   fileRefs: editor.fileRefs,
   notifyError: editor.message.error,
   notifySuccess: editor.message.success,
+  kind: FileKind.Image,
+  stores: resourceSources,
 })
 
-const imageResources = computed(() =>
-  resources.resources.value.filter((resource) => !resource.missing && isSupportedUserPageImagePath(resource.path)),
-)
+const imageResources = computed(() => resources.resources.value.filter((resource) => !resource.missing))
 const filteredResources = computed(() => {
   const query = resourceSearch.value.trim().toLowerCase()
   if (!query) return imageResources.value
@@ -81,17 +103,23 @@ const filteredResources = computed(() => {
 })
 const attachedIds = computed(() => new Set(draft.value.assets.map((asset) => asset.file.id)))
 const sourceBytes = computed(() => utf8ByteLength(draft.value.source))
-const codeIssues = computed(() => {
-  const issues = [
-    ...inspectCustomSource(draft.value.source, draft.value.assets),
-    ...compileCustomVueSfc(draft.value.source).issues,
-  ]
-  if (draft.value.assets.length > CUSTOM_HTML_MAX_ASSETS)
-    issues.push({ field: 'assets' as const, message: `资源不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, line: 1, column: 1 })
-  if (sourceBytes.value > CUSTOM_VUE_MAX_BYTES)
-    issues.push({ field: 'source' as const, message: `Vue SFC 不能超过 ${CUSTOM_VUE_MAX_BYTES / 1024} KiB`, line: 1, column: 1 })
+const previewProps = ref<CustomHtmlProps>(deepCloneJson(draft.value))
+const compiledIssues = ref<CustomCodeIssue[]>([])
+const previewStale = computed(() => draft.value.source !== previewProps.value.source)
+
+function collectIssues(targetProps: CustomHtmlProps): CustomCodeIssue[] {
+  const issues = [...inspectCustomSource(targetProps.source, targetProps.assets), ...compileCustomVueSfc(targetProps.source).issues]
+  if (targetProps.assets.length > CUSTOM_HTML_MAX_ASSETS)
+    issues.push({ field: 'assets', message: `资源不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, line: 1, column: 1 })
+  if (utf8ByteLength(targetProps.source) > CUSTOM_VUE_MAX_BYTES)
+    issues.push({ field: 'source', message: `Vue SFC 不能超过 ${CUSTOM_VUE_MAX_BYTES / 1024} KiB`, line: 1, column: 1 })
   return issues
-})
+}
+
+function refreshPreview() {
+  previewProps.value = deepCloneJson(draft.value)
+  compiledIssues.value = collectIssues(previewProps.value)
+}
 const isDirty = computed(() => JSON.stringify(draft.value) !== initialSnapshot.value)
 const monacoTheme = computed(() => (previewDark.value ? ('vs-dark' as const) : ('vs' as const)))
 const previewTokens = computed(() => buildSiteTokens(previewDark.value))
@@ -122,9 +150,25 @@ const previewStyle = computed(() => ({
   colorScheme: previewDark.value ? 'dark' : 'light',
 }))
 
-function resetDraft() {
-  draft.value = deepCloneJson(normalizeCustomHtmlProps(sourceConfig.value))
-  initialSnapshot.value = JSON.stringify(draft.value)
+function resetDraft(stash: CustomHtmlWorkspaceDraft | null = workspaceDraft.value) {
+  const applied = appliedCustomHtmlDraft(sourceConfig.value)
+  initialSnapshot.value = JSON.stringify(applied)
+  const restored = restoreCustomHtmlWorkspace(applied, stash)
+  draft.value = restored.props
+  if (restored.dropStash) workspaceDraft.value = null
+  refreshPreview()
+}
+
+function flushWorkspaceDraft() {
+  if (hydratingWorkspace.value) return
+  if (!isDirty.value) {
+    workspaceDraft.value = null
+    return
+  }
+  workspaceDraft.value = {
+    baseSnapshot: initialSnapshot.value,
+    props: deepCloneJson(draft.value),
+  }
 }
 
 function projectWithDraft(): BlockPageProject | null {
@@ -156,6 +200,16 @@ function attachResource(file: APIFileModel, insert = true) {
   codeEditor.value?.insertText(`\n<img data-vtsuru-asset="${key}" alt="">`)
 }
 
+async function copyResourcePath(path?: string | null) {
+  if (!path) return
+  try {
+    await navigator.clipboard.writeText(path)
+    editor.message.success('资源链接已复制')
+  } catch {
+    editor.message.error('复制失败，请检查浏览器剪贴板权限')
+  }
+}
+
 function syncReferencedResources() {
   const keys = collectCustomHtmlAssetKeys(draft.value.source)
   const attachedKeys = new Set(draft.value.assets.map((asset) => asset.key))
@@ -168,12 +222,14 @@ function syncReferencedResources() {
 }
 
 function applyChanges() {
-  if (codeIssues.value.length) return
+  compiledIssues.value = collectIssues(draft.value)
+  if (compiledIssues.value.length) return
   editor.batchHistory(() => {
     if (props.page) editor.currentPage.value.custom = deepCloneJson(draft.value)
     else if (props.block) props.block.props = deepCloneJson(draft.value)
   })
   initialSnapshot.value = JSON.stringify(draft.value)
+  workspaceDraft.value = null
   show.value = false
   editor.message.success('自定义代码已应用')
 }
@@ -181,6 +237,7 @@ function applyChanges() {
 function insertTemplate(key: string) {
   const apply = () => {
     draft.value = applyCustomCodeTemplate(draft.value, key)
+    codeEditor.value?.setContent(draft.value.source)
   }
   if (!isDirty.value) return apply()
   dialog.warning({
@@ -193,19 +250,8 @@ function insertTemplate(key: string) {
 }
 
 function closeEditor() {
-  if (!isDirty.value) {
-    show.value = false
-    return
-  }
-  dialog.warning({
-    title: '放弃未应用修改',
-    content: '代码工作区中的修改尚未应用到区块。',
-    positiveText: '放弃修改',
-    negativeText: '继续编辑',
-    onPositiveClick: () => {
-      show.value = false
-    },
-  })
+  flushWorkspaceDraft()
+  show.value = false
 }
 
 function updateShow(value: boolean) {
@@ -243,6 +289,9 @@ const codeFileInputRef = ref<HTMLInputElement | null>(null)
 const manualPasteOpen = ref(false)
 const manualPasteText = ref('')
 
+watch(resourceSources, () => {
+  if (show.value) void resources.loadResources()
+})
 watch(
   show,
   (visible) => {
@@ -251,8 +300,17 @@ watch(
       manualPasteText.value = ''
       return
     }
-    resetDraft()
+    hydratingWorkspace.value = true
+    resetDraft(null)
     void resources.loadResources()
+    void whenPersistedReady(workspaceDraft).then((stash) => {
+      if (!show.value) {
+        hydratingWorkspace.value = false
+        return
+      }
+      resetDraft(stash)
+      hydratingWorkspace.value = false
+    })
   },
   { immediate: true },
 )
@@ -260,10 +318,34 @@ watchDebounced([() => draft.value.source, imageResources], syncReferencedResourc
   debounce: 180,
   deep: true,
 })
+watchDebounced(
+  draft,
+  () => {
+    if (!show.value) return
+    flushWorkspaceDraft()
+  },
+  { debounce: 300, deep: true },
+)
+watchDebounced(
+  draft,
+  () => {
+    if (!show.value || !livePreview.value || hydratingWorkspace.value) return
+    refreshPreview()
+  },
+  { debounce: LIVE_PREVIEW_MS, maxWait: 1200, deep: true },
+)
+watch(livePreview, (enabled) => {
+  if (enabled && show.value && !hydratingWorkspace.value) refreshPreview()
+})
 
 function applyCodeText(text: string) {
   if (!draft.value.source.trim()) codeEditor.value?.setContent(text)
   else codeEditor.value?.insertText(text)
+}
+
+function insertApiSnippet(snippet: string) {
+  codeEditor.value?.insertText(snippet.endsWith('\n') ? snippet : `${snippet}\n`)
+  apiReferenceOpen.value = false
 }
 
 async function handlePasteFromClipboard() {
@@ -358,7 +440,7 @@ function confirmManualPaste() {
   >
     <DialogContent class="max-w-[min(1600px,96vw)] h-[min(920px,94dvh)] p-0 flex flex-col gap-0 overflow-hidden">
       <DialogHeader class="p-3.5 border-b flex flex-row items-center justify-between shrink-0">
-        <DialogTitle class="text-base font-semibold"> 自定义 Vue </DialogTitle>
+        <DialogTitle class="text-base"> 自定义 Vue </DialogTitle>
         <DialogDescription class="sr-only">使用 Vue 单文件组件编写自定义页面。</DialogDescription>
         <div class="flex items-center gap-2 pr-6">
           <DropdownMenu>
@@ -378,11 +460,11 @@ function confirmManualPaste() {
             >API 速查</Button
           >
           <Tag
-            v-if="codeIssues.length"
+            v-if="compiledIssues.length"
             variant="destructive"
             class="text-xs"
           >
-            {{ codeIssues.length }} 个问题
+            {{ compiledIssues.length }} 个问题
           </Tag>
           <Button
             variant="outline"
@@ -400,7 +482,7 @@ function confirmManualPaste() {
       >
         <aside
           v-if="resourcesVisible"
-          class="resources-pane flex flex-col border-r bg-muted/20"
+          class="resources-pane flex min-h-0 flex-col overflow-hidden border-r bg-muted/20"
         >
           <div class="p-3 border-b flex flex-col gap-2 shrink-0">
             <div class="flex justify-between items-center">
@@ -408,14 +490,7 @@ function confirmManualPaste() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      :disabled="uploading"
-                      aria-label="上传图片"
-                      @click="openImageUpload()"
-                    >
+                    <Button size="xs" variant="ghost" class="size-7" :disabled="uploading" aria-label="上传图片" @click="openImageUpload()">
                       <CloudUploadOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -423,39 +498,70 @@ function confirmManualPaste() {
                 </Tooltip>
               </TooltipProvider>
             </div>
+            <ToggleGroup
+              v-model="resourceSources"
+              type="multiple"
+              size="xs"
+              class="h-auto w-full flex-wrap justify-start"
+            >
+              <ToggleGroupItem :value="FileStore.Configs">编辑器</ToggleGroupItem>
+              <ToggleGroupItem :value="FileStore.Library">自己上传</ToggleGroupItem>
+              <ToggleGroupItem :value="FileStore.Questions">提问箱</ToggleGroupItem>
+            </ToggleGroup>
             <Input
               v-model="resourceSearch"
               size="xs"
               placeholder="搜索文件"
             />
           </div>
-          <div class="flex-1 min-h-0 overflow-y-auto p-2">
+          <div class="min-h-0 flex-1 overflow-y-auto scrollbar-thin p-2">
             <div
               v-if="filteredResources.length"
               class="resource-list space-y-1"
             >
-              <Button
+              <div
                 v-for="file in filteredResources"
                 :key="file.id"
-                variant="ghost"
-                class="resource-row w-full h-auto justify-start gap-2 p-1.5"
-                @click="attachResource(file)"
+                class="resource-row flex items-center gap-0.5 rounded-md hover:bg-muted/50"
               >
-                <img
-                  :src="file.path"
-                  alt=""
-                  class="size-8 rounded object-cover shrink-0"
-                  loading="lazy"
-                  decoding="async"
-                  referrerpolicy="no-referrer"
-                />
-                <span class="resource-copy flex-1 min-w-0">
-                  <strong class="block truncate text-foreground">{{ file.name || `资源 #${file.id}` }}</strong>
-                  <small class="text-muted-foreground"
-                    >#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small
-                  >
-                </span>
-              </Button>
+                <Button
+                  variant="ghost"
+                  class="resource-row-main min-w-0 flex-1 h-auto justify-start gap-2 p-1.5"
+                  @click="attachResource(file)"
+                >
+                  <img
+                    :src="file.path"
+                    alt=""
+                    class="size-8 rounded object-cover shrink-0"
+                    loading="lazy"
+                    decoding="async"
+                    referrerpolicy="no-referrer"
+                  />
+                  <span class="min-w-0 flex-1 text-left">
+                    <strong class="block truncate text-foreground">{{ file.name || `资源 #${file.id}` }}</strong>
+                    <small class="text-muted-foreground"
+                      >#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small
+                    >
+                  </span>
+                </Button>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger as-child>
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="size-7 shrink-0"
+                        :disabled="!file.path"
+                        aria-label="复制资源链接"
+                        @click.stop="copyResourcePath(file.path)"
+                      >
+                        <CopyOutline class="size-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>复制链接</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
             <div
               v-else-if="!resources.isLoading.value"
@@ -480,13 +586,7 @@ function confirmManualPaste() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      aria-label="从剪贴板粘贴"
-                      @click="handlePasteFromClipboard"
-                    >
+                    <Button size="xs" variant="ghost" class="size-7" aria-label="从剪贴板粘贴" @click="handlePasteFromClipboard">
                       <ClipboardPaste class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -494,13 +594,7 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      aria-label="导入代码文件"
-                      @click="triggerCodeFileInput"
-                    >
+                    <Button size="xs" variant="ghost" class="size-7" aria-label="导入代码文件" @click="triggerCodeFileInput">
                       <FileUp class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -508,13 +602,7 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      aria-label="清空当前代码"
-                      @click="handleClearCode"
-                    >
+                    <Button size="xs" variant="ghost" class="size-7" aria-label="清空当前代码" @click="handleClearCode">
                       <Trash2 class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -522,13 +610,7 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      aria-label="格式化代码"
-                      @click="codeEditor?.formatDocument()"
-                    >
+                    <Button size="xs" variant="ghost" class="size-7" aria-label="格式化代码" @click="codeEditor?.formatDocument()">
                       <CodeWorkingOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -536,13 +618,7 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7"
-                      aria-label="切换资源栏"
-                      @click="resourcesVisible = !resourcesVisible"
-                    >
+                    <Button size="xs" variant="ghost" class="size-7" aria-label="切换资源栏" @click="resourcesVisible = !resourcesVisible">
                       <FolderOpenOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -564,7 +640,7 @@ function confirmManualPaste() {
               :theme="monacoTheme"
               :assets="draft.assets"
               :resources="imageResources"
-              :issues="codeIssues"
+              :issues="compiledIssues"
               @update:source="draft.source = $event"
             />
           </div>
@@ -574,35 +650,31 @@ function confirmManualPaste() {
           <div
             class="pane-toolbar preview-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0"
           >
-            <span class="text-xs font-semibold text-foreground"> 实时预览 </span>
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-xs font-semibold text-foreground">预览</span>
+              <label class="inline-flex-center gap-1.5 text-xs text-muted-foreground">
+                实时更新
+                <Switch v-model="livePreview" />
+              </label>
+              <Button
+                v-if="!livePreview"
+                size="xs"
+                :variant="previewStale ? 'default' : 'outline'"
+                @click="refreshPreview"
+              >
+                更新预览
+              </Button>
+            </div>
             <div class="flex items-center gap-1.5">
               <div class="inline-flex rounded-md border p-0.5 bg-muted">
-                <Button
-                  size="icon"
-                  :variant="previewDevice === 'desktop' ? 'default' : 'ghost'"
-                  class="size-6"
-                  aria-label="桌面预览"
-                  @click="previewDevice = 'desktop'"
-                >
+                <Button size="xs" :variant="previewDevice === 'desktop' ? 'default' : 'ghost'" class="size-6" aria-label="桌面预览" @click="previewDevice = 'desktop'">
                   <DesktopOutline class="size-3.5" />
                 </Button>
-                <Button
-                  size="icon"
-                  :variant="previewDevice === 'mobile' ? 'default' : 'ghost'"
-                  class="size-6"
-                  aria-label="移动预览"
-                  @click="previewDevice = 'mobile'"
-                >
+                <Button size="xs" :variant="previewDevice === 'mobile' ? 'default' : 'ghost'" class="size-6" aria-label="移动预览" @click="previewDevice = 'mobile'">
                   <PhonePortraitOutline class="size-3.5" />
                 </Button>
               </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                class="size-7"
-                :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
-                @click="previewDark = !previewDark"
-              >
+              <Button size="xs" variant="ghost" class="size-7" :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'" @click="previewDark = !previewDark">
                 <SunnyOutline
                   v-if="previewDark"
                   class="size-4"
@@ -624,7 +696,7 @@ function confirmManualPaste() {
                 :style="previewStyle"
               >
                 <CustomHtmlBlock
-                  :block-props="draft"
+                  :block-props="previewProps"
                   :theme="previewTheme"
                   :user-info="editor.account.value"
                   :page-mode="props.page ? 'custom' : 'block'"
@@ -641,14 +713,14 @@ function confirmManualPaste() {
   <Dialog v-model:open="manualPasteOpen">
     <DialogContent class="max-w-md p-4 flex flex-col gap-3">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">粘贴代码</DialogTitle>
-        <DialogDescription class="text-xs text-muted-foreground">
+        <DialogTitle class="text-sm">粘贴代码</DialogTitle>
+        <DialogDescription class="text-xs">
           浏览器剪贴板自动读取受限，请在下方输入框粘贴代码（Ctrl/⌘+V）后导入：
         </DialogDescription>
       </DialogHeader>
       <Textarea
         v-model="manualPasteText"
-        class="h-36 font-mono text-xs resize-none"
+        class="h-36 font-mono resize-none"
         placeholder="在此粘贴代码..."
         aria-label="粘贴代码内容"
         autofocus
@@ -672,12 +744,14 @@ function confirmManualPaste() {
     </DialogContent>
   </Dialog>
   <Sheet v-model:open="apiReferenceOpen">
-    <SheetContent class="w-full sm:max-w-2xl overflow-y-auto scrollbar-thin">
-      <SheetHeader
-        ><SheetTitle>window.vtsuru API</SheetTitle
-        ><SheetDescription>在 &lt;script setup&gt; 中使用 await vtsuru.method() 调用宿主能力。</SheetDescription></SheetHeader
-      >
-      <pre class="whitespace-pre-wrap break-words leading-relaxed">{{ VTSURU_SANDBOX_DTS }}</pre>
+    <SheetContent class="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+      <SheetHeader class="shrink-0 border-b px-6 py-4 text-left">
+        <SheetTitle>vtsuru API</SheetTitle>
+        <SheetDescription>点击方法插入到光标处。允许 vue / dayjs / @vueuse/core。</SheetDescription>
+      </SheetHeader>
+      <div class="min-h-0 min-w-0 flex-1 overflow-y-auto scrollbar-thin px-6 py-4">
+        <CustomHtmlApiReference @insert="insertApiSnippet" />
+      </div>
     </SheetContent>
   </Sheet>
 </template>

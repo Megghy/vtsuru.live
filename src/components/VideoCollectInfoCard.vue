@@ -58,27 +58,15 @@ function onClick() {
       @keydown.enter.prevent="onClick"
       @keydown.space.prevent="onClick"
     >
-      <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2">
+      <CardHeader class="p-3 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <Badge
-            v-if="item.isFinish"
-            variant="secondary"
-            class="text-[10px] h-4.5 px-1.5 font-normal"
-          >
+          <Badge v-if="item.isFinish" variant="secondary" size="xs">
             已结束
           </Badge>
-          <Badge
-            v-else-if="isUpcoming"
-            variant="default"
-            class="text-[10px] h-4.5 px-1.5 font-normal bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30"
-          >
+          <Badge v-else-if="isUpcoming" variant="default" size="xs" class="bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30">
             未开始
           </Badge>
-          <Badge
-            v-else
-            variant="default"
-            class="text-[10px] h-4.5 px-1.5 font-normal bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-          >
+          <Badge v-else variant="success" size="xs">
             进行中
           </Badge>
 
@@ -100,9 +88,7 @@ function onClick() {
         </p>
       </CardContent>
 
-      <CardFooter
-        class="p-3 pt-0 flex items-center gap-3 text-xs text-muted-foreground border-t border-border/40 mt-1 pt-2"
-      >
+      <CardFooter class="p-3 flex items-center gap-3 text-xs text-muted-foreground border-t border-border/40 mt-1 pt-2">
         <Tooltip>
           <TooltipTrigger as-child>
             <div class="flex items-center gap-1 font-mono cursor-default">

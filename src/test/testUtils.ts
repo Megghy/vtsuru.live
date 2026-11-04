@@ -15,6 +15,7 @@ export function createMockUploadFile(overrides?: Partial<APIFileModel>): APIFile
     hash: 'hash-mock',
     path: 'https://example.com/test-image.png',
     size: 0,
+    store: 'configs',
     ...overrides,
   }
 }

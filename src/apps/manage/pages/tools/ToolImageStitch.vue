@@ -368,7 +368,7 @@ onBeforeUnmount(clearAll)
   <div class="stitch-page">
     <Card>
       <CardHeader class="flex flex-row items-center justify-between pb-4">
-        <CardTitle class="text-base font-semibold">图片拼接</CardTitle>
+        <CardTitle class="text-base">图片拼接</CardTitle>
         <div class="flex items-center gap-2">
           <span
             v-if="lastExportSize"
@@ -386,7 +386,7 @@ onBeforeUnmount(clearAll)
         </div>
       </CardHeader>
 
-      <CardContent class="pt-0">
+      <CardContent>
         <div
           v-if="!items.length"
           ref="dropZoneRef"
@@ -446,7 +446,7 @@ onBeforeUnmount(clearAll)
                   v-for="preset in layoutPresets"
                   :key="preset.key"
                   variant="outline"
-                  class="preset-card h-auto p-2.5 flex flex-col items-center justify-center text-center font-normal"
+                  class="preset-card h-auto p-2.5 flex-col-center text-center font-normal"
                   :class="{
                     active:
                       settings.layout === preset.layout &&
@@ -712,7 +712,7 @@ onBeforeUnmount(clearAll)
                 v-if="selectedItem"
                 class="selected-box"
               >
-                <div class="flex items-center justify-between">
+                <div class="flex-between">
                   <Tag
                     size="small"
                     variant="secondary"
@@ -720,20 +720,10 @@ onBeforeUnmount(clearAll)
                     已选中
                   </Tag>
                   <div class="flex items-center gap-1.5">
-                    <Button
-                      variant="outline"
-                      class="h-6 px-1.5"
-                      :disabled="!canMoveSelectedUp"
-                      @click="moveSelected(-1)"
-                    >
+                    <Button size="xs" variant="outline" class="px-1.5" :disabled="!canMoveSelectedUp" @click="moveSelected(-1)">
                       上移
                     </Button>
-                    <Button
-                      variant="outline"
-                      class="h-6 px-1.5"
-                      :disabled="!canMoveSelectedDown"
-                      @click="moveSelected(1)"
-                    >
+                    <Button size="xs" variant="outline" class="px-1.5" :disabled="!canMoveSelectedDown" @click="moveSelected(1)">
                       下移
                     </Button>
                   </div>

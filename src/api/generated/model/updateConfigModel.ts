@@ -7,7 +7,7 @@
  */
 
 export interface UpdateConfigModel {
-  name: string
-  json: string
-  public: boolean
+  name: string;
+  json: string;
+  public: boolean;
 }

@@ -10,20 +10,26 @@ import {
   useForwardPropsEmits,
 } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
+import { computed } from 'vue'
 
 import { cn } from '@/shared/utils/cn'
 
 defineOptions({ name: 'NumberField' })
 
+export type NumberFieldProps = Omit<NumberFieldRootProps, 'min' | 'max' | 'step' | 'modelValue' | 'defaultValue'> & {
+  class?: HTMLAttributes['class']
+  size?: 'default' | 'sm' | 'xs' | 'lg'
+  placeholder?: string
+  showButtons?: boolean
+  min?: number | string
+  max?: number | string
+  step?: number | string
+  modelValue?: number | string | null
+  defaultValue?: number | string
+}
+
 const props = withDefaults(
-  defineProps<
-    NumberFieldRootProps & {
-      class?: HTMLAttributes['class']
-      size?: 'default' | 'sm' | 'xs' | 'lg'
-      placeholder?: string
-      showButtons?: boolean
-    }
-  >(),
+  defineProps<NumberFieldProps>(),
   {
     size: 'sm',
     showButtons: true,
@@ -32,8 +38,18 @@ const props = withDefaults(
 )
 
 const emits = defineEmits<NumberFieldRootEmits>()
-const delegatedProps = reactiveOmit(props, 'class', 'size', 'placeholder', 'showButtons')
-const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const delegatedProps = reactiveOmit(props, 'class', 'size', 'placeholder', 'showButtons', 'min', 'max', 'step', 'modelValue', 'defaultValue')
+
+const normalizedProps = computed(() => ({
+  ...delegatedProps,
+  min: props.min !== undefined && props.min !== '' ? Number(props.min) : undefined,
+  max: props.max !== undefined && props.max !== '' ? Number(props.max) : undefined,
+  step: props.step !== undefined && props.step !== '' ? Number(props.step) : 1,
+  modelValue: props.modelValue !== undefined && props.modelValue !== null && props.modelValue !== '' ? Number(props.modelValue) : (props.modelValue as any),
+  defaultValue: props.defaultValue !== undefined && props.defaultValue !== '' ? Number(props.defaultValue) : undefined,
+}))
+
+const forwarded = useForwardPropsEmits(normalizedProps, emits)
 
 const sizeClasses: Record<string, string> = {
   default: 'h-control-default text-sm',

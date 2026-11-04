@@ -122,12 +122,9 @@ async function resendEmail() {
 
     <template v-else-if="showBindEmail">
       <div class="manage-page manage-page--md">
-        <Alert
-          variant="default"
-          class="mb-3 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-        >
-          <AlertTitle class="text-xs font-semibold">绑定邮箱后使用主播后台</AlertTitle>
-          <AlertDescription class="text-xs">
+        <Alert variant="info" class="mb-3">
+          <AlertTitle>绑定邮箱后使用主播后台</AlertTitle>
+          <AlertDescription>
             主播功能需要已验证的邮箱。绑定后我们会发送验证邮件，完成验证即可进入后台。
           </AlertDescription>
         </Alert>
@@ -136,10 +133,10 @@ async function resendEmail() {
     </template>
 
     <template v-else-if="showEmailWait">
-      <div class="manage-page manage-page--md manage-page--center flex items-center justify-center p-6">
+      <div class="manage-page manage-page--md manage-page--center flex-center p-6">
         <Card class="w-full max-w-lg p-6">
           <CardContent class="flex flex-col items-center text-center p-0 space-y-4">
-            <div class="size-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+            <div class="size-12 rounded-full bg-primary/10 flex-center text-primary">
               <Mail24Filled class="size-7" />
             </div>
             <div>
@@ -151,12 +148,9 @@ async function resendEmail() {
               </p>
             </div>
 
-            <Alert
-              variant="default"
-              class="text-left border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-            >
+            <Alert variant="warning" class="text-left">
               <Info24Filled class="size-4 shrink-0" />
-              <AlertDescription class="text-xs ml-2">
+              <AlertDescription class="ml-2">
                 如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送
               </AlertDescription>
             </Alert>

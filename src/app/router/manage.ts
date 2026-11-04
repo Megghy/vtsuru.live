@@ -232,6 +232,7 @@ const manageRoute: RouteRecordRaw = {
       component: async () => import('@/apps/manage/pages/live/LiveDetailManage.vue'),
       meta: {
         title: '直播详情',
+        parent: 'manage-live',
         pageWidth: 'lg',
       },
     },

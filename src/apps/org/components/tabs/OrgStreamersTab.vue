@@ -63,7 +63,7 @@ async function onSaved() {
     />
 
     <!-- 工具栏 -->
-    <div class="flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex-between gap-3 flex-wrap">
       <div class="relative w-56">
         <Input
           v-model="search"
@@ -95,14 +95,14 @@ async function onSaved() {
     <!-- 主播列表 -->
     <Card
       v-else
-      class="border border-border/80 overflow-hidden"
+      class="/80 overflow-hidden"
     >
       <CardContent class="p-0">
         <div class="divide-y divide-border/60">
           <div
             v-for="s in filtered"
             :key="s.streamer.id"
-            class="p-3 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors cursor-pointer select-none"
+            class="p-3 flex-between gap-3 hover:bg-muted/30 transition-colors cursor-pointer select-none"
             @click="detail.open(s.streamer.id)"
           >
             <div class="flex items-center gap-3 min-w-0">
@@ -122,21 +122,10 @@ async function onSaved() {
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-2">
                   <strong class="font-medium text-foreground text-sm truncate">{{ s.streamer.name }}</strong>
-                  <Badge
-                    variant="secondary"
-                    class="text-[10px] h-4.5 px-1.5 font-normal"
-                  >
+                  <Badge variant="secondary" size="xs">
                     {{ streamerStatusLabel(s.status) }}
                   </Badge>
-                  <Badge
-                    variant="outline"
-                    class="text-[10px] h-4.5 px-1.5 font-normal"
-                    :class="
-                      s.streamer.isBiliAuthed
-                        ? 'text-emerald-600 border-emerald-500/30'
-                        : 'text-muted-foreground border-border/60'
-                    "
-                  >
+                  <Badge variant="outline" size="xs" :class=" s.streamer.isBiliAuthed ? 'text-emerald-600 border-emerald-500/30' : 'text-muted-foreground border-border/60' ">
                     {{ s.streamer.isBiliAuthed ? '已绑定B站' : '未绑定' }}
                   </Badge>
                 </div>
@@ -161,11 +150,7 @@ async function onSaved() {
                   @positive-click="remove(s.streamer.id)"
                 >
                   <template #trigger>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      class="size-7 rounded-full text-destructive hover:bg-destructive/10"
-                    >
+                    <Button size="xs" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
                       <component
                         :is="TrashOutline"
                         class="size-3.5"

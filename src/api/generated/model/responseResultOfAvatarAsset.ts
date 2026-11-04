@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AvatarAsset } from './avatarAsset'
+import type { AvatarAsset } from './avatarAsset';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfAvatarAsset {
-  message: string
-  code: number
-  data: AvatarAsset
+  message: string;
+  code: number;
+  data: AvatarAsset;
 }

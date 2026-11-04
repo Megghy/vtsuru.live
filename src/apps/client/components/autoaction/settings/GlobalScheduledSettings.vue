@@ -27,19 +27,19 @@ watch(
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b">
-      <CardTitle class="text-sm font-semibold">全局定时器配置</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b">
+      <CardTitle>全局定时器配置</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3 space-y-3">
-      <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-        <AlertDescription class="text-xs m-0">
+      <Alert size="sm" variant="info">
+        <AlertDescription class="m-0">
           这里的设置将应用于所有启用了“使用全局设置”的定时触发操作。这些操作将共享同一个计时周期。
         </AlertDescription>
       </Alert>
 
-      <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+      <div class="flex-between p-2.5 rounded border bg-muted/20">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
@@ -48,7 +48,7 @@ watch(
                 <Info16Regular class="size-3.5 text-muted-foreground" />
               </div>
             </TooltipTrigger>
-            <TooltipContent class="text-xs"> 每隔多少秒触发一次全局定时任务 </TooltipContent>
+            <TooltipContent> 每隔多少秒触发一次全局定时任务 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
         <NumberField

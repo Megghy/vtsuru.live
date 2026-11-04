@@ -101,7 +101,7 @@ watch(
   <!-- 情况一: 缺少认证信息, 显示错误提示页 -->
   <div
     v-if="needsOpenLiveAuth && !authInfo?.Code"
-    class="h-screen w-full flex items-center justify-center p-6 bg-background text-foreground"
+    class="h-screen w-full flex-center p-6 bg-background text-foreground"
   >
     <div class="max-w-md w-full text-center space-y-4 p-8 rounded-lg border bg-card">
       <div class="text-destructive font-bold text-xl">无效访问</div>
@@ -127,7 +127,7 @@ watch(
     :style="manageCssVars"
   >
     <!-- 顶部导航栏 -->
-    <header class="h-[60px] border-b border-border flex items-center justify-between px-5 shrink-0 bg-card">
+    <header class="h-[60px] border-b border-border flex-between px-5 shrink-0 bg-card">
       <div class="flex items-center gap-3">
         <Button
           variant="ghost"
@@ -147,18 +147,7 @@ watch(
       </div>
 
       <div class="flex items-center gap-4">
-        <Badge
-          v-if="needsOpenLiveAuth"
-          variant="outline"
-          class="text-xs h-6 px-2 gap-1.5"
-          :class="
-            danmakuClient.phase === 'error'
-              ? 'border-destructive/40 text-destructive bg-destructive/10'
-              : danmakuClient.connected
-                ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-                : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
-          "
-        >
+        <Badge v-if="needsOpenLiveAuth" variant="success" class="h-6 px-2 gap-1.5" :class=" danmakuClient.phase === 'error' ? 'border-destructive/40 text-destructive bg-destructive/10' : danmakuClient.connected ? ' ' : 'border-amber-500/40 text-amber-600 bg-amber-500/10' ">
           <Sunny
             v-if="danmakuClient.connected"
             class="size-3.5"
@@ -191,13 +180,7 @@ watch(
         :class="siderCollapsed ? 'w-16' : 'w-[180px]'"
       >
         <div class="flex items-center justify-end p-2 border-b">
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            class="size-6 text-muted-foreground hover:text-foreground"
-            :aria-label="siderCollapsed ? '展开边栏' : '折叠边栏'"
-            @click="siderCollapsed = !siderCollapsed"
-          >
+          <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" :aria-label="siderCollapsed ? '展开边栏' : '折叠边栏'" @click="siderCollapsed = !siderCollapsed">
             <ChevronRight16Regular
               v-if="siderCollapsed"
               class="size-3.5"
@@ -270,7 +253,7 @@ watch(
       <main class="flex-1 min-w-0 overflow-y-auto open-live-page h-full bg-background">
         <div
           v-if="danmakuClientError"
-          class="m-3 p-3 rounded-md border border-destructive/40 bg-destructive/10 text-destructive text-xs flex items-center justify-between"
+          class="m-3 p-3 rounded-md border border-destructive/40 bg-destructive/10 text-destructive text-xs flex-between"
         >
           <span>{{ danmakuClientError }}</span>
           <Button
@@ -312,14 +295,14 @@ watch(
           </template>
           <div
             v-else-if="needsOpenLiveAuth && !danmakuClient.authInfo && !danmakuClientError"
-            class="flex flex-col items-center justify-center h-4/5 gap-3"
+            class="flex-col-center h-4/5 gap-3"
           >
             <Spin size="large" />
             <span class="text-xs text-muted-foreground">正在加载主播信息并连接服务...</span>
           </div>
           <div
             v-else-if="!danmakuClientError"
-            class="flex flex-col items-center justify-center h-4/5 gap-2 text-center"
+            class="flex-col-center h-4/5 gap-2 text-center"
           >
             <div class="text-amber-500 font-semibold text-sm">页面加载失败</div>
             <div class="text-xs text-muted-foreground">无法加载当前功能模块，请尝试刷新或联系开发者。</div>
@@ -330,7 +313,7 @@ watch(
 
     <!-- 底部信息栏 -->
     <footer
-      class="h-10 border-t border-border flex items-center justify-center px-5 shrink-0 bg-card text-xs text-muted-foreground"
+      class="h-10 border-t border-border flex-center px-5 shrink-0 bg-card text-xs text-muted-foreground"
     >
       <span>
         © {{ new Date().getFullYear() }}

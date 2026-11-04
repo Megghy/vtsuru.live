@@ -287,7 +287,7 @@ async function confirmDelete() {
         :class="{ 'border-brand bg-brand-soft/20': statusFilter === 'all' }"
         @click="statusFilter = 'all'"
       >
-        <div class="flex items-center justify-between text-xs text-muted-foreground">
+        <div class="flex-between text-xs text-muted-foreground">
           <span>全部征集</span>
           <component
             :is="Folder24Regular"
@@ -304,7 +304,7 @@ async function confirmDelete() {
         :class="{ 'border-brand bg-brand-soft/20': statusFilter === 'active' }"
         @click="statusFilter = 'active'"
       >
-        <div class="flex items-center justify-between text-xs text-muted-foreground">
+        <div class="flex-between text-xs text-muted-foreground">
           <span>进行中 / 开放中</span>
           <component
             :is="Timer24Regular"
@@ -317,7 +317,7 @@ async function confirmDelete() {
       </Card>
 
       <Card class="p-3">
-        <div class="flex items-center justify-between text-xs text-muted-foreground">
+        <div class="flex-between text-xs text-muted-foreground">
           <span>累计征集视频</span>
           <component
             :is="Video24Regular"
@@ -331,7 +331,7 @@ async function confirmDelete() {
     </div>
 
     <!-- 工具栏 -->
-    <Card class="p-3 flex items-center justify-between flex-wrap gap-2.5">
+    <Card class="p-3 flex-between flex-wrap gap-2.5">
       <div class="relative w-72">
         <component
           :is="Search24Regular"
@@ -401,18 +401,13 @@ async function confirmDelete() {
       <div
         v-for="table in filteredTables"
         :key="table.id"
-        class="p-3 rounded-lg border border-border bg-card/60 hover:bg-muted/40 cursor-pointer transition-colors flex items-center justify-between flex-wrap gap-3"
+        class="p-3 rounded-lg border border-border bg-card/60 hover:bg-muted/40 cursor-pointer transition-colors flex-between flex-wrap gap-3"
         @click="router.push({ name: 'manage-videoCollect-Detail', params: { id: table.id } })"
       >
         <!-- 主体信息 -->
         <div class="min-w-0 flex-1 space-y-1">
           <div class="flex items-center gap-2">
-            <Badge
-              :variant="
-                tableStatus(table) === '进行中' ? 'secondary' : tableStatus(table) === '未开始' ? 'outline' : 'default'
-              "
-              class="text-[10px] px-1.5 py-0 h-4"
-            >
+            <Badge :variant=" tableStatus(table) === '进行中' ? 'secondary' : tableStatus(table) === '未开始' ? 'outline' : 'default' " size="xs">
               {{ tableStatus(table) }}
             </Badge>
             <strong
@@ -442,7 +437,7 @@ async function confirmDelete() {
           </div>
 
           <div class="w-28 space-y-1">
-            <div class="flex items-center justify-between text-[10px]">
+            <div class="flex-between text-[10px]">
               <span>名额占用</span>
               <strong class="font-mono text-foreground">{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
             </div>
@@ -460,7 +455,7 @@ async function confirmDelete() {
             <Button
               size="xs"
               variant="outline"
-              title="复制投稿页面链接"
+              aria-label="复制投稿页面链接"
               @click.stop="copyShareLink(table)"
             >
               <component
@@ -472,7 +467,7 @@ async function confirmDelete() {
             <Button
               size="xs"
               variant="outline"
-              title="查看展示结果页"
+              aria-label="查看展示结果页"
               @click.stop="openResultPage(table)"
             >
               <component

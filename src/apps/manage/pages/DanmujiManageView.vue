@@ -31,6 +31,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
@@ -246,44 +247,32 @@ onActivated(() => {
       <!-- 左侧：设置面板 (7 列) -->
       <Card class="lg:col-span-7">
         <CardContent class="p-4 space-y-4">
-          <Alert
-            v-if="isLoading"
-            class="border-border bg-muted/40 py-2"
-          >
-            <AlertDescription class="text-xs"> 正在读取配置… </AlertDescription>
+          <Alert size="sm" v-if="isLoading" class="border-border bg-muted/40">
+            <AlertDescription> 正在读取配置… </AlertDescription>
           </Alert>
 
           <Tabs
             v-model="activeTab"
             class="w-full"
           >
-            <TabsList class="grid w-full grid-cols-2 max-w-xs p-0.5 bg-muted mb-3">
-              <TabsTrigger
-                value="style"
-                class="text-xs h-7"
-              >
+            <TabsList size="xs" class="grid w-full grid-cols-2 max-w-xs p-0.5 bg-muted mb-3">
+              <TabsTrigger value="style" >
                 样式定制
               </TabsTrigger>
-              <TabsTrigger
-                value="rules"
-                class="text-xs h-7"
-              >
+              <TabsTrigger value="rules" >
                 功能规则
               </TabsTrigger>
             </TabsList>
 
             <!-- 样式定制 Tab -->
-            <TabsContent
-              value="style"
-              class="space-y-4 mt-2"
-            >
+            <TabsContent value="style" class="space-y-4">
               <DanmujiStyleEditor v-model="config.style" />
 
               <Alert
                 v-if="legacyCss"
                 class="border-border bg-muted/40"
               >
-                <div class="flex items-center justify-between text-xs">
+                <div class="flex-between text-xs">
                   <span>此浏览器留有旧版 CSS，可导入后保存至云端。</span>
                   <AlertDialog>
                     <AlertDialogTrigger as-child>
@@ -312,7 +301,7 @@ onActivated(() => {
 
               <!-- 自定义覆盖 CSS 编辑器 -->
               <div class="space-y-2 pt-2">
-                <div class="flex items-center justify-between">
+                <div class="flex-between">
                   <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
                     >自定义覆盖 CSS</span
                   >
@@ -385,10 +374,7 @@ onActivated(() => {
             </TabsContent>
 
             <!-- 功能规则 Tab -->
-            <TabsContent
-              value="rules"
-              class="mt-2"
-            >
+            <TabsContent value="rules">
               <DanmujiRulesEditor
                 v-model="config"
                 @reset="config = { ...normalizeDanmujiConfig(), style: config.style }"
@@ -411,24 +397,12 @@ onActivated(() => {
       <!-- 右侧：实时预览面板 (5 列) -->
       <Card class="lg:col-span-5 lg:sticky lg:top-4">
         <CardContent class="p-4 space-y-3.5">
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex-between gap-2">
             <span class="text-xs font-semibold text-foreground"
               >实时预览 <span class="text-muted-foreground font-normal ml-1">示例消息</span></span
             >
             <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-              <Button
-                v-for="bg in [
-                  { key: 'checker', label: '网格' },
-                  { key: 'dark', label: '深色' },
-                  { key: 'light', label: '浅色' },
-                  { key: 'game', label: '游戏' },
-                ]"
-                :key="bg.key"
-                size="xs"
-                :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                class="h-6 px-2"
-                @click="previewBg = bg.key"
-              >
+              <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '深色' }, { key: 'light', label: '浅色' }, { key: 'game', label: '游戏' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" @click="previewBg = bg.key">
                 {{ bg.label }}
               </Button>
             </div>
@@ -438,26 +412,12 @@ onActivated(() => {
           <div class="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <div class="flex items-center gap-1">
               <span>宽</span>
-              <Input
-                size="xs"
-                v-model.number="sourceWidth"
-                type="number"
-                min="200"
-                max="3840"
-                class="w-16 font-mono"
-              />
+              <NumberField size="xs" v-model="sourceWidth" min="200" max="3840" class="w-16 font-mono" / :show-buttons="false">
             </div>
             <span>×</span>
             <div class="flex items-center gap-1">
               <span>高</span>
-              <Input
-                size="xs"
-                v-model.number="sourceHeight"
-                type="number"
-                min="200"
-                max="2160"
-                class="w-16 font-mono"
-              />
+              <NumberField size="xs" v-model="sourceHeight" min="200" max="2160" class="w-16 font-mono" / :show-buttons="false">
             </div>
             <label class="flex items-center gap-1.5 cursor-pointer ml-auto select-none text-foreground font-medium">
               <Checkbox v-model="fullCanvas" />
@@ -478,7 +438,7 @@ onActivated(() => {
           >
             <div
               ref="viewport"
-              class="w-full h-full flex items-center justify-center"
+              class="w-full h-full flex-center"
             >
               <div
                 class="relative shrink-0 outline-1 outline-dashed outline-slate-500/40"
@@ -505,34 +465,20 @@ onActivated(() => {
           </div>
 
           <!-- 发送测试按钮条 -->
-          <div class="flex items-center justify-between gap-2 pt-1 border-t border-border flex-wrap">
+          <div class="flex-between gap-2 pt-1 border-t border-border flex-wrap">
             <div class="flex items-center gap-1.5">
               <span class="text-xs text-muted-foreground">测试:</span>
-              <Button
-                v-for="event in eventOptions"
-                :key="event.value"
-                size="xs"
-                variant="outline"
-                class="h-6 px-2"
-                :disabled="!previewReady"
-                @click="sendTest(event.value)"
-              >
+              <Button v-for="event in eventOptions" :key="event.value" size="xs" variant="outline" :disabled="!previewReady" @click="sendTest(event.value)">
                 {{ event.label }}
               </Button>
             </div>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="h-6 text-muted-foreground"
-              :disabled="!previewReady"
-              @click="preview?.clearMessages()"
-            >
+            <Button size="xs" variant="ghost" class="text-muted-foreground" :disabled="!previewReady" @click="preview?.clearMessages()">
               清空
             </Button>
           </div>
 
           <!-- 自动发送与频率 -->
-          <div class="flex items-center justify-between gap-3 text-xs flex-wrap">
+          <div class="flex-between gap-3 text-xs flex-wrap">
             <div class="flex items-center gap-2">
               <Switch
                 :model-value="autoEnabled"
@@ -541,15 +487,7 @@ onActivated(() => {
               />
               <span class="text-muted-foreground select-none">自动轮播</span>
               <div class="flex items-center gap-1">
-                <Input
-                  size="xs"
-                  v-model.number="interval"
-                  type="number"
-                  step="0.2"
-                  min="0.3"
-                  max="5"
-                  class="w-16 font-mono"
-                />
+                <NumberField size="xs" v-model="interval" step="0.2" min="0.3" max="5" class="w-16 font-mono" / :show-buttons="false">
                 <span class="text-muted-foreground">秒</span>
               </div>
             </div>
@@ -580,13 +518,7 @@ onActivated(() => {
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">金额 (元)</span>
-                <Input
-                  size="xs"
-                  v-model.number="testPrice"
-                  type="number"
-                  min="0"
-                  class="font-mono"
-                />
+                <NumberField size="xs" v-model="testPrice" min="0" class="font-mono" / :show-buttons="false">
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">大航海等级</span>
@@ -606,7 +538,7 @@ onActivated(() => {
                 <Textarea
                   v-model="testMessage"
                   :rows="2"
-                  class="text-xs"
+                  
                 />
               </div>
             </div>

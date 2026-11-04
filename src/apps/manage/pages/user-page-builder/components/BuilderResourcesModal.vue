@@ -95,7 +95,7 @@ function confirmDelete(resource: BuilderResource) {
   >
     <DialogContent class="max-w-[900px] w-[95vw] p-6 max-h-[88vh] flex flex-col gap-4">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold"> 资源管理 </DialogTitle>
+        <DialogTitle class="text-base"> 资源管理 </DialogTitle>
       </DialogHeader>
 
       <div class="flex flex-col gap-4 min-h-0 flex-1 overflow-hidden">
@@ -108,7 +108,7 @@ function confirmDelete(resource: BuilderResource) {
               <div
                 v-for="item in editor.uploadQueue.value"
                 :key="item.name"
-                class="flex items-center justify-between"
+                class="flex-between"
               >
                 <span>{{ item.name }}</span>
                 <Tag
@@ -139,14 +139,7 @@ function confirmDelete(resource: BuilderResource) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    class="size-7"
-                    :disabled="resources.isLoading.value"
-                    aria-label="刷新资源"
-                    @click="resources.loadResources"
-                  >
+                  <Button size="xs" variant="ghost" class="size-7" :disabled="resources.isLoading.value" aria-label="刷新资源" @click="resources.loadResources">
                     <RefreshOutline class="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -162,39 +155,26 @@ function confirmDelete(resource: BuilderResource) {
           @update:model-value="(val) => (resources.currentView.value = val as any)"
         >
           <TabsList class="w-full justify-start">
-            <TabsTrigger
-              value="all"
-              class="text-xs"
-            >
+            <TabsTrigger value="all" >
               全部 {{ resources.resources.value.length }}
             </TabsTrigger>
-            <TabsTrigger
-              value="used"
-              class="text-xs"
-            >
+            <TabsTrigger value="used" >
               引用中 {{ resources.usedCount.value }}
             </TabsTrigger>
-            <TabsTrigger
-              value="unused"
-              class="text-xs"
-            >
+            <TabsTrigger value="unused" >
               未使用 {{ resources.unusedCount.value }}
             </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        <Alert
-          v-if="resources.loadError.value"
-          variant="destructive"
-          class="text-xs py-2 shrink-0"
-        >
+        <Alert size="sm" v-if="resources.loadError.value" variant="destructive" class="shrink-0">
           <AlertDescription>{{ resources.loadError.value }}</AlertDescription>
         </Alert>
 
         <div class="flex-1 min-h-0 overflow-y-auto relative">
           <div
             v-if="resources.isLoading.value"
-            class="py-12 flex items-center justify-center"
+            class="py-12 flex-center"
           >
             <Spin />
           </div>
@@ -207,7 +187,7 @@ function confirmDelete(resource: BuilderResource) {
               :key="file.id"
               class="resource-row p-3 rounded-lg border bg-card/60 flex flex-col gap-2"
             >
-              <div class="flex items-center justify-between gap-3">
+              <div class="flex-between gap-3">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                   <Popover v-if="isImagePath(file.path) && !file.missing">
                     <PopoverTrigger as-child>
@@ -232,7 +212,7 @@ function confirmDelete(resource: BuilderResource) {
                   </Popover>
                   <div
                     v-else
-                    class="resource-thumbnail resource-placeholder size-11 rounded border bg-muted flex items-center justify-center text-[10px] text-muted-foreground font-mono"
+                    class="resource-thumbnail resource-placeholder size-11 rounded border bg-muted flex-center text-[10px] text-muted-foreground font-mono"
                   >
                     #{{ file.id }}
                   </div>
@@ -273,13 +253,7 @@ function confirmDelete(resource: BuilderResource) {
                   <TooltipProvider>
                     <Tooltip v-if="file.path">
                       <TooltipTrigger as-child>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          class="size-7"
-                          aria-label="复制资源链接"
-                          @click="copyResourcePath(file.path)"
-                        >
+                        <Button size="xs" variant="ghost" class="size-7" aria-label="复制资源链接" @click="copyResourcePath(file.path)">
                           <CopyOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>
@@ -287,14 +261,7 @@ function confirmDelete(resource: BuilderResource) {
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger as-child>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          class="size-7 text-destructive hover:text-destructive"
-                          aria-label="删除资源"
-                          :disabled="resources.deletingId.value === file.id"
-                          @click="confirmDelete(file)"
-                        >
+                        <Button size="xs" variant="ghost" class="size-7 text-destructive hover:text-destructive" aria-label="删除资源" :disabled="resources.deletingId.value === file.id" @click="confirmDelete(file)">
                           <TrashOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>

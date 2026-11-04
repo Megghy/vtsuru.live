@@ -3,6 +3,7 @@ import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled 
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useSpeechService } from '@/store/useSpeechService'
@@ -49,12 +50,13 @@ function goToPage() {
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
         </span>
 
-        <span
-          v-if="queueCount > 0"
-          class="text-[11px] bg-muted text-muted-foreground rounded-full px-1.5 min-w-[18px] text-center"
+        <Badge v-if="queueCount> 0"
+          variant="secondary"
+          size="xs"
+          class="min-w-[18px] px-1 justify-center"
         >
           {{ queueCount }}
-        </span>
+        </Badge>
       </div>
 
       <div class="flex items-center gap-1 shrink-0">
@@ -62,9 +64,8 @@ function goToPage() {
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
-                size="icon"
+                size="icon-xs"
                 :variant="isPaused ? 'default' : 'outline'"
-                class="size-6 p-0"
                 @click="speechService.togglePause()"
               >
                 <component
@@ -73,7 +74,7 @@ function goToPage() {
                 />
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
+            <TooltipContent>
               {{ isPaused ? '恢复朗读' : '暂停朗读' }}
             </TooltipContent>
           </Tooltip>
@@ -81,44 +82,42 @@ function goToPage() {
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
-                size="icon"
+                size="icon-xs"
                 variant="outline"
-                class="size-6 p-0"
                 :disabled="!speechState.isSpeaking"
                 @click="speechService.skipCurrent()"
               >
                 <Next20Filled class="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs"> 跳过当前 </TooltipContent>
+            <TooltipContent> 跳过当前 </TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
-                size="icon"
+                size="icon-xs"
                 variant="destructive"
-                class="size-6 p-0"
                 @click="speechService.stopSpeech()"
               >
                 <MicOff24Filled class="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs"> 停止朗读并清空 </TooltipContent>
+            <TooltipContent> 停止朗读并清空 </TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
-                size="icon"
+                size="icon-xs"
                 variant="ghost"
-                class="size-6 p-0 text-muted-foreground"
+                class="text-muted-foreground"
                 @click="goToPage"
               >
                 <Mic24Filled class="size-3.5" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs"> 打开读弹幕页面 </TooltipContent>
+            <TooltipContent> 打开读弹幕页面 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </div>

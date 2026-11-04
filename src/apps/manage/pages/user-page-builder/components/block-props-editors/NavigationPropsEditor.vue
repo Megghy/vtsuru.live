@@ -145,7 +145,7 @@ const linkItems = ensureArrayProp<Record<string, any>>('items')
           </SelectContent>
         </Select>
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示文字</label>
         <Switch v-model:checked="blockProps.showLabel" />
       </div>

@@ -283,7 +283,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
   >
     <DialogContent class="sm:max-w-2xl max-h-[85vh] flex flex-col p-4 gap-3">
       <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold">服务订单</DialogTitle>
+        <DialogTitle class="text-sm">服务订单</DialogTitle>
       </DialogHeader>
 
       <ScrollArea class="flex-1 min-h-0 pr-2">
@@ -298,9 +298,9 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
           v-else-if="loadError"
           class="space-y-3 py-6 text-center"
         >
-          <Alert class="text-xs bg-destructive/10 border-destructive/20 text-destructive text-left">
-            <AlertTitle class="text-xs font-semibold">服务订单加载失败</AlertTitle>
-            <AlertDescription class="text-xs">{{ loadError }}</AlertDescription>
+          <Alert size="sm" class="bg-destructive/10 border-destructive/20 text-destructive text-left">
+            <AlertTitle>服务订单加载失败</AlertTitle>
+            <AlertDescription>{{ loadError }}</AlertDescription>
           </Alert>
           <Button
             variant="outline"
@@ -340,27 +340,21 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
             </div>
             <div>
               <span class="text-muted-foreground block text-[11px]">状态</span>
-              <Badge
-                :variant="statusMeta[current.status].variant"
-                class="text-[10px] h-4.5 px-1.5 font-normal"
-              >
+              <Badge :variant="statusMeta[current.status].variant" size="xs">
                 {{ statusMeta[current.status].label }}
               </Badge>
             </div>
           </div>
 
-          <Alert class="text-xs bg-muted/30 border-border/60">
-            <AlertDescription class="text-xs text-muted-foreground leading-relaxed">
+          <Alert size="sm" class="bg-muted/30 border-border/60">
+            <AlertDescription class="text-muted-foreground leading-relaxed">
               {{ statusMeta[current.status].hint }}
             </AlertDescription>
           </Alert>
 
-          <Alert
-            v-if="orderData?.cancelReason"
-            class="text-xs bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
-          >
-            <AlertTitle class="text-xs font-semibold">处理原因</AlertTitle>
-            <AlertDescription class="text-xs">{{ orderData.cancelReason }}</AlertDescription>
+          <Alert size="sm" variant="warning" v-if="orderData?.cancelReason">
+            <AlertTitle>处理原因</AlertTitle>
+            <AlertDescription>{{ orderData.cancelReason }}</AlertDescription>
           </Alert>
 
           <!-- 服务与需求快照 -->
@@ -530,7 +524,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
                 v-model="note"
                 rows="2"
                 placeholder="补充留言、需求确认或进度说明..."
-                class="text-xs resize-none"
+                class="resize-none"
               />
               <div class="flex justify-end">
                 <Button
@@ -559,7 +553,7 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
               v-model="reason"
               rows="2"
               placeholder="取消或拒绝原因（必填）"
-              class="text-xs resize-none"
+              class="resize-none"
             />
 
             <div class="flex items-center justify-end gap-2 flex-wrap">

@@ -97,7 +97,7 @@ const justifyClass = computed(() => {
       <button
         v-if="isBack || internalTarget"
         type="button"
-        class="inline-flex items-center justify-center font-medium cursor-pointer"
+        class="inline-flex-center font-medium cursor-pointer"
         :class="btnClass"
         :style="btnStyle"
         @click="handleClick"
@@ -109,7 +109,7 @@ const justifyClass = computed(() => {
         target="_blank"
         rel="noopener noreferrer"
         :href="externalHref"
-        class="inline-flex items-center justify-center font-medium cursor-pointer"
+        class="inline-flex-center font-medium cursor-pointer"
         :class="btnClass"
         :style="btnStyle"
       >

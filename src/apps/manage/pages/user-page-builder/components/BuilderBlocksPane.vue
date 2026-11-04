@@ -35,18 +35,13 @@ const {
 <template>
   <Card class="pane-card min-w-0 h-full flex flex-col overflow-hidden">
     <CardHeader class="p-2 border-b border-border flex flex-row items-center justify-between space-y-0">
-      <CardTitle class="text-xs font-semibold">区块</CardTitle>
+      <CardTitle class="text-xs">区块</CardTitle>
 
       <div class="blocks-pane__actions flex items-center gap-1">
         <TooltipProvider v-if="selectionCount">
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                class="size-7 p-0"
-                aria-label="保存所选区块为模板"
-                @click="saveSelectionAsTemplate"
-              >
+              <Button size="icon-xs" variant="ghost" aria-label="保存所选区块为模板" @click="saveSelectionAsTemplate">
                 <component
                   :is="BookmarkOutline"
                   class="size-3.5"
@@ -62,12 +57,7 @@ const {
             <Tooltip>
               <TooltipTrigger as-child>
                 <DropdownMenuTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    class="size-7 p-0"
-                    aria-label="应用起始模板"
-                    title="起始模板"
-                  >
+                  <Button size="icon-xs" variant="ghost" aria-label="应用起始模板">
                     <component
                       :is="LayersOutline"
                       class="size-3.5"
@@ -78,10 +68,7 @@ const {
               <TooltipContent>起始模板</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <DropdownMenuContent
-            align="end"
-            class="w-40 text-xs"
-          >
+          <DropdownMenuContent align="end" class="w-40">
             <DropdownMenuItem
               v-for="opt in templateOptions"
               :key="opt.key"
@@ -94,20 +81,14 @@ const {
 
         <Popover v-model:open="showAddMenu">
           <PopoverTrigger as-child>
-            <Button
-              class="size-7 p-0"
-              aria-label="添加区块"
-            >
+            <Button size="icon-xs" aria-label="添加区块">
               <component
                 :is="AddCircleOutline"
                 class="size-4"
               />
             </Button>
           </PopoverTrigger>
-          <PopoverContent
-            align="end"
-            class="w-72 p-2 text-xs flex flex-col gap-2"
-          >
+          <PopoverContent align="end" class="w-72 p-2 flex flex-col gap-2">
             <Input
               v-model="blockSearch"
               placeholder="搜索区块名称或关键词..."

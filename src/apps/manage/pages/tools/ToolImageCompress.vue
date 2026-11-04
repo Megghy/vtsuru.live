@@ -224,7 +224,7 @@ function clearAll() {
         <!-- Drop zone -->
         <div
           ref="dropZoneRef"
-          class="flex flex-col items-center justify-center gap-1 p-8 rounded-lg border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 cursor-pointer transition-colors"
+          class="flex-col-center gap-1 p-8 rounded-lg border-2 border-dashed border-border hover:border-primary hover:bg-primary/5 cursor-pointer transition-colors"
           :class="{ 'border-primary bg-primary/5': isOverDropZone }"
           @click="() => openFilePicker()"
         >
@@ -253,7 +253,7 @@ function clearAll() {
               :key="idx"
               class="border border-border rounded-lg p-2 flex flex-col gap-2 bg-card text-xs"
             >
-              <div class="w-full h-28 bg-muted/40 rounded flex items-center justify-center overflow-hidden">
+              <div class="w-full h-28 bg-muted/40 rounded flex-center overflow-hidden">
                 <img
                   :src="item.thumbUrl"
                   class="max-h-full max-w-full object-contain"

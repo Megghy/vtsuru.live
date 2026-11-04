@@ -5,23 +5,23 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DanmakuUserInfo } from './danmakuUserInfo'
-import type { ResponseSongModel } from './responseSongModel'
-import type { SongRequestFrom } from './songRequestFrom'
-import type { SongRequestStatus } from './songRequestStatus'
+import type { DanmakuUserInfo } from './danmakuUserInfo';
+import type { ResponseSongModel } from './responseSongModel';
+import type { SongRequestFrom } from './songRequestFrom';
+import type { SongRequestStatus } from './songRequestStatus';
 
 export interface ResponseSongRequestModel {
-  id: number
-  songName: string
-  song?: ResponseSongModel
-  status: SongRequestStatus
-  from: SongRequestFrom
+  id: number;
+  songName: string;
+  song?: ResponseSongModel;
+  status: SongRequestStatus;
+  from: SongRequestFrom;
   /** @nullable */
-  price?: number | null
-  user?: DanmakuUserInfo
-  createAt: number
+  price?: number | null;
+  user?: DanmakuUserInfo;
+  createAt: number;
   /** @nullable */
-  finishAt?: number | null
+  finishAt?: number | null;
   /** @nullable */
-  requestBy?: string | null
+  requestBy?: string | null;
 }

@@ -3118,6 +3118,13 @@
             }
           },
           {
+            "name": "store",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -16744,7 +16751,8 @@
       "APIFileModel": {
         "required": [
           "id",
-          "size"
+          "size",
+          "store"
         ],
         "type": "object",
         "properties": {
@@ -16768,6 +16776,9 @@
           "size": {
             "type": "integer",
             "format": "int64"
+          },
+          "store": {
+            "type": "string"
           }
         },
         "additionalProperties": false

@@ -232,7 +232,7 @@ onDeactivated(unbindKeydown)
       variant="destructive"
     >
       <AlertTitle>浏览器不支持语音能力</AlertTitle>
-      <AlertDescription class="text-xs">
+      <AlertDescription>
         当前浏览器环境不支持 Web Speech API，请使用 Chrome、Edge 或最新版现代浏览器。
       </AlertDescription>
     </Alert>
@@ -246,7 +246,7 @@ onDeactivated(unbindKeydown)
             v-model="activeConfigTab"
             class="w-full"
           >
-            <TabsList class="grid grid-cols-4 w-full mb-4">
+            <TabsList size="xs" class="grid grid-cols-4 w-full mb-4">
               <TabsTrigger value="voice">
                 <component
                   :is="Speaker224Regular"
@@ -316,8 +316,8 @@ onDeactivated(unbindKeydown)
       <div class="lg:col-span-5 space-y-4">
         <!-- 运行监控卡片 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
-            <div class="flex items-center justify-between">
+          <CardHeader class="p-3.5">
+            <div class="flex-between">
               <div class="flex items-center gap-1.5 text-xs font-semibold">
                 <component
                   :is="ChartMultiple24Regular"
@@ -326,16 +326,13 @@ onDeactivated(unbindKeydown)
                 <span>运行状态与统计</span>
               </div>
 
-              <Badge
-                :variant="speechState.canSpeech ? (isPaused ? 'warning' : 'brand') : 'secondary'"
-                class="text-[10px] px-1.5 py-0 h-4"
-              >
+              <Badge :variant="speechState.canSpeech ? (isPaused ? 'warning' : 'brand') : 'secondary'" size="xs">
                 {{ speechState.canSpeech ? (isPaused ? '已暂停' : '监听中') : '未启动' }}
               </Badge>
             </div>
           </CardHeader>
 
-          <CardContent class="p-3.5 pt-0 space-y-3">
+          <CardContent class="space-y-3">
             <div class="grid grid-cols-3 gap-2 p-2.5 rounded-lg bg-muted/40 border border-border text-center">
               <div>
                 <span class="text-[11px] text-muted-foreground block">朗读状态</span>
@@ -390,29 +387,22 @@ onDeactivated(unbindKeydown)
 
         <!-- 待读队列与历史卡片 -->
         <Card>
-          <CardContent class="p-3.5">
+          <CardContent>
             <Tabs
               v-model="activeQueueTab"
               class="w-full"
             >
-              <TabsList class="grid grid-cols-2 w-full p-0.5 bg-muted mb-3">
-                <TabsTrigger
-                  value="queue"
-                  class="text-xs h-7 gap-1"
-                >
+              <TabsList size="xs" class="grid grid-cols-2 w-full p-0.5 bg-muted mb-3">
+                <TabsTrigger value="queue" class="gap-1" >
                   待读队列
-                  <Badge
-                    v-if="queueStats.total > 0"
+                  <Badge v-if="queueStats.total> 0"
                     variant="brand"
                     class="text-[10px] px-1 py-0 h-4 ml-1"
                   >
                     {{ queueStats.total }}
                   </Badge>
                 </TabsTrigger>
-                <TabsTrigger
-                  value="history"
-                  class="text-xs h-7"
-                >
+                <TabsTrigger value="history" >
                   已读历史
                 </TabsTrigger>
               </TabsList>

@@ -83,11 +83,7 @@ const macroProgress = computed(() => {
     >
       <template #actions>
         <div class="flex items-center gap-2">
-          <Badge
-            variant="outline"
-            class="text-xs h-6 px-2.5"
-            :class="status.class"
-          >
+          <Badge variant="outline" class="h-6 px-2.5" :class="status.class">
             {{ status.text }}
           </Badge>
           <Button
@@ -112,26 +108,19 @@ const macroProgress = computed(() => {
       </template>
     </ClientPageHeader>
 
-    <Alert
-      v-if="!isTauri()"
-      class="border-destructive/20 bg-destructive/10 text-destructive py-2.5 px-3"
-    >
-      <AlertDescription class="text-xs m-0"> 当前不是桌面客户端环境，无法连接本地 VTube Studio。 </AlertDescription>
+    <Alert size="sm" v-if="!isTauri()" class="border-destructive/20 bg-destructive/10 text-destructive">
+      <AlertDescription class="m-0"> 当前不是桌面客户端环境，无法连接本地 VTube Studio。 </AlertDescription>
     </Alert>
 
     <template v-else>
-      <Alert
-        v-if="vts.connecting"
-        class="border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400 py-2.5 px-3"
-      >
-        <AlertDescription class="text-xs m-0">
+      <Alert size="sm" variant="info" v-if="vts.connecting">
+        <AlertDescription class="m-0">
           正在等待 VTube Studio：请确认 VTS 已启动并开启「启动 API」；首次连接需在 VTS 弹窗中点击「允许」。
         </AlertDescription>
       </Alert>
 
       <Card
         v-else-if="vts.connected"
-        class="border bg-card"
       >
         <CardContent class="p-3">
           <div class="flex items-center gap-2.5 flex-wrap">
@@ -139,41 +128,21 @@ const macroProgress = computed(() => {
               <span class="text-muted-foreground">当前模型</span>
               <span class="font-semibold text-foreground">{{ vts.currentModelName || '未加载模型' }}</span>
             </span>
-            <Badge
-              v-if="vts.statistics?.framerate"
-              variant="secondary"
-              class="text-xs h-5 px-1.5"
-            >
+            <Badge v-if="vts.statistics?.framerate" variant="secondary" size="sm">
               {{ vts.statistics.framerate }} FPS
             </Badge>
-            <Badge
-              v-if="vts.lastRttMs != null"
-              variant="outline"
-              class="text-xs h-5 px-1.5"
-              :class="
-                vts.lastRttMs < 50
-                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-                  : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
-              "
-            >
+            <Badge v-if="vts.lastRttMs != null" variant="success" size="sm" :class=" vts.lastRttMs < 50 ? ' ' : 'border-amber-500/40 text-amber-600 bg-amber-500/10' ">
               延迟 {{ vts.lastRttMs }}ms
             </Badge>
-            <Badge
-              v-if="vts.faceFound === false"
-              variant="outline"
-              class="text-xs h-5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
-            >
+            <Badge v-if="vts.faceFound === false" variant="warning" size="sm">
               面部丢失
             </Badge>
           </div>
         </CardContent>
       </Card>
 
-      <Alert
-        v-if="vts.lastError"
-        class="border-destructive/20 bg-destructive/10 text-destructive py-2.5 px-3 flex items-center justify-between"
-      >
-        <AlertDescription class="text-xs m-0">
+      <Alert size="sm" v-if="vts.lastError" class="border-destructive/20 bg-destructive/10 text-destructive flex-between">
+        <AlertDescription class="m-0">
           {{ vts.lastError }}
         </AlertDescription>
         <Button
@@ -190,14 +159,10 @@ const macroProgress = computed(() => {
       <Transition name="vts-slide">
         <Card
           v-if="macroProgress"
-          class="border bg-card"
         >
           <CardContent class="p-3 flex items-center gap-3">
             <span class="font-semibold text-xs text-foreground">{{ macroProgress.name }}</span>
-            <Badge
-              variant="secondary"
-              class="text-[10px] h-4.5 px-1.5"
-            >
+            <Badge variant="secondary" size="xs">
               {{ macroProgress.step }} / {{ macroProgress.total }}
             </Badge>
             <Progress
@@ -213,31 +178,19 @@ const macroProgress = computed(() => {
         class="w-full vts-tabs"
       >
         <TabsList class="grid w-full max-w-lg grid-cols-4">
-          <TabsTrigger
-            value="deck"
-            class="text-xs gap-1.5"
-          >
+          <TabsTrigger value="deck" class="gap-1.5" >
             <Grid24Regular class="size-3.5" />
             操作台
           </TabsTrigger>
-          <TabsTrigger
-            value="actions"
-            class="text-xs gap-1.5"
-          >
+          <TabsTrigger value="actions" class="gap-1.5" >
             <VideoPerson24Filled class="size-3.5" />
             热键与宏
           </TabsTrigger>
-          <TabsTrigger
-            value="items"
-            class="text-xs gap-1.5"
-          >
+          <TabsTrigger value="items" class="gap-1.5" >
             <Flash24Filled class="size-3.5" />
             道具与参数
           </TabsTrigger>
-          <TabsTrigger
-            value="settings"
-            class="text-xs gap-1.5"
-          >
+          <TabsTrigger value="settings" class="gap-1.5" >
             <Settings24Filled class="size-3.5" />
             设置
           </TabsTrigger>
@@ -306,13 +259,7 @@ const macroProgress = computed(() => {
                   :key="a.id"
                   class="flex items-center gap-2 p-2 rounded border bg-muted/20"
                 >
-                  <Badge
-                    variant="outline"
-                    class="text-[10px] h-4.5 px-1.5"
-                    :class="
-                      a.enabled ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'text-muted-foreground'
-                    "
-                  >
+                  <Badge variant="success" size="xs" :class=" a.enabled ? ' ' : 'text-muted-foreground' ">
                     {{ a.enabled ? '启用' : '禁用' }}
                   </Badge>
                   <span class="font-medium text-xs text-foreground">{{ a.name || '未命名操作' }}</span>

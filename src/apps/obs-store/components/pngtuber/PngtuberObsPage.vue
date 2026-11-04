@@ -67,8 +67,8 @@ function retry() {
       v-if="debug"
       class="p-3"
     >
-      <CardHeader class="p-0 pb-2">
-        <CardTitle class="text-sm font-semibold">PNGTuber · OBS 诊断</CardTitle>
+      <CardHeader class="p-0">
+        <CardTitle>PNGTuber · OBS 诊断</CardTitle>
       </CardHeader>
       <CardContent class="p-0 space-y-2 text-xs">
         <div>用户 {{ userId || '未指定' }} · 频道 {{ channel }} · 输入 {{ state.inputMode }}</div>
@@ -81,33 +81,21 @@ function retry() {
           {{ Math.round(microphone ? localVolume : runtime.volume) }} ·
           {{ runtime.muted ? '静音' : runtime.away ? '暂离' : '正常' }}
         </div>
-        <Alert
-          v-if="normalized.error || errorMessage || runtimeError || assetError"
-          class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-1.5 px-2"
-        >
-          <AlertDescription class="text-xs m-0">
+        <Alert size="sm" variant="warning" v-if="normalized.error || errorMessage || runtimeError || assetError">
+          <AlertDescription class="m-0">
             {{ normalized.error || errorMessage || runtimeError || assetError }}
           </AlertDescription>
         </Alert>
-        <Alert
-          v-if="!userId"
-          class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-1.5 px-2"
-        >
-          <AlertDescription class="text-xs m-0"> 链接缺少用户 ID，请从管理页重新复制浏览器源链接。 </AlertDescription>
+        <Alert size="sm" variant="warning" v-if="!userId">
+          <AlertDescription class="m-0"> 链接缺少用户 ID，请从管理页重新复制浏览器源链接。 </AlertDescription>
         </Alert>
-        <Alert
-          v-if="state.inputMode === 'client' || state.inputMode === 'obs'"
-          class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-1.5 px-2"
-        >
-          <AlertDescription class="text-xs m-0">
+        <Alert size="sm" variant="info" v-if="state.inputMode === 'client' || state.inputMode === 'obs'">
+          <AlertDescription class="m-0">
             需要启动 VTsuru 客户端并启用同频道输入。OBS 模式还需客户端连接 OBS。
           </AlertDescription>
         </Alert>
-        <Alert
-          v-if="state.inputMode === 'controller'"
-          class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-1.5 px-2"
-        >
-          <AlertDescription class="text-xs m-0"> 请保持同频道管理页打开并启动麦克风。 </AlertDescription>
+        <Alert size="sm" variant="info" v-if="state.inputMode === 'controller'">
+          <AlertDescription class="m-0"> 请保持同频道管理页打开并启动麦克风。 </AlertDescription>
         </Alert>
         <Button
           variant="outline"

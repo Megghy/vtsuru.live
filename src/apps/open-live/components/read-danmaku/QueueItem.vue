@@ -146,27 +146,16 @@ function handleSelect(action: string) {
           class="flex gap-0.5 shrink-0"
           @click.stop
         >
-          <Button
-            variant="ghost"
-            class="h-6 w-6 p-0 rounded-full"
-            @click="speechService.forceSpeak(item.data)"
-          >
+          <Button size="icon-xs" variant="ghost" class="rounded-full" @click="speechService.forceSpeak(item.data)">
             <Play20Filled class="size-3.5" />
           </Button>
-          <Button
-            variant="ghost"
-            class="h-6 w-6 p-0 rounded-full text-destructive hover:bg-destructive/10"
-            @click="speechService.removeFromQueue(item)"
-          >
+          <Button size="icon-xs" variant="ghost" class="rounded-full text-destructive hover:bg-destructive/10" @click="speechService.removeFromQueue(item)">
             <Delete20Filled class="size-3.5" />
           </Button>
         </div>
       </div>
     </DropdownMenuTrigger>
-    <DropdownMenuContent
-      align="start"
-      class="w-36 text-xs"
-    >
+    <DropdownMenuContent align="start" class="w-36">
       <DropdownMenuItem @click="handleSelect('play')">
         <Play20Filled class="size-3.5 mr-2" />
         立即播放

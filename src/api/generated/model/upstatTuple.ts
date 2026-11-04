@@ -7,6 +7,6 @@
  */
 
 export interface UpstatTuple {
-  views: number
-  likes: number
+  views: number;
+  likes: number;
 }

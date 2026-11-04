@@ -7,6 +7,7 @@
  */
 
 export enum StorageTypes {
-  Time = 0,
-  Count = 1,
+  Time= 0,
+  Count= 1,
+
 }

@@ -25,7 +25,7 @@ onMounted(() => {
 <template>
   <div
     v-if="($route.query.token || cookie) && accountInfo.id < 1"
-    class="flex items-center justify-center min-h-screen w-full"
+    class="flex-center min-h-screen w-full"
   >
     <Spin size="large" />
   </div>

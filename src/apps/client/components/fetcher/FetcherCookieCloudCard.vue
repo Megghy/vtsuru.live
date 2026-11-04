@@ -106,22 +106,10 @@ async function handleClearCookieCloudConfig() {
 </script>
 
 <template>
-  <Card class="border bg-card w-full">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">Cookie Cloud 配置</CardTitle>
-      <Badge
-        variant="outline"
-        class="h-5 text-[10px]"
-        :class="
-          biliCookie.cookieCloudState === 'valid'
-            ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-            : biliCookie.cookieCloudState === 'syncing'
-              ? 'border-sky-500/40 text-sky-600 bg-sky-500/10'
-              : biliCookie.cookieCloudState === 'invalid'
-                ? 'border-destructive/40 text-destructive bg-destructive/10'
-                : 'border-border text-muted-foreground'
-        "
-      >
+  <Card class="w-full">
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+      <CardTitle>Cookie Cloud 配置</CardTitle>
+      <Badge variant="success" size="xs" class="h-5" :class=" biliCookie.cookieCloudState === 'valid' ? ' ' : biliCookie.cookieCloudState === 'syncing' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : biliCookie.cookieCloudState === 'invalid' ? 'border-destructive/40 text-destructive bg-destructive/10' : 'border-border text-muted-foreground' ">
         {{
           biliCookie.cookieCloudState === 'valid'
             ? '已配置'
@@ -134,8 +122,8 @@ async function handleClearCookieCloudConfig() {
       </Badge>
     </CardHeader>
     <CardContent class="p-3 space-y-3">
-      <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-        <AlertDescription class="text-xs m-0"> 设置 CookieCloud 后扫码登陆的登陆信息将被覆盖 </AlertDescription>
+      <Alert size="sm" variant="info">
+        <AlertDescription class="m-0"> 设置 CookieCloud 后扫码登陆的登陆信息将被覆盖 </AlertDescription>
       </Alert>
 
       <div class="space-y-2">
@@ -222,7 +210,7 @@ async function handleClearCookieCloudConfig() {
                 }}
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
+            <TooltipContent>
               {{
                 biliCookie.cookieCloudState !== 'valid'
                   ? '请先配置有效的 Cookie Cloud'
@@ -249,7 +237,7 @@ async function handleClearCookieCloudConfig() {
                 }}
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
+            <TooltipContent>
               {{
                 !biliCookie.hasBiliCookie
                   ? '当前没有 Cookie'

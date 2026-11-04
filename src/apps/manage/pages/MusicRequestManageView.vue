@@ -50,9 +50,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tag } from '@/shared/ui/tag'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -486,16 +488,12 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+          <CardContent class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
-              <Badge
-                variant="brand"
-                size="sm"
-              >
+              <Badge variant="brand" size="sm">
                 待播歌曲: {{ musicRequestStore.waitingMusics.length }} 首
               </Badge>
-              <Badge
-                v-if="activeCooldowns.length > 0"
+              <Badge v-if="activeCooldowns.length> 0"
                 variant="warning"
                 size="sm"
               >
@@ -582,12 +580,9 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+          <CardContent class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
-              <Badge
-                variant="brand"
-                size="sm"
-              >
+              <Badge variant="brand" size="sm">
                 闲置曲库: {{ originMusics.length }} 首
               </Badge>
               <span class="text-xs text-muted-foreground hidden sm:inline">观众点歌可命中此曲库，空闲时亦可轮播</span>
@@ -674,7 +669,7 @@ onUnmounted(() => {
                 <div
                   v-for="(song, idx) in filteredOriginMusics"
                   :key="song.key || song.id"
-                  class="flex items-center justify-between py-2 px-2.5 hover:bg-muted/40 rounded transition-colors text-xs"
+                  class="flex-between py-2 px-2.5 hover:bg-muted/40 rounded transition-colors text-xs"
                 >
                   <div class="flex items-center gap-2.5 min-w-0">
                     <span class="font-mono text-muted-foreground w-6 text-right shrink-0">{{ idx + 1 }}</span>
@@ -687,7 +682,7 @@ onUnmounted(() => {
                       size="icon-xs"
                       variant="ghost"
                       class="text-primary hover:bg-primary/10"
-                      title="试听/播放"
+                      aria-label="试听/播放"
                       @click="musicRequestStore.playMusic(song)"
                     >
                       <component
@@ -702,7 +697,7 @@ onUnmounted(() => {
                           size="icon-xs"
                           variant="ghost"
                           class="text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                          title="删除"
+                          aria-label="删除"
                         >
                           <component
                             :is="Delete24Regular"
@@ -748,7 +743,7 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardContent class="p-3 flex items-center justify-between">
+          <CardContent class="p-3 flex-between">
             <span class="text-xs text-muted-foreground"
               >本地记录最近 {{ musicRequestStore.history.length }} 条点歌流水 (最多保留 200 条)</span
             >
@@ -792,13 +787,10 @@ onUnmounted(() => {
                 <div
                   v-for="(entry, index) in musicRequestStore.history"
                   :key="`${entry.time}-${index}`"
-                  class="flex items-center justify-between py-2 px-2 text-xs"
+                  class="flex-between py-2 px-2 text-xs"
                 >
                   <div class="flex items-center gap-2 min-w-0">
-                    <Badge
-                      :variant="entry.status === 'played' ? 'success' : 'destructive'"
-                      class="text-[10px] px-1.5 py-0 h-4"
-                    >
+                    <Badge :variant="entry.status === 'played' ? 'success' : 'destructive'" size="xs">
                       {{ entry.status === 'played' ? '已播' : '已取消' }}
                     </Badge>
                     <span class="font-medium text-foreground truncate max-w-[200px]">{{ entry.music.name }}</span>
@@ -830,7 +822,7 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+          <CardContent class="flex-between gap-3 flex-wrap">
             <span class="text-xs text-muted-foreground"
               >观众点歌时若匹配到黑名单关键词或歌名，系统将自动拦截并提示</span
             >
@@ -888,7 +880,7 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardContent class="p-3 flex items-center justify-between gap-3 flex-wrap">
+          <CardContent class="p-3 flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-muted-foreground">OBS 样式:</span>
               <ToggleGroup
@@ -934,7 +926,7 @@ onUnmounted(() => {
 
         <Card class="overflow-hidden">
           <div
-            class="p-6 flex items-center justify-center min-h-[460px] transition-colors"
+            class="p-6 flex-center min-h-[460px] transition-colors"
             :class="{
               'bg-[#121214]': previewBg === 'dark',
               'bg-[#f4f4f5]': previewBg === 'light',
@@ -958,24 +950,23 @@ onUnmounted(() => {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- 点歌弹幕规则 -->
           <Card>
-            <CardHeader class="p-3.5 pb-2">
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 点歌弹幕规则 </CardTitle>
+            <CardHeader class="p-3.5">
+              <CardTitle class="text-xs uppercase tracking-wide"> 点歌弹幕规则 </CardTitle>
             </CardHeader>
-            <CardContent class="p-3.5 space-y-3.5">
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-xs font-medium text-foreground">点歌弹幕前缀</span>
-                <div class="flex items-center gap-2">
-                  <Input
-                    v-model="settings.orderPrefix"
-                    placeholder="如: 点歌"
-                    class="w-32 font-mono"
-                  />
-                  <span class="text-xs text-muted-foreground">如: 点歌 晴天</span>
-                </div>
-              </div>
+            <CardContent class="space-y-3.5">
+              <SettingRow
+                type="text"
+                variant="none"
+                title="点歌弹幕前缀"
+                placeholder="如: 点歌"
+                description="输入如：点歌 晴天"
+                v-model="settings.orderPrefix"
+              />
 
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-xs font-medium text-foreground">音乐搜索平台</span>
+              <SettingRow
+                variant="none"
+                title="音乐搜索平台"
+              >
                 <ToggleGroup
                   v-model="settings.platform"
                   type="single"
@@ -984,7 +975,7 @@ onUnmounted(() => {
                   <ToggleGroupItem value="netease">网易云音乐</ToggleGroupItem>
                   <ToggleGroupItem value="kugou">酷狗音乐</ToggleGroupItem>
                 </ToggleGroup>
-              </div>
+              </SettingRow>
 
               <Separator />
 
@@ -1003,27 +994,23 @@ onUnmounted(() => {
 
           <!-- 冷却时间与防刷限制 -->
           <Card>
-            <CardHeader class="p-3.5 pb-2">
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 冷却时间与防刷限制 </CardTitle>
+            <CardHeader class="p-3.5">
+              <CardTitle class="text-xs uppercase tracking-wide"> 冷却时间与防刷限制 </CardTitle>
             </CardHeader>
-            <CardContent class="p-3.5 space-y-3.5">
-              <div class="flex items-center justify-between gap-3">
-                <span class="text-xs font-medium text-foreground">个人点歌冷却</span>
-                <div class="flex items-center gap-2">
-                  <Input
-                    v-model.number="settings.orderCooldown"
-                    type="number"
-                    min="0"
-                    max="3600"
-                    class="w-24 font-mono"
-                  />
-                  <span class="text-xs text-muted-foreground">秒 (设为 0 不限频)</span>
-                </div>
-              </div>
+            <CardContent class="space-y-3.5">
+              <SettingRow
+                type="number"
+                variant="none"
+                title="个人点歌冷却"
+                description="单位：秒 (设为 0 不限频)"
+                :min="0"
+                :max="3600"
+                v-model="settings.orderCooldown"
+              />
 
               <Separator />
 
-              <div class="flex items-center justify-between">
+              <div class="flex-between">
                 <span class="text-xs text-muted-foreground">当前冷却中观众 ({{ activeCooldowns.length }} 人)</span>
                 <Button
                   size="xs"
@@ -1095,7 +1082,7 @@ onUnmounted(() => {
             v-if="neteaseSongs.length > 0"
             class="space-y-2 border border-border rounded-lg p-3 bg-muted/20"
           >
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="text-xs text-muted-foreground"
                 >共解析出 {{ neteaseSongs.length }} 首，已勾选 {{ selectedNeteaseKeys.length }} 首</span
               >

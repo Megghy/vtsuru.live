@@ -256,13 +256,13 @@ async function handleRemoveAccount(id: string) {
 <template>
   <div class="w-full flex flex-col gap-3.5">
     <!-- 顶部操作与角色分配栏 -->
-    <Card class="border bg-card">
-      <CardHeader class="p-3 pb-2 border-b">
+    <Card>
+      <CardHeader class="p-3 border-b">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div class="flex items-center gap-2">
             <PersonOutline class="size-5 text-primary" />
             <div>
-              <CardTitle class="text-sm font-semibold">B 站多账号管理池</CardTitle>
+              <CardTitle>B 站多账号管理池</CardTitle>
               <div class="text-xs text-muted-foreground mt-0.5">
                 可任意添加多个 B
                 站账号，灵活指定主播号（主管开播与禁言）与自动化号（自动发送欢迎、感谢、回复与定时弹幕）
@@ -316,13 +316,7 @@ async function handleRemoveAccount(id: string) {
                   <SelectValue placeholder="请选择主账号" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in mainAccountOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    :disabled="opt.disabled"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in mainAccountOptions" :key="opt.value" :value="opt.value" :disabled="opt.disabled">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -342,12 +336,7 @@ async function handleRemoveAccount(id: string) {
                   <SelectValue placeholder="选择发弹幕账号" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in danmakuAccountOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in danmakuAccountOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -366,7 +355,7 @@ async function handleRemoveAccount(id: string) {
                       <span class="text-xs text-muted-foreground">小号失效自动回退主账号</span>
                     </div>
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs max-w-[260px]">
+                  <TooltipContent class="max-w-[260px]">
                     当选中的小号 Cookie 过期或异常时，自动回退到主播主账号发送，避免互动断档
                   </TooltipContent>
                 </Tooltip>
@@ -404,7 +393,7 @@ async function handleRemoveAccount(id: string) {
       <Card
         v-for="acc in accountManager.accounts"
         :key="acc.id"
-        class="border bg-card transition-[border-color,box-shadow] duration-200"
+        class="transition-[border-color,box-shadow] duration-200"
         :class="{
           'border-l-[3px] border-l-amber-500': acc.id === accountManager.routing.mainAccountId,
           'border-r-[3px] border-r-primary':
@@ -416,7 +405,7 @@ async function handleRemoveAccount(id: string) {
           <div class="flex flex-wrap items-center justify-between gap-3">
             <!-- 账号头像与信息 -->
             <div class="flex items-center gap-3">
-              <Avatar class="size-11 border shrink-0">
+              <Avatar class="size-11 border">
                 <AvatarImage
                   :src="acc.face"
                   :alt="acc.name"
@@ -457,12 +446,7 @@ async function handleRemoveAccount(id: string) {
                       取消
                     </Button>
                   </div>
-                  <Badge
-                    v-else-if="acc.alias"
-                    variant="outline"
-                    class="cursor-pointer border-sky-500/40 text-sky-600 bg-sky-500/10"
-                    @click="startEditAlias(acc)"
-                  >
+                  <Badge v-else-if="acc.alias" variant="outline" class="cursor-pointer border-sky-500/40 text-sky-600 bg-sky-500/10" @click="startEditAlias(acc)">
                     {{ acc.alias }}
                   </Badge>
                   <Button
@@ -477,19 +461,11 @@ async function handleRemoveAccount(id: string) {
                   </Button>
 
                   <!-- 有效性 Badge -->
-                  <Badge
-                    v-if="acc.isValid"
-                    variant="outline"
-                    class="border-emerald-500/40 text-emerald-600 bg-emerald-500/10 gap-0.5"
-                  >
+                  <Badge v-if="acc.isValid" variant="success" class="gap-0.5">
                     <CheckmarkCircleOutline class="size-3" />
                     有效
                   </Badge>
-                  <Badge
-                    v-else
-                    variant="outline"
-                    class="text-[10px] h-4.5 px-1.5 border-destructive/40 text-destructive bg-destructive/10 gap-0.5"
-                  >
+                  <Badge v-else variant="outline" size="xs" class="border-destructive/40 text-destructive bg-destructive/10 gap-0.5">
                     <CloseCircleOutline class="size-3" />
                     已失效
                   </Badge>
@@ -502,23 +478,11 @@ async function handleRemoveAccount(id: string) {
             <!-- 角色徽章与操作 -->
             <div class="flex items-center gap-1.5 flex-wrap">
               <!-- 角色徽章 -->
-              <Badge
-                v-if="acc.id === accountManager.routing.mainAccountId"
-                variant="outline"
-                class="text-[10px] h-5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10 gap-1"
-              >
+              <Badge v-if="acc.id === accountManager.routing.mainAccountId" variant="warning" size="xs" class="h-5 gap-1">
                 <StarOutline class="size-3" />
                 主播管理
               </Badge>
-              <Badge
-                v-if="
-                  acc.id === accountManager.routing.danmakuAccountId ||
-                  (accountManager.routing.danmakuAccountId === 'main' &&
-                    acc.id === accountManager.routing.mainAccountId)
-                "
-                variant="outline"
-                class="text-[10px] h-5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10 gap-1"
-              >
+              <Badge v-if=" acc.id === accountManager.routing.danmakuAccountId || (accountManager.routing.danmakuAccountId === 'main' && acc.id === accountManager.routing.mainAccountId) " variant="outline" size="xs" class="h-5 border-sky-500/40 text-sky-600 bg-sky-500/10 gap-1">
                 <ChatbubbleEllipsesOutline class="size-3" />
                 发弹幕
               </Badge>
@@ -579,7 +543,7 @@ async function handleRemoveAccount(id: string) {
     <Dialog v-model:open="showAddModal">
       <DialogContent class="sm:max-w-[520px]">
         <DialogHeader>
-          <DialogTitle class="text-base font-semibold">添加 B 站账号至账号池</DialogTitle>
+          <DialogTitle class="text-base">添加 B 站账号至账号池</DialogTitle>
         </DialogHeader>
 
         <Tabs
@@ -587,22 +551,13 @@ async function handleRemoveAccount(id: string) {
           class="w-full mt-2"
         >
           <TabsList class="grid w-full grid-cols-3">
-            <TabsTrigger
-              value="qrcode"
-              class="text-xs"
-            >
+            <TabsTrigger value="qrcode" >
               二维码扫码登录
             </TabsTrigger>
-            <TabsTrigger
-              value="cloud"
-              class="text-xs"
-            >
+            <TabsTrigger value="cloud" >
               CookieCloud 导入
             </TabsTrigger>
-            <TabsTrigger
-              value="manual"
-              class="text-xs"
-            >
+            <TabsTrigger value="manual" >
               手动粘贴 Cookie
             </TabsTrigger>
           </TabsList>
@@ -624,7 +579,7 @@ async function handleRemoveAccount(id: string) {
               </div>
               <div
                 v-else
-                class="h-[170px] flex items-center justify-center"
+                class="h-[170px] flex-center"
               >
                 <Button
                   class="h-9 gap-1.5"
@@ -716,7 +671,7 @@ async function handleRemoveAccount(id: string) {
               <Textarea
                 v-model="manualCookieInput"
                 placeholder="粘贴包含 SESSDATA 和 bili_jct 的完整 Cookie"
-                class="text-xs resize-none h-24"
+                class="resize-none h-24"
               />
             </div>
 

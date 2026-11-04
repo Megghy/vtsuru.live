@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
@@ -31,37 +32,42 @@ function test() {
 
 <template>
   <div class="flex flex-col gap-2.5">
-    <details class="group border rounded-md p-2.5 text-xs bg-muted/20">
-      <summary class="font-medium cursor-pointer list-none flex items-center justify-between text-foreground">
-        <span>使用说明</span>
-        <span class="text-muted-foreground transition-transform group-open:rotate-180">▾</span>
-      </summary>
-      <div class="mt-2.5 pt-2 border-t space-y-2">
-        <ul class="m-0 pl-5 text-xs leading-relaxed list-disc text-muted-foreground">
-          <li>API 需直接返回音频数据 (wav/mp3/m4a)</li>
-          <li>建议使用 HTTPS</li>
-          <li>HTTP 将通过代理转发，速度较慢</li>
-        </ul>
-        <Button
-          variant="link"
-          class="h-auto p-0 text-sky-600 dark:text-sky-400"
-          as-child
-        >
-          <a
-            href="https://github.com/Artrajz/vits-simple-api"
-            target="_blank"
-          >
-            推荐：vits-simple-api
-          </a>
-        </Button>
-      </div>
-    </details>
-
-    <Alert
-      v-if="isVtsuruVoiceAPI"
-      class="py-2 px-3 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+    <Accordion
+      type="single"
+      collapsible
+      class="border rounded-md px-3 bg-muted/20 text-xs"
     >
-      <AlertDescription class="text-xs text-current m-0"> 当前使用本站测试 API，不保证可用性 </AlertDescription>
+      <AccordionItem
+        value="instructions"
+        class="border-b-0"
+      >
+        <AccordionTrigger class="py-2 hover:no-underline">
+          使用说明
+        </AccordionTrigger>
+        <AccordionContent class="pt-1 pb-3 space-y-2">
+          <ul class="m-0 pl-5 text-xs leading-relaxed list-disc text-muted-foreground">
+            <li>API 需直接返回音频数据 (wav/mp3/m4a)</li>
+            <li>建议使用 HTTPS</li>
+            <li>HTTP 将通过代理转发，速度较慢</li>
+          </ul>
+          <Button
+            variant="link"
+            class="h-auto p-0 text-sky-600 dark:text-sky-400"
+            as-child
+          >
+            <a
+              href="https://github.com/Artrajz/vits-simple-api"
+              target="_blank"
+            >
+              推荐：vits-simple-api
+            </a>
+          </Button>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
+
+    <Alert size="sm" variant="warning" v-if="isVtsuruVoiceAPI">
+      <AlertDescription class="text-current m-0"> 当前使用本站测试 API，不保证可用性 </AlertDescription>
     </Alert>
 
     <SectionField
@@ -74,12 +80,7 @@ function test() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="opt in schemeOptions"
-              :key="opt.value"
-              :value="opt.value"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in schemeOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>

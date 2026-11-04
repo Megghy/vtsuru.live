@@ -83,7 +83,7 @@ const breakdown = computed(() => {
     :content-style="{ padding: 0 }"
   >
     <div
-      class="flex flex-col items-center justify-center p-5 min-h-[140px] @max-[420px]:px-2.5 @max-[420px]:py-4"
+      class="flex-col-center p-5 min-h-[140px] @max-[420px]:px-2.5 @max-[420px]:py-4"
       :class="{
         'rounded-[var(--radius)] bg-card/54 backdrop-blur-md': !cfg.backgrounded,
       }"

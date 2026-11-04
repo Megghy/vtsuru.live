@@ -46,31 +46,16 @@ function renderContent(content: updateNoteItemContentType): VNode | string | und
             :key="noteIndex"
           >
             <div class="flex items-start">
-              <Badge
-                v-if="note.type === 'fix'"
-                variant="secondary"
-                class="text-[10px] h-5"
-              >
+              <Badge v-if="note.type === 'fix'" variant="secondary" size="xs" class="h-5">
                 错误修复
               </Badge>
-              <Badge
-                v-else-if="note.type === 'new'"
-                class="text-[10px] h-5"
-              >
+              <Badge v-else-if="note.type === 'new'" size="xs" class="h-5">
                 功能添加
               </Badge>
-              <Badge
-                v-else-if="note.type === 'optimize'"
-                variant="outline"
-                class="text-[10px] h-5"
-              >
+              <Badge v-else-if="note.type === 'optimize'" variant="outline" size="xs" class="h-5">
                 功能优化
               </Badge>
-              <Badge
-                v-else-if="note.type === 'other'"
-                variant="destructive"
-                class="text-[10px] h-5"
-              >
+              <Badge v-else-if="note.type === 'other'" variant="destructive" size="xs" class="h-5">
                 其他
               </Badge>
             </div>

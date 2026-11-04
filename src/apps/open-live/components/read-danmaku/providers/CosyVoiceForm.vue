@@ -122,14 +122,8 @@ watch(hasUserKey, (value) => {
           <SelectValue placeholder="选择模型" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="opt in modelOptions"
-            :key="opt.value"
-            :value="opt.value"
-            :disabled="opt.disabled"
-            class="text-xs py-2"
-          >
-            <div class="flex items-center justify-between gap-3 w-full">
+          <SelectItem v-for="opt in modelOptions" :key="opt.value" :value="opt.value" :disabled="opt.disabled" class="py-2">
+            <div class="flex-between gap-3 w-full">
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-1.5 font-semibold">
                   <LockClosed16Filled
@@ -140,10 +134,7 @@ watch(hasUserKey, (value) => {
                 </div>
                 <span class="text-[11px] text-muted-foreground line-clamp-1 font-normal">{{ modelNote(opt) }}</span>
               </div>
-              <Badge
-                :variant="opt.disabled ? 'secondary' : 'default'"
-                class="shrink-0"
-              >
+              <Badge :variant="opt.disabled ? 'secondary' : 'default'">
                 {{ opt.price }}
               </Badge>
             </div>
@@ -185,11 +176,8 @@ watch(hasUserKey, (value) => {
           </TooltipProvider>
         </div>
 
-        <Alert
-          v-if="customVoiceOnly && customVoices.length === 0"
-          class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
-        >
-          <AlertDescription class="text-xs m-0">
+        <Alert size="sm" variant="warning" v-if="customVoiceOnly && customVoices.length === 0">
+          <AlertDescription class="m-0">
             CosyVoice3.5 不支持系统音色。请刷新并选择声音复刻/声音设计音色。
           </AlertDescription>
         </Alert>
@@ -216,12 +204,7 @@ watch(hasUserKey, (value) => {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="opt in COSYVOICE_LANGUAGE_HINTS"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in COSYVOICE_LANGUAGE_HINTS" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>

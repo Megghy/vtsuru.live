@@ -57,7 +57,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
           </SelectContent>
         </Select>
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">圆角</label>
         <Switch v-model:checked="blockProps.rounded" />
       </div>
@@ -163,7 +163,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
                 <Textarea
                   v-model="item.description"
                   rows="2"
-                  class="text-xs"
+                  
                 />
               </div>
             </PropsGrid>
@@ -178,7 +178,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
     class="space-y-3"
   >
     <PropsGrid>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">手风琴模式</label>
         <Switch v-model:checked="blockProps.accordion" />
       </div>
@@ -203,7 +203,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
                 <Textarea
                   v-model="item.a"
                   rows="3"
-                  class="text-xs"
+                  
                 />
               </div>
             </PropsGrid>
@@ -227,7 +227,7 @@ const { blockProps, ensureArrayProp, propertyAvailable } = useBlockPropsEditor((
         <Textarea
           v-model="blockProps.description"
           rows="3"
-          class="text-xs"
+          
         />
       </div>
       <div class="span-full space-y-1">

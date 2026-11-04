@@ -11,6 +11,7 @@ import { normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { copyToClipboard, useMessage } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
@@ -52,7 +53,7 @@ function openWorkbench() {
   <Dialog v-model:open="show">
     <DialogContent class="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">OBS 提问展示</DialogTitle>
+        <DialogTitle class="text-sm">OBS 提问展示</DialogTitle>
       </DialogHeader>
 
       <div class="grid grid-cols-1 sm:grid-cols-5 gap-5 items-center py-2">
@@ -71,15 +72,14 @@ function openWorkbench() {
         </div>
 
         <div class="sm:col-span-2 space-y-3">
-          <div class="space-y-1.5">
-            <label class="text-xs text-muted-foreground">浏览器源链接</label>
+          <FormField label="浏览器源链接">
             <Input
               readonly
               :model-value="obsUrl"
               placeholder="登录后可复制 OBS 链接"
               class="font-mono"
             />
-          </div>
+          </FormField>
           <Button
             class="w-full gap-1.5"
             @click="copyUrl"

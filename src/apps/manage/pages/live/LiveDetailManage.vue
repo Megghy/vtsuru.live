@@ -144,11 +144,7 @@ onBeforeUnmount(async () => {
             返回列表
           </Button>
 
-          <Badge
-            v-if="liveInfo"
-            :variant="isLiveFinished ? 'secondary' : 'destructive'"
-            class="text-[10px] px-1.5 py-0 h-5"
-          >
+          <Badge v-if="liveInfo" :variant="isLiveFinished ? 'secondary' : 'destructive'" size="xs" class="h-5">
             <span
               v-if="!isLiveFinished"
               class="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse"

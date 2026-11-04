@@ -56,12 +56,7 @@ function toggleNotificationEvent(val: string) {
           <SelectValue placeholder="默认设备" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="d in audioOutputDevices"
-            :key="d.value"
-            :value="d.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="d in audioOutputDevices" :key="d.value" :value="d.value">
             {{ d.label }}
           </SelectItem>
         </SelectContent>
@@ -99,13 +94,7 @@ function toggleNotificationEvent(val: string) {
       hint="这些事件类型会插到队列最前面"
     >
       <div class="flex flex-wrap gap-1.5">
-        <Badge
-          v-for="opt in eventOptions"
-          :key="opt.value"
-          :variant="settings.priorityEvents.includes(opt.value) ? 'default' : 'outline'"
-          class="cursor-pointer text-xs py-0.5"
-          @click="togglePriorityEvent(opt.value)"
-        >
+        <Badge v-for="opt in eventOptions" :key="opt.value" :variant="settings.priorityEvents.includes(opt.value) ? 'default' : 'outline'" class="cursor-pointer py-0.5" @click="togglePriorityEvent(opt.value)">
           {{ opt.label }}
         </Badge>
       </div>
@@ -124,13 +113,7 @@ function toggleNotificationEvent(val: string) {
         </label>
         <template v-if="settings.notificationSound.enabled">
           <div class="flex flex-wrap gap-1.5">
-            <Badge
-              v-for="opt in eventOptions"
-              :key="opt.value"
-              :variant="(settings.notificationSound.events as string[]).includes(opt.value) ? 'default' : 'outline'"
-              class="cursor-pointer text-xs py-0.5"
-              @click="toggleNotificationEvent(opt.value)"
-            >
+            <Badge v-for="opt in eventOptions" :key="opt.value" :variant="(settings.notificationSound.events as string[]).includes(opt.value) ? 'default' : 'outline'" class="cursor-pointer py-0.5" @click="toggleNotificationEvent(opt.value)">
               {{ opt.label }}
             </Badge>
           </div>
@@ -168,16 +151,10 @@ function toggleNotificationEvent(val: string) {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            value="drop-oldest"
-            class="text-xs"
-          >
+          <SelectItem value="drop-oldest">
             丢弃最旧
           </SelectItem>
-          <SelectItem
-            value="reject-new"
-            class="text-xs"
-          >
+          <SelectItem value="reject-new">
             拒绝新消息
           </SelectItem>
         </SelectContent>

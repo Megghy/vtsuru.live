@@ -144,22 +144,14 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Card class="border bg-card w-full">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">凭据 & 账户</CardTitle>
-      <Badge
-        v-if="biliCookie.isCookieValid"
-        variant="outline"
-        class="h-5 text-[10px] gap-1 border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
-      >
+  <Card class="w-full">
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+      <CardTitle>凭据 & 账户</CardTitle>
+      <Badge v-if="biliCookie.isCookieValid" variant="success" size="xs" class="h-5 gap-1">
         <CheckmarkCircleOutline class="size-3" />
         已登录
       </Badge>
-      <Badge
-        v-else
-        variant="outline"
-        class="h-5 text-[10px] gap-1 border-destructive/40 text-destructive bg-destructive/10"
-      >
+      <Badge v-else variant="outline" size="xs" class="h-5 gap-1 border-destructive/40 text-destructive bg-destructive/10">
         <CloseCircleOutline class="size-3" />
         未登录
       </Badge>
@@ -189,12 +181,7 @@ onUnmounted(() => {
           <span class="w-24 text-muted-foreground shrink-0">登录状态</span>
           <div class="flex items-center gap-1.5 font-medium text-foreground">
             <span>{{ loginStatusString ?? (biliCookie.isCookieValid ? '已登录' : '未登录') }}</span>
-            <Badge
-              v-if="loginStatus === 'waiting' || loginStatus === 'scanned'"
-              :key="countdownKey"
-              variant="outline"
-              class="h-4.5 px-1.5 text-[10px] border-sky-500/40 text-sky-600 bg-sky-500/10"
-            >
+            <Badge v-if="loginStatus === 'waiting' || loginStatus === 'scanned'" :key="countdownKey" variant="outline" size="xs" class="border-sky-500/40 text-sky-600 bg-sky-500/10">
               {{ formatTimeDifference(Date.now(), startAt + QRCODE_EXPIRE_MS) }}
             </Badge>
           </div>
@@ -206,14 +193,9 @@ onUnmounted(() => {
         v-if="biliCookie.isCookieValid"
         class="space-y-2"
       >
-        <div class="flex items-center justify-between">
+        <div class="flex-between">
           <span class="text-xs text-muted-foreground">登录凭据 (Cookie - 敏感信息)</span>
-          <Button
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] gap-1"
-            @click="showCookie = !showCookie"
-          >
+          <Button size="xs" variant="ghost" class="gap-1" @click="showCookie = !showCookie">
             <EyeOffOutline
               v-if="showCookie"
               class="size-3.5"
@@ -230,7 +212,7 @@ onUnmounted(() => {
           :value="showCookie ? cookie : maskedCookie"
           placeholder="已登录"
           readonly
-          class="text-xs font-mono resize-none h-16"
+          class="font-mono resize-none h-16"
         />
 
         <Button
@@ -258,16 +240,10 @@ onUnmounted(() => {
         @update:model-value="settings.save()"
       >
         <TabsList class="grid w-full grid-cols-2">
-          <TabsTrigger
-            value="qrcode"
-            class="text-xs"
-          >
+          <TabsTrigger value="qrcode" >
             扫码登录
           </TabsTrigger>
-          <TabsTrigger
-            value="cookiecloud"
-            class="text-xs"
-          >
+          <TabsTrigger value="cookiecloud" >
             Cookie Cloud
           </TabsTrigger>
         </TabsList>
@@ -293,7 +269,7 @@ onUnmounted(() => {
                 <TooltipTrigger as-child>
                   <HelpCircle class="size-4 text-muted-foreground cursor-help" />
                 </TooltipTrigger>
-                <TooltipContent class="text-xs max-w-[260px]">
+                <TooltipContent class="max-w-[260px]">
                   <p class="mb-1">所有关于Cookie的操作都将在本地进行, 不会上传到任何服务器。</p>
                   <p>
                     相关代码开源于
@@ -311,7 +287,7 @@ onUnmounted(() => {
           </div>
           <div
             v-else
-            class="flex items-center justify-center py-4"
+            class="flex-center py-4"
           >
             <Spin
               v-if="!loginUrl"
@@ -320,7 +296,7 @@ onUnmounted(() => {
             />
             <div
               v-else
-              class="p-2.5 bg-white rounded-lg border shadow-sm flex items-center justify-center"
+              class="p-2.5 bg-white rounded-lg border shadow-sm flex-center"
             >
               <QrcodeVue
                 :value="loginUrl"

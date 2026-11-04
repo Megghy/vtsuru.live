@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { effectScope, ref } from 'vue'
 
 const mockAccount = ref({ id: 100, token: 'test-token' })
@@ -90,11 +90,8 @@ describe('RealtimeBus and useRealtimeTopic', () => {
     const scope1 = effectScope()
     const scope2 = effectScope()
 
-    let topic1!: ReturnType<typeof useRealtimeTopic>
-    let topic2!: ReturnType<typeof useRealtimeTopic>
-
     scope1.run(() => {
-      topic1 = useRealtimeTopic('pngtuber:room:R12345')
+      useRealtimeTopic('pngtuber:room:R12345')
     })
     await Promise.resolve()
 
@@ -108,7 +105,7 @@ describe('RealtimeBus and useRealtimeTopic', () => {
     // 第二个组件也订阅同一主题，不应重复向服务端发送 Subscribe
     const invokeCountBefore = mockConnection?.invoke.mock.calls.length
     scope2.run(() => {
-      topic2 = useRealtimeTopic('pngtuber:room:R12345')
+      useRealtimeTopic('pngtuber:room:R12345')
     })
     await Promise.resolve()
     expect(mockConnection?.invoke.mock.calls.length).toBe(invokeCountBefore)

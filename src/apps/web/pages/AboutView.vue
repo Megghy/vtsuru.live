@@ -77,7 +77,7 @@ const timelineData: TimelineRecord[] = [
 <template>
   <main class="min-h-screen py-10 px-4 flex flex-col items-center bg-muted/30">
     <div class="w-full max-w-2xl flex flex-col items-center gap-6">
-      <Card class="w-full shadow-sm">
+      <Card class="w-full">
         <CardHeader class="pb-3 border-b border-border/50">
           <CardTitle class="text-xl font-bold">关于</CardTitle>
           <p class="text-xs text-muted-foreground mt-1">构建时间: {{ buildTime.date }} ({{ buildTime.relative }})</p>
@@ -179,20 +179,11 @@ const timelineData: TimelineRecord[] = [
                 />
                 <span class="font-medium">前端:</span>
                 <div class="flex gap-1.5 flex-wrap">
-                  <Badge
-                    variant="secondary"
-                    class="font-normal text-[11px] h-5"
-                    >Vue 3</Badge
+                  <Badge variant="secondary" size="sm">Vue 3</Badge
                   >
-                  <Badge
-                    variant="secondary"
-                    class="font-normal text-[11px] h-5"
-                    >TypeScript</Badge
+                  <Badge variant="secondary" size="sm">TypeScript</Badge
                   >
-                  <Badge
-                    variant="secondary"
-                    class="font-normal text-[11px] h-5"
-                    >shadcn + UnoCSS</Badge
+                  <Badge variant="secondary" size="sm">shadcn + UnoCSS</Badge
                   >
                 </div>
               </div>
@@ -203,20 +194,11 @@ const timelineData: TimelineRecord[] = [
                 />
                 <span class="font-medium">后端:</span>
                 <div class="flex gap-1.5 flex-wrap">
-                  <Badge
-                    variant="secondary"
-                    class="font-normal text-[11px] h-5"
-                    >C# .NET 10</Badge
+                  <Badge variant="secondary" size="sm">C# .NET 10</Badge
                   >
-                  <Badge
-                    variant="secondary"
-                    class="font-normal text-[11px] h-5"
-                    >PostgreSQL</Badge
+                  <Badge variant="secondary" size="sm">PostgreSQL</Badge
                   >
-                  <Badge
-                    variant="secondary"
-                    class="font-normal text-[11px] h-5"
-                    >Garnet</Badge
+                  <Badge variant="secondary" size="sm">Garnet</Badge
                   >
                 </div>
               </div>

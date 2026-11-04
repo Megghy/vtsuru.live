@@ -80,7 +80,7 @@ const items = computed(() => {
         :value="String(idx)"
         class="faq-item border border-border rounded-lg bg-card/50 overflow-hidden"
       >
-        <AccordionTrigger class="px-3 py-2.5 text-xs font-medium hover:no-underline">
+        <AccordionTrigger class="px-3 py-2.5 hover:no-underline">
           <span class="text-left text-[13px] text-foreground">
             {{ it.q || `问题 ${idx + 1}` }}
           </span>

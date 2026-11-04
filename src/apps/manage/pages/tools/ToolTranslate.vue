@@ -54,7 +54,7 @@ async function copyResult() {
 <template>
   <Card>
     <CardHeader class="flex flex-row items-center justify-between pb-4">
-      <CardTitle class="text-base font-semibold">翻译工具</CardTitle>
+      <CardTitle class="text-base">翻译工具</CardTitle>
       <div class="flex items-center gap-2">
         <Select v-model="mode">
           <SelectTrigger class="w-[130px]">
@@ -79,7 +79,7 @@ async function copyResult() {
       </div>
     </CardHeader>
 
-    <CardContent class="pt-0">
+    <CardContent>
       <div class="flex flex-col gap-3">
         <span
           v-if="!browserApiAvailable"

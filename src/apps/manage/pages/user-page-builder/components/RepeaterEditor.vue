@@ -76,22 +76,14 @@ function duplicateItem(index: number) {
     >
       <span class="text-[11px] text-muted-foreground">共 {{ itemsModel.length }} 项</span>
       <div class="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          class="h-6 px-2"
-          @click="expandAll"
-        >
+        <Button size="xs" variant="ghost" @click="expandAll">
           <component
             :is="ExpandOutline"
             class="size-3.5 mr-1"
           />
           全部展开
         </Button>
-        <Button
-          variant="ghost"
-          class="h-6 px-2"
-          @click="collapseAll"
-        >
+        <Button size="xs" variant="ghost" @click="collapseAll">
           <component
             :is="ContractOutline"
             class="size-3.5 mr-1"
@@ -148,12 +140,7 @@ function duplicateItem(index: number) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  class="size-6 p-0"
-                  aria-label="复制项目"
-                  @click="duplicateItem(index)"
-                >
+                <Button size="icon-xs" variant="ghost" aria-label="复制项目" @click="duplicateItem(index)">
                   <component
                     :is="CopyOutline"
                     class="size-3.5"
@@ -170,11 +157,7 @@ function duplicateItem(index: number) {
             cancel-text="取消"
             @confirm="itemsModel.splice(index, 1)"
           >
-            <Button
-              variant="ghost"
-              class="size-6 p-0 text-destructive hover:text-destructive"
-              aria-label="删除项目"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive" aria-label="删除项目">
               <component
                 :is="TrashOutline"
                 class="size-3.5"

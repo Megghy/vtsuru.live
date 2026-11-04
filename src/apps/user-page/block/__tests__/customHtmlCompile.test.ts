@@ -32,13 +32,31 @@ button { color: var(--foreground); }
     expect(result.js).toContain("vtsuru.getAssetUrl('cover')")
   })
 
-  it('rejects non-vue imports', () => {
+  it('rejects imports outside the allowlist', () => {
     const result = compileCustomVueSfc(`<script setup>
 import axios from 'axios'
 </script>
 <template><div /></template>`)
     expect(result.issues.map((item) => item.message).join('\n')).toContain("不支持导入 'axios'")
     expect(result.js).toBe('')
+  })
+
+  it('rewrites dayjs and vueuse imports onto sandbox globals', () => {
+    const result = compileCustomVueSfc(`<script setup>
+import { ref } from 'vue'
+import dayjs from 'dayjs'
+import { useMouse } from '@vueuse/core'
+const now = dayjs()
+const { x } = useMouse()
+const n = ref(0)
+</script>
+<template><p>{{ now }}{{ x }}{{ n }}</p></template>`)
+    expect(result.issues).toEqual([])
+    expect(result.js).toContain('globalThis.dayjs')
+    expect(result.js).toContain('globalThis.VueUse')
+    expect(result.js).toContain('useMouse')
+    expect(result.js).not.toContain("from 'dayjs'")
+    expect(result.js).not.toContain("from '@vueuse/core'")
   })
 
   it('compiles the default source and templates', () => {

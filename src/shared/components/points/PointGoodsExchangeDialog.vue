@@ -11,6 +11,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
@@ -277,20 +278,14 @@ const requestClose = () => {
             alt="封面"
           />
           <div class="flex-1 min-w-0 flex flex-col gap-1">
-            <DialogTitle class="text-sm font-semibold truncate text-foreground">
+            <DialogTitle class="text-sm truncate text-foreground">
               {{ goods.name }}
             </DialogTitle>
             <div class="flex items-center gap-1.5 flex-wrap text-xs">
-              <Badge
-                variant="default"
-                class="text-[10px] h-4.5 px-1.5 font-normal"
-              >
+              <Badge variant="default" size="xs">
                 {{ priceText }} 积分
               </Badge>
-              <Badge
-                variant="secondary"
-                class="text-[10px] h-4.5 px-1.5 font-normal"
-              >
+              <Badge variant="secondary" size="xs">
                 {{ typeLabel }}
               </Badge>
               <span class="text-muted-foreground text-[11px]">{{ stockText }}</span>
@@ -308,24 +303,18 @@ const requestClose = () => {
 
       <ScrollArea class="flex-1 min-h-0 pr-4">
         <div class="space-y-3.5 text-xs">
-          <Alert
-            v-if="rebuyWarning"
-            class="text-xs bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
-          >
-            <AlertDescription class="text-xs">{{ rebuyWarning }}</AlertDescription>
+          <Alert size="sm" variant="warning" v-if="rebuyWarning">
+            <AlertDescription>{{ rebuyWarning }}</AlertDescription>
           </Alert>
 
           <template v-if="isService">
-            <Alert
-              v-if="serviceConfig?.rules"
-              class="text-xs bg-muted/40 border-border/80"
-            >
-              <AlertDescription class="text-xs whitespace-pre-wrap leading-relaxed">{{
+            <Alert size="sm" v-if="serviceConfig?.rules" class="bg-muted/40 border-border/80">
+              <AlertDescription class="whitespace-pre-wrap leading-relaxed">{{
                 serviceConfig.rules
               }}</AlertDescription>
             </Alert>
-            <Alert class="text-xs bg-muted/30 border-border/60">
-              <AlertDescription class="text-xs text-muted-foreground">
+            <Alert size="sm" class="bg-muted/30 border-border/60">
+              <AlertDescription class="text-muted-foreground">
                 提交后进入待接单状态<span v-if="serviceConfig?.estimatedDays"
                   >，预计 {{ serviceConfig.estimatedDays }} 天内完成</span
                 >。主播确认接单后会在订单中更新进度。
@@ -338,20 +327,12 @@ const requestClose = () => {
             v-if="serviceConfig?.fields?.length"
             class="space-y-3 p-3 rounded-lg bg-muted/20 border border-border/60"
           >
-            <div
+            <FormField
               v-for="field in serviceConfig.fields"
               :key="field.id"
-              class="space-y-1"
+              :label="field.label"
+              :required="field.required"
             >
-              <label class="font-medium text-foreground text-xs flex items-center gap-1">
-                <span>{{ field.label }}</span>
-                <span
-                  v-if="field.required"
-                  class="text-destructive"
-                  >*</span
-                >
-              </label>
-
               <Select
                 v-if="field.type === ServiceFieldType.Select"
                 :model-value="(serviceAnswers[field.id] as string) || ''"
@@ -361,12 +342,7 @@ const requestClose = () => {
                   <SelectValue :placeholder="`请选择${field.label}`" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in field.options"
-                    :key="opt"
-                    :value="opt"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in field.options" :key="opt" :value="opt">
                     {{ opt }}
                   </SelectItem>
                 </SelectContent>
@@ -379,12 +355,11 @@ const requestClose = () => {
                 @update:model-value="serviceAnswers[field.id] = $event"
               />
 
-              <Input
+              <NumberField
                 v-else-if="field.type === ServiceFieldType.Number"
-                :model-value="serviceAnswers[field.id] == null ? '' : String(serviceAnswers[field.id])"
-                type="number"
-                step="any"
-                @update:model-value="serviceAnswers[field.id] = Number($event) || undefined"
+                :model-value="serviceAnswers[field.id] == null ? undefined : Number(serviceAnswers[field.id])"
+                :show-buttons="false"
+                @update:model-value="serviceAnswers[field.id] = $event"
               />
 
               <Textarea
@@ -393,19 +368,28 @@ const requestClose = () => {
                 rows="3"
                 :placeholder="`请输入${field.label}`"
                 maxlength="2000"
-                class="text-xs resize-none"
+                class="resize-none"
+                @update:model-value="serviceAnswers[field.id] = $event"
+              />
+
+              <Input
+                v-else-if="field.type === ServiceFieldType.Url"
+                :model-value="(serviceAnswers[field.id] as string) || ''"
+                type="url"
+                placeholder="请输入链接"
+                maxlength="300"
                 @update:model-value="serviceAnswers[field.id] = $event"
               />
 
               <Input
                 v-else
                 :model-value="(serviceAnswers[field.id] as string) || ''"
-                :type="field.type === ServiceFieldType.Url ? 'url' : 'text'"
-                :placeholder="field.type === ServiceFieldType.Url ? '请输入链接' : `请输入${field.label}`"
+                type="text"
+                :placeholder="`请输入${field.label}`"
                 maxlength="300"
                 @update:model-value="serviceAnswers[field.id] = $event"
               />
-            </div>
+            </FormField>
           </div>
 
           <!-- 款式选择 -->
@@ -413,7 +397,7 @@ const requestClose = () => {
             v-if="hasSubItems"
             class="space-y-2"
           >
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="font-medium text-foreground text-xs">选择款式 *</span>
               <span class="text-[11px] text-muted-foreground">
                 可多选，价格累计
@@ -451,10 +435,7 @@ const requestClose = () => {
                   <div class="min-w-0 flex flex-col gap-0.5">
                     <div class="flex items-center gap-1.5">
                       <strong class="font-medium text-foreground text-xs truncate">{{ sub.name }}</strong>
-                      <Badge
-                        variant="secondary"
-                        class="text-[10px] h-4 px-1 font-mono shrink-0"
-                      >
+                      <Badge variant="secondary" size="xs" class="font-mono">
                         {{ sub.price }}分
                       </Badge>
                     </div>
@@ -466,7 +447,7 @@ const requestClose = () => {
 
                 <div
                   v-if="isSubItemChecked(sub.id) && !isService"
-                  class="flex items-center justify-between gap-2 pt-2 border-t border-primary/15 cursor-default"
+                  class="flex-between gap-2 pt-2 border-t border-primary/15 cursor-default"
                   @click.stop
                 >
                   <span class="text-[11px] text-muted-foreground">数量</span>
@@ -487,7 +468,7 @@ const requestClose = () => {
             v-else-if="!isService"
             class="space-y-1.5"
           >
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="font-medium text-foreground text-xs">兑换数量 *</span>
               <span class="text-[11px] text-muted-foreground">
                 {{
@@ -511,20 +492,19 @@ const requestClose = () => {
           />
 
           <!-- 留言 -->
-          <div class="space-y-1">
-            <span class="font-medium text-foreground text-xs">备注留言 (可选)</span>
+          <FormField label="备注留言 (可选)">
             <Textarea
               v-model="remark"
               rows="2"
               placeholder="如有特殊需求请留言..."
               maxlength="100"
-              class="text-xs resize-none"
+              class="resize-none"
             />
-          </div>
+          </FormField>
         </div>
       </ScrollArea>
 
-      <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-between sm:justify-between">
+      <DialogFooter class="pt-2 border-t border-border/60 flex-between sm:justify-between">
         <div class="flex items-baseline gap-1 text-xs">
           <span class="text-muted-foreground">总计</span>
           <strong class="text-primary font-mono text-base font-semibold">{{ cost }}</strong>

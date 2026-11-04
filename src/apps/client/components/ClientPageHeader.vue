@@ -6,7 +6,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="flex items-center justify-between flex-wrap gap-3">
+  <div class="flex-between flex-wrap gap-3">
     <div>
       <div class="text-lg leading-tight font-semibold text-foreground [&>*]:text-lg [&>*]:leading-tight">
         <slot name="title">

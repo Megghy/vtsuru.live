@@ -51,7 +51,7 @@ function submit() {
   <Dialog v-model:open="showModel">
     <DialogContent class="max-w-[520px]">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">手动添加用户</DialogTitle>
+        <DialogTitle class="text-base">手动添加用户</DialogTitle>
       </DialogHeader>
 
       <div class="flex flex-col gap-3 py-2 text-xs">

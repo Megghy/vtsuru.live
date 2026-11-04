@@ -7,6 +7,7 @@
  */
 
 export enum ForumTopicTypes {
-  Default = 0,
-  Vote = 1,
+  Default= 0,
+  Vote= 1,
+
 }

@@ -214,17 +214,11 @@ watch(
 
     <!-- 自定义音色 -->
     <SectionField label="自定义音色">
-      <div class="flex items-center justify-between mb-1.5">
+      <div class="flex-between mb-1.5">
         <span class="text-[11px] text-muted-foreground">
           {{ account.id ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
         </span>
-        <Button
-          size="xs"
-          variant="secondary"
-          class="h-6 text-[11px] gap-1"
-          :disabled="!account.id"
-          @click="showCreateDialog = true"
-        >
+        <Button size="xs" variant="secondary" class="gap-1" :disabled="!account.id" @click="showCreateDialog = true">
           <Add20Filled class="size-3.5" />
           新建
         </Button>
@@ -257,33 +251,15 @@ watch(
 
           <span class="flex-1 font-medium overflow-hidden text-ellipsis whitespace-nowrap">{{ v.name }}</span>
 
-          <Badge
-            variant="outline"
-            class="text-[10px] h-4.5 px-1"
-            :class="
-              v.type === 'clone'
-                ? 'border-sky-500/40 text-sky-600 bg-sky-500/10'
-                : 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-            "
-          >
+          <Badge variant="success" size="xs" :class=" v.type === 'clone' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ' ' ">
             {{ v.type === 'clone' ? '克隆' : '描述' }}
           </Badge>
 
           <div class="flex items-center gap-0.5 shrink-0">
-            <Button
-              size="xs"
-              :variant="isCustomSelected(v) ? 'default' : 'ghost'"
-              class="h-6 px-2 text-[11px]"
-              @click="useCustomVoice(v)"
-            >
+            <Button size="xs" :variant="isCustomSelected(v) ? 'default' : 'ghost'" @click="useCustomVoice(v)">
               {{ isCustomSelected(v) ? '使用中' : '使用' }}
             </Button>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground"
-              @click="editCustomVoice(v)"
-            >
+            <Button size="icon-xs" variant="ghost" class="text-muted-foreground" @click="editCustomVoice(v)">
               <Edit20Filled class="size-3.5" />
             </Button>
             <Popconfirm
@@ -291,11 +267,7 @@ watch(
               @positive-click="deleteCustomVoice(v.id)"
             >
               <template #trigger>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="h-6 w-6 p-0 text-destructive hover:text-destructive"
-                >
+                <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive">
                   <Delete20Filled class="size-3.5" />
                 </Button>
               </template>

@@ -54,9 +54,9 @@ function addExpressions() {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">操作台</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+      <CardTitle>操作台</CardTitle>
       <div class="flex items-center gap-2">
         <Button
           v-if="editing"
@@ -102,19 +102,16 @@ function addExpressions() {
       >
         拖动格子调整顺序，点击格子修改动作、颜色与全局快捷键
       </div>
-      <Alert
-        v-if="vts.deckShortcutError"
-        class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
-      >
-        <AlertDescription class="text-xs m-0"> 全局快捷键注册失败：{{ vts.deckShortcutError }} </AlertDescription>
+      <Alert size="sm" variant="warning" v-if="vts.deckShortcutError">
+        <AlertDescription class="m-0"> 全局快捷键注册失败：{{ vts.deckShortcutError }} </AlertDescription>
       </Alert>
 
       <div
         v-if="tiles.length === 0"
-        class="py-6 flex flex-col items-center justify-center"
+        class="py-6 flex-col-center"
       >
         <Empty description="把常用的表情、热键、宏、机位预设放到这里，一键切换">
-          <div class="flex items-center justify-center gap-2 mt-3">
+          <div class="flex-center gap-2 mt-3">
             <Button
               :disabled="!vts.connected || vts.expressions.length === 0"
               @click="addExpressions"
@@ -145,7 +142,7 @@ function addExpressions() {
           :key="tile.id"
           role="button"
           :tabindex="tileDisabled ? -1 : 0"
-          class="relative flex flex-col items-center justify-center gap-1 min-w-0 aspect-[5/4] p-2 border border-border rounded-md bg-popover select-none transition-all duration-150"
+          class="relative flex-col-center gap-1 min-w-0 aspect-[5/4] p-2 border border-border rounded-md bg-popover select-none transition-all duration-150"
           :class="[
             tileDisabled
               ? 'cursor-not-allowed opacity-50'

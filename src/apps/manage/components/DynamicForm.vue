@@ -137,6 +137,7 @@ function createPreviewFile(file: File): APIFileModel {
     name: file.name,
     hash: '',
     size: file.size,
+    store: 'local',
   }
 }
 
@@ -155,13 +156,13 @@ function releaseUnusedPreviews() {
   for (const files of Object.values(decorativeFileList.value)) {
     for (const item of files) if (item.kind === 'local') activeFiles.add(item.file)
   }
-  for (const file of [...filePreviews.keys()]) {
+  for (const file of Array.from(filePreviews.keys())) {
     if (!activeFiles.has(file)) {
       releaseFilePreviewUrl(file)
       filePreviews.delete(file)
     }
   }
-  for (const file of [...decorativePreviews.keys()]) {
+  for (const file of Array.from(decorativePreviews.keys())) {
     if (!activeFiles.has(file)) {
       releaseFilePreviewUrl(file)
       decorativePreviews.delete(file)
@@ -445,14 +446,10 @@ onBeforeUnmount(() => {
     <!-- 分栏模式下置顶操作条 -->
     <div
       v-if="fillHeight"
-      class="dynamic-form__header flex items-center justify-between px-4 py-3 border-b border-border bg-card shrink-0"
+      class="dynamic-form__header flex-between px-4 py-3 border-b border-border bg-card shrink-0"
     >
       <span class="text-xs font-semibold text-foreground">模板配置</span>
-      <Button
-        type="submit"
-        :disabled="isUploading"
-        class="h-7 text-xs px-3"
-      >
+      <Button size="xs" type="submit" :disabled="isUploading" class="text-xs px-3">
         {{ isUploading ? '保存中...' : '提交' }}
       </Button>
     </div>
@@ -620,14 +617,11 @@ onBeforeUnmount(() => {
     <Dialog :open="showUploadModal">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">文件上传进度</DialogTitle>
+          <DialogTitle class="text-sm">文件上传进度</DialogTitle>
         </DialogHeader>
         <div class="space-y-3 py-2">
           <p class="text-xs text-muted-foreground">{{ uploadStage }}</p>
-          <Progress
-            :model-value="uploadProgress"
-            class="h-2"
-          />
+          <Progress :model-value="uploadProgress" />
           <p
             v-if="totalFilesToUpload > 0"
             class="text-xs text-muted-foreground"

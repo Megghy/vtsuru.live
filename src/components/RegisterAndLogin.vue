@@ -460,19 +460,11 @@ onUnmounted(() => {
 
 <template>
   <section class="account-auth text-xs text-foreground">
-    <header class="flex items-center justify-between gap-3 pb-3 border-b border-border/60">
+    <header class="flex-between gap-3 pb-3 border-b border-border/60">
       <h2 class="text-base font-semibold m-0 text-foreground">登录或注册</h2>
       <div class="flex items-center gap-2">
         <slot name="header-extra" />
-        <Button
-          v-if="props.closable"
-          variant="ghost"
-          size="icon"
-          class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-          title="关闭"
-          aria-label="关闭"
-          @click="closePanel"
-        >
+        <Button v-if="props.closable" variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground" aria-label="关闭" @click="closePanel">
           <component
             :is="Dismiss16Regular"
             class="size-4"
@@ -483,7 +475,7 @@ onUnmounted(() => {
 
     <div
       v-if="isLoggedInNow"
-      class="py-6 flex flex-col items-center justify-center gap-3 text-center"
+      class="py-6 flex-col-center gap-3 text-center"
     >
       <p class="text-sm font-medium text-emerald-600 dark:text-emerald-400 m-0">
         已以 {{ currentAccountName }} 登录，当前页面会自动解锁后续操作。
@@ -534,21 +526,11 @@ onUnmounted(() => {
           class="grid w-full"
           :class="isForgetPassword ? 'grid-cols-3' : 'grid-cols-2'"
         >
-          <TabsTrigger
-            value="login"
-            class="text-xs"
-            >登录</TabsTrigger
+          <TabsTrigger value="login" >登录</TabsTrigger
           >
-          <TabsTrigger
-            value="register"
-            class="text-xs"
-            >注册</TabsTrigger
+          <TabsTrigger value="register" >注册</TabsTrigger
           >
-          <TabsTrigger
-            v-if="isForgetPassword"
-            value="forget"
-            class="text-xs"
-            >忘记密码</TabsTrigger
+          <TabsTrigger v-if="isForgetPassword" value="forget" >忘记密码</TabsTrigger
           >
         </TabsList>
 
@@ -577,7 +559,7 @@ onUnmounted(() => {
             />
           </div>
 
-          <div class="flex items-center justify-between pt-1">
+          <div class="flex-between pt-1">
             <Button
               variant="link"
               size="xs"
@@ -695,7 +677,7 @@ onUnmounted(() => {
             />
           </div>
 
-          <div class="flex items-center justify-between pt-1">
+          <div class="flex-between pt-1">
             <Button
               variant="link"
               size="xs"

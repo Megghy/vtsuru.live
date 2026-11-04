@@ -186,7 +186,7 @@ onMounted(async () => {
           <div class="flex items-center gap-2 text-xs flex-wrap">
             <Button
               variant="ghost"
-              class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+              class="flex items-center gap-1 text-muted-foreground"
               @click="$router.push({ name: 'user-forum', params: { id: userInfo?.name } })"
             >
               <component
@@ -199,11 +199,7 @@ onMounted(async () => {
               orientation="vertical"
               class="h-4"
             />
-            <Badge
-              v-if="topic.isDeleted"
-              variant="destructive"
-              class="text-[10px] h-4.5 px-1.5 font-normal"
-            >
+            <Badge v-if="topic.isDeleted" variant="destructive" size="xs">
               已删除
             </Badge>
             <h1 class="text-sm font-semibold text-foreground truncate max-w-xl">
@@ -214,9 +210,9 @@ onMounted(async () => {
       </Card>
 
       <Card class="shadow-xs">
-        <CardHeader class="p-4 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
+        <CardHeader class="p-4 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
           <div class="flex items-center gap-2.5">
-            <Avatar class="size-8 rounded-full">
+            <Avatar class="size-8">
               <AvatarImage
                 :src="getUserAvatarUrl(topic?.user?.id)"
                 referrerpolicy="no-referrer"
@@ -231,7 +227,7 @@ onMounted(async () => {
                 {{ formatRelativeTime(topic.createAt) }}
               </span>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
+            <TooltipContent>
               {{ formatFullTime(topic.createAt) }}
             </TooltipContent>
           </Tooltip>
@@ -247,11 +243,7 @@ onMounted(async () => {
             v-if="topic.sampleLikedBy?.length"
             class="flex items-center -space-x-1.5 pt-2"
           >
-            <Avatar
-              v-for="uid in topic.sampleLikedBy.slice(0, 8)"
-              :key="uid"
-              class="size-6 rounded-full border border-background ring-1 ring-border"
-            >
+            <Avatar v-for="uid in topic.sampleLikedBy.slice(0, 8)" :key="uid" class="size-6 border border-background ring-1 ring-border" >
               <AvatarImage
                 :src="getUserAvatarUrl(uid)"
                 referrerpolicy="no-referrer"
@@ -261,7 +253,7 @@ onMounted(async () => {
           </div>
         </CardContent>
 
-        <CardFooter class="p-3 pt-2 border-t border-border/50 flex items-center justify-between gap-3 text-xs">
+        <CardFooter class="p-3 pt-2 border-t border-border/50 flex-between gap-3 text-xs">
           <div class="flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger as-child>
@@ -273,7 +265,7 @@ onMounted(async () => {
                   <span>{{ topic.viewCount }}</span>
                 </div>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">浏览量</TooltipContent>
+              <TooltipContent>浏览量</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -299,7 +291,7 @@ onMounted(async () => {
                   <span>{{ topic.likeCount }}</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">点赞</TooltipContent>
+              <TooltipContent>点赞</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -317,7 +309,7 @@ onMounted(async () => {
                   <span>{{ topic.commentCount }}</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">评论</TooltipContent>
+              <TooltipContent>评论</TooltipContent>
             </Tooltip>
           </div>
 
@@ -336,7 +328,7 @@ onMounted(async () => {
       </Card>
 
       <Card class="shadow-xs">
-        <CardHeader class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
+        <CardHeader class="p-3 border-b border-border/60 flex flex-row items-center justify-between space-y-0">
           <strong class="text-xs font-semibold">评论</strong>
           <Button
             :disabled="!canOprate"
@@ -396,7 +388,7 @@ onMounted(async () => {
       <Dialog v-model:open="showCommentModal">
         <DialogContent class="sm:max-w-3xl max-h-[90vh] flex flex-col p-4 gap-3">
           <DialogHeader>
-            <DialogTitle class="text-sm font-semibold">发送评论</DialogTitle>
+            <DialogTitle class="text-sm">发送评论</DialogTitle>
           </DialogHeader>
 
           <div class="flex-1 min-h-0 overflow-y-auto space-y-3">
@@ -427,7 +419,7 @@ onMounted(async () => {
       <Dialog v-model:open="useForum.showReplyModal">
         <DialogContent class="sm:max-w-xl flex flex-col p-4 gap-3">
           <DialogHeader>
-            <DialogTitle class="text-sm font-semibold">发送回复</DialogTitle>
+            <DialogTitle class="text-sm">发送回复</DialogTitle>
           </DialogHeader>
 
           <div class="space-y-3 text-xs">
@@ -449,7 +441,7 @@ onMounted(async () => {
               placeholder="回复内容..."
               maxlength="233"
               rows="3"
-              class="text-xs resize-none"
+              class="resize-none"
             />
 
             <div class="flex flex-wrap items-center justify-between gap-3 pt-2">

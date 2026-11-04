@@ -64,7 +64,7 @@ watch(
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="ranking-header flex items-center justify-between w-full">
+      <div class="ranking-header flex-between w-full">
         <span class="ranking-heading flex items-center gap-1.5 font-semibold text-sm">
           <component
             :is="TrophyOutline"
@@ -94,18 +94,11 @@ watch(
       </div>
     </template>
 
-    <Alert
-      v-if="!enabled"
-      class="text-xs py-2"
-    >
+    <Alert size="sm" v-if="!enabled">
       <AlertDescription> 签到排行未开放 </AlertDescription>
     </Alert>
-    <Alert
-      v-else-if="query.status.value === 'error'"
-      variant="destructive"
-      class="text-xs py-2"
-    >
-      <AlertDescription class="flex items-center justify-between w-full">
+    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+      <AlertDescription class="flex-between w-full">
         <span>签到排行加载失败</span>
         <Button
           variant="outline"
@@ -143,7 +136,7 @@ watch(
           class="ranking-item flex items-center gap-2.5 p-2 rounded-lg border border-border bg-muted text-xs"
         >
           <span
-            class="size-6 rounded-full flex items-center justify-center font-bold text-xs shrink-0"
+            class="size-6 rounded-full flex-center font-bold text-xs shrink-0"
             :class="
               index === 0
                 ? 'text-[#6b4d00] bg-[#f8d66d]'

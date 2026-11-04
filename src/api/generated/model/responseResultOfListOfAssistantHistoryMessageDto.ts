@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AssistantHistoryMessageDto } from './assistantHistoryMessageDto'
+import type { AssistantHistoryMessageDto } from './assistantHistoryMessageDto';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfAssistantHistoryMessageDto {
-  message: string
-  code: number
+  message: string;
+  code: number;
   /** @nullable */
-  data: AssistantHistoryMessageDto[] | null
+  data: AssistantHistoryMessageDto[] | null;
 }

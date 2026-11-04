@@ -148,7 +148,7 @@ async function download() {
 <template>
   <Card>
     <CardHeader class="flex flex-row items-center justify-between pb-4">
-      <CardTitle class="text-base font-semibold">文字转图片</CardTitle>
+      <CardTitle class="text-base">文字转图片</CardTitle>
       <Button
         :disabled="!text"
         @click="download"
@@ -156,7 +156,7 @@ async function download() {
         下载 PNG
       </Button>
     </CardHeader>
-    <CardContent class="pt-0">
+    <CardContent>
       <div class="text-to-image-layout">
         <div class="controls-panel">
           <span class="text-xs text-muted-foreground mb-2 block"> 输入文本 </span>

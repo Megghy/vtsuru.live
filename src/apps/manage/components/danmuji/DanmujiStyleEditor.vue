@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type { DanmujiStyle } from '@/shared/danmujiStyle'
 import { Checkbox } from '@/shared/ui/checkbox'
-import { NumberField } from '@/shared/ui/number-field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { FormField } from '@/shared/ui/form-field'
 
 const style = defineModel<DanmujiStyle>({ required: true })
 const presets = [
@@ -14,66 +13,37 @@ const presets = [
 
 <template>
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">外观预设</label>
-      <Select v-model="style.preset">
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem
-            v-for="p in presets"
-            :key="p.value"
-            :value="p.value"
-          >
-            {{ p.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+    <FormField
+      type="select"
+      label="外观预设"
+      :options="presets"
+      v-model="style.preset"
+    />
 
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">字号</label>
-      <NumberField
-        :model-value="style.fontSize"
-        :min="10"
-        :max="72"
-        @update:model-value="
-          (value) => {
-            if (value !== null) style.fontSize = value
-          }
-        "
-      />
-    </div>
+    <FormField
+      type="number"
+      label="字号"
+      :min="10"
+      :max="72"
+      v-model="style.fontSize"
+    />
 
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">不透明度</label>
-      <NumberField
-        :model-value="style.opacity"
-        :min="0"
-        :max="1"
-        :step="0.1"
-        @update:model-value="
-          (value) => {
-            if (value !== null) style.opacity = value
-          }
-        "
-      />
-    </div>
+    <FormField
+      type="number"
+      label="不透明度"
+      :min="0"
+      :max="1"
+      :step="0.1"
+      v-model="style.opacity"
+    />
 
-    <div class="space-y-1">
-      <label class="text-xs text-muted-foreground">消息保留秒数（0 为不隐藏）</label>
-      <NumberField
-        :model-value="style.autoHide"
-        :min="0"
-        :max="3600"
-        @update:model-value="
-          (value) => {
-            if (value !== null) style.autoHide = value
-          }
-        "
-      />
-    </div>
+    <FormField
+      type="number"
+      label="消息保留秒数（0 为不隐藏）"
+      :min="0"
+      :max="3600"
+      v-model="style.autoHide"
+    />
 
     <div class="flex items-center gap-2 pt-1">
       <label class="flex items-center gap-1.5 cursor-pointer select-none">
@@ -89,21 +59,14 @@ const presets = [
       </label>
     </div>
 
-    <div
+    <FormField
       v-if="style.pinned"
-      class="col-span-full space-y-1 pt-1"
-    >
-      <label class="text-xs text-muted-foreground">置顶礼物最低金额（元）</label>
-      <NumberField
-        :model-value="style.pinnedMinPrice"
-        :min="0"
-        :max="100000"
-        @update:model-value="
-          (value) => {
-            if (value !== null) style.pinnedMinPrice = value
-          }
-        "
-      />
-    </div>
+      type="number"
+      label="置顶礼物最低金额（元）"
+      class="col-span-full pt-1"
+      :min="0"
+      :max="100000"
+      v-model="style.pinnedMinPrice"
+    />
   </div>
 </template>

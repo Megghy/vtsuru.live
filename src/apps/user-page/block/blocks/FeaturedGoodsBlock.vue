@@ -98,7 +98,7 @@ watch(
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="goods-header flex items-center justify-between w-full">
+      <div class="goods-header flex-between w-full">
         <span class="goods-heading flex items-center gap-1.5 font-semibold text-sm">
           <component
             :is="StorefrontOutline"
@@ -128,18 +128,11 @@ watch(
       </div>
     </template>
 
-    <Alert
-      v-if="!enabled"
-      class="text-xs py-2"
-    >
+    <Alert size="sm" v-if="!enabled">
       <AlertDescription> 积分兑换未开放 </AlertDescription>
     </Alert>
-    <Alert
-      v-else-if="query.status.value === 'error'"
-      variant="destructive"
-      class="text-xs py-2"
-    >
-      <AlertDescription class="flex items-center justify-between w-full">
+    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+      <AlertDescription class="flex-between w-full">
         <span>积分商品加载失败</span>
         <Button
           variant="outline"
@@ -192,18 +185,14 @@ watch(
             />
             <div
               v-else
-              class="cover-empty h-full flex items-center justify-center text-muted-foreground text-2xl"
+              class="cover-empty h-full flex-center text-muted-foreground text-2xl"
             >
               <component
                 :is="StorefrontOutline"
                 class="size-8"
               />
             </div>
-            <Badge
-              v-if="isSoldOut(item)"
-              variant="secondary"
-              class="stock-tag absolute right-1.5 bottom-1.5 text-[10px] h-4 px-1"
-            >
+            <Badge v-if="isSoldOut(item)" variant="secondary" size="xs" class="stock-tag absolute right-1.5 bottom-1.5">
               已售罄
             </Badge>
           </div>
@@ -215,7 +204,7 @@ watch(
             >
               {{ item.description }}
             </p>
-            <div class="goods-meta flex items-center justify-between text-xs mt-1">
+            <div class="goods-meta flex-between text-xs mt-1">
               <span class="price font-bold text-primary">{{ price(item) }}</span>
               <span
                 v-if="showStock && !isSoldOut(item)"

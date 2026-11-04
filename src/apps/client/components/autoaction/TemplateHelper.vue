@@ -57,7 +57,7 @@ function handleInsert(text: string) {
         <div
           v-for="item in filteredPlaceholders"
           :key="item.name"
-          class="group flex items-center justify-between py-1.5 px-2 rounded-md cursor-pointer transition-colors hover:bg-muted/80"
+          class="group flex-between py-1.5 px-2 rounded-md cursor-pointer transition-colors hover:bg-muted/80"
           @click="handleInsert(item.name)"
         >
           <div class="min-w-0 pr-2">
@@ -69,22 +69,10 @@ function handleInsert(text: string) {
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0 opacity-40 transition-opacity group-hover:opacity-100">
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              class="size-6 text-muted-foreground hover:text-foreground"
-              aria-label="复制"
-              @click.stop="copyToClipboard(item.name)"
-            >
+            <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="复制" @click.stop="copyToClipboard(item.name)">
               <Copy16Regular class="size-3.5" />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              class="size-6 text-muted-foreground hover:text-foreground"
-              aria-label="插入"
-              @click.stop="handleInsert(item.name)"
-            >
+            <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="插入" @click.stop="handleInsert(item.name)">
               <Add16Regular class="size-3.5" />
             </Button>
           </div>

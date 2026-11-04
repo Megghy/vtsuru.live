@@ -21,11 +21,11 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
         class="w-full"
       />
     </div>
-    <div class="flex items-center justify-between py-1">
+    <div class="flex-between py-1">
       <label class="text-xs text-muted-foreground">显示活动说明</label>
       <Switch v-model:checked="blockProps.showDescription" />
     </div>
-    <div class="flex items-center justify-between py-1">
+    <div class="flex-between py-1">
       <label class="text-xs text-muted-foreground">显示投稿进度</label>
       <Switch v-model:checked="blockProps.showProgress" />
     </div>

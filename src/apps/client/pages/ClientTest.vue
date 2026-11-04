@@ -37,9 +37,9 @@ async function testNotification() {
 
       <Card>
         <CardHeader class="py-3 px-4">
-          <CardTitle class="text-sm font-semibold">调试操作</CardTitle>
+          <CardTitle>调试操作</CardTitle>
         </CardHeader>
-        <CardContent class="px-4 pb-4 pt-0">
+        <CardContent class="px-4 pb-4">
           <div class="flex flex-col gap-3.5">
             <div class="flex items-center gap-2.5 flex-wrap">
               <Button

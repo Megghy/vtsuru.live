@@ -64,7 +64,7 @@ function formatRelativeTime(timestamp: number) {
 
 <template>
   <div
-    class="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card transition-all"
+    class="flex-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card transition-all"
     :class="{
       'border-l-4 border-l-emerald-500 bg-emerald-500/5': isProcessing,
       'hover:border-brand/40': !isProcessing,
@@ -73,7 +73,7 @@ function formatRelativeTime(timestamp: number) {
     <!-- 左侧信息 -->
     <div class="flex items-center gap-2.5 min-w-0">
       <span
-        class="inline-flex items-center justify-center font-bold w-6 h-6 rounded-full text-xs shrink-0 font-mono"
+        class="inline-flex-center font-bold w-6 h-6 rounded-full text-xs shrink-0 font-mono"
         :class="{
           'bg-emerald-500 text-white animate-pulse': isProcessing,
           'bg-muted text-muted-foreground': queueData.status === QueueStatus.Finish,
@@ -91,7 +91,7 @@ function formatRelativeTime(timestamp: number) {
               {{ queueData.user?.name || '未知用户' }}
             </span>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
+          <TooltipContent>
             {{ queueData.user?.uid ? `UID: ${queueData.user?.uid}` : `OpenID: ${queueData.user?.oid}` }}
           </TooltipContent>
         </Tooltip>
@@ -107,24 +107,17 @@ function formatRelativeTime(timestamp: number) {
       <TooltipProvider v-if="store.settings.showPayment && paymentMeta.hasMysteryBoxPayment">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Badge
-              variant="warning"
-              class="text-[10px] px-1.5 py-0 h-4"
-            >
+            <Badge variant="warning" size="xs">
               {{ paymentMeta.shortText }}
             </Badge>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
+          <TooltipContent>
             {{ paymentMeta.detailText }}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
 
-      <Badge
-        v-if="store.settings.showPayment && paymentMeta.giftPriceText"
-        variant="destructive"
-        class="text-[10px] px-1.5 py-0 h-4"
-      >
+      <Badge v-if="store.settings.showPayment && paymentMeta.giftPriceText" variant="destructive" size="xs">
         ￥ {{ paymentMeta.giftPriceText }}
       </Badge>
 
@@ -137,7 +130,7 @@ function formatRelativeTime(timestamp: number) {
               class="h-3.5 w-3.5 text-muted-foreground cursor-help"
             />
           </TooltipTrigger>
-          <TooltipContent class="text-xs max-w-xs">
+          <TooltipContent class="max-w-xs">
             <div class="text-[10px] text-muted-foreground mb-0.5">
               {{ `来自${queueData?.from === QueueFrom.Gift ? '礼物' : '弹幕'}:` }}
             </div>
@@ -171,7 +164,7 @@ function formatRelativeTime(timestamp: number) {
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
+          <TooltipContent>
             {{ hasOtherProcessing ? '已有其他用户正在处理中' : isProcessing ? '暂停处理 (返回等待)' : '开始处理' }}
           </TooltipContent>
         </Tooltip>
@@ -192,7 +185,7 @@ function formatRelativeTime(timestamp: number) {
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs"> 标记为已完成 </TooltipContent>
+          <TooltipContent> 标记为已完成 </TooltipContent>
         </Tooltip>
 
         <!-- 拉黑用户 -->
@@ -246,7 +239,7 @@ function formatRelativeTime(timestamp: number) {
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs"> 取消此排队 </TooltipContent>
+          <TooltipContent> 取消此排队 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

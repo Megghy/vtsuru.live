@@ -68,7 +68,7 @@ const isFunctionEnabled = computed(() => {
                     </span>
                   </div>
                 </TooltipTrigger>
-                <TooltipContent class="text-xs"> 关闭后不会显示在个人主页 </TooltipContent>
+                <TooltipContent> 关闭后不会显示在个人主页 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -117,7 +117,7 @@ const isFunctionEnabled = computed(() => {
                       class="h-3.5 w-3.5 text-muted-foreground cursor-help"
                     />
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs max-w-xs">
+                  <TooltipContent class="max-w-xs">
                     {{ link.description }}
                   </TooltipContent>
                 </Tooltip>

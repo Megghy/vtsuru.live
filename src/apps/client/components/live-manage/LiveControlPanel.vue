@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -94,9 +95,9 @@ function handleSubAreaChange(val: any) {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b">
-      <CardTitle class="text-sm font-semibold">直播控制</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b">
+      <CardTitle>直播控制</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3 space-y-4">
@@ -180,7 +181,7 @@ function handleSubAreaChange(val: any) {
                 </Button>
               </div>
             </TooltipTrigger>
-            <TooltipContent class="text-xs"> 请先开始直播后再控制 OBS 推流 </TooltipContent>
+            <TooltipContent> 请先开始直播后再控制 OBS 推流 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
@@ -210,7 +211,7 @@ function handleSubAreaChange(val: any) {
         </Button>
       </div>
 
-      <div class="h-px bg-border" />
+      <Separator />
 
       <!-- 直播间设置：标题与两级分区 -->
       <div class="space-y-3">
@@ -219,7 +220,7 @@ function handleSubAreaChange(val: any) {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <!-- 标题 -->
           <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <label class="text-xs text-muted-foreground flex items-center gap-1.5">
                 直播间标题
                 <span
@@ -242,7 +243,7 @@ function handleSubAreaChange(val: any) {
 
           <!-- 分区 (大类 + 子分区) -->
           <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <label class="text-xs text-muted-foreground flex items-center gap-1.5">
                 直播分区
                 <span
@@ -300,11 +301,11 @@ function handleSubAreaChange(val: any) {
         </div>
       </div>
 
-      <div class="h-px bg-border" />
+      <Separator />
 
       <!-- 直播间公告 -->
       <div class="space-y-2">
-        <div class="flex items-center justify-between">
+        <div class="flex-between">
           <label class="text-xs font-semibold text-foreground block">直播间公告</label>
           <span class="text-[11px] text-muted-foreground">{{ (c.roomAnnouncement.value || '').length }} / 60</span>
         </div>
@@ -313,7 +314,7 @@ function handleSubAreaChange(val: any) {
           placeholder="输入直播间公告（最多 60 个字符）"
           maxlength="60"
           rows="2"
-          class="min-h-[56px] text-xs resize-y"
+          class="min-h-[56px] resize-y"
           @update:model-value="c.roomAnnouncement.value = String($event)"
         />
         <div class="flex justify-end">
@@ -328,7 +329,7 @@ function handleSubAreaChange(val: any) {
         </div>
       </div>
 
-      <div class="h-px bg-border" />
+      <Separator />
 
       <!-- 直播封面 -->
       <LiveCoverUpload :control="c" />

@@ -82,7 +82,7 @@ function requestSong(song: ResponseSongModel) {
       <aside class="filter-panel">
         <div class="filter-panel-scroll max-h-[85vh] overflow-y-auto pr-2">
           <div class="filter-panel-body space-y-4">
-            <header class="filter-heading flex items-center justify-between pb-2 border-b border-border/60">
+            <header class="filter-heading flex-between pb-2 border-b border-border/60">
               <div class="flex flex-col">
                 <strong class="text-sm font-semibold">曲库筛选</strong>
                 <span class="text-xs text-muted-foreground font-mono"
@@ -92,7 +92,7 @@ function requestSong(song: ResponseSongModel) {
               <Button
                 v-if="hasFilters"
                 variant="ghost"
-                class="text-muted-foreground hover:text-foreground"
+                class="text-muted-foreground"
                 @click="clearFilters"
               >
                 清除
@@ -119,17 +119,9 @@ function requestSong(song: ResponseSongModel) {
                   <SelectValue placeholder="筛选歌手" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    value="all"
-                    class="text-xs"
-                    >全部歌手</SelectItem
+                  <SelectItem value="all">全部歌手</SelectItem
                   >
-                  <SelectItem
-                    v-for="opt in authorOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in authorOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -249,7 +241,7 @@ function requestSong(song: ResponseSongModel) {
                 variant="semantic"
               />
 
-              <footer class="flex items-center justify-between gap-2 pt-2 border-t border-border/50 text-xs">
+              <footer class="flex-between gap-2 pt-2 border-t border-border/50 text-xs">
                 <div class="card-tags flex items-center gap-1 flex-wrap">
                   <button
                     v-for="tag in (item.tags ?? []).slice(0, 3)"
@@ -274,16 +266,7 @@ function requestSong(song: ResponseSongModel) {
                 </div>
 
                 <div class="actions flex items-center gap-1 shrink-0">
-                  <Button
-                    v-if="item.url"
-                    variant="ghost"
-                    size="icon"
-                    class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-                    title="试听"
-                    :aria-label="`试听《${item.name}》`"
-                    :disabled="isLrcLoading === item.key"
-                    @click="selectedSong = item"
-                  >
+                  <Button v-if="item.url" variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground" :aria-label="`试听《${item.name}》`" :disabled="isLrcLoading === item.key" @click="selectedSong = item">
                     <component
                       :is="Play24Filled"
                       class="size-3.5"

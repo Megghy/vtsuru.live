@@ -149,7 +149,7 @@ function triggerPreview() {
       />
       <div
         v-else
-        class="w-full h-full flex items-center justify-center text-muted-foreground"
+        class="w-full h-full flex-center text-muted-foreground"
       >
         <component
           :is="Video24Regular"
@@ -158,7 +158,7 @@ function triggerPreview() {
       </div>
 
       <div
-        class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+        class="absolute inset-0 bg-black/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity"
       >
         <component
           :is="Play24Filled"
@@ -256,8 +256,7 @@ function triggerPreview() {
             <span>· {{ formatRelative(primarySender.sendAt) }}</span>
           </div>
 
-          <Badge
-            v-if="otherSenders.length > 0"
+          <Badge v-if="otherSenders.length> 0"
             variant="outline"
             class="more-senders-pill text-[10px] cursor-pointer hover:bg-muted py-0 h-4"
             @click="isExpandedSenders = !isExpandedSenders"
@@ -342,7 +341,7 @@ function triggerPreview() {
         />
         <div
           v-else
-          class="w-full h-full flex flex-col items-center justify-center text-muted-foreground text-xs gap-1"
+          class="w-full h-full flex-col-center text-muted-foreground text-xs gap-1"
         >
           <component
             :is="Video24Regular"
@@ -352,7 +351,7 @@ function triggerPreview() {
         </div>
 
         <div
-          class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+          class="absolute inset-0 bg-black/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity"
         >
           <component
             :is="Play24Filled"
@@ -416,7 +415,7 @@ function triggerPreview() {
           </TooltipProvider>
         </div>
 
-        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+        <div class="flex-between text-[11px] text-muted-foreground">
           <span
             class="flex items-center gap-1 truncate max-w-[130px]"
             :title="`UP 主: ${videoData.ownerName}`"
@@ -445,14 +444,14 @@ function triggerPreview() {
             >
               “{{ primarySender.description }}”
             </p>
-            <div class="flex items-center justify-between text-[10px]">
+            <div class="flex-between text-[10px]">
               <span>{{ primarySender.sender || '匿名用户' }}</span>
               <span>{{ formatRelative(primarySender.sendAt) }}</span>
             </div>
           </div>
           <div
             v-else
-            class="flex items-center justify-between text-[11px] text-muted-foreground"
+            class="flex-between text-[11px] text-muted-foreground"
           >
             <span>{{ primarySender.sender || '匿名用户' }}</span>
             <span>{{ formatRelative(primarySender.sendAt) }}</span>

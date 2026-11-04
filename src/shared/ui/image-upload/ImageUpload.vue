@@ -53,7 +53,7 @@ function syncRetainedPreviews(items: readonly UploadImageItem[]) {
     }
     item.url = url
   }
-  for (const oldFile of [...retainedUrls.keys()]) {
+  for (const oldFile of Array.from(retainedUrls.keys())) {
     if (!nextFiles.has(oldFile)) {
       releaseFilePreviewUrl(oldFile)
       retainedUrls.delete(oldFile)
@@ -204,7 +204,7 @@ const labelText = computed(() => {
       v-if="canAddMore"
       type="button"
       :disabled="disabled"
-      :title="placeholder || '添加图片'"
+      :aria-label="placeholder || '添加图片'"
       class="flex-col-center border border-dashed text-muted-foreground hover:border-primary hover:text-foreground hover:bg-muted/30 transition-colors cursor-pointer p-1 text-center disabled:opacity-50 disabled:pointer-events-none"
       :class="[slotSizeClasses, isOverDropZone && !disabled ? 'border-primary bg-primary/5 text-primary' : 'border-input bg-background/50']"
       @click="triggerPick"

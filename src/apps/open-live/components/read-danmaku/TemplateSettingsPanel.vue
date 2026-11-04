@@ -265,11 +265,8 @@ function fireMock() {
 
 <template>
   <div class="flex flex-col gap-2.5">
-    <Alert
-      v-if="!supportsFollow"
-      class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs py-2"
-    >
-      <AlertDescription class="text-xs text-amber-700 dark:text-amber-400">
+    <Alert size="sm" variant="warning" v-if="!supportsFollow">
+      <AlertDescription class="text-amber-700 dark:text-amber-400">
         开放平台不推送关注事件。关注播报需要使用桌面客户端的直连弹幕源。
       </AlertDescription>
     </Alert>
@@ -279,13 +276,7 @@ function fireMock() {
     </span>
 
     <div class="flex flex-wrap gap-1 my-1">
-      <Button
-        v-for="item in Object.values(templateConstants)"
-        :key="item.name"
-        variant="outline"
-        class="h-6 text-[11px] px-2"
-        @click="copyToClipboard(item.words)"
-      >
+      <Button size="xs" v-for="item in Object.values(templateConstants)" :key="item.name" variant="outline" @click="copyToClipboard(item.words)">
         {{ item.words }}
       </Button>
     </div>
@@ -302,7 +293,7 @@ function fireMock() {
         :value="row.eventKey"
         class="border-b last:border-b-0"
       >
-        <div class="flex items-center justify-between py-2">
+        <div class="flex-between py-2">
           <div class="flex items-center gap-2">
             <Checkbox
               :checked="settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents]"
@@ -318,16 +309,7 @@ function fireMock() {
             </span>
           </div>
           <div class="flex items-center gap-2">
-            <Button
-              variant="outline"
-              class="h-6 text-[11px] px-2 text-primary"
-              :disabled="
-                !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] ||
-                (row.type === EventDataTypes.Follow && !supportsFollow)
-              "
-              :loading="speechState.isApiAudioLoading"
-              @click.stop="test(row.type, row.eventKey)"
-            >
+            <Button size="xs" variant="outline" class="text-primary" :disabled=" !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] || (row.type === EventDataTypes.Follow && !supportsFollow) " :loading="speechState.isApiAudioLoading" @click.stop="test(row.type, row.eventKey)">
               测试
             </Button>
             <AccordionTrigger class="p-0 hover:no-underline" />
@@ -344,19 +326,10 @@ function fireMock() {
               <div class="flex-between">
                 <span class="text-[11px] text-muted-foreground">规则 {{ ri + 1 }}</span>
                 <div class="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    class="h-6 text-[11px] px-2 text-primary hover:bg-primary/10"
-                    :loading="speechState.isApiAudioLoading"
-                    @click="test(row.type, row.eventKey, rule)"
-                  >
+                  <Button size="xs" variant="ghost" class="text-primary hover:bg-primary/10" :loading="speechState.isApiAudioLoading" @click="test(row.type, row.eventKey, rule)">
                     测试此条
                   </Button>
-                  <Button
-                    variant="ghost"
-                    class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                    @click="removeRule(row.eventKey, ri)"
-                  >
+                  <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="removeRule(row.eventKey, ri)">
                     <Delete20Filled class="size-3.5" />
                   </Button>
                 </div>
@@ -366,15 +339,11 @@ function fireMock() {
                 :placeholder="`模板文本，如: ${row.label}...`"
               />
               <div class="mt-1">
-                <div class="flex items-center justify-between mb-1">
+                <div class="flex-between mb-1">
                   <span class="text-[11px] text-muted-foreground">
                     {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
                   </span>
-                  <Button
-                    variant="outline"
-                    class="h-6 text-[11px] px-2 gap-1"
-                    @click="addCondition(rule, row.eventKey)"
-                  >
+                  <Button size="xs" variant="outline" class="gap-1" @click="addCondition(rule, row.eventKey)">
                     <Add20Filled class="size-3" />
                     添加条件
                   </Button>
@@ -395,12 +364,7 @@ function fireMock() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        v-for="f in fieldOptionsByEvent[row.eventKey]"
-                        :key="f.value"
-                        :value="f.value"
-                        class="text-xs"
-                      >
+                      <SelectItem v-for="f in fieldOptionsByEvent[row.eventKey]" :key="f.value" :value="f.value">
                         {{ f.label }}
                       </SelectItem>
                     </SelectContent>
@@ -414,12 +378,7 @@ function fireMock() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        v-for="op in getOpsForField(cond.field)"
-                        :key="op.value"
-                        :value="op.value"
-                        class="text-xs"
-                      >
+                      <SelectItem v-for="op in getOpsForField(cond.field)" :key="op.value" :value="op.value">
                         {{ op.label }}
                       </SelectItem>
                     </SelectContent>
@@ -494,12 +453,7 @@ function fireMock() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in mockTypeOptions"
-                    :key="opt.value"
-                    :value="String(opt.value)"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in mockTypeOptions" :key="opt.value" :value="String(opt.value)">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>

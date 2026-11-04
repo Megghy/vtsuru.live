@@ -7,8 +7,9 @@
  */
 
 export enum SongPlatform {
-  Custom = 0,
-  Netease = 1,
-  FiveSing = 2,
-  Kugou = 3,
+  Custom= 0,
+  Netease= 1,
+  FiveSing= 2,
+  Kugou= 3,
+
 }

@@ -249,10 +249,10 @@ onUnmounted(() => {
       variant="destructive"
       class="border-destructive/40 bg-destructive/10"
     >
-      <div class="flex items-center justify-between gap-3 flex-wrap">
+      <div class="flex-between gap-3 flex-wrap">
         <div>
-          <AlertTitle class="text-xs font-semibold"> 身份码已失效 </AlertTitle>
-          <AlertDescription class="text-xs"> 你的身份码已失效, 这会导致无法获取直播间数据. </AlertDescription>
+          <AlertTitle> 身份码已失效 </AlertTitle>
+          <AlertDescription> 你的身份码已失效, 这会导致无法获取直播间数据. </AlertDescription>
         </div>
         <Button
           size="xs"
@@ -267,10 +267,10 @@ onUnmounted(() => {
     <!-- 个人主页装扮常驻入口横幅 -->
     <div
       v-if="accountInfo"
-      class="rounded-lg border border-border bg-card p-3.5 shadow-sm transition-colors hover:border-brand/40 flex items-center justify-between gap-3 flex-wrap"
+      class="rounded-lg border border-border bg-card p-3.5 shadow-sm transition-colors hover:border-brand/40 flex-between gap-3 flex-wrap"
     >
       <div class="flex items-center gap-3">
-        <div class="h-9 w-9 rounded-md bg-brand/10 text-brand flex items-center justify-center shrink-0">
+        <div class="h-9 w-9 rounded-md bg-brand/10 text-brand flex-center shrink-0">
           <component
             :is="ColorPaletteOutline"
             class="h-5 w-5"
@@ -317,30 +317,17 @@ onUnmounted(() => {
       class="w-full"
       :class="{ 'dashboard-view--wide': selectedTab === 'template' }"
     >
-      <TabsList class="inline-flex p-1 bg-muted rounded-lg">
-        <TabsTrigger
-          value="info"
-          class="text-xs px-3 h-6"
-        >
+      <TabsList size="xs" class="inline-flex p-1 bg-muted rounded-lg">
+        <TabsTrigger value="info" >
           个人信息
         </TabsTrigger>
-        <TabsTrigger
-          value="setting"
-          class="text-xs px-3 h-6"
-        >
+        <TabsTrigger value="setting" >
           设置
         </TabsTrigger>
-        <TabsTrigger
-          value="template"
-          class="text-xs px-3 h-6"
-        >
+        <TabsTrigger value="template" >
           模板
         </TabsTrigger>
-        <TabsTrigger
-          v-if="isDev"
-          value="billing"
-          class="text-xs px-3 h-6"
-        >
+        <TabsTrigger v-if="isDev" value="billing" >
           增值 (dev)
         </TabsTrigger>
       </TabsList>
@@ -390,7 +377,7 @@ onUnmounted(() => {
                   v-if="accountInfo?.name"
                   size="xs"
                   variant="ghost"
-                  title="在新标签页查看公开主页"
+                  aria-label="在新标签页查看公开主页"
                   @click="goToUserPublicPage"
                 >
                   <component
@@ -454,30 +441,18 @@ onUnmounted(() => {
 
                 <div
                   v-if="accountInfo?.isBiliVerified"
-                  class="flex items-center justify-between gap-3 flex-wrap"
+                  class="flex-between gap-3 flex-wrap"
                 >
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-xs font-medium text-primary">已认证 | {{ accountInfo?.biliId }}</span>
 
-                    <Badge
-                      v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active"
-                      variant="success"
-                      class="text-[11px]"
-                    >
+                    <Badge v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active" variant="success" size="sm">
                       身份码: 有效
                     </Badge>
-                    <Badge
-                      v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
-                      variant="destructive"
-                      class="text-[11px]"
-                    >
+                    <Badge v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive" variant="destructive" size="sm">
                       身份码: 需更新
                     </Badge>
-                    <Badge
-                      v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound"
-                      variant="warning"
-                      class="text-[11px] gap-1"
-                    >
+                    <Badge v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound" variant="warning" size="sm" class="gap-1">
                       身份码: 需绑定
                       <TooltipProvider>
                         <Tooltip>
@@ -487,7 +462,7 @@ onUnmounted(() => {
                               class="h-3 w-3 inline cursor-help"
                             />
                           </TooltipTrigger>
-                          <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个提示 </TooltipContent>
+                          <TooltipContent> 如果你不是主播的话则不需要在意这个提示 </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </Badge>
@@ -535,13 +510,10 @@ onUnmounted(() => {
 
                 <div
                   v-else
-                  class="flex items-center justify-between gap-3 flex-wrap"
+                  class="flex-between gap-3 flex-wrap"
                 >
                   <div class="flex items-center gap-2">
-                    <Badge
-                      variant="destructive"
-                      class="text-[11px] gap-1"
-                    >
+                    <Badge variant="destructive" size="sm" class="gap-1">
                       未绑定
                       <TooltipProvider>
                         <Tooltip>
@@ -551,7 +523,7 @@ onUnmounted(() => {
                               class="h-3 w-3 inline cursor-help"
                             />
                           </TooltipTrigger>
-                          <TooltipContent class="text-xs"> 如果你不是主播的话则不需要在意这个 </TooltipContent>
+                          <TooltipContent> 如果你不是主播的话则不需要在意这个 </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </Badge>
@@ -573,7 +545,7 @@ onUnmounted(() => {
 
             <!-- Token 卡片 -->
             <div class="p-3.5 rounded-lg border border-border bg-card space-y-2">
-              <div class="flex items-center justify-between">
+              <div class="flex-between">
                 <span class="text-xs font-semibold tracking-wide text-foreground uppercase">Token</span>
                 <span class="text-[11px] text-muted-foreground">敏感凭据，用于 EventFetcher / OBS 鉴权</span>
               </div>
@@ -589,7 +561,7 @@ onUnmounted(() => {
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    class="absolute right-1 top-1/2 -translate-y-1/2 size-6 text-muted-foreground hover:text-foreground"
+                    class="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
                     aria-label="切换密码显示"
                     @click="showToken = !showToken"
                   >

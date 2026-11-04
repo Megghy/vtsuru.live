@@ -5,24 +5,24 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumSetting } from './forumSetting'
-import type { ForumUserInfo } from './forumUserInfo'
-import type { ForumUserLevels } from './forumUserLevels'
+import type { ForumSetting } from './forumSetting';
+import type { ForumUserInfo } from './forumUserInfo';
+import type { ForumUserLevels } from './forumUserLevels';
 
 export interface ResponseForumModel {
-  members: ForumUserInfo[]
-  admins: ForumUserInfo[]
-  applying: ForumUserInfo[]
-  blackList: ForumUserInfo[]
-  owner: ForumUserInfo
-  name: string
+  members: ForumUserInfo[];
+  admins: ForumUserInfo[];
+  applying: ForumUserInfo[];
+  blackList: ForumUserInfo[];
+  owner: ForumUserInfo;
+  name: string;
   /** @nullable */
-  description?: string | null
-  topicCount: number
-  createAt: number
-  level: ForumUserLevels
-  isApplied: boolean
-  settings: ForumSetting
-  isAdmin: boolean
-  isMember: boolean
+  description?: string | null;
+  topicCount: number;
+  createAt: number;
+  level: ForumUserLevels;
+  isApplied: boolean;
+  settings: ForumSetting;
+  isAdmin: boolean;
+  isMember: boolean;
 }

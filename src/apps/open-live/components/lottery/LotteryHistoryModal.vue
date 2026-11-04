@@ -31,7 +31,7 @@ const showModel = computed({
   <Dialog v-model:open="showModel">
     <DialogContent class="max-w-[900px] max-h-[90vh] overflow-hidden flex flex-col p-6">
       <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
-        <DialogTitle class="text-base font-semibold">抽奖结果</DialogTitle>
+        <DialogTitle class="text-base">抽奖结果</DialogTitle>
         <Button
           variant="destructive"
           class="mr-6"

@@ -5,19 +5,19 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LevelTypes } from './levelTypes'
-import type { NotifactionTypes } from './notifactionTypes'
-import type { ResponseNotifactionExtra } from './responseNotifactionExtra'
+import type { LevelTypes } from './levelTypes';
+import type { NotifactionTypes } from './notifactionTypes';
+import type { ResponseNotifactionExtra } from './responseNotifactionExtra';
 
 export interface ResponseNotifaction {
-  id: string
-  createTime: number
-  title: string
-  message: string
-  type: LevelTypes
-  notifactionType: NotifactionTypes
+  id: string;
+  createTime: number;
+  title: string;
+  message: string;
+  type: LevelTypes;
+  notifactionType: NotifactionTypes;
   /** @nullable */
-  sender?: number | null
-  extra: ResponseNotifactionExtra
-  isReaded: boolean
+  sender?: number | null;
+  extra: ResponseNotifactionExtra;
+  isReaded: boolean;
 }

@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseAllPointsModel } from './responseAllPointsModel'
+import type { ResponseAllPointsModel } from './responseAllPointsModel';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseAllPointsModelArray {
-  message: string
-  code: number
+  message: string;
+  code: number;
   /** @nullable */
-  data: ResponseAllPointsModel[] | null
+  data: ResponseAllPointsModel[] | null;
 }

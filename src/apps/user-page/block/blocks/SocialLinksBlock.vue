@@ -166,7 +166,7 @@ const iconSizeClass = computed(() => {
       <a
         v-for="(it, idx) in items"
         :key="idx"
-        class="inline-flex items-center justify-center gap-2 h-[var(--social-size)] px-4 min-w-[var(--social-size)] rounded-[var(--social-radius)] bg-[var(--social-bg)] text-[var(--social-fg)] no-underline border border-border transition-all duration-200 hover:brightness-108 hover:-translate-y-0.5 active:brightness-95 active:translate-y-0 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[3px] [&_svg]:block [&_svg]:fill-current"
+        class="inline-flex-center gap-2 h-[var(--social-size)] px-4 min-w-[var(--social-size)] rounded-[var(--social-radius)] bg-[var(--social-bg)] text-[var(--social-fg)] no-underline border border-border transition-all duration-200 hover:brightness-108 hover:-translate-y-0.5 active:brightness-95 active:translate-y-0 focus-visible:outline-2 focus-visible:outline-primary focus-visible:outline-offset-[3px] [&_svg]:block [&_svg]:fill-current"
         :href="it.url"
         target="_blank"
         rel="noopener noreferrer"

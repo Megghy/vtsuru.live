@@ -7,9 +7,9 @@
  */
 
 export interface CheckInResponse {
-  success: boolean
-  message: string
-  points: number
-  consecutiveDays: number
-  todayRank: number
+  success: boolean;
+  message: string;
+  points: number;
+  consecutiveDays: number;
+  todayRank: number;
 }

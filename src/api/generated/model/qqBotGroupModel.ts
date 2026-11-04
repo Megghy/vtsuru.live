@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QqBotGroupNotifyModel } from './qqBotGroupNotifyModel'
+import type { QqBotGroupNotifyModel } from './qqBotGroupNotifyModel';
 
 export interface QqBotGroupModel {
-  id: number
-  groupOpenId: string
-  groupHint: string
-  boundAt: string
-  notify: QqBotGroupNotifyModel
-  todayPushCount: number
+  id: number;
+  groupOpenId: string;
+  groupHint: string;
+  boundAt: string;
+  notify: QqBotGroupNotifyModel;
+  todayPushCount: number;
 }

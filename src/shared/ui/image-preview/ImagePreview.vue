@@ -95,6 +95,7 @@ function handleImageError() {
             props.class,
           )
         "
+        :aria-label="alt"
         :title="alt"
         @click="openLightbox"
       >
@@ -112,7 +113,7 @@ function handleImageError() {
             @error="handleImageError"
           />
           <span
-            class="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
+            class="pointer-events-none absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex-center opacity-0 group-hover:opacity-100"
           >
             <ZoomIn class="size-4 text-white drop-shadow" />
           </span>

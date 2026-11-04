@@ -66,9 +66,9 @@ function addFromCurrent() {
 <template>
   <Card>
     <CardHeader class="py-3 px-4">
-      <CardTitle class="text-sm font-semibold">机位预设</CardTitle>
+      <CardTitle>机位预设</CardTitle>
     </CardHeader>
-    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-2.5">
+    <CardContent class="px-4 pb-4 flex flex-col gap-2.5">
       <div class="flex items-center gap-2 flex-wrap">
         <Button
           variant="outline"
@@ -91,7 +91,7 @@ function addFromCurrent() {
         <div
           v-for="p in vts.presets"
           :key="p.id"
-          class="flex items-center justify-between gap-2 flex-wrap py-1 border-b border-[var(--border)] last:border-0"
+          class="flex-between gap-2 flex-wrap py-1 border-b border-[var(--border)] last:border-0"
         >
           <div class="flex items-center gap-2 flex-wrap text-xs">
             <span class="font-bold text-[var(--foreground)]">{{ p.name }}</span>
@@ -134,7 +134,7 @@ function addFromCurrent() {
   >
     <DialogContent class="max-w-lg">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">编辑机位预设</DialogTitle>
+        <DialogTitle class="text-base">编辑机位预设</DialogTitle>
       </DialogHeader>
       <div class="flex flex-col gap-3 py-2 text-xs">
         <Input

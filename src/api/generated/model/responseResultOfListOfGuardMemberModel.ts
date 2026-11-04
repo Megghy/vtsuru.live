@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GuardMemberModel } from './guardMemberModel'
+import type { GuardMemberModel } from './guardMemberModel';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfListOfGuardMemberModel {
-  message: string
-  code: number
+  message: string;
+  code: number;
   /** @nullable */
-  data: GuardMemberModel[] | null
+  data: GuardMemberModel[] | null;
 }

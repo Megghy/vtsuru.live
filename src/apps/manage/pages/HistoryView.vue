@@ -471,7 +471,7 @@ watch(
       variant="default"
     >
       <AlertTitle>尚未进行 Bilibili 认证</AlertTitle>
-      <AlertDescription class="text-xs">
+      <AlertDescription>
         尚未绑定认证 Bilibili 账号，无法加载历史数据。请前往面板完成认证。
       </AlertDescription>
     </Alert>
@@ -481,7 +481,7 @@ watch(
       class="space-y-4"
     >
       <Alert variant="default">
-        <AlertDescription class="text-xs flex items-center justify-between flex-wrap gap-2">
+        <AlertDescription class="flex-between flex-wrap gap-2">
           <span>
             由于 B 站收紧风控策略，平台已无法直接抓取公开数据。请主播安装 1.0.6.4 及以上版本的 EventFetcher
             本地采集端同步。
@@ -499,7 +499,7 @@ watch(
       <!-- 主控制与图表大卡片 -->
       <Card class="p-4 space-y-4">
         <!-- 顶部工具条 -->
-        <div class="flex items-center justify-between flex-wrap gap-2.5">
+        <div class="flex-between flex-wrap gap-2.5">
           <!-- 预设选择器 -->
           <div class="flex items-center gap-2 flex-wrap">
             <ToggleGroup
@@ -553,7 +553,7 @@ watch(
                 关于更新频次
               </Button>
             </PopoverTrigger>
-            <PopoverContent class="w-80 p-3 text-xs space-y-2">
+            <PopoverContent class="w-80 space-y-2">
               <div class="font-semibold text-foreground">数据采集更新规则</div>
               <Separator />
               <div class="space-y-1 text-muted-foreground text-[11px] leading-relaxed">
@@ -568,7 +568,7 @@ watch(
 
         <!-- 粉丝历史图表 -->
         <div class="space-y-2 pt-2 border-t border-border">
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <div class="text-xs font-semibold flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-blue-500" />
               <span>粉丝总量与每日增量</span>
@@ -597,7 +597,7 @@ watch(
 
         <!-- 舰长历史图表 -->
         <div class="space-y-2 pt-4 border-t border-border">
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <div class="text-xs font-semibold flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-cyan-500" />
               <span>舰长在籍总量与增减</span>

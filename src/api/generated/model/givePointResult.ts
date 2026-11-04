@@ -7,9 +7,9 @@
  */
 
 export interface GivePointResult {
-  totalPoint: number
+  totalPoint: number;
   /** @nullable */
-  userName?: string | null
+  userName?: string | null;
   /** @nullable */
-  uId?: number | null
+  uId?: number | null;
 }

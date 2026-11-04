@@ -49,16 +49,11 @@ async function onPreview() {
         :model-value="modelValue"
         @update:model-value="$emit('update:modelValue', String($event ?? ''))"
       >
-        <SelectTrigger class="w-full h-9">
+        <SelectTrigger size="default">
           <SelectValue :placeholder="placeholder ?? '选择音色'" />
         </SelectTrigger>
         <SelectContent class="max-h-60">
-          <SelectItem
-            v-for="opt in normalizedOptions"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in normalizedOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -66,8 +61,9 @@ async function onPreview() {
     </div>
     <Button
       variant="outline"
+      size="default"
       :loading="previewing"
-      class="gap-1 h-9 shrink-0"
+      class="gap-1 shrink-0"
       @click="onPreview"
     >
       <Play20Filled class="size-3.5" />

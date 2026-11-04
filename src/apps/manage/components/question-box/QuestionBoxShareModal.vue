@@ -61,7 +61,7 @@ function saveQRCode() {
   <Dialog v-model:open="show">
     <DialogContent class="max-w-xl max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">分享我的提问箱</DialogTitle>
+        <DialogTitle class="text-sm">分享我的提问箱</DialogTitle>
       </DialogHeader>
 
       <div class="space-y-4 py-1">
@@ -89,7 +89,7 @@ function saveQRCode() {
             </div>
 
             <div
-              class="flex items-center justify-center shrink-0 bg-white/95 p-2 rounded-lg size-24 self-center shadow"
+              class="flex-center shrink-0 bg-white/95 p-2 rounded-lg size-24 self-center shadow"
             >
               <QrcodeVue
                 :value="modalShareUrl"
@@ -148,7 +148,7 @@ function saveQRCode() {
 
         <Separator />
 
-        <div class="flex items-center justify-center gap-3">
+        <div class="flex-center gap-3">
           <Button @click="saveShareImage"> 保存分享图 </Button>
           <Button
             variant="outline"

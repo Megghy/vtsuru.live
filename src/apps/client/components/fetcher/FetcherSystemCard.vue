@@ -33,9 +33,9 @@ onMounted(fetchSystemInfo)
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex-row items-center justify-between space-y-0">
-      <CardTitle class="text-sm font-semibold">系统与宿主信息</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex-row items-center justify-between space-y-0">
+      <CardTitle>系统与宿主信息</CardTitle>
       <Cpu class="size-4 text-muted-foreground" />
     </CardHeader>
 

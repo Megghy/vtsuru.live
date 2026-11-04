@@ -76,7 +76,7 @@ defineExpose({ open, close, loading })
     <Dialog v-model:open="show">
       <DialogContent class="sm:max-w-xl max-h-[88vh] overflow-y-auto p-4 space-y-3">
         <DialogHeader class="pb-2 border-b border-border/60">
-          <DialogTitle class="text-sm font-semibold">修改歌曲 - {{ model.name || '' }}</DialogTitle>
+          <DialogTitle class="text-sm">修改歌曲 - {{ model.name || '' }}</DialogTitle>
         </DialogHeader>
 
         <div class="space-y-3 text-xs">
@@ -138,7 +138,7 @@ defineExpose({ open, close, loading })
               rows="2"
               maxlength="250"
               placeholder="可选备注说明"
-              class="text-xs resize-none"
+              class="resize-none"
             />
           </div>
 
@@ -226,7 +226,7 @@ defineExpose({ open, close, loading })
           </div>
         </div>
 
-        <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
+        <DialogFooter class="pt-2 border-t border-border/60">
           <Button
             variant="outline"
             @click="show = false"

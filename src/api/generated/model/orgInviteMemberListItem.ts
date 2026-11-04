@@ -5,24 +5,24 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgInviteStatuses } from './orgInviteStatuses'
-import type { OrgMemberRoles } from './orgMemberRoles'
+import type { OrgInviteStatuses } from './orgInviteStatuses';
+import type { OrgMemberRoles } from './orgMemberRoles';
 
 export interface OrgInviteMemberListItem {
-  token: string
-  joinUrl: string
-  expiresAt: number
-  status: OrgInviteStatuses
-  role: OrgMemberRoles
-  createdByUserId: number
+  token: string;
+  joinUrl: string;
+  expiresAt: number;
+  status: OrgInviteStatuses;
+  role: OrgMemberRoles;
+  createdByUserId: number;
   /** @nullable */
-  createdByName?: string | null
+  createdByName?: string | null;
   /** @nullable */
-  targetUserId?: number | null
+  targetUserId?: number | null;
   /** @nullable */
-  targetUserName?: string | null
-  usedCount: number
+  targetUserName?: string | null;
+  usedCount: number;
   /** @nullable */
-  lastUsedAt?: number | null
-  isRevoked: boolean
+  lastUsedAt?: number | null;
+  isRevoked: boolean;
 }

@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
               <Button
                 variant="ghost"
                 size="icon-xs"
-                class="size-8 rounded-full text-muted-foreground hover:text-foreground"
+                class="size-8 rounded-full text-muted-foreground"
                 aria-label="复制认证码"
                 @click="copyText(startModel?.code ?? '', '已复制认证码')"
               >
@@ -454,25 +454,13 @@ onBeforeUnmount(() => {
                   class="pr-16 font-mono"
                 />
                 <div class="absolute right-1.5 flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    class="size-6 text-muted-foreground hover:text-foreground"
-                    aria-label="显示/隐藏"
-                    @click="showPasswordLink = !showPasswordLink"
-                  >
+                  <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="显示/隐藏" @click="showPasswordLink = !showPasswordLink">
                     <component
                       :is="showPasswordLink ? EyeOff24Regular : Eye24Regular"
                       class="size-3.5"
                     />
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    class="size-6 text-muted-foreground hover:text-foreground"
-                    aria-label="复制登录链接"
-                    @click="copyText(authUrl, '已复制登录链接')"
-                  >
+                  <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="复制登录链接" @click="copyText(authUrl, '已复制登录链接')">
                     <component
                       :is="Copy24Regular"
                       class="size-3.5"

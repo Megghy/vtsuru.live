@@ -18,7 +18,7 @@ const { open: triggerSelectFile } = useFilePicker({
 
 <template>
   <div class="space-y-3">
-    <div class="flex items-center justify-between">
+    <div class="flex-between">
       <span class="text-xs font-semibold text-foreground">直播封面</span>
       <span class="text-[11px] text-muted-foreground">支持 JPG / PNG / WEBP，大小不超过 5MB</span>
     </div>
@@ -28,7 +28,7 @@ const { open: triggerSelectFile } = useFilePicker({
       <div class="space-y-1.5">
         <span class="text-xs text-muted-foreground block">当前线上封面</span>
         <div
-          class="aspect-video w-full max-w-[200px] rounded-md border border-border bg-muted/40 overflow-hidden flex items-center justify-center relative shadow-inner"
+          class="aspect-video w-full max-w-[200px] rounded-md border border-border bg-muted/40 overflow-hidden flex-center relative shadow-inner"
         >
           <img
             v-if="roomInfo?.user_cover || roomInfo?.keyframe"
@@ -76,7 +76,7 @@ const { open: triggerSelectFile } = useFilePicker({
             type="button"
             variant="ghost"
             class="size-8 p-0 text-muted-foreground hover:text-destructive"
-            title="移除已选图片"
+            aria-label="移除已选图片"
             @click="c.handleCoverRemove"
           >
             <X class="size-4" />

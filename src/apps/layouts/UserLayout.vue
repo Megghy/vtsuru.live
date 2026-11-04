@@ -48,6 +48,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
@@ -517,7 +518,7 @@ function scrollToTop() {
     v-if="loadStatus === 'not-found'"
     class="center-container p-6"
   >
-    <div class="flex flex-col items-center justify-center gap-3">
+    <div class="flex-col-center gap-3">
       <Empty description="用户未找到或该用户暂未开启个人空间" />
       <Button @click="$router.push('/')"> 返回首页 </Button>
     </div>
@@ -527,7 +528,7 @@ function scrollToTop() {
     v-else-if="loadStatus === 'error'"
     class="center-container p-6"
   >
-    <div class="flex flex-col items-center justify-center gap-3">
+    <div class="flex-col-center gap-3">
       <div class="text-base font-semibold">页面加载失败</div>
       <div class="text-xs text-muted-foreground">网络暂时不可用或服务发生异常，请稍后重试</div>
       <Button @click="retryPublicPage"> 重新加载 </Button>
@@ -564,13 +565,7 @@ function scrollToTop() {
 
         <div class="layout-header__right flex items-center gap-2">
           <!-- 主题切换开关 -->
-          <Button
-            variant="ghost"
-            class="h-7 w-7 p-0"
-            :disabled="isLoading || pageThemeMode !== 'auto'"
-            :title="themeSwitchTitle"
-            @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
-          >
+          <Button size="icon-xs" variant="ghost" :disabled="isLoading || pageThemeMode !== 'auto'" :aria-label="themeSwitchTitle" @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark">
             <component
               :is="effectiveIsDark ? Moon : Sunny"
               class="size-4"
@@ -583,7 +578,7 @@ function scrollToTop() {
               v-if="isOwner"
               variant="outline"
               size="xs"
-              title="进入主页可视化装修与块配置"
+              aria-label="进入主页可视化装修与块配置"
               @click="$router.push({ name: 'manage-userPageBuilder' })"
             >
               <component
@@ -673,7 +668,7 @@ function scrollToTop() {
             v-if="showSiderProfile"
             class="sider-profile"
           >
-            <div class="flex flex-col items-center justify-center">
+            <div class="flex-col-center">
               <Button
                 v-if="siderAvatarUrl"
                 variant="ghost"
@@ -738,7 +733,7 @@ function scrollToTop() {
             <Spin />
           </div>
 
-          <div class="h-px bg-border my-1.5" />
+          <Separator class="my-1.5" />
 
           <!-- 导航菜单 -->
           <div
@@ -854,7 +849,7 @@ function scrollToTop() {
             v-if="siderWidth > 150"
             class="sider-footer"
           >
-            <div class="flex flex-col items-center justify-center gap-1.5 w-full text-xs text-muted-foreground">
+            <div class="flex-col-center gap-1.5 w-full text-xs text-muted-foreground">
               <span class="footer-text flex items-center gap-1">
                 有更多功能建议请
                 <a
@@ -865,7 +860,7 @@ function scrollToTop() {
                   反馈
                 </a>
               </span>
-              <div class="h-px bg-border w-full my-0.5" />
+              <Separator class="my-0.5" />
               <span class="footer-text">
                 <a
                   href="/about"
@@ -953,10 +948,10 @@ function scrollToTop() {
   <Dialog v-model:open="registerAndLoginModalVisiable">
     <DialogContent class="max-w-md p-4">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">注册 / 登录</DialogTitle>
+        <DialogTitle class="text-sm">注册 / 登录</DialogTitle>
       </DialogHeader>
       <div class="flex flex-col gap-3 py-2">
-        <Alert class="bg-primary/5 border-primary/20 text-xs py-2">
+        <Alert size="sm" class="bg-primary/5 border-primary/20">
           <AlertDescription>
             <div class="text-center text-xs">
               查看积分和订单，用 Bilibili 认证即可，不用注册。主播或需要提问时再登录。

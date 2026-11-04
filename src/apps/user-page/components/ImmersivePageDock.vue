@@ -56,7 +56,6 @@ function openEditor() {
       v-if="collapsed"
       variant="ghost"
       class="dock-button"
-      title="展开页面工具栏"
       aria-label="展开页面工具栏"
       @click="collapsed = false"
     >
@@ -68,7 +67,6 @@ function openEditor() {
           <Button
             variant="ghost"
             class="dock-button"
-            title="页面导航"
             aria-label="页面导航"
           >
             <Menu class="size-4" />
@@ -100,7 +98,6 @@ function openEditor() {
         variant="ghost"
         class="dock-button"
         :disabled="themeLocked"
-        :title="themeSwitchTitle"
         :aria-label="themeSwitchTitle"
         @click="$emit('toggleTheme')"
       >
@@ -117,7 +114,6 @@ function openEditor() {
         v-if="isOwner"
         variant="ghost"
         class="dock-button"
-        title="编辑当前页面"
         aria-label="编辑当前页面"
         @click="openEditor"
       >
@@ -130,7 +126,6 @@ function openEditor() {
       <Button
         variant="ghost"
         class="dock-button"
-        title="折叠页面工具栏"
         aria-label="折叠页面工具栏"
         @click="collapsed = true"
       >

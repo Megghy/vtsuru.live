@@ -92,7 +92,7 @@ const verticalOptions = computed(() =>
 
       <div
         v-if="layout.layout === 'row'"
-        class="flex items-center justify-between py-1"
+        class="flex-between py-1"
       >
         <label class="text-xs text-muted-foreground">允许换行</label>
         <Switch v-model:checked="layout.wrap" />

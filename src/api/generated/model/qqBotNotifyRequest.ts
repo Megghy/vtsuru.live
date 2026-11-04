@@ -7,6 +7,6 @@
  */
 
 export interface QqBotNotifyRequest {
-  groupOpenId: string
-  liveStart: boolean
+  groupOpenId: string;
+  liveStart: boolean;
 }

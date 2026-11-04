@@ -315,17 +315,9 @@ onMounted(async () => {
                 <SelectValue placeholder="主播" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部主播</SelectItem
+                <SelectItem value="all">全部主播</SelectItem
                 >
-                <SelectItem
-                  v-for="s in streamerOptions"
-                  :key="s.value"
-                  :value="String(s.value)"
-                  class="text-xs"
-                >
+                <SelectItem v-for="s in streamerOptions" :key="s.value" :value="String(s.value)">
                   {{ s.label }}
                 </SelectItem>
               </SelectContent>
@@ -339,25 +331,13 @@ onMounted(async () => {
                 <SelectValue placeholder="订单类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部类型</SelectItem
+                <SelectItem value="all">全部类型</SelectItem
                 >
-                <SelectItem
-                  :value="String(GoodsTypes.Physical)"
-                  class="text-xs"
-                  >实体订单</SelectItem
+                <SelectItem :value="String(GoodsTypes.Physical)">实体订单</SelectItem
                 >
-                <SelectItem
-                  :value="String(GoodsTypes.Virtual)"
-                  class="text-xs"
-                  >虚拟订单</SelectItem
+                <SelectItem :value="String(GoodsTypes.Virtual)">虚拟订单</SelectItem
                 >
-                <SelectItem
-                  :value="String(GoodsTypes.Service)"
-                  class="text-xs"
-                  >服务订单</SelectItem
+                <SelectItem :value="String(GoodsTypes.Service)">服务订单</SelectItem
                 >
               </SelectContent>
             </Select>
@@ -370,40 +350,19 @@ onMounted(async () => {
                 <SelectValue placeholder="订单状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部状态</SelectItem
+                <SelectItem value="all">全部状态</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.Completed)"
-                  class="text-xs"
-                  >已完成</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.Pending)"
-                  class="text-xs"
-                  >待处理</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Pending)">待处理</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.Shipped)"
-                  class="text-xs"
-                  >已发货</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.InProgress)"
-                  class="text-xs"
-                  >进行中</SelectItem
+                <SelectItem :value="String(PointOrderStatus.InProgress)">进行中</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.Rejected)"
-                  class="text-xs"
-                  >已拒绝</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Rejected)">已拒绝</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.Cancelled)"
-                  class="text-xs"
-                  >已取消</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Cancelled)">已取消</SelectItem
                 >
               </SelectContent>
             </Select>
@@ -416,10 +375,7 @@ onMounted(async () => {
                 <SelectValue placeholder="按用户筛选" />
               </SelectTrigger>
               <SelectContent class="max-h-56">
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部用户</SelectItem
+                <SelectItem value="all">全部用户</SelectItem
                 >
                 <SelectItem
                   v-for="c in new List(orders).DistinctBy((s) => s.customer.userId).ToArray()"
@@ -440,7 +396,7 @@ onMounted(async () => {
 
           <Button
             variant="ghost"
-            class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+            class="flex items-center gap-1 text-muted-foreground"
             @click="filterSettings = JSON.parse(JSON.stringify(defaultSettings))"
           >
             <component
@@ -543,7 +499,7 @@ onMounted(async () => {
       <Dialog v-model:open="showStatusModal">
         <DialogContent class="sm:max-w-sm p-4 space-y-3">
           <DialogHeader class="pb-2 border-b border-border/60">
-            <DialogTitle class="text-sm font-semibold">选择目标状态</DialogTitle>
+            <DialogTitle class="text-sm">选择目标状态</DialogTitle>
           </DialogHeader>
 
           <div class="space-y-2 text-xs">
@@ -556,20 +512,11 @@ onMounted(async () => {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  :value="String(PointOrderStatus.Completed)"
-                  class="text-xs"
-                  >已完成</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.Pending)"
-                  class="text-xs"
-                  >等待发货</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Pending)">等待发货</SelectItem
                 >
-                <SelectItem
-                  :value="String(PointOrderStatus.Shipped)"
-                  class="text-xs"
-                  >已发货</SelectItem
+                <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem
                 >
               </SelectContent>
             </Select>

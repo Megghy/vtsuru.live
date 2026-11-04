@@ -61,12 +61,7 @@ onMounted(loadVoices)
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="opt in languageOptions"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in languageOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>

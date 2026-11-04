@@ -114,7 +114,7 @@ function getMetaText(song: ResponseSongModel) {
           <div class="card-top flex items-start justify-between gap-2">
             <div class="title-left flex items-start gap-2.5 min-w-0 flex-1">
               <div
-                class="left-icon size-8 rounded-md bg-muted/60 flex items-center justify-center shrink-0 text-muted-foreground"
+                class="left-icon size-8 rounded-md bg-muted/60 flex-center shrink-0 text-muted-foreground"
               >
                 <component
                   :is="MusicalNote"
@@ -133,7 +133,7 @@ function getMetaText(song: ResponseSongModel) {
                       {{ song.name }}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs">
+                  <TooltipContent>
                     {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
                   </TooltipContent>
                 </Tooltip>
@@ -172,7 +172,7 @@ function getMetaText(song: ResponseSongModel) {
             </div>
           </div>
 
-          <div class="card-bottom flex items-center justify-between gap-2 pt-1.5 border-t border-border/40 text-[11px]">
+          <div class="card-bottom flex-between gap-2 pt-1.5 border-t border-border/40 text-[11px]">
             <div class="pills flex items-center gap-1 flex-wrap">
               <span
                 v-for="tag in (song.tags ?? []).slice(0, 2)"

@@ -230,7 +230,7 @@ function toggleActionOnlyLive(row: AutoActionItem) {
 <template>
   <div class="flex flex-col h-full">
     <div
-      class="py-2.5 px-3.5 bg-muted rounded-md border border-border flex items-center justify-between gap-3 flex-wrap"
+      class="py-2.5 px-3.5 bg-muted rounded-md border border-border flex-between gap-3 flex-wrap"
     >
       <div class="flex items-center gap-4 flex-wrap">
         <div class="flex items-center gap-2 cursor-pointer select-none">
@@ -247,21 +247,11 @@ function toggleActionOnlyLive(row: AutoActionItem) {
           v-if="filteredActions.length > 0"
           class="border-l border-border pl-3 flex items-center gap-1.5"
         >
-          <Button
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] gap-1"
-            @click="handleBatchEnable(true)"
-          >
+          <Button size="xs" variant="ghost" class="gap-1" @click="handleBatchEnable(true)">
             <CheckmarkCircle16Regular class="size-3" />
             全部启用
           </Button>
-          <Button
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] gap-1"
-            @click="handleBatchEnable(false)"
-          >
+          <Button size="xs" variant="ghost" class="gap-1" @click="handleBatchEnable(false)">
             <DismissCircle16Regular class="size-3" />
             全部禁用
           </Button>
@@ -290,16 +280,10 @@ function toggleActionOnlyLive(row: AutoActionItem) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              class="text-xs"
-              @select="exportActions"
-            >
+            <DropdownMenuItem @select="exportActions">
               导出配置
             </DropdownMenuItem>
-            <DropdownMenuItem
-              class="text-xs"
-              @select="importActions"
-            >
+            <DropdownMenuItem @select="importActions">
               导入配置
             </DropdownMenuItem>
           </DropdownMenuContent>
@@ -328,7 +312,7 @@ function toggleActionOnlyLive(row: AutoActionItem) {
     <div class="action-list-content flex-1 pt-3">
       <div
         v-if="filteredActions.length === 0"
-        class="py-12 flex flex-col items-center justify-center"
+        class="py-12 flex-col-center"
       >
         <Empty :description="searchText ? '没有匹配的搜索结果' : '暂无操作'">
           <div class="mt-3">
@@ -356,15 +340,12 @@ function toggleActionOnlyLive(row: AutoActionItem) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead class="text-xs">名称</TableHead>
-              <TableHead class="text-xs text-center w-[100px]">状态</TableHead>
-              <TableHead
-                v-if="triggerType === TriggerType.SCHEDULED"
-                class="text-xs text-center w-[120px]"
-              >
+              <TableHead>名称</TableHead>
+              <TableHead class="text-center w-[100px]">状态</TableHead>
+              <TableHead v-if="triggerType === TriggerType.SCHEDULED" class="text-center w-[120px]">
                 下次触发
               </TableHead>
-              <TableHead class="text-xs text-right w-[160px]">操作</TableHead>
+              <TableHead class="text-right w-[160px]">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -372,7 +353,7 @@ function toggleActionOnlyLive(row: AutoActionItem) {
               v-for="row in filteredActions"
               :key="row.id"
             >
-              <TableCell class="text-xs">
+              <TableCell>
                 <div class="flex flex-col gap-0.5">
                   <span class="font-medium text-foreground">{{ row.name || '未命名操作' }}</span>
                   <span
@@ -391,11 +372,7 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger as-child>
-                            <Badge
-                              variant="outline"
-                              class="text-[10px] h-5 px-2 cursor-pointer"
-                              :class="getStatusBadge(row).class"
-                            >
+                            <Badge variant="outline" size="xs" class="h-5 px-2 cursor-pointer" :class="getStatusBadge(row).class">
                               {{ getStatusBadge(row).text }}
                             </Badge>
                           </TooltipTrigger>
@@ -405,26 +382,17 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="center">
-                    <DropdownMenuItem
-                      class="text-xs"
-                      @select="toggleActionEnabled(row)"
-                    >
+                    <DropdownMenuItem @select="toggleActionEnabled(row)">
                       {{ row.enabled ? '禁用' : '启用' }}
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      class="text-xs"
-                      @select="toggleActionOnlyLive(row)"
-                    >
+                    <DropdownMenuItem @select="toggleActionOnlyLive(row)">
                       {{ row.triggerConfig.onlyDuringLive ? '取消"仅直播"' : '设为"仅直播"' }}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </TableCell>
 
-              <TableCell
-                v-if="triggerType === TriggerType.SCHEDULED"
-                class="text-center text-xs"
-              >
+              <TableCell v-if="triggerType === TriggerType.SCHEDULED" class="text-center">
                 <template v-if="!typeEnabled || !row.enabled">-</template>
                 <TimerCountdown
                   v-else
@@ -436,20 +404,12 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                 <div class="flex items-center justify-end gap-1.5">
                   <!-- 上下移动排序 (仅定时) -->
                   <template v-if="triggerType === TriggerType.SCHEDULED">
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 w-6 p-0"
-                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === 0"
+                    <Button size="icon-xs" variant="ghost" :disabled="orderedActions.findIndex((a) => a.id === row.id) === 0"
                       @click="autoActionStore.moveAction(row.id, 'up')"
                     >
                       <ArrowUp24Regular class="size-3.5" />
                     </Button>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 w-6 p-0"
-                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === orderedActions.length - 1"
+                    <Button size="icon-xs" variant="ghost" :disabled="orderedActions.findIndex((a) => a.id === row.id) === orderedActions.length - 1"
                       @click="autoActionStore.moveAction(row.id, 'down')"
                     >
                       <ArrowDown24Regular class="size-3.5" />
@@ -477,17 +437,11 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        class="text-xs gap-1.5"
-                        @select="duplicateAction(row)"
-                      >
+                      <DropdownMenuItem class="gap-1.5" @select="duplicateAction(row)">
                         <Copy16Regular class="size-3.5" />
                         复制
                       </DropdownMenuItem>
-                      <DropdownMenuItem
-                        class="text-xs gap-1.5 text-destructive focus:text-destructive"
-                        @select="deleteAction(row)"
-                      >
+                      <DropdownMenuItem class="gap-1.5 text-destructive focus:text-destructive" @select="deleteAction(row)">
                         <Delete16Regular class="size-3.5" />
                         删除
                       </DropdownMenuItem>

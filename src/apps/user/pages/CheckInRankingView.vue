@@ -145,13 +145,13 @@ onMounted(() => {
   <TooltipProvider>
     <Card class="ranking-card shadow-xs space-y-4">
       <CardHeader class="pb-3 border-b border-border/60">
-        <div class="ranking-title flex items-center justify-between">
+        <div class="ranking-title flex-between">
           <div class="flex items-center gap-2">
             <component
               :is="Trophy24Filled"
               class="size-5 text-amber-500"
             />
-            <CardTitle class="text-base font-semibold">签到排行榜</CardTitle>
+            <CardTitle class="text-base">签到排行榜</CardTitle>
           </div>
           <span
             v-if="rankingData.length"
@@ -169,12 +169,7 @@ onMounted(() => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in timeRangeOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in timeRangeOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -257,7 +252,7 @@ onMounted(() => {
             >
               <div class="rank-cell">
                 <span
-                  class="rank-number inline-flex items-center justify-center size-5 rounded-full text-xs font-mono font-bold"
+                  class="rank-number inline-flex-center size-5 rounded-full text-xs font-mono font-bold"
                   :class="{
                     'bg-amber-500 text-white': item.rank === 1,
                     'bg-slate-400 text-white': item.rank === 2,
@@ -271,11 +266,7 @@ onMounted(() => {
 
               <div class="user-cell flex items-center gap-1.5 truncate">
                 <strong class="user-name text-foreground truncate">{{ item.name }}</strong>
-                <Badge
-                  v-if="item.isAuthed"
-                  variant="secondary"
-                  class="text-[10px] h-4 px-1 bg-emerald-500/10 text-emerald-600 font-normal shrink-0"
-                >
+                <Badge v-if="item.isAuthed" variant="secondary" size="xs" class="bg-emerald-500/10 text-emerald-600">
                   已认证
                 </Badge>
               </div>
@@ -299,7 +290,7 @@ onMounted(() => {
                       {{ formatRelativeTime(item.lastCheckInTime) }}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs">
+                  <TooltipContent>
                     {{ formatDateTime(item.lastCheckInTime) }}
                   </TooltipContent>
                 </Tooltip>
@@ -307,7 +298,7 @@ onMounted(() => {
             </div>
           </TransitionGroup>
 
-          <div class="ranking-footer flex items-center justify-between pt-3 border-t border-border/50">
+          <div class="ranking-footer flex-between pt-3 border-t border-border/50">
             <Pagination
               :total="filteredRankingData.length"
               :items-per-page="pagination.pageSize"
@@ -322,12 +313,7 @@ onMounted(() => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in pageSizeOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in pageSizeOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -340,7 +326,7 @@ onMounted(() => {
             :is="Info24Filled"
             class="size-4 text-primary"
           />
-          <AlertDescription class="text-xs text-muted-foreground ml-2">
+          <AlertDescription class="text-muted-foreground ml-2">
             签到可获得积分，连续签到有额外奖励。发送“{{ checkInKeyword }}”即可参与签到。
           </AlertDescription>
         </Alert>

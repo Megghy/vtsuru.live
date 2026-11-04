@@ -234,7 +234,7 @@ function formatTokens(value?: number): string {
             <Textarea
               v-model="editing[msg.id]"
               rows="2"
-              class="msg-editor__input text-xs resize-none"
+              class="msg-editor__input resize-none"
               :disabled="busy"
             />
             <div class="msg-editor__actions flex items-center justify-end gap-1.5">
@@ -295,12 +295,7 @@ function formatTokens(value?: number): string {
           >
             <Tooltip v-if="msg.text">
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
-                  @click="copyMessage(msg)"
-                >
+                <Button variant="ghost" size="xs" class="msg-action size-6 rounded-full text-muted-foreground" @click="copyMessage(msg)">
                   <component
                     :is="Copy16Regular"
                     class="size-3"
@@ -312,13 +307,7 @@ function formatTokens(value?: number): string {
 
             <Tooltip v-if="msg.role === 'user'">
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
-                  :disabled="busy || !canEditUser(msg)"
-                  @click="startEditing(msg)"
-                >
+                <Button variant="ghost" size="xs" class="msg-action size-6 rounded-full text-muted-foreground" :disabled="busy || !canEditUser(msg)" @click="startEditing(msg)">
                   <component
                     :is="Edit16Regular"
                     class="size-3"
@@ -330,13 +319,7 @@ function formatTokens(value?: number): string {
 
             <Tooltip v-if="msg.role === 'assistant'">
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="msg-action size-6 rounded-full text-muted-foreground hover:text-foreground"
-                  :disabled="busy"
-                  @click="emit('rerun', msg.id)"
-                >
+                <Button variant="ghost" size="xs" class="msg-action size-6 rounded-full text-muted-foreground" :disabled="busy" @click="emit('rerun', msg.id)">
                   <component
                     :is="ArrowClockwise16Regular"
                     class="size-3"
@@ -349,14 +332,10 @@ function formatTokens(value?: number): string {
 
           <div
             v-if="msg.status === 'error'"
-            class="msg-error flex items-center justify-between gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs"
+            class="msg-error flex-between gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs"
           >
             <span class="msg-error__text flex-1">{{ msg.error ?? '出错了' }}</span>
-            <Button
-              variant="outline"
-              class="h-6 text-[11px] border-destructive/30 hover:bg-destructive/20"
-              @click="emit('retry', msg.id)"
-            >
+            <Button size="xs" variant="outline" class="border-destructive/30 hover:bg-destructive/20" @click="emit('retry', msg.id)">
               重试
             </Button>
           </div>

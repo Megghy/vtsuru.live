@@ -20,7 +20,7 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
 
 <template>
   <div class="flex flex-col gap-3.5">
-    <Card class="border bg-card">
+    <Card>
       <div class="p-3">
         <ClientPageHeader
           title="EventFetcher"
@@ -34,24 +34,15 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       class="w-full mt-0.5"
     >
       <TabsList class="grid w-full max-w-md grid-cols-3">
-        <TabsTrigger
-          value="connection"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="connection" class="gap-1.5" >
           <CloudArchive24Filled class="size-3.5" />
           连接与凭据
         </TabsTrigger>
-        <TabsTrigger
-          value="stats"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="stats" class="gap-1.5" >
           <DataTrending24Filled class="size-3.5" />
           监控与统计
         </TabsTrigger>
-        <TabsTrigger
-          value="system"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="system" class="gap-1.5" >
           <Desktop24Filled class="size-3.5" />
           系统与诊断
         </TabsTrigger>

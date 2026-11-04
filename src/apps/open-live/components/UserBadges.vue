@@ -23,7 +23,7 @@ const GUARD_NAME: Record<number, string> = { 1: '总督', 2: '提督', 3: '舰�
     class="inline-flex items-center rounded-full bg-muted text-[10px] pr-1.5 py-0 border border-border/40 select-none"
   >
     <span
-      class="inline-flex items-center justify-center rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-400 font-semibold px-1.5 mr-1 text-[10px]"
+      class="inline-flex-center rounded-full bg-sky-500/20 text-sky-600 dark:text-sky-400 font-semibold px-1.5 mr-1 text-[10px]"
     >
       {{ user?.fans_medal_level }}
     </span>

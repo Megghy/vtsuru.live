@@ -33,6 +33,7 @@ export interface CreateData {
     compilerOptions?: ts.CompilerOptions
     vueCompilerOptions?: Record<string, unknown>
   }
+  envDts: string
   dependencies: Record<string, string>
 }
 
@@ -41,23 +42,74 @@ interface WorkerHost {
 }
 
 const VUE_TYPES_ROOT = '/node_modules/@vue/language-core/types'
-const VUE_TYPE_FILES: Record<string, string> = {
+const TS_LIB_ROOT = '/node_modules/typescript/lib'
+const TS_LIBS = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('/node_modules/typescript/lib/*.d.ts', {
+      query: '?raw',
+      eager: true,
+      import: 'default',
+    }) as Record<string, string>,
+  ).map(([path, text]) => [path.slice(path.lastIndexOf('/') + 1), text]),
+)
+const LOCAL_FILES: Record<string, string> = {
   [`${VUE_TYPES_ROOT}/template-helpers.d.ts`]: templateHelpersDts,
   [`${VUE_TYPES_ROOT}/props-fallback.d.ts`]: propsFallbackDts,
   [`${VUE_TYPES_ROOT}/vue-3.4-shims.d.ts`]: vue34ShimsDts,
+  ...Object.fromEntries(Object.entries(TS_LIBS).map(([name, text]) => [`${TS_LIB_ROOT}/${name}`, text])),
 }
-const TS_LIB_FILES: Record<string, string> = Object.fromEntries(
-  Object.entries(
-    import.meta.glob('../../../../../../node_modules/typescript/lib/lib.{es*,dom*}.d.ts', {
-      eager: true,
-      query: '?raw',
-      import: 'default',
-    }) as Record<string, string>,
-  )
-    .map(([id, content]) => [id.slice(id.lastIndexOf('/') + 1), content] as const)
-    .filter(([name]) => !name.includes('.full.'))
-    .map(([name, content]) => [`/node_modules/typescript/lib/${name}`, content]),
-)
+const LOCAL_BY_BASENAME = new Map(Object.entries(LOCAL_FILES).map(([path, text]) => [path.slice(path.lastIndexOf('/') + 1), text]))
+
+function localText(fileName: string) {
+  const normalized = fileName.replace(/\\/g, '/')
+  const path = normalized.startsWith('/') ? normalized : `/${normalized}`
+  return LOCAL_FILES[path] ?? LOCAL_BY_BASENAME.get(path.slice(path.lastIndexOf('/') + 1))
+}
+
+const tsLibHostPlugin = {
+  getLanguageId: () => undefined,
+  typescript: {
+    extraFileExtensions: [],
+    getServiceScript: () => undefined,
+    resolveLanguageServiceHost(host: ts.LanguageServiceHost) {
+      const isEnvDts = (fileName: string) => fileName.replace(/\\/g, '/').endsWith('/env.d.ts')
+      return {
+        ...host,
+        getDefaultLibFileName: () => `${TS_LIB_ROOT}/lib.esnext.d.ts`,
+        getDefaultLibLocation: () => TS_LIB_ROOT,
+        getScriptFileNames() {
+          const files = host.getScriptFileNames()
+          return files.some(isEnvDts) ? files : ['/env.d.ts', ...files]
+        },
+        getScriptSnapshot(fileName: string) {
+          if (isEnvDts(fileName)) {
+            const text = localText('/env.d.ts')
+            return text ? ts.ScriptSnapshot.fromString(text) : undefined
+          }
+          return host.getScriptSnapshot(fileName)
+        },
+        getScriptVersion(fileName: string) {
+          if (isEnvDts(fileName)) return '1'
+          return host.getScriptVersion(fileName)
+        },
+        fileExists(fileName: string) {
+          return !!localText(fileName) || host.fileExists(fileName)
+        },
+        readFile(fileName: string, encoding?: string) {
+          return localText(fileName) ?? host.readFile(fileName, encoding)
+        },
+      }
+    },
+  },
+}
+const LOCAL_DIRS = new Set([
+  '/node_modules',
+  '/node_modules/typescript',
+  TS_LIB_ROOT,
+  '/node_modules/@vue',
+  '/node_modules/@vue/language-core',
+  VUE_TYPES_ROOT,
+])
 const IGNORE_PLUGINS = new Set([
   'emmet',
   'vue-template (jade)',
@@ -81,6 +133,8 @@ function createService(
   ctx: { host: unknown; getMirrorModels: () => unknown[] },
   createData: CreateData,
 ) {
+  if (createData.envDts) LOCAL_FILES['/env.d.ts'] = createData.envDts
+  LOCAL_FILES['/package.json'] = JSON.stringify({ private: true, dependencies: createData.dependencies })
   const compilerOptions: ts.CompilerOptions = {
     allowJs: true,
     checkJs: false,
@@ -90,7 +144,7 @@ function createService(
     noEmit: true,
     skipLibCheck: true,
     target: ts.ScriptTarget.ESNext,
-    lib: ['esnext', 'dom', 'dom.iterable'],
+    lib: ['lib.esnext.d.ts', 'lib.dom.d.ts', 'lib.dom.iterable.d.ts'],
     types: [],
     ...createData.tsconfig.compilerOptions,
   }
@@ -110,13 +164,31 @@ function createService(
     workspaceFolders: [URI.parse('file:///')],
     fs: {
       stat(uri) {
-        const local = VUE_TYPE_FILES[uri.path] ?? TS_LIB_FILES[uri.path]
+        const local = localText(uri.path)
         if (local) return { type: 1, ctime: 0, mtime: 0, size: local.length }
+        if (LOCAL_DIRS.has(uri.path)) return { type: 2, ctime: 0, mtime: 0, size: -1 }
         return npmFs.stat(uri)
       },
-      readDirectory: (uri) => npmFs.readDirectory(uri),
+      readDirectory(uri) {
+        if (uri.path === TS_LIB_ROOT || uri.path.endsWith('/typescript/lib')) {
+          return Object.keys(TS_LIBS).map((name) => [name, 1] as [string, 1])
+        }
+        if (uri.path === '/node_modules') {
+          return [...new Set(Object.keys(createData.dependencies).map((name) => name.split('/')[0]))].map(
+            (name) => [name, 2] as [string, 2],
+          )
+        }
+        const scoped = uri.path.match(/^\/node_modules\/(@[^/]+)$/)
+        if (scoped) {
+          const kids = Object.keys(createData.dependencies)
+            .filter((name) => name.startsWith(`${scoped[1]}/`))
+            .map((name) => name.slice(scoped[1].length + 1).split('/')[0])
+          return [...new Set(kids)].map((name) => [name, 2] as [string, 2])
+        }
+        return npmFs.readDirectory(uri)
+      },
       readFile(uri, encoding) {
-        const local = VUE_TYPE_FILES[uri.path] ?? TS_LIB_FILES[uri.path]
+        const local = localText(uri.path)
         if (local) return local
         return npmFs.readFile(uri, encoding)
       },
@@ -129,7 +201,7 @@ function createService(
     workerContext: ctx as never,
     env,
     uriConverter: { asFileName, asUri },
-    languagePlugins: [createVueLanguagePlugin(ts, compilerOptions, vueCompilerOptions, asFileName)],
+    languagePlugins: [createVueLanguagePlugin(ts, compilerOptions, vueCompilerOptions, asFileName), tsLibHostPlugin],
     languageServicePlugins: [...getTsLanguageServicePlugins(), ...getVueLanguageServicePlugins()],
   })
   return workerService

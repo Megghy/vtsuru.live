@@ -44,7 +44,7 @@ const backgrounded = computed(() =>
       >
         {{ title }}
       </AlertTitle>
-      <AlertDescription class="text-xs whitespace-pre-wrap leading-relaxed">
+      <AlertDescription class="whitespace-pre-wrap leading-relaxed">
         {{ text }}
       </AlertDescription>
     </Alert>

@@ -7,9 +7,10 @@
  */
 
 export enum ServiceTimelineType {
-  Message = 0,
-  Status = 1,
-  Appointment = 2,
-  Delivery = 3,
-  Refund = 4,
+  Message= 0,
+  Status= 1,
+  Appointment= 2,
+  Delivery= 3,
+  Refund= 4,
+
 }

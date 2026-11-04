@@ -121,7 +121,7 @@ function download() {
 <template>
   <Card>
     <CardHeader class="flex flex-row items-center justify-between pb-4">
-      <CardTitle class="text-base font-semibold">AI 图像分割</CardTitle>
+      <CardTitle class="text-base">AI 图像分割</CardTitle>
       <div class="flex items-center gap-2">
         <TooltipProvider>
           <Tooltip>
@@ -146,7 +146,7 @@ function download() {
       </div>
     </CardHeader>
 
-    <CardContent class="pt-0">
+    <CardContent>
       <div class="flex flex-col gap-4">
         <span
           v-if="supported === false"

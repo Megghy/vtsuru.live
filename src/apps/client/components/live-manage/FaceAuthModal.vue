@@ -18,13 +18,13 @@ const c = props.control
   >
     <DialogContent class="sm:max-w-[420px]">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">人脸认证</DialogTitle>
-        <DialogDescription class="text-xs text-muted-foreground">
+        <DialogTitle class="text-base">人脸认证</DialogTitle>
+        <DialogDescription class="text-xs">
           请使用哔哩哔哩手机客户端扫描下方二维码进行人脸认证
         </DialogDescription>
       </DialogHeader>
 
-      <div class="flex flex-col items-center justify-center py-4 space-y-3">
+      <div class="flex-col-center py-4 space-y-3">
         <div
           v-if="c.faceAuthQrCode.value"
           class="p-3 bg-white rounded-lg border border-border shadow-sm"
@@ -37,7 +37,7 @@ const c = props.control
         </div>
         <div
           v-else
-          class="size-48 rounded-lg border border-dashed border-border flex items-center justify-center text-xs text-muted-foreground bg-muted/40"
+          class="size-48 rounded-lg border border-dashed border-border flex-center text-xs text-muted-foreground bg-muted/40"
         >
           暂无二维码
         </div>

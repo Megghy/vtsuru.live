@@ -131,11 +131,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+  <Card>
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
       <div class="flex items-center gap-2">
         <History16Regular class="size-4 text-primary" />
-        <CardTitle class="text-sm font-semibold">执行历史记录</CardTitle>
+        <CardTitle>执行历史记录</CardTitle>
       </div>
 
       <div class="flex items-center gap-2">
@@ -175,12 +175,7 @@ onUnmounted(() => {
         class="w-full"
       >
         <TabsList class="grid w-full grid-cols-3 max-w-[360px]">
-          <TabsTrigger
-            v-for="(label, type) in typeNameMap"
-            :key="type"
-            :value="type"
-            class="text-xs"
-          >
+          <TabsTrigger v-for="(label, type) in typeNameMap" :key="type" :value="type" >
             {{ label }}
           </TabsTrigger>
         </TabsList>
@@ -195,11 +190,11 @@ onUnmounted(() => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead class="text-xs w-[160px]">时间</TableHead>
-                  <TableHead class="text-xs w-[140px]">操作名称</TableHead>
-                  <TableHead class="text-xs">内容</TableHead>
-                  <TableHead class="text-xs w-[120px]">目标</TableHead>
-                  <TableHead class="text-xs text-center w-[80px]">状态</TableHead>
+                  <TableHead class="w-[160px]">时间</TableHead>
+                  <TableHead class="w-[140px]">操作名称</TableHead>
+                  <TableHead>内容</TableHead>
+                  <TableHead class="w-[120px]">目标</TableHead>
+                  <TableHead class="text-center w-[80px]">状态</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -208,7 +203,7 @@ onUnmounted(() => {
                     v-for="row in paginatedList"
                     :key="row.id"
                   >
-                    <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+                    <TableCell class="text-muted-foreground whitespace-nowrap">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger class="cursor-help underline decoration-dotted">
@@ -221,28 +216,18 @@ onUnmounted(() => {
                       </TooltipProvider>
                     </TableCell>
 
-                    <TableCell class="text-xs">
-                      <Badge
-                        variant="secondary"
-                        class="text-[10px] h-5 px-1.5 font-normal max-w-[130px] truncate"
-                      >
+                    <TableCell>
+                      <Badge variant="secondary" size="xs" class="h-5 max-w-[130px] truncate">
                         {{ row.actionName || '未命名' }}
                       </Badge>
                     </TableCell>
 
-                    <TableCell
-                      class="text-xs font-mono max-w-[300px] truncate"
-                      :title="row.content"
-                    >
+                    <TableCell class="font-mono max-w-[300px] truncate" :title="row.content">
                       {{ row.content }}
                     </TableCell>
 
-                    <TableCell class="text-xs">
-                      <Badge
-                        v-if="row.target"
-                        variant="outline"
-                        class="text-[10px] h-5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10"
-                      >
+                    <TableCell>
+                      <Badge v-if="row.target" variant="outline" size="xs" class="h-5 border-sky-500/40 text-sky-600 bg-sky-500/10">
                         {{ row.target }}
                       </Badge>
                       <span
@@ -286,18 +271,14 @@ onUnmounted(() => {
 
           <div
             v-if="currentList.length > 0"
-            class="flex items-center justify-between pt-1"
+            class="flex-between pt-1"
           >
             <Popconfirm
               title="确认清空"
               @positive-click="handleClearHistory(type as HistoryType)"
             >
               <template #trigger>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="h-6 text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1"
-                >
+                <Button size="xs" variant="ghost" class="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1">
                   <Delete16Filled class="size-3" />
                   清空{{ label }}历史
                 </Button>

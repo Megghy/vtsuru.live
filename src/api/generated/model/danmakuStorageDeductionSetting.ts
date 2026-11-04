@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { StorageTypes } from './storageTypes'
+import type { StorageTypes } from './storageTypes';
 
 export interface DanmakuStorageDeductionSetting {
-  storageType?: StorageTypes
-  isUnlimited?: boolean
-  limitDays?: number
-  limitCount?: number
-  isEnabled: boolean
+  storageType?: StorageTypes;
+  isUnlimited?: boolean;
+  limitDays?: number;
+  limitCount?: number;
+  isEnabled: boolean;
 }

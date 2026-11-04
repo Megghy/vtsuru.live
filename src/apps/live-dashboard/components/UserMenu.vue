@@ -203,7 +203,7 @@ onUnmounted(() => {
 
       <Textarea
         v-model="noteDraft"
-        class="text-xs min-h-[38px] max-h-[96px]"
+        class="min-h-[38px] max-h-[96px]"
         placeholder="备注（仅保存在本机，失焦后保存）"
         @blur="saveNote"
       />

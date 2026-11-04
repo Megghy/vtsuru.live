@@ -123,39 +123,31 @@ function toggleModule(mod: ClientBackupModule) {
       v-if="!isTauri()"
       class="border-destructive/20 bg-destructive/10 text-destructive"
     >
-      <AlertDescription class="text-xs m-0"> 当前不是 Tauri 客户端环境，无法使用备份功能。 </AlertDescription>
+      <AlertDescription class="m-0"> 当前不是 Tauri 客户端环境，无法使用备份功能。 </AlertDescription>
     </Alert>
 
-    <Alert
-      v-else-if="!backup.isSupported"
-      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-    >
-      <div class="flex items-center justify-between gap-2">
-        <AlertDescription class="text-xs m-0">
+    <Alert variant="warning" v-else-if="!backup.isSupported">
+      <div class="flex-between gap-2">
+        <AlertDescription class="m-0">
           当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >=
           {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。
         </AlertDescription>
-        <Button
-          size="xs"
-          variant="outline"
-          class="h-6 text-[11px] shrink-0"
-          @click="router.push({ name: 'client-settings', query: { tab: 'about' } })"
-        >
+        <Button size="xs" variant="outline" class="shrink-0" @click="router.push({ name: 'client-settings', query: { tab: 'about' } })">
           检查更新
         </Button>
       </div>
     </Alert>
 
     <template v-else>
-      <Alert class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-        <AlertDescription class="text-xs m-0">
+      <Alert variant="info">
+        <AlertDescription class="m-0">
           备份会生成单个 ZIP 文件，覆盖 Tauri Store 与客户端 IndexedDB 数据。自动备份仅在客户端运行期间生效。
         </AlertDescription>
       </Alert>
 
-      <Card class="border bg-card">
+      <Card>
         <CardHeader class="p-3 pb-1">
-          <CardTitle class="text-sm font-semibold">备份目录</CardTitle>
+          <CardTitle>备份目录</CardTitle>
         </CardHeader>
         <CardContent class="p-3 space-y-2">
           <Input
@@ -163,7 +155,7 @@ function toggleModule(mod: ClientBackupModule) {
             readonly
             placeholder="尚未选择备份目录"
           />
-          <div class="flex items-center justify-between gap-2">
+          <div class="flex-between gap-2">
             <span class="text-xs text-muted-foreground"> 目录由系统对话框选择，定时备份和手动备份都写入这里。 </span>
             <Button
               variant="secondary"
@@ -176,12 +168,12 @@ function toggleModule(mod: ClientBackupModule) {
         </CardContent>
       </Card>
 
-      <Card class="border bg-card">
+      <Card>
         <CardHeader class="p-3 pb-1">
-          <CardTitle class="text-sm font-semibold">自动备份</CardTitle>
+          <CardTitle>自动备份</CardTitle>
         </CardHeader>
         <CardContent class="p-3 space-y-3">
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex-between gap-3">
             <span class="text-xs font-medium text-foreground">启用定时备份</span>
             <Checkbox
               :checked="backupSettings.scheduleEnabled"
@@ -189,7 +181,7 @@ function toggleModule(mod: ClientBackupModule) {
             />
           </div>
 
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex-between gap-3">
             <span class="text-xs font-medium text-foreground">预设周期</span>
             <div class="w-[180px]">
               <Select
@@ -200,12 +192,7 @@ function toggleModule(mod: ClientBackupModule) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in presetOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in presetOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -213,7 +200,7 @@ function toggleModule(mod: ClientBackupModule) {
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex-between gap-3">
             <span class="text-xs font-medium text-foreground">自定义周期（小时）</span>
             <NumberField
               :model-value="backupSettings.customHours"
@@ -223,7 +210,7 @@ function toggleModule(mod: ClientBackupModule) {
             />
           </div>
 
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex-between gap-3">
             <span class="text-xs font-medium text-foreground">最多保留份数</span>
             <NumberField
               :model-value="backupSettings.keepCount"
@@ -240,9 +227,9 @@ function toggleModule(mod: ClientBackupModule) {
         </CardContent>
       </Card>
 
-      <Card class="border bg-card">
+      <Card>
         <CardHeader class="p-3 pb-1">
-          <CardTitle class="text-sm font-semibold">操作</CardTitle>
+          <CardTitle>操作</CardTitle>
         </CardHeader>
         <CardContent class="p-3 space-y-2">
           <div class="text-xs text-muted-foreground">上次备份: {{ lastBackupText }}</div>
@@ -269,15 +256,15 @@ function toggleModule(mod: ClientBackupModule) {
     <Dialog v-model:open="showImportModal">
       <DialogContent class="sm:max-w-[640px]">
         <DialogHeader>
-          <DialogTitle class="text-base font-semibold">导入备份</DialogTitle>
+          <DialogTitle class="text-base">导入备份</DialogTitle>
         </DialogHeader>
 
         <div
           v-if="importPreview"
           class="space-y-3 pt-2"
         >
-          <Alert class="py-2 px-2.5 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
-            <AlertDescription class="text-xs m-0">
+          <Alert size="sm" variant="warning">
+            <AlertDescription class="m-0">
               导入会覆盖已勾选模块的当前数据，未勾选模块保持不变。
             </AlertDescription>
           </Alert>
@@ -291,10 +278,10 @@ function toggleModule(mod: ClientBackupModule) {
             <Card
               v-for="option in CLIENT_BACKUP_MODULE_OPTIONS"
               :key="option.value"
-              class="border bg-card cursor-pointer hover:bg-muted/10 transition-colors"
+              class="cursor-pointer hover:bg-muted/10 transition-colors"
               @click="toggleModule(option.value)"
             >
-              <CardContent class="p-2.5 flex items-center justify-between gap-2">
+              <CardContent class="p-2.5 flex-between gap-2">
                 <div class="flex items-start gap-2 min-w-0">
                   <Checkbox
                     :checked="importModules.includes(option.value)"

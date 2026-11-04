@@ -110,21 +110,15 @@ function saveEdit() {
 
 <template>
   <Card class="w-full mt-2 shadow-xs">
-    <CardHeader class="p-3 pb-2 flex flex-row items-center justify-between space-y-0 border-b border-border/50">
+    <CardHeader class="p-3 flex flex-row items-center justify-between space-y-0 border-b border-border/50">
       <div class="flex items-center gap-2 min-w-0">
         <strong class="action-card__title text-xs font-semibold truncate">{{ proposal.title }}</strong>
-        <Badge
-          :variant="RISK_META[proposal.risk]?.variant || 'secondary'"
-          class="text-[10px] h-4.5 px-1 font-normal"
-        >
+        <Badge :variant="RISK_META[proposal.risk]?.variant || 'secondary'" size="xs">
           {{ RISK_META[proposal.risk]?.label }}
         </Badge>
       </div>
 
-      <Badge
-        :variant="STATUS_META[proposal.status].variant"
-        class="text-[10px] h-4.5 px-1 font-normal"
-      >
+      <Badge :variant="STATUS_META[proposal.status].variant" size="xs">
         {{ STATUS_META[proposal.status].label }}
       </Badge>
     </CardHeader>
@@ -140,7 +134,7 @@ function saveEdit() {
       <div class="relative">
         <div
           v-if="isRunning"
-          class="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex items-center justify-center z-10"
+          class="absolute inset-0 bg-background/50 backdrop-blur-[1px] flex-center z-10"
         >
           <Spin />
         </div>
@@ -151,31 +145,18 @@ function saveEdit() {
         />
       </div>
 
-      <Alert
-        v-if="proposal.status === 'failed' && proposal.error"
-        variant="destructive"
-        class="py-2 px-3 text-xs"
-      >
+      <Alert size="sm" v-if="proposal.status === 'failed' && proposal.error" variant="destructive">
         <AlertDescription>{{ proposal.error }}</AlertDescription>
       </Alert>
-      <Alert
-        v-else-if="isScheduled"
-        class="py-2 px-3 text-xs border-primary/30 bg-primary/5 text-foreground"
-      >
+      <Alert size="sm" v-else-if="isScheduled" class="border-primary/30 bg-primary/5 text-foreground">
         <AlertDescription>已设定 {{ scheduledText }} 自动执行</AlertDescription>
       </Alert>
-      <Alert
-        v-else-if="proposal.status === 'requires_confirmation' && isHighRisk && !editing"
-        class="py-2 px-3 text-xs border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-      >
+      <Alert size="sm" variant="warning" v-else-if="proposal.status === 'requires_confirmation' && isHighRisk && !editing">
         <AlertDescription>高风险操作, 请确认后执行</AlertDescription>
       </Alert>
     </CardContent>
 
-    <CardFooter
-      v-if="editing || isScheduled || isPending || proposal.status === 'failed'"
-      class="p-2.5 pt-0 flex justify-end gap-1.5"
-    >
+    <CardFooter v-if="editing || isScheduled || isPending || proposal.status === 'failed'" class="p-2.5 flex justify-end gap-1.5">
       <template v-if="editing">
         <Button
           variant="outline"
@@ -223,7 +204,7 @@ function saveEdit() {
               定时
             </Button>
           </PopoverTrigger>
-          <PopoverContent class="w-64 p-3 space-y-2.5 text-xs">
+          <PopoverContent class="w-64 space-y-2.5">
             <span class="text-muted-foreground block text-[11px]">选择自动执行时间</span>
             <Input
               size="xs"
@@ -232,17 +213,10 @@ function saveEdit() {
               class="font-mono"
             />
             <div class="flex justify-end gap-1.5">
-              <Button
-                variant="outline"
-                class="h-6 text-[11px] px-2"
-                @click="schedulePicker = false"
-              >
+              <Button size="xs" variant="outline" @click="schedulePicker = false">
                 取消
               </Button>
-              <Button
-                class="h-6 text-[11px] px-2"
-                @click="confirmSchedule"
-              >
+              <Button size="xs" @click="confirmSchedule">
                 确定
               </Button>
             </div>

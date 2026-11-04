@@ -7,8 +7,9 @@
  */
 
 export enum SupportTicketType {
-  Bug = 0,
-  Feature = 1,
-  Account = 2,
-  Other = 3,
+  Bug= 0,
+  Feature= 1,
+  Account= 2,
+  Other= 3,
+
 }

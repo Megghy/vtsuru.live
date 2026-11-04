@@ -131,7 +131,7 @@ watch(
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
         <div
-          class="flex items-center justify-between w-full h-8 px-2.5 text-xs rounded-md border border-input bg-background transition-colors hover:border-ring cursor-pointer"
+          class="flex-between w-full h-8 px-2.5 text-xs rounded-md border border-input bg-background transition-colors hover:border-ring cursor-pointer"
           :class="[disabled ? 'opacity-50 pointer-events-none' : '']"
         >
           <span
@@ -150,7 +150,7 @@ watch(
               type="button"
               variant="ghost"
               size="icon-xs"
-              class="size-4 p-0 text-muted-foreground hover:text-foreground"
+              class="size-4 p-0 text-muted-foreground"
               aria-label="清空选择"
               @click.stop="clearSelection"
             >
@@ -160,10 +160,7 @@ watch(
           </div>
         </div>
       </PopoverTrigger>
-      <PopoverContent
-        class="w-[320px] p-2 text-xs"
-        align="start"
-      >
+      <PopoverContent class="w-[320px] p-2" align="start">
         <div class="relative mb-2">
           <Input
             size="xs"
@@ -181,7 +178,7 @@ watch(
           <div
             v-for="opt in options"
             :key="opt.value"
-            class="flex items-center justify-between px-2 py-1.5 rounded cursor-pointer transition-colors"
+            class="flex-between px-2 py-1.5 rounded cursor-pointer transition-colors"
             :class="opt.value === model ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted text-foreground'"
             @click="selectOption(opt)"
           >

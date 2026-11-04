@@ -5,12 +5,12 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgMemberRoles } from './orgMemberRoles'
+import type { OrgMemberRoles } from './orgMemberRoles';
 
 export interface CreateOrgInviteModel {
-  role: OrgMemberRoles
+  role: OrgMemberRoles;
   /** @nullable */
-  expireDays?: number | null
+  expireDays?: number | null;
   /** @nullable */
-  targetUserId?: number | null
+  targetUserId?: number | null;
 }

@@ -74,9 +74,9 @@ async function updateSettings() {
 <template>
   <div class="flex flex-col gap-3">
     <!-- 规则卡片 -->
-    <Card class="border bg-card">
+    <Card>
       <CardHeader class="p-3 pb-1">
-        <CardTitle class="text-sm font-semibold">规则</CardTitle>
+        <CardTitle>规则</CardTitle>
       </CardHeader>
       <CardContent class="p-3 pt-2 space-y-3">
         <div class="flex items-center gap-3 flex-wrap">
@@ -102,11 +102,8 @@ async function updateSettings() {
             />
           </div>
 
-          <Alert
-            v-if="settings.orderPrefix && settings.orderPrefix.includes(' ')"
-            class="py-1 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 w-fit"
-          >
-            <AlertDescription class="text-xs m-0"> 前缀包含空格，可能导致用户输入困难。 </AlertDescription>
+          <Alert variant="info" v-if="settings.orderPrefix && settings.orderPrefix.includes(' ')" class="py-1 px-2.5 w-fit">
+            <AlertDescription class="m-0"> 前缀包含空格，可能导致用户输入困难。 </AlertDescription>
           </Alert>
         </div>
 
@@ -252,9 +249,9 @@ async function updateSettings() {
     </Card>
 
     <!-- 点歌卡片 -->
-    <Card class="border bg-card">
+    <Card>
       <CardHeader class="p-3 pb-1">
-        <CardTitle class="text-sm font-semibold">点歌</CardTitle>
+        <CardTitle>点歌</CardTitle>
       </CardHeader>
       <CardContent class="p-3 pt-2">
         <div class="flex items-center gap-4 flex-wrap text-xs">
@@ -308,9 +305,9 @@ async function updateSettings() {
     </Card>
 
     <!-- 冷却卡片 -->
-    <Card class="border bg-card">
+    <Card>
       <CardHeader class="p-3 pb-1">
-        <CardTitle class="text-sm font-semibold">冷却（秒）</CardTitle>
+        <CardTitle>冷却（秒）</CardTitle>
       </CardHeader>
       <CardContent class="p-3 pt-2 space-y-3">
         <div class="flex items-center gap-4 flex-wrap text-xs">
@@ -433,9 +430,9 @@ async function updateSettings() {
     </Card>
 
     <!-- OBS 卡片 -->
-    <Card class="border bg-card">
+    <Card>
       <CardHeader class="p-3 pb-1">
-        <CardTitle class="text-sm font-semibold">OBS</CardTitle>
+        <CardTitle>OBS</CardTitle>
       </CardHeader>
       <CardContent class="p-3 pt-2">
         <div class="flex items-center gap-4 flex-wrap text-xs">
@@ -485,9 +482,9 @@ async function updateSettings() {
     </Card>
 
     <!-- 警告消息卡片 -->
-    <Card class="border bg-card">
+    <Card>
       <CardHeader class="p-3 pb-1">
-        <CardTitle class="text-sm font-semibold">警告消息</CardTitle>
+        <CardTitle>警告消息</CardTitle>
       </CardHeader>
       <CardContent class="p-3 pt-2">
         <label class="flex items-center gap-1.5 cursor-pointer text-xs">

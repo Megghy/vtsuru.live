@@ -5,10 +5,10 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { VideoStatus } from './videoStatus'
+import type { VideoStatus } from './videoStatus';
 
 export type PostApiVideoCollectSetStatusParams = {
-  id?: string
-  bvid?: string
-  status?: VideoStatus
-}
+id?: string;
+bvid?: string;
+status?: VideoStatus;
+};

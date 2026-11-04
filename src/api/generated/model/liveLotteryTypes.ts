@@ -7,7 +7,8 @@
  */
 
 export enum LiveLotteryTypes {
-  Waiting = 0,
-  Result = 1,
-  Drawing = 2,
+  Waiting= 0,
+  Result= 1,
+  Drawing= 2,
+
 }

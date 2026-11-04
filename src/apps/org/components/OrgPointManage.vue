@@ -85,9 +85,9 @@ onMounted(async () => {
 <template>
   <div class="space-y-3.5 text-xs">
     <!-- 主播选择筛选 -->
-    <Card class="border border-border/80">
-      <CardHeader class="p-3 pb-2 border-b border-border/60">
-        <CardTitle class="text-xs font-semibold">主播筛选</CardTitle>
+    <Card class="/80">
+      <CardHeader class="p-3 border-b border-border/60">
+        <CardTitle class="text-xs">主播筛选</CardTitle>
       </CardHeader>
       <CardContent class="p-3">
         <Select
@@ -98,17 +98,9 @@ onMounted(async () => {
             <SelectValue placeholder="选择主播后，可单独查看/修改积分规则与筛选统计" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
-            <SelectItem
-              value="all"
-              class="text-xs"
-              >全部主播</SelectItem
+            <SelectItem value="all">全部主播</SelectItem
             >
-            <SelectItem
-              v-for="opt in streamerOptions"
-              :key="opt.value"
-              :value="String(opt.value)"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in streamerOptions" :key="opt.value" :value="String(opt.value)">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -121,9 +113,9 @@ onMounted(async () => {
       <Card
         v-for="item in statItems"
         :key="item.label"
-        class="border border-border/80"
+        class="/80"
       >
-        <CardContent class="p-3 flex items-center justify-between gap-2">
+        <CardContent class="p-3 flex-between gap-2">
           <div class="space-y-0.5">
             <span class="text-[11px] text-muted-foreground block">{{ item.label }}</span>
             <span class="text-base font-semibold font-mono text-foreground">{{ item.value }}</span>
@@ -141,9 +133,9 @@ onMounted(async () => {
       <Card
         v-for="item in orderItems"
         :key="item.label"
-        class="border border-border/80"
+        class="/80"
       >
-        <CardContent class="p-3 flex items-center justify-between gap-2">
+        <CardContent class="p-3 flex-between gap-2">
           <div class="space-y-0.5">
             <span class="text-[11px] text-muted-foreground block">{{ item.label }}</span>
             <span
@@ -194,32 +186,25 @@ onMounted(async () => {
       v-if="pointGoods.length > 0"
       class="border border-border/80"
     >
-      <CardHeader class="p-3 pb-2 border-b border-border/60">
-        <CardTitle class="text-xs font-semibold">积分商品</CardTitle>
+      <CardHeader class="p-3 border-b border-border/60">
+        <CardTitle class="text-xs">积分商品</CardTitle>
       </CardHeader>
       <CardContent class="p-3">
         <div class="divide-y divide-border/60">
           <div
             v-for="goods in pointGoods.slice(0, 5)"
             :key="goods.id"
-            class="py-2.5 first:pt-0 last:pb-0 flex items-center justify-between gap-3 text-xs"
+            class="py-2.5 first:pt-0 last:pb-0 flex-between gap-3 text-xs"
           >
             <div class="min-w-0 flex-1 space-y-0.5">
               <strong class="font-medium text-foreground text-xs block truncate">{{ goods.name }}</strong>
               <p class="text-[11px] text-muted-foreground truncate m-0">{{ goods.description }}</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-              <Badge
-                variant="secondary"
-                class="text-[10px] h-4.5 px-1.5 font-normal"
-              >
+              <Badge variant="secondary" size="xs">
                 {{ goods.price }} 积分
               </Badge>
-              <Badge
-                variant="outline"
-                class="text-[10px] h-4.5 px-1.5 font-normal"
-                :class="
-                  goods.stock > 0 ? 'text-emerald-600 border-emerald-500/30' : 'text-destructive border-destructive/30'
+              <Badge variant="outline" size="xs" :class=" goods.stock> 0 ? 'text-emerald-600 border-emerald-500/30' : 'text-destructive border-destructive/30'
                 "
               >
                 {{ goods.stock > 0 ? `库存: ${goods.stock}` : '缺货' }}
@@ -231,16 +216,13 @@ onMounted(async () => {
     </Card>
 
     <!-- 积分规则配置 -->
-    <Card class="border border-border/80">
-      <CardHeader class="p-3 pb-2 border-b border-border/60">
-        <CardTitle class="text-xs font-semibold">积分规则</CardTitle>
+    <Card class="/80">
+      <CardHeader class="p-3 border-b border-border/60">
+        <CardTitle class="text-xs">积分规则</CardTitle>
       </CardHeader>
       <CardContent class="p-3">
-        <Alert
-          v-if="!selectedStreamerId"
-          class="text-xs bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
-        >
-          <AlertDescription class="text-xs">请选择一个主播后再修改积分规则</AlertDescription>
+        <Alert size="sm" variant="warning" v-if="!selectedStreamerId">
+          <AlertDescription>请选择一个主播后再修改积分规则</AlertDescription>
         </Alert>
         <PointSettings
           v-else
@@ -253,10 +235,10 @@ onMounted(async () => {
     <!-- 操作审计 -->
     <Card
       v-if="auditLogs.length"
-      class="border border-border/80"
+      class="/80"
     >
-      <CardHeader class="p-3 pb-2 border-b border-border/60">
-        <CardTitle class="text-xs font-semibold">操作审计</CardTitle>
+      <CardHeader class="p-3 border-b border-border/60">
+        <CardTitle class="text-xs">操作审计</CardTitle>
       </CardHeader>
       <CardContent class="p-3">
         <OrgAuditList :logs="auditLogs" />

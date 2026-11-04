@@ -117,7 +117,7 @@ onUnmounted(() => {
     <p class="live-request-header">
       {{ settings.obsTitleToday ?? '今日已唱' }}
     </p>
-    <div class="live-request-divider flex items-center justify-center">
+    <div class="live-request-divider flex-center">
       <div class="flex-1 h-px bg-white/20" />
       <p class="live-request-header-count px-3">{{ songs.length ?? 0 }} 条</p>
       <div class="flex-1 h-px bg-white/20" />

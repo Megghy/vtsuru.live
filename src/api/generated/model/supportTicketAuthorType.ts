@@ -7,7 +7,8 @@
  */
 
 export enum SupportTicketAuthorType {
-  User = 0,
-  Staff = 1,
-  System = 2,
+  User= 0,
+  Staff= 1,
+  System= 2,
+
 }

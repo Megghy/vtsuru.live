@@ -103,11 +103,7 @@ function handleInput(e: Event) {
       </div>
     </PopoverTrigger>
 
-    <PopoverContent
-      v-if="currentUserInfo"
-      class="w-64 p-2.5 text-xs"
-      align="start"
-    >
+    <PopoverContent v-if="currentUserInfo" class="w-64 p-2.5" align="start">
       <div class="flex items-center gap-2.5">
         <img
           :src="currentUserInfo.face"

@@ -120,7 +120,7 @@ onUnmounted(() => {
   >
     <CardContent class="p-6">
       <Alert variant="destructive">
-        <AlertDescription class="text-xs"> 用户未创建粉丝讨论区 </AlertDescription>
+        <AlertDescription> 用户未创建粉丝讨论区 </AlertDescription>
       </Alert>
     </CardContent>
   </Card>
@@ -134,38 +134,32 @@ onUnmounted(() => {
   >
     <CardContent class="p-6 space-y-4">
       <Alert>
-        <AlertDescription class="text-xs"> 你需要成为成员才能访问 {{ forumInfo.name }} </AlertDescription>
+        <AlertDescription> 你需要成为成员才能访问 {{ forumInfo.name }} </AlertDescription>
       </Alert>
 
-      <Alert
-        v-if="forumInfo.isApplied"
-        class="bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
-      >
-        <AlertDescription class="text-xs"> 已申请, 正在等待管理员审核 </AlertDescription>
+      <Alert variant="success" v-if="forumInfo.isApplied">
+        <AlertDescription> 已申请, 正在等待管理员审核 </AlertDescription>
       </Alert>
 
       <Card
         v-else
-        class="border border-border/80 shadow-none"
+        class="/80 shadow-none"
       >
-        <CardHeader class="p-4 pb-2">
-          <CardTitle class="text-sm font-semibold">加入该讨论区</CardTitle>
+        <CardHeader class="p-4">
+          <CardTitle>加入该讨论区</CardTitle>
         </CardHeader>
         <CardContent class="p-4 pt-2 space-y-3">
           <Alert
             v-if="!accountInfo.id"
             variant="destructive"
           >
-            <AlertDescription class="text-xs"> 需要登录后才能够加入 </AlertDescription>
+            <AlertDescription> 需要登录后才能够加入 </AlertDescription>
           </Alert>
           <Alert v-else-if="forumInfo.settings.requireApply">
-            <AlertDescription class="text-xs"> 申请需要审核 </AlertDescription>
+            <AlertDescription> 申请需要审核 </AlertDescription>
           </Alert>
-          <Alert
-            v-else
-            class="bg-emerald-500/10 border-emerald-500/20 text-emerald-600"
-          >
-            <AlertDescription class="text-xs"> 该讨论区可直接加入 </AlertDescription>
+          <Alert variant="success" v-else>
+            <AlertDescription> 该讨论区可直接加入 </AlertDescription>
           </Alert>
           <Separator />
           <Button
@@ -196,11 +190,7 @@ onUnmounted(() => {
             >
               发布话题
             </Button>
-            <Badge
-              v-if="forumInfo.isAdmin"
-              variant="secondary"
-              class="w-full justify-center py-1 text-[11px] font-normal"
-            >
+            <Badge v-if="forumInfo.isAdmin" variant="secondary" size="sm" class="w-full justify-center py-1">
               你是管理员
             </Badge>
           </CardContent>
@@ -244,7 +234,7 @@ onUnmounted(() => {
       <DialogContent class="sm:max-w-3xl max-h-[90vh] flex flex-col p-4 gap-3">
         <DialogHeader class="pb-2 border-b border-border/60">
           <div class="flex items-center gap-2">
-            <DialogTitle class="text-sm font-semibold">发布话题</DialogTitle>
+            <DialogTitle class="text-sm">发布话题</DialogTitle>
             <Separator
               orientation="vertical"
               class="h-3.5"

@@ -107,19 +107,13 @@ function tagChipStyle(color?: string | null) {
     <Card
       v-for="item in schedules"
       :key="`${item.year} ${item.week}`"
-      class="border border-border/80 transition-shadow"
+      class="/80 transition-shadow"
       :class="{ 'ring-1 ring-primary/40': isCurrentWeek(item.year, item.week) }"
     >
-      <CardHeader
-        class="p-3.5 pb-2.5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2"
-      >
+      <CardHeader class="p-3.5 pb-2.5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="font-semibold text-sm text-foreground">{{ item.year }}年第{{ item.week }}周</span>
-          <Badge
-            v-if="isCurrentWeek(item.year, item.week)"
-            variant="default"
-            class="text-[10px] h-4.5 px-1.5 font-normal bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-          >
+          <Badge v-if="isCurrentWeek(item.year, item.week)" variant="success" size="xs">
             本周
           </Badge>
           <span class="text-xs text-muted-foreground font-mono">
@@ -166,7 +160,7 @@ function tagChipStyle(color?: string | null) {
           >
             <!-- 星期头部 -->
             <div
-              class="mb-1.5 px-2 py-1 rounded text-xs flex items-center justify-between gap-1 transition"
+              class="mb-1.5 px-2 py-1 rounded text-xs flex-between gap-1 transition"
               :class="
                 isCurrentDay(item.year, item.week, index)
                   ? 'bg-primary/15 text-primary font-semibold ring-1 ring-primary/40'
@@ -181,7 +175,7 @@ function tagChipStyle(color?: string | null) {
             <div class="flex-1 flex flex-col min-h-[64px] gap-1">
               <div
                 v-if="daySchedules.length === 0"
-                class="flex-1 min-h-[40px] rounded border border-dashed border-border/80 flex items-center justify-center gap-1 text-muted-foreground/60 transition"
+                class="flex-1 min-h-[40px] rounded border border-dashed border-border/80 flex-center gap-1 text-muted-foreground/60 transition"
                 :class="isSelf ? 'hover:bg-muted/30 cursor-pointer' : ''"
                 @click="isSelf && emit('onUpdate', item)"
               >
@@ -203,7 +197,7 @@ function tagChipStyle(color?: string | null) {
                 >
                   <div
                     v-if="schedule.tag || schedule.time || isSelf"
-                    class="flex items-center justify-between gap-1"
+                    class="flex-between gap-1"
                   >
                     <div class="flex items-center gap-1 min-w-0 flex-wrap">
                       <span

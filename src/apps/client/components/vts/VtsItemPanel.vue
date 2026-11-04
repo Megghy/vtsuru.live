@@ -103,9 +103,9 @@ function dropPrank(p: VtsPrankBinding) {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">道具管理</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+      <CardTitle>道具管理</CardTitle>
       <div class="flex items-center gap-2">
         <Button
           variant="secondary"
@@ -126,16 +126,10 @@ function dropPrank(p: VtsPrankBinding) {
         class="w-full"
       >
         <TabsList class="grid w-full grid-cols-2 max-w-[200px]">
-          <TabsTrigger
-            value="accessories"
-            class="text-xs"
-          >
+          <TabsTrigger value="accessories" >
             配饰
           </TabsTrigger>
-          <TabsTrigger
-            value="pranks"
-            class="text-xs"
-          >
+          <TabsTrigger value="pranks" >
             整活
           </TabsTrigger>
         </TabsList>
@@ -172,12 +166,7 @@ function dropPrank(p: VtsPrankBinding) {
                       <SelectValue placeholder="选择场景中的道具实例" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        v-for="opt in instanceOptions"
-                        :key="opt.value"
-                        :value="opt.value"
-                        class="text-xs"
-                      >
+                      <SelectItem v-for="opt in instanceOptions" :key="opt.value" :value="opt.value">
                         {{ opt.label }}
                       </SelectItem>
                     </SelectContent>
@@ -237,12 +226,7 @@ function dropPrank(p: VtsPrankBinding) {
                       <SelectValue placeholder="选择道具文件" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        v-for="opt in fileOptions"
-                        :key="opt.value"
-                        :value="opt.value"
-                        class="text-xs"
-                      >
+                      <SelectItem v-for="opt in fileOptions" :key="opt.value" :value="opt.value">
                         {{ opt.label }}
                       </SelectItem>
                     </SelectContent>
@@ -259,18 +243,10 @@ function dropPrank(p: VtsPrankBinding) {
                       <SelectValue placeholder="或绑定热键 (可选)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        value="__none__"
-                        class="text-xs"
-                      >
+                      <SelectItem value="__none__">
                         无热键
                       </SelectItem>
-                      <SelectItem
-                        v-for="opt in hotkeyOptions"
-                        :key="opt.value"
-                        :value="opt.value"
-                        class="text-xs"
-                      >
+                      <SelectItem v-for="opt in hotkeyOptions" :key="opt.value" :value="opt.value">
                         {{ opt.label }}
                       </SelectItem>
                     </SelectContent>

@@ -7,7 +7,8 @@
  */
 
 export enum QuestionDisplayShadow {
-  None = 0,
-  Soft = 1,
-  Strong = 2,
+  None= 0,
+  Soft= 1,
+  Strong= 2,
+
 }

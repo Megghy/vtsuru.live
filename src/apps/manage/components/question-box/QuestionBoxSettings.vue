@@ -12,6 +12,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Tag } from '@/shared/ui/tag'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -145,77 +146,77 @@ function addTag() {
     <div class="space-y-4">
       <Card>
         <CardHeader class="py-3 px-4 border-b flex flex-row items-center justify-between">
-          <CardTitle class="text-xs font-semibold">基础设定</CardTitle>
+          <CardTitle class="text-xs">基础设定</CardTitle>
           <SettingsOutline class="size-4 text-muted-foreground" />
         </CardHeader>
         <CardContent
-          class="p-4 space-y-3"
+          class="p-4 space-y-2"
           v-if="accountInfo?.settings?.questionBox"
         >
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              v-model:checked="accountInfo.settings.questionBox.allowUnregistedUser"
-              :disabled="useQB.isLoading"
-              @update:checked="saveQuestionBoxSettings"
-            />
-            <span>允许未注册/未登录用户提问</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              v-model:checked="accountInfo.settings.questionBox.allowAnonymous"
-              :disabled="useQB.isLoading"
-              @update:checked="saveQuestionBoxSettings"
-            />
-            <span>允许已登录用户隐藏身份</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              v-model:checked="accountInfo.settings.questionBox.allowImageUpload"
-              :disabled="useQB.isLoading"
-              @update:checked="saveQuestionBoxSettings"
-            />
-            <span>允许上传图片</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :model-value="accountInfo.settings.questionBox.showPublicReplies !== false"
-              :disabled="useQB.isLoading"
-              @update:model-value="
-                (checked) => {
-                  if (accountInfo?.settings?.questionBox) {
-                    accountInfo.settings.questionBox.showPublicReplies = Boolean(checked)
-                    saveQuestionBoxSettings()
-                  }
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="允许未注册/未登录用户提问"
+            :disabled="useQB.isLoading"
+            v-model="accountInfo.settings.questionBox.allowUnregistedUser"
+            @change="saveQuestionBoxSettings"
+          />
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="允许已登录用户隐藏身份"
+            :disabled="useQB.isLoading"
+            v-model="accountInfo.settings.questionBox.allowAnonymous"
+            @change="saveQuestionBoxSettings"
+          />
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="允许上传图片"
+            :disabled="useQB.isLoading"
+            v-model="accountInfo.settings.questionBox.allowImageUpload"
+            @change="saveQuestionBoxSettings"
+          />
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="在提问页显示公开回复"
+            :disabled="useQB.isLoading"
+            :model-value="accountInfo.settings.questionBox.showPublicReplies !== false"
+            @change="
+              (checked) => {
+                if (accountInfo?.settings?.questionBox) {
+                  accountInfo.settings.questionBox.showPublicReplies = Boolean(checked)
+                  saveQuestionBoxSettings()
                 }
-              "
-            />
-            <span>在提问页显示公开回复</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              :model-value="accountInfo.settings.questionBox.defaultPublic !== false"
-              :disabled="useQB.isLoading"
-              @update:model-value="
-                (checked) => {
-                  if (accountInfo?.settings?.questionBox) {
-                    accountInfo.settings.questionBox.defaultPublic = Boolean(checked)
-                    saveQuestionBoxSettings()
-                  }
+              }
+            "
+          />
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="新提问默认公开展示"
+            :disabled="useQB.isLoading"
+            :model-value="accountInfo.settings.questionBox.defaultPublic !== false"
+            @change="
+              (checked) => {
+                if (accountInfo?.settings?.questionBox) {
+                  accountInfo.settings.questionBox.defaultPublic = Boolean(checked)
+                  saveQuestionBoxSettings()
                 }
-              "
-            />
-            <span>新提问默认公开展示</span>
-          </label>
+              }
+            "
+          />
         </CardContent>
       </Card>
 
       <Card>
         <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs font-semibold">内容审查</CardTitle>
+          <CardTitle class="text-xs">内容审查</CardTitle>
         </CardHeader>
         <CardContent class="p-4 space-y-4">
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="text-xs text-muted-foreground">设置过滤强度，自动拦截恶意提问</span>
               <span class="text-[11px] text-muted-foreground/80 font-medium">{{ currentLevelDesc }}</span>
             </div>
@@ -242,7 +243,7 @@ function addTag() {
             v-if="Number(selectedSaftyLevel) > 0 && accountInfo?.settings?.questionBox"
             class="pt-3 border-t border-border/60 space-y-3"
           >
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="text-xs font-medium text-foreground">自选拦截分类</span>
               <span class="text-[11px] text-muted-foreground">勾选你希望自动拦截的类型</span>
             </div>
@@ -287,28 +288,28 @@ function addTag() {
 
       <Card>
         <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs font-semibold">通知设置</CardTitle>
+          <CardTitle class="text-xs">通知设置</CardTitle>
         </CardHeader>
         <CardContent
-          class="p-4 space-y-3"
+          class="p-4 space-y-2"
           v-if="accountInfo?.settings?.sendEmail"
         >
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              v-model:checked="accountInfo.settings.sendEmail.recieveQA"
-              :disabled="useQB.isLoading"
-              @update:checked="saveNotificationSetting"
-            />
-            <span>收到新提问时发送邮件通知</span>
-          </label>
-          <label class="flex items-center gap-2 cursor-pointer text-xs">
-            <Checkbox
-              v-model:checked="accountInfo.settings.sendEmail.recieveQAReply"
-              :disabled="useQB.isLoading"
-              @update:checked="saveNotificationSetting"
-            />
-            <span>我发送的提问收到回复时发送邮件通知</span>
-          </label>
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="收到新提问时发送邮件通知"
+            :disabled="useQB.isLoading"
+            v-model="accountInfo.settings.sendEmail.recieveQA"
+            @change="saveNotificationSetting"
+          />
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="我发送的提问收到回复时发送邮件通知"
+            :disabled="useQB.isLoading"
+            v-model="accountInfo.settings.sendEmail.recieveQAReply"
+            @change="saveNotificationSetting"
+          />
         </CardContent>
       </Card>
     </div>
@@ -317,7 +318,7 @@ function addTag() {
     <div>
       <Card class="h-full flex flex-col">
         <CardHeader class="py-3 px-4 border-b flex flex-row items-center justify-between">
-          <CardTitle class="text-xs font-semibold">标签/话题管理</CardTitle>
+          <CardTitle class="text-xs">标签/话题管理</CardTitle>
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
@@ -359,7 +360,7 @@ function addTag() {
             <div
               v-for="item in sortedTags"
               :key="item.name"
-              class="flex items-center justify-between p-2 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors text-xs"
+              class="flex-between p-2 rounded-md border border-border bg-card hover:bg-muted/30 transition-colors text-xs"
             >
               <div class="flex items-center gap-2">
                 <Tag
@@ -377,13 +378,7 @@ function addTag() {
               </div>
 
               <div class="flex items-center gap-1">
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  class="size-6 text-muted-foreground hover:text-foreground"
-                  :title="item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题'"
-                  @click="useQB.changeTagVisiable(item.name, !item.visiable)"
-                >
+                <Button size="xs" variant="ghost" class="size-6 text-muted-foreground" :aria-label="item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题'" @click="useQB.changeTagVisiable(item.name, !item.visiable)">
                   <Eye24Filled
                     v-if="item.visiable"
                     class="size-3.5"
@@ -399,12 +394,7 @@ function addTag() {
                   :description="`确认删除话题「${item.name}」吗？`"
                   @confirm="useQB.delTag(item.name)"
                 >
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    class="size-6 text-muted-foreground hover:text-destructive"
-                    title="删除话题"
-                  >
+                  <Button size="xs" variant="ghost" class="size-6 text-muted-foreground hover:text-destructive" aria-label="删除话题">
                     <Delete24Regular class="size-3.5" />
                   </Button>
                 </Popconfirm>

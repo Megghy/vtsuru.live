@@ -82,14 +82,9 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
   >
     <AccordionTrigger class="text-xs font-semibold py-2.5"> 页面背景 </AccordionTrigger>
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
-      <div class="flex items-center justify-between text-xs text-muted-foreground">
+      <div class="flex-between text-xs text-muted-foreground">
         <span>不设置时将使用全局背景或默认背景。</span>
-        <Button
-          variant="outline"
-          class="h-6 px-2"
-          :disabled="!page.background"
-          @click="page.background = undefined"
-        >
+        <Button size="xs" variant="outline" :disabled="!page.background" @click="page.background = undefined">
           使用全局背景
         </Button>
       </div>
@@ -104,14 +99,9 @@ const themeMode = computed<NonNullable<UserPageThemeConfigV1['pageThemeMode']>>(
   >
     <AccordionTrigger class="text-xs font-semibold py-2.5"> 页面主题 </AccordionTrigger>
     <AccordionContent class="pt-2 pb-4 flex flex-col gap-3">
-      <div class="flex items-center justify-between text-xs text-muted-foreground">
+      <div class="flex-between text-xs text-muted-foreground">
         <span>不设置时将使用全局主题或站点主题。</span>
-        <Button
-          variant="outline"
-          class="h-6 px-2"
-          :disabled="!page.theme"
-          @click="page.theme = undefined"
-        >
+        <Button size="xs" variant="outline" :disabled="!page.theme" @click="page.theme = undefined">
           清除页面主题
         </Button>
       </div>

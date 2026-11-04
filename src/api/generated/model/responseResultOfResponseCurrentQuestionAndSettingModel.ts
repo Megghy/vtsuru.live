@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ResponseCurrentQuestionAndSettingModel } from './responseCurrentQuestionAndSettingModel'
+import type { ResponseCurrentQuestionAndSettingModel } from './responseCurrentQuestionAndSettingModel';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfResponseCurrentQuestionAndSettingModel {
-  message: string
-  code: number
-  data: ResponseCurrentQuestionAndSettingModel
+  message: string;
+  code: number;
+  data: ResponseCurrentQuestionAndSettingModel;
 }

@@ -114,7 +114,7 @@ function onScroll(e: Event) {
       <div
         v-for="conv in filteredConversations"
         :key="conv.id"
-        class="conv-item group flex items-center justify-between gap-1 px-2.5 py-1.5 rounded-md text-xs cursor-pointer transition select-none"
+        class="conv-item group flex-between gap-1 px-2.5 py-1.5 rounded-md text-xs cursor-pointer transition select-none"
         :class="
           conv.id === store.currentConversationId
             ? 'bg-primary/10 text-primary font-medium'
@@ -126,7 +126,7 @@ function onScroll(e: Event) {
           v-if="editingId === conv.id"
           v-model="editingTitle"
           autofocus
-          class="h-6 px-1.5"
+          size="xs"
           @blur="commitRename"
           @keydown.enter="commitRename"
           @click.stop
@@ -139,9 +139,9 @@ function onScroll(e: Event) {
           >
             <Button
               variant="ghost"
-              size="icon"
-              class="size-6 text-muted-foreground hover:text-foreground"
-              title="重命名"
+              size="icon-xs"
+              class="text-muted-foreground"
+              aria-label="重命名"
               @click="startRename(conv.id, conv.title)"
             >
               <component
@@ -151,9 +151,9 @@ function onScroll(e: Event) {
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              class="size-6 text-destructive hover:bg-destructive/10"
-              title="删除"
+              size="icon-xs"
+              class="text-destructive hover:bg-destructive/10"
+              aria-label="删除"
               @click="confirmDelete(conv.id, conv.title)"
             >
               <component
@@ -180,7 +180,7 @@ function onScroll(e: Event) {
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle class="text-sm font-semibold">删除会话</AlertDialogTitle>
+          <AlertDialogTitle class="text-sm">删除会话</AlertDialogTitle>
           <AlertDialogDescription class="text-xs">
             确定删除「{{ deleteTarget?.title }}」? 该会话的聊天记录将被清除。
           </AlertDialogDescription>

@@ -46,9 +46,9 @@ onMounted(loadLogs)
 </script>
 
 <template>
-  <Card class="border border-border/80">
+  <Card class="/80">
     <CardHeader class="pb-3 border-b border-border/60">
-      <CardTitle class="text-sm font-semibold">操作审计</CardTitle>
+      <CardTitle>操作审计</CardTitle>
     </CardHeader>
 
     <CardContent class="pt-4 space-y-3">

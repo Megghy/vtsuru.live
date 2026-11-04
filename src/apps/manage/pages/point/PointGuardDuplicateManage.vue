@@ -273,22 +273,19 @@ async function applyCleanup(applyAll: boolean) {
 
 <template>
   <div class="flex flex-col gap-4">
-    <Alert
-      variant="default"
-      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-    >
-      <AlertDescription class="text-xs">
+    <Alert variant="info">
+      <AlertDescription>
         默认会同时扣除重复积分、删除重复事件，并清理 live
         历史里的重复上舰。你可以在执行前取消其中任意动作，也可以切换为手动三档积分值预览和执行。
       </AlertDescription>
     </Alert>
 
     <!-- 扫描条件 -->
-    <Card class="border border-border">
-      <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">扫描条件</CardTitle>
+    <Card>
+      <CardHeader class="p-3.5">
+        <CardTitle class="text-xs text-muted-foreground uppercase">扫描条件</CardTitle>
       </CardHeader>
-      <CardContent class="p-3.5 pt-0">
+      <CardContent>
         <div class="flex items-center gap-3 flex-wrap text-xs">
           <span class="text-muted-foreground">最近</span>
           <NumberField
@@ -336,11 +333,11 @@ async function applyCleanup(applyAll: boolean) {
     </Card>
 
     <!-- 扣分设置 -->
-    <Card class="border border-border">
-      <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">扣分设置</CardTitle>
+    <Card>
+      <CardHeader class="p-3.5">
+        <CardTitle class="text-xs text-muted-foreground uppercase">扣分设置</CardTitle>
       </CardHeader>
-      <CardContent class="p-3.5 pt-0 space-y-3">
+      <CardContent class="space-y-3">
         <ToggleGroup
           v-model="pointMode"
           type="single"
@@ -390,11 +387,11 @@ async function applyCleanup(applyAll: boolean) {
     </Card>
 
     <!-- 执行选项 -->
-    <Card class="border border-border">
-      <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">执行选项</CardTitle>
+    <Card>
+      <CardHeader class="p-3.5">
+        <CardTitle class="text-xs text-muted-foreground uppercase">执行选项</CardTitle>
       </CardHeader>
-      <CardContent class="p-3.5 pt-0 space-y-3">
+      <CardContent class="space-y-3">
         <div class="flex items-center gap-4 flex-wrap text-xs">
           <label class="flex items-center gap-1.5 cursor-pointer">
             <Switch v-model:checked="deductPoints" />
@@ -452,23 +449,15 @@ async function applyCleanup(applyAll: boolean) {
       </CardContent>
     </Card>
 
-    <Alert
-      v-if="scanResult"
-      variant="default"
-      class="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-    >
-      <AlertDescription class="text-xs">
+    <Alert v-if="scanResult" variant="success">
+      <AlertDescription>
         扫描结果：{{ scanResult.duplicatedUserCount }} 位用户，{{ scanResult.duplicateGroupCount }} 组重复，事件重复
         {{ scanResult.duplicateEventCount }} 条，Live 重复 {{ scanResult.duplicateLiveCount }} 条。
       </AlertDescription>
     </Alert>
 
-    <Alert
-      v-if="applyResult"
-      variant="default"
-      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-    >
-      <AlertDescription class="text-xs">
+    <Alert v-if="applyResult" variant="warning">
+      <AlertDescription>
         本次执行：扣除 {{ formatPoints(applyResult.totalPointsDeducted) }} 积分，删除事件
         {{ applyResult.eventRowsDeleted }} 条，删除临时 Live 记录 {{ applyResult.tempEventRowsDeleted }} 条，更新 Live
         {{ applyResult.liveRowsUpdated }} 场，清理 Live 重复 {{ applyResult.liveDuplicateRowsRemoved }} 条。
@@ -476,9 +465,9 @@ async function applyCleanup(applyAll: boolean) {
     </Alert>
 
     <!-- 重复用户列表 -->
-    <Card class="border border-border">
-      <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold text-muted-foreground uppercase">重复用户列表</CardTitle>
+    <Card>
+      <CardHeader class="p-3.5">
+        <CardTitle class="text-xs text-muted-foreground uppercase">重复用户列表</CardTitle>
       </CardHeader>
       <CardContent class="p-0">
         <Empty
@@ -529,11 +518,11 @@ async function applyCleanup(applyAll: boolean) {
                       <span class="text-[11px] text-muted-foreground">{{ getUserSecondaryText(row) }}</span>
                     </div>
                   </TableCell>
-                  <TableCell class="text-xs">{{ row.duplicateGroups }}</TableCell>
-                  <TableCell class="text-xs">{{ row.duplicateEventCount }}</TableCell>
-                  <TableCell class="text-xs">{{ row.duplicateLiveCount }}</TableCell>
-                  <TableCell class="text-xs">{{ row.affectedLiveCount }}</TableCell>
-                  <TableCell class="text-xs font-mono font-medium text-destructive">
+                  <TableCell>{{ row.duplicateGroups }}</TableCell>
+                  <TableCell>{{ row.duplicateEventCount }}</TableCell>
+                  <TableCell>{{ row.duplicateLiveCount }}</TableCell>
+                  <TableCell>{{ row.affectedLiveCount }}</TableCell>
+                  <TableCell class="font-mono font-medium text-destructive">
                     {{ formatPoints(row.previewPoints) }}
                   </TableCell>
                   <TableCell class="text-[11px] text-muted-foreground">
@@ -558,7 +547,7 @@ async function applyCleanup(applyAll: boolean) {
           <!-- 分页栏 -->
           <div
             v-if="totalPages > 1"
-            class="flex items-center justify-between px-4 py-3 border-t text-xs"
+            class="flex-between px-4 py-3 border-t text-xs"
           >
             <span class="text-muted-foreground">
               共 {{ rows.length }} 条，第 {{ currentPage }} / {{ totalPages }} 页
@@ -591,7 +580,7 @@ async function applyCleanup(applyAll: boolean) {
   <Dialog v-model:open="showDetailModal">
     <DialogContent class="max-w-3xl max-h-[85vh] flex flex-col">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">重复上舰详情</DialogTitle>
+        <DialogTitle class="text-sm">重复上舰详情</DialogTitle>
       </DialogHeader>
 
       <div class="flex-1 overflow-y-auto py-2 space-y-3">
@@ -601,11 +590,8 @@ async function applyCleanup(applyAll: boolean) {
             description="暂无详情"
           />
           <template v-else-if="detailResult">
-            <Alert
-              variant="default"
-              class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-            >
-              <AlertDescription class="text-xs">
+            <Alert variant="info">
+              <AlertDescription>
                 {{ detailResult.user.info?.name || '未知用户' }}：{{
                   detailResult.user.duplicateGroups
                 }}
@@ -618,9 +604,9 @@ async function applyCleanup(applyAll: boolean) {
               <Card
                 v-for="(group, index) in detailResult.groups"
                 :key="`${group.sourceType}-${group.liveId || 'none'}-${group.anchorAt}-${index}`"
-                class="border border-border p-3 space-y-2"
+                class="p-3 space-y-2"
               >
-                <div class="flex items-center justify-between text-xs">
+                <div class="flex-between text-xs">
                   <div class="flex items-center gap-1.5 flex-wrap">
                     <Tag type="warning">{{ sourceTypeLabel(group.sourceType) }}</Tag>
                     <Tag type="info">重复 {{ group.duplicateCount }} 条</Tag>
@@ -640,7 +626,7 @@ async function applyCleanup(applyAll: boolean) {
                   <div
                     v-for="entry in group.entries"
                     :key="`${entry.eventId}-${entry.time}-${entry.isDuplicate ? 'dup' : 'keep'}`"
-                    class="flex items-center justify-between p-2 rounded bg-muted/40 text-xs"
+                    class="flex-between p-2 rounded bg-muted/40 text-xs"
                   >
                     <div class="flex items-center gap-2">
                       <Tag :type="entry.isDuplicate ? 'warning' : 'success'">

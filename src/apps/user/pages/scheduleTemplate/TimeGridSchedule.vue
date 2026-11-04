@@ -529,12 +529,7 @@ defineExpose({ Config, DefaultConfig })
                 <SelectValue placeholder="选择周次" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in weekOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in weekOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -616,7 +611,7 @@ defineExpose({ Config, DefaultConfig })
                   <span class="timegrid-allday-chip__title">{{ item.title || '待定安排' }}</span>
                 </div>
               </PopoverTrigger>
-              <PopoverContent class="timegrid-popover w-60 p-3 text-xs space-y-2">
+              <PopoverContent class="timegrid-popover w-60 space-y-2">
                 <h4 class="timegrid-popover__title font-semibold text-foreground">{{ item.title || '未命名活动' }}</h4>
                 <div class="timegrid-popover__time-row flex items-center gap-1.5 text-muted-foreground text-[11px]">
                   <component
@@ -768,7 +763,7 @@ defineExpose({ Config, DefaultConfig })
                   </PopoverTrigger>
 
                   <!-- 弹层详情卡片 -->
-                  <PopoverContent class="timegrid-popover w-64 p-3 text-xs space-y-2">
+                  <PopoverContent class="timegrid-popover w-64 space-y-2">
                     <h4 class="timegrid-popover__title font-semibold text-foreground">
                       {{ entry.item.title || '未命名直播' }}
                     </h4>

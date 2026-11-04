@@ -8,6 +8,7 @@ import type { ResponseAccountInfo } from '@/api/generated/model'
 import { EventDataTypes } from '@/api/generated/model'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
+import { Separator } from '@/shared/ui/separator'
 import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { getDanmakuGiftDisplayMeta } from '@/shared/utils/danmakuGiftDisplay'
@@ -56,7 +57,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
   <Card
     v-if="danmaku.type === EventDataTypes.SC"
     :style="`margin: 4px 0; max-width: 540px; background-color: ${GetSCColor(danmaku.price ?? 0)};`"
-    class="rounded-md border-0 text-white overflow-hidden shadow-sm"
+    class="rounded-md border-0 text-white overflow-hidden"
   >
     <div class="px-2.5 py-1.5 bg-white/15 text-xs flex items-center gap-2">
       <TooltipProvider v-if="danmaku.uId > 0 && showAvatar">
@@ -211,7 +212,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
               <span v-if="giftDisplay.mysteryBoxPriceText">{{ giftDisplay.mysteryBoxPriceText }}</span>
             </span>
           </TooltipTrigger>
-          <TooltipContent class="text-xs p-2.5 space-y-1">
+          <TooltipContent class="p-2.5 space-y-1">
             <div class="font-semibold text-foreground">盲盒礼物</div>
             <div
               v-if="giftDisplay.mysteryBoxName"
@@ -239,14 +240,14 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       </TooltipProvider>
 
       <span>{{ giftDisplay.sourceLabelText }}</span>
-      <div class="h-3 w-px bg-border inline-block" />
+      <Separator orientation="vertical" class="h-3 inline-block" />
       <span
         v-if="giftDisplay.giftPriceText"
         class="inline-flex items-center gap-0.5 text-rose-500 font-medium text-[11px]"
       >
         <Money24Regular class="size-3" /> {{ giftDisplay.giftPriceText }}
       </span>
-      <div class="h-3 w-px bg-border inline-block" />
+      <Separator orientation="vertical" class="h-3 inline-block" />
       <span>{{ danmaku.msg }}</span>
       <span
         v-if="danmaku.num"
@@ -268,7 +269,7 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       >
         <VehicleShip24Filled class="size-3.5" /> {{ danmaku.price }}
       </span>
-      <div class="h-3 w-px bg-border inline-block" />
+      <Separator orientation="vertical" class="h-3 inline-block" />
       <span>{{ danmaku.msg }}</span>
     </span>
 

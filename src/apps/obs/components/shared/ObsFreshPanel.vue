@@ -30,7 +30,7 @@ const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateY
   <div
     class="size-full flex flex-col min-h-[150px] min-w-[250px] max-h-screen bg-gradient-to-br from-white/85 to-[#f5f5fa]/85 rounded-2xl text-slate-800 shadow-md overflow-hidden border border-black/5 font-sans"
   >
-    <div class="px-4 py-2.5 flex items-center justify-between bg-white/60 border-b border-black/6 shrink-0">
+    <div class="px-4 py-2.5 flex-between bg-white/60 border-b border-black/6 shrink-0">
       <h2 class="m-0 text-base font-semibold text-slate-800">
         {{ title }}
       </h2>
@@ -112,7 +112,7 @@ const { listContainerRef, listInnerRef, isMoreThanContainer, animationTranslateY
               class="flex items-center gap-2.5 px-3 py-2.5 bg-white/70 rounded-xl border border-slate-400/14 shadow-[0_6px_20px_rgba(15,23,42,0.04)]"
             >
               <div
-                class="size-7 rounded-[10px] flex items-center justify-center font-bold shrink-0 transition-colors"
+                class="size-7 rounded-[10px] flex-center font-bold shrink-0 transition-colors"
                 :class="
                   index === 0
                     ? 'bg-amber-400/16 text-amber-700'

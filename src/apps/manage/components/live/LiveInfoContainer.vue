@@ -87,7 +87,7 @@ function onClickRow() {
       />
       <div
         v-else
-        class="w-full h-full flex items-center justify-center text-muted-foreground/60"
+        class="w-full h-full flex-center text-muted-foreground/60"
       >
         <component
           :is="Video24Regular"
@@ -116,19 +116,13 @@ function onClickRow() {
       </div>
 
       <div class="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-        <Badge
-          :variant="!live.isFinish ? 'destructive' : 'secondary'"
-          class="text-[10px] px-1.5 py-0 h-4"
-        >
+        <Badge :variant="!live.isFinish ? 'destructive' : 'secondary'" size="xs">
           {{ !live.isFinish ? '直播中' : '已结束' }}
         </Badge>
 
-        <span
-          v-if="live.parentArea || live.area"
-          class="px-1.5 py-0.5 rounded bg-muted/60 text-[11px] border border-border"
-        >
+        <Badge v-if="live.parentArea || live.area" variant="outline" size="xs">
           {{ live.parentArea ? `${live.parentArea} / ` : '' }}{{ live.area }}
-        </span>
+        </Badge>
 
         <Popover>
           <PopoverTrigger as-child>
@@ -143,7 +137,7 @@ function onClickRow() {
               {{ format(live.startAt, 'yyyy-MM-dd HH:mm') }}
             </span>
           </PopoverTrigger>
-          <PopoverContent class="w-56 p-2 text-xs space-y-1">
+          <PopoverContent class="w-56 p-2 space-y-1">
             <div>开播: {{ format(live.startAt, 'yyyy-MM-dd HH:mm:ss') }}</div>
             <div v-if="live.isFinish">停播: {{ live.stopAt ? format(live.stopAt, 'yyyy-MM-dd HH:mm:ss') : '-' }}</div>
             <div>历时: {{ durationText }}</div>

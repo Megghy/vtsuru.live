@@ -135,10 +135,7 @@ const hasCover = computed(
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <Alert
-      v-if="!model.available"
-      class="text-xs py-2 m-2"
-    >
+    <Alert size="sm" v-if="!model.available" class="m-2">
       <AlertDescription> 直播信息暂不可用 </AlertDescription>
     </Alert>
 
@@ -174,15 +171,11 @@ const hasCover = computed(
         ]"
       >
         <header
-          class="flex items-center justify-between gap-3 min-w-0 @max-[520px]:items-start"
+          class="flex-between gap-3 min-w-0 @max-[520px]:items-start"
           :class="cfg.variant === 'compact' ? 'col-span-full @max-[520px]:col-span-1' : ''"
         >
           <div class="flex items-center gap-2.5 min-w-0">
-            <Avatar
-              v-if="model.avatarUrl"
-              class="border border-border shrink-0"
-              :class="cfg.variant === 'compact' ? 'size-8.5' : 'size-10.5'"
-            >
+            <Avatar v-if="model.avatarUrl" class="border border-border" :class="cfg.variant === 'compact' ? 'size-8.5' : 'size-10.5'" >
               <AvatarImage
                 :src="model.avatarUrl"
                 :alt="model.displayName"
@@ -308,7 +301,7 @@ const hasCover = computed(
             v-if="model.spaceUrl"
             as="a"
             variant="outline"
-            class="font-medium"
+            
             :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover }"
             target="_blank"
             rel="noopener noreferrer"
@@ -325,7 +318,7 @@ const hasCover = computed(
             v-if="model.liveRoomUrl"
             as="a"
             :variant="model.isStreaming ? 'default' : 'outline'"
-            class="font-medium"
+            
             :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover && !model.isStreaming }"
             target="_blank"
             rel="noopener noreferrer"

@@ -58,7 +58,7 @@ function onSizeChange(val: string | number) {
 </script>
 
 <template>
-  <div class="flex items-center justify-between gap-3 text-xs flex-wrap select-none">
+  <div class="flex-between gap-3 text-xs flex-wrap select-none">
     <div class="text-muted-foreground text-[11px]">共 {{ actualTotal }} 项</div>
 
     <div class="flex items-center gap-2">

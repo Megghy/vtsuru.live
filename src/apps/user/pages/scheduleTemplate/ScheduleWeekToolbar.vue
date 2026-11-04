@@ -93,7 +93,7 @@ async function saveScheduleImage() {
 
 <template>
   <nav
-    class="schedule-week-toolbar flex items-center justify-between gap-3 w-full p-2.5 px-3 bg-card border border-border rounded-lg text-card-foreground"
+    class="schedule-week-toolbar flex-between gap-3 w-full p-2.5 px-3 bg-card border border-border rounded-lg text-card-foreground"
     aria-label="日程周次与导出"
   >
     <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -125,16 +125,11 @@ async function saveScheduleImage() {
           :model-value="selectedWeek"
           @update:model-value="selectedWeek = String($event)"
         >
-          <SelectTrigger class="h-9 w-full bg-secondary border-border text-card-foreground">
+          <SelectTrigger size="default" class="bg-secondary border-border text-card-foreground">
             <SelectValue placeholder="选择周次" />
           </SelectTrigger>
           <SelectContent class="bg-card border-border text-card-foreground">
-            <SelectItem
-              v-for="opt in options"
-              :key="opt.value"
-              :value="opt.value"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>

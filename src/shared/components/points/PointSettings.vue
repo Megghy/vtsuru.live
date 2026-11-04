@@ -14,11 +14,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toast } from '@/shared/utils'
@@ -258,11 +260,8 @@ watch(
 <template>
   <TooltipProvider>
     <div class="space-y-4">
-      <Alert
-        v-if="!orgId && !accountInfo.eventFetcherState.online"
-        class="bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs"
-      >
-        <AlertDescription class="text-xs">
+      <Alert size="sm" variant="warning" v-if="!orgId && !accountInfo.eventFetcherState.online">
+        <AlertDescription>
           由于你尚未部署
           <a
             href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
@@ -275,8 +274,8 @@ watch(
         </AlertDescription>
       </Alert>
 
-      <Alert class="text-xs bg-muted/40 border-border/80">
-        <AlertDescription class="text-xs text-muted-foreground">
+      <Alert size="sm" class="bg-muted/40 border-border/80">
+        <AlertDescription class="text-muted-foreground">
           积分总是最多保留两位小数，四舍五入。
         </AlertDescription>
       </Alert>
@@ -294,10 +293,10 @@ watch(
       >
         <!-- 通用设置 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold">通用设置</CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs">通用设置</CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5 pt-0 space-y-2.5 text-xs">
+          <CardContent class="space-y-2.5 text-xs">
             <label
               v-if="!orgId"
               class="flex items-center gap-2 cursor-pointer"
@@ -332,10 +331,10 @@ watch(
 
         <!-- 签到配置 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold">签到配置</CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs">签到配置</CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5 pt-0 space-y-3 text-xs">
+          <CardContent class="space-y-3 text-xs">
             <label class="flex items-center gap-2 cursor-pointer">
               <Checkbox
                 v-model:checked="setting.enableCheckIn"
@@ -461,10 +460,10 @@ watch(
 
         <!-- 积分来源 -->
         <Card :id="props.sourceAnchorId">
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold">积分来源</CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs">积分来源</CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5 pt-0 text-xs flex items-center gap-4 flex-wrap">
+          <CardContent class="text-xs flex items-center gap-4 flex-wrap">
             <label class="flex items-center gap-1.5 cursor-pointer">
               <Checkbox
                 :checked="setting.allowType.includes(EventDataTypes.Guard)"
@@ -494,10 +493,10 @@ watch(
 
         <!-- 上舰积分配置 -->
         <Card v-if="setting.allowType.includes(EventDataTypes.Guard)">
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold">上舰积分配置</CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs">上舰积分配置</CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5 pt-0 space-y-3 text-xs">
+          <CardContent class="space-y-3 text-xs">
             <span class="text-muted-foreground text-[11px]">配置不同等级舰长获得的固定积分：</span>
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div class="flex items-center gap-2 p-2 rounded border border-border/80">
@@ -542,10 +541,10 @@ watch(
 
         <!-- Superchat 积分配置 -->
         <Card v-if="setting.allowType.includes(EventDataTypes.SC)">
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold">Superchat 积分配置</CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs">Superchat 积分配置</CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5 pt-0 space-y-2 text-xs">
+          <CardContent class="space-y-2 text-xs">
             <div class="flex items-center gap-2 max-w-sm">
               <span class="text-muted-foreground w-24 shrink-0">SC 转换倍率:</span>
               <NumberField
@@ -584,8 +583,8 @@ watch(
 
         <!-- 每日首次互动奖励 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2 flex flex-row items-center justify-between space-y-0">
-            <CardTitle class="text-xs font-semibold">每日首次互动奖励</CardTitle>
+          <CardHeader class="p-3.5 flex flex-row items-center justify-between space-y-0">
+            <CardTitle class="text-xs">每日首次互动奖励</CardTitle>
             <label class="flex items-center gap-1.5 cursor-pointer text-xs">
               <Checkbox
                 v-model:checked="setting.dailyFirstOnlyOnStreaming"
@@ -595,9 +594,9 @@ watch(
               <span>仅开播时生效</span>
             </label>
           </CardHeader>
-          <CardContent class="p-3.5 pt-0 space-y-3 text-xs">
-            <Alert class="text-xs bg-muted/40 border-border/80">
-              <AlertDescription class="text-xs text-muted-foreground">
+          <CardContent class="space-y-3 text-xs">
+            <Alert size="sm" class="bg-muted/40 border-border/80">
+              <AlertDescription class="text-muted-foreground">
                 每日首次发送弹幕或礼物时可以给予额外积分，每个用户每天只能获得一次。
               </AlertDescription>
             </Alert>
@@ -700,10 +699,10 @@ watch(
 
         <!-- 礼物积分配置 -->
         <Card v-if="setting.allowType.includes(EventDataTypes.Gift)">
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold">礼物积分配置</CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs">礼物积分配置</CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5 pt-0 space-y-3 text-xs">
+          <CardContent class="space-y-3 text-xs">
             <RadioGroup
               :model-value="String(setting.giftAllowType)"
               class="flex items-center gap-4"
@@ -745,11 +744,10 @@ watch(
 
             <!-- 自定义礼物列表 -->
             <div class="space-y-2">
-              <div class="flex items-center justify-between">
+              <div class="flex-between">
                 <div class="flex items-center gap-1.5 font-medium text-foreground">
                   <span>自定义礼物列表</span>
-                  <Badge
-                    v-if="Object.keys(setting.giftPercentMap).length > 0"
+                  <Badge v-if="Object.keys(setting.giftPercentMap).length> 0"
                     variant="secondary"
                     class="text-[10px] h-4.5 px-1.5 font-normal"
                   >
@@ -774,18 +772,13 @@ watch(
                 v-else
                 class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2"
               >
-                <div
+                <SettingRow
                   v-for="item in Object.entries(setting.giftPercentMap)"
                   :key="item[0]"
-                  class="p-2.5 rounded-lg border border-border/80 bg-background flex items-center justify-between gap-2"
+                  :title="item[0]"
+                  :description="`固定赠送 ${setting.giftPercentMap[item[0]]} 积分`"
+                  class="bg-background"
                 >
-                  <div class="min-w-0 flex flex-col gap-0.5">
-                    <strong class="text-foreground truncate text-xs">{{ item[0] }}</strong>
-                    <span class="text-muted-foreground text-[11px]">
-                      固定赠送 {{ setting.giftPercentMap[item[0]] }} 积分
-                    </span>
-                  </div>
-
                   <div class="flex items-center gap-1.5 shrink-0">
                     <NumberField
                       :model-value="setting.giftPercentMap[item[0]]"
@@ -802,12 +795,7 @@ watch(
                       @positive-click="deleteGift(item[0])"
                     >
                       <template #trigger>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          class="size-7 text-destructive hover:bg-destructive/10"
-                          :disabled="!canEdit"
-                        >
+                        <Button variant="ghost" size="xs" class="size-7 text-destructive hover:bg-destructive/10" :disabled="!canEdit">
                           <component
                             :is="Delete24Regular"
                             class="size-3.5"
@@ -817,7 +805,7 @@ watch(
                       确定要删除这个礼物配置吗?
                     </Popconfirm>
                   </div>
-                </div>
+                </SettingRow>
               </div>
             </div>
           </CardContent>
@@ -828,33 +816,33 @@ watch(
       <Dialog v-model:open="showAddGiftModal">
         <DialogContent class="sm:max-w-md p-4 space-y-3">
           <DialogHeader class="pb-2 border-b border-border/60">
-            <DialogTitle class="text-sm font-semibold">添加礼物</DialogTitle>
+            <DialogTitle class="text-sm">添加礼物</DialogTitle>
           </DialogHeader>
 
-          <Alert class="text-xs bg-muted/40 border-border/80">
-            <AlertDescription class="text-xs text-muted-foreground">
+          <Alert size="sm" class="bg-muted/40 border-border/80">
+            <AlertDescription class="text-muted-foreground">
               这里填写的积分是指这个礼物直接对应多少积分，而不是兑换比例。
             </AlertDescription>
           </Alert>
 
           <div class="space-y-3 text-xs">
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">礼物名称 *</label>
+            <FormField
+              label="礼物名称"
+              required
+              :error="addGiftModel.nameError"
+            >
               <Input
                 v-model="addGiftModel.name"
                 placeholder="请输入礼物名称"
                 @keydown="handleKeyDown"
               />
-              <span
-                v-if="addGiftModel.nameError"
-                class="text-destructive text-[11px] block"
-              >
-                {{ addGiftModel.nameError }}
-              </span>
-            </div>
+            </FormField>
 
-            <div class="space-y-1">
-              <label class="font-medium text-foreground">给予积分 *</label>
+            <FormField
+              label="给予积分"
+              required
+              :error="addGiftModel.pointError"
+            >
               <NumberField
                 v-model="addGiftModel.point"
                 placeholder="请输入积分数量"
@@ -862,13 +850,7 @@ watch(
                 class="w-full"
                 @keydown="handleKeyDown"
               />
-              <span
-                v-if="addGiftModel.pointError"
-                class="text-destructive text-[11px] block"
-              >
-                {{ addGiftModel.pointError }}
-              </span>
-            </div>
+            </FormField>
           </div>
 
           <DialogFooter class="pt-2 border-t border-border/60">

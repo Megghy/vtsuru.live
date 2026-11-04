@@ -130,15 +130,7 @@ function toggleFilterType(val: string, checked: boolean) {
       description="桌面半透明置顶弹幕机，支持高自由度外观、穿透、卡片/纯文本样式与智能过滤"
     >
       <template #actions>
-        <Badge
-          variant="outline"
-          class="text-xs h-6 px-2.5"
-          :class="
-            danmakuWindow.isDanmakuWindowOpen
-              ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-              : 'text-muted-foreground'
-          "
-        >
+        <Badge variant="success" class="h-6 px-2.5" :class=" danmakuWindow.isDanmakuWindowOpen ? ' ' : 'text-muted-foreground' ">
           {{ danmakuWindow.isDanmakuWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
         </Badge>
 
@@ -183,24 +175,15 @@ function toggleFilterType(val: string, checked: boolean) {
       class="w-full"
     >
       <TabsList class="grid w-full max-w-sm grid-cols-3">
-        <TabsTrigger
-          value="appearance"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="appearance" class="gap-1.5" >
           <Color24Filled class="size-3.5" />
           外观与预设
         </TabsTrigger>
-        <TabsTrigger
-          value="window"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="window" class="gap-1.5" >
           <Desktop24Filled class="size-3.5" />
           窗口与行为
         </TabsTrigger>
-        <TabsTrigger
-          value="filter"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="filter" class="gap-1.5" >
           <Filter24Filled class="size-3.5" />
           过滤与元素
         </TabsTrigger>
@@ -212,9 +195,9 @@ function toggleFilterType(val: string, checked: boolean) {
         class="pt-3 space-y-3 client-readable"
       >
         <!-- 快速主题预设 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">主题预设</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>主题预设</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -244,9 +227,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 呈现风格 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">呈现模式</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>呈现模式</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <ToggleGroup
@@ -271,7 +254,7 @@ function toggleFilterType(val: string, checked: boolean) {
                 <LabelItem label="显示消息类型角标">
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.textStyleShowType" />
                 </LabelItem>
-                <div class="flex items-center justify-between text-xs py-1">
+                <div class="flex-between text-xs py-1">
                   <span class="text-muted-foreground">用户名分隔符</span>
                   <div class="w-44">
                     <Select v-model="danmakuWindow.danmakuWindowSetting.textStyleNameSeparator">
@@ -279,12 +262,7 @@ function toggleFilterType(val: string, checked: boolean) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem
-                          v-for="opt in separatorOptions"
-                          :key="opt.value"
-                          :value="opt.value"
-                          class="text-xs"
-                        >
+                        <SelectItem v-for="opt in separatorOptions" :key="opt.value" :value="opt.value">
                           {{ opt.label }}
                         </SelectItem>
                       </SelectContent>
@@ -297,9 +275,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 顶部实时数据状态栏 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-            <CardTitle class="text-sm font-semibold">顶部实时数据状态栏</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+            <CardTitle>顶部实时数据状态栏</CardTitle>
             <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showStatusBar" />
           </CardHeader>
           <CardContent class="p-3">
@@ -356,18 +334,13 @@ function toggleFilterType(val: string, checked: boolean) {
                   <Switch v-model:checked="danmakuWindow.danmakuWindowSetting.showOnlineCount" />
                 </LabelItem>
 
-                <div class="flex items-center justify-between gap-3 pt-2 mt-1 border-t border-dashed text-xs">
+                <div class="flex-between gap-3 pt-2 mt-1 border-t border-dashed text-xs">
                   <span class="text-muted-foreground">
                     当前统计：观看 {{ danmakuWindow.liveStats.watchedText || danmakuWindow.liveStats.watchedCount }} ｜
                     点赞 {{ danmakuWindow.liveStats.likeCount }} ｜ 收益 ¥{{ danmakuWindow.liveStats.totalIncome }} ｜
                     在线 {{ danmakuWindow.liveStats.onlineCount }} 人
                   </span>
-                  <Button
-                    size="xs"
-                    variant="secondary"
-                    class="h-6 text-[11px] gap-1 shrink-0"
-                    @click="(danmakuWindow.resetLiveStats(), toast.success('实时统计数据已重置'))"
-                  >
+                  <Button size="xs" variant="secondary" class="gap-1 shrink-0" @click="(danmakuWindow.resetLiveStats(), toast.success('实时统计数据已重置'))">
                     <ArrowReset24Regular class="size-3" />
                     重置统计
                   </Button>
@@ -383,34 +356,34 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 色彩调节 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">色彩与透明度</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>色彩与透明度</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">气泡背景色</span>
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.backgroundColor"
                   :show-alpha="true"
                 />
               </div>
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">窗口底色</span>
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.windowBackgroundColor"
                   :show-alpha="true"
                 />
               </div>
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">弹幕文字色</span>
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.textColor"
                   :show-alpha="true"
                 />
               </div>
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">文字阴影色</span>
                 <ColorPicker
                   v-model:value="danmakuWindow.danmakuWindowSetting.shadowColor"
@@ -423,12 +396,12 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 字体与排版细项 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">排版细项</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>排版细项</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">整体不透明度</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -444,7 +417,7 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
             </div>
 
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">字体大小 (px)</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -460,7 +433,7 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
             </div>
 
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">气泡圆角 (px)</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -476,7 +449,7 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
             </div>
 
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">条目间距 (px)</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -507,9 +480,9 @@ function toggleFilterType(val: string, checked: boolean) {
         class="pt-3 space-y-3 client-readable"
       >
         <!-- 尺寸与坐标 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">尺寸与屏幕坐标</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>尺寸与屏幕坐标</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -575,9 +548,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 窗口行为 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">浮窗行为属性</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>浮窗行为属性</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
             <LabelItem
@@ -605,9 +578,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 滚动与动画 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">滚动方向与动效</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>滚动方向与动效</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
             <LabelItem
@@ -625,7 +598,7 @@ function toggleFilterType(val: string, checked: boolean) {
             </LabelItem>
             <div
               v-if="danmakuWindow.danmakuWindowSetting.enableAnimation"
-              class="flex items-center justify-between text-xs py-1"
+              class="flex-between text-xs py-1"
             >
               <span class="text-muted-foreground">动画持续时间 (ms)</span>
               <NumberField
@@ -641,13 +614,13 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 留存与清理 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">留存与自动清理</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>留存与自动清理</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">最大保留弹幕数</span>
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount"
@@ -657,7 +630,7 @@ function toggleFilterType(val: string, checked: boolean) {
                   @update:model-value="danmakuWindow.danmakuWindowSetting.maxDanmakuCount = $event || 50"
                 />
               </div>
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">自动消失时间 (秒)</span>
                 <NumberField
                   :model-value="danmakuWindow.danmakuWindowSetting.autoDisappearTime"
@@ -686,9 +659,9 @@ function toggleFilterType(val: string, checked: boolean) {
         class="pt-3 space-y-3 client-readable"
       >
         <!-- 事件类型过滤 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">事件类型接收过滤</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>事件类型接收过滤</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -708,9 +681,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 渲染元素显隐 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">展示元素显隐</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>展示元素显隐</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -731,9 +704,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 表情与资源 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-            <CardTitle class="text-sm font-semibold">Bilibili 官方表情包数据</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+            <CardTitle>Bilibili 官方表情包数据</CardTitle>
             <Button
               variant="secondary"
               :disabled="emojiLoading"

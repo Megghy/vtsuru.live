@@ -7,8 +7,9 @@
  */
 
 export enum BiliAuthCodeStatusType {
-  NotBind = 0,
-  Active = 1,
-  Notfound = 2,
-  Inactive = 3,
+  NotBind= 0,
+  Active= 1,
+  Notfound= 2,
+  Inactive= 3,
+
 }

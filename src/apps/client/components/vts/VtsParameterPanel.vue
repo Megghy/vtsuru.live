@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { VtsParamSlot } from '@/apps/client/store/useVtsStore'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
@@ -33,9 +34,9 @@ function addSlot() {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">参数控制</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+      <CardTitle>参数控制</CardTitle>
       <div class="flex items-center gap-2">
         <Button @click="addSlot"> 添加参数槽 </Button>
         <Button
@@ -55,7 +56,7 @@ function addSlot() {
         :key="slot.id"
         class="p-2.5 sm:px-3 border border-border rounded-md bg-muted space-y-2.5"
       >
-        <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex-between gap-2 flex-wrap">
           <div class="flex items-center gap-2">
             <span class="text-xs font-semibold text-foreground">
               {{ slot.name || slot.parameterId }}
@@ -137,70 +138,78 @@ function addSlot() {
           />
         </div>
 
-        <details class="group text-xs pt-1">
-          <summary
-            class="cursor-pointer font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 select-none"
+        <Accordion
+          type="single"
+          collapsible
+          class="text-xs pt-1 border-t"
+        >
+          <AccordionItem
+            value="config"
+            class="border-b-0"
           >
-            <span>参数配置</span>
-            <span class="transition-transform group-open:rotate-180 text-[10px]">▾</span>
-          </summary>
-          <div class="flex flex-wrap items-center gap-2 pt-2 border-t mt-2">
-            <Input
-              v-model="slot.name"
-              placeholder="显示名"
-              class="w-28"
-              @blur="updateSlot({ ...slot })"
-            />
-            <Input
-              v-model="slot.parameterId"
-              placeholder="参数 ID"
-              class="w-36"
-              @blur="updateSlot({ ...slot })"
-            />
-            <div class="flex items-center gap-1">
-              <span class="text-muted-foreground">权重:</span>
-              <NumberField
-                v-model="slot.weight"
-                :min="0"
-                :step="0.1"
-                placeholder="权重"
-                class="w-20"
-                @update:model-value="updateSlot({ ...slot })"
-              />
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-muted-foreground">最小:</span>
-              <NumberField
-                v-model="slot.min"
-                :step="0.1"
-                placeholder="最小值"
-                class="w-20"
-                @update:model-value="updateSlot({ ...slot })"
-              />
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-muted-foreground">最大:</span>
-              <NumberField
-                v-model="slot.max"
-                :step="0.1"
-                placeholder="最大值"
-                class="w-20"
-                @update:model-value="updateSlot({ ...slot })"
-              />
-            </div>
-            <div class="flex items-center gap-1">
-              <span class="text-muted-foreground">步长:</span>
-              <NumberField
-                v-model="slot.step"
-                :min="0.0001"
-                :step="0.01"
-                placeholder="步长"
-                class="w-20"
-                @update:model-value="updateSlot({ ...slot })"
-              />
-            </div>
-          </div>
-        </details>
+            <AccordionTrigger class="py-1 text-muted-foreground hover:text-foreground hover:no-underline">
+              参数配置
+            </AccordionTrigger>
+            <AccordionContent class="pt-2 pb-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <Input
+                  v-model="slot.name"
+                  placeholder="显示名"
+                  class="w-28"
+                  @blur="updateSlot({ ...slot })"
+                />
+                <Input
+                  v-model="slot.parameterId"
+                  placeholder="参数 ID"
+                  class="w-36"
+                  @blur="updateSlot({ ...slot })"
+                />
+                <div class="flex items-center gap-1">
+                  <span class="text-muted-foreground">权重:</span>
+                  <NumberField
+                    v-model="slot.weight"
+                    :min="0"
+                    :step="0.1"
+                    placeholder="权重"
+                    class="w-20"
+                    @update:model-value="updateSlot({ ...slot })"
+                  />
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="text-muted-foreground">最小:</span>
+                  <NumberField
+                    v-model="slot.min"
+                    :step="0.1"
+                    placeholder="最小值"
+                    class="w-20"
+                    @update:model-value="updateSlot({ ...slot })"
+                  />
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="text-muted-foreground">最大:</span>
+                  <NumberField
+                    v-model="slot.max"
+                    :step="0.1"
+                    placeholder="最大值"
+                    class="w-20"
+                    @update:model-value="updateSlot({ ...slot })"
+                  />
+                </div>
+                <div class="flex items-center gap-1">
+                  <span class="text-muted-foreground">步长:</span>
+                  <NumberField
+                    v-model="slot.step"
+                    :min="0.0001"
+                    :step="0.01"
+                    placeholder="步长"
+                    class="w-20"
+                    @update:model-value="updateSlot({ ...slot })"
+                  />
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </CardContent>
   </Card>

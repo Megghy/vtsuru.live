@@ -128,7 +128,7 @@ const contentClass = computed(() => ({
     <template v-else-if="renderMode === 'block'">
       <div
         v-if="blockValidation && !blockValidation.ok"
-        class="flex flex-col items-center justify-center p-12 text-center"
+        class="flex-col-center p-12 text-center"
       >
         <div class="text-destructive font-semibold text-lg mb-2">页面配置错误</div>
         <div class="text-sm text-muted-foreground">该页面的发布配置无效，请联系页面所有者处理</div>
@@ -161,7 +161,7 @@ const contentClass = computed(() => ({
 
     <div
       v-else-if="pageSlug"
-      class="flex flex-col items-center justify-center p-12 text-center"
+      class="flex-col-center p-12 text-center"
     >
       <div class="text-3xl font-bold mb-2">404</div>
       <div class="text-lg font-medium mb-1">页面不存在</div>

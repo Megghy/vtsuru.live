@@ -5,6 +5,7 @@ import { nextTick, ref } from 'vue'
 
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
 import { trackManageToolSuccess } from '@/shared/services/umami'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -242,7 +243,7 @@ async function translateTask(task: ImageTask) {
 <template>
   <Card>
     <CardHeader class="flex flex-row items-center justify-between pb-4">
-      <CardTitle class="text-base font-semibold">文字识别 (OCR)</CardTitle>
+      <CardTitle class="text-base">文字识别 (OCR)</CardTitle>
       <div class="flex items-center gap-2">
         <Button
           variant="outline"
@@ -260,7 +261,7 @@ async function translateTask(task: ImageTask) {
       </div>
     </CardHeader>
 
-    <CardContent class="pt-0">
+    <CardContent>
       <div class="flex flex-col gap-3.5">
         <!-- Upload bar -->
         <div
@@ -420,22 +421,35 @@ async function translateTask(task: ImageTask) {
                     readonly
                     placeholder="翻译结果"
                   />
-                  <details class="line-details">
-                    <summary class="line-summary">逐行结果（{{ task.lines.length }} 行，悬停可高亮原图区域）</summary>
-                    <div class="line-list">
-                      <div
-                        v-for="(line, idx) in task.lines"
-                        :key="idx"
-                        class="line-item"
-                        :class="{ active: hoveredLineIdx === idx && activeTaskId === task.id }"
-                        @mouseenter="onLineHover(task.id, idx)"
-                        @mouseleave="onLineHover(task.id, null)"
-                      >
-                        <span class="line-text">{{ line.text }}</span>
-                        <span class="line-conf">{{ (line.confidence * 100).toFixed(0) }}%</span>
-                      </div>
-                    </div>
-                  </details>
+                  <Accordion
+                    type="single"
+                    collapsible
+                    class="border rounded-md px-3 text-xs"
+                  >
+                    <AccordionItem
+                      value="lines"
+                      class="border-b-0"
+                    >
+                      <AccordionTrigger class="py-2 text-muted-foreground hover:text-foreground hover:no-underline">
+                        逐行结果（{{ task.lines.length }} 行，悬停可高亮原图区域）
+                      </AccordionTrigger>
+                      <AccordionContent class="pt-1 pb-2">
+                        <div class="line-list">
+                          <div
+                            v-for="(line, idx) in task.lines"
+                            :key="idx"
+                            class="line-item"
+                            :class="{ active: hoveredLineIdx === idx && activeTaskId === task.id }"
+                            @mouseenter="onLineHover(task.id, idx)"
+                            @mouseleave="onLineHover(task.id, null)"
+                          >
+                            <span class="line-text">{{ line.text }}</span>
+                            <span class="line-conf">{{ (line.confidence * 100).toFixed(0) }}%</span>
+                          </div>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
               </div>
             </Spin>
@@ -558,28 +572,6 @@ async function translateTask(task: ImageTask) {
   border-radius: 6px;
 }
 
-.line-details {
-  border-radius: 6px;
-  border: 1px solid var(--border);
-}
-.line-summary {
-  padding: 8px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  user-select: none;
-  color: var(--muted-foreground);
-  list-style: none;
-}
-.line-summary::-webkit-details-marker {
-  display: none;
-}
-.line-summary::before {
-  content: '▶ ';
-  font-size: 10px;
-}
-.line-details[open] .line-summary::before {
-  content: '▼ ';
-}
 .line-list {
   overflow-y: auto;
   max-height: 260px;

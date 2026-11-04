@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AppStartData } from './appStartData'
+import type { AppStartData } from './appStartData';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfAppStartData {
-  message: string
-  code: number
-  data: AppStartData
+  message: string;
+  code: number;
+  data: AppStartData;
 }

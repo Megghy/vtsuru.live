@@ -107,7 +107,12 @@ onMounted(() => {
   const monacoLanguage = props.language === 'css' ? 'css' : 'vue'
   if (monacoLanguage === 'vue') void activateCustomHtmlVolar()
   widgetsHost = document.createElement('div')
-  widgetsHost.style.cssText = 'position:absolute;z-index:2147483647;overflow:visible;background:transparent'
+  widgetsHost.style.cssText =
+    'position:absolute;inset:0;z-index:2147483647;overflow:visible;background:transparent;pointer-events:none'
+  const widgetStyle = document.createElement('style')
+  widgetStyle.textContent =
+    '.monaco-hover,.suggest-widget,.parameter-hints-widget{pointer-events:auto;user-select:text}'
+  widgetsHost.append(widgetStyle)
   syncWidgetsHostTheme()
   document.body.append(widgetsHost)
   model = monaco.editor.createModel(
@@ -133,12 +138,13 @@ onMounted(() => {
     insertSpaces: true,
     fixedOverflowWidgets: true,
     overflowWidgetsDomNode: widgetsHost,
-    quickSuggestions: { other: true, comments: true, strings: true },
+    quickSuggestions: { other: 'on', comments: 'on', strings: 'on' },
     suggestOnTriggerCharacters: true,
     snippetSuggestions: 'inline',
     wordBasedSuggestions: 'currentDocument',
     tabCompletion: 'on',
     parameterHints: { enabled: true },
+    hover: { enabled: 'on', sticky: true, delay: 150, hidingDelay: 400 },
   })
   model.onDidChangeContent(() => emit('update:source', model!.getValue()))
   providers = registerCustomHtmlEditorProviders(monaco, monacoLanguage, () => props)

@@ -6,7 +6,43 @@ export interface CustomCodeTemplate {
   source: string
 }
 
-const css = `body{padding:24px}main{max-width:900px;margin:auto}button,input{font:inherit;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);color:inherit;background:var(--popover)}button{cursor:pointer}article{padding:16px 0;border-bottom:1px solid var(--border)}small{color:var(--muted-foreground)}img{width:80px;border-radius:50%}nav{display:flex;gap:8px;flex-wrap:wrap}`
+const css = `
+  body {
+    padding: 24px;
+  }
+  main {
+    max-width: 900px;
+    margin: auto;
+  }
+  button,
+  input {
+    font: inherit;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: inherit;
+    background: var(--popover);
+  }
+  button {
+    cursor: pointer;
+  }
+  article {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  small {
+    color: var(--muted-foreground);
+  }
+  img {
+    width: 80px;
+    border-radius: 50%;
+  }
+  nav {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+`
 
 export const CUSTOM_CODE_TEMPLATES: CustomCodeTemplate[] = [
   {
@@ -15,7 +51,7 @@ export const CUSTOM_CODE_TEMPLATES: CustomCodeTemplate[] = [
     source: `<script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-const ctx = ref(null)
+const ctx = ref<VtsuruPageContext | null>(null)
 onMounted(async () => {
   ctx.value = await vtsuru.getContext()
 })
@@ -57,7 +93,7 @@ import { onMounted, ref, watch } from 'vue'
 
 const keyword = ref('')
 const total = ref(0)
-const items = ref([])
+const items = ref<VtsuruSong[]>([])
 let sequence = 0
 async function render() {
   const current = ++sequence
@@ -89,14 +125,14 @@ onMounted(render)
     source: `<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-const weeks = ref([])
-const reserves = ref([])
+const weeks = ref<VtsuruScheduleWeek[]>([])
+const reserves = ref<VtsuruReserve[]>([])
 onMounted(async () => {
   const today = new Date()
   const thursday = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))
   thursday.setUTCDate(thursday.getUTCDate() + 4 - (thursday.getUTCDay() || 7))
   const year = thursday.getUTCFullYear()
-  const week = Math.ceil(((thursday - new Date(Date.UTC(year, 0, 1))) / 86400000 + 1) / 7)
+  const week = Math.ceil(((thursday.getTime() - Date.UTC(year, 0, 1)) / 86400000 + 1) / 7)
   const result = await vtsuru.getSchedule({ year, week })
   weeks.value = result.weeks
   reserves.value = result.reserves.filter((item) => item.year === year && item.week === week)
@@ -123,7 +159,7 @@ onMounted(async () => {
     source: `<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-const ranking = ref([])
+const ranking = ref<VtsuruRankingItem[]>([])
 onMounted(async () => {
   const { totalRanking } = await vtsuru.getCheckInRanking({ count: 10 })
   ranking.value = totalRanking

@@ -7,12 +7,13 @@
  */
 
 export enum FunctionTypes {
-  SongList = 0,
-  QuestionBox = 1,
-  Schedule = 2,
-  SongRequest = 3,
-  Queue = 4,
-  Point = 5,
-  VideoCollect = 6,
-  CheckInRanking = 7,
+  SongList= 0,
+  QuestionBox= 1,
+  Schedule= 2,
+  SongRequest= 3,
+  Queue= 4,
+  Point= 5,
+  VideoCollect= 6,
+  CheckInRanking= 7,
+
 }

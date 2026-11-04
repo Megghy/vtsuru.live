@@ -4,6 +4,7 @@ import { computed } from 'vue'
 
 import { OBS_CATEGORIES, getCategoryCounts, obsComponentList } from '@/apps/obs-store/registry'
 import type { ObsCategory, ObsComponentStatus } from '@/apps/obs-store/registry'
+import { Badge } from '@/shared/ui/badge'
 import { Input } from '@/shared/ui/input'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
@@ -36,11 +37,12 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2">
           <h1 class="m-0 text-lg font-semibold text-foreground leading-tight">OBS 独立组件</h1>
-          <span
-            class="text-[11px] text-muted-foreground bg-muted border border-border py-px px-1.5 rounded-full font-medium"
+          <Badge
+            variant="secondary"
+            size="xs"
           >
             {{ availableCount }} 个可用
-          </span>
+          </Badge>
         </div>
         <p class="mt-1.5 mb-0 text-[13px] text-muted-foreground leading-snug">
           收录独立 OBS 浏览器源。纯本地组件即开即用，需要同步的组件会在配置台保存并实时更新。
@@ -63,6 +65,7 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
     <div class="flex-between flex-wrap gap-3 pb-3 border-b border-border max-md:flex-col max-md:items-stretch">
       <ToggleGroup
         type="single"
+        size="sm"
         :model-value="props.category"
         class="flex-wrap h-auto gap-1 bg-transparent border-none p-0 justify-start"
         @update:model-value="(val) => val && emit('update:category', val as ObsCategory)"
@@ -71,7 +74,7 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
           v-for="cat in OBS_CATEGORIES"
           :key="cat.id"
           :value="cat.id"
-          class="gap-1.5 h-control-sm px-2.5 rounded-md border border-transparent data-[state=on]:bg-card data-[state=on]:border-border data-[state=on]:font-semibold data-[state=on]:shadow-xs hover:bg-muted"
+          class="gap-1.5 border border-transparent data-[state=on]:bg-card data-[state=on]:border-border data-[state=on]:shadow-xs"
         >
           <component
             :is="cat.icon"

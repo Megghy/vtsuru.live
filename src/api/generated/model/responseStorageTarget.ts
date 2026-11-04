@@ -5,26 +5,26 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { StorageProviderKind } from './storageProviderKind'
-import type { StorageTargetStatus } from './storageTargetStatus'
+import type { StorageProviderKind } from './storageProviderKind';
+import type { StorageTargetStatus } from './storageTargetStatus';
 
 export interface ResponseStorageTarget {
-  id: number
-  name: string
-  provider: StorageProviderKind
+  id: number;
+  name: string;
+  provider: StorageProviderKind;
   /** @nullable */
-  endpoint?: string | null
+  endpoint?: string | null;
   /** @nullable */
-  region?: string | null
+  region?: string | null;
   /** @nullable */
-  bucket?: string | null
+  bucket?: string | null;
   /** @nullable */
-  rootPath?: string | null
-  status: StorageTargetStatus
-  isSite: boolean
-  hasCredentials: boolean
-  fileCount: number
-  usedBytes: number
-  createTime: string
-  updateTime: string
+  rootPath?: string | null;
+  status: StorageTargetStatus;
+  isSite: boolean;
+  hasCredentials: boolean;
+  fileCount: number;
+  usedBytes: number;
+  createTime: string;
+  updateTime: string;
 }

@@ -112,7 +112,7 @@ onMounted(() => {
         variant="brand"
         size="icon"
         class="assistant-fab fixed right-5 max-[600px]:right-3 bottom-[84px] max-[600px]:bottom-[72px] z-[1500] h-11 w-11 rounded-full shadow-lg"
-        title="VTsuru 助手"
+        aria-label="VTsuru 助手"
         @click="openAssistant"
       >
         <component

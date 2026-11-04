@@ -173,8 +173,7 @@ onBeforeUnmount(() => {
           <Button
             variant="ghost"
             size="icon"
-            class="size-8 rounded-full text-muted-foreground hover:text-foreground"
-            :title="`订阅设置 (${settingsSummary})`"
+            class="size-8 rounded-full text-muted-foreground"
             :aria-label="`订阅设置 (${settingsSummary})`"
           >
             <component
@@ -184,10 +183,7 @@ onBeforeUnmount(() => {
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent
-          align="end"
-          class="w-72 p-3 text-xs space-y-3"
-        >
+        <PopoverContent align="end" class="w-72 space-y-3">
           <div class="space-y-0.5 pb-1.5 border-b border-border">
             <strong class="text-xs font-semibold block text-foreground">订阅参数设置</strong>
             <span class="text-[11px] text-muted-foreground block truncate">{{ settingsSummary }}</span>
@@ -246,7 +242,7 @@ onBeforeUnmount(() => {
 
     <!-- 普通内联模式下的可折叠设置栏 -->
     <template v-if="!docked">
-      <div class="flex items-center justify-between w-full text-xs pt-2.5 border-t border-border/60">
+      <div class="flex-between w-full text-xs pt-2.5 border-t border-border/60">
         <span class="text-[11px] text-muted-foreground truncate">{{ settingsSummary }}</span>
         <Button
           variant="ghost"

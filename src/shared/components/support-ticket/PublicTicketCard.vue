@@ -40,10 +40,8 @@ const badgeVariant = computed(() => {
       :alt="ticket.images[0].name"
     />
     <div class="flex min-w-0 flex-1 flex-col gap-2 py-3 px-3.5">
-      <div class="flex items-center justify-between gap-2.5 text-muted-foreground text-xs">
-        <Badge
-          :variant="badgeVariant"
-        >
+      <div class="flex-between gap-2.5 text-muted-foreground text-xs">
+        <Badge :variant="badgeVariant">
           {{ supportTicketStatusMeta[ticket.status].label }}
         </Badge>
         <span>{{ supportTicketTypeLabel(ticket.type) }}</span>
@@ -51,7 +49,7 @@ const badgeVariant = computed(() => {
       <h2 class="line-clamp-2 m-0 text-foreground text-[15px] font-semibold leading-normal wrap-anywhere">
         {{ ticket.title }}
       </h2>
-      <div class="flex items-center justify-between gap-2.5 text-muted-foreground text-xs mt-auto">
+      <div class="flex-between gap-2.5 text-muted-foreground text-xs mt-auto">
         <span>#{{ ticket.id }}</span>
         <span>{{ relativeTime }}</span>
       </div>

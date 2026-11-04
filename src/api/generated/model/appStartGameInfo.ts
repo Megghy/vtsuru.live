@@ -7,5 +7,5 @@
  */
 
 export interface AppStartGameInfo {
-  game_id?: string
+  game_id?: string;
 }

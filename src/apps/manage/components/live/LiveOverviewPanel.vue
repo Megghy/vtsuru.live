@@ -209,7 +209,7 @@ watch(() => props.live.liveId, fetchRanking)
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
       <Card class="p-3.5">
         <div class="flex flex-col gap-1.5">
-          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+          <div class="flex-between text-xs text-muted-foreground font-medium">
             <span>直播历时</span>
             <component
               :is="Clock24Regular"
@@ -227,7 +227,7 @@ watch(() => props.live.liveId, fetchRanking)
 
       <Card class="p-3.5">
         <div class="flex flex-col gap-1.5">
-          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+          <div class="flex-between text-xs text-muted-foreground font-medium">
             <span>弹幕总数 / 发言人数</span>
             <component
               :is="Chat24Regular"
@@ -246,7 +246,7 @@ watch(() => props.live.liveId, fetchRanking)
 
       <Card class="p-3.5">
         <div class="flex flex-col gap-1.5">
-          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+          <div class="flex-between text-xs text-muted-foreground font-medium">
             <span>总打赏收益</span>
             <component
               :is="Money24Regular"
@@ -262,7 +262,7 @@ watch(() => props.live.liveId, fetchRanking)
 
       <Card class="p-3.5">
         <div class="flex flex-col gap-1.5">
-          <div class="flex items-center justify-between text-xs text-muted-foreground font-medium">
+          <div class="flex-between text-xs text-muted-foreground font-medium">
             <span>总互动人次</span>
             <component
               :is="HandRight24Regular"
@@ -282,7 +282,7 @@ watch(() => props.live.liveId, fetchRanking)
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
       <!-- 左侧：弹幕热度时间轴波形走势 (8 cols) -->
       <Card class="lg:col-span-8 p-3.5 flex flex-col">
-        <div class="flex items-center justify-between pb-2 mb-2 border-b border-border">
+        <div class="flex-between pb-2 mb-2 border-b border-border">
           <span class="text-sm font-semibold">弹幕热度时间轴走势</span>
           <span class="text-xs text-muted-foreground flex items-center gap-1">
             <component
@@ -342,7 +342,7 @@ watch(() => props.live.liveId, fetchRanking)
         </div>
         <div
           v-else
-          class="h-36 flex items-center justify-center text-xs text-muted-foreground"
+          class="h-36 flex-center text-xs text-muted-foreground"
         >
           暂无详细时段弹幕事件
         </div>
@@ -409,7 +409,7 @@ watch(() => props.live.liveId, fetchRanking)
 
     <!-- 底部：本场打赏贡献榜 Top 10 -->
     <Card class="p-3.5">
-      <div class="flex items-center justify-between pb-2 mb-3 border-b border-border">
+      <div class="flex-between pb-2 mb-3 border-b border-border">
         <span class="text-sm font-semibold">本场打赏贡献榜 (Top 10)</span>
         <span class="text-xs text-muted-foreground flex items-center gap-1">
           <component
@@ -441,7 +441,7 @@ watch(() => props.live.liveId, fetchRanking)
           class="flex items-center gap-2.5 p-2 rounded-lg border border-border bg-card/50"
         >
           <div
-            class="size-5 rounded flex items-center justify-center text-[11px] font-bold shrink-0"
+            class="size-5 rounded flex-center text-[11px] font-bold shrink-0"
             :style="getRankBadgeStyle(idx)"
           >
             {{ idx + 1 }}

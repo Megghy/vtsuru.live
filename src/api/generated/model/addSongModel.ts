@@ -5,41 +5,41 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SongPlatform } from './songPlatform'
-import type { SongRequestOption } from './songRequestOption'
+import type { SongPlatform } from './songPlatform';
+import type { SongRequestOption } from './songRequestOption';
 
 export interface AddSongModel {
   /**
-   * @minLength 0
-   * @maxLength 100
-   */
-  name: string
+     * @minLength 0
+     * @maxLength 100
+     */
+  name: string;
   /**
-   * @minLength 0
-   * @maxLength 100
-   * @nullable
-   */
-  translateName?: string | null
-  id: number
-  from: SongPlatform
-  author: string[]
+     * @minLength 0
+     * @maxLength 100
+     * @nullable
+     */
+  translateName?: string | null;
+  id: number;
+  from: SongPlatform;
+  author: string[];
   /**
-   * @minLength 0
-   * @maxLength 200
-   * @nullable
-   */
-  url?: string | null
+     * @minLength 0
+     * @maxLength 200
+     * @nullable
+     */
+  url?: string | null;
   /**
-   * @minLength 0
-   * @maxLength 100
-   * @nullable
-   */
-  description?: string | null
+     * @minLength 0
+     * @maxLength 100
+     * @nullable
+     */
+  description?: string | null;
   /** @nullable */
-  language?: string[] | null
+  language?: string[] | null;
   /** @nullable */
-  tags?: string[] | null
-  options?: SongRequestOption
+  tags?: string[] | null;
+  options?: SongRequestOption;
   /** @nullable */
-  cover?: string | null
+  cover?: string | null;
 }

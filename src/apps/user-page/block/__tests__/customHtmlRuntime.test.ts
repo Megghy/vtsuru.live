@@ -34,6 +34,8 @@ describe('customHtmlRuntime', () => {
     expect(result.srcdoc).toContain('ResizeObserver')
     expect(result.srcdoc).toContain("connect-src 'none'")
     expect(result.srcdoc).toContain('Vue.createApp')
+    expect(result.srcdoc).toContain('VueUse')
+    expect(result.srcdoc).toContain('dayjs')
     expect(result.srcdoc).not.toContain('allow-same-origin')
   })
 

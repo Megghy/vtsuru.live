@@ -37,9 +37,9 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
 </script>
 
 <template>
-  <Card class="p-3 border bg-card">
+  <Card class="p-3">
     <CardContent class="p-0">
-      <div class="flex items-center justify-between gap-3 max-[480px]:items-start">
+      <div class="flex-between gap-3 max-[480px]:items-start">
         <div>
           <h2 class="flex items-center gap-1.5 m-0 text-sm font-semibold text-foreground">
             <CheckmarkCircle24Regular class="size-4.5 text-primary" />
@@ -71,11 +71,8 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
         <span v-if="checkedAt && !refreshing && !error">上次检查 {{ new Date(checkedAt).toLocaleTimeString() }}</span>
       </div>
 
-      <Alert
-        v-if="error"
-        class="border-destructive/20 bg-destructive/10 text-destructive py-2 px-2.5 my-2"
-      >
-        <AlertDescription class="text-xs m-0"> {{ error }}，请处理后重新检查。 </AlertDescription>
+      <Alert size="sm" v-if="error" class="border-destructive/20 bg-destructive/10 text-destructive my-2">
+        <AlertDescription class="m-0"> {{ error }}，请处理后重新检查。 </AlertDescription>
       </Alert>
 
       <ul
@@ -88,24 +85,14 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
           :data-check="check.id"
           class="flex items-center gap-3 py-2.5 max-[480px]:gap-2 max-[480px]:flex-wrap"
         >
-          <Badge
-            variant="outline"
-            class="text-[10px] h-5 px-1.5 shrink-0"
-            :class="getTagBadgeClass(check.status)"
-          >
+          <Badge variant="outline" size="xs" class="h-5" :class="getTagBadgeClass(check.status)">
             {{ labels[check.status] }}
           </Badge>
           <div class="flex-1 min-w-0 break-words max-[480px]:basis-[calc(100%-60px)]">
             <strong class="text-xs font-medium text-foreground block">{{ check.title }}</strong>
             <p class="text-xs text-muted-foreground mt-0.5">{{ check.detail }}</p>
           </div>
-          <Button
-            v-if="check.status !== 'success'"
-            size="xs"
-            variant="ghost"
-            class="h-6 text-[11px] shrink-0 max-[480px]:ml-auto"
-            @click="$emit('navigate', check.target)"
-          >
+          <Button v-if="check.status !== 'success'" size="xs" variant="ghost" class="shrink-0 max-[480px]:ml-auto" @click="$emit('navigate', check.target)">
             {{ targets[check.target] }}
           </Button>
         </li>

@@ -127,10 +127,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           :default-tag="cfg.defaultTag"
           :show-public-questions="cfg.showPublicQuestions"
         />
-        <Alert
-          v-else
-          class="text-xs py-2"
-        >
+        <Alert size="sm" v-else>
           <AlertDescription> 未加载到用户信息，无法展示站内提问箱 </AlertDescription>
         </Alert>
       </template>
@@ -143,10 +140,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           {{ cfg.description }}
         </div>
 
-        <Alert
-          v-if="!url"
-          class="text-xs py-2"
-        >
+        <Alert size="sm" v-if="!url">
           <AlertDescription> 未配置跳转链接 </AlertDescription>
         </Alert>
 
@@ -185,10 +179,7 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
               loading="lazy"
             />
           </div>
-          <Alert
-            v-else-if="externalEmbedRejected"
-            class="embed-notice text-xs py-2"
-          >
+          <Alert size="sm" v-else-if="externalEmbedRejected" class="embed-notice">
             <AlertDescription> 该来源暂不支持安全内嵌，请使用上方按钮访问 </AlertDescription>
           </Alert>
         </template>

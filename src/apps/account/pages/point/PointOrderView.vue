@@ -174,40 +174,19 @@ onMounted(() => void loadOrders())
                   <SelectValue placeholder="订单状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    value="all"
-                    class="text-xs"
-                    >全部状态</SelectItem
+                  <SelectItem value="all">全部状态</SelectItem
                   >
-                  <SelectItem
-                    :value="String(PointOrderStatus.Pending)"
-                    class="text-xs"
-                    >待处理</SelectItem
+                  <SelectItem :value="String(PointOrderStatus.Pending)">待处理</SelectItem
                   >
-                  <SelectItem
-                    :value="String(PointOrderStatus.Shipped)"
-                    class="text-xs"
-                    >已发货</SelectItem
+                  <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem
                   >
-                  <SelectItem
-                    :value="String(PointOrderStatus.InProgress)"
-                    class="text-xs"
-                    >服务进行中</SelectItem
+                  <SelectItem :value="String(PointOrderStatus.InProgress)">服务进行中</SelectItem
                   >
-                  <SelectItem
-                    :value="String(PointOrderStatus.Rejected)"
-                    class="text-xs"
-                    >已拒绝</SelectItem
+                  <SelectItem :value="String(PointOrderStatus.Rejected)">已拒绝</SelectItem
                   >
-                  <SelectItem
-                    :value="String(PointOrderStatus.Cancelled)"
-                    class="text-xs"
-                    >已取消</SelectItem
+                  <SelectItem :value="String(PointOrderStatus.Cancelled)">已取消</SelectItem
                   >
-                  <SelectItem
-                    :value="String(PointOrderStatus.Completed)"
-                    class="text-xs"
-                    >已完成</SelectItem
+                  <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem
                   >
                 </SelectContent>
               </Select>

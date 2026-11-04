@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
 import { createDefaultAutoAction } from '@/apps/client/store/autoAction/utils'
@@ -7,10 +6,8 @@ import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Badge } from '@/shared/ui/badge'
-import { NumberField } from '@/shared/ui/number-field'
-import { Switch } from '@/shared/ui/switch'
-import { Textarea } from '@/shared/ui/textarea'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 const props = defineProps({
   action: {
@@ -101,34 +98,36 @@ const customJsModified = computed(() => {
             >
               用户过滤条件
             </span>
-            <Badge
-              v-if="userFilterModified"
-              variant="outline"
-              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
-            >
+            <Badge v-if="userFilterModified" variant="warning" size="xs">
               已修改
             </Badge>
           </div>
         </AccordionTrigger>
 
         <AccordionContent class="pt-2 pb-3 space-y-3">
-          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-            <span class="text-xs font-medium text-foreground">启用过滤</span>
-            <Switch v-model:checked="action.triggerConfig.userFilterEnabled" />
-          </div>
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="启用过滤"
+            v-model="action.triggerConfig.userFilterEnabled"
+          />
 
           <div
             v-if="action.triggerConfig.userFilterEnabled"
             class="space-y-2 pl-2 border-l-2 border-primary/30"
           >
-            <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-              <span class="text-xs font-medium text-foreground">要求本房勋章</span>
-              <Switch v-model:checked="action.triggerConfig.requireMedal" />
-            </div>
-            <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-              <span class="text-xs font-medium text-foreground">要求任意舰长</span>
-              <Switch v-model:checked="action.triggerConfig.requireCaptain" />
-            </div>
+            <SettingRow
+              type="switch"
+              variant="compact"
+              title="要求本房勋章"
+              v-model="action.triggerConfig.requireMedal"
+            />
+            <SettingRow
+              type="switch"
+              variant="compact"
+              title="要求任意舰长"
+              v-model="action.triggerConfig.requireCaptain"
+            />
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -145,55 +144,38 @@ const customJsModified = computed(() => {
             >
               频率与延迟控制
             </span>
-            <Badge
-              v-if="cooldownModified"
-              variant="outline"
-              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
-            >
+            <Badge v-if="cooldownModified" variant="warning" size="xs">
               已修改
             </Badge>
           </div>
         </AccordionTrigger>
 
         <AccordionContent class="pt-2 pb-3 space-y-3">
-          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <div class="flex items-center gap-1 cursor-help">
-                    <span class="text-xs font-medium text-foreground">忽略全局冷却</span>
-                    <Info16Regular class="size-3.5 text-muted-foreground" />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent class="text-xs"> 开启后此操作不受全局发送频率限制的影响 </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <Switch v-model:checked="action.ignoreCooldown" />
-          </div>
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="忽略全局冷却"
+            hint="开启后此操作不受全局发送频率限制的影响"
+            v-model="action.ignoreCooldown"
+          />
 
-          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-            <span class="text-xs font-medium text-foreground">延迟执行 (秒)</span>
-            <NumberField
-              :model-value="action.actionConfig.delaySeconds"
-              :min="0"
-              :max="600"
-              placeholder="0"
-              class="w-28"
-              @update:model-value="action.actionConfig.delaySeconds = $event || 0"
-            />
-          </div>
+          <SettingRow
+            type="number"
+            variant="compact"
+            title="延迟执行 (秒)"
+            :min="0"
+            :max="600"
+            v-model="action.actionConfig.delaySeconds"
+          />
 
-          <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-            <span class="text-xs font-medium text-foreground">冷却时间 (秒)</span>
-            <NumberField
-              :model-value="action.actionConfig.cooldownSeconds"
-              :min="0"
-              :max="3600"
-              placeholder="0"
-              class="w-28"
-              @update:model-value="action.actionConfig.cooldownSeconds = $event || 0"
-            />
-          </div>
+          <SettingRow
+            type="number"
+            variant="compact"
+            title="冷却时间 (秒)"
+            :min="0"
+            :max="3600"
+            v-model="action.actionConfig.cooldownSeconds"
+          />
         </AccordionContent>
       </AccordionItem>
 
@@ -209,27 +191,19 @@ const customJsModified = computed(() => {
             >
               逻辑判断表达式
             </span>
-            <Badge
-              v-if="logicalExpressionModified"
-              variant="outline"
-              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
-            >
+            <Badge v-if="logicalExpressionModified" variant="warning" size="xs">
               已配置
             </Badge>
           </div>
         </AccordionTrigger>
 
         <AccordionContent class="pt-2 pb-3 space-y-2">
-          <div class="text-xs text-muted-foreground">
-            使用 JavaScript 语法，仅在返回值为真时执行。例如：
-            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]"
-              >user.guardLevel &gt; 0 || gift.price &gt;= 10</code
-            >
-          </div>
-          <Textarea
-            v-model="action.logicalExpression"
+          <FormField
+            type="textarea"
             placeholder="输入表达式..."
-            class="font-mono text-xs resize-none min-h-[64px]"
+            control-class="font-mono resize-none min-h-[64px]"
+            description="使用 JavaScript 语法，仅在返回值为真时执行。例如：user.guardLevel > 0 || gift.price >= 10"
+            v-model="action.logicalExpression"
           />
         </AccordionContent>
       </AccordionItem>
@@ -246,27 +220,19 @@ const customJsModified = computed(() => {
             >
               自定义脚本 (JS)
             </span>
-            <Badge
-              v-if="customJsModified"
-              variant="outline"
-              class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
-            >
+            <Badge v-if="customJsModified" variant="warning" size="xs">
               已编写
             </Badge>
           </div>
         </AccordionTrigger>
 
         <AccordionContent class="pt-2 pb-3 space-y-2">
-          <div class="text-xs text-muted-foreground">
-            在操作执行前运行。可访问
-            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">context</code>,
-            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">event</code>,
-            <code class="px-1 py-0.5 rounded bg-muted text-primary font-mono text-[11px]">biliFunc</code> 等变量。
-          </div>
-          <Textarea
-            v-model="action.executeCommand"
+          <FormField
+            type="textarea"
             placeholder="输入要执行的JS代码..."
-            class="font-mono text-xs resize-none min-h-[96px]"
+            control-class="font-mono resize-none min-h-[96px]"
+            description="在操作执行前运行。可访问 context, event, biliFunc 等变量。"
+            v-model="action.executeCommand"
           />
         </AccordionContent>
       </AccordionItem>

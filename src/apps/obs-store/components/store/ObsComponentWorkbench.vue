@@ -11,6 +11,7 @@ import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
+import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
@@ -106,14 +107,14 @@ async function handleCopy() {
         <Button
           variant="ghost"
           size="sm"
-          class="gap-1.5 text-xs text-muted-foreground hover:text-foreground shrink-0"
+          class="gap-1.5 text-xs text-muted-foreground shrink-0"
           @click="emit('back')"
         >
           <ArrowLeft24Regular class="size-4" />
           返回组件库
         </Button>
 
-        <div class="h-4 w-px bg-border/70 shrink-0" />
+        <Separator orientation="vertical" class="h-4 shrink-0" />
 
         <div class="flex-center size-8 rounded-lg bg-brand-soft text-brand shrink-0">
           <component
@@ -128,15 +129,9 @@ async function handleCopy() {
               {{ props.component.name }}
             </h1>
             <Badge
-              variant="outline"
-              :class="[
-                'text-[10px] h-4.5 px-1.5',
-                props.component.status === 'beta'
-                  ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
-                  : isReady
-                    ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
-                    : 'text-muted-foreground',
-              ]"
+              :variant="props.component.status === 'beta' ? 'warning' : isReady ? 'success' : 'outline'"
+              size="xs"
+              :class="!isReady && props.component.status !== 'beta' ? 'text-muted-foreground' : undefined"
             >
               {{ statusLabel }}
             </Badge>

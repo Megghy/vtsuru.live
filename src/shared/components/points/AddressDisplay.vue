@@ -22,7 +22,7 @@ const elementRef = ref()
   <div
     v-else
     ref="elementRef"
-    class="flex items-center justify-between gap-3 text-xs"
+    class="flex-between gap-3 text-xs"
   >
     <div class="flex flex-col gap-1 min-w-0 flex-1">
       <div
@@ -39,10 +39,7 @@ const elementRef = ref()
       </div>
 
       <div class="flex items-center gap-1.5 text-muted-foreground">
-        <Badge
-          variant="secondary"
-          class="text-[10px] h-4.5 px-1 font-normal shrink-0"
-        >
+        <Badge variant="secondary" size="xs">
           详细地址
         </Badge>
         <span
@@ -58,10 +55,7 @@ const elementRef = ref()
         v-if="size !== 'small'"
         class="flex items-center gap-1.5 text-muted-foreground"
       >
-        <Badge
-          variant="secondary"
-          class="text-[10px] h-4.5 px-1 font-normal shrink-0"
-        >
+        <Badge variant="secondary" size="xs">
           收货人
         </Badge>
         <span class="truncate">{{ address.phone }} {{ address.name }}</span>

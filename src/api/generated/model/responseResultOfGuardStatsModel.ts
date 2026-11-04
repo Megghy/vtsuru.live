@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GuardStatsModel } from './guardStatsModel'
+import type { GuardStatsModel } from './guardStatsModel';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfGuardStatsModel {
-  message: string
-  code: number
-  data: GuardStatsModel
+  message: string;
+  code: number;
+  data: GuardStatsModel;
 }

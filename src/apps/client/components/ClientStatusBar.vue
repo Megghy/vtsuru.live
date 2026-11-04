@@ -85,7 +85,7 @@ function toggleGiftWindow() {
 
 <template>
   <footer
-    class="flex items-center justify-between h-6.5 min-h-6.5 px-2.5 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3"
+    class="flex-between h-6.5 min-h-6.5 px-2.5 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3"
   >
     <!-- 左侧：连接与采集源状态 -->
     <div class="flex items-center gap-2 whitespace-nowrap shrink-0">
@@ -161,7 +161,7 @@ function toggleGiftWindow() {
 
     <!-- 中间：实时直播互动数据指标 (点击可一键前往中控台) -->
     <div
-      class="group flex-1 flex items-center justify-center cursor-pointer px-2 py-0.5 rounded whitespace-nowrap transition-all duration-200 hover:bg-popover hover:text-foreground"
+      class="group flex-1 flex-center cursor-pointer px-2 py-0.5 rounded whitespace-nowrap transition-all duration-200 hover:bg-popover hover:text-foreground"
       title="点击前往「中控台」查看全景大盘"
       @click="goToDashboard"
     >
@@ -249,7 +249,7 @@ function toggleGiftWindow() {
               />
               <span>弹幕浮窗</span>
               <span
-                class="inline-flex items-center justify-center px-1 rounded text-[9px] font-semibold leading-tight"
+                class="inline-flex-center px-1 rounded text-[9px] font-semibold leading-tight"
                 :class="danmakuWindow.isDanmakuWindowOpen ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'"
               >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '开' : '关' }}
@@ -281,7 +281,7 @@ function toggleGiftWindow() {
               />
               <span>礼物排行</span>
               <span
-                class="inline-flex items-center justify-center px-1 rounded text-[9px] font-semibold leading-tight"
+                class="inline-flex-center px-1 rounded text-[9px] font-semibold leading-tight"
                 :class="giftWindow.isGiftWindowOpen ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'"
               >
                 {{ giftWindow.isGiftWindowOpen ? '开' : '关' }}

@@ -31,6 +31,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { DateRangePicker } from '@/shared/ui/date-picker'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -511,7 +512,7 @@ function onTabChange(value: string | number) {
         <a
           href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
           target="_blank"
-          class="inline-flex items-center justify-center rounded-md text-xs font-medium h-8 px-4 bg-brand text-brand-foreground hover:bg-brand/90"
+          class="inline-flex-center rounded-md text-xs font-medium h-8 px-4 bg-brand text-brand-foreground hover:bg-brand/90"
         >
           查看部署指南 →
         </a>
@@ -538,7 +539,7 @@ function onTabChange(value: string | number) {
           class="space-y-4"
         >
           <!-- 筛选与操作工具栏 -->
-          <div class="flex items-center justify-between flex-wrap gap-2.5">
+          <div class="flex-between flex-wrap gap-2.5">
             <div class="flex items-center gap-2 flex-wrap">
               <!-- 快捷区间 -->
               <ToggleGroup type="single">
@@ -663,20 +664,8 @@ function onTabChange(value: string | number) {
                 type="datetime-local"
                 class="w-48"
               />
-              <Input
-                v-model.number="manualGuardNum"
-                type="number"
-                min="1"
-                placeholder="数量"
-                class="w-20"
-              />
-              <Input
-                v-model.number="manualGuardPrice"
-                type="number"
-                min="0"
-                placeholder="价格(可选)"
-                class="w-28"
-              />
+              <NumberField v-model="manualGuardNum" min="1" placeholder="数量" class="w-20" / :show-buttons="false">
+              <NumberField v-model="manualGuardPrice" min="0" placeholder="价格(可选)" class="w-28" / :show-buttons="false">
 
               <Button
                 variant="default"
@@ -690,28 +679,18 @@ function onTabChange(value: string | number) {
           </div>
 
           <!-- 统计与视图切换条 -->
-          <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+          <div class="flex-between flex-wrap gap-2 text-xs">
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-muted-foreground">
                 已加载 {{ eventSummary.count }} 条{{ hasMore ? ' (可继续加载)' : '' }}
               </span>
-              <Badge
-                variant="secondary"
-                class="text-[11px] px-2 py-0.5"
-              >
+              <Badge variant="secondary" size="sm" class="py-0.5">
                 人数 {{ eventSummary.uniqueUsers }}
               </Badge>
-              <Badge
-                variant="outline"
-                class="text-[11px] px-2 py-0.5 font-medium"
-              >
+              <Badge variant="outline" size="sm" class="py-0.5 font-medium">
                 金额合计 ¥{{ eventSummary.totalPrice }}
               </Badge>
-              <Badge
-                v-if="selectedType === EventDataTypes.Guard"
-                variant="outline"
-                class="text-[11px] px-2 py-0.5"
-              >
+              <Badge v-if="selectedType === EventDataTypes.Guard" variant="outline" size="sm" class="py-0.5">
                 数量合计 {{ eventSummary.totalNum }}
               </Badge>
             </div>
@@ -767,12 +746,7 @@ function onTabChange(value: string | number) {
                 >
                   <AlertDialog>
                     <AlertDialogTrigger as-child>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        class="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        aria-label="删除"
-                      >
+                      <Button variant="ghost" size="xs" class="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10" aria-label="删除">
                         <component
                           :is="Delete24Regular"
                           class="size-3"
@@ -801,11 +775,7 @@ function onTabChange(value: string | number) {
 
                 <!-- 标签 -->
                 <div class="flex items-center gap-1">
-                  <Badge
-                    v-if="selectedType === EventDataTypes.Guard"
-                    variant="outline"
-                    class="text-[9px] px-1 py-0 h-3.5"
-                  >
+                  <Badge v-if="selectedType === EventDataTypes.Guard" variant="outline" class="text-[9px] px-1 py-0 h-3.5">
                     {{ item.msg }}
                   </Badge>
                   <span
@@ -886,10 +856,7 @@ function onTabChange(value: string | number) {
                     v-if="selectedEvents.length === 0"
                     class="text-center"
                   >
-                    <TableCell
-                      colspan="7"
-                      class="py-8 text-xs text-muted-foreground"
-                    >
+                    <TableCell colspan="7" class="py-8 text-muted-foreground">
                       没有找到事件记录
                     </TableCell>
                   </TableRow>
@@ -897,21 +864,18 @@ function onTabChange(value: string | number) {
                     v-for="item in selectedEvents"
                     :key="item.id ?? `${item.time}_${item.uid}_${item.price}`"
                   >
-                    <TableCell class="text-xs font-semibold">
+                    <TableCell class="font-semibold">
                       {{ item.uname }}
                     </TableCell>
-                    <TableCell class="font-mono text-xs text-muted-foreground">
+                    <TableCell class="font-mono text-muted-foreground">
                       {{
                         GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid || item.uid
                       }}
                     </TableCell>
-                    <TableCell class="text-xs text-muted-foreground">
+                    <TableCell class="text-muted-foreground">
                       {{ format(item.time, 'yyyy-MM-dd HH:mm:ss') }}
                     </TableCell>
-                    <TableCell
-                      v-if="selectedType === EventDataTypes.Guard"
-                      class="text-xs"
-                    >
+                    <TableCell v-if="selectedType === EventDataTypes.Guard">
                       {{ item.msg }}
                     </TableCell>
                     <TableCell>
@@ -925,11 +889,7 @@ function onTabChange(value: string | number) {
                         ¥{{ item.price }}
                       </span>
                     </TableCell>
-                    <TableCell
-                      v-if="selectedType === EventDataTypes.SC"
-                      class="text-xs text-muted-foreground max-w-xs truncate"
-                      :title="item.msg"
-                    >
+                    <TableCell v-if="selectedType === EventDataTypes.SC" class="text-muted-foreground max-w-xs truncate" :title="item.msg">
                       {{ item.msg }}
                     </TableCell>
                     <TableCell
@@ -1060,10 +1020,7 @@ function onTabChange(value: string | number) {
                   v-if="guardList.length === 0"
                   class="text-center"
                 >
-                  <TableCell
-                    colspan="4"
-                    class="py-8 text-xs text-muted-foreground"
-                  >
+                  <TableCell colspan="4" class="py-8 text-muted-foreground">
                     暂无在舰用户记录
                   </TableCell>
                 </TableRow>
@@ -1071,12 +1028,12 @@ function onTabChange(value: string | number) {
                   v-for="row in paginatedGuardList"
                   :key="row.guardOUId"
                 >
-                  <TableCell class="font-mono text-xs font-bold">
+                  <TableCell class="font-mono font-bold">
                     {{
                       GuidUtils.isGuidFromUserId(row.guardOUId) ? GuidUtils.guidToLong(row.guardOUId) : row.guardOUId
                     }}
                   </TableCell>
-                  <TableCell class="text-xs">
+                  <TableCell>
                     {{ row.username }}
                   </TableCell>
                   <TableCell>
@@ -1090,7 +1047,7 @@ function onTabChange(value: string | number) {
                       {{ row.guardLevel }}
                     </span>
                   </TableCell>
-                  <TableCell class="text-right font-mono text-xs text-muted-foreground">
+                  <TableCell class="text-right font-mono text-muted-foreground">
                     {{ row.accompanyDays }} 天
                   </TableCell>
                 </TableRow>
@@ -1101,7 +1058,7 @@ function onTabChange(value: string | number) {
           <!-- 分页器 -->
           <div
             v-if="guardList.length > guardPaginationPageSize"
-            class="flex items-center justify-between text-xs text-muted-foreground pt-2"
+            class="flex-between text-xs text-muted-foreground pt-2"
           >
             <span>共 {{ guardList.length }} 位在舰用户</span>
             <div class="flex items-center gap-1.5">

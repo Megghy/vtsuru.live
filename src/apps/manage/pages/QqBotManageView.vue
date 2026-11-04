@@ -86,7 +86,7 @@ onMounted(() => {
     <div class="space-y-4">
       <Alert variant="destructive">
         <AlertTitle>开发中，暂不可用</AlertTitle>
-        <AlertDescription class="text-xs"> QQ 群机器人还在开发中，所有功能暂不可用 </AlertDescription>
+        <AlertDescription> QQ 群机器人还在开发中，所有功能暂不可用 </AlertDescription>
       </Alert>
 
       <Alert
@@ -94,7 +94,7 @@ onMounted(() => {
         variant="destructive"
       >
         <AlertTitle>机器人未配置</AlertTitle>
-        <AlertDescription class="text-xs"> 后端尚未填写 QQ 机器人 AppId / Secret，Webhook 不会启动。 </AlertDescription>
+        <AlertDescription> 后端尚未填写 QQ 机器人 AppId / Secret，Webhook 不会启动。 </AlertDescription>
       </Alert>
 
       <Alert
@@ -102,15 +102,15 @@ onMounted(() => {
         variant="default"
       >
         <AlertTitle>Webhook 尚未握手</AlertTitle>
-        <AlertDescription class="text-xs"> 配置已就绪。QQ 开放平台完成首次回调后才会显示已连接。 </AlertDescription>
+        <AlertDescription> 配置已就绪。QQ 开放平台完成首次回调后才会显示已连接。 </AlertDescription>
       </Alert>
 
       <!-- 绑定群卡片 -->
       <Card>
-        <CardHeader class="p-4 pb-2">
-          <CardTitle class="text-sm font-semibold"> 绑定群 </CardTitle>
+        <CardHeader class="p-4">
+          <CardTitle> 绑定群 </CardTitle>
         </CardHeader>
-        <CardContent class="p-4 pt-0 space-y-3">
+        <CardContent class="p-4 space-y-3">
           <div class="text-xs text-muted-foreground leading-relaxed">
             1. 把机器人拉进粉丝群
             <br />
@@ -170,10 +170,10 @@ onMounted(() => {
 
       <!-- 已绑定的群卡片 -->
       <Card>
-        <CardHeader class="p-4 pb-2">
-          <CardTitle class="text-sm font-semibold"> 已绑定的群 </CardTitle>
+        <CardHeader class="p-4">
+          <CardTitle> 已绑定的群 </CardTitle>
         </CardHeader>
-        <CardContent class="p-4 pt-0">
+        <CardContent class="p-4">
           <div
             v-if="!groups.length"
             class="text-center py-8 text-xs text-muted-foreground"
@@ -188,7 +188,7 @@ onMounted(() => {
             <div
               v-for="group in groups"
               :key="group.groupOpenId"
-              class="py-2.5 flex items-center justify-between gap-3 text-xs"
+              class="py-2.5 flex-between gap-3 text-xs"
             >
               <div>
                 <strong class="text-foreground">群 …{{ group.groupHint }}</strong>

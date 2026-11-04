@@ -431,14 +431,14 @@ onBeforeUnmount(() => {
   <div class="media-page">
     <Card>
       <CardHeader class="flex flex-row items-center justify-between pb-4">
-        <CardTitle class="text-base font-semibold">音视频转换与压缩</CardTitle>
+        <CardTitle class="text-base">音视频转换与压缩</CardTitle>
         <span class="text-xs text-muted-foreground"> 浏览器本地处理 </span>
       </CardHeader>
 
-      <CardContent class="pt-0">
+      <CardContent>
         <div class="flex flex-col gap-4">
           <Alert>
-            <AlertDescription class="text-xs">
+            <AlertDescription>
               支持视频压缩、转
               GIF、提取音频、格式互转与片段截取。全程在浏览器本地完成，不上传文件；大文件会占用较多内存和 CPU。
             </AlertDescription>
@@ -451,7 +451,7 @@ onBeforeUnmount(() => {
                 v-for="preset in presets"
                 :key="preset.key"
                 :variant="activePreset === preset.key ? 'default' : 'outline'"
-                :title="preset.desc"
+                :aria-label="preset.desc"
                 @click="applyPreset(preset.key)"
               >
                 {{ preset.label }}
@@ -500,38 +500,19 @@ onBeforeUnmount(() => {
 
             <Tabs default-value="audio">
               <TabsList class="w-full grid grid-cols-5">
-                <TabsTrigger
-                  v-if="selectedFormat.kind === 'video'"
-                  value="video"
-                  class="text-xs"
-                >
+                <TabsTrigger v-if="selectedFormat.kind === 'video'" value="video" >
                   编码
                 </TabsTrigger>
-                <TabsTrigger
-                  v-if="selectedFormat.kind === 'gif'"
-                  value="gif"
-                  class="text-xs"
-                >
+                <TabsTrigger v-if="selectedFormat.kind === 'gif'" value="gif" >
                   GIF
                 </TabsTrigger>
-                <TabsTrigger
-                  v-if="selectedFormat.kind !== 'audio'"
-                  value="picture"
-                  class="text-xs"
-                >
+                <TabsTrigger v-if="selectedFormat.kind !== 'audio'" value="picture" >
                   画面
                 </TabsTrigger>
-                <TabsTrigger
-                  v-if="selectedFormat.kind !== 'audio'"
-                  value="speed"
-                  class="text-xs"
-                >
+                <TabsTrigger v-if="selectedFormat.kind !== 'audio'" value="speed" >
                   速度
                 </TabsTrigger>
-                <TabsTrigger
-                  value="audio"
-                  class="text-xs"
-                >
+                <TabsTrigger value="audio" >
                   音频
                 </TabsTrigger>
               </TabsList>
@@ -1064,7 +1045,7 @@ onBeforeUnmount(() => {
             v-if="invalidItems.length"
             variant="destructive"
           >
-            <AlertDescription class="text-xs">
+            <AlertDescription>
               当前输出为视频/GIF，{{ invalidItems.length }} 个音频源文件无法处理；请改选音频输出格式。
             </AlertDescription>
           </Alert>
@@ -1222,11 +1203,7 @@ onBeforeUnmount(() => {
                   {{ item.error }}
                 </span>
 
-                <Button
-                  variant="ghost"
-                  class="trim-toggle h-6 px-1.5 text-muted-foreground hover:text-foreground"
-                  @click="item.expanded = !item.expanded"
-                >
+                <Button size="xs" variant="ghost" class="trim-toggle px-1.5 text-muted-foreground" @click="item.expanded = !item.expanded">
                   {{ item.expanded ? '收起预览/截取' : '预览 / 截取片段' }}
                 </Button>
 

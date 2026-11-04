@@ -80,9 +80,9 @@ async function download() {
 <template>
   <Card>
     <CardHeader class="pb-4">
-      <CardTitle class="text-base font-semibold">二维码生成器</CardTitle>
+      <CardTitle class="text-base">二维码生成器</CardTitle>
     </CardHeader>
-    <CardContent class="pt-0">
+    <CardContent>
       <div class="flex flex-col gap-4">
         <Input
           v-model="text"

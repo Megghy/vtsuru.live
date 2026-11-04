@@ -171,7 +171,7 @@ function cancel() {
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-muted-foreground">原图</span>
           <div
-            class="aspect-video bg-muted/30 rounded border border-border flex items-center justify-center overflow-hidden"
+            class="aspect-video bg-muted/30 rounded border border-border flex-center overflow-hidden"
           >
             <img
               v-if="sourceUrl"
@@ -184,7 +184,7 @@ function cancel() {
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-muted-foreground">结果</span>
           <div
-            class="aspect-video bg-muted/30 rounded border border-border flex items-center justify-center overflow-hidden manage-checkerboard"
+            class="aspect-video bg-muted/30 rounded border border-border flex-center overflow-hidden manage-checkerboard"
           >
             <img
               v-if="resultUrl"

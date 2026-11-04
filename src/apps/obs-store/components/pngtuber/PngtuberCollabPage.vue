@@ -177,7 +177,7 @@ function getMemberOpacity(m: CollabMemberItem) {
       v-if="showDebugPanel"
       class="fixed bottom-3 right-3 z-50 pointer-events-auto bg-black/80 backdrop-blur-lg border border-white/20 rounded-xl p-3 shadow-2xl text-white text-xs max-w-xs space-y-2.5"
     >
-      <div class="flex items-center justify-between border-b border-white/10 pb-1.5">
+      <div class="flex-between border-b border-white/10 pb-1.5">
         <span class="font-semibold flex items-center gap-1 text-amber-400">
           <Wrench24Regular class="size-3.5" />
           组队画面调试控制器

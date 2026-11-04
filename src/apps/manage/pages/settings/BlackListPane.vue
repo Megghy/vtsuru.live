@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { useMessage } from '@/shared/utils'
 import { GuidUtils } from '@/shared/utils'
 
@@ -73,24 +74,19 @@ function unblockUser(id: number) {
 <template>
   <div class="flex flex-col gap-3">
     <Alert class="border-border bg-muted/30">
-      <AlertDescription class="text-xs text-muted-foreground">
+      <AlertDescription class="text-muted-foreground">
         黑名单用于限制互动：B 站 UID 黑名单主要影响弹幕相关互动；站内黑名单限制本站注册用户（提问箱等）。
       </AlertDescription>
     </Alert>
 
     <!-- B 站黑名单 -->
     <Card>
-      <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold uppercase tracking-wide"> B 站黑名单 </CardTitle>
+      <CardHeader class="p-3.5">
+        <CardTitle class="text-xs uppercase tracking-wide"> B 站黑名单 </CardTitle>
       </CardHeader>
-      <CardContent class="p-3.5 space-y-3">
+      <CardContent class="space-y-3">
         <div class="flex items-center gap-2 flex-wrap">
-          <Input
-            v-model="biliId"
-            type="number"
-            placeholder="B 站 UID"
-            class="w-40 font-mono"
-          />
+          <NumberField v-model="biliId" placeholder="B 站 UID" class="w-40 font-mono" / :show-buttons="false">
           <Input
             v-model="biliName"
             placeholder="备注名（可选）"
@@ -112,7 +108,7 @@ function unblockUser(id: number) {
           <li
             v-for="item in Object.entries(accountInfo.biliBlackList)"
             :key="item[0]"
-            class="flex items-center justify-between p-2.5 text-xs hover:bg-muted/30 transition-colors"
+            class="flex-between p-2.5 text-xs hover:bg-muted/30 transition-colors"
           >
             <div class="flex items-center gap-2">
               <span class="font-medium text-foreground">{{ item[1] }}</span>
@@ -141,10 +137,10 @@ function unblockUser(id: number) {
 
     <!-- 站内黑名单 -->
     <Card>
-      <CardHeader class="p-3.5 pb-2">
-        <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 站内黑名单 </CardTitle>
+      <CardHeader class="p-3.5">
+        <CardTitle class="text-xs uppercase tracking-wide"> 站内黑名单 </CardTitle>
       </CardHeader>
-      <CardContent class="p-3.5 space-y-3">
+      <CardContent class="space-y-3">
         <div class="text-xs text-muted-foreground">站内用户通常在提问箱等场景操作时加入；此处支持移除。</div>
 
         <ul
@@ -154,7 +150,7 @@ function unblockUser(id: number) {
           <li
             v-for="item in accountInfo.blackList"
             :key="item.id"
-            class="flex items-center justify-between p-2.5 text-xs hover:bg-muted/30 transition-colors"
+            class="flex-between p-2.5 text-xs hover:bg-muted/30 transition-colors"
           >
             <div class="flex items-center gap-2">
               <span class="font-medium text-foreground">{{ item.name }}</span>

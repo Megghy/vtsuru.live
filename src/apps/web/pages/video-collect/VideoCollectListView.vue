@@ -429,10 +429,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             </Button>
             <div class="title-row flex items-center gap-2.5">
               <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
-              <Badge
-                :variant="isCollecting ? 'default' : 'secondary'"
-                class="text-xs"
-              >
+              <Badge :variant="isCollecting ? 'default' : 'secondary'">
                 {{ isCollecting ? '征集中' : '已结束' }}
               </Badge>
             </div>
@@ -468,7 +465,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             class="summary-card stat-videos p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
           >
             <div
-              class="stat-icon-wrapper size-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"
+              class="stat-icon-wrapper size-9 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
             >
               <component
                 :is="Video24Regular"
@@ -485,7 +482,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             class="summary-card stat-duration p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
           >
             <div
-              class="stat-icon-wrapper size-9 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0"
+              class="stat-icon-wrapper size-9 rounded-lg bg-blue-500/10 text-blue-500 flex-center shrink-0"
             >
               <component
                 :is="Clock24Regular"
@@ -502,7 +499,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             class="summary-card stat-watched p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
           >
             <div
-              class="stat-icon-wrapper size-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0"
+              class="stat-icon-wrapper size-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex-center shrink-0"
             >
               <component
                 :is="CheckmarkCircle24Regular"
@@ -521,7 +518,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             class="summary-card progress-card p-3.5 rounded-xl border border-border/80 bg-card flex flex-col justify-between"
             :class="{ 'border-emerald-500/50 bg-emerald-500/5': isAllWatched }"
           >
-            <div class="progress-info flex items-center justify-between">
+            <div class="progress-info flex-between">
               <div class="progress-title flex items-center gap-1.5 font-medium">
                 <component
                   :is="isAllWatched ? Trophy24Regular : Sparkle24Regular"
@@ -531,10 +528,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
               </div>
               <strong class="progress-value font-mono font-bold">{{ progressPercentage }}%</strong>
             </div>
-            <Progress
-              :model-value="progressPercentage"
-              class="h-2 mt-2"
-            />
+            <Progress :model-value="progressPercentage" class="mt-2" />
           </div>
         </section>
 
@@ -613,12 +607,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                       <SelectValue placeholder="排序方式" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        v-for="opt in sortOptions"
-                        :key="opt.value"
-                        :value="opt.value"
-                        class="text-xs"
-                      >
+                      <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
                         {{ opt.label }}
                       </SelectItem>
                     </SelectContent>
@@ -741,7 +730,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             <!-- 模式 2：随机抽取 -->
             <template v-else-if="mode === 'draw'">
               <div class="draw-stage max-w-xl mx-auto space-y-4">
-                <div class="draw-stage-header flex items-center justify-between text-xs text-muted-foreground">
+                <div class="draw-stage-header flex-between text-xs text-muted-foreground">
                   <div class="draw-round-info flex items-center gap-1.5 font-mono">
                     <component
                       :is="ArrowSwap24Regular"
@@ -772,11 +761,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                   <Button
                     v-else
                     variant="outline"
-                    class="draw-trigger-placeholder w-full aspect-video rounded-xl border-2 border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-muted/40 transition flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-foreground h-auto p-4 cursor-pointer"
+                    class="draw-trigger-placeholder w-full aspect-video rounded-xl border-2 border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-muted/40 transition flex-col-center gap-2 text-muted-foreground hover:text-foreground h-auto p-4"
                     @click="drawRandomVideo"
                   >
                     <div
-                      class="placeholder-icon size-12 rounded-full bg-primary/10 text-primary flex items-center justify-center"
+                      class="placeholder-icon size-12 rounded-full bg-primary/10 text-primary flex-center"
                     >
                       <component
                         :is="Sparkle24Regular"
@@ -788,7 +777,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                   </Button>
                 </div>
 
-                <div class="draw-actions-row flex items-center justify-center gap-3 pt-2">
+                <div class="draw-actions-row flex-center gap-3 pt-2">
                   <Button
                     v-if="drawnVideo"
                     variant="outline"
@@ -859,7 +848,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                 v-if="sequenceVideo"
                 class="sequence-stage max-w-2xl mx-auto space-y-4"
               >
-                <div class="sequence-header flex items-center justify-between text-xs text-muted-foreground">
+                <div class="sequence-header flex-between text-xs text-muted-foreground">
                   <div class="sequence-nav-info flex items-center gap-1.5 font-mono">
                     <component
                       :is="PlayCircle24Regular"
@@ -883,7 +872,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                   @toggle-watched="toggleWatched(sequenceVideo.info.bvid)"
                 />
 
-                <div class="sequence-controls flex items-center justify-center gap-3">
+                <div class="sequence-controls flex-center gap-3">
                   <Button
                     variant="outline"
                     :disabled="sequenceIndex === 0"

@@ -36,7 +36,7 @@ function handleKeydown(e: KeyboardEvent) {
   <Dialog v-model:open="show">
     <DialogContent class="max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">回复提问</DialogTitle>
+        <DialogTitle class="text-sm">回复提问</DialogTitle>
       </DialogHeader>
 
       <template v-if="useQB.currentQuestion">
@@ -77,13 +77,13 @@ function handleKeydown(e: KeyboardEvent) {
               placeholder="请输入回复内容 (支持 Ctrl + Enter 快捷发送)..."
               maxlength="10000"
               :rows="5"
-              class="text-xs"
+              
               @keydown="handleKeydown"
             />
           </div>
         </div>
 
-        <DialogFooter class="flex items-center justify-between sm:justify-between w-full pt-2">
+        <DialogFooter class="flex-between sm:justify-between w-full pt-2">
           <span class="text-[11px] text-muted-foreground">按 Ctrl + Enter 快捷发送</span>
           <div class="flex items-center gap-2">
             <Button

@@ -5,8 +5,8 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DanmakuStorageDeductionSetting } from './danmakuStorageDeductionSetting'
+import type { DanmakuStorageDeductionSetting } from './danmakuStorageDeductionSetting';
 
 export interface UserConsumptionSetting {
-  danmakuStorage: DanmakuStorageDeductionSetting
+  danmakuStorage: DanmakuStorageDeductionSetting;
 }

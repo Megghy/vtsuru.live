@@ -22,6 +22,7 @@ import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useMessage } from '@/shared/utils'
@@ -306,7 +307,7 @@ function clearCurrentTheme() {
       class="w-full sm:max-w-md p-0 flex flex-col"
     >
       <SheetHeader class="p-4 border-b border-border">
-        <SheetTitle class="flex items-center gap-2 text-base font-semibold">
+        <SheetTitle class="flex items-center gap-2 text-base">
           <component
             :is="ColorPaletteOutline"
             class="size-5 text-primary"
@@ -320,10 +321,7 @@ function clearCurrentTheme() {
         <div class="bg-muted border border-border rounded-lg py-2.5 px-3.5">
           <template v-if="isCurrentHome">
             <div class="flex items-center gap-2">
-              <Badge
-                variant="default"
-                class="text-xs"
-              >
+              <Badge variant="default">
                 全局主页
               </Badge>
               <span class="block text-xs text-muted-foreground mt-1 leading-snug"
@@ -332,7 +330,7 @@ function clearCurrentTheme() {
             </div>
           </template>
           <template v-else>
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="text-[13px] font-medium">配置作用范围：</span>
               <div class="grid grid-cols-2 gap-1 bg-muted p-0.5 rounded-lg">
                 <Button
@@ -365,7 +363,7 @@ function clearCurrentTheme() {
         <div
           class="bg-[var(--brand-tint,rgba(99,102,241,0.05))] border border-dashed border-border rounded-lg py-2.5 px-3.5"
         >
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
               <component
                 :is="SparklesOutline"
@@ -374,21 +372,10 @@ function clearCurrentTheme() {
               <span>智能提取配色</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                class="h-6 px-2"
-                :disabled="isExtracting || !avatarUrl"
-                @click="runExtractFromUrl(avatarUrl, '头像')"
-              >
+              <Button size="xs" variant="outline" :disabled="isExtracting || !avatarUrl" @click="runExtractFromUrl(avatarUrl, '头像')">
                 从头像提取
               </Button>
-              <Button
-                v-if="currentBackgroundImageUrl"
-                variant="outline"
-                class="h-6 px-2"
-                :disabled="isExtracting"
-                @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')"
-              >
+              <Button size="xs" v-if="currentBackgroundImageUrl" variant="outline" :disabled="isExtracting" @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')">
                 从壁纸提取
               </Button>
             </div>
@@ -399,7 +386,7 @@ function clearCurrentTheme() {
             v-if="extractedResult"
             class="mt-2.5 pt-2 border-t border-border"
           >
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex-between mb-2">
               <div class="flex items-center gap-1.5 text-xs font-medium">
                 <span
                   class="inline-block size-3.5 rounded-full border border-black/10"
@@ -408,17 +395,10 @@ function clearCurrentTheme() {
                 <span>主色：{{ extractedResult.primaryColor }}</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <Button
-                  variant="outline"
-                  class="h-6 px-2"
-                  @click="applyExtracted('light')"
-                >
+                <Button size="xs" variant="outline" @click="applyExtracted('light')">
                   套用浅色
                 </Button>
-                <Button
-                  class="h-6 px-2"
-                  @click="applyExtracted('dark')"
-                >
+                <Button size="xs" @click="applyExtracted('dark')">
                   套用深色
                 </Button>
               </div>
@@ -435,7 +415,7 @@ function clearCurrentTheme() {
                 type="button"
                 class="size-[18px] rounded border border-black/15 cursor-pointer p-0 transition-transform hover:scale-120"
                 :style="{ backgroundColor: swatch }"
-                :title="`设为主题色 ${swatch}`"
+                :aria-label="`设为主题色 ${swatch}`"
                 @click="applyCustomSwatch(swatch)"
               />
             </div>
@@ -473,7 +453,7 @@ function clearCurrentTheme() {
           </div>
         </div>
 
-        <div class="h-px bg-border my-1" />
+        <Separator class="my-1" />
 
         <!-- 三大选项卡配置 -->
         <Tabs
@@ -481,20 +461,11 @@ function clearCurrentTheme() {
           class="w-full"
         >
           <TabsList class="grid grid-cols-3 w-full">
-            <TabsTrigger
-              value="colors"
-              class="text-xs"
-              >色彩与模式</TabsTrigger
+            <TabsTrigger value="colors" >色彩与模式</TabsTrigger
             >
-            <TabsTrigger
-              value="background"
-              class="text-xs"
-              >壁纸与背景</TabsTrigger
+            <TabsTrigger value="background" >壁纸与背景</TabsTrigger
             >
-            <TabsTrigger
-              value="advanced"
-              class="text-xs"
-              >排版与质感</TabsTrigger
+            <TabsTrigger value="advanced" >排版与质感</TabsTrigger
             >
           </TabsList>
 
@@ -551,7 +522,7 @@ function clearCurrentTheme() {
 
             <div class="pt-2 border-t border-border flex flex-col gap-2">
               <span class="text-xs font-semibold text-muted-foreground uppercase">自定义 CSS</span>
-              <div class="flex items-center justify-between p-2.5 rounded-lg border border-border bg-muted text-xs">
+              <div class="flex-between p-2.5 rounded-lg border border-border bg-muted text-xs">
                 <span class="text-muted-foreground">
                   {{ editor.settings.value.customCss ? '已配置全局 CSS' : '未配置全局 CSS' }}
                 </span>
@@ -571,7 +542,7 @@ function clearCurrentTheme() {
         </Tabs>
       </div>
 
-      <SheetFooter class="p-3 border-t border-border flex items-center justify-between sm:justify-between">
+      <SheetFooter class="p-3 border-t border-border flex-between sm:justify-between">
         <Popconfirm
           title="确定要清空当前的样式与主题配置吗？"
           ok-text="确定清空"

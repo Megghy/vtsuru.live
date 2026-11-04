@@ -31,19 +31,19 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
           </SelectContent>
         </Select>
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示标题</label>
         <Switch v-model:checked="blockProps.showTitle" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示分区</label>
         <Switch v-model:checked="blockProps.showArea" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示封面</label>
         <Switch v-model:checked="blockProps.showCover" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示按钮</label>
         <Switch v-model:checked="blockProps.showButtons" />
       </div>
@@ -79,15 +79,15 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
           class="w-full"
         />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示订阅(ICS)</label>
         <Switch v-model:checked="blockProps.showIcs" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">高亮今天</label>
         <Switch v-model:checked="blockProps.highlightToday" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示标签</label>
         <Switch v-model:checked="blockProps.showTag" />
       </div>
@@ -111,29 +111,29 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
           </SelectContent>
         </Select>
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示头像</label>
         <Switch v-model:checked="blockProps.showAvatar" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示昵称</label>
         <Switch v-model:checked="blockProps.showName" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示签名</label>
         <Switch v-model:checked="blockProps.showSign" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示统计</label>
         <Switch v-model:checked="blockProps.showStats" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示按钮</label>
         <Switch v-model:checked="blockProps.showButtons" />
       </div>
       <div
         v-if="propertyAvailable('showLiveRoom')"
-        class="flex items-center justify-between py-1"
+        class="flex-between py-1"
       >
         <label class="text-xs text-muted-foreground">显示直播间按钮</label>
         <Switch v-model:checked="blockProps.showLiveRoom" />
@@ -201,7 +201,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
           class="w-full"
         />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示标题栏</label>
         <Switch v-model:checked="blockProps.showTitle" />
       </div>
@@ -281,7 +281,7 @@ const { blockProps, ensureArrayProp, propertyAvailable, propertyNumberRange } = 
           class="w-full"
         />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">紧凑模式</label>
         <Switch v-model:checked="blockProps.compact" />
       </div>

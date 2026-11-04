@@ -22,6 +22,7 @@ import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Slider } from '@/shared/ui/slider'
+import { Separator } from '@/shared/ui/separator'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -246,7 +247,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
           </div>
         </div>
 
-        <div class="h-px bg-border my-2.5" />
+        <Separator class="my-2.5" />
 
         <!-- 主控制台与实时预览双栏布局 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -526,7 +527,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
           <!-- 右栏：实时 OBS 监视器与链接管理 -->
           <div>
             <div class="monitor-panel-box">
-              <div class="flex items-center justify-between mb-2">
+              <div class="flex-between mb-2">
                 <span class="deck-label">OBS 画面实时监视器</span>
                 <ToggleGroup
                   type="single"

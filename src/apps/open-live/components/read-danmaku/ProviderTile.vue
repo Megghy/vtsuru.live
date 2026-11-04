@@ -17,7 +17,7 @@ defineEmits<{ (e: 'click'): void }>()
     :class="{ 'border-primary bg-primary/10 shadow-[inset_0_0_0_1.5px_var(--primary)]': active }"
     @click="$emit('click')"
   >
-    <div class="flex items-center justify-between gap-1.5">
+    <div class="flex-between gap-1.5">
       <span class="text-[13px] font-semibold leading-tight">{{ title }}</span>
       <span
         v-if="badge"

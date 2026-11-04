@@ -31,7 +31,7 @@ const levelOptions = [
           v-model="blockProps.content"
           maxlength="500"
           placeholder="文本或 https 链接"
-          class="text-xs min-h-[60px]"
+          class="min-h-[60px]"
         />
       </div>
       <div class="span-full space-y-1">

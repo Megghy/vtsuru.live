@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/shared/ui/di
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 
 import { useVtsAction } from './useVtsAction'
@@ -158,9 +159,9 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">表情与动作热键</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+      <CardTitle>表情与动作热键</CardTitle>
       <div
         v-if="modelName"
         class="text-xs text-muted-foreground"
@@ -189,12 +190,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in groupModeOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in groupModeOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -218,7 +214,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
 
       <div
         v-if="filtered.length === 0"
-        class="py-6 flex flex-col items-center justify-center"
+        class="py-6 flex-col-center"
       >
         <Empty :description="disabled ? '连接 VTS 后显示当前模型的热键' : '当前模型没有匹配的热键'" />
       </div>
@@ -230,11 +226,11 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
         class="space-y-2"
       >
         <template v-if="key">
-          <div class="flex items-center justify-between pt-1">
+          <div class="flex-between pt-1">
             <span class="text-xs font-semibold text-foreground">{{ key }}</span>
             <span class="text-xs text-muted-foreground">{{ list.length }}</span>
           </div>
-          <div class="h-px bg-border my-1" />
+          <Separator class="my-1" />
         </template>
         <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
           <div
@@ -261,7 +257,7 @@ const groups = computed<[string, VtsHotkeyInfo[]][]>(() => {
   <Dialog v-model:open="showEdit">
     <DialogContent class="sm:max-w-[500px]">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">自定义热键外观</DialogTitle>
+        <DialogTitle class="text-base">自定义热键外观</DialogTitle>
       </DialogHeader>
 
       <div class="space-y-3 pt-2 text-xs">

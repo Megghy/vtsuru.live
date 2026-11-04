@@ -79,7 +79,7 @@ const borderTitleAlignClass = computed(() => {
     </div>
     <div
       v-if="$slots.header || $slots['header-extra']"
-      class="flex items-center justify-between p-[var(--vtsuru-page-spacing)] border-b border-border"
+      class="flex-between p-[var(--vtsuru-page-spacing)] border-b border-border"
       :style="props.headerStyle"
     >
       <div class="flex-1 min-w-0">

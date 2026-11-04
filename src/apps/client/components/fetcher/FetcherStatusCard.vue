@@ -88,9 +88,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex-row items-center justify-between space-y-0">
-      <CardTitle class="text-sm font-semibold">运行状态 & 连接</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex-row items-center justify-between space-y-0">
+      <CardTitle>运行状态 & 连接</CardTitle>
 
       <div
         class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border"
@@ -164,15 +164,7 @@ onUnmounted(() => {
             <span>SignalR 服务</span>
           </div>
           <div class="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              class="text-[11px] px-1.5 py-0"
-              :class="
-                webfetcher.state === 'connected'
-                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-                  : 'border-border text-muted-foreground'
-              "
-            >
+            <Badge variant="success" size="sm" :class=" webfetcher.state === 'connected' ? ' ' : 'border-border text-muted-foreground' ">
               {{ signalRStateText }}
             </Badge>
             <span
@@ -191,15 +183,7 @@ onUnmounted(() => {
             <span>弹幕服务器</span>
           </div>
           <div class="flex items-center gap-2">
-            <Badge
-              variant="outline"
-              class="text-[11px] px-1.5 py-0 shrink-0"
-              :class="
-                webfetcher.danmakuClientState === 'connected'
-                  ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-                  : 'border-border text-muted-foreground'
-              "
-            >
+            <Badge variant="success" size="sm" :class=" webfetcher.danmakuClientState === 'connected' ? ' ' : 'border-border text-muted-foreground' ">
               {{ danmakuClientStateText }}
             </Badge>
             <span

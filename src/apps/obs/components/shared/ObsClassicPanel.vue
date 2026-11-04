@@ -39,7 +39,7 @@ const {
     <p class="obs-classic-header">
       {{ title }}
     </p>
-    <div class="obs-classic-divider flex items-center justify-center gap-2">
+    <div class="obs-classic-divider flex-center gap-2">
       <div class="h-px flex-1 bg-white/40" />
       <p class="obs-classic-count shrink-0">
         {{ countText }}

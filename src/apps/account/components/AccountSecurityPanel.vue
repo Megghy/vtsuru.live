@@ -147,7 +147,7 @@ defineExpose({ reset })
 
 <template>
   <section class="rounded-lg border border-border bg-card p-4 space-y-3.5 shadow-sm">
-    <header class="flex items-center justify-between gap-3">
+    <header class="flex-between gap-3">
       <div>
         <h2 class="text-sm font-semibold tracking-tight text-foreground">站内账号安全</h2>
         <span class="text-xs text-muted-foreground">管理用于登录和找回账号的凭据</span>
@@ -164,9 +164,9 @@ defineExpose({ reset })
 
     <div class="grid gap-2">
       <!-- 邮箱条目 -->
-      <article class="flex items-center justify-between gap-3 p-3 rounded-md border border-border/60 bg-muted/30">
+      <article class="flex-between gap-3 p-3 rounded-md border border-border/60 bg-muted/30">
         <div class="flex items-center gap-3 min-w-0">
-          <div class="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <div class="h-8 w-8 rounded-md bg-primary/10 text-primary flex-center shrink-0">
             <component
               :is="Mail24Regular"
               class="h-4 w-4"
@@ -179,10 +179,7 @@ defineExpose({ reset })
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-          <Badge
-            :variant="account.isEmailVerified ? 'success' : account.bindEmail ? 'warning' : 'outline'"
-            class="text-[11px]"
-          >
+          <Badge :variant="account.isEmailVerified ? 'success' : account.bindEmail ? 'warning' : 'outline'" size="sm">
             {{ account.isEmailVerified ? '已验证' : account.bindEmail ? '待验证' : '未绑定' }}
           </Badge>
           <Button
@@ -196,9 +193,9 @@ defineExpose({ reset })
       </article>
 
       <!-- 密码条目 -->
-      <article class="flex items-center justify-between gap-3 p-3 rounded-md border border-border/60 bg-muted/30">
+      <article class="flex-between gap-3 p-3 rounded-md border border-border/60 bg-muted/30">
         <div class="flex items-center gap-3 min-w-0">
-          <div class="h-8 w-8 rounded-md bg-primary/10 text-primary flex items-center justify-center shrink-0">
+          <div class="h-8 w-8 rounded-md bg-primary/10 text-primary flex-center shrink-0">
             <component
               :is="Key24Regular"
               class="h-4 w-4"

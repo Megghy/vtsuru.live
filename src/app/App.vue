@@ -80,7 +80,7 @@ watchEffect(() => {
         </div>
       </TempComponent>
       <template #fallback>
-        <div class="flex items-center justify-center min-h-screen">
+        <div class="flex-center min-h-screen">
           <Spin size="large" />
         </div>
       </template>

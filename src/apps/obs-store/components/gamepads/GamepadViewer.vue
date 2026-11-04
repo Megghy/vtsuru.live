@@ -5,6 +5,7 @@ import { toast } from 'vue-sonner'
 
 import { controllerBodies, gamepadConfigs } from '@/apps/obs-store/data/gamepadConfigs'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -15,6 +16,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
+import { Separator } from '@/shared/ui/separator'
 import { useGamepadStore } from '@/store/useGamepadStore'
 import type { GamepadType } from '@/types/gamepad'
 
@@ -135,60 +137,38 @@ async function copyObsUrl() {
           </div>
         </div>
 
-        <div class="h-px bg-border my-2.5" />
+        <Separator class="my-2.5" />
 
         <!-- 手柄连接状态与仿真开关 -->
-        <Alert
-          v-if="gamepadStore.isSimulating"
-          class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5 px-3"
-        >
-          <div class="flex items-center justify-between gap-2">
+        <Alert size="sm" variant="info" v-if="gamepadStore.isSimulating">
+          <div class="flex-between gap-2">
             <div class="flex items-center gap-2 text-xs">
               <span class="font-bold">SIM</span>
-              <AlertDescription class="text-xs text-current m-0">
+              <AlertDescription class="text-current m-0">
                 正在运行仿真测试演示动画（自动模拟摇杆画圆与按键交替触发）
               </AlertDescription>
             </div>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px] border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
-              @click="gamepadStore.stopSimulation"
-            >
+            <Button size="xs" variant="outline" class="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10" @click="gamepadStore.stopSimulation">
               退出测试
             </Button>
           </div>
         </Alert>
-        <Alert
-          v-else-if="!gamepadStore.isGamepadConnected"
-          class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2.5 px-3"
-        >
-          <div class="flex items-center justify-between gap-2">
-            <AlertDescription class="text-xs text-current m-0">
+        <Alert size="sm" variant="warning" v-else-if="!gamepadStore.isGamepadConnected">
+          <div class="flex-between gap-2">
+            <AlertDescription class="text-current m-0">
               未检测到游戏手柄连接。按下手柄任意按键唤醒，或开启动态仿真测试：
             </AlertDescription>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px] border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
-              @click="gamepadStore.startSimulation"
-            >
+            <Button size="xs" variant="outline" class="border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10" @click="gamepadStore.startSimulation">
               开启仿真测试
             </Button>
           </div>
         </Alert>
-        <Alert
-          v-else
-          class="border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 py-2.5 px-3"
-        >
-          <div class="flex items-center justify-between gap-2">
-            <AlertDescription class="text-xs text-current m-0">
+        <Alert size="sm" variant="success" v-else>
+          <div class="flex-between gap-2">
+            <AlertDescription class="text-current m-0">
               已连接设备: {{ gamepadStore.connectedGamepadInfo?.id || '标准 Gamepad' }}
             </AlertDescription>
-            <Badge
-              variant="outline"
-              class="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-[10px] h-5 px-1.5"
-            >
+            <Badge variant="outline" size="xs" class="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 h-5">
               活跃
             </Badge>
           </div>
@@ -213,35 +193,20 @@ async function copyObsUrl() {
 
           <div class="gp-stage-overlay-tools">
             <div class="flex items-center gap-1.5">
-              <Button
-                size="xs"
-                class="h-6 text-[11px] px-2"
-                :variant="previewBg === 'checker' ? 'default' : 'outline'"
-                @click="previewBg = 'checker'"
-              >
+              <Button size="xs" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
                 网格底
               </Button>
-              <Button
-                size="xs"
-                class="h-6 text-[11px] px-2"
-                :variant="previewBg === 'dark' ? 'default' : 'outline'"
-                @click="previewBg = 'dark'"
-              >
+              <Button size="xs" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
                 暗黑底
               </Button>
-              <Button
-                size="xs"
-                class="h-6 text-[11px] px-2"
-                :variant="previewBg === 'transparent' ? 'default' : 'outline'"
-                @click="previewBg = 'transparent'"
-              >
+              <Button size="xs" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
                 透明底
               </Button>
             </div>
           </div>
         </div>
 
-        <div class="h-px bg-border my-3.5" />
+        <Separator class="my-3.5" />
 
         <!-- 主配置选项 -->
         <div class="flex flex-col gap-3">
@@ -254,12 +219,7 @@ async function copyObsUrl() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in gamepadTypeOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in gamepadTypeOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -276,12 +236,7 @@ async function copyObsUrl() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in bodyOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in bodyOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -315,7 +270,7 @@ async function copyObsUrl() {
           <!-- 摇杆灵敏度与死区 -->
           <div class="flex items-center gap-2 my-2 text-xs font-semibold text-foreground">
             <span>摇杆参数微调</span>
-            <div class="flex-1 h-px bg-border" />
+            <Separator class="flex-1" />
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
@@ -376,7 +331,7 @@ async function copyObsUrl() {
           <!-- OBS 使用指南 -->
           <div class="flex items-center gap-2 my-2 text-xs font-semibold text-foreground">
             <span>OBS 浏览器源配置指南</span>
-            <div class="flex-1 h-px bg-border" />
+            <Separator class="flex-1" />
           </div>
 
           <div class="gp-obs-guide">
@@ -398,28 +353,36 @@ async function copyObsUrl() {
           </div>
 
           <!-- 高级 ViewBox 设置 -->
-          <details class="group mt-2 border rounded-md p-2.5 text-xs">
-            <summary
-              class="font-medium cursor-pointer list-none flex items-center justify-between text-muted-foreground hover:text-foreground"
+          <Accordion
+            type="single"
+            collapsible
+            class="mt-2 border rounded-md px-3 text-xs"
+          >
+            <AccordionItem
+              value="viewbox"
+              class="border-b-0"
             >
-              <span>高级布局与 ViewBox 微调</span>
-              <span class="transition-transform group-open:rotate-180">▾</span>
-            </summary>
-            <div class="flex items-center gap-2 mt-3 pt-2 border-t">
-              <span class="text-xs">自定义 ViewBox:</span>
-              <Input
-                v-model="customViewBox"
-                :placeholder="config.defaultViewBox"
-                class="w-[220px]"
-              />
-              <Button
-                variant="outline"
-                @click="customViewBox = ''"
-              >
-                恢复默认
-              </Button>
-            </div>
-          </details>
+              <AccordionTrigger class="py-2 text-muted-foreground hover:text-foreground hover:no-underline">
+                高级布局与 ViewBox 微调
+              </AccordionTrigger>
+              <AccordionContent class="pt-1 pb-3">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs">自定义 ViewBox:</span>
+                  <Input
+                    v-model="customViewBox"
+                    :placeholder="config.defaultViewBox"
+                    class="w-[220px]"
+                  />
+                  <Button
+                    variant="outline"
+                    @click="customViewBox = ''"
+                  >
+                    恢复默认
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </div>
       </CardContent>
     </Card>

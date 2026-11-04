@@ -110,7 +110,7 @@ watch(show, (visible) => {
   >
     <DialogContent class="max-w-[min(860px,94vw)] p-6">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold"> 选择导航图标 </DialogTitle>
+        <DialogTitle class="text-base"> 选择导航图标 </DialogTitle>
       </DialogHeader>
 
       <div class="page-icon-picker space-y-3">
@@ -134,7 +134,6 @@ watch(show, (visible) => {
               v-for="option in styleOptions"
               :key="option.value"
               :value="option.value"
-              class="text-xs px-2.5"
             >
               {{ option.label }}
             </ToggleGroupItem>
@@ -175,19 +174,19 @@ watch(show, (visible) => {
           </div>
           <div
             v-else-if="loading"
-            class="picker-state h-full flex items-center justify-center"
+            class="picker-state h-full flex-center"
           >
             <Spin />
           </div>
           <div
             v-else-if="loadError"
-            class="picker-state h-full flex items-center justify-center text-xs text-destructive"
+            class="picker-state h-full flex-center text-xs text-destructive"
           >
             {{ loadError }}
           </div>
           <div
             v-else
-            class="picker-state h-full flex items-center justify-center text-xs text-muted-foreground"
+            class="picker-state h-full flex-center text-xs text-muted-foreground"
           >
             未找到匹配图标
           </div>

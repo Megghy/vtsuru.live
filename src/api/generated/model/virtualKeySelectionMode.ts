@@ -7,7 +7,8 @@
  */
 
 export enum VirtualKeySelectionMode {
-  None = 0,
-  Random = 1,
-  Sequential = 2,
+  None= 0,
+  Random= 1,
+  Sequential= 2,
+
 }

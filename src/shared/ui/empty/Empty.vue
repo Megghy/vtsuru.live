@@ -14,7 +14,7 @@ withDefaults(
 </script>
 
 <template>
-  <div class="flex flex-col items-center justify-center p-6 text-center text-muted-foreground select-none">
+  <div class="flex-col-center p-6 text-center text-muted-foreground select-none">
     <slot name="icon">
       <InboxIcon
         class="mb-2 text-muted-foreground/40 stroke-[1.5]"

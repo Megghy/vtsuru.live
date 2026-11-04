@@ -115,12 +115,7 @@ async function save() {
           <SelectValue placeholder="请选择收货地址" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="addr in addressList"
-            :key="addr.id"
-            :value="String(addr.id)"
-            class="text-xs"
-          >
+          <SelectItem v-for="addr in addressList" :key="addr.id" :value="String(addr.id)">
             {{ addr.name }} ({{ addr.phone }}) · {{ addr.province }}{{ addr.city }}{{ addr.district }}{{ addr.address }}
           </SelectItem>
         </SelectContent>
@@ -156,7 +151,7 @@ async function save() {
   <Dialog v-model:open="showModal">
     <DialogContent class="sm:max-w-md p-4 space-y-3">
       <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold">新增收货地址</DialogTitle>
+        <DialogTitle class="text-sm">新增收货地址</DialogTitle>
       </DialogHeader>
 
       <div class="space-y-3 text-xs">
@@ -185,12 +180,7 @@ async function save() {
                 <SelectValue :placeholder="field.label" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in field.options"
-                  :key="opt"
-                  :value="opt"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in field.options" :key="opt" :value="opt">
                   {{ opt }}
                 </SelectItem>
               </SelectContent>
@@ -204,7 +194,7 @@ async function save() {
             v-model="current.address"
             rows="2"
             placeholder="楼栋号、单元号、门牌号等"
-            class="text-xs resize-none"
+            class="resize-none"
           />
         </div>
 

@@ -94,17 +94,9 @@ function requestSong(song: ResponseSongModel) {
             <SelectValue placeholder="标签" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              value="all"
-              class="text-xs"
-              >全部标签</SelectItem
+            <SelectItem value="all">全部标签</SelectItem
             >
-            <SelectItem
-              v-for="opt in tagOptions"
-              :key="opt.value"
-              :value="opt.value"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in tagOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -154,7 +146,7 @@ function requestSong(song: ResponseSongModel) {
               />
               <div
                 v-else
-                class="cover-placeholder w-full h-full flex items-center justify-center font-bold text-lg text-muted-foreground"
+                class="cover-placeholder w-full h-full flex-center font-bold text-lg text-muted-foreground"
               >
                 <span>{{ song.name.charAt(0) }}</span>
               </div>
@@ -180,7 +172,7 @@ function requestSong(song: ResponseSongModel) {
               </span>
 
               <div
-                class="cover-overlay absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2"
+                class="cover-overlay absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex-center gap-2"
               >
                 <Tooltip v-if="song.url">
                   <TooltipTrigger as-child>

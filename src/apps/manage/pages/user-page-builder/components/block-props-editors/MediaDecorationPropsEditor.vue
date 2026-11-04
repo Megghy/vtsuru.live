@@ -75,7 +75,7 @@ function enableFeedbackEmbed(enabled: boolean) {
         <label class="text-xs text-muted-foreground">内容</label>
         <Textarea
           v-model="blockProps.text"
-          class="text-xs min-h-[70px]"
+          class="min-h-[70px]"
         />
       </div>
       <div class="space-y-1">
@@ -108,7 +108,7 @@ function enableFeedbackEmbed(enabled: boolean) {
         <label class="text-xs text-muted-foreground">文本</label>
         <Textarea
           v-model="blockProps.text"
-          class="text-xs min-h-[50px]"
+          class="min-h-[50px]"
         />
       </div>
       <div class="space-y-1">
@@ -134,7 +134,7 @@ function enableFeedbackEmbed(enabled: boolean) {
           class="w-full"
         />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">悬停暂停</label>
         <Switch v-model:checked="blockProps.pauseOnHover" />
       </div>
@@ -172,7 +172,7 @@ function enableFeedbackEmbed(enabled: boolean) {
           </SelectContent>
         </Select>
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示秒</label>
         <Switch v-model:checked="blockProps.showSeconds" />
       </div>
@@ -212,7 +212,7 @@ function enableFeedbackEmbed(enabled: boolean) {
         <label class="text-xs text-muted-foreground">描述</label>
         <Textarea
           v-model="blockProps.description"
-          class="text-xs min-h-[50px]"
+          class="min-h-[50px]"
         />
       </div>
       <div
@@ -233,7 +233,7 @@ function enableFeedbackEmbed(enabled: boolean) {
         />
       </div>
       <div class="span-full space-y-1">
-        <div class="flex items-center justify-between py-1">
+        <div class="flex-between py-1">
           <label class="text-xs text-muted-foreground">嵌入到页面</label>
           <Switch
             :checked="blockProps.embed"
@@ -296,7 +296,7 @@ function enableFeedbackEmbed(enabled: boolean) {
       </div>
       <div
         v-if="propertyAvailable('showPublicQuestions')"
-        class="flex items-center justify-between py-1"
+        class="flex-between py-1"
       >
         <label class="text-xs text-muted-foreground">显示公开问题</label>
         <Switch v-model:checked="blockProps.showPublicQuestions" />

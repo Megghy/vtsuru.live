@@ -78,18 +78,14 @@ function formatFullTime(time: number) {
 
 <template>
   <TooltipProvider>
-    <div class="flex items-center justify-between gap-3 text-xs w-full py-1">
+    <div class="flex-between gap-3 text-xs w-full py-1">
       <div class="flex items-center gap-2 min-w-0 flex-1">
-        <Badge
-          v-if="item.isDeleted"
-          variant="secondary"
-          class="text-[10px] h-4.5 px-1.5 font-normal shrink-0"
-        >
+        <Badge v-if="item.isDeleted" variant="secondary" size="xs">
           已删除
         </Badge>
         <span
           v-if="item.isPinned"
-          class="size-4 text-amber-500 inline-flex items-center justify-center shrink-0"
+          class="size-4 text-amber-500 inline-flex-center shrink-0"
           title="置顶"
         >
           <component
@@ -97,10 +93,7 @@ function formatFullTime(time: number) {
             class="size-3.5"
           />
         </span>
-        <Badge
-          variant="outline"
-          class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1 shrink-0"
-        >
+        <Badge variant="outline" size="xs" class="flex items-center gap-1">
           <component
             :is="Chat24Regular"
             class="size-3"
@@ -138,28 +131,21 @@ function formatFullTime(time: number) {
               {{ formatRelativeTime(item.createAt) }}
             </span>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
+          <TooltipContent>
             {{ formatFullTime(item.createAt) }}
           </TooltipContent>
         </Tooltip>
 
         <DropdownMenu v-if="forum.isAdmin">
           <DropdownMenuTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-6 rounded-full text-muted-foreground hover:text-foreground"
-            >
+            <Button variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground">
               <component
                 :is="MoreVertical24Filled"
                 class="size-3.5"
               />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            class="text-xs"
-          >
+          <DropdownMenuContent align="end">
             <DropdownMenuItem @select="handleDropdownAction('top')">
               <component
                 :is="Star24Filled"

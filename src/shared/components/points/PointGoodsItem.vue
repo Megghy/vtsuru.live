@@ -55,7 +55,7 @@ const priceRangeText = computed(() => {
   />
   <Card
     v-else
-    class="goods-card group overflow-hidden border border-border/80 bg-card shadow-xs transition hover:border-primary/50 flex flex-col justify-between"
+    class="goods-card group overflow-hidden /80 bg-card shadow-xs transition hover:border-primary/50 flex flex-col justify-between"
     :class="{ 'is-pinned ring-1 ring-primary/40': goods.isPinned }"
     :style="props.contentStyle"
   >
@@ -72,7 +72,7 @@ const priceRangeText = computed(() => {
       <!-- 售罄遮罩 -->
       <div
         v-if="isSoldOut"
-        class="sold-out-mask absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center"
+        class="sold-out-mask absolute inset-0 bg-black/60 backdrop-blur-xs flex-center"
       >
         <span class="sold-out-text text-white font-bold text-xs px-2.5 py-1 rounded bg-black/70 border border-white/20">
           已售完
@@ -82,7 +82,7 @@ const priceRangeText = computed(() => {
       <!-- 置顶标记 -->
       <div
         v-if="goods.isPinned"
-        class="pin-badge absolute top-2 right-2 size-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xs"
+        class="pin-badge absolute top-2 right-2 size-6 rounded-full bg-primary text-primary-foreground flex-center shadow-xs"
         title="置顶商品"
       >
         <component
@@ -97,23 +97,15 @@ const priceRangeText = computed(() => {
       >
         <!-- 左侧标签组 -->
         <div class="overlay-tags flex items-center gap-1 flex-wrap">
-          <Badge
-            variant="secondary"
-            class="text-[10px] h-4.5 px-1 font-normal bg-black/60 text-white border-0"
-          >
+          <Badge variant="secondary" size="xs" class="bg-black/60 text-white border-0">
             {{ goods.type === GoodsTypes.Physical ? '实物' : goods.type === GoodsTypes.Service ? '服务' : '虚拟' }}
           </Badge>
 
-          <Badge
-            v-if="hasSubItems"
-            variant="secondary"
-            class="text-[10px] h-4.5 px-1 font-normal bg-black/60 text-white border-0"
-          >
+          <Badge v-if="hasSubItems" variant="secondary" size="xs" class="bg-black/60 text-white border-0">
             多选
           </Badge>
 
-          <Badge
-            v-if="goods.allowGuardLevel > 0"
+          <Badge v-if="goods.allowGuardLevel> 0"
             variant="secondary"
             class="text-[10px] h-4.5 px-1 font-normal bg-amber-500/80 text-white border-0"
           >
@@ -171,26 +163,13 @@ const priceRangeText = computed(() => {
         v-if="!isManage"
         class="tags-row flex items-center gap-1 flex-wrap pt-1"
       >
-        <Badge
-          v-if="goods.canFreeBuy"
-          variant="secondary"
-          class="text-[10px] h-4.5 px-1 bg-emerald-500/10 text-emerald-600 font-normal"
-        >
+        <Badge v-if="goods.canFreeBuy" variant="secondary" size="xs" class="bg-emerald-500/10 text-emerald-600">
           ⭐ 舰长免费
         </Badge>
-        <Badge
-          v-if="!goods.isAllowRebuy"
-          variant="secondary"
-          class="text-[10px] h-4.5 px-1 bg-destructive/10 text-destructive font-normal"
-        >
+        <Badge v-if="!goods.isAllowRebuy" variant="secondary" size="xs" class="bg-destructive/10 text-destructive">
           🔒 限购一次
         </Badge>
-        <Badge
-          v-for="tag in goods.tags"
-          :key="tag"
-          variant="outline"
-          class="text-[10px] h-4.5 px-1 font-normal text-muted-foreground"
-        >
+        <Badge v-for="tag in goods.tags" :key="tag" variant="outline" size="xs" class="text-muted-foreground">
           {{ tag }}
         </Badge>
       </div>
@@ -202,12 +181,12 @@ const priceRangeText = computed(() => {
       >
         <div
           v-if="goods.type === GoodsTypes.Physical && goods.maxBuyCount"
-          class="info-cell flex items-center justify-between p-1 rounded bg-muted/40"
+          class="info-cell flex-between p-1 rounded bg-muted/40"
         >
           <span class="label">📦 限购</span>
           <span class="value font-mono">{{ goods.maxBuyCount }}</span>
         </div>
-        <div class="info-cell flex items-center justify-between p-1 rounded bg-muted/40">
+        <div class="info-cell flex-between p-1 rounded bg-muted/40">
           <span class="label">🔄 重购</span>
           <span
             class="value font-medium"
@@ -218,21 +197,21 @@ const priceRangeText = computed(() => {
         </div>
         <div
           v-if="goods.type === GoodsTypes.Virtual && goods.virtualKeys?.length"
-          class="info-cell flex items-center justify-between p-1 rounded bg-muted/40"
+          class="info-cell flex-between p-1 rounded bg-muted/40"
         >
           <span class="label">🔑 密钥</span>
           <span class="value font-mono">{{ goods.virtualKeys.length }}</span>
         </div>
         <div
           v-if="goods.type === GoodsTypes.Physical"
-          class="info-cell flex items-center justify-between p-1 rounded bg-muted/40"
+          class="info-cell flex-between p-1 rounded bg-muted/40"
         >
           <span class="label">📮 地址</span>
           <span class="value">{{ goods.collectUrl ? '站外' : '本站' }}</span>
         </div>
         <div
           v-if="hasSubItems"
-          class="info-cell col-span-2 flex items-center justify-between p-1 rounded bg-muted/40"
+          class="info-cell col-span-2 flex-between p-1 rounded bg-muted/40"
         >
           <span class="label shrink-0 mr-1">🎨 款式</span>
           <span
@@ -246,10 +225,7 @@ const priceRangeText = computed(() => {
     </CardContent>
 
     <!-- 页脚插槽 -->
-    <CardFooter
-      v-if="$slots.footer"
-      class="p-3 pt-0"
-    >
+    <CardFooter v-if="$slots.footer" class="p-3">
       <slot name="footer" />
     </CardFooter>
   </Card>

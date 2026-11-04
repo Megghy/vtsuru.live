@@ -395,7 +395,7 @@ await loadIndexInfo()
       <Textarea
         v-model="accountInfo.settings.index.notification"
         placeholder="可选，向访问你主页的访客展示的置顶通知"
-        class="text-xs"
+        
         rows="3"
       />
       <div class="flex justify-end">
@@ -410,7 +410,7 @@ await loadIndexInfo()
 
     <!-- 展示视频 -->
     <div class="flex flex-col gap-2 pt-2 border-t border-border">
-      <div class="flex items-center justify-between">
+      <div class="flex-between">
         <div class="text-xs font-semibold text-muted-foreground uppercase">展示视频</div>
         <Button
           variant="outline"
@@ -437,28 +437,13 @@ await loadIndexInfo()
         >
           <SimpleVideoCard :video="item" />
           <div class="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              class="h-6 px-2"
-              :disabled="isLoading"
-              @click="moveVideo(item.id, 'up')"
-            >
+            <Button size="xs" variant="outline" :disabled="isLoading" @click="moveVideo(item.id, 'up')">
               上移
             </Button>
-            <Button
-              variant="outline"
-              class="h-6 px-2"
-              :disabled="isLoading"
-              @click="moveVideo(item.id, 'down')"
-            >
+            <Button size="xs" variant="outline" :disabled="isLoading" @click="moveVideo(item.id, 'down')">
               下移
             </Button>
-            <Button
-              variant="destructive"
-              class="h-6 px-2"
-              :disabled="isLoading"
-              @click="removeVideo(item.id)"
-            >
+            <Button size="xs" variant="destructive" :disabled="isLoading" @click="removeVideo(item.id)">
               删除
             </Button>
           </div>
@@ -468,7 +453,7 @@ await loadIndexInfo()
 
     <!-- 其他链接 -->
     <div class="flex flex-col gap-2 pt-2 border-t border-border">
-      <div class="flex items-center justify-between">
+      <div class="flex-between">
         <div class="text-xs font-semibold text-muted-foreground uppercase">其他链接</div>
         <Button
           variant="outline"
@@ -492,7 +477,7 @@ await loadIndexInfo()
         <div
           v-for="link in orderedLinks"
           :key="link[0]"
-          class="link-item-row flex items-center justify-between p-2 rounded-lg border border-border bg-card text-xs gap-2"
+          class="link-item-row flex-between p-2 rounded-lg border border-border bg-card text-xs gap-2"
         >
           <template v-if="editingLinkName === link[0]">
             <div class="flex items-center gap-1.5 w-full">
@@ -529,40 +514,26 @@ await loadIndexInfo()
                     {{ link[0] }}
                   </Tag>
                 </TooltipTrigger>
-                <TooltipContent class="text-xs max-w-xs break-all">
+                <TooltipContent class="max-w-xs break-all">
                   {{ link[1] }}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
 
             <div class="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                class="size-6 p-0"
-                aria-label="上移链接"
-                @click="moveLink(link[0], 'up')"
-              >
+              <Button size="icon-xs" variant="ghost" aria-label="上移链接" @click="moveLink(link[0], 'up')">
                 <component
                   :is="ArrowUpOutline"
                   class="size-3.5"
                 />
               </Button>
-              <Button
-                variant="ghost"
-                class="size-6 p-0"
-                aria-label="下移链接"
-                @click="moveLink(link[0], 'down')"
-              >
+              <Button size="icon-xs" variant="ghost" aria-label="下移链接" @click="moveLink(link[0], 'down')">
                 <component
                   :is="ArrowDownOutline"
                   class="size-3.5"
                 />
               </Button>
-              <Button
-                variant="outline"
-                class="h-6 px-2"
-                @click="startEditLink(link[0])"
-              >
+              <Button size="xs" variant="outline" @click="startEditLink(link[0])">
                 改名
               </Button>
               <Popconfirm
@@ -571,11 +542,7 @@ await loadIndexInfo()
                 cancel-text="取消"
                 @confirm="removeLink(link[0])"
               >
-                <Button
-                  variant="ghost"
-                  class="size-6 p-0 text-destructive hover:text-destructive"
-                  aria-label="删除链接"
-                >
+                <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive" aria-label="删除链接">
                   <component
                     :is="Delete24Regular"
                     class="size-3.5"
@@ -593,7 +560,7 @@ await loadIndexInfo()
   <Dialog v-model:open="showAddVideoModal">
     <DialogContent class="max-w-md p-4">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">添加视频</DialogTitle>
+        <DialogTitle class="text-sm">添加视频</DialogTitle>
       </DialogHeader>
       <div class="py-2 flex flex-col gap-2">
         <Input
@@ -620,7 +587,7 @@ await loadIndexInfo()
   <Dialog v-model:open="showAddLinkModal">
     <DialogContent class="max-w-md p-4">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">添加链接</DialogTitle>
+        <DialogTitle class="text-sm">添加链接</DialogTitle>
       </DialogHeader>
       <div class="py-2 flex flex-col gap-2">
         <Input
@@ -651,7 +618,7 @@ await loadIndexInfo()
   <Dialog v-model:open="showTemplatePreview">
     <DialogContent class="max-w-4xl p-4 max-h-[85vh] flex flex-col">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">主页模板预览 - {{ selectedIndexTemplate.name }}</DialogTitle>
+        <DialogTitle class="text-sm">主页模板预览 - {{ selectedIndexTemplate.name }}</DialogTitle>
       </DialogHeader>
       <div class="flex-1 overflow-y-auto mt-2 border border-border rounded-lg p-2 bg-background">
         <component

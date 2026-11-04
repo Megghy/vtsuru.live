@@ -40,7 +40,7 @@ const { pageEntries } = usePageEntries(editor)
       <Transition name="fade">
         <CardTitle
           v-if="!props.collapsed"
-          class="text-xs font-semibold"
+          class="text-xs"
         >
           页面
         </CardTitle>
@@ -51,7 +51,7 @@ const { pageEntries } = usePageEntries(editor)
             <Button
               variant="ghost"
               size="icon-xs"
-              class="rounded-md shrink-0"
+              class="shrink-0"
               :aria-label="props.collapsed ? '展开页面栏' : '收起页面栏'"
               @click="emit('toggle-collapse')"
             >

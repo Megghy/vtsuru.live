@@ -27,11 +27,11 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
         </SelectContent>
       </Select>
     </div>
-    <div class="flex items-center justify-between py-1">
+    <div class="flex-between py-1">
       <label class="text-xs text-muted-foreground">显示本月次数</label>
       <Switch v-model:checked="blockProps.showMonthly" />
     </div>
-    <div class="flex items-center justify-between py-1">
+    <div class="flex-between py-1">
       <label class="text-xs text-muted-foreground">显示累计次数</label>
       <Switch v-model:checked="blockProps.showTotal" />
     </div>

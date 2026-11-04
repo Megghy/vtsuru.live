@@ -76,7 +76,7 @@ function formatFullTime(time: number) {
 <template>
   <TooltipProvider>
     <div class="flex items-start gap-3 py-3 border-b border-border/50 text-xs">
-      <Avatar class="size-8 rounded-full shrink-0">
+      <Avatar class="size-8">
         <AvatarImage
           :src="getUserAvatarUrl(item.user.id)"
           referrerpolicy="no-referrer"
@@ -86,11 +86,7 @@ function formatFullTime(time: number) {
 
       <div class="flex-1 min-w-0 space-y-2">
         <div class="flex items-center gap-2">
-          <Badge
-            v-if="item.isDeleted"
-            variant="destructive"
-            class="text-[10px] h-4.5 px-1.5 font-normal"
-          >
+          <Badge v-if="item.isDeleted" variant="destructive" size="xs">
             已删除
           </Badge>
           <strong class="font-medium text-foreground">{{ item.user.name }}</strong>
@@ -100,7 +96,7 @@ function formatFullTime(time: number) {
                 {{ formatRelativeTime(item.sendAt) }}
               </span>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">
+            <TooltipContent>
               {{ formatFullTime(item.sendAt) }}
             </TooltipContent>
           </Tooltip>
@@ -135,7 +131,7 @@ function formatFullTime(time: number) {
             <TooltipTrigger as-child>
               <Button
                 variant="ghost"
-                class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground"
+                class="flex items-center gap-1 px-2 text-muted-foreground"
                 :class="{ 'text-destructive': item.isLiked }"
                 :disabled="!canOprate || useForum.isLikeLoading"
                 @click="
@@ -154,14 +150,14 @@ function formatFullTime(time: number) {
                 <span>{{ item.likeCount }}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">点赞</TooltipContent>
+            <TooltipContent>点赞</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
                 variant="ghost"
-                class="flex items-center gap-1 px-2 text-muted-foreground hover:text-foreground"
+                class="flex items-center gap-1 px-2 text-muted-foreground"
                 :disabled="!canOprate"
                 @click="useForum.SetReplyingComment(item)"
               >
@@ -172,7 +168,7 @@ function formatFullTime(time: number) {
                 <span>{{ item.replies.length }}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">回复</TooltipContent>
+            <TooltipContent>回复</TooltipContent>
           </Tooltip>
 
           <div class="ml-auto">

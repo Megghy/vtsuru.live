@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { SongRequestOption } from './songRequestOption'
+import type { SongRequestOption } from './songRequestOption';
 
 export interface BatchUpdateOption {
-  ids: string[]
-  data?: SongRequestOption
+  ids: string[];
+  data?: SongRequestOption;
 }

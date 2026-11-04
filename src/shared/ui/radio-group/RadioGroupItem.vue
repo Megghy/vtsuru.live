@@ -24,7 +24,7 @@ const forwardedProps = useForwardProps(delegatedProps)
       )
     "
   >
-    <RadioGroupIndicator class="flex items-center justify-center">
+    <RadioGroupIndicator class="flex-center">
       <Circle class="h-2.5 w-2.5 fill-current text-current" />
     </RadioGroupIndicator>
   </RadioGroupItem>

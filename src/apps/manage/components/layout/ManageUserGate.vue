@@ -92,7 +92,7 @@ onMounted(async () => {
 <template>
   <div
     v-if="auth.isLoading && !isReady"
-    class="flex flex-col items-center justify-center min-h-[280px] gap-3 text-muted-foreground"
+    class="flex-col-center min-h-[280px] gap-3 text-muted-foreground"
   >
     <Spin size="large" />
     <span class="text-xs">正在载入 Bilibili 账户</span>
@@ -120,12 +120,12 @@ onMounted(async () => {
 
   <div
     v-else
-    class="manage-page manage-page--md flex items-center justify-center p-6"
+    class="manage-page manage-page--md flex-center p-6"
   >
     <Card class="w-full max-w-md text-center p-6">
       <CardHeader class="flex flex-col items-center p-0 space-y-3">
         <div
-          class="size-12 rounded-full flex items-center justify-center"
+          class="size-12 rounded-full flex-center"
           :class="auth.isInvalid ? 'bg-amber-500/10 text-amber-500' : 'bg-primary/10 text-primary'"
         >
           <ShieldAlert
@@ -137,10 +137,10 @@ onMounted(async () => {
             class="size-6"
           />
         </div>
-        <CardTitle class="text-base font-semibold">
+        <CardTitle class="text-base">
           {{ auth.isInvalid ? 'Bilibili 认证已失效' : '先完成 Bilibili 认证' }}
         </CardTitle>
-        <CardDescription class="text-xs text-muted-foreground"> 认证后即可查看积分、订单和积分记录。 </CardDescription>
+        <CardDescription class="text-xs"> 认证后即可查看积分、订单和积分记录。 </CardDescription>
       </CardHeader>
       <CardFooter class="flex justify-center p-0 pt-6">
         <Button @click="router.push({ name: 'bili-auth' })">
@@ -154,8 +154,8 @@ onMounted(async () => {
     <DialogContent class="sm:max-w-md">
       <template v-if="auth.replacementToken">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">保存新的登录链接</DialogTitle>
-          <DialogDescription class="text-xs text-muted-foreground">
+          <DialogTitle class="text-sm">保存新的登录链接</DialogTitle>
+          <DialogDescription class="text-xs">
             登录链接已更新，请复制并妥善保存新的长期登录链接。
           </DialogDescription>
         </DialogHeader>
@@ -167,7 +167,7 @@ onMounted(async () => {
             class="font-mono"
           />
         </div>
-        <DialogFooter class="flex items-center justify-end gap-2">
+        <DialogFooter>
           <Button
             variant="outline"
             class="gap-1.5"
@@ -181,14 +181,14 @@ onMounted(async () => {
       </template>
       <template v-else>
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">
+          <DialogTitle class="text-sm">
             {{ migrationError ? '无法生成新链接' : '正在更新登录链接' }}
           </DialogTitle>
-          <DialogDescription class="text-xs text-muted-foreground">
+          <DialogDescription class="text-xs">
             {{ migrationError || '完成后会在这里显示新的长期登录链接。' }}
           </DialogDescription>
         </DialogHeader>
-        <div class="flex items-center justify-center py-6">
+        <div class="flex-center py-6">
           <Button
             v-if="migrationError"
             @click="migrateLegacyAuth"

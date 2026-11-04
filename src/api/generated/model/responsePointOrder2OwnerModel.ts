@@ -5,34 +5,34 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { GoodsTypes } from './goodsTypes'
-import type { PointOrderStatus } from './pointOrderStatus'
-import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel'
-import type { ResponsePointGoodsModel } from './responsePointGoodsModel'
-import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo'
-import type { ServiceOrderData } from './serviceOrderData'
-import type { ShippingAddressInfo } from './shippingAddressInfo'
+import type { GoodsTypes } from './goodsTypes';
+import type { PointOrderStatus } from './pointOrderStatus';
+import type { ResponseBiliAuthBasicModel } from './responseBiliAuthBasicModel';
+import type { ResponsePointGoodsModel } from './responsePointGoodsModel';
+import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo';
+import type { ServiceOrderData } from './serviceOrderData';
+import type { ShippingAddressInfo } from './shippingAddressInfo';
 
 export interface ResponsePointOrder2OwnerModel {
-  id: number
-  point: number
-  vTsuruId: number
-  type: GoodsTypes
-  customer: ResponseBiliAuthBasicModel
-  address?: ShippingAddressInfo
-  goods: ResponsePointGoodsModel
-  count: number
-  createAt: number
+  id: number;
+  point: number;
+  vTsuruId: number;
+  type: GoodsTypes;
+  customer: ResponseBiliAuthBasicModel;
+  address?: ShippingAddressInfo;
+  goods: ResponsePointGoodsModel;
+  count: number;
+  createAt: number;
   /** @nullable */
-  updateAt?: number | null
-  status: PointOrderStatus
+  updateAt?: number | null;
+  status: PointOrderStatus;
   /** @nullable */
-  remark?: string | null
+  remark?: string | null;
   /** @nullable */
-  trackingNumber?: string | null
+  trackingNumber?: string | null;
   /** @nullable */
-  expressCompany?: string | null
+  expressCompany?: string | null;
   /** @nullable */
-  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null
-  serviceData?: ServiceOrderData
+  selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null;
+  serviceData?: ServiceOrderData;
 }

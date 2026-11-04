@@ -128,19 +128,16 @@ function openAssistant() {
       class="max-w-4xl max-h-[88vh] flex flex-col p-0"
     >
       <DialogHeader class="p-4 border-b">
-        <DialogTitle class="text-sm font-semibold">添加歌曲</DialogTitle>
+        <DialogTitle class="text-sm">添加歌曲</DialogTitle>
       </DialogHeader>
 
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
         <Spin :show="isModalLoading">
-          <Alert
-            variant="default"
-            class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5"
-          >
-            <div class="flex items-center justify-between flex-wrap gap-2 w-full">
+          <Alert size="sm" variant="info">
+            <div class="flex-between flex-wrap gap-2 w-full">
               <div class="space-y-0.5">
-                <AlertTitle class="text-xs font-semibold">也可以使用 VTsuru 助手</AlertTitle>
-                <AlertDescription class="text-xs">
+                <AlertTitle>也可以使用 VTsuru 助手</AlertTitle>
+                <AlertDescription>
                   上传歌曲信息截图，或直接粘贴歌曲信息，Agent 会自动识别并生成添加操作。
                 </AlertDescription>
               </div>
@@ -237,7 +234,7 @@ function openAssistant() {
         </Spin>
       </div>
 
-      <DialogFooter class="p-3 border-t bg-muted/10 flex items-center justify-between">
+      <DialogFooter class="p-3 border-t bg-muted/10 flex-between">
         <span class="text-xs text-muted-foreground">{{ footerConfig.hint }}</span>
         <div
           v-if="activeTab === 'custom' && customTabRef"

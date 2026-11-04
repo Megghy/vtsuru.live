@@ -5,26 +5,26 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DuplicateVideoPolicy } from './duplicateVideoPolicy'
-import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
+import type { DuplicateVideoPolicy } from './duplicateVideoPolicy';
+import type { ResponseUserBasicInfo } from './responseUserBasicInfo';
 
 export interface ResponseVideoCollectModel {
-  id: string
-  owner: ResponseUserBasicInfo
-  shortId: string
-  name: string
-  description: string
-  createAt: number
-  startAt: number
-  endAt: number
-  videoCount: number
-  maxVideoCount: number
-  minVideoDuration: number
-  maxVideoDuration: number
-  allowedPartitions: string[]
-  allowUnregisteredUser: boolean
-  maxVideoPerUser: number
-  requireDescription: boolean
-  duplicatePolicy: DuplicateVideoPolicy
-  isFinish: boolean
+  id: string;
+  owner: ResponseUserBasicInfo;
+  shortId: string;
+  name: string;
+  description: string;
+  createAt: number;
+  startAt: number;
+  endAt: number;
+  videoCount: number;
+  maxVideoCount: number;
+  minVideoDuration: number;
+  maxVideoDuration: number;
+  allowedPartitions: string[];
+  allowUnregisteredUser: boolean;
+  maxVideoPerUser: number;
+  requireDescription: boolean;
+  duplicatePolicy: DuplicateVideoPolicy;
+  isFinish: boolean;
 }

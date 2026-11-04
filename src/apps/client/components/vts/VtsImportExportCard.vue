@@ -90,9 +90,9 @@ function cancelImport() {
 <template>
   <Card>
     <CardHeader class="py-3 px-4">
-      <CardTitle class="text-sm font-semibold">导入 / 导出</CardTitle>
+      <CardTitle>导入 / 导出</CardTitle>
     </CardHeader>
-    <CardContent class="px-4 pb-4 pt-0">
+    <CardContent class="px-4 pb-4">
       <div class="flex items-center gap-2 flex-wrap text-xs">
         <Button
           variant="outline"
@@ -129,7 +129,7 @@ function cancelImport() {
   >
     <DialogContent class="max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">导入预览</DialogTitle>
+        <DialogTitle class="text-base">导入预览</DialogTitle>
       </DialogHeader>
       <div class="flex flex-col gap-2 py-3">
         <span

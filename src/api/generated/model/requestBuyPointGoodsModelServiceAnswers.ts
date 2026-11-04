@@ -9,4 +9,4 @@
 /**
  * @nullable
  */
-export type RequestBuyPointGoodsModelServiceAnswers = { [key: string]: string } | null
+export type RequestBuyPointGoodsModelServiceAnswers = {[key: string]: string} | null;

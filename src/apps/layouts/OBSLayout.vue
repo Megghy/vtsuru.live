@@ -58,7 +58,7 @@ onUnmounted(() => {
             :open-live-auth="openLiveAuth"
           />
           <template #fallback>
-            <div class="flex items-center justify-center w-full h-full min-h-[100px]">
+            <div class="flex-center w-full h-full min-h-[100px]">
               <Spin size="medium" />
             </div>
           </template>

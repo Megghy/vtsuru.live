@@ -85,7 +85,7 @@ const previewBoxStyle = computed(() => {
   <Dialog v-model:open="showModel">
     <DialogContent class="max-w-[860px] max-h-[90vh] overflow-hidden flex flex-col p-6">
       <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
-        <DialogTitle class="text-base font-semibold">OBS 抽奖组件</DialogTitle>
+        <DialogTitle class="text-base">OBS 抽奖组件</DialogTitle>
         <Button
           v-if="url"
           as="a"
@@ -103,7 +103,7 @@ const previewBoxStyle = computed(() => {
         <div class="grid grid-cols-[minmax(320px,1fr)_300px] gap-6 items-start max-[720px]:grid-cols-1">
           <!-- 左侧：链接与配置 -->
           <div class="flex flex-col gap-4 min-w-0">
-            <Alert class="text-xs py-2 bg-muted/50 border-muted">
+            <Alert size="sm" class="bg-muted/50 border-muted">
               <AlertDescription> 将抽奖等待队列与中奖揭榜结果实时展示在 OBS 浏览器源中。 </AlertDescription>
             </Alert>
 
@@ -152,11 +152,8 @@ const previewBoxStyle = computed(() => {
             <!-- 链接复制 -->
             <div class="flex flex-col gap-2">
               <div class="text-[13px] font-medium text-foreground">OBS 浏览器源链接</div>
-              <Alert
-                v-if="!url"
-                class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs py-2"
-              >
-                <AlertDescription class="text-xs text-amber-700 dark:text-amber-400">
+              <Alert size="sm" variant="warning" v-if="!url">
+                <AlertDescription class="text-amber-700 dark:text-amber-400">
                   未获取到用户信息，无法生成 OBS 链接。请先登录，或通过幻星平台打开本页。
                 </AlertDescription>
               </Alert>

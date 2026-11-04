@@ -5,18 +5,18 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AssistantConversationDto } from './assistantConversationDto'
+import type { AssistantConversationDto } from './assistantConversationDto';
 
 /**
  * 分页响应信封：code / message / data / pn / ps / total / more
  */
 export interface PaginationResponseOfListOfAssistantConversationDto {
-  ps: number
-  pn: number
-  total: number
-  more: boolean
-  message: string
-  code: number
+  ps: number;
+  pn: number;
+  total: number;
+  more: boolean;
+  message: string;
+  code: number;
   /** @nullable */
-  data: AssistantConversationDto[] | null
+  data: AssistantConversationDto[] | null;
 }

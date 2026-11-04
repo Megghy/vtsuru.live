@@ -93,7 +93,7 @@ const darkResult = computed(() => resolveUserPageTextColor(props.target.get(), t
                   class="size-3.5 text-muted-foreground cursor-help"
                 />
               </TooltipTrigger>
-              <TooltipContent class="max-w-xs text-xs">
+              <TooltipContent class="max-w-xs">
                 根据亮色或暗色模式下最不利的页面背景微调最终显示颜色，至少保持 4.5:1
                 对比度。不会修改已选择的颜色，亮色或暗色覆盖色会优先于基础文字颜色。
               </TooltipContent>

@@ -25,6 +25,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
@@ -248,7 +249,7 @@ function handleTitleClick() {
               v-for="item in navItems"
               :key="item.key"
               :variant="currentTab === item.key ? 'default' : 'ghost'"
-              class="w-full justify-start gap-2.5 text-xs font-medium"
+              class="w-full justify-start gap-2.5 text-xs"
               @click="currentTab = item.key"
             >
               <component
@@ -265,7 +266,7 @@ function handleTitleClick() {
       <div class="md:col-span-3">
         <div
           v-if="isLoading"
-          class="flex items-center justify-center p-8 text-xs text-[var(--muted-foreground)] gap-2"
+          class="flex-center p-8 text-xs text-[var(--muted-foreground)] gap-2"
         >
           <Spin class="w-4 h-4" />
           <span>正在加载设置...</span>
@@ -281,13 +282,9 @@ function handleTitleClick() {
             class="mb-2"
           >
             <AlertTitle>操作错误</AlertTitle>
-            <AlertDescription class="flex items-center justify-between">
+            <AlertDescription class="flex-between">
               <span>{{ errorMsg }}</span>
-              <Button
-                variant="ghost"
-                class="h-6 px-2"
-                @click="errorMsg = null"
-              >
+              <Button size="xs" variant="ghost" @click="errorMsg = null">
                 关闭
               </Button>
             </AlertDescription>
@@ -306,9 +303,9 @@ function handleTitleClick() {
                 <div class="flex flex-col gap-3">
                   <Card>
                     <CardHeader class="py-3 px-4">
-                      <CardTitle class="text-sm font-semibold">启动偏好</CardTitle>
+                      <CardTitle>启动偏好</CardTitle>
                     </CardHeader>
-                    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+                    <CardContent class="px-4 pb-4 flex flex-col gap-3">
                       <LabelItem
                         label="开机时自动启动应用"
                         label-placement="left"
@@ -340,11 +337,13 @@ function handleTitleClick() {
 
                   <Card>
                     <CardHeader class="py-3 px-4">
-                      <CardTitle class="text-sm font-semibold">界面外观</CardTitle>
+                      <CardTitle>界面外观</CardTitle>
                     </CardHeader>
-                    <CardContent class="px-4 pb-4 pt-0">
-                      <div class="flex items-center justify-between">
-                        <span class="text-xs font-medium text-[var(--foreground)]">主题模式</span>
+                    <CardContent class="px-4 pb-4">
+                      <SettingRow
+                        variant="none"
+                        title="主题模式"
+                      >
                         <RadioGroup
                           :model-value="themeType"
                           class="flex items-center gap-3"
@@ -384,7 +383,7 @@ function handleTitleClick() {
                             >
                           </div>
                         </RadioGroup>
-                      </div>
+                      </SettingRow>
                     </CardContent>
                   </Card>
                 </div>
@@ -399,16 +398,14 @@ function handleTitleClick() {
               <template v-else-if="currentTab === 'notification'">
                 <Card>
                   <CardHeader class="py-3 px-4">
-                    <CardTitle class="text-sm font-semibold">系统通知</CardTitle>
+                    <CardTitle>系统通知</CardTitle>
                   </CardHeader>
-                  <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3.5">
-                    <div class="flex items-center justify-between gap-3">
-                      <div>
-                        <span class="font-bold text-xs text-foreground">桌面通知总开关</span>
-                        <div class="text-xs text-muted-foreground mt-0.5">
-                          开启后，选中的事件将在 Windows 桌面右下角推送通知
-                        </div>
-                      </div>
+                  <CardContent class="px-4 pb-4 flex flex-col gap-3.5">
+                    <SettingRow
+                      variant="none"
+                      title="桌面通知总开关"
+                      description="开启后，选中的事件将在 Windows 桌面右下角推送通知"
+                    >
                       <Switch
                         :checked="setting.settings.enableNotification"
                         @update:checked="
@@ -418,7 +415,7 @@ function handleTitleClick() {
                           }
                         "
                       />
-                    </div>
+                    </SettingRow>
 
                     <Separator />
 
@@ -426,22 +423,18 @@ function handleTitleClick() {
                       v-if="setting.settings.enableNotification"
                       class="flex flex-col gap-2.5"
                     >
-                      <div
+                      <SettingRow
                         v-for="item in notificationItems"
                         :key="item.type"
-                        class="flex items-center justify-between py-2 px-3 border border-border rounded-md bg-muted"
+                        variant="compact"
+                        :title="item.title"
+                        :description="item.desc"
                       >
-                        <div class="min-w-0 pr-2">
-                          <span class="font-bold text-xs text-foreground">{{ item.title }}</span>
-                          <div class="text-xs text-muted-foreground mt-0.5">
-                            {{ item.desc }}
-                          </div>
-                        </div>
                         <Switch
                           :checked="isNotificationTypeEnabled(item.type)"
                           @update:checked="(val) => toggleNotificationType(item.type, val)"
                         />
-                      </div>
+                      </SettingRow>
                     </div>
 
                     <span
@@ -458,9 +451,9 @@ function handleTitleClick() {
               <template v-else-if="currentTab === 'backup'">
                 <Card>
                   <CardHeader class="py-3 px-4">
-                    <CardTitle class="text-sm font-semibold">数据备份</CardTitle>
+                    <CardTitle>数据备份</CardTitle>
                   </CardHeader>
-                  <CardContent class="px-4 pb-4 pt-0">
+                  <CardContent class="px-4 pb-4">
                     <ClientBackupPanel />
                   </CardContent>
                 </Card>
@@ -470,9 +463,9 @@ function handleTitleClick() {
               <template v-else-if="currentTab === 'about'">
                 <Card>
                   <CardHeader class="py-3 px-4">
-                    <CardTitle class="text-sm font-semibold">关于 VTsuru.Client</CardTitle>
+                    <CardTitle>关于 VTsuru.Client</CardTitle>
                   </CardHeader>
-                  <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3.5">
+                  <CardContent class="px-4 pb-4 flex flex-col gap-3.5">
                     <div class="flex flex-col gap-1">
                       <div class="flex items-center gap-2">
                         <span class="font-bold text-base text-foreground"> VTsuru EventFetcher </span>
@@ -484,7 +477,7 @@ function handleTitleClick() {
                     </div>
 
                     <div class="flex flex-col gap-2 text-[13px]">
-                      <div class="flex items-center justify-between py-1.5 border-b border-dashed border-border">
+                      <div class="flex-between py-1.5 border-b border-dashed border-border">
                         <span class="text-xs text-muted-foreground">作者</span>
                         <a
                           href="https://space.bilibili.com/10021741"
@@ -495,7 +488,7 @@ function handleTitleClick() {
                         </a>
                       </div>
 
-                      <div class="flex items-center justify-between py-1.5 border-b border-dashed border-border">
+                      <div class="flex-between py-1.5 border-b border-dashed border-border">
                         <span class="text-xs text-muted-foreground">开源仓库</span>
                         <div class="flex items-center gap-2">
                           <a
@@ -516,7 +509,7 @@ function handleTitleClick() {
                         </div>
                       </div>
 
-                      <div class="flex items-center justify-between py-1.5 border-b border-dashed border-border">
+                      <div class="flex-between py-1.5 border-b border-dashed border-border">
                         <span class="text-xs text-muted-foreground">交流与反馈群</span>
                         <span class="font-bold text-xs text-foreground">873260337</span>
                       </div>
@@ -524,7 +517,7 @@ function handleTitleClick() {
 
                     <Separator />
 
-                    <div class="flex items-center justify-between">
+                    <div class="flex-between">
                       <div>
                         <span class="font-bold text-xs text-foreground">在线检查更新</span>
                         <div class="text-xs text-muted-foreground mt-0.5">查询服务端最新客户端版本并自动更新</div>

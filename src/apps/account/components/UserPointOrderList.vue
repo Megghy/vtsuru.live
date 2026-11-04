@@ -118,7 +118,7 @@ function formatDateTime(ts: number) {
             v-for="row in pagedOrders"
             :key="row.id"
           >
-            <TableCell class="font-mono text-xs text-muted-foreground">#{{ row.id }}</TableCell>
+            <TableCell class="font-mono text-muted-foreground">#{{ row.id }}</TableCell>
             <TableCell>
               <div class="flex flex-col gap-0.5">
                 <strong class="text-xs"
@@ -132,10 +132,10 @@ function formatDateTime(ts: number) {
                 </span>
               </div>
             </TableCell>
-            <TableCell class="text-xs text-muted-foreground">
+            <TableCell class="text-muted-foreground">
               {{ formatRelativeTime(row.createAt) }}
             </TableCell>
-            <TableCell class="text-xs font-medium">
+            <TableCell class="font-medium">
               {{ Number(row.point.toFixed(1)) }}
             </TableCell>
             <TableCell>
@@ -187,7 +187,7 @@ function formatDateTime(ts: number) {
         class="mobile-order-card h-auto flex flex-col items-stretch text-left p-3 rounded-lg border border-border bg-card hover:bg-accent/50 font-normal"
         @click="openDetail(order)"
       >
-        <span class="flex items-center justify-between mb-1.5 text-xs">
+        <span class="flex-between mb-1.5 text-xs">
           <span class="font-mono text-muted-foreground">#{{ order.id }}</span>
           <Tag
             :type="statusMeta[order.status].type"
@@ -210,7 +210,7 @@ function formatDateTime(ts: number) {
           {{ order.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / ') }}
         </span>
         <span
-          class="flex items-center justify-between mt-2 pt-1.5 border-t border-border/50 text-xs text-muted-foreground"
+          class="flex-between mt-2 pt-1.5 border-t border-border/50 text-xs text-muted-foreground"
         >
           <span>{{ formatRelativeTime(order.createAt) }}</span>
           <b class="text-foreground font-semibold">{{ Number(order.point.toFixed(1)) }} 积分</b>
@@ -283,7 +283,7 @@ function formatDateTime(ts: number) {
                 <div
                   v-for="item in detail.selectedSubItems"
                   :key="item.subItemId"
-                  class="flex items-center justify-between p-2.5 rounded border border-border bg-card text-xs"
+                  class="flex-between p-2.5 rounded border border-border bg-card text-xs"
                 >
                   <div class="flex items-center gap-2">
                     <strong class="text-foreground">{{ item.nameSnapshot }}</strong>

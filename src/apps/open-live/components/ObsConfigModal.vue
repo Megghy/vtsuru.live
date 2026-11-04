@@ -80,7 +80,7 @@ const obsUrl = computed(() =>
   <Dialog v-model:open="showModel">
     <DialogContent class="max-w-[880px] max-h-[90vh] overflow-hidden flex flex-col p-6">
       <DialogHeader class="flex flex-row items-center justify-between pb-2 border-b">
-        <DialogTitle class="text-base font-semibold">OBS 组件</DialogTitle>
+        <DialogTitle class="text-base">OBS 组件</DialogTitle>
         <Button
           as="a"
           variant="outline"
@@ -97,7 +97,7 @@ const obsUrl = computed(() =>
         <div class="grid grid-cols-[minmax(320px,1fr)_280px] gap-6 items-start max-[720px]:grid-cols-1">
           <!-- 左侧：操作、链接与配置 -->
           <div class="flex flex-col gap-4 min-w-0">
-            <Alert class="text-xs py-2 bg-muted/50 border-muted">
+            <Alert size="sm" class="bg-muted/50 border-muted">
               <AlertDescription>{{ description }}</AlertDescription>
             </Alert>
 

@@ -95,7 +95,7 @@ function moveImage(id: number, offset: -1 | 1) {
       @click="selectedImageId = selectedImageId === image.id ? undefined : image.id"
     >
       <CardHeader class="p-3">
-        <div class="flex items-center justify-between">
+        <div class="flex-between">
           <div class="flex items-center gap-2.5 min-w-0">
             <img
               :src="image.path"
@@ -114,7 +114,7 @@ function moveImage(id: number, offset: -1 | 1) {
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    class="text-muted-foreground hover:text-foreground"
+                    class="text-muted-foreground"
                     aria-label="下移一层"
                     :disabled="disabled"
                     @click.stop="moveImage(image.id, -1)"
@@ -130,7 +130,7 @@ function moveImage(id: number, offset: -1 | 1) {
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    class="text-muted-foreground hover:text-foreground"
+                    class="text-muted-foreground"
                     aria-label="上移一层"
                     :disabled="disabled"
                     @click.stop="moveImage(image.id, 1)"
@@ -161,10 +161,7 @@ function moveImage(id: number, offset: -1 | 1) {
         </div>
       </CardHeader>
 
-      <CardFooter
-        v-if="selectedImageId === image.id"
-        class="p-3 pt-0 flex flex-col gap-3 border-t bg-muted/10"
-      >
+      <CardFooter v-if="selectedImageId === image.id" class="p-3 flex flex-col gap-3 border-t bg-muted/10">
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-3">
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground">X (%)</span>

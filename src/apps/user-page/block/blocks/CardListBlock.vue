@@ -96,12 +96,7 @@ const items = computed(() =>
             v-if="item.tags.length"
             class="flex gap-1.5 flex-wrap"
           >
-            <Badge
-              v-for="tag in item.tags"
-              :key="tag"
-              variant="secondary"
-              class="text-[10px] px-1.5 py-0.5"
-            >
+            <Badge v-for="tag in item.tags" :key="tag" variant="secondary" size="xs" class="py-0.5">
               {{ tag }}
             </Badge>
           </div>

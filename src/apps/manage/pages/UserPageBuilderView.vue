@@ -357,7 +357,7 @@ onBeforeRouteLeave(() => {
     >
       <div
         v-if="editor.loadStatus.value === 'error'"
-        class="m-auto flex flex-col items-center justify-center p-8 text-center"
+        class="m-auto flex-col-center p-8 text-center"
       >
         <div class="mb-2 text-lg font-semibold text-destructive">页面配置加载失败</div>
         <p class="mb-4 text-sm text-muted-foreground">{{ editor.error.value || '请检查网络连接后重试' }}</p>
@@ -379,10 +379,7 @@ onBeforeRouteLeave(() => {
           <AlertDescription>{{ editor.error.value }}</AlertDescription>
         </Alert>
 
-        <Alert
-          v-if="editor.localDraftConflict.value"
-          class="mb-3 border-amber-500/50 text-amber-600 dark:text-amber-400"
-        >
+        <Alert variant="warning" v-if="editor.localDraftConflict.value" class="mb-3">
           <AlertTriangle class="h-4 w-4" />
           <AlertTitle>版本冲突</AlertTitle>
           <AlertDescription>
@@ -509,7 +506,7 @@ onBeforeRouteLeave(() => {
               <div
                 v-for="id in layoutColumnsModel"
                 :key="id"
-                class="my-2 flex items-center justify-between gap-2.5 rounded-lg border border-border p-2.5"
+                class="my-2 flex-between gap-2.5 rounded-lg border border-border p-2.5"
               >
                 <div class="flex min-w-0 items-center gap-2.5">
                   <ReorderThreeOutline class="drag-handle size-4 cursor-grab text-muted-foreground" />
@@ -586,21 +583,15 @@ onBeforeRouteLeave(() => {
                   </Button>
                 </AlertDescription>
               </Alert>
-              <Alert
-                v-else
-                class="border-green-500/50 text-green-600 dark:text-green-400"
-              >
+              <Alert variant="success" v-else>
                 <CheckCircle2 class="h-4 w-4" />
                 <AlertDescription>校验通过，可以发布</AlertDescription>
               </Alert>
 
-              <Alert
-                v-if="editor.publishCheckWarnings.value.length"
-                class="border-amber-500/50 text-amber-600 dark:text-amber-400"
-              >
+              <Alert variant="warning" v-if="editor.publishCheckWarnings.value.length">
                 <AlertTriangle class="h-4 w-4" />
                 <AlertTitle>提示建议</AlertTitle>
-                <AlertDescription class="mt-1 flex flex-col gap-0.5 text-xs">
+                <AlertDescription class="mt-1 flex flex-col gap-0.5">
                   <div
                     v-for="(it, idx) in editor.publishCheckWarnings.value"
                     :key="idx"

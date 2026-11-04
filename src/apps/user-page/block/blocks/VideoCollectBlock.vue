@@ -83,7 +83,7 @@ watch(
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="collect-header flex items-center justify-between w-full">
+      <div class="collect-header flex-between w-full">
         <span class="collect-heading flex items-center gap-1.5 font-semibold text-sm">
           <component
             :is="VideocamOutline"
@@ -113,18 +113,11 @@ watch(
       </div>
     </template>
 
-    <Alert
-      v-if="!enabled"
-      class="text-xs py-2"
-    >
+    <Alert size="sm" v-if="!enabled">
       <AlertDescription> 视频征集未开放 </AlertDescription>
     </Alert>
-    <Alert
-      v-else-if="query.status.value === 'error'"
-      variant="destructive"
-      class="text-xs py-2"
-    >
-      <AlertDescription class="flex items-center justify-between w-full">
+    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+      <AlertDescription class="flex-between w-full">
         <span>视频征集加载失败</span>
         <Button
           variant="outline"

@@ -166,9 +166,9 @@ onUnmounted(stopSession)
 </script>
 
 <template>
-  <Card class="border bg-card w-full">
-    <CardHeader class="p-3 pb-2 border-b">
-      <CardTitle class="text-sm font-semibold">会话实时统计</CardTitle>
+  <Card class="w-full">
+    <CardHeader class="p-3 border-b">
+      <CardTitle>会话实时统计</CardTitle>
     </CardHeader>
     <CardContent class="p-3">
       <div v-if="isConnected && showCharts">
@@ -176,7 +176,7 @@ onUnmounted(stopSession)
           <!-- 实时速率 -->
           <Card class="border bg-muted/20">
             <CardHeader class="p-2.5 pb-1 border-b">
-              <CardTitle class="text-xs font-semibold">实时速率</CardTitle>
+              <CardTitle class="text-xs">实时速率</CardTitle>
             </CardHeader>
             <CardContent class="p-2">
               <div class="h-[180px]">
@@ -193,7 +193,7 @@ onUnmounted(stopSession)
           <!-- 事件类型分布 -->
           <Card class="border bg-muted/20">
             <CardHeader class="p-2.5 pb-1 border-b">
-              <CardTitle class="text-xs font-semibold">事件类型分布</CardTitle>
+              <CardTitle class="text-xs">事件类型分布</CardTitle>
             </CardHeader>
             <CardContent class="p-2">
               <div class="h-[180px]">
@@ -210,7 +210,7 @@ onUnmounted(stopSession)
           <!-- 会话摘要 -->
           <Card class="border bg-muted/20 col-span-1 sm:col-span-2 lg:col-span-1">
             <CardHeader class="p-2.5 pb-1 border-b">
-              <CardTitle class="text-xs font-semibold">会话摘要</CardTitle>
+              <CardTitle class="text-xs">会话摘要</CardTitle>
             </CardHeader>
             <CardContent class="p-3 flex flex-col justify-around h-[180px]">
               <div>
@@ -237,7 +237,7 @@ onUnmounted(stopSession)
       />
       <div
         v-else
-        class="flex flex-col items-center justify-center py-6 gap-2 text-xs text-muted-foreground"
+        class="flex-col-center py-6 gap-2 text-xs text-muted-foreground"
       >
         <Spin
           :show="true"

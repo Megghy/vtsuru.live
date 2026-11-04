@@ -46,13 +46,7 @@ function markAllRead() {
       />
       <Popover v-if="panel === 'gift'">
         <PopoverTrigger as-child>
-          <Button
-            variant="ghost"
-            size="icon"
-            class="h-6 w-6"
-            aria-label="礼物过滤"
-            :class="
-              dashboard.settings.giftMinPrice > 0 || dashboard.settings.showFreeGift
+          <Button variant="ghost" size="icon-xs" aria-label="礼物过滤" :class=" dashboard.settings.giftMinPrice> 0 || dashboard.settings.showFreeGift
                 ? 'text-primary'
                 : 'text-muted-foreground'
             "
@@ -63,10 +57,7 @@ function markAllRead() {
             />
           </Button>
         </PopoverTrigger>
-        <PopoverContent
-          class="w-[220px] p-3 text-xs"
-          align="end"
-        >
+        <PopoverContent class="w-[220px]" align="end">
           <div class="grid gap-2 w-[200px] text-xs">
             <label class="text-muted-foreground">最低金额（元），大航海不受影响</label>
             <NumberField

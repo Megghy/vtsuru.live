@@ -204,7 +204,7 @@ async function rejectStreamer() {
 
 <template>
   <main class="web-page web-page--md py-10 px-4 max-w-lg mx-auto">
-    <Card class="shadow-sm">
+    <Card>
       <CardHeader class="pb-3 border-b border-border/50">
         <CardTitle class="text-lg">加入 / 授权</CardTitle>
       </CardHeader>
@@ -255,10 +255,7 @@ async function rejectStreamer() {
               <template v-if="preview.type === 'member'">
                 <dt class="text-muted-foreground">加入角色</dt>
                 <dd>
-                  <Badge
-                    variant="secondary"
-                    class="h-5 text-[11px] font-normal"
-                  >
+                  <Badge variant="secondary" size="sm">
                     {{ roleLabel(preview.role) }}
                   </Badge>
                 </dd>
@@ -279,7 +276,7 @@ async function rejectStreamer() {
           <Separator />
 
           <template v-if="!isLoggedIn">
-            <Alert class="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+            <Alert variant="warning">
               <AlertDescription>需要先登录才能继续。</AlertDescription>
             </Alert>
             <RegisterAndLogin />
@@ -287,9 +284,9 @@ async function rejectStreamer() {
 
           <template v-else>
             <template v-if="done">
-              <div class="py-6 flex flex-col items-center justify-center text-center gap-2">
+              <div class="py-6 flex-col-center text-center gap-2">
                 <div
-                  class="size-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center text-lg font-bold"
+                  class="size-10 rounded-full bg-emerald-500/10 text-emerald-500 flex-center text-lg font-bold"
                 >
                   ✓
                 </div>

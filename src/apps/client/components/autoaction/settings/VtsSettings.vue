@@ -7,9 +7,11 @@ import { ActionType } from '@/apps/client/store/useAutoAction'
 import { useVtsStore } from '@/apps/client/store/useVtsStore'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -43,26 +45,25 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
 
 <template>
   <div v-if="isVtsAction">
-    <Card class="border bg-card">
-      <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-        <CardTitle class="text-sm font-semibold">VTS 动作配置</CardTitle>
+    <Card>
+      <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+        <CardTitle>VTS 动作配置</CardTitle>
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
               <Info16Regular class="size-4 text-muted-foreground cursor-help" />
             </TooltipTrigger>
-            <TooltipContent class="text-xs"> 需要 VTS 已连接且已授权 </TooltipContent>
+            <TooltipContent> 需要 VTS 已连接且已授权 </TooltipContent>
           </Tooltip>
         </TooltipProvider>
       </CardHeader>
 
       <CardContent class="p-3 space-y-3">
         <!-- 热键 -->
-        <div
+        <FormField
           v-if="action.actionType === ActionType.VTS_HOTKEY"
-          class="space-y-1"
+          label="热键"
         >
-          <span class="text-xs text-muted-foreground">热键</span>
           <div class="flex items-center gap-1.5">
             <div class="flex-1">
               <Select v-model="action.actionConfig.vtsHotkeyId">
@@ -70,12 +71,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                   <SelectValue placeholder="选择热键" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in hotkeyOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in hotkeyOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -85,41 +81,34 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
               size="xs"
               variant="ghost"
               class="w-8 p-0"
-              title="刷新"
+              aria-label="刷新"
               @click="vts.refreshHotkeys()"
             >
               <ArrowClockwise16Filled class="size-3.5" />
             </Button>
           </div>
-        </div>
+        </FormField>
 
         <!-- 机位预设 -->
-        <div
+        <FormField
           v-if="action.actionType === ActionType.VTS_PRESET"
-          class="space-y-1"
+          label="机位预设"
         >
-          <span class="text-xs text-muted-foreground">机位预设</span>
           <Select v-model="action.actionConfig.vtsPresetId">
             <SelectTrigger class="w-full">
               <SelectValue placeholder="选择预设" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in presetOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in presetOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FormField>
 
         <!-- 掉落道具 -->
         <template v-if="action.actionType === ActionType.VTS_DROP_ITEM">
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">道具文件</span>
+          <FormField label="道具文件">
             <div class="flex items-center gap-1.5">
               <div class="flex-1">
                 <Select v-model="action.actionConfig.vtsItemFileName">
@@ -127,12 +116,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                     <SelectValue placeholder="选择道具文件" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      v-for="opt in itemFileOptions"
-                      :key="opt.value"
-                      :value="opt.value"
-                      class="text-xs"
-                    >
+                    <SelectItem v-for="opt in itemFileOptions" :key="opt.value" :value="opt.value">
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -143,16 +127,18 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                 variant="ghost"
                 class="w-8 p-0"
                 :disabled="!vts.connected"
-                title="刷新"
+                aria-label="刷新"
                 @click="vts.refreshItems({ includeFiles: true })"
               >
                 <ArrowClockwise16Filled class="size-3.5" />
               </Button>
             </div>
-          </div>
+          </FormField>
 
-          <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-            <span class="text-xs font-medium text-foreground">位置与缩放</span>
+          <SettingRow
+            variant="compact"
+            title="位置与缩放"
+          >
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-muted-foreground">X:</span>
@@ -177,21 +163,22 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                 />
               </div>
             </div>
-          </div>
+          </SettingRow>
         </template>
 
         <!-- 参数调节 -->
         <template v-if="action.actionType === ActionType.VTS_PARAM_ADD">
-          <div class="space-y-1">
-            <span class="text-xs text-muted-foreground">参数 ID</span>
+          <FormField label="参数 ID">
             <Input
               v-model="action.actionConfig.vtsParamId"
               placeholder="如 Blush, EyeOpen"
             />
-          </div>
+          </FormField>
 
-          <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-            <span class="text-xs font-medium text-foreground">数值与权重</span>
+          <SettingRow
+            variant="compact"
+            title="数值与权重"
+          >
             <div class="flex items-center gap-2">
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-muted-foreground">值:</span>
@@ -230,12 +217,7 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
               <SelectValue placeholder="选择要运行的宏" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in macroOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in macroOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -251,19 +233,14 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                 <SelectValue placeholder="选择配饰" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in accessoryOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in accessoryOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+          <div class="flex-between p-2.5 rounded border bg-muted/20">
             <span class="text-xs font-medium text-foreground">
               {{ action.actionConfig.vtsAccessoryVisible ? '操作: 显示' : '操作: 隐藏' }}
             </span>

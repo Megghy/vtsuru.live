@@ -219,11 +219,8 @@ async function addUploadFileSong() {
 
 <template>
   <div class="space-y-4">
-    <Alert
-      variant="default"
-      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2"
-    >
-      <AlertDescription class="text-xs">
+    <Alert size="sm" variant="info">
+      <AlertDescription>
         Excel 文件格式详见:
         <a
           href="https://www.wolai.com/hZWizjCnAdc6hDdntuWgcU"

@@ -203,10 +203,7 @@ function handleMoreAction(key: string) {
           />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        class="w-48 text-xs"
-      >
+      <DropdownMenuContent align="end" class="w-48">
         <div class="px-2 py-1.5 text-[11px] text-muted-foreground select-none">
           编辑来源：{{ editor.loadedFromLabel.value }}
         </div>

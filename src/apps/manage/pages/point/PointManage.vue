@@ -399,7 +399,7 @@ function resetGoods() {
             <Input
               :model-value="goodsPageUrl"
               readonly
-              class="hidden md:flex h-control-sm w-60 lg:w-72 xl:w-80 font-mono text-xs bg-muted/40 text-muted-foreground select-all"
+              class="hidden md:flex h-control-sm w-60 lg:w-72 xl:w-80 font-mono bg-muted/40 text-muted-foreground select-all"
               title="礼物展示页链接（点击全选）"
               @click="($event.target as HTMLInputElement).select()"
             />
@@ -433,12 +433,8 @@ function resetGoods() {
       </template>
     </ManagePageHeader>
 
-    <Alert
-      v-if="!accountInfo.eventFetcherState.online"
-      variant="default"
-      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2"
-    >
-      <AlertDescription class="text-xs flex items-center gap-1.5 flex-wrap">
+    <Alert size="sm" v-if="!accountInfo.eventFetcherState.online" variant="warning">
+      <AlertDescription class="flex items-center gap-1.5 flex-wrap">
         <span>
           此功能依赖
           <a
@@ -698,7 +694,7 @@ function resetGoods() {
     <Dialog v-model:open="showAddGoodsModal">
       <DialogContent class="max-w-3xl max-h-[88vh] flex flex-col p-0">
         <DialogHeader class="p-4 border-b flex flex-row items-center justify-between space-y-0">
-          <DialogTitle class="text-sm font-semibold">
+          <DialogTitle class="text-sm">
             {{ currentGoodsModel.goods.id ? '编辑礼物' : '添加礼物' }}
           </DialogTitle>
           <Button
@@ -786,7 +782,7 @@ function resetGoods() {
 
                 <!-- 封面上传 -->
                 <div class="space-y-1.5 pt-2">
-                  <div class="flex items-center justify-between">
+                  <div class="flex-between">
                     <label class="text-xs font-medium text-foreground">礼物封面</label>
                     <label class="flex items-center gap-1 text-[11px] text-muted-foreground cursor-pointer">
                       <Checkbox v-model:checked="shouldWatermarkCover" />
@@ -863,7 +859,7 @@ function resetGoods() {
                       v-model="currentGoodsModel.goods.content"
                       placeholder="请输入兑换成功后展示给用户的文本、下载链接或提取码（支持 {key} 占位符）"
                       :rows="3"
-                      class="text-xs"
+                      
                     />
                   </div>
                 </div>
@@ -881,7 +877,7 @@ function resetGoods() {
               value="subItems"
               class="pt-3 space-y-3"
             >
-              <div class="flex items-center justify-between">
+              <div class="flex-between">
                 <span class="text-xs text-muted-foreground">可为主商品添加多种款式（如不同尺码、颜色或套餐）</span>
                 <Button
                   size="xs"
@@ -904,9 +900,9 @@ function resetGoods() {
                 <Card
                   v-for="(sub, subIdx) in currentGoodsModel.goods.subItems"
                   :key="getSubItemKey(sub)"
-                  class="border border-border p-3 space-y-3"
+                  class="p-3 space-y-3"
                 >
-                  <div class="flex items-center justify-between">
+                  <div class="flex-between">
                     <span class="text-xs font-semibold text-foreground">款式 #{{ subIdx + 1 }}</span>
                     <Button
                       variant="ghost"

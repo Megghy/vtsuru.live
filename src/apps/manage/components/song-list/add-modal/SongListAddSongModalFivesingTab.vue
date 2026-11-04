@@ -151,7 +151,7 @@ async function addFivesingSongs(song: ResponseSongModel) {
             v-for="song in fivesingResults"
             :key="song.id"
           >
-            <TableCell class="text-xs font-medium">{{ song.name }}</TableCell>
+            <TableCell class="font-medium">{{ song.name }}</TableCell>
             <TableCell>
               <div class="flex flex-wrap gap-1">
                 <Tag

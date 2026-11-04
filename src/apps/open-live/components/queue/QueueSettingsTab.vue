@@ -33,16 +33,16 @@ function onChange() {
 <template>
   <Spin :show="isLoading">
     <div class="flex flex-col gap-3">
-      <Alert class="text-xs py-2 bg-muted/50 border-muted">
-        <AlertTitle class="text-xs font-semibold">提示</AlertTitle>
-        <AlertDescription class="text-xs">
+      <Alert size="sm" class="bg-muted/50 border-muted">
+        <AlertTitle>提示</AlertTitle>
+        <AlertDescription>
           修改后会自动保存并实时生效（部分配置可能需要重新开启功能后生效）。
         </AlertDescription>
       </Alert>
 
       <Card>
         <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs font-semibold">加入规则</CardTitle>
+          <CardTitle class="text-xs">加入规则</CardTitle>
         </CardHeader>
         <CardContent class="p-4 flex flex-col gap-3">
           <div class="flex items-center gap-2 flex-wrap">
@@ -181,7 +181,7 @@ function onChange() {
 
       <Card>
         <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs font-semibold">礼物规则</CardTitle>
+          <CardTitle class="text-xs">礼物规则</CardTitle>
         </CardHeader>
         <CardContent class="p-4 flex flex-col gap-3">
           <label class="flex items-center gap-2 cursor-pointer text-xs">
@@ -323,7 +323,7 @@ function onChange() {
 
       <Card>
         <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs font-semibold">冷却时间 (CD)</CardTitle>
+          <CardTitle class="text-xs">冷却时间 (CD)</CardTitle>
         </CardHeader>
         <CardContent class="p-4 flex flex-col gap-3">
           <label class="flex items-center gap-2 cursor-pointer text-xs">
@@ -385,7 +385,7 @@ function onChange() {
 
       <Card>
         <CardHeader class="py-3 px-4 border-b">
-          <CardTitle class="text-xs font-semibold">显示与界面</CardTitle>
+          <CardTitle class="text-xs">显示与界面</CardTitle>
         </CardHeader>
         <CardContent class="p-4 flex flex-col gap-3">
           <div class="flex items-center gap-2 my-1">

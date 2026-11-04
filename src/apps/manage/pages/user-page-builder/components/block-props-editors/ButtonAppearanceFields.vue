@@ -90,7 +90,7 @@ function setColor(key: 'color' | 'textColor' | 'borderColor', value: string | nu
 
   <div
     v-if="propertyAvailable('fullWidth')"
-    class="flex items-center justify-between py-1"
+    class="flex-between py-1"
   >
     <label class="text-xs text-muted-foreground">按钮铺满宽度</label>
     <Switch v-model:checked="blockProps.fullWidth" />

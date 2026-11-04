@@ -45,7 +45,7 @@ const emit = defineEmits<{
         }}</span>
       </Button>
     </PopoverTrigger>
-    <PopoverContent class="w-72 p-3 text-xs flex flex-col gap-2">
+    <PopoverContent class="w-72 flex flex-col gap-2">
       <div>
         <div class="font-semibold text-sm">{{ hk.name }}</div>
         <div
@@ -62,26 +62,13 @@ const emit = defineEmits<{
         </div>
       </div>
       <div class="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border">
-        <Button
-          variant="secondary"
-          class="h-6 text-[11px] px-2"
-          :disabled="onDeck"
-          @click="emit('add-to-deck')"
-        >
+        <Button size="xs" variant="secondary" :disabled="onDeck" @click="emit('add-to-deck')">
           {{ onDeck ? '已在操作台' : '加入操作台' }}
         </Button>
-        <Button
-          variant="outline"
-          class="h-6 text-[11px] px-2"
-          @click="emit('toggle-pinned')"
-        >
+        <Button size="xs" variant="outline" @click="emit('toggle-pinned')">
           {{ custom?.pinned ? '取消置顶' : '置顶' }}
         </Button>
-        <Button
-          variant="outline"
-          class="h-6 text-[11px] px-2"
-          @click="emit('edit')"
-        >
+        <Button size="xs" variant="outline" @click="emit('edit')">
           自定义外观
         </Button>
       </div>

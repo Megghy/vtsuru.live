@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { QqBotBindCodeModel } from './qqBotBindCodeModel'
+import type { QqBotBindCodeModel } from './qqBotBindCodeModel';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfQqBotBindCodeModel {
-  message: string
-  code: number
-  data: QqBotBindCodeModel
+  message: string;
+  code: number;
+  data: QqBotBindCodeModel;
 }

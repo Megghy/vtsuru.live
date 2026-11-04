@@ -824,9 +824,9 @@ onUnmounted(() => {
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <!-- Card 1: 收益总览 -->
         <Card class="flex flex-col justify-between">
-          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+          <CardHeader class="p-3.5 flex-row items-center justify-between">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded bg-amber-500/15 text-amber-500 flex items-center justify-center">
+              <div class="w-6 h-6 rounded bg-amber-500/15 text-amber-500 flex-center">
                 <component
                   :is="Wallet24Regular"
                   class="h-3.5 w-3.5"
@@ -834,9 +834,7 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}总收益</span>
             </div>
-            <Badge
-              v-if="currentSummary.incomeTrend !== undefined"
-              :variant="currentSummary.incomeTrend >= 0 ? 'brand' : 'destructive'"
+            <Badge v-if="currentSummary.incomeTrend !== undefined" :variant="currentSummary.incomeTrend>= 0 ? 'brand' : 'destructive'"
               class="text-[10px] px-1 py-0 h-4"
             >
               <component
@@ -847,7 +845,7 @@ onUnmounted(() => {
             </Badge>
           </CardHeader>
 
-          <CardContent class="p-3.5 pt-0 space-y-2">
+          <CardContent class="space-y-2">
             <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
               <span class="text-amber-500 text-lg">¥</span>
               {{ formatNumber(currentSummary.grandTotalIncome) }}
@@ -897,9 +895,9 @@ onUnmounted(() => {
 
         <!-- Card 2: 弹幕与互动 -->
         <Card class="flex flex-col justify-between">
-          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+          <CardHeader class="p-3.5 flex-row items-center justify-between">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded bg-emerald-500/15 text-emerald-500 flex items-center justify-center">
+              <div class="w-6 h-6 rounded bg-emerald-500/15 text-emerald-500 flex-center">
                 <component
                   :is="ChatMultiple24Regular"
                   class="h-3.5 w-3.5"
@@ -907,22 +905,20 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}弹幕数</span>
             </div>
-            <Badge
-              v-if="currentSummary.danmakuTrend !== undefined"
-              :variant="currentSummary.danmakuTrend >= 0 ? 'brand' : 'destructive'"
+            <Badge v-if="currentSummary.danmakuTrend !== undefined" :variant="currentSummary.danmakuTrend>= 0 ? 'brand' : 'destructive'"
               class="text-[10px] px-1 py-0 h-4"
             >
               {{ Math.abs(currentSummary.danmakuTrend) }}%
             </Badge>
           </CardHeader>
 
-          <CardContent class="p-3.5 pt-0 space-y-2">
+          <CardContent class="space-y-2">
             <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
               {{ formatNumber(currentSummary.totalDanmakuCount) }}
               <span class="text-xs font-normal text-muted-foreground">条</span>
             </div>
 
-            <div class="text-xs text-muted-foreground flex items-center justify-between">
+            <div class="text-xs text-muted-foreground flex-between">
               <span>观众互动粘性</span>
               <span class="font-semibold text-foreground">{{ currentSummary.avgDanmakuPerUser.toFixed(1) }} 条/人</span>
             </div>
@@ -946,9 +942,9 @@ onUnmounted(() => {
 
         <!-- Card 3: 粉丝与转化 -->
         <Card class="flex flex-col justify-between">
-          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+          <CardHeader class="p-3.5 flex-row items-center justify-between">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded bg-cyan-500/15 text-cyan-500 flex items-center justify-center">
+              <div class="w-6 h-6 rounded bg-cyan-500/15 text-cyan-500 flex-center">
                 <component
                   :is="People24Regular"
                   class="h-3.5 w-3.5"
@@ -956,21 +952,18 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}互动人数</span>
             </div>
-            <Badge
-              variant="secondary"
-              class="text-[10px] px-1 py-0 h-4"
-            >
+            <Badge variant="secondary" size="xs">
               转化率 {{ currentSummary.payingRate.toFixed(1) }}%
             </Badge>
           </CardHeader>
 
-          <CardContent class="p-3.5 pt-0 space-y-2">
+          <CardContent class="space-y-2">
             <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
               {{ formatNumber(currentSummary.interactionUsers) }}
               <span class="text-xs font-normal text-muted-foreground">人</span>
             </div>
 
-            <div class="text-xs text-muted-foreground flex items-center justify-between">
+            <div class="text-xs text-muted-foreground flex-between">
               <span
                 >付费观众:
                 <strong class="text-foreground">{{ formatNumber(currentSummary.payingUsers) }}人</strong></span
@@ -995,9 +988,9 @@ onUnmounted(() => {
 
         <!-- Card 4: 开播时长 -->
         <Card class="flex flex-col justify-between">
-          <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+          <CardHeader class="p-3.5 flex-row items-center justify-between">
             <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded bg-purple-500/15 text-purple-500 flex items-center justify-center">
+              <div class="w-6 h-6 rounded bg-purple-500/15 text-purple-500 flex-center">
                 <component
                   :is="Timer24Regular"
                   class="h-3.5 w-3.5"
@@ -1005,21 +998,18 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}直播时长</span>
             </div>
-            <Badge
-              variant="secondary"
-              class="text-[10px] px-1 py-0 h-4"
-            >
+            <Badge variant="secondary" size="xs">
               开播 {{ currentSummary.activeLiveDays }} 天
             </Badge>
           </CardHeader>
 
-          <CardContent class="p-3.5 pt-0 space-y-2">
+          <CardContent class="space-y-2">
             <div class="text-2xl font-extrabold font-mono text-foreground flex items-baseline gap-1">
               {{ (currentSummary.totalLiveMinutes / 60).toFixed(1) }}
               <span class="text-xs font-normal text-muted-foreground">小时</span>
             </div>
 
-            <div class="text-xs text-muted-foreground flex items-center justify-between">
+            <div class="text-xs text-muted-foreground flex-between">
               <span>周期开播率</span>
               <span class="font-semibold text-foreground">
                 {{
@@ -1047,7 +1037,7 @@ onUnmounted(() => {
 
       <!-- Section 2: 全维交互主趋势看板 -->
       <Card class="p-4 space-y-3">
-        <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex-between flex-wrap gap-2">
           <div class="flex items-center gap-2 text-xs font-semibold">
             <component
               :is="DataTrending24Regular"
@@ -1138,7 +1128,7 @@ onUnmounted(() => {
           </div>
 
           <div class="space-y-2">
-            <div class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs">
+            <div class="flex-between p-2 rounded bg-muted/40 border border-border text-xs">
               <div class="flex items-center gap-2">
                 <div class="w-2.5 h-2.5 rounded-full bg-amber-500" />
                 <span>普通打赏礼物</span>
@@ -1155,7 +1145,7 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <div class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs">
+            <div class="flex-between p-2 rounded bg-muted/40 border border-border text-xs">
               <div class="flex items-center gap-2">
                 <div class="w-2.5 h-2.5 rounded-full bg-orange-500" />
                 <span>醒目留言 (SC)</span>
@@ -1174,7 +1164,7 @@ onUnmounted(() => {
 
             <div
               v-if="currentSummary.guardIncome > 0"
-              class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs"
+              class="flex-between p-2 rounded bg-muted/40 border border-border text-xs"
             >
               <div class="flex items-center gap-2">
                 <div class="w-2.5 h-2.5 rounded-full bg-blue-500" />
@@ -1194,7 +1184,7 @@ onUnmounted(() => {
 
             <div
               v-if="currentSummary.offlineIncome > 0"
-              class="flex items-center justify-between p-2 rounded bg-muted/40 border border-border text-xs"
+              class="flex-between p-2 rounded bg-muted/40 border border-border text-xs"
             >
               <div class="flex items-center gap-2">
                 <div class="w-2.5 h-2.5 rounded-full bg-emerald-500" />
@@ -1241,7 +1231,7 @@ onUnmounted(() => {
 
         <!-- 周开播黄金日与出勤热力 -->
         <Card class="p-4 space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <div class="flex items-center gap-2 text-xs font-semibold">
               <component
                 :is="CalendarLtr24Regular"
@@ -1249,11 +1239,7 @@ onUnmounted(() => {
               />
               <span>周开播习惯与黄金日</span>
             </div>
-            <Badge
-              v-if="bestDayInsight"
-              variant="brand"
-              class="text-[10px] px-1 py-0 h-4"
-            >
+            <Badge v-if="bestDayInsight" variant="brand" size="xs">
               黄金日: {{ bestDayInsight.income.dayName }}
             </Badge>
           </div>
@@ -1331,14 +1317,11 @@ onUnmounted(() => {
             <div
               v-for="area in currentAreaStats"
               :key="`${area.parentArea}-${area.area}`"
-              class="p-2.5 rounded-lg border border-border bg-card/60 flex items-center justify-between text-xs"
+              class="p-2.5 rounded-lg border border-border bg-card/60 flex-between text-xs"
             >
               <div>
                 <div class="flex items-center gap-1.5">
-                  <Badge
-                    variant="outline"
-                    class="text-[10px] px-1 py-0 h-4"
-                  >
+                  <Badge variant="outline" size="xs">
                     {{ area.parentArea }}
                   </Badge>
                   <span class="font-semibold">{{ area.area }}</span>
@@ -1358,7 +1341,7 @@ onUnmounted(() => {
 
         <!-- 单场高光排行 Top 5 -->
         <Card class="p-4 space-y-3">
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <div class="flex items-center gap-2 text-xs font-semibold">
               <component
                 :is="Star24Regular"
@@ -1398,7 +1381,7 @@ onUnmounted(() => {
               class="p-2.5 rounded-lg border border-border bg-card/60 flex items-center gap-2.5 text-xs"
             >
               <div
-                class="w-5 h-5 rounded flex items-center justify-center font-bold text-[11px] shrink-0"
+                class="w-5 h-5 rounded flex-center font-bold text-[11px] shrink-0"
                 :class="{
                   'bg-amber-500 text-black': idx === 0,
                   'bg-slate-400 text-black': idx === 1,
@@ -1416,10 +1399,7 @@ onUnmounted(() => {
                     :title="session.title"
                     >{{ session.title }}</span
                   >
-                  <Badge
-                    variant="outline"
-                    class="text-[9px] px-1 py-0 h-3.5 shrink-0"
-                  >
+                  <Badge variant="outline" class="text-[9px] px-1 py-0 h-3.5">
                     {{ session.area }}
                   </Badge>
                 </div>
@@ -1452,7 +1432,7 @@ onUnmounted(() => {
       <!-- Section 5: 每日直播明细复盘表 (可折叠) -->
       <Card class="p-4 space-y-3">
         <div
-          class="flex items-center justify-between cursor-pointer select-none"
+          class="flex-between cursor-pointer select-none"
           @click="isDailyTableExpanded = !isDailyTableExpanded"
         >
           <div class="flex items-center gap-2 text-xs font-semibold">
@@ -1529,24 +1509,23 @@ onUnmounted(() => {
                 v-for="row in dailyTableData"
                 :key="row.timestamp"
               >
-                <TableCell class="font-mono text-xs">
+                <TableCell class="font-mono">
                   {{ row.date }}
                 </TableCell>
-                <TableCell class="text-right font-mono font-semibold text-amber-500 text-xs">
+                <TableCell class="text-right font-mono font-semibold text-amber-500">
                   {{ row.income > 0 ? `¥${formatCurrency(row.income)}` : '-' }}
                 </TableCell>
-                <TableCell class="text-right font-mono text-xs">
+                <TableCell class="text-right font-mono">
                   {{ row.danmakuCount > 0 ? formatNumber(row.danmakuCount) : '-' }}
                 </TableCell>
-                <TableCell class="text-right font-mono text-xs">
+                <TableCell class="text-right font-mono">
                   {{ row.interactionCount > 0 ? formatNumber(row.interactionCount) : '-' }}
                 </TableCell>
-                <TableCell class="text-right text-xs">
+                <TableCell class="text-right">
                   {{ row.payingUsers > 0 ? `${row.payingUsers} 人` : '-' }}
                 </TableCell>
-                <TableCell class="text-right text-xs">
-                  <Badge
-                    v-if="row.liveMinutes > 0"
+                <TableCell class="text-right">
+                  <Badge v-if="row.liveMinutes> 0"
                     variant="outline"
                     class="text-[10px] px-1 py-0 h-4"
                   >
@@ -1558,7 +1537,7 @@ onUnmounted(() => {
                     >-</span
                   >
                 </TableCell>
-                <TableCell class="text-right font-mono text-xs">
+                <TableCell class="text-right font-mono">
                   {{ row.likeCount > 0 ? formatNumber(row.likeCount) : '-' }}
                 </TableCell>
               </TableRow>

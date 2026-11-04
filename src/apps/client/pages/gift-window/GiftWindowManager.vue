@@ -31,6 +31,7 @@ import { ColorPicker } from '@/shared/ui/color-picker'
 import { Empty } from '@/shared/ui/empty'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Slider } from '@/shared/ui/slider'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
@@ -235,15 +236,7 @@ function toggleFilterType(val: string, checked: boolean) {
       description="桌面半透明置顶礼物浮窗与高能排行榜，同窗口分屏或独立展示，支持实时打赏动画、在场舰长名单与下播感谢"
     >
       <template #actions>
-        <Badge
-          variant="outline"
-          class="text-xs h-6 px-2.5"
-          :class="
-            giftWindow.isGiftWindowOpen
-              ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-              : 'text-muted-foreground'
-          "
-        >
+        <Badge variant="success" class="h-6 px-2.5" :class=" giftWindow.isGiftWindowOpen ? ' ' : 'text-muted-foreground' ">
           {{ giftWindow.isGiftWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
         </Badge>
 
@@ -287,38 +280,23 @@ function toggleFilterType(val: string, checked: boolean) {
       @update:model-value="onTabChange"
     >
       <TabsList class="grid w-full max-w-xl grid-cols-5">
-        <TabsTrigger
-          value="thank"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="thank" class="gap-1.5" >
           <Megaphone24Filled class="size-3.5" />
           下播感谢
         </TabsTrigger>
-        <TabsTrigger
-          value="appearance"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="appearance" class="gap-1.5" >
           <Color24Filled class="size-3.5" />
           外观与主题
         </TabsTrigger>
-        <TabsTrigger
-          value="window"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="window" class="gap-1.5" >
           <Desktop24Filled class="size-3.5" />
           窗口与布局
         </TabsTrigger>
-        <TabsTrigger
-          value="filter"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="filter" class="gap-1.5" >
           <Filter24Filled class="size-3.5" />
           筛选与规则
         </TabsTrigger>
-        <TabsTrigger
-          value="history"
-          class="text-xs gap-1.5"
-        >
+        <TabsTrigger value="history" class="gap-1.5" >
           <History24Filled class="size-3.5" />
           往期榜单
         </TabsTrigger>
@@ -329,9 +307,9 @@ function toggleFilterType(val: string, checked: boolean) {
         value="thank"
         class="pt-3 space-y-3 client-readable"
       >
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-            <CardTitle class="text-sm font-semibold">本场打赏前 50 ➕ 在场舰长名单</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+            <CardTitle>本场打赏前 50 ➕ 在场舰长名单</CardTitle>
             <Button
               variant="secondary"
               class="gap-1 text-primary"
@@ -346,15 +324,12 @@ function toggleFilterType(val: string, checked: boolean) {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <!-- 左列: 本场打赏榜 Top 50 -->
               <div>
-                <div class="flex items-center justify-between mb-2">
+                <div class="flex-between mb-2">
                   <span class="font-semibold text-[13px] text-foreground flex items-center gap-1.5">
                     <Trophy20Regular class="size-4 text-amber-500" />
                     本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
                   </span>
-                  <Badge
-                    variant="secondary"
-                    class="text-[10px] text-amber-600 bg-amber-500/10"
-                  >
+                  <Badge variant="secondary" size="xs" class="text-amber-600 bg-amber-500/10">
                     上限 {{ giftWindow.settings.rankDisplayCount }} 人
                   </Badge>
                 </div>
@@ -375,7 +350,7 @@ function toggleFilterType(val: string, checked: boolean) {
                       class="p-2 px-3 rounded-md bg-popover border border-border transition-all duration-150 hover:border-primary"
                       :class="{ 'border-amber-500/35 bg-amber-500/5': idx < 3 }"
                     >
-                      <div class="flex items-center justify-between w-full">
+                      <div class="flex-between w-full">
                         <div class="flex items-center gap-2">
                           <span
                             class="w-5 font-bold text-xs text-center text-muted-foreground"
@@ -387,7 +362,7 @@ function toggleFilterType(val: string, checked: boolean) {
                           >
                             {{ idx + 1 }}
                           </span>
-                          <div class="relative flex items-center justify-center">
+                          <div class="relative flex-center">
                             <img
                               :src="r.uface || 'https://static.hdslb.com/images/member/noface.gif'"
                               class="size-6 rounded-full object-cover"
@@ -400,8 +375,7 @@ function toggleFilterType(val: string, checked: boolean) {
                             />
                           </div>
                           <span class="text-xs font-semibold text-foreground">{{ r.uname }}</span>
-                          <Badge
-                            v-if="r.guardLevel > 0"
+                          <Badge v-if="r.guardLevel> 0"
                             variant="outline"
                             class="text-[9px] h-4 px-1"
                             :class="
@@ -417,11 +391,7 @@ function toggleFilterType(val: string, checked: boolean) {
                         </div>
 
                         <div class="flex items-center gap-1.5">
-                          <Badge
-                            v-if="r.isOnline"
-                            variant="outline"
-                            class="text-[9px] h-4 px-1 border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
-                          >
+                          <Badge v-if="r.isOnline" variant="success" size="xs" class="text-[9px]">
                             在场
                           </Badge>
                           <span class="text-xs font-bold text-amber-500"> ¥{{ r.score.toLocaleString() }} </span>
@@ -434,7 +404,7 @@ function toggleFilterType(val: string, checked: boolean) {
 
               <!-- 右列: 还在直播间的在场舰长 -->
               <div>
-                <div class="flex items-center justify-between mb-2">
+                <div class="flex-between mb-2">
                   <span class="font-semibold text-[13px] text-foreground flex items-center gap-1.5">
                     <VehicleShip20Regular class="size-4 text-sky-500" />
                     还在直播间的舰长 ({{ realtimeGuardList.length }} 人)
@@ -459,22 +429,12 @@ function toggleFilterType(val: string, checked: boolean) {
                       :key="g.id"
                       class="p-2 px-3 rounded-md bg-popover border border-sky-500/30 bg-sky-500/5"
                     >
-                      <div class="flex items-center justify-between w-full">
+                      <div class="flex-between w-full">
                         <div class="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            class="text-[9px] h-4 px-1"
-                            :class="
-                              g.guardLevel === GuardLevel.Zongdu
-                                ? 'text-destructive border-destructive/40 bg-destructive/10'
-                                : g.guardLevel === GuardLevel.Tidu
-                                  ? 'text-amber-600 border-amber-500/40 bg-amber-500/10'
-                                  : 'text-sky-600 border-sky-500/40 bg-sky-500/10'
-                            "
-                          >
+                          <Badge variant="warning" size="xs" class="text-[9px]" :class=" g.guardLevel === GuardLevel.Zongdu ? 'text-destructive border-destructive/40 bg-destructive/10' : g.guardLevel === GuardLevel.Tidu ? ' ' : 'text-sky-600 border-sky-500/40 bg-sky-500/10' ">
                             {{ getGuardTitle(g.guardLevel) }}
                           </Badge>
-                          <div class="relative flex items-center justify-center">
+                          <div class="relative flex-center">
                             <img
                               :src="g.uface || 'https://static.hdslb.com/images/member/noface.gif'"
                               class="size-6 rounded-full object-cover"
@@ -491,11 +451,7 @@ function toggleFilterType(val: string, checked: boolean) {
                           <span class="text-[11px] text-muted-foreground">
                             {{ g.lastAction }}
                           </span>
-                          <Badge
-                            v-if="g.rankIndex"
-                            variant="outline"
-                            class="text-[9px] h-4 px-1 border-amber-500/40 text-amber-600 bg-amber-500/10"
-                          >
+                          <Badge v-if="g.rankIndex" variant="warning" size="xs" class="text-[9px]">
                             榜 #{{ g.rankIndex }}
                           </Badge>
                         </div>
@@ -515,9 +471,9 @@ function toggleFilterType(val: string, checked: boolean) {
         class="pt-3 space-y-3 client-readable"
       >
         <!-- 主题预设 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">配色预设</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>配色预设</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -547,34 +503,34 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 颜色自定义 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">色彩调节</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>色彩调节</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">卡片背景色</span>
                 <ColorPicker
                   v-model:value="giftWindow.settings.backgroundColor"
                   :show-alpha="true"
                 />
               </div>
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">窗口背景色</span>
                 <ColorPicker
                   v-model:value="giftWindow.settings.windowBackgroundColor"
                   :show-alpha="true"
                 />
               </div>
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">文字主色</span>
                 <ColorPicker
                   v-model:value="giftWindow.settings.textColor"
                   :show-alpha="true"
                 />
               </div>
-              <div class="flex items-center justify-between text-xs">
+              <div class="flex-between text-xs">
                 <span class="text-muted-foreground">金额高亮色</span>
                 <ColorPicker
                   v-model:value="giftWindow.settings.highlightColor"
@@ -586,12 +542,12 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 样式细节 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">排版与细节</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>排版与细节</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">整体不透明度</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -607,7 +563,7 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
             </div>
 
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">字号大小 (px)</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -623,7 +579,7 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
             </div>
 
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">卡片圆角 (px)</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -639,7 +595,7 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
             </div>
 
-            <div class="flex items-center justify-between gap-4 text-xs">
+            <div class="flex-between gap-4 text-xs">
               <span class="text-muted-foreground w-28 shrink-0">条目间距 (px)</span>
               <div class="flex-1 max-w-xs flex items-center gap-3">
                 <Slider
@@ -655,7 +611,7 @@ function toggleFilterType(val: string, checked: boolean) {
               </div>
             </div>
 
-            <div class="h-px bg-border my-2" />
+            <Separator class="my-2" />
 
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <LabelItem label="显示头像">
@@ -687,9 +643,9 @@ function toggleFilterType(val: string, checked: boolean) {
         class="pt-3 space-y-3 client-readable"
       >
         <!-- 尺寸与坐标 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">尺寸与屏幕坐标</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>尺寸与屏幕坐标</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -747,9 +703,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 模块展示开关 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">同窗口展示模块</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>同窗口展示模块</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
             <LabelItem
@@ -767,7 +723,7 @@ function toggleFilterType(val: string, checked: boolean) {
 
             <div
               v-if="giftWindow.settings.showRanking"
-              class="flex items-center justify-between text-xs py-1 border-t pt-2"
+              class="flex-between text-xs py-1 border-t pt-2"
             >
               <div class="flex flex-col gap-0.5">
                 <span class="font-medium text-foreground">浮窗默认排行视图</span>
@@ -791,9 +747,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 窗口行为 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">浮窗行为属性</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>浮窗行为属性</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
             <LabelItem
@@ -827,9 +783,9 @@ function toggleFilterType(val: string, checked: boolean) {
         class="pt-3 space-y-3 client-readable"
       >
         <!-- 显示类型过滤 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">礼物类型过滤</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>礼物类型过滤</CardTitle>
           </CardHeader>
           <CardContent class="p-3">
             <div class="flex flex-wrap gap-4 text-xs">
@@ -849,9 +805,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 排序方式 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">礼物排序方式</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>礼物排序方式</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-2.5">
             <ToggleGroup
@@ -874,9 +830,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 过滤与合并规则 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">合并与过滤阈值</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>合并与过滤阈值</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -933,9 +889,9 @@ function toggleFilterType(val: string, checked: boolean) {
         </Card>
 
         <!-- 排行榜与在场规则 -->
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">排行榜与在场规则</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>排行榜与在场规则</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
@@ -977,9 +933,9 @@ function toggleFilterType(val: string, checked: boolean) {
         value="history"
         class="pt-3 space-y-3 client-readable"
       >
-        <Card class="border bg-card">
-          <CardHeader class="p-3 pb-2 border-b">
-            <CardTitle class="text-sm font-semibold">查询历史直播场次榜单</CardTitle>
+        <Card>
+          <CardHeader class="p-3 border-b">
+            <CardTitle>查询历史直播场次榜单</CardTitle>
           </CardHeader>
           <CardContent class="p-3 space-y-3">
             <div class="flex items-center gap-3">
@@ -992,12 +948,7 @@ function toggleFilterType(val: string, checked: boolean) {
                     <SelectValue placeholder="选择已结束的直播场次" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      v-for="opt in historyLiveOptions"
-                      :key="opt.value"
-                      :value="opt.value"
-                      class="text-xs"
-                    >
+                    <SelectItem v-for="opt in historyLiveOptions" :key="opt.value" :value="opt.value">
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -1020,7 +971,7 @@ function toggleFilterType(val: string, checked: boolean) {
 
             <div
               v-if="isHistoryLoading"
-              class="py-12 flex items-center justify-center"
+              class="py-12 flex-center"
             >
               <Spin size="medium" />
             </div>
@@ -1040,7 +991,7 @@ function toggleFilterType(val: string, checked: boolean) {
                 :key="item.ouId"
                 class="p-2 px-3 rounded-md bg-popover border border-border"
               >
-                <div class="flex items-center justify-between">
+                <div class="flex-between">
                   <div class="flex items-center gap-2.5">
                     <span
                       class="w-5.5 font-bold text-[13px] text-center text-muted-foreground"
@@ -1059,10 +1010,7 @@ function toggleFilterType(val: string, checked: boolean) {
                     />
                     <span class="text-xs font-semibold text-foreground">{{ item.uName }}</span>
                   </div>
-                  <Badge
-                    variant="secondary"
-                    class="text-xs font-bold text-amber-500"
-                  >
+                  <Badge variant="secondary" class="font-bold text-amber-500">
                     {{ formatPaid(item.totalPaid) }}
                   </Badge>
                 </div>

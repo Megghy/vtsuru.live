@@ -5,48 +5,48 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel'
-import type { GoodsStatus } from './goodsStatus'
-import type { GoodsTypes } from './goodsTypes'
-import type { GuardLevel } from './guardLevel'
-import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel'
-import type { ServiceConfigData } from './serviceConfigData'
-import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
-import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
+import type { APIFileModel } from './aPIFileModel';
+import type { GoodsStatus } from './goodsStatus';
+import type { GoodsTypes } from './goodsTypes';
+import type { GuardLevel } from './guardLevel';
+import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel';
+import type { ServiceConfigData } from './serviceConfigData';
+import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting';
+import type { VirtualKeySelectionMode } from './virtualKeySelectionMode';
 
 export interface ResponsePointGoodsModel {
-  content: string
-  collectUrl: string
-  embedCollectUrl: boolean
-  setting: TempRequestGoodsSetting
-  serviceConfig?: ServiceConfigData
-  virtualKeys: string[]
-  keySelectionMode: VirtualKeySelectionMode
-  id: number
-  name: string
-  description: string
+  content: string;
+  collectUrl: string;
+  embedCollectUrl: boolean;
+  setting: TempRequestGoodsSetting;
+  serviceConfig?: ServiceConfigData;
+  virtualKeys: string[];
+  keySelectionMode: VirtualKeySelectionMode;
+  id: number;
+  name: string;
+  description: string;
   /** @nullable */
-  count?: number | null
-  price: number
-  tags: string[]
-  images: number[]
-  status: GoodsStatus
-  type: GoodsTypes
-  isPinned: boolean
-  isAllowRebuy: boolean
-  maxBuyCount: number
+  count?: number | null;
+  price: number;
+  tags: string[];
+  images: number[];
+  status: GoodsStatus;
+  type: GoodsTypes;
+  isPinned: boolean;
+  isAllowRebuy: boolean;
+  maxBuyCount: number;
   /** @nullable */
-  maxSubItemSelections?: number | null
-  createAt: number
-  canFreeBuy: boolean
-  allowGuardLevel: GuardLevel
-  cover?: APIFileModel
-  purchasedCount: number
-  soldCount: number
-  hasPurchased: boolean
-  canPurchase: boolean
+  maxSubItemSelections?: number | null;
+  createAt: number;
+  canFreeBuy: boolean;
+  allowGuardLevel: GuardLevel;
+  cover?: APIFileModel;
+  purchasedCount: number;
+  soldCount: number;
+  hasPurchased: boolean;
+  canPurchase: boolean;
   /** @nullable */
-  cannotPurchaseReason?: string | null
+  cannotPurchaseReason?: string | null;
   /** @nullable */
-  subItems?: ResponseSubPointGoodsModel[] | null
+  subItems?: ResponseSubPointGoodsModel[] | null;
 }

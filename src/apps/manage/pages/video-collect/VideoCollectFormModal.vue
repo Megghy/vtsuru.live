@@ -8,8 +8,11 @@ import { DuplicateVideoPolicy } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { useMessage } from '@/shared/utils'
@@ -142,63 +145,57 @@ function submit() {
 
       <div class="space-y-4 py-2 text-xs">
         <!-- 基础配置 -->
-        <div class="space-y-1.5">
-          <label class="font-semibold text-foreground">征集名称 <span class="text-destructive">*</span></label>
+        <FormField
+          label="征集名称"
+          required
+        >
           <Input
             v-model="model.name"
             placeholder="例如：三周年回顾视频征集"
             maxlength="30"
           />
-        </div>
+        </FormField>
 
-        <div class="space-y-1.5">
-          <label class="font-semibold text-foreground">征集说明</label>
+        <FormField label="征集说明">
           <Textarea
             v-model="model.description"
             rows="2"
             placeholder="填写主题、投稿要求或注意事项（选填）"
             maxlength="300"
           />
-        </div>
+        </FormField>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="space-y-1.5">
-            <label class="font-semibold text-foreground">开放时间</label>
+          <FormField label="开放时间">
             <Input
               v-model="startDateStr"
               type="datetime-local"
             />
-          </div>
-          <div class="space-y-1.5">
-            <label class="font-semibold text-foreground">截止时间</label>
+          </FormField>
+          <FormField label="截止时间">
             <Input
               v-model="endDateStr"
               type="datetime-local"
             />
-          </div>
+          </FormField>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="space-y-1.5">
-            <label class="font-semibold text-foreground">最大征集视频数</label>
-            <Input
-              v-model.number="model.maxVideoCount"
-              type="number"
-              min="1"
-              max="10000"
-            />
-          </div>
+          <FormField
+            type="number"
+            label="最大征集视频数"
+            :min="1"
+            :max="10000"
+            v-model="model.maxVideoCount"
+          />
 
-          <div class="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20">
-            <div>
-              <div class="font-semibold text-foreground">允许游客投稿</div>
-              <div class="text-[10px] text-muted-foreground">未绑定 B 站也可提交</div>
-            </div>
-            <Switch
-              :checked="model.allowUnregisteredUser"
-              @update:checked="(val) => (model.allowUnregisteredUser = val)"
-            />
-          </div>
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="允许游客投稿"
+            description="未绑定 B 站也可提交"
+            v-model="model.allowUnregisteredUser"
+          />
         </div>
 
         <!-- 高级折叠面板 -->
@@ -227,29 +224,16 @@ function submit() {
           >
             <!-- 时长限制 -->
             <div class="grid grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] text-muted-foreground">最短时长 (秒，0为不限)</label>
-                <Input
-                  size="xs"
-                  v-model.number="model.minVideoDuration"
-                  type="number"
-                  min="0"
-                />
-              </div>
-              <div class="space-y-1">
-                <label class="text-[11px] text-muted-foreground">最长时长 (秒，0为不限)</label>
-                <Input
-                  v-model.number="model.maxVideoDuration"
-                  type="number"
-                  min="0"
-                  size="xs"
-                />
-              </div>
+              <FormField label="最短时长 (秒，0为不限)">
+                <NumberField size="xs" v-model="model.minVideoDuration" min="0" :show-buttons="false" />
+              </FormField>
+              <FormField label="最长时长 (秒，0为不限)">
+                <NumberField v-model="model.maxVideoDuration" min="0" size="xs" :show-buttons="false" />
+              </FormField>
             </div>
 
             <!-- 分区白名单 -->
-            <div class="space-y-1.5">
-              <label class="text-[11px] text-muted-foreground">允许分区白名单 (留空表示不限制)</label>
+            <FormField label="允许分区白名单 (留空表示不限制)">
               <div class="flex items-center gap-1.5">
                 <Input
                   size="xs"
@@ -271,23 +255,16 @@ function submit() {
                 v-if="model.allowedPartitions.length > 0"
                 class="flex flex-wrap gap-1 pt-1"
               >
-                <Badge
-                  v-for="p in model.allowedPartitions"
-                  :key="p"
-                  variant="secondary"
-                  class="text-[10px] pr-1 flex items-center gap-1 cursor-pointer"
-                  @click="removePartition(p)"
-                >
+                <Badge v-for="p in model.allowedPartitions" :key="p" variant="secondary" size="xs" class="pr-1 flex items-center gap-1 cursor-pointer" @click="removePartition(p)">
                   {{ p }}
                   <span class="text-muted-foreground hover:text-foreground">×</span>
                 </Badge>
               </div>
-            </div>
+            </FormField>
 
             <!-- 重复策略与粉丝限额 -->
             <div class="grid grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="text-[11px] text-muted-foreground">重复视频策略</label>
+              <FormField label="重复视频策略">
                 <Select
                   :model-value="String(model.duplicatePolicy)"
                   @update:model-value="(val) => (model.duplicatePolicy = Number(val) as DuplicateVideoPolicy)"
@@ -300,30 +277,21 @@ function submit() {
                     <SelectItem :value="String(DuplicateVideoPolicy.Reject)"> 直接拒绝 </SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </FormField>
 
-              <div class="space-y-1">
-                <label class="text-[11px] text-muted-foreground">每人最多推荐 (0为不限)</label>
-                <Input
-                  size="xs"
-                  v-model.number="model.maxVideoPerUser"
-                  type="number"
-                  min="0"
-                />
-              </div>
+              <FormField label="每人最多推荐 (0为不限)">
+                <NumberField size="xs" v-model="model.maxVideoPerUser" min="0" :show-buttons="false" />
+              </FormField>
             </div>
 
             <!-- 推荐理由必填 -->
-            <div class="flex items-center justify-between p-2 rounded-md border border-border bg-muted/10">
-              <div>
-                <div class="font-semibold text-foreground">推荐理由必填</div>
-                <div class="text-[10px] text-muted-foreground">投稿时必须附带推荐看点说明</div>
-              </div>
-              <Switch
-                :checked="model.requireDescription"
-                @update:checked="(val) => (model.requireDescription = val)"
-              />
-            </div>
+            <SettingRow
+              type="switch"
+              variant="compact"
+              title="推荐理由必填"
+              description="投稿时必须附带推荐看点说明"
+              v-model="model.requireDescription"
+            />
           </div>
         </div>
       </div>

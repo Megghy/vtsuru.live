@@ -57,7 +57,7 @@ async function goToUserPage(accountName?: string) {
 
 <template>
   <header
-    class="h-[var(--vtsuru-header-height)] px-3 max-[600px]:px-2 flex items-center justify-between gap-3 max-[600px]:gap-2 bg-card border-b border-border box-border"
+    class="h-[var(--vtsuru-header-height)] px-3 max-[600px]:px-2 flex-between gap-3 max-[600px]:gap-2 bg-card border-b border-border box-border"
   >
     <div class="min-w-0 flex items-center gap-2.5 max-[600px]:gap-1.5">
       <TooltipProvider>

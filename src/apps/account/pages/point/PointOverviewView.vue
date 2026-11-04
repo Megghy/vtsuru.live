@@ -77,7 +77,7 @@ onMounted(loadPoints)
           class="summary-item summary-item--primary flex items-center gap-3.5 p-4 rounded-lg border border-primary/30 bg-primary/5"
         >
           <span
-            class="summary-icon size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"
+            class="summary-icon size-10 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
           >
             <component
               :is="Wallet24Regular"
@@ -91,7 +91,7 @@ onMounted(loadPoints)
         </div>
         <div class="summary-item flex items-center gap-3.5 p-4 rounded-lg border border-border bg-card">
           <span
-            class="summary-icon size-10 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0"
+            class="summary-icon size-10 rounded-lg bg-muted text-muted-foreground flex-center shrink-0"
           >
             <component
               :is="Gift24Regular"
@@ -139,7 +139,7 @@ onMounted(loadPoints)
             :key="item.owner.id"
             class="balance-row py-3 flex items-center gap-3.5 first:pt-0 last:pb-0"
           >
-            <Avatar class="size-10 shrink-0">
+            <Avatar class="size-10">
               <AvatarImage :src="item.owner.faceUrl" />
               <AvatarFallback>{{ item.owner.name.slice(0, 1) }}</AvatarFallback>
             </Avatar>

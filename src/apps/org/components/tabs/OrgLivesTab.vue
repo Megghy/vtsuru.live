@@ -80,12 +80,7 @@ onMounted(() => load())
             <SelectValue placeholder="筛选主播" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
-            <SelectItem
-              v-for="opt in streamerSelectOptions"
-              :key="opt.value"
-              :value="String(opt.value)"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in streamerSelectOptions" :key="opt.value" :value="String(opt.value)">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -99,12 +94,7 @@ onMounted(() => load())
             <SelectValue placeholder="排序" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="s in sortOptions"
-              :key="s.value"
-              :value="s.value"
-              class="text-xs"
-            >
+            <SelectItem v-for="s in sortOptions" :key="s.value" :value="s.value">
               {{ s.label }}
             </SelectItem>
           </SelectContent>
@@ -147,7 +137,7 @@ onMounted(() => load())
         <Card
           v-for="item in view"
           :key="item.live.liveId"
-          class="border border-border/80 overflow-hidden flex flex-col hover:border-primary/50 transition-colors"
+          class="/80 overflow-hidden flex flex-col hover:border-primary/50 transition-colors"
         >
           <!-- 封面大图 -->
           <div class="h-36 overflow-hidden relative bg-muted/40">
@@ -160,7 +150,7 @@ onMounted(() => load())
             />
             <div
               v-else
-              class="w-full h-full flex items-center justify-center text-muted-foreground"
+              class="w-full h-full flex-center text-muted-foreground"
             >
               <component
                 :is="TimeOutline"
@@ -170,18 +160,10 @@ onMounted(() => load())
 
             <!-- 状态标签 -->
             <div class="absolute top-2 right-2">
-              <Badge
-                v-if="!item.live.isFinish"
-                variant="default"
-                class="text-[10px] h-4.5 px-1.5 font-semibold bg-emerald-600 hover:bg-emerald-600 text-white shadow-xs"
-              >
+              <Badge v-if="!item.live.isFinish" variant="default" size="xs" class="bg-emerald-600 hover:bg-emerald-600 text-white shadow-xs">
                 LIVE
               </Badge>
-              <Badge
-                v-else
-                variant="secondary"
-                class="text-[10px] h-4.5 px-1.5 font-normal bg-black/60 text-white border-none shadow-xs"
-              >
+              <Badge v-else variant="secondary" size="xs" class="bg-black/60 text-white border-none shadow-xs">
                 已结束
               </Badge>
             </div>
@@ -214,7 +196,7 @@ onMounted(() => load())
                 <TooltipContent>{{ item.live.title }}</TooltipContent>
               </Tooltip>
 
-              <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground mt-1.5">
+              <div class="flex-between gap-2 text-[11px] text-muted-foreground mt-1.5">
                 <span>{{ item.live.parentArea }} / {{ item.live.area }}</span>
                 <span>
                   {{ format(item.live.startAt, 'MM-dd HH:mm') }}
@@ -225,7 +207,7 @@ onMounted(() => load())
             </div>
 
             <div
-              class="pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground"
+              class="pt-2 border-t border-border/60 flex-between text-[11px] text-muted-foreground"
             >
               <span
                 class="inline-flex items-center gap-1"

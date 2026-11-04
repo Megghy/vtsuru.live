@@ -12,6 +12,7 @@ import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import { EventFetcherType } from '@/api/generated/model'
+import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -107,7 +108,7 @@ function goBindBili() {
                 <Button
                   variant="ghost"
                   size="icon-xs"
-                  class="size-4 p-0 text-muted-foreground hover:text-foreground"
+                  class="size-4 p-0 text-muted-foreground"
                   aria-label="查看说明"
                 >
                   <component
@@ -116,7 +117,7 @@ function goBindBili() {
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="max-w-xs text-xs leading-relaxed space-y-1.5 p-3">
+              <TooltipContent class="max-w-xs leading-relaxed space-y-1.5 p-3">
                 <p>持续监听直播间内的 Superchat 和上舰事件并上传到本站记录。</p>
                 <p>支持按自定义范围查询并导出表格。</p>
                 <a
@@ -135,17 +136,15 @@ function goBindBili() {
           <TooltipProvider v-if="status === 'success' && !accountInfo?.isServerFetcherOnline">
             <Tooltip>
               <TooltipTrigger as-child>
-                <span
-                  class="inline-flex items-center gap-0.75 px-1.5 py-0.5 rounded bg-muted text-muted-foreground text-[10px] font-medium cursor-help hover:bg-accent transition-all"
-                >
+                <Badge variant="secondary" size="xs" class="cursor-help gap-1">
                   <component
                     :is="FlashCheckmark16Filled"
                     class="size-3"
                   />
                   {{ eventFetcherVersionName }}
-                </span>
+                </Badge>
               </TooltipTrigger>
-              <TooltipContent class="text-xs"> 当前连接版本 </TooltipContent>
+              <TooltipContent> 当前连接版本 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>

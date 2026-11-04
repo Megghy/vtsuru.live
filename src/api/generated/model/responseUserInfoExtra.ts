@@ -5,17 +5,17 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { FunctionTypes } from './functionTypes'
-import type { ResponseUserInfoExtraTemplateTypes } from './responseUserInfoExtraTemplateTypes'
+import type { FunctionTypes } from './functionTypes';
+import type { ResponseUserInfoExtraTemplateTypes } from './responseUserInfoExtraTemplateTypes';
 
 export interface ResponseUserInfoExtra {
-  templateTypes: ResponseUserInfoExtraTemplateTypes
-  enableFunctions: FunctionTypes[]
+  templateTypes: ResponseUserInfoExtraTemplateTypes;
+  enableFunctions: FunctionTypes[];
   /** @nullable */
-  isInBlackList?: boolean | null
-  allowQuestionBoxUploadImage: boolean
-  allowQuestionBoxAnonymous: boolean
-  allowQuestionBoxUnregistedUser: boolean
-  showQuestionBoxPublicReplies: boolean
-  questionBoxDefaultPublic: boolean
+  isInBlackList?: boolean | null;
+  allowQuestionBoxUploadImage: boolean;
+  allowQuestionBoxAnonymous: boolean;
+  allowQuestionBoxUnregistedUser: boolean;
+  showQuestionBoxPublicReplies: boolean;
+  questionBoxDefaultPublic: boolean;
 }

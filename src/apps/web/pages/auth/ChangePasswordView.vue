@@ -53,7 +53,7 @@ function changePassword() {
 </script>
 
 <template>
-  <main class="web-center flex flex-col items-center justify-center min-h-[60vh] p-6">
+  <main class="web-center flex-col-center min-h-[60vh] p-6">
     <div class="web-page web-page--md w-full max-w-sm">
       <Card>
         <CardHeader class="pb-4">

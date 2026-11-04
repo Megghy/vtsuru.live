@@ -231,28 +231,25 @@ onMounted(() => {
 <template>
   <div class="space-y-4">
     <!-- 运行时数据 (SessionStorage) -->
-    <Card class="border bg-card">
-      <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+    <Card>
+      <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
         <div class="flex items-center gap-2">
           <Flash24Regular class="size-4 text-amber-500" />
-          <CardTitle class="text-sm font-semibold">运行时数据 (SessionStorage)</CardTitle>
-          <Badge
-            variant="outline"
-            class="text-[10px] h-4.5 px-1.5 border-amber-500/40 text-amber-600 bg-amber-500/10"
-          >
+          <CardTitle>运行时数据 (SessionStorage)</CardTitle>
+          <Badge variant="warning" size="xs">
             临时
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent class="p-3 space-y-3">
-        <Alert class="py-2 px-2.5 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
-          <AlertDescription class="text-xs m-0">
+        <Alert size="sm" variant="warning">
+          <AlertDescription class="m-0">
             这里显示通过 <code>getData</code> / <code>setData</code> 管理的数据。仅在程序运行期间保留，重启即逝。
           </AlertDescription>
         </Alert>
 
-        <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex-between gap-2 flex-wrap">
           <div class="relative w-[200px]">
             <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <Input
@@ -298,10 +295,10 @@ onMounted(() => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead class="text-xs w-[200px]">键 (Key)</TableHead>
-                <TableHead class="text-xs w-[100px]">类型</TableHead>
-                <TableHead class="text-xs">值 (Value)</TableHead>
-                <TableHead class="text-xs text-center w-[80px]">操作</TableHead>
+                <TableHead class="w-[200px]">键 (Key)</TableHead>
+                <TableHead class="w-[100px]">类型</TableHead>
+                <TableHead>值 (Value)</TableHead>
+                <TableHead class="text-center w-[80px]">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -310,31 +307,20 @@ onMounted(() => {
                   v-for="row in filteredRuntimeData"
                   :key="row.key"
                 >
-                  <TableCell class="text-xs font-mono font-bold text-primary">
+                  <TableCell class="font-mono font-bold text-primary">
                     {{ row.key }}
                   </TableCell>
-                  <TableCell class="text-xs">
-                    <Badge
-                      variant="secondary"
-                      class="text-[10px] h-4.5 px-1.5"
-                      :class="
-                        row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''
-                      "
-                    >
+                  <TableCell>
+                    <Badge variant="secondary" size="xs" :class=" row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : '' ">
                       {{ row.type }}
                     </Badge>
                   </TableCell>
-                  <TableCell class="text-xs">
-                    <div class="flex items-center justify-between gap-2">
+                  <TableCell>
+                    <div class="flex-between gap-2">
                       <pre
                         class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1"
                         >{{ row.valueDisplay }}</pre>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0"
-                        @click="copyToClipboard(row.valueDisplay)"
-                      >
+                      <Button size="icon-xs" variant="ghost" class="text-muted-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -345,11 +331,7 @@ onMounted(() => {
                       @positive-click="deleteRuntimeItem(row.key)"
                     >
                       <template #trigger>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                        >
+                        <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10">
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>
@@ -375,28 +357,25 @@ onMounted(() => {
     </Card>
 
     <!-- 持久化数据 (IndexedDB) -->
-    <Card class="border bg-card">
-      <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
+    <Card>
+      <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
         <div class="flex items-center gap-2">
           <Database20Regular class="size-4 text-sky-500" />
-          <CardTitle class="text-sm font-semibold">持久化数据 (IndexedDB)</CardTitle>
-          <Badge
-            variant="outline"
-            class="text-[10px] h-4.5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10"
-          >
+          <CardTitle>持久化数据 (IndexedDB)</CardTitle>
+          <Badge variant="outline" size="xs" class="border-sky-500/40 text-sky-600 bg-sky-500/10">
             永久
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent class="p-3 space-y-3">
-        <Alert class="py-2 px-2.5 border-sky-500/20 bg-sky-500/10 text-sky-600 dark:text-sky-400">
-          <AlertDescription class="text-xs m-0">
+        <Alert size="sm" variant="info">
+          <AlertDescription class="m-0">
             这里显示通过 <code>getStorageData</code> / <code>setStorageData</code> 管理的数据。程序关闭后依然保留。
           </AlertDescription>
         </Alert>
 
-        <div class="flex items-center justify-between gap-2 flex-wrap">
+        <div class="flex-between gap-2 flex-wrap">
           <div class="relative w-[200px]">
             <Search16Regular class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <Input
@@ -442,10 +421,10 @@ onMounted(() => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead class="text-xs w-[200px]">键 (Key)</TableHead>
-                <TableHead class="text-xs w-[100px]">类型</TableHead>
-                <TableHead class="text-xs">值 (Value)</TableHead>
-                <TableHead class="text-xs text-center w-[80px]">操作</TableHead>
+                <TableHead class="w-[200px]">键 (Key)</TableHead>
+                <TableHead class="w-[100px]">类型</TableHead>
+                <TableHead>值 (Value)</TableHead>
+                <TableHead class="text-center w-[80px]">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -454,31 +433,20 @@ onMounted(() => {
                   v-for="row in filteredPersistentData"
                   :key="row.key"
                 >
-                  <TableCell class="text-xs font-mono font-bold text-primary">
+                  <TableCell class="font-mono font-bold text-primary">
                     {{ row.key }}
                   </TableCell>
-                  <TableCell class="text-xs">
-                    <Badge
-                      variant="secondary"
-                      class="text-[10px] h-4.5 px-1.5"
-                      :class="
-                        row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''
-                      "
-                    >
+                  <TableCell>
+                    <Badge variant="secondary" size="xs" :class=" row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : '' ">
                       {{ row.type }}
                     </Badge>
                   </TableCell>
-                  <TableCell class="text-xs">
-                    <div class="flex items-center justify-between gap-2">
+                  <TableCell>
+                    <div class="flex-between gap-2">
                       <pre
                         class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1"
                         >{{ row.valueDisplay }}</pre>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="h-6 w-6 p-0 text-muted-foreground hover:text-foreground shrink-0"
-                        @click="copyToClipboard(row.valueDisplay)"
-                      >
+                      <Button size="icon-xs" variant="ghost" class="text-muted-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -489,11 +457,7 @@ onMounted(() => {
                       @positive-click="deletePersistentItem(row.key)"
                     >
                       <template #trigger>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                        >
+                        <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10">
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>

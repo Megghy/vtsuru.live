@@ -7,6 +7,11 @@ export const CUSTOM_HTML_MIN_HEIGHT = 80
 export const CUSTOM_HTML_MAX_HEIGHT = 10000
 export const CUSTOM_HTML_MIN_AUTO_HEIGHT = 160
 export const CUSTOM_HTML_ASSET_KEY_PATTERN = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/
+export const CUSTOM_HTML_ALLOWED_IMPORTS = {
+  vue: 'Vue',
+  dayjs: 'dayjs',
+  '@vueuse/core': 'VueUse',
+} as const
 
 export interface CustomHtmlAsset {
   key: string
@@ -27,7 +32,7 @@ export interface CustomHtmlProps {
 export const DEFAULT_CUSTOM_VUE_SOURCE = `<script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-const ctx = ref(null)
+const ctx = ref<VtsuruPageContext | null>(null)
 
 onMounted(async () => {
   ctx.value = await vtsuru.getContext()
@@ -42,22 +47,22 @@ onMounted(async () => {
 </template>
 
 <style>
-.custom-panel {
-  padding: 24px;
-  border: var(--border-width) var(--border-style) var(--border);
-  border-radius: var(--radius);
-  color: var(--foreground);
-  background: var(--popover);
-  box-shadow: var(--ui-shadow);
-}
-.custom-panel h2 {
-  margin: 0 0 8px;
-  font-size: 22px;
-}
-.custom-panel p {
-  margin: 0;
-  color: var(--muted-foreground);
-}
+  .custom-panel {
+    padding: 24px;
+    border: var(--border-width) var(--border-style) var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    background: var(--popover);
+    box-shadow: var(--ui-shadow);
+  }
+  .custom-panel h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+  }
+  .custom-panel p {
+    margin: 0;
+    color: var(--muted-foreground);
+  }
 </style>
 `
 

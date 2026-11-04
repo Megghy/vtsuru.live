@@ -5,6 +5,7 @@ import { ref } from 'vue'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
@@ -12,7 +13,6 @@ import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { useSpeechService } from '@/store/useSpeechService'
 
-import SectionField from './SectionField.vue'
 
 const { settings } = useSpeechService()
 
@@ -54,7 +54,7 @@ function removeReplacement(index: number) {
 
 <template>
   <div class="flex flex-col gap-3">
-    <SectionField
+    <FormField
       label="屏蔽用户"
       hint="这些用户的弹幕/礼物不会播报"
     >
@@ -90,9 +90,9 @@ function removeReplacement(index: number) {
           </Button>
         </div>
       </div>
-    </SectionField>
+    </FormField>
 
-    <SectionField
+    <FormField
       label="屏蔽关键词"
       hint="包含这些词的弹幕不会播报"
     >
@@ -128,11 +128,11 @@ function removeReplacement(index: number) {
           </Button>
         </div>
       </div>
-    </SectionField>
+    </FormField>
 
     <Separator class="my-1" />
 
-    <SectionField
+    <FormField
       label="字数限制"
       hint="0 = 不限制，超出部分截断"
     >
@@ -144,9 +144,9 @@ function removeReplacement(index: number) {
           placeholder="0"
         />
       </div>
-    </SectionField>
+    </FormField>
 
-    <SectionField
+    <FormField
       label="防刷屏间隔 (秒)"
       hint="同一用户在此间隔内只播报一条，0 = 不限制"
     >
@@ -158,7 +158,7 @@ function removeReplacement(index: number) {
           placeholder="0"
         />
       </div>
-    </SectionField>
+    </FormField>
 
     <label class="flex items-center gap-2 cursor-pointer text-xs">
       <Checkbox
@@ -170,7 +170,7 @@ function removeReplacement(index: number) {
 
     <Separator class="my-1" />
 
-    <SectionField
+    <FormField
       label="文本替换规则"
       hint="按顺序执行，可用正则"
     >
@@ -218,6 +218,6 @@ function removeReplacement(index: number) {
         <Add20Filled class="size-3.5" />
         添加规则
       </Button>
-    </SectionField>
+    </FormField>
   </div>
 </template>

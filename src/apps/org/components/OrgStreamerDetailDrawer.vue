@@ -56,7 +56,7 @@ function getHeatmapColor(val: number) {
             :size="40"
           />
           <div class="min-w-0 flex-1 flex flex-col">
-            <SheetTitle class="text-sm font-semibold truncate text-foreground">
+            <SheetTitle class="text-sm truncate text-foreground">
               {{ d.detail.value?.streamer.name || (d.selectedId.value ? `ID: ${d.selectedId.value}` : '主播详情') }}
             </SheetTitle>
             <span class="text-xs text-muted-foreground font-mono">
@@ -64,11 +64,7 @@ function getHeatmapColor(val: number) {
             </span>
           </div>
 
-          <Badge
-            v-if="d.detail.value"
-            variant="secondary"
-            class="text-[10px] h-4.5 px-1.5 font-normal ml-auto"
-          >
+          <Badge v-if="d.detail.value" variant="secondary" size="xs" class="ml-auto">
             {{ streamerStatusLabel(d.detail.value.status) }}
           </Badge>
         </div>
@@ -93,7 +89,7 @@ function getHeatmapColor(val: number) {
         >
           <!-- 统计指标网格 -->
           <div class="grid grid-cols-2 gap-2">
-            <Card class="border border-border/80">
+            <Card class="/80">
               <CardContent class="p-3 space-y-0.5">
                 <span class="text-[11px] text-muted-foreground block">总收入</span>
                 <span class="text-base font-semibold font-mono text-primary">
@@ -102,7 +98,7 @@ function getHeatmapColor(val: number) {
               </CardContent>
             </Card>
 
-            <Card class="border border-border/80">
+            <Card class="/80">
               <CardContent class="p-3 space-y-0.5">
                 <span class="text-[11px] text-muted-foreground block">直播时长</span>
                 <span class="text-base font-semibold font-mono text-foreground">
@@ -112,7 +108,7 @@ function getHeatmapColor(val: number) {
               </CardContent>
             </Card>
 
-            <Card class="border border-border/80">
+            <Card class="/80">
               <CardContent class="p-3 space-y-0.5">
                 <span class="text-[11px] text-muted-foreground block">互动人次</span>
                 <span class="text-base font-semibold font-mono text-foreground">
@@ -121,7 +117,7 @@ function getHeatmapColor(val: number) {
               </CardContent>
             </Card>
 
-            <Card class="border border-border/80">
+            <Card class="/80">
               <CardContent class="p-3 space-y-0.5">
                 <span class="text-[11px] text-muted-foreground block">弹幕数量</span>
                 <span class="text-base font-semibold font-mono text-foreground">
@@ -132,9 +128,9 @@ function getHeatmapColor(val: number) {
           </div>
 
           <!-- 直播热力图 -->
-          <Card class="border border-border/80">
-            <CardHeader class="p-3 pb-2 border-b border-border/60">
-              <CardTitle class="text-xs font-semibold">直播时间热力图</CardTitle>
+          <Card class="/80">
+            <CardHeader class="p-3 border-b border-border/60">
+              <CardTitle class="text-xs">直播时间热力图</CardTitle>
             </CardHeader>
             <CardContent class="p-3">
               <div class="flex flex-wrap gap-1">
@@ -152,10 +148,10 @@ function getHeatmapColor(val: number) {
           <!-- 主播设置（管理员权限） -->
           <Card
             v-if="isOrgAdmin"
-            class="border border-border/80"
+            class="/80"
           >
-            <CardHeader class="p-3 pb-2 border-b border-border/60">
-              <CardTitle class="text-xs font-semibold">主播设置</CardTitle>
+            <CardHeader class="p-3 border-b border-border/60">
+              <CardTitle class="text-xs">主播设置</CardTitle>
             </CardHeader>
             <CardContent class="p-3 space-y-3">
               <div class="space-y-1">
@@ -168,15 +164,9 @@ function getHeatmapColor(val: number) {
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      value="1"
-                      class="text-xs"
-                      >Active</SelectItem
+                    <SelectItem value="1">Active</SelectItem
                     >
-                    <SelectItem
-                      value="3"
-                      class="text-xs"
-                      >Removed</SelectItem
+                    <SelectItem value="3">Removed</SelectItem
                     >
                   </SelectContent>
                 </Select>
@@ -188,7 +178,7 @@ function getHeatmapColor(val: number) {
                   v-model="d.editNote.value"
                   rows="2"
                   placeholder="仅组织管理员可见"
-                  class="text-xs resize-none"
+                  class="resize-none"
                 />
               </div>
 
@@ -202,9 +192,9 @@ function getHeatmapColor(val: number) {
           </Card>
 
           <!-- 直播记录 -->
-          <Card class="border border-border/80">
-            <CardHeader class="p-3 pb-2 border-b border-border/60">
-              <CardTitle class="text-xs font-semibold">直播记录</CardTitle>
+          <Card class="/80">
+            <CardHeader class="p-3 border-b border-border/60">
+              <CardTitle class="text-xs">直播记录</CardTitle>
             </CardHeader>
             <CardContent class="p-3">
               <div

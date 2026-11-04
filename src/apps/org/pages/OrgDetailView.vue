@@ -113,11 +113,11 @@ function openRename() {
   <div class="org-page p-4 sm:p-6 max-w-7xl mx-auto space-y-4">
     <Card
       v-if="!isLoggedIn"
-      class="border border-border/80"
+      class="/80"
     >
       <CardContent class="p-4 space-y-3">
-        <Alert class="text-xs bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400">
-          <AlertDescription class="text-xs">需要先登录才能查看组织数据。</AlertDescription>
+        <Alert size="sm" variant="warning">
+          <AlertDescription>需要先登录才能查看组织数据。</AlertDescription>
         </Alert>
         <RegisterAndLogin />
       </CardContent>
@@ -125,14 +125,14 @@ function openRename() {
 
     <template v-else>
       <!-- 页头卡片 -->
-      <Card class="border border-border/80">
+      <Card class="/80">
         <CardContent class="p-4 space-y-4">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="icon"
-                class="size-8 rounded-full text-muted-foreground hover:text-foreground"
+                class="size-8 rounded-full text-muted-foreground"
                 aria-label="返回"
                 @click="router.push({ name: 'org-index' })"
               >
@@ -142,7 +142,7 @@ function openRename() {
                 />
               </Button>
 
-              <div class="size-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+              <div class="size-10 rounded-lg bg-primary/10 text-primary flex-center shrink-0">
                 <component
                   :is="People24Regular"
                   class="size-5"
@@ -154,14 +154,7 @@ function openRename() {
                   <h1 class="text-base font-semibold text-foreground truncate m-0">
                     {{ orgName || `组织 ${orgId}` }}
                   </h1>
-                  <Button
-                    v-if="isOrgAdmin"
-                    variant="ghost"
-                    size="icon"
-                    class="size-6 rounded-full text-muted-foreground hover:text-foreground"
-                    title="重命名组织"
-                    @click="openRename"
-                  >
+                  <Button v-if="isOrgAdmin" variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground" aria-label="重命名组织" @click="openRename">
                     <component
                       :is="Edit20Regular"
                       class="size-3.5"
@@ -242,10 +235,7 @@ function openRename() {
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 border-t border-border/60 text-xs">
             <div class="space-y-0.5">
               <span class="text-[11px] text-muted-foreground block">我的角色</span>
-              <Badge
-                variant="outline"
-                class="text-[10px] h-4.5 px-1.5 text-primary border-primary/30"
-              >
+              <Badge variant="outline" size="xs" class="text-primary border-primary/30">
                 {{ orgInfo ? roleLabel(orgInfo.role) : '-' }}
               </Badge>
             </div>
@@ -267,41 +257,20 @@ function openRename() {
         class="w-full space-y-3"
         @update:model-value="activeTab = $event as any"
       >
-        <TabsList class="h-9 p-1 flex-wrap">
-          <TabsTrigger
-            value="analyze"
-            class="text-xs"
-            >数据分析</TabsTrigger
+        <TabsList size="default" class="flex-wrap">
+          <TabsTrigger value="analyze" >数据分析</TabsTrigger
           >
-          <TabsTrigger
-            value="lives"
-            class="text-xs"
-            >直播记录</TabsTrigger
+          <TabsTrigger value="lives" >直播记录</TabsTrigger
           >
-          <TabsTrigger
-            value="streamers"
-            class="text-xs"
-            >主播管理</TabsTrigger
+          <TabsTrigger value="streamers" >主播管理</TabsTrigger
           >
-          <TabsTrigger
-            value="members"
-            class="text-xs"
-            >成员管理</TabsTrigger
+          <TabsTrigger value="members" >成员管理</TabsTrigger
           >
-          <TabsTrigger
-            value="points"
-            class="text-xs"
-            >积分管理</TabsTrigger
+          <TabsTrigger value="points" >积分管理</TabsTrigger
           >
-          <TabsTrigger
-            value="shipping"
-            class="text-xs"
-            >订单管理</TabsTrigger
+          <TabsTrigger value="shipping" >订单管理</TabsTrigger
           >
-          <TabsTrigger
-            value="audit"
-            class="text-xs"
-            >操作审计</TabsTrigger
+          <TabsTrigger value="audit" >操作审计</TabsTrigger
           >
         </TabsList>
 
@@ -368,7 +337,7 @@ function openRename() {
       <Dialog v-model:open="showRenameModal">
         <DialogContent class="sm:max-w-md p-4 space-y-3">
           <DialogHeader class="pb-2 border-b border-border/60">
-            <DialogTitle class="text-sm font-semibold">重命名组织</DialogTitle>
+            <DialogTitle class="text-sm">重命名组织</DialogTitle>
           </DialogHeader>
 
           <div class="space-y-1 text-xs">
@@ -380,7 +349,7 @@ function openRename() {
             />
           </div>
 
-          <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
+          <DialogFooter class="pt-2 border-t border-border/60">
             <Button
               variant="outline"
               @click="showRenameModal = false"

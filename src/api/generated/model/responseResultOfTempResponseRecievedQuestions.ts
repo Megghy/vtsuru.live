@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { TempResponseRecievedQuestions } from './tempResponseRecievedQuestions'
+import type { TempResponseRecievedQuestions } from './tempResponseRecievedQuestions';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfTempResponseRecievedQuestions {
-  message: string
-  code: number
-  data: TempResponseRecievedQuestions
+  message: string;
+  code: number;
+  data: TempResponseRecievedQuestions;
 }

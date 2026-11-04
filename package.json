@@ -70,6 +70,7 @@
     "css-tree": "^3.2.1",
     "culori": "^4.0.2",
     "date-fns": "^4.4.0",
+    "dayjs": "^1.11.23",
     "dexie": "^4.4.6",
     "dompurify": "^3.4.17",
     "easy-speech": "^2.4.0",

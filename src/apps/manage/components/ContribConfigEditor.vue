@@ -102,7 +102,7 @@ function removeUploadedFile(key: string, idx: number) {
 </script>
 
 <template>
-  <Alert class="text-xs">
+  <Alert size="sm">
     <AlertDescription>
       此处仅编辑 <code>contrib.config</code>（跟随“保存草稿/发布”写入 user-pages），不会单独提交到其他配置接口。
     </AlertDescription>

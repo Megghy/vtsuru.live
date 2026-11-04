@@ -5,34 +5,34 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { APIFileModel } from './aPIFileModel'
-import type { GoodsTypes } from './goodsTypes'
-import type { GuardLevel } from './guardLevel'
-import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
-import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
+import type { APIFileModel } from './aPIFileModel';
+import type { GoodsTypes } from './goodsTypes';
+import type { GuardLevel } from './guardLevel';
+import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting';
+import type { VirtualKeySelectionMode } from './virtualKeySelectionMode';
 
 export interface ResponseSubPointGoodsModel {
-  id: number
-  name: string
+  id: number;
+  name: string;
   /** @nullable */
-  description?: string | null
+  description?: string | null;
   /** @nullable */
-  count?: number | null
-  price: number
-  tags: string[]
-  type: GoodsTypes
+  count?: number | null;
+  price: number;
+  tags: string[];
+  type: GoodsTypes;
   /** @nullable */
-  collectUrl?: string | null
-  embedCollectUrl: boolean
-  isAllowRebuy: boolean
-  maxBuyCount: number
-  canFreeBuy: boolean
-  allowGuardLevel: GuardLevel
-  setting: TempRequestGoodsSetting
-  cover?: APIFileModel
+  collectUrl?: string | null;
+  embedCollectUrl: boolean;
+  isAllowRebuy: boolean;
+  maxBuyCount: number;
+  canFreeBuy: boolean;
+  allowGuardLevel: GuardLevel;
+  setting: TempRequestGoodsSetting;
+  cover?: APIFileModel;
   /** @nullable */
-  content?: string | null
+  content?: string | null;
   /** @nullable */
-  virtualKeys?: string[] | null
-  keySelectionMode?: VirtualKeySelectionMode
+  virtualKeys?: string[] | null;
+  keySelectionMode?: VirtualKeySelectionMode;
 }

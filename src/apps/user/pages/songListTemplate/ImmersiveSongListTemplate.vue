@@ -130,20 +130,10 @@ const stageRequestLabel = computed(() => {
             v-if="selectedSong.language?.length || selectedSong.tags?.length"
             class="stage-tags flex flex-wrap gap-1"
           >
-            <Badge
-              v-for="lang in selectedSong.language ?? []"
-              :key="`l-${lang}`"
-              variant="secondary"
-              class="text-xs h-5 px-2 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-normal"
-            >
+            <Badge v-for="lang in selectedSong.language ?? []" :key="`l-${lang}`" variant="secondary" size="sm" class="bg-blue-500/10 text-blue-600 dark:text-blue-400">
               {{ lang }}
             </Badge>
-            <Badge
-              v-for="tag in (selectedSong.tags ?? []).slice(0, 4)"
-              :key="`t-${tag}`"
-              variant="secondary"
-              class="text-xs h-5 px-2 font-normal"
-            >
+            <Badge v-for="tag in (selectedSong.tags ?? []).slice(0, 4)" :key="`t-${tag}`" variant="secondary" size="sm">
               {{ tag }}
             </Badge>
           </div>

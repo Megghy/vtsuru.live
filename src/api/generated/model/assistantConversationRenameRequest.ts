@@ -10,5 +10,5 @@
  * 重命名会话请求
  */
 export interface AssistantConversationRenameRequest {
-  title: string
+  title: string;
 }

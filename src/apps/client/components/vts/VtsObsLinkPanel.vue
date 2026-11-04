@@ -41,9 +41,9 @@ function removeMapping(scene: string) {
 <template>
   <Card>
     <CardHeader class="py-3 px-4">
-      <CardTitle class="text-sm font-semibold">OBS 场景联动</CardTitle>
+      <CardTitle>OBS 场景联动</CardTitle>
     </CardHeader>
-    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+    <CardContent class="px-4 pb-4 flex flex-col gap-3">
       <div class="flex items-center gap-3 flex-wrap text-xs">
         <div class="flex items-center gap-2">
           <Switch
@@ -90,7 +90,7 @@ function removeMapping(scene: string) {
         <div
           v-for="scene in obs.obsScenes"
           :key="scene"
-          class="flex items-center justify-between gap-3 flex-wrap"
+          class="flex-between gap-3 flex-wrap"
         >
           <div class="flex items-center gap-3 flex-wrap flex-1">
             <span class="font-bold text-xs min-w-[120px]">{{ scene }}</span>

@@ -1,8 +1,8 @@
-import type { ComputedRef } from 'vue'
-import { computed, ref } from 'vue'
+import type { ComputedRef, MaybeRefOrGetter } from 'vue'
+import { computed, ref, toValue } from 'vue'
 
 import { deleteApiFilesDeleteId, getApiFilesList } from '@/api/generated/file/file'
-import type { APIFileModel } from '@/api/generated/model'
+import type { APIFileModel, FileKind } from '@/api/generated/model'
 import { unwrapOk } from '@/api/query'
 
 import type { FileRefEntry } from './editorResources'
@@ -18,18 +18,27 @@ interface UseBuilderResourcesOptions {
   fileRefs: ComputedRef<FileRefEntry[]>
   notifyError: (content: string) => void
   notifySuccess: (content: string) => void
+  kind?: FileKind
+  stores?: MaybeRefOrGetter<readonly string[] | undefined>
 }
 
-async function fetchAllFiles() {
+async function fetchStoreFiles(kind?: FileKind, store?: string) {
   const pageSize = 100
-  const first = await getApiFilesList({ page: 1, pageSize })
+  const first = await getApiFilesList({ page: 1, pageSize, kind, store })
   const files = [...(unwrapOk(first, '加载资源失败') ?? [])]
   const pageCount = Math.ceil(first.total / pageSize)
   for (let page = 2; page <= pageCount; page++) {
-    const response = await getApiFilesList({ page, pageSize })
+    const response = await getApiFilesList({ page, pageSize, kind, store })
     files.push(...(unwrapOk(response, '加载资源失败') ?? []))
   }
   return files
+}
+
+async function fetchAllFiles(kind?: FileKind, stores?: readonly string[]) {
+  if (stores && stores.length === 0) return []
+  if (!stores) return fetchStoreFiles(kind)
+  const groups = await Promise.all(stores.map((store) => fetchStoreFiles(kind, store)))
+  return [...new Map(groups.flat().map((file) => [file.id, file])).values()]
 }
 
 export function mergeBuilderResources(filesToMerge: APIFileModel[], references: FileRefEntry[]): BuilderResource[] {
@@ -48,6 +57,7 @@ export function mergeBuilderResources(filesToMerge: APIFileModel[], references: 
       name: file.name ?? `资源 #${file.id}`,
       hash: '',
       size: undefined,
+      store: '',
       locations: file.locations,
       missing: true,
     }))
@@ -60,6 +70,7 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
   const isLoading = ref(false)
   const deletingId = ref<number | null>(null)
   const loadError = ref('')
+  let loadGeneration = 0
 
   const resources = computed(() => mergeBuilderResources(allFiles.value, options.fileRefs.value))
 
@@ -75,15 +86,22 @@ export function useBuilderResources(options: UseBuilderResourcesOptions) {
   const missingCount = computed(() => resources.value.filter((resource) => resource.missing).length)
 
   async function loadResources() {
+    const generation = ++loadGeneration
+    const knownIds = new Set(allFiles.value.map((file) => file.id))
     isLoading.value = true
     loadError.value = ''
     try {
-      allFiles.value = await fetchAllFiles()
+      const fetched = await fetchAllFiles(options.kind, toValue(options.stores))
+      if (generation !== loadGeneration) return
+      const fetchedIds = new Set(fetched.map((file) => file.id))
+      const addedDuringLoad = allFiles.value.filter((file) => !knownIds.has(file.id) && !fetchedIds.has(file.id))
+      allFiles.value = addedDuringLoad.length ? [...fetched, ...addedDuringLoad] : fetched
     } catch (error) {
+      if (generation !== loadGeneration) return
       loadError.value = (error as Error).message || String(error)
       options.notifyError(loadError.value)
     } finally {
-      isLoading.value = false
+      if (generation === loadGeneration) isLoading.value = false
     }
   }
 

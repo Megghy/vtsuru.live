@@ -133,7 +133,7 @@ onUnmounted(disposeChart)
         <Card
           v-for="card in summaryCards"
           :key="card.label"
-          class="border border-border/80"
+          class="/80"
         >
           <CardContent class="p-3 space-y-1">
             <span class="text-[11px] text-muted-foreground block">{{ card.label }}</span>
@@ -151,12 +151,7 @@ onUnmounted(disposeChart)
                 class="text-[11px] text-muted-foreground"
                 >{{ card.suffix }}</span
               >
-              <Badge
-                v-if="card.trend != null"
-                variant="outline"
-                class="text-[10px] h-4 px-1 ml-auto"
-                :class="
-                  card.trend >= 0
+              <Badge v-if="card.trend != null" variant="outline" size="xs" class="ml-auto" :class=" card.trend>= 0
                     ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/10'
                     : 'text-destructive border-destructive/30 bg-destructive/10'
                 "
@@ -173,11 +168,9 @@ onUnmounted(disposeChart)
       </div>
 
       <!-- 趋势图表 -->
-      <Card class="border border-border/80">
-        <CardHeader
-          class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2"
-        >
-          <CardTitle class="text-xs font-semibold">趋势图表</CardTitle>
+      <Card class="/80">
+        <CardHeader class="p-3 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle class="text-xs">趋势图表</CardTitle>
           <ToggleGroup
             type="multiple"
             size="xs"
@@ -211,11 +204,9 @@ onUnmounted(disposeChart)
       </Card>
 
       <!-- 主播排行榜 Top 10 -->
-      <Card class="border border-border/80">
-        <CardHeader
-          class="p-3 pb-2 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2"
-        >
-          <CardTitle class="text-xs font-semibold">主播排行榜 Top 10</CardTitle>
+      <Card class="/80">
+        <CardHeader class="p-3 border-b border-border/60 flex flex-row items-center justify-between flex-wrap gap-2">
+          <CardTitle class="text-xs">主播排行榜 Top 10</CardTitle>
           <div class="flex items-center gap-2">
             <Tabs
               :model-value="rankMetric"
@@ -277,10 +268,7 @@ onUnmounted(disposeChart)
               </span>
 
               <div class="flex-1">
-                <Progress
-                  :value="s.pct"
-                  class="h-2"
-                />
+                <Progress :value="s.pct" />
               </div>
 
               <span class="w-24 text-right font-mono font-semibold text-xs text-foreground shrink-0">

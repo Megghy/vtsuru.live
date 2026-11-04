@@ -266,14 +266,7 @@ const triggerTypeOptions = [
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Badge
-                  variant="outline"
-                  class="cursor-pointer text-xs h-6 px-2 gap-1.5"
-                  :class="
-                    biliFunc.activeDanmakuAccountType === 'bot' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ''
-                  "
-                  @click="currentMenuKey = 'account-settings'"
-                >
+                <Badge variant="outline" class="cursor-pointer h-6 px-2 gap-1.5" :class=" biliFunc.activeDanmakuAccountType === 'bot' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : '' " @click="currentMenuKey = 'account-settings'">
                   <component
                     :is="biliFunc.activeDanmakuAccountType === 'bot' ? Bot24Regular : PersonAdd24Regular"
                     class="size-3.5"
@@ -287,16 +280,13 @@ const triggerTypeOptions = [
                   </span>
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">
+              <TooltipContent>
                 点击管理 B 站账号池，自由选择发弹幕账号（支持添加多个账号随时切换）
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          <Badge
-            variant="secondary"
-            class="text-xs h-6 px-2"
-            :class="activeRulesCount > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ''"
+          <Badge variant="secondary" class="h-6 px-2" :class="activeRulesCount> 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ''"
           >
             {{ `${activeRulesCount} 条规则已启用` }}
           </Badge>
@@ -304,18 +294,15 @@ const triggerTypeOptions = [
       </template>
     </ClientPageHeader>
 
-    <Alert
-      v-if="!biliCookieStore.isCookieValid"
-      class="py-2.5 px-3 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-    >
-      <AlertTitle class="text-xs font-semibold">B站账号凭据未就绪</AlertTitle>
-      <AlertDescription class="text-xs mt-0.5">
+    <Alert size="sm" variant="warning" v-if="!biliCookieStore.isCookieValid">
+      <AlertTitle>B站账号凭据未就绪</AlertTitle>
+      <AlertDescription class="mt-0.5">
         部分需要发送弹幕或私信的操作（如自动回复、上舰感谢）将无法执行。请前往【设置】完成登录。
       </AlertDescription>
     </Alert>
 
     <!-- 双栏工作台卡片 -->
-    <Card class="border bg-card auto-action-workbench overflow-hidden">
+    <Card class="auto-action-workbench overflow-hidden">
       <div class="flex min-h-[560px]">
         <!-- 左侧二级菜单 -->
         <div class="w-52 border-r bg-muted/10 p-2.5 flex flex-col gap-4 shrink-0">
@@ -422,24 +409,16 @@ const triggerTypeOptions = [
                       autoActionStore.globalSchedulingMode === 'sequential' &&
                       autoActionStore.nextScheduledAction
                     "
-                    class="next-action-display flex items-center justify-between p-2.5 rounded-md border border-l-4 border-l-primary bg-card"
+                    class="next-action-display flex-between p-2.5 rounded-md border border-l-4 border-l-primary bg-card"
                   >
                     <div class="flex items-center gap-2 text-xs text-foreground">
                       <Target24Filled class="size-4 text-primary" />
                       <span>下一个执行:</span>
-                      <Badge
-                        variant="secondary"
-                        class="text-xs h-5 px-1.5"
-                      >
+                      <Badge variant="secondary" size="sm">
                         {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
                       </Badge>
                     </div>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="h-6 gap-1 text-primary hover:text-primary"
-                      @click="openSetNextModal"
-                    >
+                    <Button size="xs" variant="ghost" class="gap-1 text-primary hover:text-primary" @click="openSetNextModal">
                       <Edit16Regular class="size-3" />
                       手动指定
                     </Button>
@@ -447,12 +426,9 @@ const triggerTypeOptions = [
                 </div>
 
                 <!-- 舰长专属提示 -->
-                <Alert
-                  v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
-                  class="py-2.5 px-3 mb-3 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                >
-                  <AlertTitle class="text-xs font-semibold">功能限制提醒</AlertTitle>
-                  <AlertDescription class="text-xs mt-0.5">
+                <Alert size="sm" variant="warning" v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'" class="mb-3">
+                  <AlertTitle>功能限制提醒</AlertTitle>
+                  <AlertDescription class="mt-0.5">
                     当前连接模式 (OpenLive) 无法获取用户
                     UID，因此无法执行【发送私信】操作。如需使用私信功能，请切换至直连模式。
                   </AlertDescription>
@@ -471,12 +447,12 @@ const triggerTypeOptions = [
               v-else-if="currentMenuKey === 'queue-settings'"
               class="space-y-4"
             >
-              <Card class="border bg-card">
-                <CardHeader class="p-3 pb-2 border-b">
-                  <CardTitle class="text-sm font-semibold">全局消息队列频率</CardTitle>
+              <Card>
+                <CardHeader class="p-3 border-b">
+                  <CardTitle>全局消息队列频率</CardTitle>
                 </CardHeader>
                 <CardContent class="p-3 space-y-3">
-                  <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+                  <div class="flex-between p-2.5 rounded border bg-muted/20">
                     <div>
                       <span class="text-xs font-medium text-foreground block">弹幕队列最小间隔</span>
                       <span class="text-[11px] text-muted-foreground block mt-0.5">
@@ -492,7 +468,7 @@ const triggerTypeOptions = [
                     />
                   </div>
 
-                  <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+                  <div class="flex-between p-2.5 rounded border bg-muted/20">
                     <div>
                       <span class="text-xs font-medium text-foreground block">私信队列最小间隔</span>
                       <span class="text-[11px] text-muted-foreground block mt-0.5">
@@ -526,7 +502,7 @@ const triggerTypeOptions = [
     <Dialog v-model:open="showAddModal">
       <DialogContent class="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">添加新的自动操作</DialogTitle>
+          <DialogTitle class="text-sm">添加新的自动操作</DialogTitle>
         </DialogHeader>
         <div class="space-y-3 pt-2">
           <span class="text-xs text-muted-foreground block">请选择要添加的自动操作类型：</span>
@@ -535,12 +511,7 @@ const triggerTypeOptions = [
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in triggerTypeOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in triggerTypeOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -562,7 +533,7 @@ const triggerTypeOptions = [
     <Dialog v-model:open="showSetNextModal">
       <DialogContent class="sm:max-w-[440px]">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">手动指定下一条 (顺序模式)</DialogTitle>
+          <DialogTitle class="text-sm">手动指定下一条 (顺序模式)</DialogTitle>
         </DialogHeader>
         <div class="space-y-2 pt-2">
           <Select v-model="targetNextActionId">
@@ -570,12 +541,7 @@ const triggerTypeOptions = [
               <SelectValue placeholder="选择操作" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in eligibleGlobalActions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in eligibleGlobalActions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -600,7 +566,7 @@ const triggerTypeOptions = [
     <Dialog v-model:open="showTestModal">
       <DialogContent class="sm:max-w-[420px]">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">测试舰长私信</DialogTitle>
+          <DialogTitle class="text-sm">测试舰长私信</DialogTitle>
         </DialogHeader>
         <div class="space-y-2 pt-2">
           <span class="text-xs text-muted-foreground block">请输入私信接收者的UID：</span>

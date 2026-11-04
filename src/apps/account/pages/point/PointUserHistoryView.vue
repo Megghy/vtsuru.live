@@ -207,17 +207,9 @@ onMounted(() => void loadHistories())
                   <SelectValue placeholder="全部主播" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    value="all"
-                    class="text-xs"
-                    >全部主播</SelectItem
+                  <SelectItem value="all">全部主播</SelectItem
                   >
-                  <SelectItem
-                    v-for="opt in streamerOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in streamerOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>

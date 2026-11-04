@@ -1,10 +1,13 @@
 import { compileScript, compileStyle, compileTemplate, parse } from 'vue/compiler-sfc'
 import { transform } from 'sucrase'
 
+import { CUSTOM_HTML_ALLOWED_IMPORTS } from './customHtmlContract'
 import type { CustomCodeIssue } from './customHtmlRuntime'
 
 const FILENAME = 'App.vue'
-const VUE_FROM = /(?:import\s+(?:([A-Za-z_$][\w$]*)\s*,\s*)?\{([^}]+)\}\s*from\s*['"]vue['"]\s*;?|import\s+\*\s+as\s+([A-Za-z_$][\w$]*)\s*from\s*['"]vue['"]\s*;?|import\s+([A-Za-z_$][\w$]*)\s+from\s*['"]vue['"]\s*;?|import\s*['"]vue['"]\s*;?)/g
+const ALLOWED_IMPORT_HINT = Object.keys(CUSTOM_HTML_ALLOWED_IMPORTS)
+  .map((spec) => `'${spec}'`)
+  .join(' / ')
 
 export interface CompiledCustomVue {
   js: string
@@ -53,7 +56,7 @@ export function compileCustomVueSfc(source: string): CompiledCustomVue {
     issues.push(mapError(error))
   }
 
-  const rewritten = rewriteVueImports(script)
+  const rewritten = rewriteAllowedImports(script)
   if (rewritten.error) issues.push(issue(rewritten.error))
 
   const cssParts: string[] = []
@@ -86,29 +89,40 @@ function rewriteAssetAttrs(source: string) {
   })
 }
 
-function rewriteVueImports(code: string): { code: string; error?: string } {
-  const other = [...code.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)].map((match) => match[1]).find((spec) => spec !== 'vue')
-  if (other) return { code, error: `不支持导入 '${other}'，仅允许 from 'vue'` }
+function rewriteAllowedImports(code: string): { code: string; error?: string } {
+  const other = [...code.matchAll(/\bfrom\s*['"]([^'"]+)['"]/g)]
+    .map((match) => match[1])
+    .find((spec) => !(spec in CUSTOM_HTML_ALLOWED_IMPORTS))
+  if (other) return { code, error: `不支持导入 '${other}'，仅允许 from ${ALLOWED_IMPORT_HINT}` }
 
-  const named: string[] = []
-  const aliases: string[] = []
-  let js = code.replace(/import\s+type\s+[\s\S]*?from\s*['"]vue['"]\s*;?/g, '')
-  js = js.replace(VUE_FROM, (_full, defaultWithNamed, spec, namespace, defaultOnly) => {
-    if (namespace) aliases.push(`const ${namespace} = Vue;`)
-    if (defaultWithNamed || defaultOnly) aliases.push(`const ${defaultWithNamed || defaultOnly} = Vue;`)
-    if (spec) {
-      for (const part of spec.split(',')) {
-        const token = part.trim()
-        if (!token) continue
-        const [exported, local] = token.split(/\s+as\s+/).map((item: string) => item.trim())
-        named.push(local && local !== exported ? `${exported}: ${local}` : exported)
+  const prelude: string[] = []
+  let js = code.replace(/import\s+type\s+[\s\S]*?from\s*['"][^'"]+['"]\s*;?/g, '')
+  for (const [spec, globalName] of Object.entries(CUSTOM_HTML_ALLOWED_IMPORTS)) {
+    const escaped = spec.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const pattern = new RegExp(
+      String.raw`(?:import\s+(?:([A-Za-z_$][\w$]*)\s*,\s*)?\{([^}]+)\}\s*from\s*['"]${escaped}['"]\s*;?|import\s+\*\s+as\s+([A-Za-z_$][\w$]*)\s*from\s*['"]${escaped}['"]\s*;?|import\s+([A-Za-z_$][\w$]*)\s*from\s*['"]${escaped}['"]\s*;?|import\s*['"]${escaped}['"]\s*;?)`,
+      'g',
+    )
+    js = js.replace(pattern, (_full, defaultWithNamed, specifiers, namespace, defaultOnly) => {
+      const globalExpr = `globalThis.${globalName}`
+      if (namespace) prelude.push(`const ${namespace} = ${globalExpr};`)
+      if (defaultWithNamed || defaultOnly)
+        prelude.push(`const ${defaultWithNamed || defaultOnly} = ${globalExpr}.default ?? ${globalExpr};`)
+      if (specifiers) {
+        const named: string[] = []
+        for (const part of specifiers.split(',')) {
+          const token = part.trim()
+          if (!token) continue
+          const [exported, local] = token.split(/\s+as\s+/).map((item: string) => item.trim())
+          named.push(local && local !== exported ? `${exported}: ${local}` : exported)
+        }
+        if (named.length) prelude.push(`const { ${named.join(', ')} } = ${globalExpr};`)
       }
-    }
-    return ''
-  })
+      return ''
+    })
+  }
   js = js.replace(/export\s+default\s+[\w$]+\s*;?/, '').replace(/^export\s+/gm, '')
-  const prelude = [...(named.length ? [`const { ${named.join(', ')} } = Vue;`] : []), ...aliases].join('\n')
-  return { code: `${prelude}${prelude ? '\n' : ''}${js}` }
+  return { code: `${prelude.join('\n')}${prelude.length ? '\n' : ''}${js}` }
 }
 
 function wrapMount(code: string) {

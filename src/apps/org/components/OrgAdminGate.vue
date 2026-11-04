@@ -11,11 +11,8 @@ const { isOrgAdmin } = useOrgContext()
 </script>
 
 <template>
-  <Alert
-    v-if="!isOrgAdmin"
-    class="text-xs bg-amber-500/10 border-amber-500/30 text-amber-600 dark:text-amber-400"
-  >
-    <AlertDescription class="text-xs">{{ message }}</AlertDescription>
+  <Alert size="sm" variant="warning" v-if="!isOrgAdmin">
+    <AlertDescription>{{ message }}</AlertDescription>
   </Alert>
   <slot v-else />
 </template>

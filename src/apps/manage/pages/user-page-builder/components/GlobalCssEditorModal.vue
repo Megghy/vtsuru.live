@@ -84,7 +84,7 @@ watch(
   >
     <DialogContent class="max-w-[min(1100px,94vw)] h-[min(720px,88dvh)] p-0 flex flex-col gap-0 overflow-hidden">
       <DialogHeader class="p-4 border-b flex flex-row items-center justify-between shrink-0">
-        <DialogTitle class="text-base font-semibold"> 全局 CSS </DialogTitle>
+        <DialogTitle class="text-base"> 全局 CSS </DialogTitle>
         <div class="flex items-center gap-2 pr-6">
           <Tag
             v-if="issues.length"
@@ -110,7 +110,7 @@ watch(
 
       <div class="editor-shell flex-1 min-h-0 flex flex-col">
         <div class="px-3.5 pt-3 shrink-0">
-          <Alert class="text-xs py-2">
+          <Alert size="sm">
             <AlertDescription>
               CSS 作用于公开用户页，可使用 --foreground、--primary、--card、--border 等主题变量；不允许外部 URL、@import
               和脚本相关属性。

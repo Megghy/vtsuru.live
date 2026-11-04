@@ -88,9 +88,9 @@ watch(
 <template>
   <div class="org-page p-6">
     <template v-if="!isLoggedIn">
-      <Card class="border bg-card">
+      <Card>
         <CardHeader class="p-4 border-b">
-          <CardTitle class="text-base font-semibold">组织管理</CardTitle>
+          <CardTitle class="text-base">组织管理</CardTitle>
           <CardDescription class="text-xs">需要先登录才能查看/创建组织。</CardDescription>
         </CardHeader>
         <CardContent class="p-4">
@@ -100,7 +100,7 @@ watch(
     </template>
 
     <template v-else>
-      <div class="flex items-center justify-between gap-3 pb-4 border-b flex-wrap">
+      <div class="flex-between gap-3 pb-4 border-b flex-wrap">
         <div>
           <h2 class="text-lg font-bold text-foreground">组织管理</h2>
           <p class="text-xs text-muted-foreground mt-0.5">管理我参与或创建的公会与组织</p>
@@ -143,7 +143,7 @@ watch(
           <Card
             v-for="i in 4"
             :key="i"
-            class="border bg-card p-4 space-y-3"
+            class="p-4 space-y-3"
           >
             <div class="flex justify-between items-start">
               <Skeleton class="size-8 rounded" />
@@ -175,16 +175,13 @@ watch(
           <Card
             v-for="org in orgs"
             :key="org.id"
-            class="border bg-card p-4 hover:border-primary transition-all cursor-pointer flex flex-col justify-between"
+            class="p-4 hover:border-primary transition-all cursor-pointer flex flex-col justify-between"
             @click="openOrg(org.id)"
           >
             <div>
               <div class="flex justify-between items-start">
                 <BusinessOutline class="size-8 text-primary" />
-                <Badge
-                  variant="secondary"
-                  class="text-xs"
-                >
+                <Badge variant="secondary">
                   {{ roleLabel(org.role) }}
                 </Badge>
               </div>
@@ -214,7 +211,7 @@ watch(
       <Dialog v-model:open="showCreateModal">
         <DialogContent class="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle class="text-base font-semibold">创建新组织</DialogTitle>
+            <DialogTitle class="text-base">创建新组织</DialogTitle>
           </DialogHeader>
 
           <form

@@ -37,9 +37,10 @@ interface VtsuruQuestion {id:number;tag?:string|null;question:{message:string;cr
 interface VtsuruPointGood {id:number;name:string;description:string;price:number;count?:number|null;tags:string[];status:number;type:number;coverUrl:string|null;canPurchase:boolean;cannotPurchaseReason:string|null}
 interface VtsuruVideoCollect {id:string;shortId:string;name:string;description:string;createAt:number;startAt:number;endAt:number;videoCount:number;maxVideoCount:number;minVideoDuration:number;maxVideoDuration:number;allowedPartitions:string[];allowUnregisteredUser:boolean;maxVideoPerUser:number;requireDescription:boolean;isFinish:boolean}
 interface VtsuruBiliProfile {name?:string;face?:string;sign?:string;top_photo?:string;top_photo_v2?:string;fans?:number;follower?:number;follower_count?:number;attention?:number;friend?:number;archive_count?:number;video?:number;likes?:number;like_num?:number;level?:number;pendant?:{image?:string;image_enhance?:string;image_enhance_frame?:string};nameplate?:{image?:string;name?:string};level_info?:{current_level?:number};official?:{title?:string;desc?:string};Official?:{title?:string;desc?:string};official_verify?:{desc?:string};vip?:{label?:{text?:string}}}
+interface VtsuruPageContext {streamer:{id:number;name:string;biliId:number;roomId:number;faceUrl:string;title:string;bio:string;isStreaming:boolean;enabledFeatures:string[]};bili:VtsuruBiliProfile|null;theme:VtsuruTheme;page:{slug:string|null;mode:'block'|'custom';immersive:boolean}}
 interface VtsuruSandboxSdk {
 /** 当前主播、公开 B 站资料、主题与页面信息。 */
-getContext():Promise<{streamer:{id:number;name:string;biliId:number;roomId:number;faceUrl:string;title:string;bio:string;isStreaming:boolean;enabledFeatures:string[]};bili:VtsuruBiliProfile|null;theme:VtsuruTheme;page:{slug:string|null;mode:'block'|'custom';immersive:boolean}}>;
+getContext():Promise<VtsuruPageContext>;
 /** 主播歌单，默认最多 50 首，limit 最大 100。 */
 getSongs(filter?:{keyword?:string;language?:string;tag?:string;scOnly?:boolean;guardOnly?:boolean;offset?:number;limit?:number}):Promise<{total:number;items:VtsuruSong[];languages:string[];tags:string[]}>;
 /** 当前点歌队列及公开点歌设置。 */

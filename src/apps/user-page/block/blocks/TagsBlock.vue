@@ -82,17 +82,7 @@ function getContrastColor(color: string) {
     :border-title-align="cfg.borderTitleAlign"
   >
     <div class="flex justify-center flex-wrap gap-2">
-      <Badge
-        v-for="(it, idx) in items"
-        :key="idx"
-        variant="secondary"
-        class="cursor-default font-medium transition-all hover:brightness-95 hover:-translate-y-px motion-reduce:transition-none motion-reduce:hover:translate-y-0"
-        :class="[
-          cfg.rounded ? 'rounded-full' : 'rounded-md',
-          cfg.size === 'small' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1',
-        ]"
-        :style="it.color ? { backgroundColor: it.color, color: getContrastColor(it.color) } : undefined"
-      >
+      <Badge v-for="(it, idx) in items" :key="idx" variant="secondary" class="cursor-default font-medium transition-all hover:brightness-95 hover:-translate-y-px motion-reduce:transition-none motion-reduce:hover:translate-y-0" :class="[ cfg.rounded ? 'rounded-full' : 'rounded-md', cfg.size === 'small' ? 'text-[10px] px-2 py-0.5' : 'text-xs px-2.5 py-1', ]" :style="it.color ? { backgroundColor: it.color, color: getContrastColor(it.color) } : undefined">
         {{ it.text }}
       </Badge>
     </div>

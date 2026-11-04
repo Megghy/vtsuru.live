@@ -45,7 +45,7 @@ const goToSettings = () => {
     variant="destructive"
     class="w-full box-border"
   >
-    <AlertTitle class="font-semibold">{{ alertConfig.title }}</AlertTitle>
+    <AlertTitle>{{ alertConfig.title }}</AlertTitle>
     <AlertDescription class="text-[13px] leading-relaxed text-foreground mt-1">
       <p>{{ alertConfig.message }}</p>
       <p>如果已经部署 CookieCloud，请尝试重新同步；否则请重新扫码登录。</p>

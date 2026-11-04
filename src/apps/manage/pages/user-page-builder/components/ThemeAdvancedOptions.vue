@@ -89,7 +89,7 @@ const radiusPresets = [
       class="border-b-0"
     >
       <AccordionTrigger class="text-xs font-semibold py-2">
-        <div class="flex items-center justify-between w-full pr-2">
+        <div class="flex-between w-full pr-2">
           <span>高级外观选项</span>
           <Tag
             :variant="hasAdvancedSettings ? 'default' : 'outline'"

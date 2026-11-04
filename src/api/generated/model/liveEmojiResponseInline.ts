@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type LiveEmojiResponseInline = { [key: string]: string }
+export type LiveEmojiResponseInline = {[key: string]: string};

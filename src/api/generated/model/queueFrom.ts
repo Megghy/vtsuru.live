@@ -7,8 +7,9 @@
  */
 
 export enum QueueFrom {
-  Manual = 0,
-  Danmaku = 1,
-  Gift = 2,
-  Web = 3,
+  Manual= 0,
+  Danmaku= 1,
+  Gift= 2,
+  Web= 3,
+
 }

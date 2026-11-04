@@ -156,7 +156,7 @@ function propertyAvailable(property: string) {
 
       <div
         v-if="propertyAvailable('autoplay')"
-        class="flex items-center justify-between pt-4"
+        class="flex-between pt-4"
       >
         <label class="text-xs text-muted-foreground">自动轮播</label>
         <Switch
@@ -199,7 +199,7 @@ function propertyAvailable(property: string) {
 
         <div
           v-if="propertyAvailable('showDots')"
-          class="flex items-center justify-between pt-4"
+          class="flex-between pt-4"
         >
           <label class="text-xs text-muted-foreground">显示指示点</label>
           <Switch
@@ -210,7 +210,7 @@ function propertyAvailable(property: string) {
 
         <div
           v-if="propertyAvailable('showArrow')"
-          class="flex items-center justify-between pt-4"
+          class="flex-between pt-4"
         >
           <label class="text-xs text-muted-foreground">显示切换箭头</label>
           <Switch
@@ -253,7 +253,7 @@ function propertyAvailable(property: string) {
           </Select>
         </div>
 
-        <div class="flex items-center justify-between pt-4">
+        <div class="flex-between pt-4">
           <label class="text-xs text-muted-foreground">循环播放</label>
           <Switch
             :checked="gallery.loop"
@@ -261,7 +261,7 @@ function propertyAvailable(property: string) {
           />
         </div>
 
-        <div class="flex items-center justify-between pt-4">
+        <div class="flex-between pt-4">
           <label class="text-xs text-muted-foreground">鼠标拖拽切换</label>
           <Switch
             :checked="gallery.draggable"
@@ -269,7 +269,7 @@ function propertyAvailable(property: string) {
           />
         </div>
 
-        <div class="flex items-center justify-between pt-4">
+        <div class="flex-between pt-4">
           <label class="text-xs text-muted-foreground">触屏滑动切换</label>
           <Switch
             :checked="gallery.touchable"
@@ -293,7 +293,7 @@ function propertyAvailable(property: string) {
     </template>
 
     <div class="flex flex-col gap-2 pt-2 border-t border-border">
-      <div class="flex items-center justify-between">
+      <div class="flex-between">
         <span class="text-xs text-muted-foreground">图片列表（可拖拽排序）</span>
         <Button
           variant="outline"
@@ -318,7 +318,7 @@ function propertyAvailable(property: string) {
           :key="getItemKey(element)"
           class="border border-border rounded-lg p-2.5 bg-card flex flex-col gap-2"
         >
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <div class="flex items-center gap-2 min-w-0">
               <span class="drag-handle cursor-grab text-muted-foreground font-mono select-none">≡</span>
               <img
@@ -332,26 +332,13 @@ function propertyAvailable(property: string) {
             </div>
 
             <div class="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                class="h-6 px-2"
-                :disabled="props.editor.isUploading.value"
-                @click="props.editor.triggerUploadItemImage(props.block, index)"
-              >
+              <Button size="xs" variant="outline" :disabled="props.editor.isUploading.value" @click="props.editor.triggerUploadItemImage(props.block, index)">
                 上传
               </Button>
-              <Button
-                variant="ghost"
-                class="h-6 px-2"
-                @click="props.editor.clearUploadedItemImage(props.block, index)"
-              >
+              <Button size="xs" variant="ghost" @click="props.editor.clearUploadedItemImage(props.block, index)">
                 清除
               </Button>
-              <Button
-                variant="ghost"
-                class="h-6 px-2 text-destructive hover:text-destructive"
-                @click="removeItem(index)"
-              >
+              <Button size="xs" variant="ghost" class="text-destructive hover:text-destructive" @click="removeItem(index)">
                 <component
                   :is="TrashOutline"
                   class="size-3.5"

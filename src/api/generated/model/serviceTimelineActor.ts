@@ -7,7 +7,8 @@
  */
 
 export enum ServiceTimelineActor {
-  Buyer = 0,
-  Owner = 1,
-  System = 2,
+  Buyer= 0,
+  Owner= 1,
+  System= 2,
+
 }

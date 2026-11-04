@@ -7,7 +7,7 @@
  */
 
 export interface RequestCreateForum {
-  name: string
+  name: string;
   /** @nullable */
-  description?: string | null
+  description?: string | null;
 }

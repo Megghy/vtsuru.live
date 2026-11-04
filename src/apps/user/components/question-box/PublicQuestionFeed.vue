@@ -226,7 +226,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
                   <div
                     class="flex items-center gap-1.5 min-w-0 text-xs text-muted-foreground @[max-width:480px]:flex-wrap"
                   >
-                    <Avatar class="size-7 rounded-full">
+                    <Avatar class="size-7">
                       <AvatarImage
                         :src="
                           userInfo?.faceUrl ||

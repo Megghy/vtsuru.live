@@ -98,7 +98,7 @@ const topSubtitle = computed(() => {
               class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/4 border border-white/6 transition-all duration-200"
             >
               <div
-                class="size-5.5 rounded-md flex items-center justify-center text-[11px] font-extrabold shrink-0 transition-colors"
+                class="size-5.5 rounded-md flex-center text-[11px] font-extrabold shrink-0 transition-colors"
                 :class="
                   index === 0
                     ? 'bg-amber-500 text-black shadow-[0_0_8px_rgba(245,158,11,0.5)]'

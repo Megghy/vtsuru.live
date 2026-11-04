@@ -36,6 +36,15 @@ const emit = defineEmits<{
 }>()
 
 const tooltip = computed(() => getSongRequestTooltip(props.song, props.liveRequestSettings, props.authState))
+
+const buttonSize = computed(() => {
+  if (props.circle && !props.label) {
+    return props.size === 'tiny' ? 'icon-xs' : 'icon-sm'
+  }
+  if (props.size === 'tiny') return 'xs'
+  if (props.size === 'large') return 'default'
+  return 'sm'
+})
 </script>
 
 <template>
@@ -44,12 +53,8 @@ const tooltip = computed(() => getSongRequestTooltip(props.song, props.liveReque
       <TooltipTrigger as-child>
         <Button
           :variant="secondary ? 'secondary' : 'default'"
-          :size="circle && !label ? 'icon' : 'sm'"
-          :class="[
-            circle && !label ? 'size-7 rounded-full' : ' px-2.5',
-            size === 'tiny' && circle ? 'size-6' : '',
-            size === 'large' ? 'h-9 px-4 text-sm' : '',
-          ]"
+          :size="buttonSize"
+          :class="[circle && !label ? 'rounded-full' : '']"
           :disabled="disabled || loading"
           :aria-label="`点歌《${song.name}》`"
           @click="emit('request', song)"
@@ -62,7 +67,7 @@ const tooltip = computed(() => getSongRequestTooltip(props.song, props.liveReque
           <span v-if="label">{{ label }}</span>
         </Button>
       </TooltipTrigger>
-      <TooltipContent class="text-xs">{{ tooltip }}</TooltipContent>
+      <TooltipContent>{{ tooltip }}</TooltipContent>
     </Tooltip>
   </TooltipProvider>
 </template>

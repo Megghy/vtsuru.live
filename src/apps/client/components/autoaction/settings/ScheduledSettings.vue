@@ -47,7 +47,7 @@ const schedulingModeOptions = [
     v-if="action.triggerType === TriggerType.SCHEDULED"
     class="scheduled-trigger-settings space-y-3"
   >
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+    <div class="flex-between p-2.5 rounded border bg-muted/20">
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger as-child>
@@ -56,7 +56,7 @@ const schedulingModeOptions = [
               <Info16Regular class="size-3.5 text-muted-foreground" />
             </div>
           </TooltipTrigger>
-          <TooltipContent class="text-xs"> 开启后将遵循【自动化 -> 消息队列】中的全局定时设置 </TooltipContent>
+          <TooltipContent> 开启后将遵循【自动化 -> 消息队列】中的全局定时设置 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
       <Switch v-model:checked="useGlobalTimer" />
@@ -79,7 +79,7 @@ const schedulingModeOptions = [
         class="space-y-3"
         :class="{ 'opacity-50 pointer-events-none': useGlobalTimer }"
       >
-        <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+        <div class="flex-between p-2.5 rounded border bg-muted/20">
           <span class="text-xs font-medium text-foreground">发送间隔 (秒)</span>
           <NumberField
             :model-value="action.triggerConfig.intervalSeconds"

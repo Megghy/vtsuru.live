@@ -101,17 +101,9 @@ function requestSong(song: ResponseSongModel) {
           <SelectValue placeholder="歌手" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            value="all"
-            class="text-xs"
-            >全部歌手</SelectItem
+          <SelectItem value="all">全部歌手</SelectItem
           >
-          <SelectItem
-            v-for="opt in authorOptions"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in authorOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -124,17 +116,9 @@ function requestSong(song: ResponseSongModel) {
           <SelectValue placeholder="标签" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            value="all"
-            class="text-xs"
-            >全部标签</SelectItem
+          <SelectItem value="all">全部标签</SelectItem
           >
-          <SelectItem
-            v-for="opt in tagOptions"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in tagOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -238,15 +222,7 @@ function requestSong(song: ResponseSongModel) {
               </button>
             </div>
             <div class="row-actions flex items-center gap-1">
-              <Button
-                v-if="song.url"
-                variant="ghost"
-                size="icon"
-                class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-                :disabled="isLrcLoading === song.key"
-                title="试听"
-                @click="previewSong = song"
-              >
+              <Button v-if="song.url" variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground" :disabled="isLrcLoading === song.key" aria-label="试听" @click="previewSong = song">
                 <component
                   :is="Play24Filled"
                   class="size-3.5"

@@ -108,7 +108,7 @@ onUnmounted(() => void dashboard.stop())
     />
     <div
       v-else-if="!isLoggedIn"
-      class="m-auto flex flex-col items-center justify-center p-6 text-center"
+      class="m-auto flex-col-center p-6 text-center"
     >
       <h2 class="text-xl font-semibold mb-2">请先登录</h2>
       <p class="text-sm text-muted-foreground mb-4">中控台需要登录并绑定直播间后使用</p>

@@ -21,9 +21,9 @@ const streamingDuration = computed(() => {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex-row items-center justify-between space-y-0">
-      <CardTitle class="text-sm font-semibold">直播间信息</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex-row items-center justify-between space-y-0">
+      <CardTitle>直播间信息</CardTitle>
 
       <div
         class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border"

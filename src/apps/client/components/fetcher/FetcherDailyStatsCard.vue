@@ -131,9 +131,9 @@ onMounted(loadHistoricalData)
 <template>
   <div class="flex flex-col gap-3">
     <!-- 今日统计 -->
-    <Card class="border bg-card w-full">
-      <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-        <CardTitle class="text-sm font-semibold">今日统计</CardTitle>
+    <Card class="w-full">
+      <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+        <CardTitle>今日统计</CardTitle>
         <span class="text-xs text-muted-foreground">
           {{ currentStatistic?.date ?? 'N/A' }}
         </span>
@@ -177,10 +177,7 @@ onMounted(loadHistoricalData)
                         {{ row.rank }}
                       </TableCell>
                       <TableCell class="text-[11px] py-1">
-                        <Badge
-                          variant="outline"
-                          class="text-[10px] h-4.5 px-1.5 border-sky-500/40 text-sky-600 bg-sky-500/10 truncate max-w-full"
-                        >
+                        <Badge variant="outline" size="xs" class="border-sky-500/40 text-sky-600 bg-sky-500/10 truncate max-w-full">
                           {{ row.type }}
                         </Badge>
                       </TableCell>
@@ -208,15 +205,15 @@ onMounted(loadHistoricalData)
     </Card>
 
     <!-- 历史统计 -->
-    <Card class="border bg-card w-full">
-      <CardHeader class="p-3 pb-2 border-b">
-        <CardTitle class="text-sm font-semibold">历史事件量 (近30日)</CardTitle>
+    <Card class="w-full">
+      <CardHeader class="p-3 border-b">
+        <CardTitle>历史事件量 (近30日)</CardTitle>
       </CardHeader>
       <CardContent class="p-3">
         <div class="h-[280px] relative">
           <div
             v-if="isLoadingHistory"
-            class="absolute inset-0 bg-background/50 backdrop-blur-xs flex items-center justify-center z-10"
+            class="absolute inset-0 bg-background/50 backdrop-blur-xs flex-center z-10"
           >
             <Spin
               :show="true"
@@ -234,7 +231,7 @@ onMounted(loadHistoricalData)
           <Empty
             v-else
             description="无历史数据"
-            class="h-full flex items-center justify-center"
+            class="h-full flex-center"
           />
         </div>
       </CardContent>

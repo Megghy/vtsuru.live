@@ -151,7 +151,7 @@ const itemsClass = computed(() => {
           target="_blank"
           rel="noopener noreferrer"
           :href="it.href"
-          class="inline-flex items-center justify-center font-medium cursor-pointer"
+          class="inline-flex-center font-medium cursor-pointer"
           :class="btnClass"
           :style="btnStyle"
         >
@@ -160,7 +160,7 @@ const itemsClass = computed(() => {
         <button
           v-else
           type="button"
-          class="inline-flex items-center justify-center font-medium cursor-pointer"
+          class="inline-flex-center font-medium cursor-pointer"
           :class="btnClass"
           :style="btnStyle"
           @click="it.kind === 'back' ? router.back() : router.push(it.to || route.fullPath)"

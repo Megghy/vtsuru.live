@@ -39,7 +39,7 @@ const victim = computed(() => grid.value.nextVictim())
           <Button
             variant="ghost"
             size="xs"
-            class="h-auto p-0 min-w-0 max-w-full justify-start text-muted-foreground hover:text-foreground text-[0.8em] font-normal"
+            class="h-auto p-0 min-w-0 max-w-full justify-start text-muted-foreground text-[0.8em] font-normal"
             data-user-trigger
             @click.stop="ui.openUserMenu(card.display, $event)"
           >
@@ -71,7 +71,7 @@ const victim = computed(() => grid.value.nextVictim())
           <Button
             variant="ghost"
             size="icon-xs"
-            class="size-5 p-0 opacity-0 group-hover/slot:opacity-80 ml-auto text-muted-foreground hover:text-foreground"
+            class="size-5 p-0 opacity-0 group-hover/slot:opacity-80 ml-auto text-muted-foreground"
             aria-label="隐藏这条弹幕"
             @click="grid.hide(index)"
           >

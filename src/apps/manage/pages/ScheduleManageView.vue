@@ -965,12 +965,8 @@ onMounted(() => {
         </DialogHeader>
 
         <div class="space-y-3 py-2">
-          <Alert
-            v-if="scheduleConflict"
-            variant="destructive"
-            class="py-2"
-          >
-            <AlertDescription class="text-xs flex items-center justify-between">
+          <Alert size="sm" v-if="scheduleConflict" variant="destructive">
+            <AlertDescription class="flex-between">
               <span>源周或目标周已更新，请加载最新版本。</span>
               <Button
                 size="xs"
@@ -1059,12 +1055,8 @@ onMounted(() => {
         </DialogHeader>
 
         <div class="flex-1 overflow-y-auto space-y-3 py-2 pr-1">
-          <Alert
-            v-if="scheduleConflict"
-            variant="destructive"
-            class="py-2"
-          >
-            <AlertDescription class="text-xs flex items-center justify-between">
+          <Alert size="sm" v-if="scheduleConflict" variant="destructive">
+            <AlertDescription class="flex-between">
               <span>当前草稿已保留，加载最新版本会替换草稿。</span>
               <Button
                 size="xs"
@@ -1076,7 +1068,7 @@ onMounted(() => {
             </AlertDescription>
           </Alert>
 
-          <div class="flex items-center justify-between gap-3">
+          <div class="flex-between gap-3">
             <div class="flex-1">
               <Select v-model="selectedDay">
                 <SelectTrigger>
@@ -1109,12 +1101,12 @@ onMounted(() => {
             <Card
               v-for="(item, itemIndex) in updateScheduleModel.days[Number(selectedDay)]"
               :key="itemIndex"
-              class="border-border bg-card/60"
+              class="border-/60"
               :style="{
                 borderLeft: item.tagColor ? `4px solid ${item.tagColor}` : undefined,
               }"
             >
-              <CardHeader class="p-3 pb-2 flex-row items-center justify-between">
+              <CardHeader class="p-3 flex-row items-center justify-between">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs font-semibold">行程 {{ itemIndex + 1 }}</span>
                   <Button
@@ -1161,7 +1153,7 @@ onMounted(() => {
                 </div>
               </CardHeader>
 
-              <CardContent class="p-3 pt-0 space-y-2.5">
+              <CardContent class="p-3 space-y-2.5">
                 <div class="flex items-center gap-2 flex-wrap">
                   <Input
                     size="xs"

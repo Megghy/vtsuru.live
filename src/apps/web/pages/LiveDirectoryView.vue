@@ -83,7 +83,7 @@ function formatTime(sec: number) {
 
 <template>
   <main class="live-directory max-w-6xl mx-auto px-4 py-8 space-y-6">
-    <header class="directory-header flex items-center justify-between gap-4">
+    <header class="directory-header flex-between gap-4">
       <div>
         <h1 class="text-2xl font-bold tracking-tight">正在直播</h1>
         <p class="text-sm text-muted-foreground mt-1">看看主播们在播什么，也可以在这里查看你的关注。</p>
@@ -120,7 +120,7 @@ function formatTime(sec: number) {
       <Input
         v-model="search"
         placeholder="搜索主播、标题或分区..."
-        class="h-9"
+        size="default"
       />
     </div>
 
@@ -167,14 +167,7 @@ function formatTime(sec: number) {
               class="w-full h-full object-cover group-hover:scale-105 transition duration-300"
             />
             <div class="absolute top-2 left-2">
-              <Badge
-                class="text-[10px] h-5 px-1.5 font-medium"
-                :class="[
-                  freshStatus(entry) === 'live'
-                    ? 'bg-emerald-500 text-white hover:bg-emerald-500'
-                    : 'bg-black/60 text-white/90 backdrop-blur-xs',
-                ]"
-              >
+              <Badge size="xs" class="h-5 font-medium" :class="[ freshStatus(entry) === 'live' ? 'bg-emerald-500 text-white hover:bg-emerald-500' : 'bg-black/60 text-white/90 backdrop-blur-xs', ]">
                 {{
                   freshStatus(entry) === 'live' ? '直播中' : freshStatus(entry) === 'offline' ? '未开播' : '状态待更新'
                 }}
@@ -188,12 +181,12 @@ function formatTime(sec: number) {
             >
               {{ entry.title || entry.name }}
             </h2>
-            <div class="streamer-person flex items-center justify-between gap-2 mt-auto pt-1">
+            <div class="streamer-person flex-between gap-2 mt-auto pt-1">
               <RouterLink
                 :to="`/@${entry.id}`"
                 class="flex items-center gap-2 min-w-0 hover:text-primary transition"
               >
-                <Avatar class="size-7 shrink-0 border border-border/50">
+                <Avatar class="size-7 border border-border/50">
                   <AvatarImage :src="entry.avatar" />
                   <AvatarFallback>{{ entry.name?.slice(0, 1) }}</AvatarFallback>
                 </Avatar>

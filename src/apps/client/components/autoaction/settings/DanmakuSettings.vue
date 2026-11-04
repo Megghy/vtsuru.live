@@ -7,7 +7,9 @@ import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
 import { Tag } from '@/shared/ui/tag'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
@@ -86,8 +88,10 @@ function removeBlockword(index: number) {
     class="danmaku-trigger-settings space-y-4"
   >
     <!-- 触发关键词 -->
-    <div class="settings-group space-y-2.5">
-      <span class="font-semibold text-xs text-foreground block">触发关键词</span>
+    <FormField
+      label="触发关键词"
+      class="settings-group space-y-2"
+    >
       <div class="flex items-center gap-2">
         <Input
           v-model="tempKeyword"
@@ -129,13 +133,15 @@ function removeBlockword(index: number) {
           未设置关键词 (将匹配所有弹幕)
         </span>
       </div>
-    </div>
+    </FormField>
 
-    <div class="h-px bg-border my-2" />
+    <Separator class="my-2" />
 
     <!-- 屏蔽词 -->
-    <div class="settings-group space-y-2.5">
-      <span class="font-semibold text-xs text-foreground block">屏蔽关键词</span>
+    <FormField
+      label="屏蔽关键词"
+      class="settings-group space-y-2"
+    >
       <div class="flex items-center gap-2">
         <Input
           v-model="tempBlockword"
@@ -185,6 +191,6 @@ function removeBlockword(index: number) {
           无屏蔽词
         </span>
       </div>
-    </div>
+    </FormField>
   </div>
 </template>

@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
-
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 defineProps({
   action: {
@@ -27,102 +25,59 @@ const scFilterModeOptions = [
     v-if="action.triggerType === TriggerType.SUPER_CHAT"
     class="sc-trigger-settings space-y-3"
   >
-    <div class="space-y-1">
-      <span class="text-xs text-muted-foreground">SC过滤模式</span>
-      <Select v-model="action.triggerConfig.scFilterMode">
-        <SelectTrigger class="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem
-            v-for="opt in scFilterModeOptions"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
-            {{ opt.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+    <FormField
+      type="select"
+      label="SC过滤模式"
+      :options="scFilterModeOptions"
+      v-model="action.triggerConfig.scFilterMode"
+    />
 
     <div
       v-if="action.triggerConfig.scFilterMode === 'price'"
       class="p-2.5 rounded border bg-muted/20 space-y-2"
     >
-      <div class="flex items-center justify-between">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <div class="flex items-center gap-1 cursor-help">
-                <span class="text-xs font-medium text-foreground">价格区间 (元)</span>
-                <Info16Regular class="size-3.5 text-muted-foreground" />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent class="text-xs max-w-[280px]">
-              仅当 SC 价格在区间内才触发感谢。<br />
-              • 最低填 30 元可自动忽略 B 站每日赠送的 2 元免费 SC；<br />
-              • 填 2 ~ 29 元可针对 2 元小额 SC 设置专属感谢话术。
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <NumberField
-          :model-value="action.triggerConfig.scMinPrice"
-          :min="0"
-          placeholder="最低 (如 30)"
-          class="flex-1"
-          @update:model-value="action.triggerConfig.scMinPrice = $event"
-        />
-        <span class="text-xs text-muted-foreground">至</span>
-        <NumberField
-          :model-value="action.triggerConfig.scMaxPrice"
-          :min="0"
-          placeholder="不限"
-          class="flex-1"
-          @update:model-value="action.triggerConfig.scMaxPrice = $event"
-        />
-      </div>
+      <FormField
+        label="价格区间 (元)"
+        hint="仅当 SC 价格在区间内才触发感谢。最低填 30 元可自动忽略 B 站每日赠送的 2 元免费 SC；填 2 ~ 29 元可针对 2 元小额 SC 设置专属感谢话术。"
+      >
+        <div class="flex items-center gap-2">
+          <NumberField
+            :model-value="action.triggerConfig.scMinPrice"
+            :min="0"
+            placeholder="最低 (如 30)"
+            class="flex-1"
+            @update:model-value="action.triggerConfig.scMinPrice = $event"
+          />
+          <span class="text-xs text-muted-foreground">至</span>
+          <NumberField
+            :model-value="action.triggerConfig.scMaxPrice"
+            :min="0"
+            placeholder="不限"
+            class="flex-1"
+            @update:model-value="action.triggerConfig.scMaxPrice = $event"
+          />
+        </div>
+      </FormField>
     </div>
 
-    <div class="h-px bg-border my-1" />
+    <Separator class="my-1" />
 
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <div class="flex items-center gap-1 cursor-help">
-              <span class="text-xs font-medium text-foreground">防止重复发送</span>
-              <Info16Regular class="size-3.5 text-muted-foreground" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent class="text-xs"> 同一用户在单次直播中多次发送 SC 仅触发一次感谢 </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <Switch v-model:checked="action.triggerConfig.preventRepeat" />
-    </div>
+    <SettingRow
+      type="switch"
+      variant="compact"
+      title="防止重复发送"
+      hint="同一用户在单次直播中多次发送 SC 仅触发一次感谢"
+      v-model="action.triggerConfig.preventRepeat"
+    />
 
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <div class="flex items-center gap-1 cursor-help">
-              <span class="text-xs font-medium text-foreground">单次合并上限</span>
-              <Info16Regular class="size-3.5 text-muted-foreground" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <NumberField
-        :model-value="action.actionConfig.maxUsersPerMsg"
-        :min="1"
-        :max="50"
-        class="w-32"
-        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
-      />
-    </div>
+    <SettingRow
+      type="number"
+      variant="compact"
+      title="单次合并上限"
+      hint="单条感谢弹幕中最多合并展示的用户数量"
+      :min="1"
+      :max="50"
+      v-model="action.actionConfig.maxUsersPerMsg"
+    />
   </div>
 </template>

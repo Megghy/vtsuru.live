@@ -28,6 +28,7 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { Separator } from '@/shared/ui/separator'
 import { Input } from '@/shared/ui/input'
 import { Progress } from '@/shared/ui/progress'
 import { Slider } from '@/shared/ui/slider'
@@ -166,28 +167,20 @@ const displayMembers = computed(() => {
 </script>
 
 <template>
-  <Card class="border border-border/80 bg-card/60">
+  <Card class="/80 bg-card/60">
     <CardHeader class="py-3 px-4 flex flex-row items-center justify-between gap-2 border-b border-border/50">
       <div class="flex items-center gap-2 flex-wrap">
         <div class="flex items-center gap-1.5 font-semibold text-sm">
           <People24Regular class="size-4 text-brand" />
-          <CardTitle class="text-sm font-semibold">多人联动（组队模式）</CardTitle>
+          <CardTitle>多人联动（组队模式）</CardTitle>
         </div>
 
-        <Badge
-          v-if="inRoom"
-          variant="outline"
-          class="border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 text-xs gap-1 font-mono"
-        >
+        <Badge v-if="inRoom" variant="success" class="gap-1 font-mono">
           组队中 · {{ currentRoomCode }}
           <span class="font-sans">({{ isHost ? '房主' : '队员' }})</span>
         </Badge>
 
-        <Badge
-          v-else-if="isMockCollab"
-          variant="outline"
-          class="border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10 text-xs gap-1 font-mono"
-        >
+        <Badge v-else-if="isMockCollab" variant="warning" class="gap-1 font-mono">
           模拟调试中 (3人)
         </Badge>
       </div>
@@ -268,7 +261,7 @@ const displayMembers = computed(() => {
         v-if="showSettings"
         class="p-3.5 rounded-lg border border-border/80 bg-muted/30 space-y-3.5 transition-all text-xs"
       >
-        <div class="flex items-center justify-between">
+        <div class="flex-between">
           <span class="font-medium text-foreground flex items-center gap-1.5">
             <Settings24Regular class="size-3.5 text-muted-foreground" />
             房间本地显示与排版设置
@@ -276,7 +269,7 @@ const displayMembers = computed(() => {
           <Button
             variant="ghost"
             size="xs"
-            class="gap-1 text-muted-foreground hover:text-foreground"
+            class="gap-1 text-muted-foreground"
             @click="resetToDefaults"
           >
             <ArrowReset24Regular class="size-3" />
@@ -386,7 +379,7 @@ const displayMembers = computed(() => {
         v-if="collabError"
         variant="destructive"
       >
-        <AlertDescription class="text-xs">{{ collabError }}</AlertDescription>
+        <AlertDescription>{{ collabError }}</AlertDescription>
       </Alert>
 
       <div
@@ -403,7 +396,7 @@ const displayMembers = computed(() => {
             <Input
               v-model="inputCode"
               placeholder="输入 6 位房间码（如 MEUK86）"
-              class="uppercase tracking-widest font-mono text-xs"
+              class="uppercase tracking-widest font-mono"
               maxlength="16"
               @keyup.enter="handleJoin"
             />
@@ -417,7 +410,7 @@ const displayMembers = computed(() => {
             </Button>
           </div>
 
-          <div class="h-4 w-px bg-border/80 hidden sm:block shrink-0" />
+          <Separator orientation="vertical" class="h-4 hidden sm:block shrink-0" />
 
           <Button
             class="shrink-0"
@@ -433,7 +426,7 @@ const displayMembers = computed(() => {
         v-else
         class="space-y-3"
       >
-        <div class="text-xs text-muted-foreground flex items-center justify-between">
+        <div class="text-xs text-muted-foreground flex-between">
           <div class="flex items-center gap-2">
             <span>队伍成员 ({{ displayMembers.length }} 人)</span>
             <span
@@ -480,7 +473,7 @@ const displayMembers = computed(() => {
             class="p-2.5 rounded-md border border-border bg-card/70 flex flex-col gap-1.5 transition-all"
             :class="{ 'ring-1 ring-primary/60 border-primary/50 bg-primary/5': member.isSpeaking }"
           >
-            <div class="flex items-center justify-between text-xs">
+            <div class="flex-between text-xs">
               <div class="flex items-center gap-1.5 truncate">
                 <span
                   class="size-2 rounded-full shrink-0 transition-colors"
@@ -495,25 +488,13 @@ const displayMembers = computed(() => {
               </div>
 
               <div class="flex items-center gap-1 shrink-0">
-                <Badge
-                  v-if="member.muted"
-                  variant="outline"
-                  class="text-[10px] px-1 py-0 h-4 border-amber-500/40 text-amber-500"
-                >
+                <Badge v-if="member.muted" variant="outline" size="xs" class="border-amber-500/40 text-amber-500">
                   静音
                 </Badge>
-                <Badge
-                  v-else-if="member.away"
-                  variant="outline"
-                  class="text-[10px] px-1 py-0 h-4 border-muted text-muted-foreground"
-                >
+                <Badge v-else-if="member.away" variant="outline" size="xs" class="border-muted text-muted-foreground">
                   暂离
                 </Badge>
-                <Badge
-                  v-else-if="member.isSpeaking"
-                  variant="outline"
-                  class="text-[10px] px-1 py-0 h-4 border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
-                >
+                <Badge v-else-if="member.isSpeaking" variant="success" size="xs">
                   说话中
                 </Badge>
                 <span class="text-[11px] font-mono text-muted-foreground">{{ Math.round(member.volume) }}%</span>
@@ -527,7 +508,7 @@ const displayMembers = computed(() => {
 
             <div
               v-if="isMockCollab"
-              class="flex items-center justify-between pt-1 text-[11px] text-muted-foreground"
+              class="flex-between pt-1 text-[11px] text-muted-foreground"
             >
               <Button
                 variant="link"

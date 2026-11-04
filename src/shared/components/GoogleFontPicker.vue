@@ -144,19 +144,10 @@ function applyPreviewFont() {
               <SelectValue :placeholder="placeholder" />
             </SelectTrigger>
             <SelectContent class="max-h-60">
-              <SelectItem
-                v-if="clearable"
-                value="__default__"
-                class="text-xs text-muted-foreground"
-              >
+              <SelectItem v-if="clearable" value="__default__" class="text-muted-foreground">
                 默认字体
               </SelectItem>
-              <SelectItem
-                v-for="opt in fontOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in fontOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -200,7 +191,7 @@ function applyPreviewFont() {
       <Dialog v-model:open="fontBrowserShown">
         <DialogContent class="sm:max-w-2xl max-h-[85vh] flex flex-col p-4 gap-3">
           <DialogHeader class="pb-2 border-b border-border/60">
-            <DialogTitle class="text-sm font-semibold">Google Fonts 字体库</DialogTitle>
+            <DialogTitle class="text-sm">Google Fonts 字体库</DialogTitle>
           </DialogHeader>
 
           <div class="font-browser-controls flex items-center gap-2">
@@ -224,17 +215,9 @@ function applyPreviewFont() {
                 <SelectValue placeholder="全部分类" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部分类</SelectItem
+                <SelectItem value="all">全部分类</SelectItem
                 >
-                <SelectItem
-                  v-for="cat in fontCategoryOptions"
-                  :key="cat.value"
-                  :value="cat.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="cat in fontCategoryOptions" :key="cat.value" :value="cat.value">
                   {{ cat.label }}
                 </SelectItem>
               </SelectContent>

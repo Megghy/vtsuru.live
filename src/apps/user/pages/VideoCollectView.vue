@@ -52,7 +52,7 @@ onMounted(() => {
       <CardHeader class="py-3 px-4">
         <CardTitle class="text-base font-medium">视频征集</CardTitle>
       </CardHeader>
-      <CardContent class="p-4 pt-0">
+      <CardContent class="p-4">
         <Spin :show="isLoading">
           <template v-if="videoTables.length === 0">
             <div class="flex justify-center py-5">

@@ -109,7 +109,7 @@ async function onRemoveBgConfirm(blob: Blob) {
 <template>
   <Card>
     <CardHeader class="flex flex-row items-center justify-between pb-4">
-      <CardTitle class="text-base font-semibold">表情包制作</CardTitle>
+      <CardTitle class="text-base">表情包制作</CardTitle>
       <div class="flex items-center gap-2">
         <span
           v-if="blobSize"
@@ -127,7 +127,7 @@ async function onRemoveBgConfirm(blob: Blob) {
       </div>
     </CardHeader>
 
-    <CardContent class="pt-0">
+    <CardContent>
       <!-- Upload or Canvas -->
       <div
         v-if="!opts.bgImageUrl"
@@ -217,19 +217,10 @@ async function onRemoveBgConfirm(blob: Blob) {
             <div class="flex justify-between items-center panel-title">
               <span class="font-medium text-foreground text-sm"> 图层 </span>
               <div class="flex items-center gap-1">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  class="h-6 w-6"
-                  @click="editorRef?.addTextLayer()"
-                >
+                <Button size="icon-xs" variant="outline" @click="editorRef?.addTextLayer()">
                   <TextOutline class="w-3.5 h-3.5" />
                 </Button>
-                <Button
-                  size="icon"
-                  variant="outline"
-                  class="h-6 w-6"
-                  @click="() => openImgPicker()"
+                <Button size="icon-xs" variant="outline" @click="() => openImgPicker()"
                 >
                   <ImageOutline class="w-3.5 h-3.5" />
                 </Button>

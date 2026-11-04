@@ -243,7 +243,7 @@ onMounted(async () => {
     >
       <Alert variant="destructive">
         <AlertTitle>尚未开通</AlertTitle>
-        <AlertDescription class="text-xs">
+        <AlertDescription>
           你尚未创建粉丝讨论区。开通后可以在此管理专属社区、设置入群门槛与指派房管。
         </AlertDescription>
       </Alert>
@@ -360,7 +360,7 @@ onMounted(async () => {
             <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">入区与发帖策略</h4>
 
             <div class="space-y-3">
-              <div class="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20">
+              <div class="flex-between p-2 rounded-lg border border-border bg-muted/20">
                 <div>
                   <div class="text-xs font-semibold text-foreground">加入需要管理员审批</div>
                   <div class="text-[11px] text-muted-foreground">
@@ -380,7 +380,7 @@ onMounted(async () => {
 
               <div
                 v-if="currentForum.settings.requireApply"
-                class="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20"
+                class="flex-between p-2 rounded-lg border border-border bg-muted/20"
               >
                 <div>
                   <div class="text-xs font-semibold text-foreground">仅允许已绑定 Bilibili 的用户申请</div>
@@ -397,7 +397,7 @@ onMounted(async () => {
                 />
               </div>
 
-              <div class="flex items-center justify-between p-2 rounded-lg border border-border bg-muted/20">
+              <div class="flex-between p-2 rounded-lg border border-border bg-muted/20">
                 <div>
                   <div class="text-xs font-semibold text-foreground">允许发布帖子</div>
                   <div class="text-[11px] text-muted-foreground">总开关，关闭后除管理员外全区禁止发表新帖</div>
@@ -477,7 +477,7 @@ onMounted(async () => {
         >
           <!-- 待审批申请 -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <h4 class="text-xs font-semibold text-foreground">入区申请 ({{ currentForum.applying?.length || 0 }})</h4>
             </div>
 
@@ -495,10 +495,7 @@ onMounted(async () => {
                     v-if="!currentForum.applying || currentForum.applying.length === 0"
                     class="text-center"
                   >
-                    <TableCell
-                      colspan="3"
-                      class="py-6 text-xs text-muted-foreground"
-                    >
+                    <TableCell colspan="3" class="py-6 text-muted-foreground">
                       暂无待审批的入区申请
                     </TableCell>
                   </TableRow>
@@ -506,14 +503,11 @@ onMounted(async () => {
                     v-for="user in currentForum.applying"
                     :key="user.id"
                   >
-                    <TableCell class="text-xs font-semibold">
+                    <TableCell class="font-semibold">
                       {{ user.name }}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        :variant="user.isBiliAuthed ? 'secondary' : 'outline'"
-                        class="text-[10px]"
-                      >
+                      <Badge :variant="user.isBiliAuthed ? 'secondary' : 'outline'" size="xs">
                         {{ user.isBiliAuthed ? '已绑定' : '未绑定' }}
                       </Badge>
                     </TableCell>
@@ -550,10 +544,7 @@ onMounted(async () => {
                     v-if="!currentForum.members || currentForum.members.length === 0"
                     class="text-center"
                   >
-                    <TableCell
-                      colspan="3"
-                      class="py-6 text-xs text-muted-foreground"
-                    >
+                    <TableCell colspan="3" class="py-6 text-muted-foreground">
                       暂无成员
                     </TableCell>
                   </TableRow>
@@ -561,14 +552,11 @@ onMounted(async () => {
                     v-for="user in currentForum.members"
                     :key="user.id"
                   >
-                    <TableCell class="text-xs font-semibold">
+                    <TableCell class="font-semibold">
                       {{ user.name }}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        :variant="user.isBiliAuthed ? 'secondary' : 'outline'"
-                        class="text-[10px]"
-                      >
+                      <Badge :variant="user.isBiliAuthed ? 'secondary' : 'outline'" size="xs">
                         {{ user.isBiliAuthed ? '已绑定' : '未绑定' }}
                       </Badge>
                     </TableCell>
@@ -599,7 +587,7 @@ onMounted(async () => {
 
           <!-- 管理员 -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <h4 class="text-xs font-semibold text-foreground">管理员 ({{ currentForum.admins?.length || 0 }})</h4>
               <Button
                 size="xs"
@@ -625,10 +613,7 @@ onMounted(async () => {
                     v-if="!currentForum.admins || currentForum.admins.length === 0"
                     class="text-center"
                   >
-                    <TableCell
-                      colspan="3"
-                      class="py-6 text-xs text-muted-foreground"
-                    >
+                    <TableCell colspan="3" class="py-6 text-muted-foreground">
                       暂无管理员
                     </TableCell>
                   </TableRow>
@@ -636,14 +621,11 @@ onMounted(async () => {
                     v-for="user in currentForum.admins"
                     :key="user.id"
                   >
-                    <TableCell class="text-xs font-semibold">
+                    <TableCell class="font-semibold">
                       {{ user.name }}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        :variant="user.isBiliAuthed ? 'secondary' : 'outline'"
-                        class="text-[10px]"
-                      >
+                      <Badge :variant="user.isBiliAuthed ? 'secondary' : 'outline'" size="xs">
                         {{ user.isBiliAuthed ? '已绑定' : '未绑定' }}
                       </Badge>
                     </TableCell>
@@ -666,7 +648,7 @@ onMounted(async () => {
 
           <!-- 封禁黑名单 -->
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <h4 class="text-xs font-semibold text-foreground">
                 封禁用户 ({{ currentForum.blackList?.length || 0 }})
               </h4>
@@ -693,10 +675,7 @@ onMounted(async () => {
                     v-if="!currentForum.blackList || currentForum.blackList.length === 0"
                     class="text-center"
                   >
-                    <TableCell
-                      colspan="3"
-                      class="py-6 text-xs text-muted-foreground"
-                    >
+                    <TableCell colspan="3" class="py-6 text-muted-foreground">
                       黑名单为空
                     </TableCell>
                   </TableRow>
@@ -704,14 +683,11 @@ onMounted(async () => {
                     v-for="user in currentForum.blackList"
                     :key="user.id"
                   >
-                    <TableCell class="text-xs font-semibold">
+                    <TableCell class="font-semibold">
                       {{ user.name }}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        :variant="user.isBiliAuthed ? 'secondary' : 'outline'"
-                        class="text-[10px]"
-                      >
+                      <Badge :variant="user.isBiliAuthed ? 'secondary' : 'outline'" size="xs">
                         {{ user.isBiliAuthed ? '已绑定' : '未绑定' }}
                       </Badge>
                     </TableCell>

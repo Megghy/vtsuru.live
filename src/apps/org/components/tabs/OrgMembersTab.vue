@@ -55,7 +55,7 @@ onMounted(async () => {
     />
 
     <!-- 工具栏 -->
-    <div class="flex items-center justify-between gap-3 flex-wrap">
+    <div class="flex-between gap-3 flex-wrap">
       <div class="relative w-56">
         <Input
           v-model="search"
@@ -79,14 +79,14 @@ onMounted(async () => {
     <!-- 成员列表 -->
     <Card
       v-else
-      class="border border-border/80 overflow-hidden"
+      class="/80 overflow-hidden"
     >
       <CardContent class="p-0">
         <div class="divide-y divide-border/60">
           <div
             v-for="m in filtered"
             :key="m.user.id"
-            class="p-3 flex items-center justify-between gap-3 hover:bg-muted/30 transition-colors"
+            class="p-3 flex-between gap-3 hover:bg-muted/30 transition-colors"
           >
             <div class="flex items-center gap-3 min-w-0">
               <OrgUserAvatar
@@ -97,10 +97,7 @@ onMounted(async () => {
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-2">
                   <strong class="font-medium text-foreground text-sm truncate">{{ m.user.name }}</strong>
-                  <Badge
-                    variant="outline"
-                    class="text-[10px] h-4 px-1 text-primary border-primary/30"
-                  >
+                  <Badge variant="outline" size="xs" class="text-primary border-primary/30">
                     {{ roleLabel(m.role) }}
                   </Badge>
                 </div>
@@ -119,10 +116,7 @@ onMounted(async () => {
                   @positive-click="() => updateRole(m.user.id, 1)"
                 >
                   <template #trigger>
-                    <Button
-                      variant="outline"
-                      class="h-6 text-[11px] px-2 text-primary"
-                    >
+                    <Button size="xs" variant="outline" class="text-primary">
                       设为 Admin
                     </Button>
                   </template>
@@ -136,10 +130,7 @@ onMounted(async () => {
                   @positive-click="() => updateRole(m.user.id, 2)"
                 >
                   <template #trigger>
-                    <Button
-                      variant="outline"
-                      class="h-6 text-[11px] px-2"
-                    >
+                    <Button size="xs" variant="outline">
                       设为 Member
                     </Button>
                   </template>
@@ -153,10 +144,7 @@ onMounted(async () => {
                   @positive-click="() => transferOwner(m.user.id)"
                 >
                   <template #trigger>
-                    <Button
-                      variant="outline"
-                      class="h-6 text-[11px] px-2 text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
-                    >
+                    <Button size="xs" variant="outline" class="text-amber-600 border-amber-500/30 hover:bg-amber-500/10">
                       移交所有权
                     </Button>
                   </template>
@@ -172,11 +160,7 @@ onMounted(async () => {
                 @positive-click="() => remove(m.user.id)"
               >
                 <template #trigger>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    class="size-7 rounded-full text-destructive hover:bg-destructive/10"
-                  >
+                  <Button size="xs" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
                     <component
                       :is="TrashOutline"
                       class="size-3.5"

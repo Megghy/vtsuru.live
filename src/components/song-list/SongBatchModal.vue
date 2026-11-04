@@ -102,7 +102,7 @@ defineExpose({ open, close })
   <Dialog v-model:open="show">
     <DialogContent class="sm:max-w-lg p-4 space-y-3">
       <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold">批量操作 · 已选 {{ selectedCount }} 首</DialogTitle>
+        <DialogTitle class="text-sm">批量操作 · 已选 {{ selectedCount }} 首</DialogTitle>
       </DialogHeader>
 
       <Tabs
@@ -110,30 +110,15 @@ defineExpose({ open, close })
         class="w-full"
       >
         <TabsList class="grid grid-cols-5">
-          <TabsTrigger
-            value="author"
-            class="text-xs"
-            >作者</TabsTrigger
+          <TabsTrigger value="author" >作者</TabsTrigger
           >
-          <TabsTrigger
-            value="tag"
-            class="text-xs"
-            >标签</TabsTrigger
+          <TabsTrigger value="tag" >标签</TabsTrigger
           >
-          <TabsTrigger
-            value="language"
-            class="text-xs"
-            >语言</TabsTrigger
+          <TabsTrigger value="language" >语言</TabsTrigger
           >
-          <TabsTrigger
-            value="option"
-            class="text-xs"
-            >要求</TabsTrigger
+          <TabsTrigger value="option" >要求</TabsTrigger
           >
-          <TabsTrigger
-            value="delete"
-            class="text-xs text-destructive"
-            >删除</TabsTrigger
+          <TabsTrigger value="delete" class="text-destructive" >删除</TabsTrigger
           >
         </TabsList>
 

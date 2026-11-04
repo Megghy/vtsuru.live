@@ -12,7 +12,9 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -86,57 +88,45 @@ async function handleForceRestartDanmaku() {
 </script>
 
 <template>
-  <Card class="border bg-card w-full">
-    <CardHeader class="p-3 pb-2 border-b">
-      <CardTitle class="text-sm font-semibold">设置</CardTitle>
+  <Card class="w-full">
+    <CardHeader class="p-3 border-b">
+      <CardTitle>设置</CardTitle>
     </CardHeader>
     <CardContent class="p-3 space-y-4">
       <!-- EventFetcher 功能开关 -->
       <div class="space-y-2">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-1">
-            <span class="text-xs font-semibold text-foreground">EventFetcher 功能</span>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <HelpCircle class="size-4 text-muted-foreground cursor-help" />
-                </TooltipTrigger>
-                <TooltipContent class="max-w-[300px] text-xs">
-                  <p class="mb-1">启用后，系统将会：</p>
-                  <ul class="pl-4 list-disc space-y-0.5">
-                    <li>连接到 SignalR 服务器</li>
-                    <li>启动弹幕客户端接收直播间消息</li>
-                    <li>收集并上传直播间事件数据</li>
-                    <li>显示实时统计信息</li>
-                  </ul>
-                  <p class="mt-1">关闭后，所有 EventFetcher 相关功能将停止工作。</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-muted-foreground">
-              {{ settings.settings.enableEventFetcher ? '已启用' : '已禁用' }}
-            </span>
-            <Switch
-              :checked="settings.settings.enableEventFetcher"
-              :disabled="webfetcher.state === 'connecting'"
-              @update:checked="((settings.settings.enableEventFetcher = $event), handleToggleEventFetcher($event))"
-            />
-          </div>
-        </div>
-
-        <Alert
-          v-if="!settings.settings.enableEventFetcher"
-          class="py-2 px-2.5 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
+        <SettingRow
+          variant="none"
+          title="EventFetcher 功能"
         >
-          <AlertDescription class="text-xs m-0">
+          <template #hint>
+            <p class="mb-1">启用后，系统将会：</p>
+            <ul class="pl-4 list-disc space-y-0.5">
+              <li>连接到 SignalR 服务器</li>
+              <li>启动弹幕客户端接收直播间消息</li>
+              <li>收集并上传直播间事件数据</li>
+              <li>显示实时统计信息</li>
+            </ul>
+            <p class="mt-1">关闭后，所有 EventFetcher 相关功能将停止工作。</p>
+          </template>
+          <span class="text-xs text-muted-foreground">
+            {{ settings.settings.enableEventFetcher ? '已启用' : '已禁用' }}
+          </span>
+          <Switch
+            :checked="settings.settings.enableEventFetcher"
+            :disabled="webfetcher.state === 'connecting'"
+            @update:checked="((settings.settings.enableEventFetcher = $event), handleToggleEventFetcher($event))"
+          />
+        </SettingRow>
+
+        <Alert size="sm" variant="warning" v-if="!settings.settings.enableEventFetcher">
+          <AlertDescription class="m-0">
             EventFetcher 功能已禁用，直播间事件数据将不会被收集和上传
           </AlertDescription>
         </Alert>
       </div>
 
-      <div class="h-px bg-border" />
+      <Separator />
 
         <!-- 弹幕客户端模式选择 -->
         <div class="space-y-2">
@@ -165,7 +155,7 @@ async function handleForceRestartDanmaku() {
                     </ToggleGroupItem>
                   </span>
                 </TooltipTrigger>
-                <TooltipContent class="text-xs"> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
+                <TooltipContent> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
               </Tooltip>
               <ToggleGroupItem
                 v-else

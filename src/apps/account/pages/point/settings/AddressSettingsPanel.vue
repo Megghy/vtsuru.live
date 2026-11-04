@@ -10,6 +10,7 @@ import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
@@ -192,10 +193,10 @@ defineExpose({ reset })
 
 <template>
   <section class="point-settings__panel rounded-lg border border-border bg-card p-4 space-y-4">
-    <div class="point-settings__panel-header flex items-center justify-between pb-3 border-b border-border/60">
+    <div class="point-settings__panel-header flex-between pb-3 border-b border-border/60">
       <div class="point-settings__panel-title flex items-center gap-2.5">
         <span
-          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"
+          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
         >
           <component
             :is="Location24Regular"
@@ -256,7 +257,7 @@ defineExpose({ reset })
           <Button
             size="xs"
             variant="ghost"
-            class="px-2 text-muted-foreground hover:text-foreground flex items-center gap-1"
+            class="px-2 text-muted-foreground flex items-center gap-1"
             @click="openEditor(address)"
           >
             <component
@@ -294,7 +295,7 @@ defineExpose({ reset })
   <Dialog v-model:open="editing">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">
+        <DialogTitle class="text-base">
           {{ draft.id ? '编辑收货地址' : '添加收货地址' }}
         </DialogTitle>
       </DialogHeader>
@@ -311,8 +312,10 @@ defineExpose({ reset })
         class="space-y-3.5 py-2 text-xs"
       >
         <div class="grid grid-cols-2 gap-2.5">
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">省份</label>
+          <FormField
+            label="省份"
+            required
+          >
             <Select
               :model-value="draft.province"
               @update:model-value="changeProvince"
@@ -321,20 +324,17 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择省份" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in provinceOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in provinceOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">城市</label>
+          <FormField
+            label="城市"
+            required
+          >
             <Select
               :model-value="draft.city"
               :disabled="!draft.province"
@@ -344,20 +344,17 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择城市" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in cityOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in cityOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">区县</label>
+          <FormField
+            label="区县"
+            required
+          >
             <Select
               :model-value="draft.district"
               :disabled="!draft.city"
@@ -367,20 +364,14 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择区县" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in districtOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in districtOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
 
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">街道 (选填)</label>
+          <FormField label="街道 (选填)">
             <Select
               :model-value="draft.street"
               :disabled="!draft.district"
@@ -390,39 +381,40 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择街道" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in streetOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in streetOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </div>
 
-        <div class="space-y-1">
-          <label class="font-medium text-foreground">详细地址</label>
+        <FormField
+          label="详细地址"
+          required
+        >
           <Textarea
             v-model="draft.address"
             rows="2"
             placeholder="楼栋、单元和门牌号"
-            class="text-xs resize-none"
+            class="resize-none"
           />
-        </div>
+        </FormField>
 
         <div class="grid grid-cols-2 gap-2.5">
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">收件人</label>
+          <FormField
+            label="收件人"
+            required
+          >
             <Input
               v-model="draft.name"
               placeholder="收件人姓名"
             />
-          </div>
-          <div class="space-y-1">
-            <label class="font-medium text-foreground">联系电话</label>
+          </FormField>
+          <FormField
+            label="联系电话"
+            required
+          >
             <Input
               :model-value="draft.phone ? String(draft.phone) : ''"
               type="tel"
@@ -430,7 +422,7 @@ defineExpose({ reset })
               class="font-mono"
               @update:model-value="draft.phone = Number($event) || null"
             />
-          </div>
+          </FormField>
         </div>
 
         <label class="flex items-center gap-2 pt-2 cursor-pointer text-xs">
@@ -440,7 +432,7 @@ defineExpose({ reset })
             <Button
               variant="link"
               size="xs"
-              class="h-auto p-0 inline font-medium"
+              class="h-auto p-0 inline"
               @click.prevent="emit('showAgreement')"
             >
               用户协议

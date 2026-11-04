@@ -212,7 +212,7 @@ onMounted(() => {
     >
       <Card
         v-if="!isLoadingAccount"
-        class="max-w-[90vw] w-[400px] border bg-card shadow-lg"
+        class="max-w-[90vw] w-[400px] shadow-lg"
       >
         <CardHeader class="text-center pb-4">
           <CardTitle>登录</CardTitle>
@@ -221,7 +221,7 @@ onMounted(() => {
 
         <CardContent class="space-y-4">
           <div class="space-y-2">
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="text-xs font-medium text-foreground">Token</span>
               <Button
                 variant="link"
@@ -303,7 +303,7 @@ onMounted(() => {
                       />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs">
+                  <TooltipContent>
                     <div>EventFetcher 状态</div>
                     <div class="text-[11px] text-muted-foreground">
                       {{ webfetcher.state === 'connected' ? '运行中' : '未运行 / 连接断开' }}
@@ -385,7 +385,7 @@ onMounted(() => {
                     v-for="sub in item.children"
                     :key="sub.key"
                     :to="{ name: sub.name }"
-                    class="flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition"
+                    class="flex-between px-2.5 py-1.5 rounded-md text-xs transition"
                     :class="
                       activeMenuKey === sub.key
                         ? 'bg-primary/10 text-primary font-semibold'
@@ -431,7 +431,7 @@ onMounted(() => {
             <Popover>
               <PopoverTrigger as-child>
                 <div
-                  class="status-row status-row--hoverable flex items-center justify-between text-xs cursor-pointer select-none"
+                  class="status-row status-row--hoverable flex-between text-xs cursor-pointer select-none"
                 >
                   <div class="status-row-label flex items-center gap-1.5 min-w-0">
                     <PlugConnected24Filled
@@ -440,21 +440,14 @@ onMounted(() => {
                     />
                     <span class="text-muted-foreground text-[11px]">本地接口</span>
                   </div>
-                  <Badge
-                    variant="outline"
-                    class="text-[10px] h-4 px-1.5"
-                    :class="
-                      rpcServer.connectionCount > 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''
+                  <Badge variant="outline" size="xs" :class=" rpcServer.connectionCount> 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''
                     "
                   >
                     {{ rpcServer.connectionCount }} 连接
                   </Badge>
                 </div>
               </PopoverTrigger>
-              <PopoverContent
-                side="right"
-                class="w-64 p-3 text-xs space-y-2"
-              >
+              <PopoverContent side="right" class="w-64 space-y-2">
                 <div class="font-semibold text-foreground text-xs">外部接入连接</div>
                 <Empty
                   v-if="rpcServer.connectionCount === 0"
@@ -467,13 +460,9 @@ onMounted(() => {
                   :key="conn.connId"
                   class="p-2 rounded bg-muted/40 space-y-1"
                 >
-                  <div class="flex items-center justify-between gap-2">
+                  <div class="flex-between gap-2">
                     <span class="font-medium text-foreground truncate">{{ formatOrigin(conn.origin) }}</span>
-                    <Badge
-                      variant="outline"
-                      class="text-[9px] h-3.5 px-1"
-                      :class="conn.subscribed ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''"
-                    >
+                    <Badge variant="success" class="text-[9px] h-3.5 px-1" :class="conn.subscribed ? ' ' : ''">
                       {{ conn.subscribed ? '已订阅' : '未订阅' }}
                     </Badge>
                   </div>
@@ -488,7 +477,7 @@ onMounted(() => {
             v-if="!siderCollapsed"
             class="cookie-status-card m-2 p-2.5 rounded border bg-muted/20 space-y-2"
           >
-            <div class="cookie-status-header flex items-center justify-between text-xs">
+            <div class="cookie-status-header flex-between text-xs">
               <div class="status-row-label flex items-center gap-1.5 min-w-0">
                 <Cookies24Filled
                   class="size-3.5 shrink-0"
@@ -502,27 +491,11 @@ onMounted(() => {
                 />
                 <span class="font-medium text-foreground text-[11px]">B站 Cookie</span>
               </div>
-              <Badge
-                variant="outline"
-                class="text-[10px] h-4 px-1.5"
-                :class="
-                  cookieStatusType === 'success'
-                    ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
-                    : cookieStatusType === 'error'
-                      ? 'border-destructive/40 text-destructive bg-destructive/10'
-                      : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
-                "
-              >
+              <Badge variant="success" size="xs" :class=" cookieStatusType === 'success' ? ' ' : cookieStatusType === 'error' ? 'border-destructive/40 text-destructive bg-destructive/10' : 'border-amber-500/40 text-amber-600 bg-amber-500/10' ">
                 {{ cookieStatusText }}
               </Badge>
             </div>
-            <Button
-              v-if="cookieStatusType !== 'success'"
-              size="xs"
-              variant="outline"
-              class="w-full h-6 text-[10px]"
-              @click="goCookieManagement"
-            >
+            <Button v-if="cookieStatusType !== 'success'" size="xs" variant="outline" class="w-full text-[10px]" @click="goCookieManagement">
               前往处理
             </Button>
           </div>

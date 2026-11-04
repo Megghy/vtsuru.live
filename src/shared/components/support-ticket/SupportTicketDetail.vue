@@ -159,8 +159,8 @@ function formatRelative(time: number) {
           <Button
             variant="ghost"
             size="icon"
-            class="size-8 -ml-1 text-muted-foreground hover:text-foreground shrink-0 md:hidden"
-            title="返回工单列表"
+            class="size-8 -ml-1 text-muted-foreground shrink-0 md:hidden"
+            aria-label="返回工单列表"
             @click="emit('back')"
           >
             <component
@@ -172,10 +172,7 @@ function formatRelative(time: number) {
           <div class="ticket-detail__heading min-w-0 space-y-1">
             <div class="ticket-detail__title-row flex items-center gap-2 flex-wrap">
               <h2 class="text-sm font-semibold text-foreground truncate m-0">{{ ticket.title }}</h2>
-              <Badge
-                variant="secondary"
-                class="text-[10px] h-4.5 px-1.5 font-normal"
-              >
+              <Badge variant="secondary" size="xs">
                 {{ supportTicketStatusMeta[ticket.status].label }}
               </Badge>
             </div>
@@ -192,8 +189,8 @@ function formatRelative(time: number) {
           v-if="editable"
           variant="ghost"
           size="icon"
-          class="size-8 text-muted-foreground hover:text-foreground shrink-0"
-          title="工单设置"
+          class="size-8 text-muted-foreground shrink-0"
+          aria-label="工单设置"
           @click="showPreferences = true"
         >
           <component
@@ -279,11 +276,11 @@ function formatRelative(time: number) {
           rows="2"
           maxlength="5000"
           placeholder="继续补充信息或回复站长 (Ctrl+Enter 发送)"
-          class="text-xs resize-none"
+          class="resize-none"
           @keydown.ctrl.enter.prevent="sendReply"
         />
 
-        <div class="ticket-detail__actions flex items-center justify-between gap-2">
+        <div class="ticket-detail__actions flex-between gap-2">
           <Popconfirm
             v-if="ticket.status !== SupportTicketStatus.Resolved"
             title="确认解决?"
@@ -327,7 +324,7 @@ function formatRelative(time: number) {
     <Dialog v-model:open="showPreferences">
       <DialogContent class="sm:max-w-md p-4 space-y-3">
         <DialogHeader class="pb-2 border-b border-border/60">
-          <DialogTitle class="text-sm font-semibold">工单设置</DialogTitle>
+          <DialogTitle class="text-sm">工单设置</DialogTitle>
         </DialogHeader>
 
         <div class="space-y-3 text-xs">

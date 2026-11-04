@@ -199,7 +199,7 @@ watch(
     class="flex flex-col min-h-0 w-full"
     :class="{ 'ticket-page--manage': inManage, 'ticket-page--detail': isDetailRoute }"
   >
-    <header class="ticket-page__toolbar flex items-center justify-between gap-3 pb-3 border-b border-border/60">
+    <header class="ticket-page__toolbar flex-between gap-3 pb-3 border-b border-border/60">
       <div v-if="isLoggedIn">
         <ToggleGroup
           type="single"
@@ -207,16 +207,10 @@ watch(
           :model-value="view"
           @update:model-value="(v) => { if (v) view = v as 'mine' | 'public' }"
         >
-          <ToggleGroupItem
-            value="mine"
-            class="text-xs px-3"
-          >
+          <ToggleGroupItem value="mine">
             我的工单
           </ToggleGroupItem>
-          <ToggleGroupItem
-            value="public"
-            class="text-xs px-3"
-          >
+          <ToggleGroupItem value="public">
             公开工单
           </ToggleGroupItem>
         </ToggleGroup>
@@ -232,8 +226,8 @@ watch(
         <Button
           variant="ghost"
           size="icon"
-          class="size-8 text-muted-foreground hover:text-foreground"
-          title="刷新"
+          class="size-8 text-muted-foreground"
+          aria-label="刷新"
           :disabled="loadingList"
           @click="loadTickets"
         >
@@ -271,17 +265,9 @@ watch(
           <SelectValue placeholder="状态" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            value="all"
-            class="text-xs"
-            >全部状态</SelectItem
+          <SelectItem value="all">全部状态</SelectItem
           >
-          <SelectItem
-            v-for="opt in supportTicketStatusOptions"
-            :key="opt.value"
-            :value="String(opt.value)"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in supportTicketStatusOptions" :key="opt.value" :value="String(opt.value)">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -291,17 +277,9 @@ watch(
           <SelectValue placeholder="类型" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            value="all"
-            class="text-xs"
-            >全部类型</SelectItem
+          <SelectItem value="all">全部类型</SelectItem
           >
-          <SelectItem
-            v-for="opt in supportTicketTypeOptions"
-            :key="opt.value"
-            :value="String(opt.value)"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in supportTicketTypeOptions" :key="opt.value" :value="String(opt.value)">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -387,7 +365,7 @@ watch(
     <Dialog v-model:open="showCreate">
       <DialogContent class="sm:max-w-md p-4 space-y-3">
         <DialogHeader class="pb-2 border-b border-border/60">
-          <DialogTitle class="text-sm font-semibold">新建工单</DialogTitle>
+          <DialogTitle class="text-sm">新建工单</DialogTitle>
         </DialogHeader>
 
         <div class="space-y-3 text-xs">
@@ -401,12 +379,7 @@ watch(
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in supportTicketTypeOptions"
-                  :key="opt.value"
-                  :value="String(opt.value)"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in supportTicketTypeOptions" :key="opt.value" :value="String(opt.value)">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -429,7 +402,7 @@ watch(
               rows="5"
               maxlength="5000"
               placeholder="说明发生了什么、如何复现，以及你期望的结果"
-              class="text-xs resize-none"
+              class="resize-none"
             />
           </div>
 

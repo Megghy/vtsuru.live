@@ -108,7 +108,7 @@ function getStyle(p: Platform) {
   >
     <div class="relative text-foreground">
       <div class="flex items-center gap-3 px-6 py-5 border-b border-border bg-secondary/50">
-        <div class="size-8 rounded-[var(--radius)] bg-primary/12 text-primary flex items-center justify-center text-lg">
+        <div class="size-8 rounded-[var(--radius)] bg-primary/12 text-primary flex-center text-lg">
           <component
             :is="HeartIcon"
             class="size-4.5"
@@ -146,7 +146,7 @@ function getStyle(p: Platform) {
             class="absolute inset-0 bg-[var(--accent-color)] opacity-0 transition-opacity duration-300 group-hover:opacity-5 pointer-events-none"
           />
           <div
-            class="relative z-1 size-12 rounded-[var(--radius)] bg-secondary flex items-center justify-center text-2xl text-[var(--accent-readable)] transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--accent-color)] group-hover:text-[var(--accent-text)]"
+            class="relative z-1 size-12 rounded-[var(--radius)] bg-secondary flex-center text-2xl text-[var(--accent-readable)] transition-all duration-300 group-hover:scale-110 group-hover:bg-[var(--accent-color)] group-hover:text-[var(--accent-text)]"
           >
             <component
               :is="getIcon(it.platform)"

@@ -13,6 +13,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Textarea } from '@/shared/ui/textarea'
 import { toast } from '@/shared/utils'
@@ -244,10 +245,7 @@ onUnmounted(() => turnstile.value?.remove())
               </Button>
               <div class="collect-title-row flex items-center gap-3 mt-2">
                 <h1 class="text-2xl font-bold tracking-tight min-w-0">{{ table.name }}</h1>
-                <Badge
-                  :variant="collectionStatus === '进行中' ? 'default' : 'secondary'"
-                  class="text-xs"
-                >
+                <Badge :variant="collectionStatus === '进行中' ? 'default' : 'secondary'">
                   {{ collectionStatus }}
                 </Badge>
               </div>
@@ -308,19 +306,16 @@ onUnmounted(() => turnstile.value?.remove())
                 </div>
               </div>
             </div>
-            <Progress
-              :model-value="capacityPercentage"
-              class="h-2"
-            />
+            <Progress :model-value="capacityPercentage" />
           </section>
 
-          <Card class="min-w-0 collect-on-surface shadow-sm">
+          <Card class="min-w-0 collect-on-surface">
             <CardContent class="p-6">
               <div
                 v-if="submitted"
                 class="py-8 flex flex-col items-center text-center gap-3"
               >
-                <div class="size-12 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
+                <div class="size-12 rounded-full bg-emerald-500/10 text-emerald-500 flex-center">
                   <component
                     :is="CheckmarkCircle24Regular"
                     class="size-7"
@@ -404,7 +399,7 @@ onUnmounted(() => turnstile.value?.remove())
                   <Input
                     v-model="addModel.video"
                     placeholder="https://www.bilibili.com/video/BV..."
-                    class="h-9"
+                    size="default"
                   />
                 </div>
 
@@ -428,18 +423,12 @@ onUnmounted(() => turnstile.value?.remove())
                       v-model="addModel.name"
                       placeholder="选填"
                       maxlength="50"
-                      class="h-9"
+                      size="default"
                     />
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-xs font-medium text-foreground">哔哩哔哩 UID</label>
-                    <Input
-                      :model-value="addModel.uid != null ? String(addModel.uid) : ''"
-                      type="number"
-                      placeholder="选填"
-                      class="h-9"
-                      @update:model-value="addModel.uid = $event ? Number($event) : undefined"
-                    />
+                    <NumberField :model-value="addModel.uid != null ? String(addModel.uid) : ''" placeholder="选填" size="default" @update:model-value="addModel.uid = $event ? Number($event) : undefined" / :show-buttons="false">
                   </div>
                 </div>
 
@@ -452,7 +441,7 @@ onUnmounted(() => turnstile.value?.remove())
                     :placeholder="table.requireDescription ? '请说明推荐这个视频的原因' : '可补充推荐原因或看点'"
                     maxlength="200"
                     rows="3"
-                    class="text-xs"
+                    
                   />
                 </div>
 

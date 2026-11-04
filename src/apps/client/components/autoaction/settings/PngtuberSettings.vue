@@ -51,8 +51,8 @@ function test() {
 
 <template>
   <div class="space-y-3">
-    <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-      <AlertDescription class="text-xs m-0">
+    <Alert size="sm" variant="info">
+      <AlertDescription class="m-0">
         驱动需已启动且频道一致。持续时间为 0 时保持表情，其他值到期后恢复。
       </AlertDescription>
     </Alert>
@@ -73,12 +73,7 @@ function test() {
             <SelectValue placeholder="选择已加载表情或填写表情 ID" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="opt in expressionOptions"
-              :key="opt.value"
-              :value="opt.value"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in expressionOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -92,7 +87,7 @@ function test() {
       </div>
     </div>
 
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
+    <div class="flex-between p-2.5 rounded border bg-muted/20">
       <span class="text-xs font-medium text-foreground">持续时间（毫秒）</span>
       <NumberField
         :model-value="action.actionConfig.pngtuberDurationMs"

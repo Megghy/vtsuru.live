@@ -11,8 +11,10 @@ import {
 import type { LotteryOption } from '@/apps/open-live/components/lottery/lotteryTypes'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 defineProps<{
@@ -43,13 +45,7 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
         <Sparkle24Filled class="size-5 text-amber-500" />
         <span class="font-bold text-base text-foreground">抽奖设置</span>
       </div>
-      <Button
-        size="xs"
-        variant="secondary"
-        class="h-6 text-[11px]"
-        :disabled="isStartLottery"
-        @click="emit('reset')"
-      >
+      <Button size="xs" variant="secondary" :disabled="isStartLottery" @click="emit('reset')">
         恢复默认
       </Button>
     </div>
@@ -167,20 +163,17 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
             </div>
 
             <!-- 粉丝牌等级 -->
-            <div
+            <SettingRow
               v-if="option.needFanMedal"
-              class="flex items-center gap-3"
-            >
-              <span class="text-xs text-muted-foreground w-16 shrink-0">粉丝牌等级</span>
-              <NumberField
-                :model-value="option.fanCardLevel"
-                :min="1"
-                :max="50"
-                :disabled="isStartLottery"
-                class="w-32"
-                @update:model-value="option.fanCardLevel = $event || 1"
-              />
-            </div>
+              type="number"
+              variant="none"
+              title="粉丝牌等级"
+              :min="1"
+              :max="50"
+              :disabled="isStartLottery"
+              control-class="w-32"
+              v-model="option.fanCardLevel"
+            />
           </div>
         </div>
       </div>
@@ -197,29 +190,23 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
 
           <div class="space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">抽取人数</label>
-                <NumberField
-                  :model-value="option.resultCount"
-                  :min="1"
-                  :disabled="isStartLottery"
-                  class="w-full"
-                  @update:model-value="option.resultCount = $event || 1"
-                />
-              </div>
+              <FormField
+                type="number"
+                label="抽取人数"
+                :min="1"
+                :disabled="isStartLottery"
+                v-model="option.resultCount"
+              />
 
-              <div class="space-y-1">
-                <label class="text-xs text-muted-foreground">动画速度 (ms)</label>
-                <NumberField
-                  :model-value="option.animationSpeed"
-                  :step="100"
-                  :min="100"
-                  :max="5000"
-                  :disabled="isLottering"
-                  class="w-full"
-                  @update:model-value="option.animationSpeed = $event || 1000"
-                />
-              </div>
+              <FormField
+                type="number"
+                label="动画速度 (ms)"
+                :step="100"
+                :min="100"
+                :max="5000"
+                :disabled="isLottering"
+                v-model="option.animationSpeed"
+              />
             </div>
 
             <div class="space-y-2">

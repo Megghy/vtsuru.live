@@ -259,12 +259,9 @@ async function selectFolder() {
 
 <template>
   <div class="space-y-4">
-    <Alert
-      variant="default"
-      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 py-2.5"
-    >
-      <AlertTitle class="text-xs font-semibold">功能说明</AlertTitle>
-      <AlertDescription class="text-xs space-y-1 mt-1">
+    <Alert size="sm" variant="info">
+      <AlertTitle>功能说明</AlertTitle>
+      <AlertDescription class="space-y-1 mt-1">
         <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>
         <p class="text-destructive font-medium">
           注意：导入的歌曲链接为本地文件地址，仅在当前浏览器会话有效。刷新页面后可能需要重新导入。

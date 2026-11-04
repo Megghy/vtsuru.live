@@ -520,7 +520,7 @@ async function go(name: string, query?: Record<string, string>) {
               'w-8.5 p-0 justify-center flex-none': collapsed,
               'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
             }"
-            :title="collapsed ? '面板' : undefined"
+            :aria-label="collapsed ? '面板' : undefined"
             @click="go('manage-index')"
           >
             <component
@@ -539,7 +539,7 @@ async function go(name: string, query?: Record<string, string>) {
             size="icon-sm"
             variant="ghost"
             class="h-[34px] w-8.5"
-            title="反馈"
+            aria-label="反馈"
             @click="go('manage-feedback')"
           >
             <component
@@ -560,7 +560,7 @@ async function go(name: string, query?: Record<string, string>) {
               'w-8.5 p-0 justify-center flex-none': collapsed,
               'flex-1 justify-start px-2.5 gap-2.5': !collapsed,
             }"
-            :title="collapsed ? '主页装修' : undefined"
+            :aria-label="collapsed ? '主页装修' : undefined"
             @click="go('manage-userPageBuilder')"
           >
             <component
@@ -579,7 +579,7 @@ async function go(name: string, query?: Record<string, string>) {
             size="icon-sm"
             variant="ghost"
             class="h-[34px] w-8.5"
-            title="更换主页背景与主题"
+            aria-label="更换主页背景与主题"
             @click="go('manage-userPageBuilder', { action: 'theme' })"
           >
             <component
@@ -639,10 +639,7 @@ async function go(name: string, query?: Record<string, string>) {
                       />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    class="max-w-xs text-xs p-3"
-                  >
+                  <TooltipContent side="right" class="max-w-xs p-3">
                     <div class="font-medium text-destructive mb-1">可用性警告</div>
                     <div class="text-[11px] text-muted-foreground space-y-1">
                       <div>
@@ -667,11 +664,14 @@ async function go(name: string, query?: Record<string, string>) {
                 <RouterLink
                   v-if="!item.disabled && item.to"
                   :to="item.to"
-                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 no-underline text-foreground border border-transparent bg-transparent transition-colors box-border hover:bg-[rgba(127,127,127,0.08)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
-                  :class="{
-                    'bg-[rgba(127,127,127,0.12)] border-[rgba(127,127,127,0.18)]': activeKey === item.key,
-                    'p-0 justify-center': collapsed,
-                  }"
+                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 no-underline text-foreground border transition-colors box-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
+                  :class="[
+                    activeKey === item.key
+                      ? 'bg-[rgba(127,127,127,0.12)] border-[rgba(127,127,127,0.18)]'
+                      : 'bg-transparent border-transparent hover:bg-[rgba(127,127,127,0.08)]',
+                    { 'p-0 justify-center': collapsed },
+                  ]"
+                  :aria-current="activeKey === item.key ? 'page' : undefined"
                   :title="collapsed ? item.label : undefined"
                   @click="(ev: any) => onClickNavItem(ev, item)"
                 >

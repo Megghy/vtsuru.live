@@ -19,6 +19,8 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Tag } from '@/shared/ui/tag'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
@@ -273,11 +275,7 @@ function removeHotword(index: number) {
             最终字幕会归档到当前直播。临时结果只在本机显示。凭据只保存在本机。
           </div>
         </div>
-        <Badge
-          variant="outline"
-          class="text-xs"
-          :class="statusMeta.class"
-        >
+        <Badge variant="outline" :class="statusMeta.class">
           {{ statusMeta.text }}
         </Badge>
       </div>
@@ -324,12 +322,8 @@ function removeHotword(index: number) {
         </span>
       </div>
 
-      <Alert
-        v-if="notice"
-        class="py-2 px-2.5"
-        :class="notice.class"
-      >
-        <AlertDescription class="text-xs m-0">
+      <Alert size="sm" v-if="notice" :class="notice.class">
+        <AlertDescription class="m-0">
           {{ notice.text }}
         </AlertDescription>
       </Alert>
@@ -362,7 +356,7 @@ function removeHotword(index: number) {
       </div>
     </section>
 
-    <div class="h-px bg-border my-1" />
+    <Separator class="my-1" />
 
     <section class="flex flex-col gap-3">
       <div class="flex justify-between items-center">
@@ -371,22 +365,10 @@ function removeHotword(index: number) {
           <div class="mt-0.5 text-xs text-muted-foreground">可保存多个本地配置，启动时使用当前选中的配置。</div>
         </div>
         <div class="flex items-center gap-2">
-          <Button
-            size="xs"
-            variant="outline"
-            class="h-6 text-[11px]"
-            :disabled="isRunning"
-            @click="addProfile('tencent')"
-          >
+          <Button size="xs" variant="outline" :disabled="isRunning" @click="addProfile('tencent')">
             新增腾讯云
           </Button>
-          <Button
-            size="xs"
-            variant="outline"
-            class="h-6 text-[11px]"
-            :disabled="isRunning"
-            @click="addProfile('openai')"
-          >
+          <Button size="xs" variant="outline" :disabled="isRunning" @click="addProfile('openai')">
             新增 OpenAI
           </Button>
         </div>
@@ -402,12 +384,7 @@ function removeHotword(index: number) {
               <SelectValue placeholder="选择配置" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in profileOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in profileOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -434,154 +411,119 @@ function removeHotword(index: number) {
 
       <div
         v-if="activeProfile"
-        class="space-y-3 pt-2 text-xs"
+        class="space-y-1 pt-2 text-xs"
       >
-        <div class="flex items-center gap-3">
-          <span class="w-24 text-muted-foreground shrink-0">配置名称</span>
-          <Input
-            v-model="activeProfile.name"
-            :disabled="isRunning"
-            placeholder="用于区分本地配置"
-            class="flex-1"
-          />
-        </div>
+        <SettingRow
+          type="text"
+          variant="line"
+          title="配置名称"
+          :disabled="isRunning"
+          placeholder="用于区分本地配置"
+          control-class="w-full flex-1"
+          v-model="activeProfile.name"
+        />
 
-        <div class="flex items-center gap-3">
-          <span class="w-24 text-muted-foreground shrink-0">识别服务</span>
-          <div class="flex-1">
-            <Select
-              :model-value="activeProfile.provider"
-              :disabled="isRunning"
-              @update:model-value="changeProvider"
-            >
-              <SelectTrigger class="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  value="tencent"
-                  class="text-xs"
-                  >腾讯云</SelectItem
-                >
-                <SelectItem
-                  value="openai"
-                  class="text-xs"
-                  >OpenAI</SelectItem
-                >
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <SettingRow
+          type="select"
+          variant="line"
+          title="识别服务"
+          :options="[
+            { label: '腾讯云', value: 'tencent' },
+            { label: 'OpenAI', value: 'openai' },
+          ]"
+          :disabled="isRunning"
+          control-class="w-full flex-1"
+          :model-value="activeProfile.provider"
+          @change="changeProvider"
+        />
 
-        <div class="flex items-center gap-3">
-          <span class="w-24 text-muted-foreground shrink-0">识别语言</span>
-          <div class="flex-1">
-            <Select
-              v-model="activeProfile.language"
-              :disabled="isRunning"
-            >
-              <SelectTrigger class="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="opt in languageOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
-                  {{ opt.label }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        <SettingRow
+          type="select"
+          variant="line"
+          title="识别语言"
+          :options="languageOptions"
+          :disabled="isRunning"
+          control-class="w-full flex-1"
+          v-model="activeProfile.language"
+        />
 
         <template v-if="activeTencentProfile">
-          <div class="flex items-center gap-3">
-            <span class="w-24 text-muted-foreground shrink-0">引擎模型</span>
-            <div class="flex-1">
-              <Select
-                v-model="activeTencentProfile.engineModelType"
-                :disabled="isRunning"
-              >
-                <SelectTrigger class="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    v-for="opt in tencentModelOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
-                    {{ opt.label }}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          <SettingRow
+            type="select"
+            variant="line"
+            title="引擎模型"
+            :options="tencentModelOptions"
+            :disabled="isRunning"
+            control-class="w-full flex-1"
+            v-model="activeTencentProfile.engineModelType"
+          />
 
-          <div class="flex items-center gap-3">
-            <span class="w-24 text-muted-foreground shrink-0">App ID</span>
-            <Input
-              v-model="activeTencentProfile.appId"
-              :disabled="isRunning"
-              class="flex-1"
-            />
-          </div>
+          <SettingRow
+            type="text"
+            variant="line"
+            title="App ID"
+            :disabled="isRunning"
+            control-class="w-full flex-1"
+            v-model="activeTencentProfile.appId"
+          />
 
-          <div class="flex items-center gap-3">
-            <span class="w-24 text-muted-foreground shrink-0">Secret ID</span>
+          <SettingRow
+            variant="line"
+            title="Secret ID"
+          >
             <Input
               v-model="activeTencentProfile.secretId"
               type="password"
               :disabled="isRunning"
-              class="flex-1"
+              class="w-48"
             />
-          </div>
+          </SettingRow>
 
-          <div class="flex items-center gap-3">
-            <span class="w-24 text-muted-foreground shrink-0">Secret Key</span>
+          <SettingRow
+            variant="line"
+            title="Secret Key"
+          >
             <Input
               v-model="activeTencentProfile.secretKey"
               type="password"
               :disabled="isRunning"
-              class="flex-1"
+              class="w-48"
             />
-          </div>
+          </SettingRow>
         </template>
 
         <template v-else-if="activeOpenAIProfile">
-          <div class="flex items-center gap-3">
-            <span class="w-24 text-muted-foreground shrink-0">模型</span>
-            <Input
-              v-model="activeOpenAIProfile.model"
-              :disabled="isRunning"
-              placeholder="gpt-live-transcribe"
-              class="flex-1"
-            />
-          </div>
+          <SettingRow
+            type="text"
+            variant="line"
+            title="模型"
+            :disabled="isRunning"
+            placeholder="gpt-live-transcribe"
+            control-class="w-full flex-1"
+            v-model="activeOpenAIProfile.model"
+          />
 
-          <div class="flex items-center gap-3">
-            <span class="w-24 text-muted-foreground shrink-0">API 地址</span>
-            <Input
-              v-model="activeOpenAIProfile.baseUrl"
-              :disabled="isRunning"
-              placeholder="wss://api.openai.com/v1/realtime"
-              class="flex-1"
-            />
-          </div>
+          <SettingRow
+            type="text"
+            variant="line"
+            title="API 地址"
+            :disabled="isRunning"
+            placeholder="wss://api.openai.com/v1/realtime"
+            control-class="w-full flex-1"
+            v-model="activeOpenAIProfile.baseUrl"
+          />
 
-          <div class="flex items-center gap-3">
-            <span class="w-24 text-muted-foreground shrink-0">API Key</span>
+          <SettingRow
+            variant="line"
+            title="API Key"
+          >
             <Input
               v-model="activeOpenAIProfile.apiKey"
               type="password"
               :disabled="isRunning"
-              class="flex-1"
+              class="w-48"
             />
-          </div>
+          </SettingRow>
         </template>
 
         <div class="flex items-start gap-3">
@@ -602,16 +544,11 @@ function removeHotword(index: number) {
                 v-model="newHotword"
                 :disabled="isRunning"
                 placeholder="+ 新增热词"
-                class="h-6 w-24"
+                size="xs"
+                class="w-24"
                 @keyup.enter="addHotword"
               />
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-6 px-1.5"
-                :disabled="isRunning || !newHotword.trim()"
-                @click="addHotword"
-              >
+              <Button size="xs" variant="ghost" class="px-1.5" :disabled="isRunning || !newHotword.trim()" @click="addHotword">
                 添加
               </Button>
             </div>

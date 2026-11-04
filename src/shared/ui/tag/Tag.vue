@@ -83,7 +83,7 @@ const sizeClasses = computed(() => {
 
 <template>
   <span
-    class="inline-flex items-center justify-center font-medium transition-colors select-none"
+    class="inline-flex-center font-medium transition-colors select-none"
     :class="[
       sizeClasses,
       typeClasses,
@@ -97,7 +97,7 @@ const sizeClasses = computed(() => {
     <button
       v-if="closable"
       type="button"
-      class="ml-1 inline-flex items-center justify-center size-3 rounded-full hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
+      class="ml-1 inline-flex-center size-3 rounded-full hover:bg-black/10 dark:hover:bg-white/20 transition-colors"
       @click.stop="emit('close', $event)"
     >
       <X class="size-2.5" />

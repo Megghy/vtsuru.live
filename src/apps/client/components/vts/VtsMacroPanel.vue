@@ -13,6 +13,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 
@@ -188,9 +189,9 @@ function runMacro(macroId: string) {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">组合动作 (宏)</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
+      <CardTitle>组合动作 (宏)</CardTitle>
       <div class="flex items-center gap-2">
         <Button @click="addMacro"> 新建宏 </Button>
         <span class="text-xs text-muted-foreground"> 按顺序执行所有步骤，任一步失败即终止 </span>
@@ -255,7 +256,7 @@ function runMacro(macroId: string) {
   <Dialog v-model:open="showEdit">
     <DialogContent class="sm:max-w-[700px] max-h-[85vh] flex flex-col">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">编辑宏</DialogTitle>
+        <DialogTitle class="text-base">编辑宏</DialogTitle>
       </DialogHeader>
 
       <div class="flex-1 overflow-y-auto space-y-3 pt-2 text-xs pr-1">
@@ -264,7 +265,7 @@ function runMacro(macroId: string) {
           placeholder="宏名称"
         />
 
-        <div class="flex items-center justify-between gap-2">
+        <div class="flex-between gap-2">
           <span class="text-xs text-muted-foreground">拖拽排序，串行执行</span>
           <DropdownMenu>
             <DropdownMenuTrigger as-child>
@@ -277,12 +278,7 @@ function runMacro(macroId: string) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                v-for="opt in stepTypeOptions"
-                :key="opt.key"
-                class="text-xs"
-                @select="addStep(opt.key)"
-              >
+              <DropdownMenuItem v-for="opt in stepTypeOptions" :key="opt.key" @select="addStep(opt.key)">
                 {{ opt.label }}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -302,10 +298,10 @@ function runMacro(macroId: string) {
             :key="element.id"
             class="p-2.5 rounded-md border bg-muted/30 space-y-2.5"
           >
-            <div class="flex items-center justify-between gap-2">
+            <div class="flex-between gap-2">
               <div class="flex items-center gap-2">
                 <span
-                  class="macro-step-handle inline-flex items-center justify-center size-6 rounded cursor-grab active:cursor-grabbing select-none"
+                  class="macro-step-handle inline-flex-center size-6 rounded cursor-grab active:cursor-grabbing select-none"
                   title="拖拽排序"
                 >
                   <ReorderThreeOutline class="size-4 text-muted-foreground" />
@@ -325,12 +321,7 @@ function runMacro(macroId: string) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem
-                        v-for="o in stepTypeOptions"
-                        :key="o.key"
-                        :value="o.key"
-                        class="text-xs"
-                      >
+                      <SelectItem v-for="o in stepTypeOptions" :key="o.key" :value="o.key">
                         {{ o.label }}
                       </SelectItem>
                     </SelectContent>
@@ -338,17 +329,12 @@ function runMacro(macroId: string) {
                 </div>
               </div>
 
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                @click="removeStep(element.id)"
-              >
+              <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="removeStep(element.id)">
                 <TrashOutline class="size-3.5" />
               </Button>
             </div>
 
-            <div class="h-px bg-border my-1" />
+            <Separator class="my-1" />
 
             <!-- hotkey -->
             <div
@@ -363,12 +349,7 @@ function runMacro(macroId: string) {
                   <SelectValue placeholder="选择热键" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="h in hotkeyOptions"
-                    :key="h.value"
-                    :value="h.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="h in hotkeyOptions" :key="h.value" :value="h.value">
                     {{ h.label }}
                   </SelectItem>
                 </SelectContent>
@@ -388,12 +369,7 @@ function runMacro(macroId: string) {
                   <SelectValue placeholder="选择预设" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="p in presetOptions"
-                    :key="p.value"
-                    :value="p.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="p in presetOptions" :key="p.value" :value="p.value">
                     {{ p.label }}
                   </SelectItem>
                 </SelectContent>
@@ -457,12 +433,7 @@ function runMacro(macroId: string) {
                     <SelectValue placeholder="选择配饰" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      v-for="a in accessoryOptions"
-                      :key="a.value"
-                      :value="a.value"
-                      class="text-xs"
-                    >
+                    <SelectItem v-for="a in accessoryOptions" :key="a.value" :value="a.value">
                       {{ a.label }}
                     </SelectItem>
                   </SelectContent>
@@ -490,12 +461,7 @@ function runMacro(macroId: string) {
                   <SelectValue placeholder="选择整活" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="p in prankOptions"
-                    :key="p.value"
-                    :value="p.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="p in prankOptions" :key="p.value" :value="p.value">
                     {{ p.label }}
                   </SelectItem>
                 </SelectContent>
@@ -533,7 +499,7 @@ function runMacro(macroId: string) {
           </div>
         </VueDraggable>
 
-        <div class="flex items-center justify-between pt-2">
+        <div class="flex-between pt-2">
           <div class="flex items-center gap-1.5 cursor-pointer select-none">
             <Switch
               :checked="showAdvancedJson"
@@ -541,12 +507,7 @@ function runMacro(macroId: string) {
             />
             <span class="text-muted-foreground">JSON 预览</span>
           </div>
-          <Button
-            size="xs"
-            variant="ghost"
-            class="h-6 text-muted-foreground"
-            @click="macroSteps = []"
-          >
+          <Button size="xs" variant="ghost" class="text-muted-foreground" @click="macroSteps = []">
             清空步骤
           </Button>
         </div>
@@ -555,7 +516,7 @@ function runMacro(macroId: string) {
           v-if="showAdvancedJson"
           :value="advancedJson"
           readonly
-          class="font-mono text-xs h-32"
+          class="font-mono h-32"
         />
       </div>
 

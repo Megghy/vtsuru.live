@@ -194,7 +194,7 @@ onMounted(async () => {
 <template>
   <div class="space-y-4 p-4">
     <!-- 用户基本信息 -->
-    <Card class="border border-border">
+    <Card>
       <CardContent class="p-5 space-y-4">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-4">
@@ -311,7 +311,7 @@ onMounted(async () => {
     <Dialog v-model:open="showAddPointModal">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">给予 / 扣除积分</DialogTitle>
+          <DialogTitle class="text-sm">给予 / 扣除积分</DialogTitle>
         </DialogHeader>
 
         <div class="space-y-3 py-2">
@@ -342,7 +342,7 @@ onMounted(async () => {
               v-model="addPointReason"
               placeholder="请输入调整备注"
               :maxlength="100"
-              class="text-xs"
+              
               :rows="3"
             />
           </div>

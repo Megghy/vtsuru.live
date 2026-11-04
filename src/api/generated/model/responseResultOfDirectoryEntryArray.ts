@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { DirectoryEntry } from './directoryEntry'
+import type { DirectoryEntry } from './directoryEntry';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfDirectoryEntryArray {
-  message: string
-  code: number
+  message: string;
+  code: number;
   /** @nullable */
-  data: DirectoryEntry[] | null
+  data: DirectoryEntry[] | null;
 }

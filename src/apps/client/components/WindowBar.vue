@@ -127,16 +127,12 @@ function goToLiveManage() {
       <TooltipProvider v-if="isLiving">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Badge
-              variant="destructive"
-              class="h-5 px-2 text-[11px] font-normal cursor-pointer rounded-full"
-              @click="goToLiveManage"
-            >
+            <Badge variant="destructive" size="sm" class="cursor-pointer" @click="goToLiveManage">
               <span class="inline-block size-1.5 rounded-full bg-current mr-1 animate-pulse" />
               直播中
             </Badge>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
+          <TooltipContent>
             正在直播：{{ currentLive?.title }}
             <br />
             点击进入直播管理
@@ -144,11 +140,7 @@ function goToLiveManage() {
         </Tooltip>
       </TooltipProvider>
 
-      <Badge
-        v-else
-        variant="secondary"
-        class="h-5 px-2 text-[11px] font-normal rounded-full"
-      >
+      <Badge v-else variant="secondary" size="sm">
         未开播
       </Badge>
     </div>

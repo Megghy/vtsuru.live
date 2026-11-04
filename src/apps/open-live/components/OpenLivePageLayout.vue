@@ -54,7 +54,7 @@ defineEmits<{
       v-if="isLoggedIn && showFunctionSwitch"
       class="p-3"
     >
-      <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="flex-between flex-wrap gap-3">
         <div class="flex items-center gap-2.5">
           <span class="text-sm font-medium">{{ switchLabel }}</span>
           <Switch
@@ -80,9 +80,9 @@ defineEmits<{
       v-if="!isLoggedIn"
       name="login-tip"
     >
-      <Alert class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs flex items-center justify-between">
+      <Alert size="sm" variant="warning" class="flex-between">
         <div>
-          <AlertTitle class="text-xs font-semibold text-amber-800 dark:text-amber-300">{{ loginTipText }}</AlertTitle>
+          <AlertTitle class="text-amber-800 dark:text-amber-300">{{ loginTipText }}</AlertTitle>
         </div>
         <Button
           as="a"

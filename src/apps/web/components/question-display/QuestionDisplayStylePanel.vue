@@ -19,9 +19,11 @@ import {
 } from '@/shared/questionDisplayPresets'
 import { Button } from '@/shared/ui/button'
 import { ColorPicker } from '@/shared/ui/color-picker'
+import { FormField } from '@/shared/ui/form-field'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -104,7 +106,7 @@ function resetToDefault() {
   <div class="w-full min-w-0 space-y-5 text-xs">
     <!-- 预设 -->
     <div class="preset-section space-y-2.5">
-      <div class="preset-header flex items-center justify-between">
+      <div class="preset-header flex-between">
         <span class="preset-title text-xs font-semibold text-foreground">视觉预设</span>
         <Popconfirm
           title="重置样式？"
@@ -113,10 +115,7 @@ function resetToDefault() {
           @positive-click="resetToDefault"
         >
           <template #trigger>
-            <Button
-              variant="ghost"
-              class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1"
-            >
+            <Button size="xs" variant="ghost" class="text-muted-foreground flex items-center gap-1">
               <component
                 :is="ArrowReset24Regular"
                 class="size-3.5"
@@ -142,7 +141,7 @@ function resetToDefault() {
           @click="applyPreset(preset.value)"
         >
           <div
-            class="preset-preview-wrap relative w-full h-12 rounded overflow-hidden flex items-center justify-center border border-border/50"
+            class="preset-preview-wrap relative w-full h-12 rounded overflow-hidden flex-center border border-border/50"
           >
             <div
               class="preset-preview w-full h-full p-1.5 flex flex-col justify-center items-center text-center transition"
@@ -167,7 +166,7 @@ function resetToDefault() {
             </div>
             <span
               v-if="isPresetSelected(preset.value)"
-              class="selected-badge absolute top-1 right-1 size-4 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xs"
+              class="selected-badge absolute top-1 right-1 size-4 rounded-full bg-primary text-primary-foreground flex-center shadow-xs"
             >
               <component
                 :is="Checkmark16Regular"
@@ -225,12 +224,7 @@ function resetToDefault() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in fontWeightOptions"
-                :key="opt.value"
-                :value="String(opt.value)"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in fontWeightOptions" :key="opt.value" :value="String(opt.value)">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -255,12 +249,7 @@ function resetToDefault() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in fontWeightOptions"
-                :key="opt.value"
-                :value="String(opt.value)"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in fontWeightOptions" :key="opt.value" :value="String(opt.value)">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -269,7 +258,7 @@ function resetToDefault() {
       </div>
 
       <div class="space-y-1">
-        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+        <div class="flex-between text-[11px] text-muted-foreground">
           <span class="font-medium">行高倍数</span>
           <span class="font-mono">{{ setting.lineHeight }}</span>
         </div>
@@ -342,7 +331,7 @@ function resetToDefault() {
       </div>
 
       <div class="space-y-1">
-        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+        <div class="flex-between text-[11px] text-muted-foreground">
           <span class="font-medium">内容最大宽度 (0 为不限)</span>
           <span class="font-mono">{{ setting.contentMaxWidth || 0 }}</span>
         </div>
@@ -375,12 +364,7 @@ function resetToDefault() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="opt in textShadowOptions"
-              :key="opt.value"
-              :value="opt.value"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in textShadowOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -430,7 +414,7 @@ function resetToDefault() {
       </div>
 
       <div class="space-y-1">
-        <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+        <div class="flex-between text-[11px] text-muted-foreground">
           <span class="font-medium">背景不透明度 (%)</span>
           <span class="font-mono">{{ setting.backgroundOpacity ?? 100 }}%</span>
         </div>
@@ -486,12 +470,7 @@ function resetToDefault() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in shadowOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in shadowOptions" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -503,74 +482,51 @@ function resetToDefault() {
     <!-- 显示与动画 -->
     <section class="setting-section space-y-3 pt-3 border-t border-border/60">
       <h3 class="text-xs font-semibold text-foreground uppercase tracking-wider">显示与动画</h3>
-      <div class="space-y-2">
-        <div class="switch-row flex items-center justify-between py-1">
-          <span class="text-xs text-foreground">显示提问者昵称</span>
-          <Switch v-model:checked="setting.showUserName" />
-        </div>
-        <div class="switch-row flex items-center justify-between py-1">
-          <span class="text-xs text-foreground">显示提问附图</span>
-          <Switch v-model:checked="setting.showImage" />
-        </div>
-        <div class="switch-row flex items-center justify-between py-1">
-          <span class="text-xs text-foreground">显示 VTsuru 标识</span>
-          <Switch v-model:checked="setting.showBrand" />
-        </div>
+      <div class="space-y-1">
+        <SettingRow
+          type="switch"
+          variant="line"
+          title="显示提问者昵称"
+          v-model="setting.showUserName"
+        />
+        <SettingRow
+          type="switch"
+          variant="line"
+          title="显示提问附图"
+          v-model="setting.showImage"
+        />
+        <SettingRow
+          type="switch"
+          variant="line"
+          title="显示 VTsuru 标识"
+          v-model="setting.showBrand"
+        />
       </div>
 
       <div class="grid grid-cols-2 gap-3 pt-1">
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">附图排列</label>
-          <Select
-            :model-value="setting.imageLayout ?? QuestionDisplayImageLayout.Contain"
-            @update:model-value="setting.imageLayout = $event as any"
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="opt in imageLayoutOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
-                {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div class="space-y-1">
-          <label class="text-[11px] text-muted-foreground font-medium">切换动画</label>
-          <Select
-            :model-value="setting.transition ?? QuestionDisplayTransition.Fade"
-            @update:model-value="setting.transition = $event as any"
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="opt in transitionOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
-                {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      <div class="space-y-1">
-        <label class="text-[11px] text-muted-foreground font-medium">单图最大高度 (px)</label>
-        <NumberField
-          v-model="setting.imageMaxHeight"
-          :min="80"
-          :max="1080"
+        <FormField
+          type="select"
+          label="附图排列"
+          :options="imageLayoutOptions"
+          :model-value="setting.imageLayout ?? QuestionDisplayImageLayout.Contain"
+          @update:model-value="setting.imageLayout = $event as any"
+        />
+        <FormField
+          type="select"
+          label="切换动画"
+          :options="transitionOptions"
+          :model-value="setting.transition ?? QuestionDisplayTransition.Fade"
+          @update:model-value="setting.transition = $event as any"
         />
       </div>
+
+      <FormField
+        type="number"
+        label="单图最大高度 (px)"
+        :min="80"
+        :max="1080"
+        v-model="setting.imageMaxHeight"
+      />
     </section>
   </div>
 </template>

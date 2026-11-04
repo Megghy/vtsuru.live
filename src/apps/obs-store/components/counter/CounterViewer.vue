@@ -22,6 +22,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
+import { Separator } from '@/shared/ui/separator'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -234,7 +235,7 @@ activateKeyboard()
           </div>
         </div>
 
-        <div class="h-px bg-border my-2.5" />
+        <Separator class="my-2.5" />
 
         <!-- 主控制台与实时预览 -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
@@ -315,7 +316,7 @@ activateKeyboard()
 
           <!-- 右侧：实时 OBS 监视器 -->
           <div class="monitor-panel-box">
-            <div class="flex items-center justify-between mb-2">
+            <div class="flex-between mb-2">
               <span class="deck-label">OBS 画面实时监视器</span>
               <ToggleGroup
                 type="single"
@@ -345,7 +346,7 @@ activateKeyboard()
           </div>
         </div>
 
-        <div class="h-px bg-border my-3.5" />
+        <Separator class="my-3.5" />
 
         <!-- 参数与视觉配置 -->
         <div class="deck-label mb-2">配置与样式微调</div>
@@ -389,12 +390,7 @@ activateKeyboard()
                 <SelectValue placeholder="选择风格" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in themeOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in themeOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>

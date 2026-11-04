@@ -25,7 +25,9 @@ import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
@@ -173,20 +175,20 @@ onUnmounted(() => {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <!-- 舞台视口 (8 列) -->
           <Card class="lg:col-span-8 flex flex-col">
-            <CardHeader class="p-3.5 pb-2">
-              <div class="flex items-center justify-between gap-3 flex-wrap">
+            <CardHeader class="p-3.5">
+              <div class="flex-between gap-3 flex-wrap">
                 <div class="flex items-center gap-2">
                   <component
                     :is="Eye24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
+                  <CardTitle class="text-xs"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
                 </div>
 
                 <ToggleGroup
                   v-model="previewBg"
                   type="single"
-                  class="bg-muted p-0.5 rounded-md"
+                  size="xs"
                 >
                   <ToggleGroupItem
                     v-for="bg in [
@@ -197,7 +199,6 @@ onUnmounted(() => {
                     ]"
                     :key="bg.key"
                     :value="bg.key"
-                    class="h-6 text-xs px-2 data-[state=on]:bg-background data-[state=on]:text-foreground data-[state=on]:shadow-sm"
                   >
                     {{ bg.label }}
                   </ToggleGroupItem>
@@ -207,7 +208,7 @@ onUnmounted(() => {
 
             <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
               <div
-                class="rounded-lg border border-border p-6 flex items-center justify-center min-h-[460px] transition-colors"
+                class="rounded-lg border border-border p-6 flex-center min-h-[460px] transition-colors"
                 :class="{
                   'bg-[#121214]': previewBg === 'dark',
                   'bg-[#f4f4f5]': previewBg === 'light',
@@ -226,7 +227,7 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
+              <div class="flex-between gap-3 flex-wrap pt-2 border-t border-border/60">
                 <span class="text-xs text-muted-foreground"
                   >推荐 OBS 来源尺寸：宽 380px ~ 440px，高 540px ~ 680px。</span
                 >
@@ -247,17 +248,17 @@ onUnmounted(() => {
           <!-- 视觉预设 (4 列) -->
           <div class="lg:col-span-4 space-y-4">
             <Card>
-              <CardHeader class="p-3.5 pb-2">
+              <CardHeader class="p-3.5">
                 <div class="flex items-center gap-2">
                   <component
                     :is="Color24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> OBS 视觉预设 </CardTitle>
+                  <CardTitle class="text-xs uppercase tracking-wide"> OBS 视觉预设 </CardTitle>
                 </div>
               </CardHeader>
 
-              <CardContent class="p-3.5 space-y-3.5">
+              <CardContent class="space-y-3.5">
                 <div class="grid grid-cols-1 gap-1.5">
                   <Button
                     v-for="st in [
@@ -278,20 +279,16 @@ onUnmounted(() => {
 
                 <Separator />
 
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-xs text-muted-foreground">滚动轮播速度</span>
-                  <div class="flex items-center gap-1.5">
-                    <Input
-                      v-model.number="obsScrollSpeed"
-                      type="number"
-                      step="0.2"
-                      min="0.5"
-                      max="3"
-                      class="w-20 font-mono"
-                    />
-                    <span class="text-xs text-muted-foreground">x</span>
-                  </div>
-                </div>
+                <SettingRow
+                  type="number"
+                  variant="none"
+                  title="滚动轮播速度"
+                  :min="0.5"
+                  :max="3"
+                  :step="0.2"
+                  control-class="w-20 font-mono"
+                  v-model="obsScrollSpeed"
+                />
               </CardContent>
             </Card>
           </div>
@@ -312,16 +309,16 @@ onUnmounted(() => {
           <!-- 规则 (5 列) -->
           <div class="lg:col-span-5">
             <Card>
-              <CardHeader class="p-3.5 pb-2">
+              <CardHeader class="p-3.5">
                 <div class="flex items-center gap-2">
                   <component
                     :is="ShieldCheckmark24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 点播指令与权限设置 </CardTitle>
+                  <CardTitle class="text-xs uppercase tracking-wide"> 点播指令与权限设置 </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent class="p-3.5">
+              <CardContent>
                 <SongRequestSettings
                   :is-loading="liveRequest.isLoading"
                   :is-logged-in="!!accountInfo.id"

@@ -46,7 +46,7 @@ async function toggle() {
   <Dialog v-model:open="showLogin">
     <DialogContent class="sm:max-w-md p-4 space-y-3">
       <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold">登录后关注</DialogTitle>
+        <DialogTitle class="text-sm">登录后关注</DialogTitle>
       </DialogHeader>
       <RegisterAndLogin />
     </DialogContent>

@@ -171,9 +171,9 @@ export const Config = defineTemplateConfig([])
           >
             <div
               v-if="avatar"
-              class="portrait-frame relative flex items-center justify-center"
+              class="portrait-frame relative flex-center"
             >
-              <Avatar class="size-36 rounded-full border-4 border-background shadow-md">
+              <Avatar class="size-36 border-4 border-background shadow-md">
                 <AvatarImage
                   :src="avatar"
                   referrerpolicy="no-referrer"

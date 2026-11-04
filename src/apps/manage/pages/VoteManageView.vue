@@ -52,10 +52,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Textarea } from '@/shared/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -617,19 +620,16 @@ onUnmounted(() => {
         <!-- 1. 进行中的投票监控卡片 -->
         <Card
           v-if="currentVote && currentVote.isActive"
-          class="border-l-4 border-l-amber-500 bg-amber-500/5 shadow-sm"
+          class="border-l-4 border-l-amber-500 bg-amber-500/5"
         >
-          <CardHeader class="p-3.5 pb-2">
-            <div class="flex items-center justify-between gap-3 flex-wrap">
+          <CardHeader class="p-3.5">
+            <div class="flex-between gap-3 flex-wrap">
               <div class="flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500 animate-pulse" />
-                <CardTitle class="text-sm font-semibold">
+                <CardTitle>
                   {{ currentVote.title }}
                 </CardTitle>
-                <Badge
-                  variant="warning"
-                  class="text-xs"
-                >
+                <Badge variant="warning">
                   剩余：{{ formatTime(timeLeftMs) }}
                 </Badge>
               </div>
@@ -640,7 +640,7 @@ onUnmounted(() => {
             </div>
           </CardHeader>
 
-          <CardContent class="p-3.5 space-y-3">
+          <CardContent class="space-y-3">
             <!-- 动态选项统计条 -->
             <div class="space-y-2.5">
               <div
@@ -653,11 +653,7 @@ onUnmounted(() => {
                   <div class="flex items-center gap-1.5 font-medium">
                     <span class="font-mono text-muted-foreground">#{{ idx + 1 }}</span>
                     <span>{{ opt.text }}</span>
-                    <Badge
-                      v-if="idx === leadingOptionIndex"
-                      variant="warning"
-                      class="text-[10px] px-1 py-0 h-4"
-                    >
+                    <Badge v-if="idx === leadingOptionIndex" variant="warning" size="xs">
                       领先
                     </Badge>
                   </div>
@@ -682,7 +678,7 @@ onUnmounted(() => {
 
             <Separator />
 
-            <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex-between gap-3 flex-wrap">
               <div class="flex items-center gap-1.5">
                 <span class="text-xs text-muted-foreground">加时:</span>
                 <Button
@@ -746,22 +742,15 @@ onUnmounted(() => {
 
         <!-- 2. 发起新投票卡片 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 发起投票 </CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs uppercase tracking-wide"> 发起投票 </CardTitle>
           </CardHeader>
 
-          <CardContent class="p-3.5 space-y-3.5">
+          <CardContent class="space-y-3.5">
             <!-- 快捷预设芯片 -->
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="text-xs text-muted-foreground">快捷预设:</span>
-              <Button
-                v-for="p in VOTE_QUICK_PRESETS"
-                :key="p.name"
-                size="xs"
-                variant="outline"
-                class="h-6 gap-1"
-                @click="applyPreset(p)"
-              >
+              <Button v-for="p in VOTE_QUICK_PRESETS" :key="p.name" size="xs" variant="outline" class="gap-1" @click="applyPreset(p)">
                 <component
                   :is="Sparkle24Regular"
                   class="h-3 w-3 text-brand"
@@ -839,18 +828,11 @@ onUnmounted(() => {
             <Separator />
 
             <!-- 时长与规则 -->
-            <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="flex-between gap-3 flex-wrap">
               <div class="flex items-center gap-4 flex-wrap">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs text-muted-foreground">时长:</span>
-                  <Input
-                    v-model.number="formDuration"
-                    type="number"
-                    min="0"
-                    max="3600"
-                    step="30"
-                    class="w-20 font-mono"
-                  />
+                  <NumberField v-model="formDuration" min="0" max="3600" step="30" class="w-20 font-mono" / :show-buttons="false">
                   <span class="text-xs text-muted-foreground">秒</span>
                 </div>
 
@@ -880,10 +862,10 @@ onUnmounted(() => {
       <div class="lg:col-span-4 space-y-4">
         <!-- 模板库卡片 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 我的模板库 </CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs uppercase tracking-wide"> 我的模板库 </CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5 space-y-2.5">
+          <CardContent class="space-y-2.5">
             <div class="flex gap-1.5">
               <Input
                 v-model="newTemplateName"
@@ -912,7 +894,7 @@ onUnmounted(() => {
               <div
                 v-for="(tpl, idx) in savedTemplates"
                 :key="idx"
-                class="flex items-center justify-between p-2 rounded border border-border bg-muted/20 hover:bg-muted/40 transition-colors text-xs cursor-pointer"
+                class="flex-between p-2 rounded border border-border bg-muted/20 hover:bg-muted/40 transition-colors text-xs cursor-pointer"
                 @click="applyPreset(tpl)"
               >
                 <div class="min-w-0 pr-2">
@@ -941,10 +923,10 @@ onUnmounted(() => {
 
         <!-- 历史记录卡片 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
-            <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 历史投票记录 </CardTitle>
+          <CardHeader class="p-3.5">
+            <CardTitle class="text-xs uppercase tracking-wide"> 历史投票记录 </CardTitle>
           </CardHeader>
-          <CardContent class="p-3.5">
+          <CardContent>
             <Empty
               v-if="voteHistory.length === 0"
               size="small"
@@ -958,7 +940,7 @@ onUnmounted(() => {
               <div
                 v-for="item in voteHistory"
                 :key="item.id"
-                class="flex items-center justify-between p-2 rounded border border-border bg-muted/20 text-xs"
+                class="flex-between p-2 rounded border border-border bg-muted/20 text-xs"
               >
                 <div class="min-w-0 pr-2">
                   <div class="font-medium truncate text-foreground">
@@ -1022,36 +1004,21 @@ onUnmounted(() => {
     >
       <!-- 左侧：OBS 预览舞台 (8 列) -->
       <Card class="lg:col-span-8 flex flex-col">
-        <CardHeader class="p-3.5 pb-2">
-          <div class="flex items-center justify-between gap-3 flex-wrap">
+        <CardHeader class="p-3.5">
+          <div class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
               <component
                 :is="Eye24Regular"
                 class="h-4 w-4 text-muted-foreground"
               />
-              <CardTitle class="text-xs font-semibold"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
-              <Badge
-                :variant="previewMode === 'live' ? 'success' : 'outline'"
-                class="text-[10px] px-1.5 py-0 h-4"
-              >
+              <CardTitle class="text-xs"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
+              <Badge :variant="previewMode === 'live' ? 'success' : 'outline'" size="xs">
                 {{ previewMode === 'live' ? '真实数据源' : '模拟仿真模式' }}
               </Badge>
             </div>
 
             <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-              <Button
-                v-for="bg in [
-                  { key: 'checker', label: '网格' },
-                  { key: 'dark', label: '纯黑' },
-                  { key: 'light', label: '浅色' },
-                  { key: 'game', label: '直播场景' },
-                ]"
-                :key="bg.key"
-                size="xs"
-                :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                class="h-6 px-2"
-                @click="previewBg = bg.key as any"
-              >
+              <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '纯黑' }, { key: 'light', label: '浅色' }, { key: 'game', label: '直播场景' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" @click="previewBg = bg.key as any">
                 {{ bg.label }}
               </Button>
             </div>
@@ -1060,7 +1027,7 @@ onUnmounted(() => {
 
         <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
           <div
-            class="rounded-lg border border-border p-6 flex items-center justify-center min-h-[460px] transition-colors"
+            class="rounded-lg border border-border p-6 flex-center min-h-[460px] transition-colors"
             :class="{
               'bg-[#121214]': previewBg === 'dark',
               'bg-[#f4f4f5]': previewBg === 'light',
@@ -1080,7 +1047,7 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
+          <div class="flex-between gap-3 flex-wrap pt-2 border-t border-border/60">
             <span class="text-xs text-muted-foreground font-mono">
               参数: ?theme={{ previewTheme }}&position={{ previewPosition }}&max={{ previewMaxDisplay }}
             </span>
@@ -1103,17 +1070,17 @@ onUnmounted(() => {
       <div class="lg:col-span-4 space-y-4">
         <!-- 视觉与场景调试 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
+          <CardHeader class="p-3.5">
             <div class="flex items-center gap-2">
               <component
                 :is="Color24Regular"
                 class="h-4 w-4 text-muted-foreground"
               />
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 视觉与场景调试 </CardTitle>
+              <CardTitle class="text-xs uppercase tracking-wide"> 视觉与场景调试 </CardTitle>
             </div>
           </CardHeader>
 
-          <CardContent class="p-3.5 space-y-3.5">
+          <CardContent class="space-y-3.5">
             <div>
               <span class="text-xs text-muted-foreground block mb-2">一键载入场景:</span>
               <div class="flex flex-wrap gap-1.5">
@@ -1209,63 +1176,42 @@ onUnmounted(() => {
               </Select>
             </div>
 
-            <div class="flex items-center justify-between">
+            <div class="flex-between">
               <span class="text-xs text-muted-foreground">排行榜最大显示行数:</span>
-              <Input
-                v-model.number="previewMaxDisplay"
-                type="number"
-                min="2"
-                max="20"
-                class="w-20 font-mono"
-              />
+              <NumberField v-model="previewMaxDisplay" min="2" max="20" class="w-20 font-mono" / :show-buttons="false">
             </div>
           </CardContent>
         </Card>
 
         <!-- 实时互动模拟 -->
         <Card>
-          <CardHeader class="p-3.5 pb-2">
+          <CardHeader class="p-3.5">
             <div class="flex items-center gap-2">
               <component
                 :is="Flash24Regular"
                 class="h-4 w-4 text-muted-foreground"
               />
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 实时互动模拟 </CardTitle>
+              <CardTitle class="text-xs uppercase tracking-wide"> 实时互动模拟 </CardTitle>
             </div>
           </CardHeader>
-          <CardContent class="p-3.5 space-y-3">
+          <CardContent class="space-y-3">
             <span class="text-xs text-muted-foreground block"> 点击模拟观众弹幕投票，观察顺位赛跑换位： </span>
 
             <div class="space-y-1.5">
               <div
                 v-for="opt in mockData.options.slice(0, 6)"
                 :key="opt.index"
-                class="flex items-center justify-between p-1.5 rounded bg-muted/30 text-xs"
+                class="flex-between p-1.5 rounded bg-muted/30 text-xs"
               >
                 <span class="font-medium truncate max-w-[140px]">{{ opt.index }}. {{ opt.text }}</span>
                 <div class="flex items-center gap-1">
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    class="h-6 px-1.5"
-                    @click="mockAddVote(opt.index, 1)"
-                  >
+                  <Button size="xs" variant="outline" class="px-1.5" @click="mockAddVote(opt.index, 1)">
                     +1
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    class="h-6 px-1.5"
-                    @click="mockAddVote(opt.index, 10)"
-                  >
+                  <Button size="xs" variant="outline" class="px-1.5" @click="mockAddVote(opt.index, 10)">
                     +10
                   </Button>
-                  <Button
-                    size="xs"
-                    variant="ghost"
-                    class="h-6 px-1.5 text-amber-500 hover:bg-amber-500/10"
-                    @click="mockOvertake(opt.index)"
-                  >
+                  <Button size="xs" variant="ghost" class="px-1.5 text-amber-500 hover:bg-amber-500/10" @click="mockOvertake(opt.index)">
                     <component
                       :is="ArrowTrending24Filled"
                       class="h-3 w-3 mr-0.5"
@@ -1324,7 +1270,7 @@ onUnmounted(() => {
             v-model="batchInputText"
             :rows="8"
             placeholder="选项A&#10;选项B&#10;选项C&#10;选项D..."
-            class="text-xs font-mono"
+            class="font-mono"
           />
         </div>
 
@@ -1353,43 +1299,42 @@ onUnmounted(() => {
           <DialogDescription class="text-xs"> 此处设置将作为默认参数应用于新发起的投票和 OBS 渲染。 </DialogDescription>
         </DialogHeader>
 
-        <div class="space-y-4 py-2">
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="font-medium text-xs text-foreground">启用弹幕投票功能</div>
-              <div class="text-[11px] text-muted-foreground">关闭后将忽略直播间发送的投票弹幕</div>
-            </div>
-            <Switch v-model="voteConfig.isEnabled" />
-          </div>
+        <div class="space-y-3 py-2">
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="启用弹幕投票功能"
+            description="关闭后将忽略直播间发送的投票弹幕"
+            v-model="voteConfig.isEnabled"
+          />
 
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="font-medium text-xs text-foreground">实时显示票数与进度</div>
-              <div class="text-[11px] text-muted-foreground">OBS 挂件实时渲染各选项得票比率</div>
-            </div>
-            <Switch v-model="voteConfig.showResults" />
-          </div>
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="实时显示票数与进度"
+            description="OBS 挂件实时渲染各选项得票比率"
+            v-model="voteConfig.showResults"
+          />
 
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="font-medium text-xs text-foreground">允许观众自由提名</div>
-              <div class="text-[11px] text-muted-foreground">观众发送未在列表中的词条将自动追加为新选项</div>
-            </div>
-            <Switch v-model="voteConfig.allowCustomOptions" />
-          </div>
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="允许观众自由提名"
+            description="观众发送未在列表中的词条将自动追加为新选项"
+            v-model="voteConfig.allowCustomOptions"
+          />
 
-          <div class="flex items-center justify-between gap-3">
-            <div>
-              <div class="font-medium text-xs text-foreground">送礼按金额计票</div>
-              <div class="text-[11px] text-muted-foreground">观众送礼时按电池金额折算追加票数</div>
-            </div>
-            <Switch v-model="voteConfig.allowGiftVoting" />
-          </div>
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="送礼按金额计票"
+            description="观众送礼时按电池金额折算追加票数"
+            v-model="voteConfig.allowGiftVoting"
+          />
 
           <Separator />
 
-          <div class="space-y-1.5">
-            <span class="text-xs text-muted-foreground block">默认主题风格</span>
+          <FormField label="默认主题风格">
             <div class="grid grid-cols-2 gap-2">
               <Button
                 v-for="th in [
@@ -1407,10 +1352,9 @@ onUnmounted(() => {
                 {{ th.label }}
               </Button>
             </div>
-          </div>
+          </FormField>
 
-          <div class="space-y-1.5">
-            <span class="text-xs text-muted-foreground block">OBS 画面停靠位置</span>
+          <FormField label="OBS 画面停靠位置">
             <Select v-model="voteConfig.displayPosition">
               <SelectTrigger>
                 <SelectValue />
@@ -1424,7 +1368,7 @@ onUnmounted(() => {
                 <SelectItem value="top-left"> 左上角 </SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </FormField>
         </div>
 
         <DialogFooter>

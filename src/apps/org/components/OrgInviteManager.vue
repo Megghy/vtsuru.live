@@ -90,15 +90,9 @@ function submit() {
                 <SelectValue placeholder="角色" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="1"
-                  class="text-xs"
-                  >Admin</SelectItem
+                <SelectItem value="1">Admin</SelectItem
                 >
-                <SelectItem
-                  value="2"
-                  class="text-xs"
-                  >Member</SelectItem
+                <SelectItem value="2">Member</SelectItem
                 >
               </SelectContent>
             </Select>
@@ -136,9 +130,9 @@ function submit() {
       </AccordionItem>
     </Accordion>
 
-    <Card class="border border-border/80">
+    <Card class="/80">
       <CardHeader class="pb-2.5 border-b border-border/60 flex flex-row items-center justify-between">
-        <CardTitle class="text-sm font-semibold">已发出邀请</CardTitle>
+        <CardTitle>已发出邀请</CardTitle>
         <Button
           variant="outline"
           :disabled="loading"
@@ -170,20 +164,13 @@ function submit() {
             :key="inv.token"
             class="py-3 first:pt-0 last:pb-0 space-y-2 text-xs"
           >
-            <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex-between gap-2 flex-wrap">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <Badge
-                  variant="secondary"
-                  class="text-[10px] h-4.5 px-1.5 font-normal"
-                >
+                <Badge variant="secondary" size="xs">
                   {{ inviteStatusLabel(inv.status) }}
                 </Badge>
                 <strong class="font-medium text-foreground text-xs">{{ targetName(inv) }}</strong>
-                <Badge
-                  v-if="withRole && 'role' in inv"
-                  variant="outline"
-                  class="text-[10px] h-4 px-1 text-primary border-primary/30"
-                >
+                <Badge v-if="withRole && 'role' in inv" variant="outline" size="xs" class="text-primary border-primary/30">
                   {{ roleLabel(inv.role) }}
                 </Badge>
               </div>
@@ -193,7 +180,7 @@ function submit() {
               </span>
             </div>
 
-            <div class="flex items-center justify-between gap-2 text-[11px] text-muted-foreground flex-wrap">
+            <div class="flex-between gap-2 text-[11px] text-muted-foreground flex-wrap">
               <span>创建者: {{ inv.createdByUserName || inv.createdByUserId }}</span>
               <span>
                 使用次数: {{ inv.usedCount }}

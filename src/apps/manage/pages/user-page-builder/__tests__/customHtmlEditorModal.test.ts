@@ -7,7 +7,7 @@ import { UserPageEditorKey } from '../context'
 
 vi.mock('@/shared/services/fileUpload', () => ({
   uploadFiles: vi.fn(),
-  FileStore: { UserPage: 1 },
+  FileStore: { Configs: 'configs', Library: 'library', Questions: 'questions' },
 }))
 
 vi.mock('../components/CustomHtmlCodeEditor.vue', () => ({
@@ -68,6 +68,8 @@ describe('CustomHtmlEditorModal setup and initial mount', () => {
             Input: { template: '<input />' },
             Textarea: { template: '<textarea />' },
             Tag: { template: '<span><slot /></span>' },
+            ToggleGroup: { template: '<div><slot /></div>' },
+            ToggleGroupItem: { template: '<button><slot /></button>' },
           },
         },
       })

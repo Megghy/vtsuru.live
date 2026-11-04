@@ -99,7 +99,7 @@ function requestStatus(song: ResponseSongModel) {
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="song-header flex items-center justify-between w-full">
+      <div class="song-header flex-between w-full">
         <span class="song-heading flex items-center gap-1.5 font-semibold text-sm">
           <component
             :is="MusicalNotesOutline"
@@ -129,18 +129,11 @@ function requestStatus(song: ResponseSongModel) {
       </div>
     </template>
 
-    <Alert
-      v-if="!songListEnabled"
-      class="text-xs py-2"
-    >
+    <Alert size="sm" v-if="!songListEnabled">
       <AlertDescription> 歌单功能未启用 </AlertDescription>
     </Alert>
-    <Alert
-      v-else-if="query.status.value === 'error'"
-      variant="destructive"
-      class="text-xs py-2"
-    >
-      <AlertDescription class="flex items-center justify-between w-full">
+    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+      <AlertDescription class="flex-between w-full">
         <span>歌单加载失败</span>
         <Button
           variant="outline"
@@ -213,20 +206,11 @@ function requestStatus(song: ResponseSongModel) {
             v-if="variant === 'full' && song.tags?.length"
             class="song-tags col-span-2 flex flex-wrap gap-1"
           >
-            <Badge
-              v-for="tag in song.tags.slice(0, 4)"
-              :key="tag"
-              variant="secondary"
-              class="text-[10px] h-4 px-1"
-            >
+            <Badge v-for="tag in song.tags.slice(0, 4)" :key="tag" variant="secondary" size="xs">
               {{ tag }}
             </Badge>
           </div>
-          <Badge
-            v-if="showRequestStatus"
-            :variant="requestStatus(song).variant"
-            class="text-[10px] h-4 px-1.5 @max-[420px]:col-start-1 @max-[420px]:row-auto @max-[420px]:justify-self-start"
-          >
+          <Badge v-if="showRequestStatus" :variant="requestStatus(song).variant" size="xs" class="@max-[420px]:col-start-1 @max-[420px]:row-auto @max-[420px]:justify-self-start">
             {{ requestStatus(song).label }}
           </Badge>
         </article>

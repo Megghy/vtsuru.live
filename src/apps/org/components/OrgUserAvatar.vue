@@ -17,10 +17,7 @@ const src = computed(() => withImageSize(props.faceUrl, `@${props.size}w`))
 </script>
 
 <template>
-  <Avatar
-    class="shrink-0 border border-border/80"
-    :style="{ width: `${size}px`, height: `${size}px` }"
-  >
+  <Avatar class="border border-border/80" :style="{ width: `${size}px`, height: `${size}px` }" >
     <AvatarImage
       :src="src || DEFAULT_AVATAR"
       referrerpolicy="no-referrer"

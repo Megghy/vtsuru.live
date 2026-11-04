@@ -156,7 +156,7 @@ onBeforeUnmount(() => recognition?.abort())
           <Button
             variant="ghost"
             size="icon-xs"
-            class="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/65 text-white p-0 hover:bg-black/85"
+            class="absolute top-0.5 right-0.5 size-4 rounded-full bg-black/65 text-white hover:bg-black/85"
             aria-label="移除图片"
             @click="removeImage(i)"
           >
@@ -174,7 +174,7 @@ onBeforeUnmount(() => recognition?.abort())
             <Button
               variant="ghost"
               size="icon"
-              class="size-8 rounded-full text-muted-foreground hover:text-foreground"
+              class="size-8 rounded-full text-muted-foreground"
               :disabled="loading || images.length >= MAX_IMAGES"
               @click="openImagePicker()"
             >
@@ -192,7 +192,7 @@ onBeforeUnmount(() => recognition?.abort())
             <Button
               variant="ghost"
               size="icon"
-              class="size-8 rounded-full text-muted-foreground hover:text-foreground"
+              class="size-8 rounded-full text-muted-foreground"
               :class="{ 'composer-mic-on text-primary!': listening }"
               :disabled="loading"
               @click="toggleSpeech"
@@ -212,7 +212,7 @@ onBeforeUnmount(() => recognition?.abort())
           rows="1"
           placeholder="描述你想做的事, 或粘贴/上传日程截图让我识别"
           :disabled="loading"
-          class="flex-1 min-w-0 min-h-[38px] max-h-32 text-xs resize-none py-2"
+          class="flex-1 min-w-0 min-h-[38px] max-h-32 resize-none py-2"
           @keydown="onKeydown"
           @paste="onPaste"
         />

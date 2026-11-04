@@ -7,10 +7,11 @@
  */
 
 export enum ForumUserLevels {
-  Guest = 0,
-  User = 1,
-  Member = 2,
-  AuthedMember = 3,
-  Admin = 4,
-  Owner = 5,
+  Guest= 0,
+  User= 1,
+  Member= 2,
+  AuthedMember= 3,
+  Admin= 4,
+  Owner= 5,
+
 }

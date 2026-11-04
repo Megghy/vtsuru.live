@@ -129,7 +129,7 @@ const SEARCH_HELP = [
                 class="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground cursor-help"
               />
             </TooltipTrigger>
-            <TooltipContent class="text-xs space-y-0.5">
+            <TooltipContent class="space-y-0.5">
               <div
                 v-for="line in SEARCH_HELP"
                 :key="line"
@@ -152,7 +152,7 @@ const SEARCH_HELP = [
           v-if="dashboard.search"
           variant="ghost"
           size="icon-xs"
-          class="absolute right-1 top-1/2 -translate-y-1/2 size-5 text-muted-foreground hover:text-foreground"
+          class="absolute right-1 top-1/2 -translate-y-1/2 size-5 text-muted-foreground"
           aria-label="清除搜索"
           @click="dashboard.search = ''"
         >
@@ -178,34 +178,16 @@ const SEARCH_HELP = [
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent
-          align="start"
-          class="w-80 p-3 space-y-3"
-        >
+        <PopoverContent align="start" class="w-80 space-y-3">
           <div class="font-semibold text-xs text-foreground">历史事件回溯筛选</div>
           <div class="grid grid-cols-3 gap-1.5">
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px]"
-              @click="applyQuickRange(3600_000)"
-            >
+            <Button size="xs" variant="outline" @click="applyQuickRange(3600_000)">
               最近 1 小时
             </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px]"
-              @click="applyTodayRange"
-            >
+            <Button size="xs" variant="outline" @click="applyTodayRange">
               今天
             </Button>
-            <Button
-              size="xs"
-              variant="outline"
-              class="h-6 text-[11px]"
-              @click="applyQuickRange(7 * 86400_000)"
-            >
+            <Button size="xs" variant="outline" @click="applyQuickRange(7 * 86400_000)">
               最近 7 天
             </Button>
           </div>
@@ -224,21 +206,11 @@ const SEARCH_HELP = [
                 size="xs"
               />
             </div>
-            <div class="flex items-center justify-between pt-1">
-              <Button
-                size="xs"
-                variant="ghost"
-                class="h-6 text-[11px] text-muted-foreground"
-                :disabled="!range"
-                @click="range = null"
-              >
+            <div class="flex-between pt-1">
+              <Button size="xs" variant="ghost" class="text-muted-foreground" :disabled="!range" @click="range = null">
                 清除时间筛选
               </Button>
-              <Button
-                size="xs"
-                class="h-6 text-[11px]"
-                @click="applyCustomRange"
-              >
+              <Button size="xs" @click="applyCustomRange">
                 应用
               </Button>
             </div>
@@ -281,7 +253,7 @@ const SEARCH_HELP = [
                 }}</span>
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs">点击重置统计（仅影响顶部数据）</TooltipContent>
+            <TooltipContent>点击重置统计（仅影响顶部数据）</TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
@@ -458,7 +430,7 @@ const SEARCH_HELP = [
               :style="{ background: statusColor }"
             />
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
+          <TooltipContent>
             {{
               client.hasRemoteSource && client.phase !== 'connected'
                 ? '已通过其他标签页接收弹幕'

@@ -88,10 +88,7 @@ function displayValue(f: EditableField) {
         class="generic-item flex flex-col gap-1 p-2 rounded-md bg-muted/40 border border-border/50 text-xs"
       >
         <div class="generic-item__head flex items-center gap-1.5">
-          <Badge
-            :variant="OP_META[item.op]?.variant ?? 'secondary'"
-            class="text-[10px] h-4.5 px-1 font-normal"
-          >
+          <Badge :variant="OP_META[item.op]?.variant ?? 'secondary'" size="xs">
             {{ OP_META[item.op]?.label ?? item.op }}
           </Badge>
           <span class="generic-item__title font-medium truncate flex-1 min-w-0 text-foreground">{{ item.title }}</span>
@@ -125,12 +122,7 @@ function displayValue(f: EditableField) {
                 <SelectValue :placeholder="f.label" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  v-for="opt in f.options"
-                  :key="opt.value"
-                  :value="String(opt.value)"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in f.options" :key="opt.value" :value="String(opt.value)">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -139,7 +131,7 @@ function displayValue(f: EditableField) {
               v-else-if="f.type === 'textarea'"
               :model-value="fieldValue(i, f.key)"
               rows="2"
-              class="text-xs resize-none"
+              class="resize-none"
               :placeholder="f.label"
               @update:model-value="setFieldValue(i, f.key, $event)"
             />

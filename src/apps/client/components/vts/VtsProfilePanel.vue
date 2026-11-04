@@ -61,9 +61,9 @@ const { open: openProfileImport } = useFilePicker({
 <template>
   <Card>
     <CardHeader class="py-3 px-4">
-      <CardTitle class="text-sm font-semibold">配置包 (Profile)</CardTitle>
+      <CardTitle>配置包 (Profile)</CardTitle>
     </CardHeader>
-    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+    <CardContent class="px-4 pb-4 flex flex-col gap-3">
       <div class="flex items-center gap-2 flex-wrap text-xs">
         <Button
           variant="outline"
@@ -84,7 +84,7 @@ const { open: openProfileImport } = useFilePicker({
         <div
           v-for="p in vts.profiles"
           :key="p.id"
-          class="flex items-center justify-between gap-3 flex-wrap py-1.5 border-b border-[var(--border)] last:border-0"
+          class="flex-between gap-3 flex-wrap py-1.5 border-b border-[var(--border)] last:border-0"
         >
           <div class="flex items-center gap-2 flex-wrap">
             <Tag

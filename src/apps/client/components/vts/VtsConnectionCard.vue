@@ -38,9 +38,9 @@ function handleConnect() {
 <template>
   <Card>
     <CardHeader class="py-3 px-4">
-      <CardTitle class="text-sm font-semibold">VTS 连接</CardTitle>
+      <CardTitle>VTS 连接</CardTitle>
     </CardHeader>
-    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+    <CardContent class="px-4 pb-4 flex flex-col gap-3">
       <p class="text-xs text-[var(--muted-foreground)]">
         在 VTube Studio 设置中开启「启动 API」（默认端口 8001）。首次连接时需在 VTS
         弹窗中点击「允许」，授权会自动保存，之后启动客户端时自动连接。
@@ -110,12 +110,8 @@ function handleConnect() {
         </Button>
       </div>
 
-      <Alert
-        v-if="vts.monitorLastError"
-        variant="destructive"
-        class="py-2 px-3"
-      >
-        <AlertDescription class="text-xs"> 状态监控异常: {{ vts.monitorLastError }} </AlertDescription>
+      <Alert size="sm" v-if="vts.monitorLastError" variant="destructive">
+        <AlertDescription> 状态监控异常: {{ vts.monitorLastError }} </AlertDescription>
       </Alert>
     </CardContent>
   </Card>

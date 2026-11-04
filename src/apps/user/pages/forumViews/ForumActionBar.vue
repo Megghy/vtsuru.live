@@ -46,13 +46,7 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
             @positive-click="emit('delete')"
           >
             <template #trigger>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                :class="{ 'text-destructive': hardDelete }"
-                :disabled="!canOperate"
-              >
+              <Button variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10" :class="{ 'text-destructive': hardDelete }" :disabled="!canOperate">
                 <component
                   :is="Delete24Filled"
                   class="size-3.5"
@@ -62,7 +56,7 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
             {{ hardDelete ? hardDeleteConfirm : deleteConfirm }}
           </Popconfirm>
         </TooltipTrigger>
-        <TooltipContent class="text-xs">{{ hardDelete ? '完全' : '' }}删除</TooltipContent>
+        <TooltipContent>{{ hardDelete ? '完全' : '' }}删除</TooltipContent>
       </Tooltip>
 
       <Tooltip v-if="isDeleted && isAdmin">
@@ -74,12 +68,7 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
             @positive-click="emit('restore')"
           >
             <template #trigger>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-7 rounded-full text-muted-foreground hover:text-foreground"
-                :disabled="!canOperate"
-              >
+              <Button variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground" :disabled="!canOperate">
                 <component
                   :is="SyncCircleSharp"
                   class="size-3.5"
@@ -89,7 +78,7 @@ const hardDelete = computed(() => props.isDeleted || props.isAdmin)
             {{ restoreConfirm }}
           </Popconfirm>
         </TooltipTrigger>
-        <TooltipContent class="text-xs">恢复</TooltipContent>
+        <TooltipContent>恢复</TooltipContent>
       </Tooltip>
     </div>
   </TooltipProvider>

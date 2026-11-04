@@ -63,7 +63,7 @@ function formatFullTime(time: number) {
               />
             </span>
           </TooltipTrigger>
-          <TooltipContent class="max-w-xs p-2 text-xs">
+          <TooltipContent class="max-w-xs p-2">
             <ForumReplyItem
               :item="replyTo"
               :comment="comment"
@@ -73,7 +73,7 @@ function formatFullTime(time: number) {
           </TooltipContent>
         </Tooltip>
 
-        <Avatar class="size-6 rounded-full shrink-0">
+        <Avatar class="size-6">
           <AvatarImage
             :src="getUserAvatarUrl(item.user.id)"
             referrerpolicy="no-referrer"
@@ -97,27 +97,21 @@ function formatFullTime(time: number) {
               {{ formatRelativeTime(item.sendAt) }}
             </span>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">
+          <TooltipContent>
             {{ formatFullTime(item.sendAt) }}
           </TooltipContent>
         </Tooltip>
 
         <Tooltip v-if="showReplyButton">
           <TooltipTrigger as-child>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-6 rounded-full text-muted-foreground hover:text-foreground"
-              :disabled="!canOprate"
-              @click="useForum.SetReplyingComment(comment, item)"
-            >
+            <Button variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground" :disabled="!canOprate" @click="useForum.SetReplyingComment(comment, item)">
               <component
                 :is="ArrowReply16Filled"
                 class="size-3"
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs">回复这条回复</TooltipContent>
+          <TooltipContent>回复这条回复</TooltipContent>
         </Tooltip>
 
         <Popconfirm
@@ -130,19 +124,14 @@ function formatFullTime(time: number) {
           <template #trigger>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="size-6 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                  :disabled="!canOprate"
-                >
+                <Button variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10" :disabled="!canOprate">
                   <component
                     :is="Delete24Filled"
                     class="size-3"
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs">删除</TooltipContent>
+              <TooltipContent>删除</TooltipContent>
             </Tooltip>
           </template>
           确定删除这条回复吗？

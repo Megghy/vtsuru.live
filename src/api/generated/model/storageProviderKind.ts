@@ -10,7 +10,8 @@
  * 存储位置类型。Local 为本站磁盘，其余为可配置的远端。
  */
 export enum StorageProviderKind {
-  Local = 0,
-  S3 = 1,
-  WebDav = 2,
+  Local= 0,
+  S3= 1,
+  WebDav= 2,
+
 }

@@ -24,16 +24,16 @@ const accountInfo = useAccount()
     </Card>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      <Card class="flex flex-col justify-between hover:shadow-sm transition-shadow">
+      <Card class="flex flex-col justify-between hover: transition-shadow">
         <div>
-          <CardHeader class="p-4 pb-2">
-            <CardTitle class="text-sm font-semibold">弹幕抽奖</CardTitle>
+          <CardHeader class="p-4">
+            <CardTitle>弹幕抽奖</CardTitle>
           </CardHeader>
-          <CardContent class="p-4 pt-0 text-xs text-muted-foreground">
+          <CardContent class="p-4 text-xs text-muted-foreground">
             通过弹幕或礼物收集用户并抽取，支持多种条件与动画效果。
           </CardContent>
         </div>
-        <CardFooter class="p-4 pt-0">
+        <CardFooter class="p-4">
           <Button
             class="w-full"
             @click="$router.push({ name: 'open-live-lottery', query: $route.query })"
@@ -43,16 +43,16 @@ const accountInfo = useAccount()
         </CardFooter>
       </Card>
 
-      <Card class="flex flex-col justify-between hover:shadow-sm transition-shadow">
+      <Card class="flex flex-col justify-between hover: transition-shadow">
         <div>
-          <CardHeader class="p-4 pb-2">
-            <CardTitle class="text-sm font-semibold">弹幕点播</CardTitle>
+          <CardHeader class="p-4">
+            <CardTitle>弹幕点播</CardTitle>
           </CardHeader>
-          <CardContent class="p-4 pt-0 text-xs text-muted-foreground">
+          <CardContent class="p-4 text-xs text-muted-foreground">
             通过弹幕或 SC 点歌/点播，登录后可保存配置并支持 OBS 展示。
           </CardContent>
         </div>
-        <CardFooter class="p-4 pt-0">
+        <CardFooter class="p-4">
           <Button
             class="w-full"
             @click="$router.push({ name: 'open-live-live-request', query: $route.query })"
@@ -62,16 +62,16 @@ const accountInfo = useAccount()
         </CardFooter>
       </Card>
 
-      <Card class="flex flex-col justify-between hover:shadow-sm transition-shadow">
+      <Card class="flex flex-col justify-between hover: transition-shadow">
         <div>
-          <CardHeader class="p-4 pb-2">
-            <CardTitle class="text-sm font-semibold">弹幕排队</CardTitle>
+          <CardHeader class="p-4">
+            <CardTitle>弹幕排队</CardTitle>
           </CardHeader>
-          <CardContent class="p-4 pt-0 text-xs text-muted-foreground">
+          <CardContent class="p-4 text-xs text-muted-foreground">
             通过弹幕或礼物加入队列，支持过滤条件、排序策略与冷却控制。
           </CardContent>
         </div>
-        <CardFooter class="p-4 pt-0">
+        <CardFooter class="p-4">
           <Button
             class="w-full"
             @click="$router.push({ name: 'open-live-queue', query: $route.query })"
@@ -81,16 +81,16 @@ const accountInfo = useAccount()
         </CardFooter>
       </Card>
 
-      <Card class="flex flex-col justify-between hover:shadow-sm transition-shadow">
+      <Card class="flex flex-col justify-between hover: transition-shadow">
         <div>
-          <CardHeader class="p-4 pb-2">
-            <CardTitle class="text-sm font-semibold">读弹幕</CardTitle>
+          <CardHeader class="p-4">
+            <CardTitle>读弹幕</CardTitle>
           </CardHeader>
-          <CardContent class="p-4 pt-0 text-xs text-muted-foreground">
+          <CardContent class="p-4 text-xs text-muted-foreground">
             使用浏览器 TTS 朗读弹幕（推荐 Chrome/Edge 等现代浏览器）。
           </CardContent>
         </div>
-        <CardFooter class="p-4 pt-0">
+        <CardFooter class="p-4">
           <Button
             class="w-full"
             @click="$router.push({ name: 'open-live-speech', query: $route.query })"
@@ -100,16 +100,16 @@ const accountInfo = useAccount()
         </CardFooter>
       </Card>
 
-      <Card class="flex flex-col justify-between hover:shadow-sm transition-shadow">
+      <Card class="flex flex-col justify-between hover: transition-shadow">
         <div>
-          <CardHeader class="p-4 pb-2">
-            <CardTitle class="text-sm font-semibold">弹幕姬</CardTitle>
+          <CardHeader class="p-4">
+            <CardTitle>弹幕姬</CardTitle>
           </CardHeader>
-          <CardContent class="p-4 pt-0 text-xs text-muted-foreground">
+          <CardContent class="p-4 text-xs text-muted-foreground">
             实时展示弹幕、礼物、舰长与醒目留言，可直接调整样式和过滤规则。
           </CardContent>
         </div>
-        <CardFooter class="p-4 pt-0">
+        <CardFooter class="p-4">
           <Button
             class="w-full"
             @click="$router.push({ name: 'open-live-danmuji', query: $route.query })"
@@ -119,16 +119,16 @@ const accountInfo = useAccount()
         </CardFooter>
       </Card>
 
-      <Card class="flex flex-col justify-between hover:shadow-sm transition-shadow">
+      <Card class="flex flex-col justify-between hover: transition-shadow">
         <div>
-          <CardHeader class="p-4 pb-2">
-            <CardTitle class="text-sm font-semibold">直播工具箱</CardTitle>
+          <CardHeader class="p-4">
+            <CardTitle>直播工具箱</CardTitle>
           </CardHeader>
-          <CardContent class="p-4 pt-0 text-xs text-muted-foreground">
+          <CardContent class="p-4 text-xs text-muted-foreground">
             图片、音视频、封面、二维码、OCR 等工具，无需登录即可在浏览器中使用。
           </CardContent>
         </div>
-        <CardFooter class="p-4 pt-0">
+        <CardFooter class="p-4">
           <Button
             class="w-full"
             @click="$router.push({ name: 'open-live-tools', query: $route.query })"
@@ -139,12 +139,9 @@ const accountInfo = useAccount()
       </Card>
     </div>
 
-    <Alert
-      v-if="accountInfo?.eventFetcherState?.online !== true"
-      class="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-xs"
-    >
-      <AlertTitle class="text-xs font-semibold text-amber-800 dark:text-amber-300">可用性提醒</AlertTitle>
-      <AlertDescription class="text-xs text-amber-700 dark:text-amber-400 mt-1">
+    <Alert size="sm" variant="warning" v-if="accountInfo?.eventFetcherState?.online !== true">
+      <AlertTitle class="text-amber-800 dark:text-amber-300">可用性提醒</AlertTitle>
+      <AlertDescription class="text-amber-700 dark:text-amber-400 mt-1">
         当浏览器在后台运行时，计时器和 WebSocket 连接会受到严格限制，可能导致弹幕接收不稳定（详见
         <a
           href="https://developer.chrome.com/blog/background_tabs/"

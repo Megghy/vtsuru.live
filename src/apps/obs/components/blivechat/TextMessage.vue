@@ -102,7 +102,7 @@ const repeatedMarkColor = computed(() => {
         </template>
         <span
           v-if="repeated > 1"
-          class="style-scope yt-live-chat-text-message-renderer inline-flex items-center justify-center ml-2 px-1.5 min-w-4 h-4.5 rounded-full text-xs text-white font-sans border-0 select-none align-middle"
+          class="style-scope yt-live-chat-text-message-renderer inline-flex-center ml-2 px-1.5 min-w-4 h-4.5 rounded-full text-xs text-white font-sans border-0 select-none align-middle"
           :style="{ backgroundColor: repeatedMarkColor, textShadow: 'none' }"
         >
           {{ repeated > 99 ? '99+' : repeated }}

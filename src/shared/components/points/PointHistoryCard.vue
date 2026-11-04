@@ -169,7 +169,7 @@ function formatFullTime(time: number) {
                       {{ formatRelativeTime(row.createAt) }}
                     </span>
                   </TooltipTrigger>
-                  <TooltipContent class="text-xs">
+                  <TooltipContent>
                     {{ formatFullTime(row.createAt) }}
                   </TooltipContent>
                 </Tooltip>
@@ -183,10 +183,7 @@ function formatFullTime(time: number) {
 
               <TableCell class="py-2.5">
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <Badge
-                    :variant="sourceMeta(row).badgeVariant"
-                    class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
-                  >
+                  <Badge :variant="sourceMeta(row).badgeVariant" size="xs" class="flex items-center gap-1">
                     <component
                       :is="sourceMeta(row).icon"
                       class="size-3"
@@ -243,11 +240,8 @@ function formatFullTime(time: number) {
           :key="`${item.ouId}-${item.createAt}-${item.from}`"
           class="p-3 rounded-lg border border-border/80 bg-card space-y-2 text-xs"
         >
-          <div class="flex items-center justify-between">
-            <Badge
-              :variant="sourceMeta(item).badgeVariant"
-              class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
-            >
+          <div class="flex-between">
+            <Badge :variant="sourceMeta(item).badgeVariant" size="xs" class="flex items-center gap-1">
               <component
                 :is="sourceMeta(item).icon"
                 class="size-3"
@@ -265,7 +259,7 @@ function formatFullTime(time: number) {
           <p class="text-xs text-foreground m-0 break-words">{{ detailText(item) }}</p>
 
           <div
-            class="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40"
+            class="flex-between text-[11px] text-muted-foreground pt-1 border-t border-border/40"
           >
             <a
               v-if="item.extra?.user?.name"
@@ -311,7 +305,7 @@ function formatFullTime(time: number) {
     >
       <DialogContent class="sm:max-w-md p-4">
         <DialogHeader class="pb-2 border-b border-border/60">
-          <DialogTitle class="text-sm font-semibold">礼物快照</DialogTitle>
+          <DialogTitle class="text-sm">礼物快照</DialogTitle>
         </DialogHeader>
 
         <div class="space-y-3 pt-2 text-xs">
@@ -328,15 +322,12 @@ function formatFullTime(time: number) {
                 <div
                   v-for="item in selectedSubItems"
                   :key="item.subItemId"
-                  class="flex items-center justify-between p-1.5 rounded bg-muted/40 text-xs"
+                  class="flex-between p-1.5 rounded bg-muted/40 text-xs"
                 >
                   <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
                   <div class="flex items-center gap-2">
                     <span class="text-muted-foreground">x {{ item.quantity }}</span>
-                    <Badge
-                      variant="secondary"
-                      class="text-[10px] h-4.5 px-1 font-normal font-mono"
-                    >
+                    <Badge variant="secondary" size="xs" class="font-mono">
                       {{ item.priceSnapshot }} 积分
                     </Badge>
                   </div>
@@ -353,7 +344,7 @@ function formatFullTime(time: number) {
                 :model-value="currentGoods.content"
                 readonly
                 rows="3"
-                class="text-xs resize-none bg-muted/20"
+                class="resize-none bg-muted/20"
               />
             </div>
           </template>

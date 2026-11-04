@@ -1,4 +1,5 @@
 import vueRuntime from 'vue/dist/vue.runtime.global.prod.js?raw'
+import sandboxLibs from 'virtual:custom-html-sandbox-libs'
 
 import { FILE_BASE_URL, getCurrentAPIUrl } from '@/shared/config'
 
@@ -67,6 +68,6 @@ export function buildCustomHtmlDocument(
   return {
     issues: cssResult.issues,
     channelId,
-    srcdoc: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imageSources(props)}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; font-src https://fonts.gstatic.com data:; media-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'"><style>${escapeStyleText(baseCss)}\n${escapeStyleText(cssResult.css)}</style></head><body><div id="app"></div><script nonce="${nonce}">${escapeScriptText(vueRuntime)}</script><script nonce="${nonce}">${createSandboxSdkSource(channelId, assets)}</script><script nonce="${nonce}">${reportError}</script><script nonce="${nonce}">${bridge}</script><script nonce="${nonce}">${escapeScriptText(compiled.js)}</script></body></html>`,
+    srcdoc: `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${imageSources(props)}; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; connect-src 'none'; font-src https://fonts.gstatic.com data:; media-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'; base-uri 'none'"><style>${escapeStyleText(baseCss)}\n${escapeStyleText(cssResult.css)}</style></head><body><div id="app"></div><script nonce="${nonce}">${escapeScriptText(vueRuntime)}</script><script nonce="${nonce}">${escapeScriptText(sandboxLibs)}</script><script nonce="${nonce}">${createSandboxSdkSource(channelId, assets)}</script><script nonce="${nonce}">${reportError}</script><script nonce="${nonce}">${bridge}</script><script nonce="${nonce}">${escapeScriptText(compiled.js)}</script></body></html>`,
   }
 }

@@ -32,7 +32,7 @@ onMounted(() => {
 
 <template>
   <Card class="p-4 space-y-3">
-    <div class="flex items-center justify-between">
+    <div class="flex-between">
       <h3 class="text-sm font-semibold text-foreground">增值服务</h3>
     </div>
 
@@ -41,7 +41,7 @@ onMounted(() => {
       variant="default"
     >
       <AlertTitle>开发中</AlertTitle>
-      <AlertDescription class="text-xs"> 增值服务面板正在开发中（WIP） </AlertDescription>
+      <AlertDescription> 增值服务面板正在开发中（WIP） </AlertDescription>
     </Alert>
 
     <template v-else>

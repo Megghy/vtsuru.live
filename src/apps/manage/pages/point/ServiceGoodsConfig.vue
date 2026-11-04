@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
@@ -154,16 +155,13 @@ function removeOption(field: ServiceField, optIndex: number) {
 
 <template>
   <div class="space-y-4 pb-2">
-    <Alert
-      variant="default"
-      class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-    >
-      <AlertDescription class="text-xs"> 服务兑换会先收集需求，再由你在订单中安排和交付 </AlertDescription>
+    <Alert variant="info">
+      <AlertDescription> 服务兑换会先收集需求，再由你在订单中安排和交付 </AlertDescription>
     </Alert>
 
     <!-- 接单状态卡片 -->
-    <Card class="border border-border">
-      <CardContent class="p-3.5 flex items-center justify-between">
+    <Card>
+      <CardContent class="flex-between">
         <div>
           <span class="text-xs font-semibold text-foreground block">接单状态</span>
           <span class="text-[11px] text-muted-foreground mt-0.5 block">
@@ -192,28 +190,13 @@ function removeOption(field: ServiceField, optIndex: number) {
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">预计完成周期</label>
           <div class="relative">
-            <Input
-              v-model="estimatedDaysInput"
-              type="number"
-              min="1"
-              step="1"
-              placeholder="可选，例如 7"
-              class="pr-7"
-              @update:model-value="updateNumber('estimatedDays', String($event))"
-            />
+            <NumberField v-model="estimatedDaysInput" min="1" step="1" placeholder="可选，例如 7" class="pr-7" @update:model-value="updateNumber('estimatedDays', String($event))" / :show-buttons="false">
             <span class="absolute right-2.5 top-2 text-[11px] text-muted-foreground">天</span>
           </div>
         </div>
         <div class="space-y-1">
           <label class="text-xs font-medium text-foreground">最大未完成订单数</label>
-          <Input
-            v-model="maxActiveOrdersInput"
-            type="number"
-            min="1"
-            step="1"
-            placeholder="不限制"
-            @update:model-value="updateNumber('maxActiveOrders', String($event))"
-          />
+          <NumberField v-model="maxActiveOrdersInput" min="1" step="1" placeholder="不限制" @update:model-value="updateNumber('maxActiveOrders', String($event))" / :show-buttons="false">
         </div>
       </div>
     </div>
@@ -226,13 +209,13 @@ function removeOption(field: ServiceField, optIndex: number) {
         :rows="3"
         maxlength="3000"
         placeholder="例如：包含几次修改、如何确认时间、哪些需求无法承接，以及成品交付方式。"
-        class="text-xs"
+        
       />
     </div>
 
     <!-- 需求收集字段配置 -->
     <div class="space-y-3 pt-2">
-      <div class="flex items-center justify-between">
+      <div class="flex-between">
         <div class="flex items-center gap-1.5">
           <h4 class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">兑换时收集的需求</h4>
           <TooltipProvider>
@@ -287,7 +270,7 @@ function removeOption(field: ServiceField, optIndex: number) {
         <Card
           v-for="(field, index) in draft.fields"
           :key="field.id || index"
-          class="border border-border p-3 space-y-3"
+          class="p-3 space-y-3"
         >
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div class="space-y-1">

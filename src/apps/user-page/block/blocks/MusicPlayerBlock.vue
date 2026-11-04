@@ -56,10 +56,7 @@ const embed = computed(() => {
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <Alert
-      v-if="!embed"
-      class="text-xs py-2 m-2"
-    >
+    <Alert size="sm" v-if="!embed" class="m-2">
       <AlertDescription> 未配置可用的音乐链接 </AlertDescription>
     </Alert>
     <iframe

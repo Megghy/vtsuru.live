@@ -145,12 +145,12 @@ watch(
         </div>
       </div>
 
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示商品说明</label>
         <Switch v-model:checked="blockProps.showDescription" />
       </div>
 
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示库存状态</label>
         <Switch v-model:checked="blockProps.showStock" />
       </div>

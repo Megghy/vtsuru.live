@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Input } from '@/shared/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
 import { Tag } from '@/shared/ui/tag'
+import { Separator } from '@/shared/ui/separator'
 
 import { UserPageEditorKey } from '../context'
 import { PAGE_MODE_OPTIONS } from '../editorPageConfig'
@@ -113,7 +114,7 @@ function confirmDuplicatePage() {
       </div>
     </div>
 
-    <div class="h-px bg-border my-1" />
+    <Separator class="my-1" />
 
     <Button
       variant="outline"
@@ -166,10 +167,7 @@ function confirmDuplicatePage() {
                   />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                class="min-w-32 text-xs"
-              >
+              <DropdownMenuContent align="end" class="min-w-32">
                 <DropdownMenuItem @click="openIconPicker(p.slug)">
                   <component
                     :is="AppsOutline"
@@ -205,7 +203,7 @@ function confirmDuplicatePage() {
     <Dialog v-model:open="addPageModal">
       <DialogContent class="max-w-md p-4">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">新建子页面</DialogTitle>
+          <DialogTitle class="text-sm">新建子页面</DialogTitle>
         </DialogHeader>
         <div class="flex flex-col gap-3 py-2">
           <div class="flex flex-col gap-1.5">
@@ -250,7 +248,7 @@ function confirmDuplicatePage() {
             </RadioGroup>
           </div>
 
-          <Alert class="bg-primary/5 border-primary/20 text-xs py-2">
+          <Alert size="sm" class="bg-primary/5 border-primary/20">
             <AlertDescription>
               创建后访问地址：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
             </AlertDescription>
@@ -275,10 +273,10 @@ function confirmDuplicatePage() {
     <Dialog v-model:open="duplicatePageModal">
       <DialogContent class="max-w-sm p-4">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">复制子页面</DialogTitle>
+          <DialogTitle class="text-sm">复制子页面</DialogTitle>
         </DialogHeader>
         <div class="flex flex-col gap-3 py-2">
-          <Alert class="bg-primary/5 border-primary/20 text-xs py-2">
+          <Alert size="sm" class="bg-primary/5 border-primary/20">
             <AlertDescription>复制自：/{{ duplicateFromSlug || 'slug' }}</AlertDescription>
           </Alert>
           <div class="flex flex-col gap-1.5">
@@ -309,7 +307,7 @@ function confirmDuplicatePage() {
     <Dialog v-model:open="deletePageModal">
       <DialogContent class="max-w-sm p-4">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold text-destructive">删除子页面</DialogTitle>
+          <DialogTitle class="text-sm text-destructive">删除子页面</DialogTitle>
         </DialogHeader>
         <div class="py-2 text-xs text-muted-foreground">
           将删除 /{{ deletePageSlug }} 及其中全部配置，此操作可通过撤销恢复。

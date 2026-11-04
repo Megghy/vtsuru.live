@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
 import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { ActionType, Priority, TriggerType } from '@/apps/client/store/useAutoAction'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Input } from '@/shared/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 const props = defineProps({
   action: {
@@ -71,134 +68,68 @@ const priorityOptions = [
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b">
-      <CardTitle class="text-sm font-semibold">常规设置</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b">
+      <CardTitle>常规设置</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3 space-y-3">
-      <div
+      <FormField
         v-if="!hideName"
-        class="space-y-1"
-      >
-        <span class="text-xs text-muted-foreground">操作名称</span>
-        <Input
-          v-model="action.name"
-          placeholder="例如：给礼物老板点赞"
-          :class="nameInvalid ? 'border-destructive focus-visible:ring-destructive' : ''"
-        />
-        <div
-          v-if="nameInvalid"
-          class="text-[11px] text-destructive"
-        >
-          操作名称不能为空
-        </div>
-        <div
-          v-else-if="templateInvalid"
-          class="text-[11px] text-amber-500"
-        >
-          当前动作需要设置模板内容，否则不会生效
-        </div>
-      </div>
+        type="text"
+        label="操作名称"
+        placeholder="例如：给礼物老板点赞"
+        :error="nameInvalid ? '操作名称不能为空' : undefined"
+        :description="templateInvalid ? '当前动作需要设置模板内容，否则不会生效' : undefined"
+        v-model="action.name"
+      />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-        <div
+        <SettingRow
           v-if="!hideEnabled"
-          class="flex items-center justify-between p-2 rounded border bg-muted/20"
-        >
-          <span class="text-xs text-foreground font-medium">是否启用</span>
-          <Switch v-model:checked="action.enabled" />
-        </div>
+          type="switch"
+          variant="compact"
+          title="是否启用"
+          v-model="action.enabled"
+        />
 
-        <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <div class="flex items-center gap-1 cursor-help">
-                  <span class="text-xs text-foreground font-medium">仅直播时</span>
-                  <Info16Regular class="size-3.5 text-muted-foreground" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent class="text-xs"> 关闭直播后将不会触发此操作 </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <Switch v-model:checked="action.triggerConfig.onlyDuringLive" />
-        </div>
+        <SettingRow
+          type="switch"
+          variant="compact"
+          title="仅直播时"
+          hint="关闭直播后将不会触发此操作"
+          v-model="action.triggerConfig.onlyDuringLive"
+        />
 
-        <div class="flex items-center justify-between p-2 rounded border bg-muted/20">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <div class="flex items-center gap-1 cursor-help">
-                  <span class="text-xs text-foreground font-medium">忽略天选</span>
-                  <Info16Regular class="size-3.5 text-muted-foreground" />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent class="text-xs"> 开启天选时刻期间暂停触发（防止被风控） </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <Switch v-model:checked="action.triggerConfig.ignoreTianXuan" />
-        </div>
+        <SettingRow
+          type="switch"
+          variant="compact"
+          title="忽略天选"
+          hint="开启天选时刻期间暂停触发（防止被风控）"
+          v-model="action.triggerConfig.ignoreTianXuan"
+        />
 
-        <div class="space-y-1">
-          <span class="text-xs text-muted-foreground">触发类型</span>
-          <Select
-            v-model="action.triggerType"
-            disabled
-          >
-            <SelectTrigger class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="opt in triggerTypeOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
-                {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FormField
+          type="select"
+          label="触发类型"
+          :options="triggerTypeOptions"
+          disabled
+          v-model="action.triggerType"
+        />
 
-        <div class="space-y-1">
-          <span class="text-xs text-muted-foreground">执行动作</span>
-          <Select v-model="action.actionType">
-            <SelectTrigger class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="opt in actionTypeOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
-                {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FormField
+          type="select"
+          label="执行动作"
+          :options="actionTypeOptions"
+          v-model="action.actionType"
+        />
 
-        <div class="space-y-1">
-          <span class="text-xs text-muted-foreground">执行优先级</span>
-          <Select v-model="action.priority">
-            <SelectTrigger class="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="opt in priorityOptions"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
-                {{ opt.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FormField
+          type="select"
+          label="执行优先级"
+          :options="priorityOptions"
+          v-model="action.priority"
+        />
       </div>
     </CardContent>
   </Card>

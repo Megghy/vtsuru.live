@@ -249,7 +249,7 @@ function reset() {
   >
     <DialogContent class="max-w-[480px]">
       <DialogHeader>
-        <DialogTitle class="text-sm font-semibold">
+        <DialogTitle class="text-sm">
           {{ isEdit ? '编辑自定义音色' : '新建自定义音色' }}
         </DialogTitle>
       </DialogHeader>
@@ -312,7 +312,7 @@ function reset() {
               v-model="description"
               :rows="3"
               placeholder="用自然语言描述想要的音色特征，1-4 句即可"
-              class="text-xs"
+              
             />
             <div class="text-[11px] text-muted-foreground leading-relaxed">
               关键维度：性别/年龄、音色质感（磁性/醇厚/清亮/沙哑）、情绪语气、语速节奏。
@@ -330,7 +330,7 @@ function reset() {
             v-model="directorNote"
             :rows="2"
             placeholder="像给演员写指导：语速、气息、停顿、重音、情绪起伏"
-            class="text-xs"
+            
           />
           <div class="text-[11px] text-muted-foreground leading-relaxed">
             用自然语言描述朗读方式，支持多风格切换、复合情绪、字粒度控制。
@@ -359,11 +359,8 @@ function reset() {
           </div>
         </div>
 
-        <Alert
-          v-if="!account"
-          class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-1.5 px-2"
-        >
-          <AlertDescription class="text-xs m-0"> 需要登录才能保存自定义音色 </AlertDescription>
+        <Alert size="sm" variant="warning" v-if="!account">
+          <AlertDescription class="m-0"> 需要登录才能保存自定义音色 </AlertDescription>
         </Alert>
       </div>
 

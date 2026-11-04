@@ -72,22 +72,16 @@ async function updateSettings() {
 
 <template>
   <div class="flex flex-col gap-3">
-    <Card class="border bg-card">
+    <Card>
       <CardContent class="p-2.5 sm:p-3.5">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <!-- 左侧统计指示 -->
           <div class="flex items-center gap-2 flex-wrap">
-            <Badge
-              variant="outline"
-              class="h-6 px-2 text-xs gap-1 border-sky-500/40 text-sky-600 bg-sky-500/10"
-            >
+            <Badge variant="outline" class="h-6 px-2 gap-1 border-sky-500/40 text-sky-600 bg-sky-500/10">
               <PeopleQueue24Filled class="size-3.5" />
               待唱: {{ waitingCount }}
             </Badge>
-            <Badge
-              variant="outline"
-              class="h-6 px-2 text-xs gap-1 border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
-            >
+            <Badge variant="success" class="h-6 px-2 gap-1">
               <Checkmark12Regular class="size-3.5" />
               今日已点: {{ todayFinishedCount }}
             </Badge>

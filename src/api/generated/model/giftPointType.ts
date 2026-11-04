@@ -7,6 +7,7 @@
  */
 
 export enum GiftPointType {
-  All = 0,
-  WhiteList = 1,
+  All= 0,
+  WhiteList= 1,
+
 }

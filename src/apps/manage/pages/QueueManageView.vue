@@ -44,7 +44,9 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useMessage } from '@/shared/utils'
@@ -209,31 +211,22 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-3 max-w-md p-0.5 bg-muted">
-        <TabsTrigger
-          value="queue"
-          class="text-xs h-7 gap-1"
-        >
+      <TabsList size="xs" class="grid w-full grid-cols-3 max-w-md p-0.5 bg-muted">
+        <TabsTrigger value="queue" class="gap-1" >
           <component
             :is="PeopleQueue24Regular"
             class="h-3.5 w-3.5"
           />
           当前排队队列
         </TabsTrigger>
-        <TabsTrigger
-          value="preview"
-          class="text-xs h-7 gap-1"
-        >
+        <TabsTrigger value="preview" class="gap-1" >
           <component
             :is="Desktop24Regular"
             class="h-3.5 w-3.5"
           />
           OBS 舞台预览
         </TabsTrigger>
-        <TabsTrigger
-          value="settings"
-          class="text-xs h-7 gap-1"
-        >
+        <TabsTrigger value="settings" class="gap-1" >
           <component
             :is="Settings24Regular"
             class="h-3.5 w-3.5"
@@ -248,22 +241,16 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+          <CardContent class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
-              <Badge
-                variant="brand"
-                class="text-xs gap-1"
-              >
+              <Badge variant="brand" class="gap-1">
                 <component
                   :is="PeopleQueue24Filled"
                   class="h-3.5 w-3.5"
                 />
                 等待中: {{ waitingCount }} 人
               </Badge>
-              <Badge
-                variant="success"
-                class="text-xs gap-1"
-              >
+              <Badge variant="success" class="gap-1">
                 <component
                   :is="Checkmark12Regular"
                   class="h-3.5 w-3.5"
@@ -367,30 +354,18 @@ onUnmounted(() => {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <!-- 舞台视口 (8 列) -->
           <Card class="lg:col-span-8 flex flex-col">
-            <CardHeader class="p-3.5 pb-2">
-              <div class="flex items-center justify-between gap-3 flex-wrap">
+            <CardHeader class="p-3.5">
+              <div class="flex-between gap-3 flex-wrap">
                 <div class="flex items-center gap-2">
                   <component
                     :is="Eye24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
+                  <CardTitle class="text-xs"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
                 </div>
 
                 <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                  <Button
-                    v-for="bg in [
-                      { key: 'checker', label: '网格' },
-                      { key: 'dark', label: '纯黑' },
-                      { key: 'light', label: '浅色' },
-                      { key: 'game', label: '模拟游戏' },
-                    ]"
-                    :key="bg.key"
-                    size="xs"
-                    :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                    class="h-6 px-2"
-                    @click="previewBg = bg.key as any"
-                  >
+                  <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '纯黑' }, { key: 'light', label: '浅色' }, { key: 'game', label: '模拟游戏' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" @click="previewBg = bg.key as any">
                     {{ bg.label }}
                   </Button>
                 </div>
@@ -399,7 +374,7 @@ onUnmounted(() => {
 
             <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
               <div
-                class="rounded-lg border border-border p-6 flex items-center justify-center min-h-[460px] transition-colors"
+                class="rounded-lg border border-border p-6 flex-center min-h-[460px] transition-colors"
                 :class="{
                   'bg-[#121214]': previewBg === 'dark',
                   'bg-[#f4f4f5]': previewBg === 'light',
@@ -418,7 +393,7 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <div class="flex items-center justify-between gap-3 flex-wrap pt-2 border-t border-border/60">
+              <div class="flex-between gap-3 flex-wrap pt-2 border-t border-border/60">
                 <span class="text-xs text-muted-foreground"
                   >推荐 OBS 来源尺寸：宽 360px ~ 420px，高 540px ~ 680px。</span
                 >
@@ -441,17 +416,17 @@ onUnmounted(() => {
           <div class="lg:col-span-4 space-y-4">
             <!-- 样式预设 -->
             <Card>
-              <CardHeader class="p-3.5 pb-2">
+              <CardHeader class="p-3.5">
                 <div class="flex items-center gap-2">
                   <component
                     :is="Color24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> OBS 视觉预设 </CardTitle>
+                  <CardTitle class="text-xs uppercase tracking-wide"> OBS 视觉预设 </CardTitle>
                 </div>
               </CardHeader>
 
-              <CardContent class="p-3.5 space-y-3.5">
+              <CardContent class="space-y-3.5">
                 <div class="grid grid-cols-1 gap-1.5">
                   <Button
                     v-for="st in [
@@ -472,36 +447,31 @@ onUnmounted(() => {
 
                 <Separator />
 
-                <div class="flex items-center justify-between gap-2">
-                  <span class="text-xs text-muted-foreground">滚动轮播速度</span>
-                  <div class="flex items-center gap-1.5">
-                    <Input
-                      size="xs"
-                      v-model.number="obsScrollSpeed"
-                      type="number"
-                      step="0.2"
-                      min="0.5"
-                      max="3"
-                      class="w-20 font-mono"
-                    />
-                    <span class="text-xs text-muted-foreground">x</span>
-                  </div>
-                </div>
+                <SettingRow
+                  type="number"
+                  variant="none"
+                  title="滚动轮播速度"
+                  :min="0.5"
+                  :max="3"
+                  :step="0.2"
+                  control-class="w-20 font-mono"
+                  v-model="obsScrollSpeed"
+                />
               </CardContent>
             </Card>
 
             <!-- 仿真调试工具 -->
             <Card>
-              <CardHeader class="p-3.5 pb-2">
+              <CardHeader class="p-3.5">
                 <div class="flex items-center gap-2">
                   <component
                     :is="Flash24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 舞台仿真调试 </CardTitle>
+                  <CardTitle class="text-xs uppercase tracking-wide"> 舞台仿真调试 </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent class="p-3.5 space-y-2">
+              <CardContent class="space-y-2">
                 <Button
                   variant="outline"
                   class="w-full justify-center"
@@ -542,13 +512,13 @@ onUnmounted(() => {
           <!-- 历史处理记录 (7 列) -->
           <div class="lg:col-span-7">
             <Card>
-              <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+              <CardHeader class="p-3.5 flex-row items-center justify-between">
                 <div class="flex items-center gap-2">
                   <component
                     :is="History24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 历史处理记录 </CardTitle>
+                  <CardTitle class="text-xs uppercase tracking-wide"> 历史处理记录 </CardTitle>
                 </div>
                 <span class="text-xs text-muted-foreground">共 {{ store.historySongs.length }} 条</span>
               </CardHeader>
@@ -557,10 +527,10 @@ onUnmounted(() => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead class="text-xs"> 用户名 </TableHead>
-                      <TableHead class="text-xs w-28"> 来源 </TableHead>
-                      <TableHead class="text-xs w-36"> 加入时间 </TableHead>
-                      <TableHead class="text-xs w-28 text-right"> 操作 </TableHead>
+                      <TableHead> 用户名 </TableHead>
+                      <TableHead class="w-28"> 来源 </TableHead>
+                      <TableHead class="w-36"> 加入时间 </TableHead>
+                      <TableHead class="w-28 text-right"> 操作 </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -574,10 +544,7 @@ onUnmounted(() => {
                           {{ item.user?.name || '未知用户' }}
                         </TableCell>
                         <TableCell>
-                          <Badge
-                            :variant="getFromBadgeVariant(item.from)"
-                            class="text-[10px] px-1.5 py-0 h-4"
-                          >
+                          <Badge :variant="getFromBadgeVariant(item.from)" size="xs">
                             {{ getQueueSourceText(item) }}
                           </Badge>
                         </TableCell>
@@ -589,7 +556,7 @@ onUnmounted(() => {
                             size="icon-xs"
                             variant="ghost"
                             class="text-primary hover:bg-primary/10"
-                            title="重置为等待状态"
+                            aria-label="重置为等待状态"
                             @click="store.updateStatus(item, QueueStatus.Waiting)"
                           >
                             重置
@@ -598,7 +565,7 @@ onUnmounted(() => {
                             size="icon-xs"
                             variant="ghost"
                             class="text-destructive hover:bg-destructive/10"
-                            title="删除"
+                            aria-label="删除"
                             @click="store.deleteQueue([item])"
                           >
                             删除
@@ -619,7 +586,7 @@ onUnmounted(() => {
                 <!-- 分页 -->
                 <div
                   v-if="totalHistoryPages > 1"
-                  class="flex items-center justify-between p-3 border-t border-border"
+                  class="flex-between p-3 border-t border-border"
                 >
                   <span class="text-xs text-muted-foreground">页码 {{ historyPage }} / {{ totalHistoryPages }}</span>
                   <div class="flex items-center gap-1">
@@ -648,16 +615,16 @@ onUnmounted(() => {
           <!-- 规则配置 (5 列) -->
           <div class="lg:col-span-5">
             <Card>
-              <CardHeader class="p-3.5 pb-2">
+              <CardHeader class="p-3.5">
                 <div class="flex items-center gap-2">
                   <component
                     :is="ShieldCheckmark24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 触发条件与防刷规则 </CardTitle>
+                  <CardTitle class="text-xs uppercase tracking-wide"> 触发条件与防刷规则 </CardTitle>
                 </div>
               </CardHeader>
-              <CardContent class="p-3.5">
+              <CardContent>
                 <QueueSettingsTab
                   :is-loading="store.isLoading"
                   :settings="accountInfo.settings.queue"

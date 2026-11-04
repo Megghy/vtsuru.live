@@ -311,9 +311,9 @@ async function checkEligibility() {
 </script>
 
 <template>
-  <Card class="border border-border">
+  <Card>
     <CardHeader class="p-4 flex flex-row items-center justify-between space-y-0 border-b">
-      <CardTitle class="text-sm font-semibold">积分测试系统</CardTitle>
+      <CardTitle>积分测试系统</CardTitle>
       <Tag
         type="info"
         size="small"
@@ -324,18 +324,15 @@ async function checkEligibility() {
     </CardHeader>
 
     <CardContent class="p-4 space-y-6">
-      <Alert
-        variant="default"
-        class="border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400"
-      >
-        <AlertDescription class="text-xs">
+      <Alert variant="info">
+        <AlertDescription>
           此功能用于测试积分系统的配置，所有测试事件将记录到一个专用的 mock
           账户（OUId=0）。你可以在这里测试不同类型事件的积分获取情况。
         </AlertDescription>
       </Alert>
 
       <!-- 测试账户积分显示 -->
-      <div class="rounded-lg border border-border bg-card p-4 flex items-center justify-between">
+      <div class="rounded-lg border border-border bg-card p-4 flex-between">
         <div>
           <span class="text-xs text-muted-foreground block">测试账户当前积分</span>
           <div class="flex items-baseline gap-1 mt-1">
@@ -544,10 +541,10 @@ async function checkEligibility() {
             :variant="eligibilityResult.eligible ? 'default' : 'destructive'"
             class="mt-3"
           >
-            <AlertTitle class="text-xs font-semibold">
+            <AlertTitle>
               {{ eligibilityResult.eligible ? '可兑换' : '不可兑换' }}
             </AlertTitle>
-            <AlertDescription class="text-xs space-y-2">
+            <AlertDescription class="space-y-2">
               <div v-if="!eligibilityResult.eligible">原因: {{ eligibilityResult.reason || '未知原因' }}</div>
               <div class="flex flex-wrap gap-1.5 pt-1">
                 <Tag :type="eligibilityResult.canFreeBuy ? 'success' : 'default'">

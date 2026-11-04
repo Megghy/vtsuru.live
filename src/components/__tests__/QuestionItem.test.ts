@@ -59,8 +59,8 @@ describe('QuestionItem.vue', () => {
   it('渲染附带图片并支持大图预览', async () => {
     const question = createMockQuestion({
       questionImages: [
-        { id: 101, path: 'https://example.com/pic1.jpg', name: '图片1', size: 1024, hash: '' },
-        { id: 102, path: 'https://example.com/pic2.jpg', name: '图片2', size: 2048, hash: '' },
+        { id: 101, path: 'https://example.com/pic1.jpg', name: '图片1', size: 1024, hash: '', store: 'cos' },
+        { id: 102, path: 'https://example.com/pic2.jpg', name: '图片2', size: 2048, hash: '', store: 'cos' },
       ],
     })
 

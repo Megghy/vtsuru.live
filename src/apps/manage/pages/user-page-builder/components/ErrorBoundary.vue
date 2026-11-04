@@ -25,7 +25,7 @@ onErrorCaptured((e) => {
     v-if="capturedError"
     class="p-6 text-center space-y-4"
   >
-    <div class="inline-flex items-center justify-center size-12 rounded-full bg-destructive/10 text-destructive mb-2">
+    <div class="inline-flex-center size-12 rounded-full bg-destructive/10 text-destructive mb-2">
       <AlertCircle class="size-6" />
     </div>
     <div class="text-base font-semibold text-foreground">

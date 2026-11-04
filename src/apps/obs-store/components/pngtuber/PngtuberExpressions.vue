@@ -84,8 +84,8 @@ function recordKey(event: KeyboardEvent) {
 
 <template>
   <Card class="p-3">
-    <CardHeader class="p-0 pb-2">
-      <CardTitle class="text-sm font-semibold">表情与配件</CardTitle>
+    <CardHeader class="p-0">
+      <CardTitle>表情与配件</CardTitle>
     </CardHeader>
     <CardContent class="p-0 space-y-3">
       <Select v-model="selected">
@@ -93,12 +93,7 @@ function recordKey(event: KeyboardEvent) {
           <SelectValue placeholder="选择表情" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="opt in options"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -162,12 +157,7 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="opt in options"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -187,18 +177,10 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                value="__default__"
-                class="text-xs"
-              >
+              <SelectItem value="__default__">
                 使用默认表情
               </SelectItem>
-              <SelectItem
-                v-for="opt in options"
-                :key="opt.value"
-                :value="opt.value"
-                class="text-xs"
-              >
+              <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -248,20 +230,11 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                value="toggle"
-                class="text-xs"
-                >切换</SelectItem
+              <SelectItem value="toggle">切换</SelectItem
               >
-              <SelectItem
-                value="hold"
-                class="text-xs"
-                >按住</SelectItem
+              <SelectItem value="hold">按住</SelectItem
               >
-              <SelectItem
-                value="timed"
-                class="text-xs"
-                >定时</SelectItem
+              <SelectItem value="timed">定时</SelectItem
               >
             </SelectContent>
           </Select>
@@ -299,20 +272,11 @@ function recordKey(event: KeyboardEvent) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              value="continue"
-              class="text-xs"
-              >继续播放</SelectItem
+            <SelectItem value="continue">继续播放</SelectItem
             >
-            <SelectItem
-              value="restart"
-              class="text-xs"
-              >激活时重播</SelectItem
+            <SelectItem value="restart">激活时重播</SelectItem
             >
-            <SelectItem
-              value="once"
-              class="text-xs"
-              >播放一次</SelectItem
+            <SelectItem value="once">播放一次</SelectItem
             >
           </SelectContent>
         </Select>

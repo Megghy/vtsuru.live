@@ -273,18 +273,12 @@ function changeChannel() {
     </Button>
 
     <div class="flex flex-col gap-3">
-      <Alert
-        v-if="!userId"
-        class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2.5 px-3"
-      >
-        <AlertDescription class="text-xs text-current m-0"> 请登录后编辑立绘配置。 </AlertDescription>
+      <Alert size="sm" variant="warning" v-if="!userId">
+        <AlertDescription class="text-current m-0"> 请登录后编辑立绘配置。 </AlertDescription>
       </Alert>
-      <Alert
-        v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error"
-        class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2.5 px-3"
-      >
-        <div class="flex items-center justify-between gap-2">
-          <AlertDescription class="text-xs text-current m-0">
+      <Alert size="sm" variant="warning" v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error">
+        <div class="flex-between gap-2">
+          <AlertDescription class="text-current m-0">
             {{
               normalized.error ||
               errorMessage ||
@@ -292,12 +286,7 @@ function changeChannel() {
               (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪')
             }}
           </AlertDescription>
-          <Button
-            size="xs"
-            variant="outline"
-            class="h-6 text-[11px] shrink-0"
-            @click="retry"
-          >
+          <Button size="xs" variant="outline" class="shrink-0" @click="retry">
             重试连接
           </Button>
         </div>
@@ -306,8 +295,8 @@ function changeChannel() {
       <div class="workbench">
         <div class="settings flex flex-col gap-4">
           <Card class="p-3">
-            <CardHeader class="p-0 pb-2">
-              <CardTitle class="text-sm font-semibold">声音输入</CardTitle>
+            <CardHeader class="p-0">
+              <CardTitle>声音输入</CardTitle>
             </CardHeader>
             <CardContent class="p-0 space-y-3">
               <PngtuberInputSettings
@@ -346,8 +335,8 @@ function changeChannel() {
 
         <div class="stage flex flex-col gap-4">
           <Card class="p-3">
-            <CardHeader class="p-0 pb-2 flex flex-row items-center justify-between">
-              <CardTitle class="text-sm font-semibold">实时预览</CardTitle>
+            <CardHeader class="p-0 flex flex-row items-center justify-between">
+              <CardTitle>实时预览</CardTitle>
               <Button
                 variant="ghost"
                 size="xs"
@@ -363,24 +352,13 @@ function changeChannel() {
             </CardHeader>
             <CardContent class="p-0 space-y-3">
               <div class="flex items-center gap-2 flex-wrap">
-                <Badge
-                  :variant="previewSpeaking ? 'default' : 'secondary'"
-                  class="text-xs"
-                >
+                <Badge :variant="previewSpeaking ? 'default' : 'secondary'">
                   {{ previewAway ? '暂离' : previewMuted ? '静音' : previewSpeaking ? '说话中' : '待机' }}
                 </Badge>
-                <Badge
-                  v-if="isSimulating"
-                  variant="outline"
-                  class="border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10 text-xs"
-                >
+                <Badge v-if="isSimulating" variant="warning">
                   模拟运行中
                 </Badge>
-                <Badge
-                  v-else
-                  variant="outline"
-                  class="text-xs"
-                >
+                <Badge v-else variant="outline">
                   {{ isSyncing ? '保存中' : lastSyncError ? '保存失败' : isReady ? '配置已就绪' : '加载中' }}
                 </Badge>
                 <span class="text-xs text-muted-foreground">音量 {{ Math.round(previewVolume) }}%</span>
@@ -390,7 +368,7 @@ function changeChannel() {
                 v-if="isSimulating"
                 class="p-2.5 rounded-md border border-amber-500/30 bg-amber-500/5 space-y-2.5 text-xs"
               >
-                <div class="flex items-center justify-between gap-2">
+                <div class="flex-between gap-2">
                   <span class="text-muted-foreground font-medium">模拟说话状态</span>
                   <div class="flex items-center gap-1.5">
                     <Button
@@ -463,25 +441,13 @@ function changeChannel() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    value="checker"
-                    class="text-xs"
-                    >透明棋盘</SelectItem
+                  <SelectItem value="checker">透明棋盘</SelectItem
                   >
-                  <SelectItem
-                    value="dark"
-                    class="text-xs"
-                    >暗色</SelectItem
+                  <SelectItem value="dark">暗色</SelectItem
                   >
-                  <SelectItem
-                    value="green"
-                    class="text-xs"
-                    >绿幕</SelectItem
+                  <SelectItem value="green">绿幕</SelectItem
                   >
-                  <SelectItem
-                    value="transparent"
-                    class="text-xs"
-                    >透明</SelectItem
+                  <SelectItem value="transparent">透明</SelectItem
                   >
                 </SelectContent>
               </Select>
@@ -502,11 +468,8 @@ function changeChannel() {
                 />
               </div>
 
-              <Alert
-                v-if="assetError"
-                class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
-              >
-                <AlertDescription class="text-xs m-0">
+              <Alert size="sm" variant="warning" v-if="assetError">
+                <AlertDescription class="m-0">
                   {{ assetError }}
                 </AlertDescription>
               </Alert>
@@ -538,8 +501,8 @@ function changeChannel() {
           </Card>
 
           <Card class="p-3">
-            <CardHeader class="p-0 pb-2">
-              <CardTitle class="text-sm font-semibold">OBS 浏览器源</CardTitle>
+            <CardHeader class="p-0">
+              <CardTitle>OBS 浏览器源</CardTitle>
             </CardHeader>
             <CardContent class="p-0 space-y-3">
               <div class="flex items-center gap-1.5">
@@ -615,8 +578,8 @@ function changeChannel() {
           />
 
           <Card class="p-3">
-            <CardHeader class="p-0 pb-2">
-              <CardTitle class="text-sm font-semibold">模型包</CardTitle>
+            <CardHeader class="p-0">
+              <CardTitle>模型包</CardTitle>
             </CardHeader>
             <CardContent class="p-0 space-y-2">
               <div class="flex items-center gap-2">

@@ -298,7 +298,7 @@ function getSafeUrl(value?: string) {
               :title="link.label"
               target="_blank"
               rel="noopener noreferrer"
-              class="profile-icon-link p-2 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition size-9 flex items-center justify-center"
+              class="profile-icon-link p-2 rounded-full bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground transition size-9 flex-center"
             >
               <component
                 :is="link.icon"
@@ -342,17 +342,9 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="歌手" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部歌手</SelectItem
+                <SelectItem value="all">全部歌手</SelectItem
                 >
-                <SelectItem
-                  v-for="opt in artistOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in artistOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -365,17 +357,9 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="语言" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部语言</SelectItem
+                <SelectItem value="all">全部语言</SelectItem
                 >
-                <SelectItem
-                  v-for="opt in languageOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in languageOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -388,17 +372,9 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="标签" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem
-                  value="all"
-                  class="text-xs"
-                  >全部标签</SelectItem
+                <SelectItem value="all">全部标签</SelectItem
                 >
-                <SelectItem
-                  v-for="opt in tagOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                  class="text-xs"
-                >
+                <SelectItem v-for="opt in tagOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -412,12 +388,7 @@ function getSafeUrl(value?: string) {
                   <SelectValue placeholder="排序" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    v-for="opt in sortOptions"
-                    :key="opt.value"
-                    :value="opt.value"
-                    class="text-xs"
-                  >
+                  <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -427,7 +398,7 @@ function getSafeUrl(value?: string) {
                 size="icon"
                 class="size-8 shrink-0 text-muted-foreground"
                 :disabled="!sortKey"
-                :title="sortOrder === 'asc' ? '升序' : '降序'"
+                :aria-label="sortOrder === 'asc' ? '升序' : '降序'"
                 @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
               >
                 <component
@@ -438,7 +409,7 @@ function getSafeUrl(value?: string) {
             </div>
           </div>
 
-          <div class="result-toolbar flex items-center justify-between gap-3 text-xs pt-1 border-t border-border/50">
+          <div class="result-toolbar flex-between gap-3 text-xs pt-1 border-t border-border/50">
             <span class="result-count text-muted-foreground font-mono"
               >{{ filteredAndSortedSongs.length }} / {{ data?.length ?? 0 }} 首</span
             >
@@ -532,7 +503,7 @@ function getSafeUrl(value?: string) {
                               {{ song.name }}
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent class="text-xs">
+                          <TooltipContent>
                             {{ getSongRequestTooltip(song, liveRequestSettings, requestAuthState) }}
                           </TooltipContent>
                         </Tooltip>
@@ -640,7 +611,7 @@ function getSafeUrl(value?: string) {
       <Dialog v-model:open="dialogState.open">
         <DialogContent class="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle class="text-sm font-semibold">{{ dialogState.title }}</DialogTitle>
+            <DialogTitle class="text-sm">{{ dialogState.title }}</DialogTitle>
             <DialogDescription class="text-xs whitespace-pre-wrap pt-2">
               {{ dialogState.content }}
             </DialogDescription>

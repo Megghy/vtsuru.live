@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -24,9 +25,9 @@ const handleToggleConnect = () => {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b flex-row items-center justify-between space-y-0">
-      <CardTitle class="text-sm font-semibold">OBS 控制与统计</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b flex-row items-center justify-between space-y-0">
+      <CardTitle>OBS 控制与统计</CardTitle>
 
       <TooltipProvider>
         <Tooltip>
@@ -34,13 +35,13 @@ const handleToggleConnect = () => {
             <Button
               variant="ghost"
               size="xs"
-              class="gap-1 text-muted-foreground hover:text-foreground cursor-help"
+              class="gap-1 text-muted-foreground cursor-help"
             >
               <HelpCircle class="size-3.5" />
               使用说明
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="max-w-[280px] text-xs space-y-1.5 p-3">
+          <TooltipContent class="max-w-[280px] space-y-1.5 p-3">
             <p class="font-semibold text-foreground">在 OBS 中开启 WebSocket 服务：</p>
             <ol class="pl-4 list-decimal space-y-0.5 text-muted-foreground">
               <li>在 OBS 菜单中选择「工具 - WebSocket 服务器设置」</li>
@@ -58,7 +59,7 @@ const handleToggleConnect = () => {
 
     <CardContent class="p-3 space-y-4">
       <!-- 快捷推流控制与重连状态 -->
-      <div class="flex items-center justify-between">
+      <div class="flex-between">
         <Button
           type="button"
           :variant="obsStore.obsStreamActive ? 'destructive' : 'default'"
@@ -77,11 +78,7 @@ const handleToggleConnect = () => {
           {{ obsStore.obsStreamActive ? '停止推流' : '开始推流' }}
         </Button>
 
-        <Badge
-          v-if="obsStore.obsStreamReconnecting"
-          variant="outline"
-          class="border-amber-500/40 text-amber-600 bg-amber-500/10 text-xs py-0.5"
-        >
+        <Badge v-if="obsStore.obsStreamReconnecting" variant="warning" class="py-0.5">
           推流重连中
         </Badge>
       </div>
@@ -95,7 +92,7 @@ const handleToggleConnect = () => {
               v-model="obsStore.obsAddress"
               placeholder="ws://127.0.0.1:4455"
               :disabled="obsStore.obsConnected"
-              class="font-mono text-xs bg-background"
+              class="font-mono bg-background"
             />
           </div>
 
@@ -106,12 +103,12 @@ const handleToggleConnect = () => {
               type="password"
               placeholder="无密码可留空"
               :disabled="obsStore.obsConnected"
-              class="text-xs bg-background"
+              class="bg-background"
             />
           </div>
         </div>
 
-        <div class="flex items-center justify-between pt-1">
+        <div class="flex-between pt-1">
           <Button
             type="button"
             :variant="obsStore.obsConnected ? 'outline' : 'default'"
@@ -152,13 +149,10 @@ const handleToggleConnect = () => {
         </div>
 
         <!-- 错误提示 -->
-        <Alert
-          v-if="obsStore.obsError"
-          class="py-2 px-2.5 border-destructive/30 bg-destructive/10 text-destructive mt-2"
-        >
+        <Alert size="sm" v-if="obsStore.obsError" class="border-destructive/30 bg-destructive/10 text-destructive mt-2">
           <div class="flex items-center gap-1.5">
             <AlertCircle class="size-4 shrink-0" />
-            <AlertDescription class="text-xs m-0">
+            <AlertDescription class="m-0">
               {{ obsStore.obsError }}
             </AlertDescription>
           </div>
@@ -210,7 +204,7 @@ const handleToggleConnect = () => {
                     }}%
                   </span>
                 </TooltipTrigger>
-                <TooltipContent class="text-xs">
+                <TooltipContent>
                   {{ obsStore.obsStats.outputSkippedFrames }} / {{ obsStore.obsStats.outputTotalFrames }} 帧
                 </TooltipContent>
               </Tooltip>
@@ -263,7 +257,7 @@ const handleToggleConnect = () => {
                     }}%
                   </span>
                 </TooltipTrigger>
-                <TooltipContent class="text-xs">
+                <TooltipContent>
                   {{ obsStore.obsStats.renderSkippedFrames }} / {{ obsStore.obsStats.renderTotalFrames }} 帧
                 </TooltipContent>
               </Tooltip>
@@ -277,16 +271,13 @@ const handleToggleConnect = () => {
         </div>
       </div>
 
-      <div class="h-px bg-border" />
+      <Separator />
 
       <!-- 场景控制 -->
       <div class="space-y-2.5">
-        <div class="flex items-center justify-between">
+        <div class="flex-between">
           <span class="text-xs font-semibold text-foreground block">场景切换</span>
-          <Badge
-            variant="outline"
-            class="text-[11px] font-normal"
-          >
+          <Badge variant="outline" size="sm">
             当前场景：{{ obsStore.currentObsScene || '未连接' }}
           </Badge>
         </div>
@@ -295,15 +286,7 @@ const handleToggleConnect = () => {
           v-if="obsStore.obsScenes.length > 0"
           class="flex flex-wrap gap-2"
         >
-          <Button
-            v-for="scene in obsStore.obsScenes"
-            :key="scene"
-            type="button"
-            :variant="scene === obsStore.currentObsScene ? 'default' : 'outline'"
-            class="text-xs h-7 px-2.5"
-            :disabled="obsStore.isSwitchingScene"
-            @click="scene !== obsStore.currentObsScene && obsStore.switchToScene(scene)"
-          >
+          <Button size="xs" v-for="scene in obsStore.obsScenes" :key="scene" type="button" :variant="scene === obsStore.currentObsScene ? 'default' : 'outline'" class="text-xs" :disabled="obsStore.isSwitchingScene" @click="scene !== obsStore.currentObsScene && obsStore.switchToScene(scene)">
             {{ scene }}
           </Button>
         </div>
@@ -316,14 +299,14 @@ const handleToggleConnect = () => {
         </div>
       </div>
 
-      <div class="h-px bg-border" />
+      <Separator />
 
       <!-- 场景联动配置 -->
       <div class="space-y-3">
         <span class="text-xs font-semibold text-foreground block">场景联动设置</span>
 
         <div class="space-y-2.5">
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <span class="text-xs text-foreground">启用自动场景切换</span>
             <Switch
               :checked="obsStore.obsSceneConfig.autoSwitchEnabled"
@@ -331,7 +314,7 @@ const handleToggleConnect = () => {
             />
           </div>
 
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <div>
               <span class="text-xs text-foreground block">开播/下播联动推流</span>
               <span class="text-[11px] text-muted-foreground block mt-0.5">
@@ -420,13 +403,10 @@ const handleToggleConnect = () => {
           </div>
         </div>
 
-        <Alert
-          v-if="obsStore.obsSceneError"
-          class="py-2 px-2.5 border-destructive/30 bg-destructive/10 text-destructive mt-2"
-        >
+        <Alert size="sm" v-if="obsStore.obsSceneError" class="border-destructive/30 bg-destructive/10 text-destructive mt-2">
           <div class="flex items-center gap-1.5">
             <AlertCircle class="size-4 shrink-0" />
-            <AlertDescription class="text-xs m-0">
+            <AlertDescription class="m-0">
               {{ obsStore.obsSceneError }}
             </AlertDescription>
           </div>

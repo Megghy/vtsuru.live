@@ -15,24 +15,15 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
       class="w-full"
     >
       <TabsList class="grid grid-cols-2 w-full">
-        <TabsTrigger
-          value="spoken"
-          class="text-xs"
-        >
+        <TabsTrigger value="spoken" >
           已播报 ({{ spokenHistory.length }})
         </TabsTrigger>
-        <TabsTrigger
-          value="rejected"
-          class="text-xs"
-        >
+        <TabsTrigger value="rejected" >
           已拒绝 ({{ rejectedHistory.length }})
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent
-        value="spoken"
-        class="mt-2"
-      >
+      <TabsContent value="spoken">
         <Empty
           v-if="spokenHistory.length === 0"
           description="暂无记录"
@@ -58,10 +49,7 @@ const { spokenHistory, rejectedHistory } = useSpeechService()
         </ScrollArea>
       </TabsContent>
 
-      <TabsContent
-        value="rejected"
-        class="mt-2"
-      >
+      <TabsContent value="rejected">
         <Empty
           v-if="rejectedHistory.length === 0"
           description="暂无记录"

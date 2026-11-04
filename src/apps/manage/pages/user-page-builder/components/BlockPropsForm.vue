@@ -212,7 +212,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
 
             <div
               v-if="propertyAvailable('framed')"
-              class="flex items-center justify-between pt-4"
+              class="flex-between pt-4"
             >
               <label class="text-xs text-muted-foreground">显示边框</label>
               <Switch
@@ -223,7 +223,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
 
             <div
               v-if="propertyAvailable('backgrounded')"
-              class="flex items-center justify-between pt-4"
+              class="flex-between pt-4"
             >
               <label class="text-xs text-muted-foreground">显示背景</label>
               <Switch
@@ -240,15 +240,10 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
         class="border-b-0"
       >
         <AccordionTrigger class="text-xs font-semibold py-2">
-          <div class="flex items-center justify-between w-full pr-2">
+          <div class="flex-between w-full pr-2">
             <span>显示条件</span>
             <div class="flex items-center gap-1">
-              <Badge
-                v-for="tag in visibilityTags"
-                :key="tag"
-                variant="outline"
-                class="text-[10px] h-4.5 px-1.5"
-              >
+              <Badge v-for="tag in visibilityTags" :key="tag" variant="outline" size="xs">
                 {{ tag }}
               </Badge>
             </div>
@@ -300,13 +295,7 @@ function visibilityModel<Key extends 'liveState' | 'device'>(key: Key) {
       role="status"
       aria-live="polite"
     >
-      <Alert
-        v-for="(issue, index) in validationIssues"
-        :key="`${issue.fieldPath}:${index}`"
-        variant="destructive"
-        class="py-2 text-xs"
-        :data-validation-field="issue.fieldPath || undefined"
-      >
+      <Alert size="sm" v-for="(issue, index) in validationIssues" :key="`${issue.fieldPath}:${index}`" variant="destructive" :data-validation-field="issue.fieldPath || undefined">
         <AlertDescription>
           <strong v-if="issue.fieldPath">{{ issue.fieldPath }}: </strong>
           {{ issue.message }}

@@ -86,10 +86,11 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    v-if="accountInfo"
-    class="space-y-4 w-full"
-  >
+  <div class="question-box-manage w-full min-w-0">
+    <div
+      v-if="accountInfo"
+      class="space-y-4 w-full"
+    >
     <ManagePageHeader
       title="提问箱管理"
       subtitle="收集观众的匿名提问并互动回复，支持话题标签分类、公开展示与 OBS 弹幕投屏"
@@ -103,7 +104,7 @@ onMounted(async () => {
             size="icon-sm"
             variant="outline"
             :loading="useQB.isLoading"
-            title="刷新"
+            aria-label="刷新"
             @click="refresh"
           >
             <component
@@ -126,7 +127,7 @@ onMounted(async () => {
                   />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent class="text-xs"> 分享提问箱 </TooltipContent>
+              <TooltipContent> 分享提问箱 </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
@@ -176,19 +177,13 @@ onMounted(async () => {
       <TabsList class="grid w-full grid-cols-4 max-w-lg">
         <TabsTrigger value="0">
           我收到的
-          <Badge
-            variant="secondary"
-            size="xs"
-          >
+          <Badge variant="secondary" size="xs">
             {{ useQB.recieveQuestionsFiltered.length }}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="1">
           我发送的
-          <Badge
-            variant="secondary"
-            size="xs"
-          >
+          <Badge variant="secondary" size="xs">
             {{ useQB.sendQuestions.length }}
           </Badge>
         </TabsTrigger>
@@ -198,8 +193,7 @@ onMounted(async () => {
             class="h-3.5 w-3.5"
           />
           垃圾站
-          <Badge
-            v-if="useQB.trashQuestions.length > 0"
+          <Badge v-if="useQB.trashQuestions.length> 0"
             variant="warning"
             size="xs"
           >
@@ -238,13 +232,10 @@ onMounted(async () => {
             :key="item.id"
             class="hover:border-brand/30 transition-colors"
           >
-            <CardHeader class="p-3.5 pb-2">
-              <div class="flex items-center justify-between text-xs">
+            <CardHeader class="p-3.5">
+              <div class="flex-between text-xs">
                 <div class="flex items-center gap-1.5">
-                  <Badge
-                    variant="outline"
-                    class="text-[10px] px-1 py-0 h-4"
-                  >
+                  <Badge variant="outline" size="xs">
                     发给
                   </Badge>
                   <Button
@@ -262,7 +253,7 @@ onMounted(async () => {
               </div>
             </CardHeader>
 
-            <CardContent class="p-3.5 pt-0 space-y-3">
+            <CardContent class="space-y-3">
               <p class="text-sm text-foreground leading-relaxed m-0">
                 {{ item.question?.message }}
               </p>
@@ -288,7 +279,7 @@ onMounted(async () => {
                 v-if="item.answer"
                 class="p-3 rounded-md bg-muted/40 border border-border/60 space-y-1.5"
               >
-                <div class="flex items-center justify-between text-xs text-muted-foreground">
+                <div class="flex-between text-xs text-muted-foreground">
                   <span class="font-medium">对方的回复</span>
                   <span
                     v-if="item.answer.createdAt"
@@ -421,8 +412,9 @@ onMounted(async () => {
     正在加载账户信息...
   </div>
 
-  <!-- 模态框 -->
-  <QuestionBoxReplyModal v-model:show="replyModalVisible" />
-  <QuestionBoxShareModal v-model:show="shareModalVisible" />
-  <QuestionBoxOBSModal v-model:show="showOBSModal" />
+    <!-- 模态框 -->
+    <QuestionBoxReplyModal v-model:show="replyModalVisible" />
+    <QuestionBoxShareModal v-model:show="shareModalVisible" />
+    <QuestionBoxOBSModal v-model:show="showOBSModal" />
+  </div>
 </template>

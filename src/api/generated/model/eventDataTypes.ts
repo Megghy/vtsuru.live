@@ -7,12 +7,13 @@
  */
 
 export enum EventDataTypes {
-  Guard = 0,
-  SC = 1,
-  Gift = 2,
-  Message = 3,
-  Like = 4,
-  SCDel = 5,
-  Enter = 6,
-  Follow = 7,
+  Guard= 0,
+  SC= 1,
+  Gift= 2,
+  Message= 3,
+  Like= 4,
+  SCDel= 5,
+  Enter= 6,
+  Follow= 7,
+
 }

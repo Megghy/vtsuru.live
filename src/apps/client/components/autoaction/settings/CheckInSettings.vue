@@ -38,6 +38,8 @@ import { Switch } from '@/shared/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { FormField } from '@/shared/ui/form-field'
+import { SettingRow } from '@/shared/ui/setting-row'
 
 import AutoActionEditor from '../AutoActionEditor.vue'
 import { CHECKIN_PLACEHOLDERS } from '../placeholders'
@@ -329,33 +331,23 @@ onMounted(() => {
 <template>
   <Card
     v-if="config"
-    class="border bg-card"
   >
-    <CardHeader class="p-3 pb-2 border-b">
-      <CardTitle class="text-sm font-semibold">弹幕签到设置</CardTitle>
+    <CardHeader class="p-3 border-b">
+      <CardTitle>弹幕签到设置</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3">
       <Tabs default-value="settings">
         <TabsList class="grid w-full grid-cols-3">
-          <TabsTrigger
-            value="settings"
-            class="text-xs gap-1.5"
-          >
+          <TabsTrigger value="settings" class="gap-1.5" >
             <Settings24Regular class="size-3.5" />
             功能设置
           </TabsTrigger>
-          <TabsTrigger
-            value="ranking"
-            class="text-xs gap-1.5"
-          >
+          <TabsTrigger value="ranking" class="gap-1.5" >
             <People24Regular class="size-3.5" />
             签到排行榜
           </TabsTrigger>
-          <TabsTrigger
-            value="test"
-            class="text-xs gap-1.5"
-          >
+          <TabsTrigger value="test" class="gap-1.5" >
             <Flash24Regular class="size-3.5" />
             模拟测试
           </TabsTrigger>
@@ -366,11 +358,8 @@ onMounted(() => {
           value="settings"
           class="pt-3 space-y-4"
         >
-          <Alert
-            v-if="!canEdit"
-            class="py-2 px-2.5 border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400"
-          >
-            <AlertDescription class="text-xs m-0"> 加载中或无法编辑设置，请稍后再试 </AlertDescription>
+          <Alert size="sm" variant="warning" v-if="!canEdit">
+            <AlertDescription class="m-0"> 加载中或无法编辑设置，请稍后再试 </AlertDescription>
           </Alert>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -378,54 +367,52 @@ onMounted(() => {
             <div class="col-span-1 md:col-span-2 border rounded-md p-3 bg-muted/10 space-y-3">
               <span class="font-semibold text-xs text-foreground block">基础设置</span>
 
-              <div class="flex items-center justify-between p-2 rounded border bg-card">
-                <div>
-                  <span class="text-xs font-medium text-foreground block">启用签到功能</span>
-                  <span class="text-[11px] text-muted-foreground block mt-0.5">观众发送签到命令可获得积分</span>
-                </div>
-                <Switch
-                  v-model:checked="serverSetting.enableCheckIn"
-                  @update:checked="updateServerSettings"
-                />
-              </div>
+              <SettingRow
+                type="switch"
+                title="启用签到功能"
+                description="观众发送签到命令可获得积分"
+                v-model="serverSetting.enableCheckIn"
+                @change="updateServerSettings"
+              />
 
               <div
                 v-if="serverSetting.enableCheckIn"
                 class="space-y-3 pt-1"
               >
-                <div class="flex items-center gap-2">
-                  <span class="text-xs text-muted-foreground w-20 shrink-0">签到命令 *</span>
-                  <Input
-                    :value="serverSetting.checkInKeyword"
-                    placeholder="例如：签到"
-                    class="flex-1"
-                    @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value"
-                  />
-                  <Button @click="updateServerSettings"> 保存 </Button>
-                </div>
+                <FormField
+                  label="签到命令"
+                  required
+                >
+                  <div class="flex items-center gap-2">
+                    <Input
+                      :value="serverSetting.checkInKeyword"
+                      placeholder="例如：签到"
+                      class="flex-1"
+                      @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value"
+                    />
+                    <Button @click="updateServerSettings"> 保存 </Button>
+                  </div>
+                </FormField>
 
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  <div class="flex items-center justify-between p-2 rounded border bg-card">
-                    <span class="text-xs font-medium text-foreground">要求已认证</span>
-                    <Switch
-                      v-model:checked="serverSetting.requireAuth"
-                      @update:checked="updateServerSettings"
-                    />
-                  </div>
-                  <div class="flex items-center justify-between p-2 rounded border bg-card">
-                    <span class="text-xs font-medium text-foreground">允许自己签到</span>
-                    <Switch
-                      v-model:checked="serverSetting.allowSelfCheckIn"
-                      @update:checked="updateServerSettings"
-                    />
-                  </div>
-                  <div class="flex items-center justify-between p-2 rounded border bg-card">
-                    <span class="text-xs font-medium text-foreground">允许查看排行</span>
-                    <Switch
-                      :checked="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)"
-                      @update:checked="updateCheckInRanking"
-                    />
-                  </div>
+                  <SettingRow
+                    type="switch"
+                    title="要求已认证"
+                    v-model="serverSetting.requireAuth"
+                    @change="updateServerSettings"
+                  />
+                  <SettingRow
+                    type="switch"
+                    title="允许自己签到"
+                    v-model="serverSetting.allowSelfCheckIn"
+                    @change="updateServerSettings"
+                  />
+                  <SettingRow
+                    type="switch"
+                    title="允许查看排行"
+                    :model-value="accountInfo.settings?.enableFunctions?.includes(FunctionTypes.CheckInRanking)"
+                    @change="updateCheckInRanking"
+                  />
                 </div>
               </div>
             </div>
@@ -437,58 +424,53 @@ onMounted(() => {
             >
               <span class="font-semibold text-xs text-foreground block">积分奖励配置</span>
 
-              <div class="flex items-center justify-between p-2 rounded border bg-card">
-                <span class="text-xs font-medium text-foreground">启用积分奖励</span>
+              <SettingRow title="启用积分奖励">
                 <Switch
                   v-model:checked="serverSetting.givePointsForCheckIn"
                   @update:checked="updateServerSettings"
                 />
-              </div>
+              </SettingRow>
 
               <div
                 v-if="serverSetting.givePointsForCheckIn"
                 class="space-y-3 pt-1"
               >
-                <div class="flex items-center justify-between p-2 rounded border bg-card">
-                  <span class="text-xs font-medium text-foreground">基础签到积分</span>
+                <SettingRow title="基础签到积分">
                   <NumberField
                     :model-value="serverSetting.baseCheckInPoints"
                     :min="0"
                     class="w-32"
                     @update:model-value="((serverSetting.baseCheckInPoints = $event || 0), updateServerSettings())"
                   />
-                </div>
+                </SettingRow>
 
-                <div class="flex items-center justify-between p-2 rounded border bg-card">
-                  <span class="text-xs font-medium text-foreground">连续签到奖励</span>
+                <SettingRow title="连续签到奖励">
                   <Switch
                     v-model:checked="serverSetting.enableConsecutiveBonus"
                     @update:checked="updateServerSettings"
                   />
-                </div>
+                </SettingRow>
 
                 <div
                   v-if="serverSetting.enableConsecutiveBonus"
                   class="grid grid-cols-1 sm:grid-cols-2 gap-2"
                 >
-                  <div class="flex items-center justify-between p-2 rounded border bg-card">
-                    <span class="text-xs font-medium text-foreground">每日额外奖励</span>
+                  <SettingRow title="每日额外奖励">
                     <NumberField
                       :model-value="serverSetting.bonusPointsPerDay"
                       :min="0"
                       class="w-28"
                       @update:model-value="((serverSetting.bonusPointsPerDay = $event || 0), updateServerSettings())"
                     />
-                  </div>
-                  <div class="flex items-center justify-between p-2 rounded border bg-card">
-                    <span class="text-xs font-medium text-foreground">奖励积分上限</span>
+                  </SettingRow>
+                  <SettingRow title="奖励积分上限">
                     <NumberField
                       :model-value="serverSetting.maxBonusPoints"
                       :min="0"
                       class="w-28"
                       @update:model-value="((serverSetting.maxBonusPoints = $event || 0), updateServerSettings())"
                     />
-                  </div>
+                  </SettingRow>
                 </div>
               </div>
             </div>
@@ -498,7 +480,7 @@ onMounted(() => {
               v-if="serverSetting.enableCheckIn"
               class="col-span-1 md:col-span-2 border rounded-md p-3 bg-muted/10 space-y-3"
             >
-              <div class="flex items-center justify-between p-2 rounded border bg-card">
+              <div class="flex-between p-2 rounded border bg-card">
                 <span class="text-xs font-medium text-foreground">发送签到回复</span>
                 <Switch v-model:checked="config.sendReply" />
               </div>
@@ -550,13 +532,13 @@ onMounted(() => {
           value="ranking"
           class="pt-3 space-y-3"
         >
-          <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <AlertDescription class="text-xs m-0">
+          <Alert size="sm" variant="info">
+            <AlertDescription class="m-0">
               显示用户签到排行榜。选择时间段可查看不同期间的签到数据。
             </AlertDescription>
           </Alert>
 
-          <div class="flex items-center justify-between gap-3 flex-wrap">
+          <div class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
               <div class="w-32">
                 <Select
@@ -567,12 +549,7 @@ onMounted(() => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem
-                      v-for="opt in timeRangeOptions"
-                      :key="opt.value"
-                      :value="opt.value"
-                      class="text-xs"
-                    >
+                    <SelectItem v-for="opt in timeRangeOptions" :key="opt.value" :value="opt.value">
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -624,13 +601,13 @@ onMounted(() => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead class="text-xs text-center w-16">排名</TableHead>
-                  <TableHead class="text-xs">用户名</TableHead>
-                  <TableHead class="text-xs text-center w-24">连续签到</TableHead>
-                  <TableHead class="text-xs text-center w-24">总积分</TableHead>
-                  <TableHead class="text-xs w-40">最近签到</TableHead>
-                  <TableHead class="text-xs text-center w-20">认证</TableHead>
-                  <TableHead class="text-xs text-right w-20">操作</TableHead>
+                  <TableHead class="text-center w-16">排名</TableHead>
+                  <TableHead>用户名</TableHead>
+                  <TableHead class="text-center w-24">连续签到</TableHead>
+                  <TableHead class="text-center w-24">总积分</TableHead>
+                  <TableHead class="w-40">最近签到</TableHead>
+                  <TableHead class="text-center w-20">认证</TableHead>
+                  <TableHead class="text-right w-20">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -639,21 +616,17 @@ onMounted(() => {
                     v-for="(row, idx) in paginatedRankingData"
                     :key="row.ouId || idx"
                   >
-                    <TableCell class="text-xs text-center">
-                      <Badge
-                        variant="secondary"
-                        class="text-[10px] h-5 px-1.5 font-bold"
-                        :class="idx === 0 ? 'bg-amber-500 text-white' : idx <= 2 ? 'bg-sky-500 text-white' : ''"
-                      >
+                    <TableCell class="text-center">
+                      <Badge variant="secondary" size="xs" class="h-5 font-bold" :class="idx === 0 ? 'bg-amber-500 text-white' : idx <= 2 ? 'bg-sky-500 text-white' : ''">
                         {{ (rankingPage - 1) * rankingPageSize + idx + 1 }}
                       </Badge>
                     </TableCell>
 
-                    <TableCell class="text-xs font-semibold">
+                    <TableCell class="font-semibold">
                       {{ row.name }}
                     </TableCell>
 
-                    <TableCell class="text-xs text-center">
+                    <TableCell class="text-center">
                       <span
                         :class="
                           row.consecutiveDays > 0
@@ -665,29 +638,25 @@ onMounted(() => {
                       </span>
                     </TableCell>
 
-                    <TableCell class="text-xs text-center font-bold text-sky-600 dark:text-sky-400">
+                    <TableCell class="text-center font-bold text-sky-600 dark:text-sky-400">
                       {{ row.points }}
                     </TableCell>
 
-                    <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+                    <TableCell class="text-muted-foreground whitespace-nowrap">
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger as-child>
                             <span class="cursor-help">{{ formatRelativeTime(row.lastCheckInTime) }}</span>
                           </TooltipTrigger>
-                          <TooltipContent class="text-xs">
+                          <TooltipContent>
                             {{ new Date(row.lastCheckInTime).toLocaleString() }}
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </TableCell>
 
-                    <TableCell class="text-xs text-center">
-                      <Badge
-                        v-if="row.isAuthed"
-                        variant="outline"
-                        class="text-[10px] h-4.5 px-1 border-emerald-500/40 text-emerald-600 bg-emerald-500/10"
-                      >
+                    <TableCell class="text-center">
+                      <Badge v-if="row.isAuthed" variant="success" size="xs">
                         已认证
                       </Badge>
                       <span
@@ -697,18 +666,13 @@ onMounted(() => {
                       >
                     </TableCell>
 
-                    <TableCell class="text-xs text-right">
+                    <TableCell class="text-right">
                       <Popconfirm
                         title="确认重置"
                         @positive-click="resetUserCheckInByGuid(row.ouId)"
                       >
                         <template #trigger>
-                          <Button
-                            size="xs"
-                            variant="ghost"
-                            class="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
-                            :disabled="isResetting"
-                          >
+                          <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="isResetting">
                             <Delete16Filled class="size-3.5" />
                           </Button>
                         </template>
@@ -749,8 +713,8 @@ onMounted(() => {
           value="test"
           class="pt-3 space-y-4 max-w-xl"
         >
-          <Alert class="py-2 px-2.5 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-            <AlertDescription class="text-xs m-0">
+          <Alert size="sm" variant="info">
+            <AlertDescription class="m-0">
               在此可以模拟用户发送签到命令，验证逻辑和回复消息是否正确。
             </AlertDescription>
           </Alert>
@@ -791,17 +755,11 @@ onMounted(() => {
             v-if="testResult"
             class="pt-1"
           >
-            <Alert
-              :class="
-                testResult.success
-                  ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                  : 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-              "
-            >
-              <AlertTitle class="text-xs font-semibold">
+            <Alert :variant="testResult.success ? 'success' : 'warning'">
+              <AlertTitle>
                 {{ testResult.success ? '模拟签到成功' : '模拟签到失败' }}
               </AlertTitle>
-              <AlertDescription class="text-xs mt-1">
+              <AlertDescription class="mt-1">
                 {{ testResult.message }}
               </AlertDescription>
             </Alert>
@@ -818,7 +776,7 @@ onMounted(() => {
 
   <Card
     v-else
-    class="border bg-card p-12 text-center"
+    class="p-12 text-center"
   >
     <Spin size="medium" />
     <span class="text-xs text-muted-foreground block mt-2">正在加载设置...</span>

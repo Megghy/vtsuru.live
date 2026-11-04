@@ -9,9 +9,9 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
   action: {
@@ -84,20 +84,13 @@ function getGuardLevelName(level: number): string {
     v-if="action.triggerType === TriggerType.GUARD"
     class="guard-trigger-settings space-y-3"
   >
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <div class="flex items-center gap-1 cursor-help">
-              <span class="text-xs font-medium text-foreground">防止重复发送</span>
-              <Info16Regular class="size-3.5 text-muted-foreground" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent class="text-xs"> 同一用户在单次直播中多次上舰仅触发一次 </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+    <SettingRow
+      variant="compact"
+      title="防止重复发送"
+      hint="同一用户在单次直播中多次上舰仅触发一次"
+    >
       <Switch v-model:checked="action.triggerConfig.preventRepeat" />
-    </div>
+    </SettingRow>
 
     <div
       v-if="action.actionType === ActionType.SEND_PRIVATE_MSG"
@@ -117,25 +110,13 @@ function getGuardLevelName(level: number): string {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                value="1"
-                class="text-xs"
-                >总督</SelectItem
+              <SelectItem value="1">总督</SelectItem
               >
-              <SelectItem
-                value="2"
-                class="text-xs"
-                >提督</SelectItem
+              <SelectItem value="2">提督</SelectItem
               >
-              <SelectItem
-                value="3"
-                class="text-xs"
-                >舰长</SelectItem
+              <SelectItem value="3">舰长</SelectItem
               >
-              <SelectItem
-                value="0"
-                class="text-xs"
-                >通用</SelectItem
+              <SelectItem value="0">通用</SelectItem
               >
             </SelectContent>
           </Select>
@@ -158,17 +139,7 @@ function getGuardLevelName(level: number): string {
           :key="levelIndex"
           class="flex items-center gap-2 p-1.5 rounded border bg-muted/20"
         >
-          <Badge
-            variant="outline"
-            class="text-[10px] h-5 px-1.5 shrink-0"
-            :class="
-              levelCodes.level === 3
-                ? 'border-sky-500/40 text-sky-600 bg-sky-500/10'
-                : levelCodes.level === 0
-                  ? ''
-                  : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
-            "
-          >
+          <Badge variant="warning" size="xs" class="h-5" :class=" levelCodes.level === 3 ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : levelCodes.level === 0 ? '' : ' ' ">
             {{ getGuardLevelName(levelCodes.level) }}
           </Badge>
 

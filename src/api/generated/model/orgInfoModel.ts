@@ -5,11 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { OrgMemberRoles } from './orgMemberRoles'
+import type { OrgMemberRoles } from './orgMemberRoles';
 
 export interface OrgInfoModel {
-  id: number
-  name: string
-  ownerUserId: number
-  role: OrgMemberRoles
+  id: number;
+  name: string;
+  ownerUserId: number;
+  role: OrgMemberRoles;
 }

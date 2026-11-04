@@ -36,7 +36,7 @@ const sizeClasses: Record<string, string> = {
     v-bind="delegatedProps"
     :class="
       cn(
-        'inline-flex items-center justify-center rounded-md bg-muted text-muted-foreground',
+        'inline-flex-center rounded-md bg-muted text-muted-foreground',
         sizeClasses[props.size] || sizeClasses.default,
         props.class,
       )

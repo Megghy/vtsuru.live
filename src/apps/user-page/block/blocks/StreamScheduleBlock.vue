@@ -148,7 +148,7 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
       class="@container"
       aria-labelledby="schedule-title"
     >
-      <header class="schedule-header flex items-center justify-between gap-3 p-4 border-b border-border bg-muted/40">
+      <header class="schedule-header flex-between gap-3 p-4 border-b border-border bg-muted/40">
         <div class="header-title-wrap flex items-center gap-2 min-w-0">
           <component
             :is="CalendarNumberOutline"
@@ -171,12 +171,8 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
         >
           <Spin />
         </div>
-        <Alert
-          v-else-if="failed"
-          variant="destructive"
-          class="text-xs py-2"
-        >
-          <AlertDescription class="flex items-center justify-between w-full">
+        <Alert size="sm" v-else-if="failed" variant="destructive">
+          <AlertDescription class="flex-between w-full">
             <span>日程加载失败，请稍后重试</span>
             <Button
               variant="outline"
@@ -231,11 +227,7 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
                 <td class="p-2.5">
                   <div class="flex items-center gap-1.5">
                     <span>{{ dayLabel(row.dayIndex) }}</span>
-                    <Badge
-                      v-if="cfg.highlightToday && row.isToday"
-                      variant="default"
-                      class="h-4 px-1.5 text-[10px]"
-                    >
+                    <Badge v-if="cfg.highlightToday && row.isToday" variant="default" size="xs">
                       今天
                     </Badge>
                   </div>
@@ -246,12 +238,7 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
                 <td class="p-2.5">
                   <div class="flex items-center gap-1.5">
                     <span>{{ row.title }}</span>
-                    <Badge
-                      v-if="cfg.showTag && row.tag"
-                      variant="secondary"
-                      class="h-4 px-1.5 text-[10px]"
-                      :style="{ color: row.tagColor || undefined }"
-                    >
+                    <Badge v-if="cfg.showTag && row.tag" variant="secondary" size="xs" :style="{ color: row.tagColor || undefined }">
                       {{ row.tag }}
                     </Badge>
                   </div>
@@ -278,11 +265,7 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
             <div class="timeline-content min-w-0">
               <div class="item-heading flex items-center gap-2">
                 <strong class="text-xs font-semibold leading-relaxed">{{ row.title }}</strong>
-                <Badge
-                  v-if="cfg.highlightToday && row.isToday"
-                  variant="default"
-                  class="h-4 px-1.5 text-[10px]"
-                >
+                <Badge v-if="cfg.highlightToday && row.isToday" variant="default" size="xs">
                   今天
                 </Badge>
               </div>

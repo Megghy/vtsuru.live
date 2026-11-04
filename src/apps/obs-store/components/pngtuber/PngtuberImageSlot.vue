@@ -88,7 +88,7 @@ function apply() {
 
     <Button
       variant="outline"
-      class="image-preview h-auto min-h-[96px] w-full p-2 border-dashed border-2 flex flex-col items-center justify-center font-normal"
+      class="image-preview h-auto min-h-[96px] w-full p-2 border-dashed border-2 flex-col-center font-normal"
       :disabled="disabled || busy"
       :aria-label="`上传${label}`"
       @click="input?.click()"

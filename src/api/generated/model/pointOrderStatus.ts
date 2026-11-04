@@ -7,10 +7,11 @@
  */
 
 export enum PointOrderStatus {
-  Pending = 0,
-  Shipped = 1,
-  Completed = 2,
-  InProgress = 3,
-  Rejected = 4,
-  Cancelled = 5,
+  Pending= 0,
+  Shipped= 1,
+  Completed= 2,
+  InProgress= 3,
+  Rejected= 4,
+  Cancelled= 5,
+
 }

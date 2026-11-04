@@ -22,8 +22,8 @@ const formatOptions = [
 
 <template>
   <div class="flex flex-col gap-3">
-    <Alert class="py-2 px-3 border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400">
-      <AlertDescription class="text-xs text-current m-0">
+    <Alert size="sm" variant="info">
+      <AlertDescription class="text-current m-0">
         请求由浏览器直连 API 服务方，不经过 VTsuru 后端（避免 IP 暴露和延迟）
       </AlertDescription>
     </Alert>
@@ -67,12 +67,7 @@ const formatOptions = [
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            v-for="opt in formatOptions"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
+          <SelectItem v-for="opt in formatOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>

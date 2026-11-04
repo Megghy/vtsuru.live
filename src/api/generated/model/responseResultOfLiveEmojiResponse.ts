@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { LiveEmojiResponse } from './liveEmojiResponse'
+import type { LiveEmojiResponse } from './liveEmojiResponse';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfLiveEmojiResponse {
-  message: string
-  code: number
-  data: LiveEmojiResponse
+  message: string;
+  code: number;
+  data: LiveEmojiResponse;
 }

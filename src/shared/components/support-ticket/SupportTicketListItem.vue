@@ -49,14 +49,11 @@ const badgeVariant = computed(() => {
         aria-label="有新消息"
       />
       <span class="flex-1 overflow-hidden text-sm font-semibold truncate">{{ ticket.title }}</span>
-      <Badge
-        :variant="badgeVariant"
-        class="shrink-0"
-      >
+      <Badge :variant="badgeVariant">
         {{ supportTicketStatusMeta[ticket.status].label }}
       </Badge>
     </span>
-    <span class="flex items-center justify-between gap-2 min-w-0 text-muted-foreground text-xs">
+    <span class="flex-between gap-2 min-w-0 text-muted-foreground text-xs">
       <span>#{{ ticket.id }} · {{ supportTicketTypeLabel(ticket.type) }}</span>
       <span>{{ relativeTime }}</span>
     </span>

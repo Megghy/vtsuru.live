@@ -16,6 +16,7 @@ import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
+import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
@@ -271,7 +272,7 @@ defineExpose({
     <Dialog v-model:open="showModal">
       <DialogContent class="max-w-2xl max-h-[85vh] flex flex-col p-4">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">
+          <DialogTitle class="text-sm">
             观众「{{ userDanmakus?.[0]?.uName || '未知用户' }}」在本场的发言 ({{ userDanmakus?.length || 0 }} 条)
           </DialogTitle>
         </DialogHeader>
@@ -291,7 +292,7 @@ defineExpose({
     <Dialog v-model:open="showExportModal">
       <DialogContent class="max-w-md p-4">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">导出弹幕数据</DialogTitle>
+          <DialogTitle class="text-sm">导出弹幕数据</DialogTitle>
         </DialogHeader>
         <div
           v-if="isExporting"
@@ -432,7 +433,7 @@ defineExpose({
               >
             </div>
 
-            <div class="h-4 w-px bg-border" />
+            <Separator orientation="vertical" class="h-4" />
 
             <Button
               variant="outline"
@@ -507,7 +508,7 @@ defineExpose({
               <ToggleGroupItem value="100">≥100</ToggleGroupItem>
             </ToggleGroup>
 
-            <div class="h-4 w-px bg-border" />
+            <Separator orientation="vertical" class="h-4" />
 
             <div class="flex items-center gap-1.5">
               <Checkbox

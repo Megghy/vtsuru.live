@@ -125,7 +125,7 @@ function togglePlayerMinimize() {
       class="rounded-lg border border-border bg-card shadow-sm p-2.5 max-w-7xl mx-auto"
     >
       <!-- 顶部状态栏 -->
-      <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-border/50 text-xs">
+      <div class="flex-between gap-2 pb-1.5 border-b border-border/50 text-xs">
         <div class="flex items-center gap-2 min-w-0">
           <component
             :is="MusicalNote"
@@ -133,11 +133,7 @@ function togglePlayerMinimize() {
           />
           <span class="font-semibold text-foreground shrink-0">音乐播放器</span>
 
-          <Badge
-            v-if="currentPlayingInfo && !isPlayerMinimized"
-            :variant="currentPlayingInfo.type === 'request' ? 'brand' : 'secondary'"
-            class="text-[11px] px-2 py-0 h-5 font-normal truncate"
-          >
+          <Badge v-if="currentPlayingInfo && !isPlayerMinimized" :variant="currentPlayingInfo.type === 'request' ? 'brand' : 'secondary'" size="sm" class="truncate">
             {{ currentPlayingInfo.info }}
           </Badge>
 
@@ -159,8 +155,7 @@ function togglePlayerMinimize() {
 
         <div class="flex items-center gap-2 shrink-0 pr-12">
           <template v-if="isPlayerMinimized">
-            <Badge
-              v-if="musicRquestStore.waitingMusics.length > 0"
+            <Badge v-if="musicRquestStore.waitingMusics.length> 0"
               variant="destructive"
               class="text-[10px] px-1.5 py-0 h-4"
             >
@@ -195,7 +190,7 @@ function togglePlayerMinimize() {
           <Button
             size="icon-xs"
             variant="ghost"
-            :title="isPlayerMinimized ? '展开播放器' : '收起播放器'"
+            :aria-label="isPlayerMinimized ? '展开播放器' : '收起播放器'"
             @click="togglePlayerMinimize"
           >
             <component
@@ -235,7 +230,7 @@ function togglePlayerMinimize() {
               <Button
                 size="icon-sm"
                 variant="outline"
-                title="上一首 / 重播"
+                aria-label="上一首 / 重播"
                 :disabled="musicRquestStore.aplayerMusics.length === 0"
                 @click="onPreviousMusic"
               >
@@ -248,7 +243,7 @@ function togglePlayerMinimize() {
               <Button
                 size="icon-sm"
                 variant="brand"
-                :title="aplayer?.audio?.paused !== false ? '播放' : '暂停'"
+                :aria-label="aplayer?.audio?.paused !== false ? '播放' : '暂停'"
                 :disabled="musicRquestStore.aplayerMusics.length === 0"
                 @click="togglePlay"
               >
@@ -261,7 +256,7 @@ function togglePlayerMinimize() {
               <Button
                 size="icon-sm"
                 variant="outline"
-                title="下一首"
+                aria-label="下一首"
                 :disabled="musicRquestStore.waitingMusics.length === 0 && musicRquestStore.aplayerMusics.length <= 1"
                 @click="onNextMusic"
               >
@@ -277,16 +272,10 @@ function togglePlayerMinimize() {
           <div class="flex flex-col items-center gap-1">
             <span class="text-[11px] font-medium text-muted-foreground">队列管理</span>
             <div class="flex items-center gap-1.5">
-              <Badge
-                variant="secondary"
-                class="text-[11px] px-2 h-5"
-              >
+              <Badge variant="secondary" size="sm">
                 等待: {{ musicRquestStore.waitingMusics.length }}
               </Badge>
-              <Badge
-                variant="outline"
-                class="text-[11px] px-2 h-5"
-              >
+              <Badge variant="outline" size="sm">
                 歌单: {{ musicRquestStore.originMusics.length }}
               </Badge>
               <Button

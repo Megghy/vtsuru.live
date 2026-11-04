@@ -157,12 +157,7 @@ function getStatusBadge(status: SongRequestStatus) {
             <SelectValue placeholder="状态筛选" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem
-              v-for="opt in statusFilterOptions"
-              :key="opt.value"
-              :value="opt.value"
-              class="text-xs"
-            >
+            <SelectItem v-for="opt in statusFilterOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -175,12 +170,12 @@ function getStatusBadge(status: SongRequestStatus) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead class="text-xs">曲名</TableHead>
-            <TableHead class="text-xs">用户名</TableHead>
-            <TableHead class="text-xs">来自</TableHead>
-            <TableHead class="text-xs">状态</TableHead>
-            <TableHead class="text-xs">时间</TableHead>
-            <TableHead class="text-xs text-right w-[100px]">操作</TableHead>
+            <TableHead>曲名</TableHead>
+            <TableHead>用户名</TableHead>
+            <TableHead>来自</TableHead>
+            <TableHead>状态</TableHead>
+            <TableHead>时间</TableHead>
+            <TableHead class="text-right w-[100px]">操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -194,18 +189,15 @@ function getStatusBadge(status: SongRequestStatus) {
                   : ''
               "
             >
-              <TableCell class="text-xs font-medium">
+              <TableCell class="font-medium">
                 {{ row.songName }}
               </TableCell>
 
-              <TableCell class="text-xs">
+              <TableCell>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Badge
-                        variant="outline"
-                        class="text-[10px] h-4.5 px-1.5 cursor-help"
-                      >
+                      <Badge variant="outline" size="xs" class="cursor-help">
                         {{ row.from === 3 ? '手动添加' : row.user?.name || '未知用户' }}
                       </Badge>
                     </TooltipTrigger>
@@ -216,42 +208,28 @@ function getStatusBadge(status: SongRequestStatus) {
                 </TooltipProvider>
               </TableCell>
 
-              <TableCell class="text-xs">
-                <Badge
-                  variant="outline"
-                  class="text-[10px] h-4.5 px-1.5"
-                  :class="getFromBadge(row).class"
-                >
+              <TableCell>
+                <Badge variant="outline" size="xs" :class="getFromBadge(row).class">
                   {{ getFromBadge(row).text }}
                 </Badge>
               </TableCell>
 
-              <TableCell class="text-xs">
-                <Badge
-                  variant="outline"
-                  class="text-[10px] h-4.5 px-1.5"
-                  :class="getStatusBadge(row.status).class"
-                >
+              <TableCell>
+                <Badge variant="outline" size="xs" :class="getStatusBadge(row.status).class">
                   {{ getStatusBadge(row.status).text }}
                 </Badge>
               </TableCell>
 
-              <TableCell class="text-xs text-muted-foreground whitespace-nowrap">
+              <TableCell class="text-muted-foreground whitespace-nowrap">
                 {{ formatTime(row.createAt) }}
               </TableCell>
 
-              <TableCell class="text-xs text-right">
+              <TableCell class="text-right">
                 <div class="flex items-center justify-end gap-1.5">
                   <TooltipProvider>
                     <Tooltip v-if="row.status === SongRequestStatus.Finish || row.status === SongRequestStatus.Cancel">
                       <TooltipTrigger as-child>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          class="h-6 w-6 p-0 text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40"
-                          :disabled="songRequest.isLoading"
-                          @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)"
-                        >
+                        <Button size="icon-xs" variant="ghost" class="text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40" :disabled="songRequest.isLoading" @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)">
                           <ArrowCounterclockwise24Regular class="size-3.5" />
                         </Button>
                       </TooltipTrigger>
@@ -266,12 +244,7 @@ function getStatusBadge(status: SongRequestStatus) {
                             @positive-click="songRequest.deleteSongs([row])"
                           >
                             <template #trigger>
-                              <Button
-                                size="xs"
-                                variant="ghost"
-                                class="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                :disabled="songRequest.isLoading"
-                              >
+                              <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive hover:bg-destructive/10" :disabled="songRequest.isLoading">
                                 <Delete24Filled class="size-3.5" />
                               </Button>
                             </template>

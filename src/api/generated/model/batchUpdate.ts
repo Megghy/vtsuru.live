@@ -7,6 +7,6 @@
  */
 
 export interface BatchUpdate {
-  ids: string[]
-  data: string[]
+  ids: string[];
+  data: string[];
 }

@@ -7,6 +7,6 @@
  */
 
 export interface TempResponseEmoiconModel {
-  keyword: string
-  url: string
+  keyword: string;
+  url: string;
 }

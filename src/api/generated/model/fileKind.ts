@@ -10,10 +10,11 @@
  * 允许上传的内容大类，与具体扩展名解耦。
  */
 export enum FileKind {
-  Image = 0,
-  Audio = 1,
-  Video = 2,
-  Document = 3,
-  Archive = 4,
-  Other = 5,
+  Image= 0,
+  Audio= 1,
+  Video= 2,
+  Document= 3,
+  Archive= 4,
+  Other= 5,
+
 }

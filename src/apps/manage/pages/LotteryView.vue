@@ -70,6 +70,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Separator } from '@/shared/ui/separator'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useMessage } from '@/shared/utils'
@@ -488,21 +489,15 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList class="grid w-full grid-cols-2 max-w-sm p-0.5 bg-muted">
-        <TabsTrigger
-          value="live"
-          class="text-xs h-7 gap-1"
-        >
+      <TabsList size="xs" class="grid w-full grid-cols-2 max-w-sm p-0.5 bg-muted">
+        <TabsTrigger value="live" class="gap-1" >
           <component
             :is="Games24Regular"
             class="h-3.5 w-3.5"
           />
           直播间实时弹幕抽奖
         </TabsTrigger>
-        <TabsTrigger
-          value="dynamic"
-          class="text-xs h-7 gap-1"
-        >
+        <TabsTrigger value="dynamic" class="gap-1" >
           <component
             :is="Comment24Regular"
             class="h-3.5 w-3.5"
@@ -517,22 +512,15 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardContent class="p-3.5 flex items-center justify-between gap-3 flex-wrap">
+          <CardContent class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
-              <Badge
-                :variant="isStartLiveLottery ? 'success' : 'outline'"
-                class="text-xs"
-              >
+              <Badge :variant="isStartLiveLottery ? 'success' : 'outline'">
                 {{ isStartLiveLottery ? '正在抓取弹幕/送礼' : '已暂停采集' }}
               </Badge>
-              <Badge
-                variant="brand"
-                class="text-xs"
-              >
+              <Badge variant="brand">
                 奖池观众: {{ currentUsers.length }} 人
               </Badge>
-              <Badge
-                v-if="liveResultUsers.length > 0"
+              <Badge v-if="liveResultUsers.length> 0"
                 variant="warning"
                 class="text-xs"
               >
@@ -629,17 +617,17 @@ onUnmounted(() => {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <!-- 奖池卡片 (8 列) -->
           <Card class="lg:col-span-8 flex flex-col">
-            <CardHeader class="p-3.5 pb-2">
+            <CardHeader class="p-3.5">
               <div class="flex items-center gap-2">
                 <component
                   :is="PeopleQueue24Regular"
                   class="h-4 w-4 text-muted-foreground"
                 />
-                <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 实时奖池观众卡片 </CardTitle>
+                <CardTitle class="text-xs uppercase tracking-wide"> 实时奖池观众卡片 </CardTitle>
               </div>
             </CardHeader>
 
-            <CardContent class="p-3.5 flex-1 flex flex-col space-y-3">
+            <CardContent class="flex-1 flex flex-col space-y-3">
               <!-- 抽奖中进度条 -->
               <div
                 v-if="isLiveLottering"
@@ -659,7 +647,7 @@ onUnmounted(() => {
                 <div
                   v-for="user in currentUsers"
                   :key="user.openId"
-                  class="flex flex-col items-center justify-center p-2 rounded-lg border border-border bg-card/60 transition-all text-center relative overflow-hidden"
+                  class="flex-col-center p-2 rounded-lg border border-border bg-card/60 transition-all text-center relative overflow-hidden"
                   :class="{
                     'border-amber-500 bg-amber-500/10 shadow-sm ring-1 ring-amber-500':
                       cardStates[user.openId]?.isWinner,
@@ -676,11 +664,7 @@ onUnmounted(() => {
                   >
                     {{ user.name }}
                   </span>
-                  <Badge
-                    v-if="cardStates[user.openId]?.isWinner"
-                    variant="warning"
-                    class="text-[9px] px-1 py-0 h-3.5 mt-1"
-                  >
+                  <Badge v-if="cardStates[user.openId]?.isWinner" variant="warning" class="text-[9px] px-1 py-0 h-3.5 mt-1">
                     中奖
                   </Badge>
                 </div>
@@ -713,17 +697,17 @@ onUnmounted(() => {
         class="mt-3 space-y-3"
       >
         <Card>
-          <CardHeader class="p-3.5 pb-2">
+          <CardHeader class="p-3.5">
             <div class="flex items-center gap-2">
               <component
                 :is="Link24Regular"
                 class="h-4 w-4 text-muted-foreground"
               />
-              <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 输入动态或视频链接 </CardTitle>
+              <CardTitle class="text-xs uppercase tracking-wide"> 输入动态或视频链接 </CardTitle>
             </div>
           </CardHeader>
 
-          <CardContent class="p-3.5 space-y-3">
+          <CardContent class="space-y-3">
             <div class="flex items-center gap-3 flex-wrap">
               <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
                 <Button
@@ -774,13 +758,13 @@ onUnmounted(() => {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <!-- 候选池与抽取 (8 列) -->
           <Card class="lg:col-span-8 flex flex-col">
-            <CardHeader class="p-3.5 pb-2 flex-row items-center justify-between">
+            <CardHeader class="p-3.5 flex-row items-center justify-between">
               <div class="flex items-center gap-2">
                 <component
                   :is="Target24Regular"
                   class="h-4 w-4 text-muted-foreground"
                 />
-                <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 候选观众与中奖结果 </CardTitle>
+                <CardTitle class="text-xs uppercase tracking-wide"> 候选观众与中奖结果 </CardTitle>
               </div>
 
               <div class="flex items-center gap-2">
@@ -809,7 +793,7 @@ onUnmounted(() => {
               </div>
             </CardHeader>
 
-            <CardContent class="p-3.5 flex-1">
+            <CardContent class="flex-1">
               <div
                 v-if="validDynamicUsers.length > 0"
                 class="flex flex-wrap gap-2 max-h-[460px] overflow-y-auto p-1"
@@ -830,8 +814,7 @@ onUnmounted(() => {
                     <AvatarFallback>{{ user.name.slice(0, 1) }}</AvatarFallback>
                   </Avatar>
                   <span class="truncate max-w-[100px]">{{ user.name }}</span>
-                  <Badge
-                    v-if="dynamicResultUsers.some((w) => w.uId === user.uId)"
+                  <Badge v-if="dynamicResultUsers.some((w) => w.uId === user.uId)"
                     variant="warning"
                     class="text-[9px] px-1 py-0 h-3.5"
                   >
@@ -851,25 +834,20 @@ onUnmounted(() => {
           <!-- 抽选条件与过滤 (4 列) -->
           <div class="lg:col-span-4">
             <Card>
-              <CardHeader class="p-3.5 pb-2">
+              <CardHeader class="p-3.5">
                 <div class="flex items-center gap-2">
                   <component
                     :is="Settings24Regular"
                     class="h-4 w-4 text-muted-foreground"
                   />
-                  <CardTitle class="text-xs font-semibold uppercase tracking-wide"> 抽选条件与过滤 </CardTitle>
+                  <CardTitle class="text-xs uppercase tracking-wide"> 抽选条件与过滤 </CardTitle>
                 </div>
               </CardHeader>
 
-              <CardContent class="p-3.5 space-y-3.5">
-                <div class="flex items-center justify-between gap-3">
+              <CardContent class="space-y-3.5">
+                <div class="flex-between gap-3">
                   <span class="text-xs font-medium text-foreground">抽取人数</span>
-                  <Input
-                    v-model.number="dynamicOption.resultCount"
-                    type="number"
-                    min="1"
-                    class="w-24 font-mono"
-                  />
+                  <NumberField v-model="dynamicOption.resultCount" min="1" class="w-24 font-mono" / :show-buttons="false">
                 </div>
 
                 <Separator />
@@ -893,14 +871,7 @@ onUnmounted(() => {
                     class="pl-6 pt-1 flex items-center gap-2"
                   >
                     <span class="text-xs text-muted-foreground">最低等级:</span>
-                    <Input
-                      size="xs"
-                      v-model.number="dynamicOption.fanCardLevel"
-                      type="number"
-                      min="1"
-                      max="40"
-                      class="w-20 font-mono"
-                    />
+                    <NumberField size="xs" v-model="dynamicOption.fanCardLevel" min="1" max="40" class="w-20 font-mono" / :show-buttons="false">
                   </div>
                 </div>
               </CardContent>

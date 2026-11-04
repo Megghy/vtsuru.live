@@ -311,32 +311,32 @@ onMounted(async () => {
   <div class="space-y-4">
     <!-- 统计卡片 -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
-      <Card class="border border-border">
-        <CardContent class="p-3.5 space-y-1">
+      <Card>
+        <CardContent class="space-y-1">
           <span class="text-xs text-muted-foreground">总用户</span>
           <span class="text-xl font-bold font-mono text-foreground block">{{ userStats.total }}</span>
         </CardContent>
       </Card>
-      <Card class="border border-border">
-        <CardContent class="p-3.5 space-y-1">
+      <Card>
+        <CardContent class="space-y-1">
           <span class="text-xs text-muted-foreground">已认证</span>
           <span class="text-xl font-bold font-mono text-emerald-500 block">{{ userStats.authed }}</span>
         </CardContent>
       </Card>
-      <Card class="border border-border">
-        <CardContent class="p-3.5 space-y-1">
+      <Card>
+        <CardContent class="space-y-1">
           <span class="text-xs text-muted-foreground">总积分</span>
           <span class="text-xl font-bold font-mono text-primary block">{{ userStats.totalPoints }}</span>
         </CardContent>
       </Card>
-      <Card class="border border-border">
-        <CardContent class="p-3.5 space-y-1">
+      <Card>
+        <CardContent class="space-y-1">
           <span class="text-xs text-muted-foreground">总订单</span>
           <span class="text-xl font-bold font-mono text-blue-500 block">{{ userStats.totalOrders }}</span>
         </CardContent>
       </Card>
-      <Card class="border border-border">
-        <CardContent class="p-3.5 space-y-1">
+      <Card>
+        <CardContent class="space-y-1">
           <span class="text-xs text-muted-foreground">平均积分</span>
           <span class="text-xl font-bold font-mono text-foreground block">{{ userStats.avgPoints }}</span>
         </CardContent>
@@ -344,16 +344,8 @@ onMounted(async () => {
     </div>
 
     <!-- 积分来源提示 -->
-    <Alert
-      variant="default"
-      class="border"
-      :class="
-        pointSourceAlertType === 'warning'
-          ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
-          : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'
-      "
-    >
-      <div class="flex items-center justify-between flex-wrap gap-2 w-full">
+    <Alert variant="warning" class="border" :class=" pointSourceAlertType === 'warning' ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400' ">
+      <div class="flex-between flex-wrap gap-2 w-full">
         <div>
           <span class="text-xs font-semibold block">当前积分来源：{{ pointSourceText }}</span>
           <span class="text-[11px] text-muted-foreground mt-0.5 block">{{ pointSourceHelpText }}</span>
@@ -371,7 +363,7 @@ onMounted(async () => {
     </Alert>
 
     <!-- 工具栏 -->
-    <div class="flex items-center justify-between gap-3 flex-wrap bg-card p-3 rounded-lg border border-border">
+    <div class="flex-between gap-3 flex-wrap bg-card p-3 rounded-lg border border-border">
       <div class="flex items-center gap-3 flex-wrap">
         <div class="relative w-56">
           <Search24Regular class="absolute left-2.5 top-2.5 size-3.5 text-muted-foreground" />
@@ -395,7 +387,7 @@ onMounted(async () => {
             <TooltipTrigger as-child>
               <Info24Filled class="size-3.5 text-muted-foreground/70 cursor-help" />
             </TooltipTrigger>
-            <TooltipContent class="max-w-xs text-xs space-y-1">
+            <TooltipContent class="max-w-xs space-y-1">
               <p>
                 1. 如果 EventFetcher 使用的是开放平台连接则无法通过UId搜索除了已认证和手动添加之外的用户 (OpenID不通用)
               </p>
@@ -455,7 +447,7 @@ onMounted(async () => {
     </div>
 
     <!-- 用户表格 -->
-    <Card class="border border-border">
+    <Card>
       <CardContent class="p-0">
         <Spin :show="isLoading">
           <Empty
@@ -500,10 +492,10 @@ onMounted(async () => {
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell class="text-right text-xs font-mono font-medium text-foreground">
+                    <TableCell class="text-right font-mono font-medium text-foreground">
                       {{ formatNumber(Number(user.point.toFixed(1))) }}
                     </TableCell>
-                    <TableCell class="text-right text-xs">
+                    <TableCell class="text-right">
                       <span
                         v-if="!user.isAuthed"
                         class="text-muted-foreground text-[11px]"
@@ -520,11 +512,11 @@ onMounted(async () => {
                         >无订单</span
                       >
                     </TableCell>
-                    <TableCell class="text-xs text-muted-foreground">
+                    <TableCell class="text-muted-foreground">
                       {{ formatTime(user.updateAt) }}
                     </TableCell>
                     <TableCell class="text-center">
-                      <div class="flex items-center justify-center gap-1.5">
+                      <div class="flex-center gap-1.5">
                         <Button
                           variant="ghost"
                           size="xs"
@@ -557,7 +549,7 @@ onMounted(async () => {
             </div>
 
             <!-- 分页栏 -->
-            <div class="flex items-center justify-between px-4 py-3 border-t text-xs">
+            <div class="flex-between px-4 py-3 border-t text-xs">
               <span class="text-muted-foreground">
                 共 {{ filteredUsers.length }} 位用户，第 {{ pn }} / {{ totalPages }} 页
               </span>
@@ -608,7 +600,7 @@ onMounted(async () => {
     <Dialog v-model:open="showModal">
       <DialogContent class="max-w-4xl max-h-[85vh] flex flex-col p-0">
         <DialogHeader class="p-4 border-b">
-          <DialogTitle class="text-sm font-semibold">用户详情</DialogTitle>
+          <DialogTitle class="text-sm">用户详情</DialogTitle>
         </DialogHeader>
         <div class="flex-1 overflow-y-auto">
           <PointUserDetailCard
@@ -624,7 +616,7 @@ onMounted(async () => {
     <Dialog v-model:open="showGivePointModal">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold">给予 / 扣除积分</DialogTitle>
+          <DialogTitle class="text-sm">给予 / 扣除积分</DialogTitle>
         </DialogHeader>
 
         <div class="space-y-3 py-2">
@@ -684,7 +676,7 @@ onMounted(async () => {
     <Dialog v-model:open="showResetAllPointsModal">
       <DialogContent class="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle class="text-sm font-semibold text-destructive flex items-center gap-2">
+          <DialogTitle class="text-sm text-destructive flex items-center gap-2">
             <Warning24Regular class="size-5" />
             重置所有用户积分
           </DialogTitle>

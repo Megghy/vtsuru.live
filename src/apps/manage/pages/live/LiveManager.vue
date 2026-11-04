@@ -24,6 +24,7 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
+import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Switch } from '@/shared/ui/switch'
@@ -281,7 +282,7 @@ onBeforeUnmount(() => {
         variant="default"
       >
         <AlertTitle>未认证</AlertTitle>
-        <AlertDescription class="text-xs"> 尚未进行 Bilibili 认证，请先在认证中心完成账号绑定。 </AlertDescription>
+        <AlertDescription> 尚未进行 Bilibili 认证，请先在认证中心完成账号绑定。 </AlertDescription>
       </Alert>
 
       <Alert
@@ -289,7 +290,7 @@ onBeforeUnmount(() => {
         variant="destructive"
       >
         <AlertTitle>加载失败</AlertTitle>
-        <AlertDescription class="text-xs flex items-center justify-between gap-2">
+        <AlertDescription class="flex-between gap-2">
           <span>{{ loadError }}</span>
           <Button
             size="xs"
@@ -307,7 +308,7 @@ onBeforeUnmount(() => {
       <!-- 4 宫格 Bento 概览看板 -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card class="p-3">
-          <div class="flex items-center justify-between text-xs text-muted-foreground">
+          <div class="flex-between text-xs text-muted-foreground">
             <span>总直播场次</span>
             <component
               :is="Video24Regular"
@@ -319,8 +320,7 @@ onBeforeUnmount(() => {
             <span class="text-xs text-muted-foreground">场</span>
           </div>
           <div class="mt-2 text-[11px]">
-            <Badge
-              v-if="overviewStats.livingCount > 0"
+            <Badge v-if="overviewStats.livingCount> 0"
               variant="destructive"
               class="text-[9px] px-1 py-0 h-4"
             >
@@ -335,7 +335,7 @@ onBeforeUnmount(() => {
         </Card>
 
         <Card class="p-3">
-          <div class="flex items-center justify-between text-xs text-muted-foreground">
+          <div class="flex-between text-xs text-muted-foreground">
             <span>累计直播时长</span>
             <component
               :is="Clock24Regular"
@@ -350,7 +350,7 @@ onBeforeUnmount(() => {
         </Card>
 
         <Card class="p-3">
-          <div class="flex items-center justify-between text-xs text-muted-foreground">
+          <div class="flex-between text-xs text-muted-foreground">
             <span>累计互动弹幕</span>
             <component
               :is="Chat24Regular"
@@ -367,7 +367,7 @@ onBeforeUnmount(() => {
         </Card>
 
         <Card class="p-3">
-          <div class="flex items-center justify-between text-xs text-muted-foreground">
+          <div class="flex-between text-xs text-muted-foreground">
             <span>累计打赏收益</span>
             <component
               :is="Money24Regular"
@@ -386,7 +386,7 @@ onBeforeUnmount(() => {
 
       <!-- 筛选与控制工具条 -->
       <Card class="p-3 space-y-2.5">
-        <div class="flex items-center justify-between flex-wrap gap-2.5">
+        <div class="flex-between flex-wrap gap-2.5">
           <!-- 左侧：搜索与状态过滤 -->
           <div class="flex items-center gap-2 flex-wrap">
             <div class="relative w-56">
@@ -456,14 +456,7 @@ onBeforeUnmount(() => {
                 :checked="enableAutoRefresh"
                 @update:checked="(val) => (enableAutoRefresh = val)"
               />
-              <Input
-                v-if="enableAutoRefresh"
-                v-model.number="refreshSeconds"
-                type="number"
-                min="10"
-                max="300"
-                class="w-16"
-              />
+              <NumberField v-if="enableAutoRefresh" v-model="refreshSeconds" min="10" max="300" class="w-16" / :show-buttons="false">
             </div>
           </div>
         </div>
@@ -517,7 +510,7 @@ onBeforeUnmount(() => {
         <!-- 分页控制器 -->
         <div
           v-if="totalFilteredCount > 0"
-          class="flex items-center justify-between text-xs text-muted-foreground pt-3"
+          class="flex-between text-xs text-muted-foreground pt-3"
         >
           <div class="flex items-center gap-2">
             <span>共 {{ totalFilteredCount }} 条</span>

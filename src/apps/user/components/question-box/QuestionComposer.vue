@@ -137,7 +137,7 @@ async function submit() {
     :class="{ 'is-embedded': embedded }"
   >
     <header class="composer-header">
-      <Avatar class="size-12 rounded-full">
+      <Avatar class="size-12">
         <AvatarImage
           :src="
             userInfo?.faceUrl ||
@@ -221,7 +221,7 @@ async function submit() {
               <Button
                 variant="ghost"
                 size="xs"
-                class="topic-banner-clear h-auto p-0 text-muted-foreground hover:text-foreground font-normal"
+                class="topic-banner-clear h-auto p-0 text-muted-foreground font-normal"
                 @click="draft = { ...draft, tag: null }"
               >
                 取消
@@ -254,7 +254,7 @@ async function submit() {
         >
           <Textarea
             v-model="draft.message"
-            class="message-input min-h-[140px] resize-y border-0 bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
+            class="message-input min-h-[140px] resize-y border-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 rounded-none"
             :disabled="isSelf"
             maxlength="10000"
             placeholder="写下你想说的话..."
@@ -306,7 +306,7 @@ async function submit() {
               <Button
                 variant="ghost"
                 size="icon-xs"
-                class="absolute top-1 right-1 size-6 rounded-full bg-black/60 text-white p-0 hover:bg-black/80"
+                class="absolute top-1 right-1 rounded-full bg-black/60 text-white hover:bg-black/80"
                 :aria-label="`移除第 ${index + 1} 张图片`"
                 @click="removeImage(index)"
               >

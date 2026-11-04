@@ -259,7 +259,7 @@ function handleVariableInsert(text: string) {
 <template>
   <Card class="template-editor-card border-none bg-transparent shadow-none">
     <CardHeader class="p-0 pb-3 flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">
+      <CardTitle>
         {{ title }}
       </CardTitle>
       <Button
@@ -298,11 +298,7 @@ function handleVariableInsert(text: string) {
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div class="md:col-span-3 flex flex-col gap-2">
             <!-- 长度检查警告 -->
-            <Alert
-              v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'"
-              :variant="lengthStatus.status === 'error' ? 'destructive' : 'default'"
-              class="py-2 text-xs"
-            >
+            <Alert size="sm" v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'" :variant="lengthStatus.status === 'error' ? 'destructive' : 'default'">
               <AlertDescription>{{ lengthStatus.message }}</AlertDescription>
             </Alert>
 
@@ -316,7 +312,7 @@ function handleVariableInsert(text: string) {
             />
 
             <!-- 实时预览切换与区域 -->
-            <div class="flex items-center justify-between mt-1">
+            <div class="flex-between mt-1">
               <Button
                 size="xs"
                 variant="ghost"
@@ -409,7 +405,7 @@ function handleVariableInsert(text: string) {
         <ScrollArea class="h-[60vh] pr-4">
           <Alert class="mb-4">
             <AlertTitle class="text-sm font-bold mb-1"> 模板语法说明 </AlertTitle>
-            <AlertDescription class="text-xs space-y-2">
+            <AlertDescription class="space-y-2">
               <p>模板支持插入变量和执行 JavaScript。</p>
               <Separator class="my-2" />
               <div>
@@ -451,10 +447,7 @@ function handleVariableInsert(text: string) {
                 数据存储函数说明 (在 js+ 或 js-run 中使用)
               </AccordionTrigger>
               <AccordionContent class="text-xs space-y-3">
-                <Alert
-                  variant="default"
-                  class="py-2"
-                >
+                <Alert size="sm" variant="default">
                   <AlertDescription>
                     <strong>运行时数据</strong>仅在本次运行有效, 重启后失效，且操作是<strong>同步</strong>的。
                   </AlertDescription>
@@ -470,10 +463,7 @@ function handleVariableInsert(text: string) {
 
                 <Separator class="my-2" />
 
-                <Alert
-                  variant="default"
-                  class="py-2"
-                >
+                <Alert size="sm" variant="default">
                   <AlertDescription>
                     <strong>持久化数据</strong>会长期保留，但操作是<strong>异步</strong>的 (返回 Promise)。<br />
                     在 <code>js+</code> 中使用 <code>await</code> 或 <code>.then()</code>。

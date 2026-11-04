@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { TempResponseSimpleStreamerModel } from './tempResponseSimpleStreamerModel'
+import type { TempResponseSimpleStreamerModel } from './tempResponseSimpleStreamerModel';
 
 export interface TempResponseIndexDataModel {
-  userCount: number
-  streamers: TempResponseSimpleStreamerModel[]
+  userCount: number;
+  streamers: TempResponseSimpleStreamerModel[];
 }

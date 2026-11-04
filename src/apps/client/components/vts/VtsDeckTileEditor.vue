@@ -79,7 +79,7 @@ function save() {
   >
     <DialogContent class="max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">
+        <DialogTitle class="text-base">
           {{ vts.deckTiles.some((t) => t.id === form.id) ? '编辑格子' : '添加格子' }}
         </DialogTitle>
       </DialogHeader>

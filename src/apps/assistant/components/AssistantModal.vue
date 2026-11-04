@@ -47,34 +47,25 @@ function onClose() {
         class="px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 shrink-0"
       >
         <div class="flex items-center gap-2 min-w-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            class="hidden max-[720px]:inline-flex size-7 -ml-1 text-muted-foreground"
-            @click="drawerVisible = true"
-          >
+          <Button variant="ghost" size="xs" class="hidden max-[720px]:inline-flex size-7 -ml-1 text-muted-foreground" @click="drawerVisible = true">
             <component
               :is="LineHorizontal320Regular"
               class="size-4"
             />
           </Button>
 
-          <DialogTitle class="text-sm font-semibold text-foreground">VTsuru 助手</DialogTitle>
+          <DialogTitle class="text-sm text-foreground">VTsuru 助手</DialogTitle>
 
           <Popover>
             <PopoverTrigger as-child>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-6 text-muted-foreground hover:text-foreground"
-              >
+              <Button variant="ghost" size="xs" class="size-6 text-muted-foreground">
                 <component
                   :is="QuestionCircle20Regular"
                   class="size-3.5"
                 />
               </Button>
             </PopoverTrigger>
-            <PopoverContent class="w-72 p-3 text-xs space-y-2">
+            <PopoverContent class="w-72 space-y-2">
               <strong class="text-xs font-semibold block text-foreground">我能帮你做这些</strong>
               <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
                 <div
@@ -89,10 +80,7 @@ function onClose() {
             </PopoverContent>
           </Popover>
 
-          <Badge
-            variant="secondary"
-            class="text-[10px] h-5 px-1.5 font-normal text-muted-foreground bg-muted"
-          >
+          <Badge variant="secondary" size="xs" class="h-5 text-muted-foreground bg-muted">
             {{ ctx.title || '管理后台' }}
           </Badge>
         </div>
@@ -134,7 +122,7 @@ function onClose() {
       class="w-64 p-4 flex flex-col"
     >
       <SheetHeader class="pb-3 border-b border-border/60">
-        <SheetTitle class="text-sm font-semibold">历史会话</SheetTitle>
+        <SheetTitle class="text-sm">历史会话</SheetTitle>
       </SheetHeader>
       <div class="flex-1 min-h-0 pt-3">
         <AssistantConversationList @click="drawerVisible = false" />

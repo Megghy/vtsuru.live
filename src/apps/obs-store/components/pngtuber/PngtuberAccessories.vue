@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PngtuberAccessory } from '@/shared/pngtuber/types'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
@@ -57,18 +58,21 @@ const fields = [
       增加配件（{{ accessories.length }}/12）
     </Button>
 
-    <div class="space-y-2">
-      <details
+    <Accordion
+      type="multiple"
+      class="space-y-2 border-none"
+    >
+      <AccordionItem
         v-for="a in accessories"
         :key="a.id"
-        class="group border rounded-md p-2.5 text-xs bg-muted/20"
+        :value="a.id"
+        class="border rounded-md px-3 bg-muted/20 text-xs"
       >
-        <summary class="font-medium cursor-pointer list-none flex items-center justify-between text-foreground">
+        <AccordionTrigger class="py-2.5 font-medium hover:no-underline">
           <span>{{ a.name || '配件' }}</span>
-          <span class="text-muted-foreground transition-transform group-open:rotate-180">▾</span>
-        </summary>
+        </AccordionTrigger>
 
-        <div class="mt-3 pt-2.5 border-t space-y-3">
+        <AccordionContent class="pt-2 pb-3 space-y-3">
           <Input
             :value="a.name"
             placeholder="配件名称"
@@ -111,25 +115,16 @@ const fields = [
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                value="always"
-                class="text-xs"
-                >始终显示</SelectItem
+              <SelectItem value="always">始终显示</SelectItem
               >
-              <SelectItem
-                value="speaking"
-                class="text-xs"
-                >说话时显示</SelectItem
+              <SelectItem value="speaking">说话时显示</SelectItem
               >
-              <SelectItem
-                value="idle"
-                class="text-xs"
-                >静止时显示</SelectItem
+              <SelectItem value="idle">静止时显示</SelectItem
               >
             </SelectContent>
           </Select>
 
-          <div class="flex items-center justify-between gap-2 pt-1">
+          <div class="flex-between gap-2 pt-1">
             <div class="flex items-center gap-2">
               <span class="text-xs">置于立绘前方</span>
               <Switch
@@ -150,21 +145,16 @@ const fields = [
               "
             >
               <template #trigger>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="h-6 text-[11px] border-destructive/40 text-destructive hover:bg-destructive/10"
-                  :disabled="disabled"
-                >
+                <Button size="xs" variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="disabled">
                   删除配件
                 </Button>
               </template>
               删除此配件？
             </Popconfirm>
           </div>
-        </div>
-      </details>
-    </div>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   </div>
 </template>
 

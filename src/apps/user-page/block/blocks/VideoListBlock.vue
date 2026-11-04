@@ -151,12 +151,8 @@ const containerStyle = computed(() => {
         <Spin />
       </div>
 
-      <Alert
-        v-else-if="error"
-        variant="destructive"
-        class="text-xs py-2 mb-2.5"
-      >
-        <AlertDescription class="flex items-center justify-between w-full">
+      <Alert size="sm" v-else-if="error" variant="destructive" class="mb-2.5">
+        <AlertDescription class="flex-between w-full">
           <span>{{ error }}</span>
           <Button
             variant="outline"
@@ -174,10 +170,7 @@ const containerStyle = computed(() => {
       </Alert>
 
       <template v-else-if="cfg.source === 'userIndex'">
-        <Alert
-          v-if="videos.length === 0"
-          class="text-xs py-2"
-        >
+        <Alert size="sm" v-if="videos.length === 0">
           <AlertDescription> 暂无视频 </AlertDescription>
         </Alert>
         <div
@@ -200,10 +193,7 @@ const containerStyle = computed(() => {
       </template>
 
       <template v-else>
-        <Alert
-          v-if="manualItems.length === 0"
-          class="text-xs py-2"
-        >
+        <Alert size="sm" v-if="manualItems.length === 0">
           <AlertDescription> 未配置视频链接 </AlertDescription>
         </Alert>
         <div

@@ -34,11 +34,11 @@ const { blockProps } = useBlockPropsEditor(() => props.block)
         class="w-full"
       />
     </div>
-    <div class="flex items-center justify-between py-1">
+    <div class="flex-between py-1">
       <label class="text-xs text-muted-foreground">显示搜索</label>
       <Switch v-model:checked="blockProps.showSearch" />
     </div>
-    <div class="flex items-center justify-between py-1">
+    <div class="flex-between py-1">
       <label class="text-xs text-muted-foreground">显示点歌方式</label>
       <Switch v-model:checked="blockProps.showRequestStatus" />
     </div>

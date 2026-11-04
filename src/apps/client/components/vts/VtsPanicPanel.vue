@@ -25,9 +25,9 @@ function setResetPhysicsHotkey(id: string) {
 <template>
   <Card>
     <CardHeader class="py-3 px-4">
-      <CardTitle class="text-sm font-semibold">应急控制</CardTitle>
+      <CardTitle>应急控制</CardTitle>
     </CardHeader>
-    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+    <CardContent class="px-4 pb-4 flex flex-col gap-3">
       <p class="text-xs text-[var(--muted-foreground)]">选择 VTS 中已配置的热键来绑定应急操作</p>
 
       <div class="flex items-center gap-3 flex-wrap">

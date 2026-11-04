@@ -130,7 +130,7 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
                   v-model="item.body"
                   maxlength="1000"
                   rows="3"
-                  class="text-xs"
+                  
                 />
               </div>
               <div class="span-full space-y-1">
@@ -149,14 +149,11 @@ function removeTag(item: Record<string, any>, tagIdx: number | string) {
                     <Input
                       v-model="newTagInput[index]"
                       placeholder="新标签"
-                      class="h-6 w-20 px-2"
+                      size="xs"
+                      class="w-20"
                       @keydown.enter.prevent="addTag(item, index)"
                     />
-                    <Button
-                      variant="outline"
-                      class="h-6 px-1.5"
-                      @click="addTag(item, index)"
-                    >
+                    <Button size="xs" variant="outline" class="px-1.5" @click="addTag(item, index)">
                       <Plus class="size-3" />
                     </Button>
                   </div>

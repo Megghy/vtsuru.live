@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type SettingPointGiftPercentMap = { [key: string]: number }
+export type SettingPointGiftPercentMap = {[key: string]: number};

@@ -7,5 +7,5 @@
  */
 
 export interface UpdateUserPagesModel {
-  json: string
+  json: string;
 }

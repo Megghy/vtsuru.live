@@ -34,11 +34,11 @@ const platformTag = computed(() => {
 
 <template>
   <div
-    class="flex items-center justify-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card hover:border-brand/30 transition-colors"
+    class="flex-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card hover:border-brand/30 transition-colors"
   >
     <div class="flex items-center gap-2.5 min-w-0">
       <span
-        class="inline-flex items-center justify-center font-bold w-6 h-6 rounded-full bg-brand/10 text-brand text-xs shrink-0 font-mono"
+        class="inline-flex-center font-bold w-6 h-6 rounded-full bg-brand/10 text-brand text-xs shrink-0 font-mono"
       >
         {{ index }}
       </span>
@@ -47,11 +47,7 @@ const platformTag = computed(() => {
         {{ music.name }}
       </span>
 
-      <Badge
-        v-if="platformTag"
-        :variant="platformTag.variant"
-        class="text-[10px] px-1.5 py-0 h-4"
-      >
+      <Badge v-if="platformTag" :variant="platformTag.variant" size="xs">
         {{ platformTag.label }}
       </Badge>
 
@@ -80,7 +76,7 @@ const platformTag = computed(() => {
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs"> 播放 </TooltipContent>
+          <TooltipContent> 播放 </TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -97,7 +93,7 @@ const platformTag = computed(() => {
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs"> 加入黑名单 </TooltipContent>
+          <TooltipContent> 加入黑名单 </TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -114,7 +110,7 @@ const platformTag = computed(() => {
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent class="text-xs"> 取消 </TooltipContent>
+          <TooltipContent> 取消 </TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

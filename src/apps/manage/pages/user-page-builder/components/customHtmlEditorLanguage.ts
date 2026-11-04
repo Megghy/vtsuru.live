@@ -1,9 +1,9 @@
 import type * as monaco from 'monaco-editor'
 
 import type { APIFileModel } from '@/api/generated/model'
-import type { CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
+import { CUSTOM_HTML_ALLOWED_IMPORTS, type CustomHtmlAsset } from '@/apps/user-page/block/customHtmlContract'
 
-const THEME_VARIABLES = [
+export const THEME_VARIABLES = [
   '--foreground',
   '--muted-foreground',
   '--background',
@@ -30,34 +30,172 @@ const VUE_DIRECTIVES = [
   'v-once',
   'v-memo',
 ]
-const VTSURU_APIS = [
-  { name: 'getContext', args: '', await: true, doc: '当前主播、公开 B 站资料、主题与页面信息。' },
-  { name: 'getSongs', args: 'filter?', await: true, doc: '主播歌单，默认最多 50 首，limit 最大 100。' },
-  { name: 'getSongRequestState', args: '', await: true, doc: '当前点歌队列及公开点歌设置。' },
-  { name: 'getSchedule', args: 'options?', await: true, doc: '主播日程与 B 站直播预约。' },
-  { name: 'getCheckInRanking', args: 'options?', await: true, doc: '签到排行，count 范围 1 至 100。' },
-  { name: 'getQuestions', args: 'options?', await: true, doc: '公开问答；匿名邮箱与认证身份不会返回。' },
-  { name: 'getPointGoods', args: '', await: true, doc: '公开积分商品。' },
-  { name: 'getVideoCollects', args: '', await: true, doc: '进行中的视频征集活动。' },
-  { name: 'getAssetUrl', args: 'key', await: false, doc: '读取已绑定资源 URL，找不到时返回 null。' },
-  { name: 'requestSong', args: 'keyOrName', await: true, doc: '宿主确认后提交网页点歌；仅指令点歌时复制指令。' },
-  { name: 'openQuestionBox', args: 'defaultTag?', await: true, doc: '打开带验证码的原生提问箱。' },
-  { name: 'navigate', args: 'target', await: true, doc: '跳转当前主播主页、子页面或指定站内功能。' },
-  { name: 'copyText', args: 'text', await: true, doc: '复制最多 500 字符并展示宿主提示。' },
-  { name: 'toast', args: "message, type?", await: true, doc: '宿主提示。' },
-  { name: 'onThemeChange', args: 'callback', await: false, doc: '监听站点主题变化。' },
-  { name: 'reportHeight', args: 'height', await: false, doc: '通知宿主更新当前沙盒的内容高度。' },
-]
+export const VTSURU_SDK_GROUPS = [
+  { key: 'read', label: '读取数据' },
+  { key: 'action', label: '写操作' },
+  { key: 'runtime', label: '运行时' },
+] as const
+
+export type VtsuruSdkGroup = (typeof VTSURU_SDK_GROUPS)[number]['key']
+
+export const VTSURU_SDK_METHODS = [
+  {
+    name: 'getContext',
+    group: 'read',
+    args: '',
+    await: true,
+    returns: 'Promise<VtsuruPageContext>',
+    snippet: 'const ctx = await vtsuru.getContext()',
+    doc: '当前主播、公开 B 站资料、主题与页面信息。',
+  },
+  {
+    name: 'getSongs',
+    group: 'read',
+    args: 'filter?',
+    await: true,
+    returns: 'Promise<{ total, items, languages, tags }>',
+    snippet: 'const { items } = await vtsuru.getSongs()',
+    doc: '主播歌单，默认最多 50 首，limit 最大 100。',
+  },
+  {
+    name: 'getSongRequestState',
+    group: 'read',
+    args: '',
+    await: true,
+    returns: 'Promise<{ songs, setting }>',
+    snippet: 'const queue = await vtsuru.getSongRequestState()',
+    doc: '当前点歌队列及公开点歌设置。',
+  },
+  {
+    name: 'getSchedule',
+    group: 'read',
+    args: 'options?',
+    await: true,
+    returns: 'Promise<{ weeks, reserves, liveRoomUrl }>',
+    snippet: 'const schedule = await vtsuru.getSchedule()',
+    doc: '主播日程与 B 站直播预约。',
+  },
+  {
+    name: 'getCheckInRanking',
+    group: 'read',
+    args: 'options?',
+    await: true,
+    returns: 'Promise<{ keyword, totalRanking, monthlyRanking }>',
+    snippet: 'const ranking = await vtsuru.getCheckInRanking()',
+    doc: '签到排行，count 范围 1 至 100。',
+  },
+  {
+    name: 'getQuestions',
+    group: 'read',
+    args: 'options?',
+    await: true,
+    returns: 'Promise<{ tags, questions }>',
+    snippet: 'const { questions } = await vtsuru.getQuestions()',
+    doc: '公开问答；匿名邮箱与认证身份不会返回。',
+  },
+  {
+    name: 'getPointGoods',
+    group: 'read',
+    args: '',
+    await: true,
+    returns: 'Promise<VtsuruPointGood[]>',
+    snippet: 'const goods = await vtsuru.getPointGoods()',
+    doc: '公开积分商品。',
+  },
+  {
+    name: 'getVideoCollects',
+    group: 'read',
+    args: '',
+    await: true,
+    returns: 'Promise<VtsuruVideoCollect[]>',
+    snippet: 'const collects = await vtsuru.getVideoCollects()',
+    doc: '进行中的视频征集活动。',
+  },
+  {
+    name: 'getAssetUrl',
+    group: 'read',
+    args: 'key',
+    await: false,
+    returns: 'string | null',
+    snippet: "vtsuru.getAssetUrl('file-id')",
+    doc: '读取已绑定资源 URL，找不到时返回 null。',
+  },
+  {
+    name: 'requestSong',
+    group: 'action',
+    args: 'keyOrName',
+    await: true,
+    returns: "Promise<{ action, message }>",
+    snippet: "await vtsuru.requestSong(song.key)",
+    doc: '宿主确认后提交网页点歌；仅指令点歌时复制指令。',
+  },
+  {
+    name: 'openQuestionBox',
+    group: 'action',
+    args: 'defaultTag?',
+    await: true,
+    returns: 'Promise<void>',
+    snippet: 'await vtsuru.openQuestionBox()',
+    doc: '打开带验证码的原生提问箱。',
+  },
+  {
+    name: 'navigate',
+    group: 'action',
+    args: 'target',
+    await: true,
+    returns: 'Promise<void>',
+    snippet: "await vtsuru.navigate('home')",
+    doc: '跳转当前主播主页、子页面或指定站内功能。',
+  },
+  {
+    name: 'copyText',
+    group: 'action',
+    args: 'text',
+    await: true,
+    returns: 'Promise<boolean>',
+    snippet: "await vtsuru.copyText('text')",
+    doc: '复制最多 500 字符并展示宿主提示。',
+  },
+  {
+    name: 'toast',
+    group: 'action',
+    args: 'message, type?',
+    await: true,
+    returns: 'Promise<void>',
+    snippet: "await vtsuru.toast('已完成', 'success')",
+    doc: '宿主提示。',
+  },
+  {
+    name: 'onThemeChange',
+    group: 'runtime',
+    args: 'callback',
+    await: false,
+    returns: '() => void',
+    snippet: 'onUnmounted(vtsuru.onThemeChange((theme) => { /* ... */ }))',
+    doc: '监听站点主题变化。',
+  },
+  {
+    name: 'reportHeight',
+    group: 'runtime',
+    args: 'height',
+    await: false,
+    returns: 'void',
+    snippet: 'vtsuru.reportHeight(document.documentElement.scrollHeight)',
+    doc: '通知宿主更新当前沙盒的内容高度。',
+  },
+] as const
+
+const VTSURU_APIS = VTSURU_SDK_METHODS
 
 type AssetEntry = { key: string; file: APIFileModel }
 type Region = 'script' | 'template' | 'style' | 'other'
 
 export function hoverMarkdown(word: string) {
   if (word === 'vtsuru') return '**vtsuru**\n\n沙盒宿主 SDK。在 `<script setup>` 中调用，例如 `await vtsuru.getSongs()`。'
-  const api = VTSURU_APIS.find((item) => item.name === word)
+  const api = VTSURU_APIS.find((it) => it.name === word)
   if (api) return `**vtsuru.${api.name}(${api.args})**\n\n${api.doc}`
   if (VUE_DIRECTIVES.includes(word)) return `**${word}**\n\nVue 指令`
-  const theme = THEME_VARIABLES.find((item) => item === word || item.slice(2) === word)
+  const theme = THEME_VARIABLES.find((v) => v === word || v.slice(2) === word)
   if (theme) return `**${theme}**\n\n主题 CSS 变量，使用 \`var(${theme})\``
   return null
 }
@@ -92,7 +230,7 @@ function item(
     documentation: detail,
     range,
     insertTextRules: snippet ? monacoApi.languages.CompletionItemInsertTextRule.InsertAsSnippet : undefined,
-    sortText: `0_${label}`,
+    sortText: label,
   }
 }
 
@@ -128,6 +266,48 @@ function assetSuggestions(
   )
 }
 
+function importSuggestions(monacoApi: typeof monaco, range: monaco.IRange, prefix: string) {
+  const fromMatch = prefix.match(/\bfrom\s*(['"])([^'"]*)$/)
+  if (fromMatch) {
+    const quote = fromMatch[1]
+    const typed = fromMatch[2]
+    return Object.keys(CUSTOM_HTML_ALLOWED_IMPORTS)
+      .filter((spec) => spec.startsWith(typed) || spec.includes(typed))
+      .map((spec) =>
+        item(monacoApi, range, spec, `${spec}${quote}`, monacoApi.languages.CompletionItemKind.Module, '沙盒可用库'),
+      )
+  }
+  return [
+    item(
+      monacoApi,
+      range,
+      "import { } from 'vue'",
+      "import { $0 } from 'vue'",
+      monacoApi.languages.CompletionItemKind.Keyword,
+      '从 Vue 导入',
+      true,
+    ),
+    item(
+      monacoApi,
+      range,
+      "import dayjs from 'dayjs'",
+      "import dayjs from 'dayjs'",
+      monacoApi.languages.CompletionItemKind.Module,
+      '日期时间',
+      true,
+    ),
+    item(
+      monacoApi,
+      range,
+      "import { } from '@vueuse/core'",
+      "import { $0 } from '@vueuse/core'",
+      monacoApi.languages.CompletionItemKind.Module,
+      'VueUse 组合式函数',
+      true,
+    ),
+  ]
+}
+
 function scriptSuggestions(monacoApi: typeof monaco, range: monaco.IRange, prefix: string, assets: AssetEntry[]) {
   if (/\bvtsuru\.\w*$/.test(prefix)) {
     return VTSURU_APIS.map((api) =>
@@ -142,7 +322,12 @@ function scriptSuggestions(monacoApi: typeof monaco, range: monaco.IRange, prefi
       ),
     )
   }
+  if (/getAssetUrl\s*\(\s*['"][^'"]*$/.test(prefix)) return assetSuggestions(monacoApi, range, assets, 'script', prefix)
+  if (/\bimport\s*\{[^}]*$/.test(prefix)) return []
+  if (/\bfrom\s*['"][^'"]*$/.test(prefix) || /(?:^|\s)i(?:m(?:p(?:o(?:r(?:t)?)?)?)?)?$/.test(prefix))
+    return importSuggestions(monacoApi, range, prefix)
   return [
+    ...importSuggestions(monacoApi, range, prefix),
     item(monacoApi, range, 'vtsuru', 'vtsuru', monacoApi.languages.CompletionItemKind.Variable, '沙盒宿主 SDK'),
     ...VTSURU_APIS.map((api) =>
       item(
@@ -155,7 +340,6 @@ function scriptSuggestions(monacoApi: typeof monaco, range: monaco.IRange, prefi
         true,
       ),
     ),
-    ...assetSuggestions(monacoApi, range, assets, 'script', prefix),
   ]
 }
 
@@ -242,7 +426,7 @@ export function registerCustomHtmlEditorProviders(
         if (model.getLanguageId() !== language) return null
         const prefix = model.getLineContent(position.lineNumber).slice(0, position.column - 1)
         const match = prefix.match(/vtsuru\.(\w+)\s*\($/)
-        const api = VTSURU_APIS.find((item) => item.name === match?.[1])
+        const api = VTSURU_APIS.find((it) => it.name === match?.[1])
         if (!api) return null
         return {
           dispose() {},

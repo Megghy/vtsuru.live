@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
       />
 
       <section class="stage-panel grid grid-rows-[auto_minmax(0,1fr)_auto] min-w-0 min-h-0">
-        <header class="stage-toolbar flex items-center justify-between min-h-14 px-4 bg-card border-b border-border">
+        <header class="stage-toolbar flex-between min-h-14 px-4 bg-card border-b border-border">
           <div class="stage-title flex items-center gap-3">
             <Button
               variant="ghost"
@@ -397,10 +397,7 @@ onBeforeUnmount(() => {
               复制 OBS 链接
             </Button>
 
-            <Badge
-              :variant="questionBox.displayQuestion ? 'default' : 'secondary'"
-              class="text-xs h-6 px-2"
-            >
+            <Badge :variant="questionBox.displayQuestion ? 'default' : 'secondary'" class="h-6 px-2">
               {{ questionBox.displayQuestion ? '正在展示' : '画面已清空' }}
             </Badge>
 
@@ -426,10 +423,10 @@ onBeforeUnmount(() => {
 
         <div
           ref="stageViewportRef"
-          class="stage-viewport relative flex-1 min-h-0 p-6 flex items-center justify-center overflow-hidden bg-muted/20"
+          class="stage-viewport relative flex-1 min-h-0 p-6 flex-center overflow-hidden bg-muted/20"
         >
           <div
-            class="preview-frame-shell relative flex items-center justify-center transition-all duration-75"
+            class="preview-frame-shell relative flex-center transition-all duration-75"
             :style="previewShellStyle"
           >
             <div
@@ -457,7 +454,7 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <footer class="stage-actions flex items-center justify-between p-3 bg-card border-t border-border text-xs">
+        <footer class="stage-actions flex-between p-3 bg-card border-t border-border text-xs">
           <div class="actions-left flex items-center gap-2">
             <Tooltip>
               <TooltipTrigger as-child>
@@ -562,7 +559,7 @@ onBeforeUnmount(() => {
         v-show="!isSettingsCollapsed"
         class="settings-panel flex flex-col h-full min-h-0 bg-card border-l border-border"
       >
-        <header class="settings-heading flex items-center justify-between min-h-14 px-4 border-b border-border">
+        <header class="settings-heading flex-between min-h-14 px-4 border-b border-border">
           <div class="flex items-center gap-2">
             <strong class="text-sm font-semibold">展示设置</strong>
             <span
@@ -598,15 +595,9 @@ onBeforeUnmount(() => {
             class="w-full"
           >
             <TabsList class="w-full grid grid-cols-2">
-              <TabsTrigger
-                value="style"
-                class="text-xs"
-                >外观</TabsTrigger
+              <TabsTrigger value="style" >外观</TabsTrigger
               >
-              <TabsTrigger
-                value="obs"
-                class="text-xs"
-                >OBS</TabsTrigger
+              <TabsTrigger value="obs" >OBS</TabsTrigger
               >
             </TabsList>
             <TabsContent
@@ -694,7 +685,7 @@ onBeforeUnmount(() => {
 
               <div
                 v-if="settingDraft"
-                class="flex items-center justify-between p-3 rounded-lg border border-border/80 bg-muted/30"
+                class="flex-between p-3 rounded-lg border border-border/80 bg-muted/30"
               >
                 <div class="flex flex-col">
                   <strong class="text-xs">实时滚动同步 (WebRTC)</strong>

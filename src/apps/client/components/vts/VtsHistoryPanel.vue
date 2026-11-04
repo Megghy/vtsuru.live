@@ -25,7 +25,7 @@ const pagedHistory = computed(() => {
 <template>
   <Card>
     <CardHeader class="py-3 px-4 flex flex-row items-center justify-between">
-      <CardTitle class="text-sm font-semibold">操作记录</CardTitle>
+      <CardTitle>操作记录</CardTitle>
       <Button
         variant="destructive"
         @click="run(() => vts.clearHistory(), '已清空')"
@@ -33,7 +33,7 @@ const pagedHistory = computed(() => {
         清空
       </Button>
     </CardHeader>
-    <CardContent class="px-4 pb-4 pt-0 flex flex-col gap-3">
+    <CardContent class="px-4 pb-4 flex flex-col gap-3">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-xs border-collapse">
           <thead>
@@ -88,12 +88,7 @@ const pagedHistory = computed(() => {
                 {{ row.error ?? '' }}
               </td>
               <td class="py-2 px-2 text-right whitespace-nowrap">
-                <Button
-                  v-if="row.payload && REPLAYABLE_KINDS.has(row.kind)"
-                  variant="outline"
-                  class="h-6 text-[11px] px-1.5"
-                  :disabled="!vts.connected"
-                  @click="run(() => vts.replayHistoryRecord(row.id), '已回放')"
+                <Button size="xs" v-if="row.payload && REPLAYABLE_KINDS.has(row.kind)" variant="outline" class="px-1.5" :disabled="!vts.connected" @click="run(() => vts.replayHistoryRecord(row.id), '已回放')"
                 >
                   回放
                 </Button>

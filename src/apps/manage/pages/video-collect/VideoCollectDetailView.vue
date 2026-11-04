@@ -430,12 +430,12 @@ function openVideoInBili(bvid: string) {
 
     <template v-else-if="videoDetail && table">
       <!-- 紧凑页头与操作区 -->
-      <div class="flex items-center justify-between flex-wrap gap-3">
+      <div class="flex-between flex-wrap gap-3">
         <div class="flex items-center gap-2.5 min-w-0">
           <Button
             size="icon-sm"
             variant="outline"
-            title="返回列表"
+            aria-label="返回列表"
             class="shrink-0"
             @click="router.push({ name: 'manage-videoCollect' })"
           >
@@ -449,12 +449,7 @@ function openVideoInBili(bvid: string) {
               <h1 class="text-base font-bold text-foreground truncate">
                 {{ table.name }}
               </h1>
-              <Badge
-                :variant="
-                  collectionStatus === '进行中' ? 'secondary' : collectionStatus === '未开始' ? 'outline' : 'default'
-                "
-                class="text-[10px] px-1.5 py-0 h-4"
-              >
+              <Badge :variant=" collectionStatus === '进行中' ? 'secondary' : collectionStatus === '未开始' ? 'outline' : 'default' " size="xs">
                 {{ collectionStatus }}
               </Badge>
             </div>
@@ -569,50 +564,37 @@ function openVideoInBili(bvid: string) {
       </div>
 
       <!-- 规则微型卡片 -->
-      <Card class="p-3 flex items-center justify-between flex-wrap gap-3">
+      <Card class="p-3 flex-between flex-wrap gap-3">
         <div class="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
           <span class="flex items-center gap-1 font-mono">
             {{ format(toTimestamp(table.startAt), 'MM-dd HH:mm') }} ~
             {{ format(toTimestamp(table.endAt), 'MM-dd HH:mm') }}
           </span>
 
-          <span class="px-1.5 py-0.5 rounded bg-muted/60 text-[11px] border border-border">
+          <Badge variant="outline" size="xs">
             {{ table.allowUnregisteredUser ? '游客可投' : '仅限绑定' }}
-          </span>
-          <span class="px-1.5 py-0.5 rounded bg-muted/60 text-[11px] border border-border">
+          </Badge>
+          <Badge variant="outline" size="xs">
             {{ table.duplicatePolicy === DuplicateVideoPolicy.Reject ? '拒绝重复' : '重复合并' }}
-          </span>
-          <span
-            v-if="table.maxVideoPerUser"
-            class="px-1.5 py-0.5 rounded bg-muted/60 text-[11px] border border-border"
-          >
+          </Badge>
+          <Badge v-if="table.maxVideoPerUser" variant="outline" size="xs">
             每人限 {{ table.maxVideoPerUser }} 个
-          </span>
-          <span
-            v-if="table.minVideoDuration || table.maxVideoDuration"
-            class="px-1.5 py-0.5 rounded bg-muted/60 text-[11px] border border-border"
-          >
+          </Badge>
+          <Badge v-if="table.minVideoDuration || table.maxVideoDuration" variant="outline" size="xs">
             时长 {{ table.minVideoDuration ? formatDuration(table.minVideoDuration) : '0' }} ~
             {{ table.maxVideoDuration ? formatDuration(table.maxVideoDuration) : '不限' }}
-          </span>
+          </Badge>
 
           <Popover v-if="table.allowedPartitions?.length">
             <PopoverTrigger as-child>
-              <span
-                class="px-1.5 py-0.5 rounded bg-muted/60 text-[11px] border border-border cursor-pointer hover:text-foreground"
-              >
+              <Badge variant="outline" size="xs" class="cursor-pointer hover:text-foreground">
                 限定 {{ table.allowedPartitions.length }} 个分区
-              </span>
+              </Badge>
             </PopoverTrigger>
-            <PopoverContent class="w-64 p-2 text-xs space-y-1.5">
+            <PopoverContent class="w-64 p-2 space-y-1.5">
               <div class="font-semibold text-foreground">限定投稿分区：</div>
               <div class="flex flex-wrap gap-1">
-                <Badge
-                  v-for="p in table.allowedPartitions"
-                  :key="p"
-                  variant="secondary"
-                  class="text-[10px]"
-                >
+                <Badge v-for="p in table.allowedPartitions" :key="p" variant="secondary" size="xs">
                   {{ p }}
                 </Badge>
               </div>
@@ -621,7 +603,7 @@ function openVideoInBili(bvid: string) {
         </div>
 
         <div class="w-36 space-y-1">
-          <div class="flex items-center justify-between text-[11px] text-muted-foreground">
+          <div class="flex-between text-[11px] text-muted-foreground">
             <span>名额</span>
             <strong class="font-mono text-foreground">{{ table.videoCount }} / {{ table.maxVideoCount }}</strong>
           </div>
@@ -635,7 +617,7 @@ function openVideoInBili(bvid: string) {
       <!-- 审核工作台 -->
       <div class="space-y-3">
         <!-- Tab 栏与工具条 -->
-        <Card class="p-3 flex items-center justify-between flex-wrap gap-3">
+        <Card class="p-3 flex-between flex-wrap gap-3">
           <ToggleGroup
             type="single"
             size="xs"
@@ -733,16 +715,11 @@ function openVideoInBili(bvid: string) {
         <!-- 批量操作悬浮条 -->
         <div
           v-if="selectedBvids.length > 0"
-          class="p-2.5 rounded-lg border border-brand/40 bg-brand-soft/30 flex items-center justify-between flex-wrap gap-2 text-xs"
+          class="p-2.5 rounded-lg border border-brand/40 bg-brand-soft/30 flex-between flex-wrap gap-2 text-xs"
         >
           <div class="flex items-center gap-2">
             <span class="font-semibold text-foreground">已选中 {{ selectedBvids.length }} 项</span>
-            <Button
-              size="xs"
-              variant="ghost"
-              class="h-6 px-2 text-muted-foreground"
-              @click="clearSelection"
-            >
+            <Button size="xs" variant="ghost" class="text-muted-foreground" @click="clearSelection">
               取消勾选
             </Button>
           </div>
@@ -791,7 +768,7 @@ function openVideoInBili(bvid: string) {
         <!-- 全选控制栏 -->
         <div
           v-if="visibleVideos.length > 0"
-          class="flex items-center justify-between text-xs text-muted-foreground px-1"
+          class="flex-between text-xs text-muted-foreground px-1"
         >
           <div class="flex items-center gap-2">
             <Checkbox

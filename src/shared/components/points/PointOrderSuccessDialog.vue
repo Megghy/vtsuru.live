@@ -17,7 +17,7 @@ const router = useRouter()
   <Dialog v-model:open="show">
     <DialogContent class="sm:max-w-md max-h-[80vh] flex flex-col p-4 gap-3">
       <DialogHeader class="pb-2 border-b border-border/60">
-        <DialogTitle class="text-sm font-semibold text-emerald-600">
+        <DialogTitle class="text-sm text-emerald-600">
           兑换成功！{{ orders.length > 1 ? `共 ${orders.length} 个订单` : '' }}
         </DialogTitle>
       </DialogHeader>
@@ -29,7 +29,7 @@ const router = useRouter()
             :key="order.id"
             class="space-y-1.5 p-2.5 rounded-lg border border-border/60"
           >
-            <div class="flex items-center justify-between gap-2">
+            <div class="flex-between gap-2">
               <strong class="font-medium text-foreground truncate">{{ order.goods?.name }}</strong>
               <span class="text-muted-foreground font-mono shrink-0">#{{ order.id }}</span>
             </div>
@@ -39,17 +39,14 @@ const router = useRouter()
             >
               {{ order.selectedSubItems.map((s) => `${s.nameSnapshot}×${s.quantity}`).join('、') }}
             </p>
-            <Alert
-              v-if="order.type === GoodsTypes.Virtual && order.goods?.content"
-              class="text-xs bg-muted/40 whitespace-pre-wrap break-words"
-            >
-              <AlertDescription class="text-xs">{{ order.goods.content }}</AlertDescription>
+            <Alert size="sm" v-if="order.type === GoodsTypes.Virtual && order.goods?.content" class="bg-muted/40 whitespace-pre-wrap break-words">
+              <AlertDescription>{{ order.goods.content }}</AlertDescription>
             </Alert>
           </div>
         </div>
       </ScrollArea>
 
-      <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
+      <DialogFooter class="pt-2 border-t border-border/60">
         <Button
           variant="outline"
           @click="show = false"

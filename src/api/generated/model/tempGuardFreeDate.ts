@@ -7,6 +7,6 @@
  */
 
 export interface TempGuardFreeDate {
-  year: number
-  month: number
+  year: number;
+  month: number;
 }

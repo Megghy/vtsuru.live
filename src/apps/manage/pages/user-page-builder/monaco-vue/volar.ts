@@ -18,14 +18,13 @@ function syncUris() {
 
 export function activateCustomHtmlVolar() {
   setup ??= (async () => {
-    const envUri = monaco.Uri.parse('file:///env.d.ts')
-    if (!monaco.editor.getModel(envUri)) monaco.editor.createModel(VTSURU_SANDBOX_DTS, 'typescript', envUri)
     const worker = createWebWorker({
       label: 'vue',
       keepIdleModels: true,
       host: { onFetchCdnFile },
       createData: {
         tsconfig: {},
+        envDts: VTSURU_SANDBOX_DTS,
         dependencies: {
           vue: '3.5.44',
           '@vue/compiler-core': '3.5.44',
@@ -37,10 +36,13 @@ export function activateCustomHtmlVolar() {
           '@vue/shared': '3.5.44',
           '@vue/language-core': '3.3.14',
           typescript: '6.0.3',
+          dayjs: '1.11.23',
+          '@vueuse/core': '15.0.0',
+          '@vueuse/shared': '15.0.0',
         },
       },
     }) as monaco.editor.MonacoWebWorker<WorkerLanguageService>
-    activateMarkers(worker, ['vue', 'javascript', 'typescript'], 'vue', syncUris, monaco.editor)
+    activateMarkers(worker, ['vue'], 'vue', syncUris, monaco.editor)
     activateAutoInsertion(worker, ['vue', 'javascript', 'typescript'], syncUris, monaco.editor)
     await registerProviders(worker, ['vue', 'javascript', 'typescript'], syncUris, monaco.languages)
   })()

@@ -318,7 +318,7 @@ watchEffect(async () => {
           <div
             v-if="!sourceFile"
             ref="dropZoneRef"
-            class="flex flex-col items-center justify-center gap-2 p-12 rounded-xl border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors"
+            class="flex-col-center gap-2 p-12 rounded-xl border-2 border-dashed border-border hover:border-primary cursor-pointer transition-colors"
             :class="{ 'border-primary bg-primary/5': isOverDropZone }"
             @click="() => openFilePicker()"
           >
@@ -380,7 +380,7 @@ watchEffect(async () => {
                     <div
                       v-for="i in 9"
                       :key="i"
-                      class="border border-white/40 flex items-center justify-center"
+                      class="border border-white/40 flex-center"
                     >
                       <span class="text-xs font-bold text-white/80 drop-shadow">{{ i }}</span>
                     </div>
@@ -405,7 +405,7 @@ watchEffect(async () => {
               <div class="space-y-3 p-4 rounded-lg border border-border bg-card text-xs">
                 <h4 class="font-semibold text-sm text-foreground">导出设置</h4>
                 <div class="space-y-3">
-                  <div class="flex items-center justify-between">
+                  <div class="flex-between">
                     <span class="text-muted-foreground">单张尺寸</span>
                     <div class="flex items-center gap-1.5 w-32">
                       <NumberField
@@ -417,11 +417,11 @@ watchEffect(async () => {
                       <span class="text-muted-foreground">px</span>
                     </div>
                   </div>
-                  <div class="flex items-center justify-between">
+                  <div class="flex-between">
                     <span class="text-muted-foreground">允许放大</span>
                     <Switch v-model:checked="allowUpscale" />
                   </div>
-                  <div class="flex items-center justify-between">
+                  <div class="flex-between">
                     <span class="text-muted-foreground">格式</span>
                     <div class="w-32">
                       <Select v-model="exportSettings.format">
@@ -442,7 +442,7 @@ watchEffect(async () => {
                   </div>
                   <div
                     v-if="exportSettings.format === 'jpeg'"
-                    class="flex items-center justify-between"
+                    class="flex-between"
                   >
                     <span class="text-muted-foreground">质量</span>
                     <div class="w-32">
@@ -454,7 +454,7 @@ watchEffect(async () => {
                       />
                     </div>
                   </div>
-                  <div class="flex items-center justify-between">
+                  <div class="flex-between">
                     <span class="text-muted-foreground">图片间距</span>
                     <div class="flex items-center gap-1.5 w-32">
                       <NumberField
@@ -655,7 +655,7 @@ watchEffect(async () => {
                 />
                 <span class="absolute top-1 left-1 bg-black/60 text-white text-[10px] px-1 rounded">{{ i + 1 }}</span>
                 <div
-                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                  class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex-center transition-opacity"
                 >
                   <span class="text-white text-xs font-medium">下载</span>
                 </div>

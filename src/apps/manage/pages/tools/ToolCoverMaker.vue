@@ -167,25 +167,16 @@ async function onRemoveBgConfirm(blob: Blob) {
       <!-- Left panel: layers -->
       <div class="editor-panel panel-left">
         <div class="panel-section">
-          <div class="flex items-center justify-between panel-header">
+          <div class="flex-between panel-header">
             <span class="text-xs font-semibold">图层</span>
             <div class="flex gap-0.5">
-              <Button
-                size="icon"
-                variant="ghost"
-                class="size-6 p-0"
-                @click="editorRef?.addTextLayer()"
-              >
+              <Button size="icon-xs" variant="ghost" @click="editorRef?.addTextLayer()">
                 <component
                   :is="TextOutline"
                   class="size-3.5"
                 />
               </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                class="size-6 p-0"
-                @click="() => openImgPicker()"
+              <Button size="icon-xs" variant="ghost" @click="() => openImgPicker()"
               >
                 <component
                   :is="ImageOutline"
@@ -348,7 +339,7 @@ async function onRemoveBgConfirm(blob: Blob) {
           <template v-if="selectedLayer?.type === 'text'">
             <Textarea
               v-model="(selectedLayer as TextLayer).text"
-              class="text-xs min-h-[60px]"
+              class="min-h-[60px]"
             />
             <div class="prop-row">
               <span class="text-muted-foreground">字号</span>

@@ -7,6 +7,8 @@ import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useMessage } from '@/shared/utils'
 
@@ -92,11 +94,11 @@ async function SaveComboSetting() {
 
 <template>
   <Card>
-    <CardHeader class="p-3.5 pb-2">
-      <CardTitle class="text-sm font-semibold"> 系统设置 </CardTitle>
+    <CardHeader class="p-3.5">
+      <CardTitle> 系统设置 </CardTitle>
     </CardHeader>
 
-    <CardContent class="p-3.5 pt-0">
+    <CardContent>
       <Tabs
         v-model="selectedTab"
         class="w-full"
@@ -107,10 +109,7 @@ async function SaveComboSetting() {
         </TabsList>
 
         <!-- 常规设置 -->
-        <TabsContent
-          value="general"
-          class="space-y-4 mt-2"
-        >
+        <TabsContent value="general" class="space-y-4">
           <!-- 启用功能 -->
           <div class="space-y-2">
             <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">启用功能</span>
@@ -137,55 +136,49 @@ async function SaveComboSetting() {
             <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">邮件通知</span>
             <div
               v-if="accountInfo"
-              class="flex flex-col gap-2.5 p-3 rounded-md border border-border/60 bg-muted/20"
+              class="flex flex-col gap-2"
             >
-              <label class="flex items-center gap-2 cursor-pointer text-xs font-medium select-none text-foreground">
-                <Checkbox
-                  :model-value="accountInfo.settings.sendEmail.recieveQA"
-                  :disabled="isSaving"
-                  @update:model-value="
-                    (val) => {
-                      if (accountInfo) {
-                        accountInfo.settings.sendEmail.recieveQA = Boolean(val)
-                        SaveComboSetting()
-                      }
-                    }
-                  "
-                />
-                <span>收到新提问时发送邮件</span>
-              </label>
+              <SettingRow
+                type="switch"
+                title="收到新提问时发送邮件"
+                variant="compact"
+                :disabled="isSaving"
+                :model-value="accountInfo.settings.sendEmail.recieveQA"
+                @change="
+                  (val) => {
+                    accountInfo.settings.sendEmail.recieveQA = val
+                    SaveComboSetting()
+                  }
+                "
+              />
 
-              <label class="flex items-center gap-2 cursor-pointer text-xs font-medium select-none text-foreground">
-                <Checkbox
-                  :model-value="accountInfo.settings.sendEmail.recieveQAReply"
-                  :disabled="isSaving"
-                  @update:model-value="
-                    (val) => {
-                      if (accountInfo) {
-                        accountInfo.settings.sendEmail.recieveQAReply = Boolean(val)
-                        SaveComboSetting()
-                      }
-                    }
-                  "
-                />
-                <span>提问收到回复时发送邮件</span>
-              </label>
+              <SettingRow
+                type="switch"
+                title="提问收到回复时发送邮件"
+                variant="compact"
+                :disabled="isSaving"
+                :model-value="accountInfo.settings.sendEmail.recieveQAReply"
+                @change="
+                  (val) => {
+                    accountInfo.settings.sendEmail.recieveQAReply = val
+                    SaveComboSetting()
+                  }
+                "
+              />
 
-              <label class="flex items-center gap-2 cursor-pointer text-xs font-medium select-none text-foreground">
-                <Checkbox
-                  :model-value="accountInfo.settings.sendEmail.receiveOrder"
-                  :disabled="isSaving"
-                  @update:model-value="
-                    (val) => {
-                      if (accountInfo) {
-                        accountInfo.settings.sendEmail.receiveOrder = Boolean(val)
-                        SaveComboSetting()
-                      }
-                    }
-                  "
-                />
-                <span>积分礼物有新用户兑换时发送邮件</span>
-              </label>
+              <SettingRow
+                type="switch"
+                title="积分礼物有新用户兑换时发送邮件"
+                variant="compact"
+                :disabled="isSaving"
+                :model-value="accountInfo.settings.sendEmail.receiveOrder"
+                @change="
+                  (val) => {
+                    accountInfo.settings.sendEmail.receiveOrder = val
+                    SaveComboSetting()
+                  }
+                "
+              />
             </div>
           </div>
 
@@ -196,47 +189,41 @@ async function SaveComboSetting() {
             <span class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">提问箱</span>
             <div
               v-if="accountInfo"
-              class="flex flex-col gap-2 p-3 rounded-md border border-border/60 bg-muted/20"
+              class="flex flex-col gap-2"
             >
-              <label class="flex items-center gap-2 cursor-pointer text-xs font-medium select-none text-foreground">
-                <Checkbox
-                  :model-value="accountInfo.settings.questionBox.allowUnregistedUser"
-                  :disabled="isSaving"
-                  @update:model-value="
-                    (val) => {
-                      if (accountInfo) {
-                        accountInfo.settings.questionBox.allowUnregistedUser = Boolean(val)
-                        SaveComboSetting()
-                      }
-                    }
-                  "
-                />
-                <span>允许未注册/未登录用户提问</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer text-xs font-medium select-none text-foreground">
-                <Checkbox
-                  :model-value="accountInfo.settings.questionBox.allowAnonymous"
-                  :disabled="isSaving"
-                  @update:model-value="
-                    (val) => {
-                      if (accountInfo) {
-                        accountInfo.settings.questionBox.allowAnonymous = Boolean(val)
-                        SaveComboSetting()
-                      }
-                    }
-                  "
-                />
-                <span>允许已登录用户隐藏身份</span>
-              </label>
+              <SettingRow
+                type="switch"
+                title="允许未注册/未登录用户提问"
+                variant="compact"
+                :disabled="isSaving"
+                :model-value="accountInfo.settings.questionBox.allowUnregistedUser"
+                @change="
+                  (val) => {
+                    accountInfo.settings.questionBox.allowUnregistedUser = val
+                    SaveComboSetting()
+                  }
+                "
+              />
+
+              <SettingRow
+                type="switch"
+                title="允许已登录用户隐藏身份"
+                variant="compact"
+                :disabled="isSaving"
+                :model-value="accountInfo.settings.questionBox.allowAnonymous"
+                @change="
+                  (val) => {
+                    accountInfo.settings.questionBox.allowAnonymous = val
+                    SaveComboSetting()
+                  }
+                "
+              />
             </div>
           </div>
         </TabsContent>
 
         <!-- 黑名单设置 -->
-        <TabsContent
-          value="blacklist"
-          class="mt-2"
-        >
+        <TabsContent value="blacklist">
           <BlackListPane />
         </TabsContent>
       </Tabs>

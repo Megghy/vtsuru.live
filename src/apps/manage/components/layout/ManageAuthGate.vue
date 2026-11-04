@@ -110,8 +110,8 @@ async function switchToBackupAPI() {
         v-if="!isUserWorkspace"
         class="bg-muted/30 border-border"
       >
-        <AlertTitle class="text-xs font-semibold">不是主播？</AlertTitle>
-        <AlertDescription class="text-xs text-muted-foreground mt-1 space-y-2">
+        <AlertTitle>不是主播？</AlertTitle>
+        <AlertDescription class="text-muted-foreground mt-1 space-y-2">
           <p>看积分和订单不用注册。用 Bilibili 发一条弹幕完成认证即可。</p>
           <div>
             <Button
@@ -148,8 +148,8 @@ async function switchToBackupAPI() {
         v-if="showAPISwitchDialog"
         class="w-full border-warning/50 bg-warning/10 text-warning-foreground"
       >
-        <AlertTitle class="text-xs font-semibold">加载时间较长</AlertTitle>
-        <AlertDescription class="text-xs text-muted-foreground mt-1 space-y-2.5">
+        <AlertTitle>加载时间较长</AlertTitle>
+        <AlertDescription class="text-muted-foreground mt-1 space-y-2.5">
           <p>当前 API 响应较慢，是否切换到备用 API？</p>
           <div class="flex justify-end gap-2">
             <Button

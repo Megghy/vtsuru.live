@@ -77,18 +77,12 @@ async function handleCopy() {
         />
       </div>
       <div class="flex-1 min-w-0">
-        <div class="flex items-center justify-between gap-1.5">
+        <div class="flex-between gap-1.5">
           <span class="text-sm font-semibold text-foreground truncate">{{ item.name }}</span>
           <Badge
-            variant="outline"
-            :class="[
-              'text-[10px] h-4.5 px-1.5',
-              props.item.status === 'beta'
-                ? 'border-amber-500/40 text-amber-600 dark:text-amber-400 bg-amber-500/10'
-                : isReady
-                  ? 'border-emerald-500/40 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10'
-                  : 'text-muted-foreground',
-            ]"
+            :variant="props.item.status === 'beta' ? 'warning' : isReady ? 'success' : 'outline'"
+            size="xs"
+            :class="!isReady && props.item.status !== 'beta' ? 'text-muted-foreground' : undefined"
           >
             {{ statusLabel }}
           </Badge>
@@ -161,7 +155,7 @@ async function handleCopy() {
     </div>
 
     <!-- 卡片底部操作栏 -->
-    <div class="flex items-center justify-between gap-2 mt-3.5 pt-3 border-t border-border">
+    <div class="flex-between gap-2 mt-3.5 pt-3 border-t border-border">
       <template v-if="isReady">
         <Button
           class="flex-1 gap-1.5"

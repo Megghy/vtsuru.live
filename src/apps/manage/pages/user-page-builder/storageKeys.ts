@@ -4,3 +4,4 @@ export const USER_PAGE_BLOCK_TEMPLATES_KEY = 'vtsuru.user-page.block-templates.v
 export const USER_PAGE_BUILDER_COLUMNS_ORDER_KEY = 'vtsuru.user-page-builder.columns.order.v1'
 export const USER_PAGE_BUILDER_COLUMNS_WIDTHS_KEY = 'vtsuru.user-page-builder.columns.widths.v1'
 export const USER_PAGE_BUILDER_PAGES_COLLAPSED_KEY = 'vtsuru.user-page-builder.pages.collapsed.v1'
+export const CUSTOM_HTML_WORKSPACE_KEY = 'vtsuru:user-page-builder:custom-html-workspace:v1'

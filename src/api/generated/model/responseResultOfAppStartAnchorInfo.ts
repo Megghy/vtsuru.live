@@ -5,13 +5,13 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { AppStartAnchorInfo } from './appStartAnchorInfo'
+import type { AppStartAnchorInfo } from './appStartAnchorInfo';
 
 /**
  * 统一响应信封：code / message / data
  */
 export interface ResponseResultOfAppStartAnchorInfo {
-  message: string
-  code: number
-  data: AppStartAnchorInfo
+  message: string;
+  code: number;
+  data: AppStartAnchorInfo;
 }

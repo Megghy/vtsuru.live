@@ -284,10 +284,7 @@ function formatRelativeTime(time: number) {
                 {{ Number(row.point.toFixed(1)) }}
               </TableCell>
               <TableCell class="py-2.5">
-                <Badge
-                  :variant="getStatusVariant(row)"
-                  class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1 w-fit"
-                >
+                <Badge :variant="getStatusVariant(row)" size="xs" class="flex items-center gap-1 w-fit">
                   <component
                     :is="statusMeta[row.status].icon"
                     class="size-3"
@@ -296,10 +293,7 @@ function formatRelativeTime(time: number) {
                 </Badge>
               </TableCell>
               <TableCell class="py-2.5">
-                <Badge
-                  variant="outline"
-                  class="text-[10px] h-4.5 px-1 font-normal text-muted-foreground"
-                >
+                <Badge variant="outline" size="xs" class="text-muted-foreground">
                   {{ row.type === GoodsTypes.Physical ? '实体' : row.type === GoodsTypes.Service ? '服务' : '虚拟' }}
                 </Badge>
               </TableCell>
@@ -333,7 +327,7 @@ function formatRelativeTime(time: number) {
           :key="item.id"
           class="p-3 rounded-lg border border-border/80 bg-card space-y-2 text-xs"
         >
-          <div class="flex items-center justify-between">
+          <div class="flex-between">
             <label class="flex items-center gap-1.5 cursor-pointer font-mono text-muted-foreground">
               <Checkbox
                 :checked="selectedItems.includes(item.id)"
@@ -342,10 +336,7 @@ function formatRelativeTime(time: number) {
               />
               <span>#{{ item.id }}</span>
             </label>
-            <Badge
-              :variant="getStatusVariant(item)"
-              class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1"
-            >
+            <Badge :variant="getStatusVariant(item)" size="xs" class="flex items-center gap-1">
               <component
                 :is="statusMeta[item.status].icon"
                 class="size-3"
@@ -390,7 +381,7 @@ function formatRelativeTime(time: number) {
     >
       <DialogContent class="sm:max-w-lg max-h-[85vh] flex flex-col p-4 gap-3">
         <DialogHeader class="pb-2 border-b border-border/60">
-          <DialogTitle class="text-sm font-semibold">订单详情</DialogTitle>
+          <DialogTitle class="text-sm">订单详情</DialogTitle>
         </DialogHeader>
 
         <ScrollArea class="flex-1 min-h-0 pr-2">
@@ -410,10 +401,7 @@ function formatRelativeTime(time: number) {
               </div>
               <div>
                 <span class="text-muted-foreground block text-[11px]">当前状态</span>
-                <Badge
-                  :variant="getStatusVariant(detail)"
-                  class="text-[10px] h-4.5 px-1.5 font-normal flex items-center gap-1 w-fit mt-0.5"
-                >
+                <Badge :variant="getStatusVariant(detail)" size="xs" class="flex items-center gap-1 w-fit mt-0.5">
                   <component
                     :is="statusMeta[detail.status].icon"
                     class="size-3"
@@ -438,15 +426,12 @@ function formatRelativeTime(time: number) {
                   <div
                     v-for="item in detail.selectedSubItems"
                     :key="item.subItemId"
-                    class="flex items-center justify-between p-1.5 rounded bg-muted/40 text-xs"
+                    class="flex-between p-1.5 rounded bg-muted/40 text-xs"
                   >
                     <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
                     <div class="flex items-center gap-2">
                       <span class="text-muted-foreground">x {{ item.quantity }}</span>
-                      <Badge
-                        variant="secondary"
-                        class="text-[10px] h-4.5 px-1 font-mono"
-                      >
+                      <Badge variant="secondary" size="xs" class="font-mono">
                         {{ item.priceSnapshot }} 积分
                       </Badge>
                     </div>
@@ -455,17 +440,14 @@ function formatRelativeTime(time: number) {
               </div>
             </template>
 
-            <Alert
-              v-if="detail.remark"
-              class="text-xs"
-            >
-              <AlertTitle class="text-xs font-semibold">订单备注</AlertTitle>
-              <AlertDescription class="text-xs text-muted-foreground">{{ detail.remark }}</AlertDescription>
+            <Alert size="sm" v-if="detail.remark">
+              <AlertTitle>订单备注</AlertTitle>
+              <AlertDescription class="text-muted-foreground">{{ detail.remark }}</AlertDescription>
             </Alert>
 
-            <Alert class="text-xs bg-muted/40 border-border/80">
-              <AlertTitle class="text-xs font-semibold">状态说明</AlertTitle>
-              <AlertDescription class="text-xs text-muted-foreground">{{
+            <Alert size="sm" class="bg-muted/40 border-border/80">
+              <AlertTitle>状态说明</AlertTitle>
+              <AlertDescription class="text-muted-foreground">{{
                 statusMeta[detail.status].hint
               }}</AlertDescription>
             </Alert>
@@ -518,7 +500,7 @@ function formatRelativeTime(time: number) {
           </div>
         </ScrollArea>
 
-        <DialogFooter class="pt-2 border-t border-border/60 flex items-center justify-end gap-2">
+        <DialogFooter class="pt-2 border-t border-border/60">
           <Popconfirm
             v-if="previousStatus(detail) !== null"
             :title="`确认将订单 #${detail.id} 从「${statusMeta[detail.status].label}」改为「${statusMeta[previousStatus(detail)!].label}」？`"

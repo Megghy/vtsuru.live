@@ -148,11 +148,7 @@ function resetToolbarOrder() {
         <Separator />
         <div class="settings__stat-header flex justify-between items-center">
           <div class="font-semibold">顶栏指标项 (支持拖拽排序)</div>
-          <Button
-            variant="ghost"
-            class="h-6 px-2 text-muted-foreground"
-            @click="resetToolbarOrder"
-          >
+          <Button size="xs" variant="ghost" class="text-muted-foreground" @click="resetToolbarOrder">
             重置排序
           </Button>
         </div>

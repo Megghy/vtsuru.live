@@ -31,6 +31,7 @@ const contentHeight = ref(CUSTOM_HTML_MIN_AUTO_HEIGHT)
 const runtimeError = ref('')
 const themeReady = ref(Boolean(props.theme))
 const compiled = shallowRef<CompiledCustomVue>({ js: '', css: '', issues: [] })
+const compiledSource = ref<string | null>(null)
 const detectedTheme = ref<CustomHtmlTheme>({
   fg: '#18181b',
   fgMuted: '#71717a',
@@ -71,10 +72,7 @@ const { handlers, dialog, cancelPending } = useCustomHtmlBridge({
 })
 const initialTheme = shallowRef<CustomHtmlTheme | null>(props.theme ?? null)
 const compileError = computed(() => compiled.value.issues.map((item) => item.message).join('；'))
-const documentResult = computed(() => {
-  if (compiled.value.issues.length) return { srcdoc: '', channelId: '', issues: compiled.value.issues }
-  return buildCustomHtmlDocument(config.value, initialTheme.value ?? detectedTheme.value, compiled.value)
-})
+const documentResult = shallowRef({ srcdoc: '', channelId: '', issues: compiled.value.issues })
 const iframeHeight = computed(() => {
   const measured = Math.max(CUSTOM_HTML_MIN_AUTO_HEIGHT, contentHeight.value)
   return config.value.heightMode === 'fixed'
@@ -88,9 +86,23 @@ watchDebounced(
   () => config.value.source,
   async (source) => {
     const { compileCustomVueSfc } = await import('../customHtmlCompile')
+    if (config.value.source !== source) return
     compiled.value = compileCustomVueSfc(source)
+    compiledSource.value = source
   },
   { debounce: 200, immediate: true },
+)
+
+watch(
+  [compiled, compiledSource, config, () => initialTheme.value ?? detectedTheme.value],
+  () => {
+    if (compiledSource.value !== config.value.source) return
+    if (compiled.value.issues.length) {
+      documentResult.value = { srcdoc: '', channelId: '', issues: compiled.value.issues }
+      return
+    }
+    documentResult.value = buildCustomHtmlDocument(config.value, initialTheme.value ?? detectedTheme.value, compiled.value)
+  },
 )
 
 function readTheme() {
@@ -174,37 +186,39 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <BlockCard
-    :framed="config.framed"
-    :backgrounded="config.backgrounded"
-    :content-style="{ padding: 0, overflow: 'hidden' }"
-  >
-    <div
-      ref="host"
-      class="@container w-full min-w-0 [&_iframe]:block [&_iframe]:w-full [&_iframe]:min-h-20 [&_iframe]:border-0 [&_iframe]:bg-transparent"
+  <div class="custom-html-block w-full min-w-0">
+    <BlockCard
+      :framed="config.framed"
+      :backgrounded="config.backgrounded"
+      :content-style="{ padding: 0, overflow: 'hidden' }"
     >
       <div
-        v-if="runtimeError || compileError"
-        role="alert"
-        class="p-4 text-destructive"
+        ref="host"
+        class="@container w-full min-w-0 [&_iframe]:block [&_iframe]:w-full [&_iframe]:min-h-20 [&_iframe]:border-0 [&_iframe]:bg-transparent"
       >
-        自定义代码执行失败：{{ runtimeError || compileError }}
+        <div
+          v-if="runtimeError || compileError"
+          role="alert"
+          class="p-4 text-destructive"
+        >
+          自定义代码执行失败：{{ runtimeError || compileError }}
+        </div>
+        <iframe
+          v-if="themeReady && documentResult.srcdoc"
+          ref="frame"
+          :srcdoc="documentResult.srcdoc"
+          :style="{ height: `${iframeHeight}px`, minHeight: config.heightMode === 'viewport' ? '100dvh' : undefined }"
+          title="自定义内容"
+          sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
+          referrerpolicy="no-referrer"
+          loading="lazy"
+          @load="connectBridge"
+        />
       </div>
-      <iframe
-        v-if="themeReady && documentResult.srcdoc"
-        ref="frame"
-        :srcdoc="documentResult.srcdoc"
-        :style="{ height: `${iframeHeight}px`, minHeight: config.heightMode === 'viewport' ? '100dvh' : undefined }"
-        title="自定义内容"
-        sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
-        referrerpolicy="no-referrer"
-        loading="lazy"
-        @load="connectBridge"
-      />
-    </div>
-  </BlockCard>
-  <CustomHtmlHostDialogs
-    :dialog="dialog"
-    :user-info="userInfo"
-  />
+    </BlockCard>
+    <CustomHtmlHostDialogs
+      :dialog="dialog"
+      :user-info="userInfo"
+    />
+  </div>
 </template>

@@ -41,7 +41,7 @@ function formatRelativeTime(time: number) {
       <SheetHeader class="px-5 py-4 border-b border-border/80">
         <div class="drawer-heading flex items-center gap-3">
           <span
-            class="drawer-icon size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0"
+            class="drawer-icon size-9 rounded-full bg-primary/10 text-primary flex-center shrink-0"
           >
             <component
               :is="History24Regular"
@@ -49,7 +49,7 @@ function formatRelativeTime(time: number) {
             />
           </span>
           <div>
-            <SheetTitle class="text-base font-semibold">本地提问记录</SheetTitle>
+            <SheetTitle class="text-base">本地提问记录</SheetTitle>
             <span class="text-xs text-muted-foreground">仅保存在当前浏览器</span>
           </div>
         </div>
@@ -65,7 +65,7 @@ function formatRelativeTime(time: number) {
             :key="item.id"
             class="relative p-3.5 rounded-xl border border-border/80 bg-muted/20 space-y-2 group transition-colors duration-150"
           >
-            <div class="history-meta flex items-center justify-between text-xs text-muted-foreground">
+            <div class="history-meta flex-between text-xs text-muted-foreground">
               <span>提给 {{ item.targetUserName }}</span>
               <span class="text-[11px]">{{ formatRelativeTime(item.sendAt) }}</span>
             </div>
@@ -73,11 +73,7 @@ function formatRelativeTime(time: number) {
               {{ item.message }}
             </p>
             <div class="history-tags flex items-center gap-2 text-xs flex-wrap">
-              <Badge
-                v-if="item.tag"
-                variant="secondary"
-                class="text-[10px] h-4.5 px-1.5 font-normal"
-              >
+              <Badge v-if="item.tag" variant="secondary" size="xs">
                 {{ item.tag }}
               </Badge>
               <span
@@ -103,10 +99,9 @@ function formatRelativeTime(time: number) {
             </div>
             <Button
               variant="ghost"
-              size="icon"
-              class="delete-action absolute top-2 right-2 size-6 rounded-full text-muted-foreground opacity-60 hover:opacity-100 hover:text-destructive hover:bg-destructive/10"
+              size="icon-xs"
+              class="delete-action absolute top-2 right-2 rounded-full text-muted-foreground opacity-60 hover:opacity-100 hover:text-destructive hover:bg-destructive/10"
               aria-label="删除这条本地记录"
-              title="删除这条本地记录"
               @click="emit('remove', item.id)"
             >
               <component

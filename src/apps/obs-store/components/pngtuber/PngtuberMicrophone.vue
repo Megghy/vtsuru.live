@@ -70,11 +70,8 @@ const currentDeviceLabel = computed(() => {
     v-if="controls"
     class="space-y-3"
   >
-    <Alert
-      v-if="errorMessage"
-      class="border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400 py-2 px-2.5"
-    >
-      <AlertDescription class="text-xs m-0">
+    <Alert size="sm" variant="warning" v-if="errorMessage">
+      <AlertDescription class="m-0">
         {{ errorMessage }}
       </AlertDescription>
     </Alert>
@@ -96,10 +93,7 @@ const currentDeviceLabel = computed(() => {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem
-            value="default"
-            class="text-xs"
-            >系统默认麦克风</SelectItem
+          <SelectItem value="default">系统默认麦克风</SelectItem
           >
           <SelectItem
             v-for="d in deviceList.filter((item) => Boolean(item.deviceId) && item.deviceId !== 'default')"
@@ -157,10 +151,7 @@ const currentDeviceLabel = computed(() => {
     </div>
 
     <div class="space-y-1">
-      <Progress
-        :model-value="Math.round(smoothedVolume)"
-        class="h-2"
-        :class="isSpeaking ? '[&>div]:bg-emerald-500' : ''"
+      <Progress :model-value="Math.round(smoothedVolume)" :class="isSpeaking ? '[&>div]:bg-emerald-500' : ''"
       />
     </div>
   </div>

@@ -5,14 +5,14 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { ForumUserLevels } from './forumUserLevels'
+import type { ForumUserLevels } from './forumUserLevels';
 
 export interface ForumSetting {
-  allowedViewerLevel: ForumUserLevels
-  allowPost: boolean
-  allowedPostLevel: ForumUserLevels
-  requireApply: boolean
-  requireAuthedToJoin: boolean
+  allowedViewerLevel: ForumUserLevels;
+  allowPost: boolean;
+  allowedPostLevel: ForumUserLevels;
+  requireApply: boolean;
+  requireAuthedToJoin: boolean;
   /** 分钟 */
-  sendTopicDelay: number
+  sendTopicDelay: number;
 }

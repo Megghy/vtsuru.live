@@ -21,6 +21,7 @@ import type { ConfigItemDefinition } from '@/shared/types/VTsuruConfigTypes'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
@@ -270,7 +271,7 @@ async function setAsDisplayTemplate() {
     :show="isSaving"
     class="relative flex flex-col gap-3"
   >
-    <Alert class="bg-primary/5 border-primary/20 text-xs py-2 text-primary">
+    <Alert size="sm" class="bg-primary/5 border-primary/20 text-primary">
       <AlertDescription> 如果有合适的设计稿或者想法可以给我说然后做成模板捏 </AlertDescription>
     </Alert>
 
@@ -406,7 +407,7 @@ async function setAsDisplayTemplate() {
       </div>
     </div>
 
-    <div class="h-px bg-border w-full" />
+    <Separator />
 
     <div
       ref="workspaceRef"
@@ -421,7 +422,7 @@ async function setAsDisplayTemplate() {
         >
           <div
             v-if="!configSchema || !currentConfigData"
-            class="min-h-[200px] flex items-center justify-center"
+            class="min-h-[200px] flex-center"
           >
             <Spin />
           </div>

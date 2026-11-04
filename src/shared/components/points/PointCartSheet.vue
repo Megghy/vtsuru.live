@@ -125,7 +125,7 @@ async function checkout() {
   <Sheet v-model:open="show">
     <SheetContent class="w-full sm:max-w-md flex flex-col p-4 gap-3">
       <SheetHeader class="pb-2 border-b border-border/60">
-        <SheetTitle class="text-sm font-semibold">购物车 ({{ lines.length }})</SheetTitle>
+        <SheetTitle class="text-sm">购物车 ({{ lines.length }})</SheetTitle>
       </SheetHeader>
 
       <Empty
@@ -151,7 +151,7 @@ async function checkout() {
               alt=""
             />
             <div class="flex-1 min-w-0 flex flex-col gap-1">
-              <div class="flex items-center justify-between gap-2">
+              <div class="flex-between gap-2">
                 <strong class="font-medium text-foreground truncate">{{ line.good?.name ?? '未知礼物' }}</strong>
                 <span class="font-mono text-primary shrink-0">{{ line.cost }} 分</span>
               </div>
@@ -183,26 +183,13 @@ async function checkout() {
                   class="w-28"
                   @update:model-value="updateCount(line.item, $event)"
                 />
-                <Button
-                  v-if="line.good"
-                  variant="ghost"
-                  size="icon"
-                  class="size-7"
-                  aria-label="修改"
-                  @click="emit('edit', line.good)"
-                >
+                <Button v-if="line.good" variant="ghost" size="xs" class="size-7" aria-label="修改" @click="emit('edit', line.good)">
                   <component
                     :is="Edit24Regular"
                     class="size-3.5"
                   />
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="size-7 text-muted-foreground hover:text-destructive"
-                  aria-label="移除"
-                  @click="cart.remove(line.item.goodsId)"
-                >
+                <Button variant="ghost" size="xs" class="size-7 text-muted-foreground hover:text-destructive" aria-label="移除" @click="cart.remove(line.item.goodsId)">
                   <component
                     :is="Delete24Regular"
                     class="size-3.5"

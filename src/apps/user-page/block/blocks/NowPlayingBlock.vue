@@ -68,7 +68,7 @@ useIntervalFn(() => {
     :backgrounded="values.backgrounded !== false"
   >
     <template #header>
-      <div class="playing-header flex items-center justify-between w-full">
+      <div class="playing-header flex-between w-full">
         <span class="playing-heading flex items-center gap-1.5 font-semibold text-sm">
           <component
             :is="MusicalNotesOutline"
@@ -98,18 +98,11 @@ useIntervalFn(() => {
       </div>
     </template>
 
-    <Alert
-      v-if="!enabled"
-      class="text-xs py-2"
-    >
+    <Alert size="sm" v-if="!enabled">
       <AlertDescription> 点歌功能未开放 </AlertDescription>
     </Alert>
-    <Alert
-      v-else-if="query.status.value === 'error'"
-      variant="destructive"
-      class="text-xs py-2"
-    >
-      <AlertDescription class="flex items-center justify-between w-full">
+    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+      <AlertDescription class="flex-between w-full">
         <span>当前点歌状态加载失败</span>
         <Button
           variant="outline"
@@ -137,7 +130,7 @@ useIntervalFn(() => {
         class="@container flex items-center gap-3 p-1"
       >
         <div
-          class="size-10 @max-[340px]:size-9 rounded-full flex items-center justify-center shrink-0 bg-primary/10 text-primary"
+          class="size-10 @max-[340px]:size-9 rounded-full flex-center shrink-0 bg-primary/10 text-primary"
         >
           <component
             :is="MusicalNotesOutline"
@@ -161,7 +154,7 @@ useIntervalFn(() => {
       </div>
       <div
         v-else-if="query.status.value === 'success'"
-        class="playing-empty flex flex-col items-center justify-center py-4 gap-2"
+        class="playing-empty flex-col-center py-4 gap-2"
       >
         <Empty
           description="当前没有正在演唱的歌曲"

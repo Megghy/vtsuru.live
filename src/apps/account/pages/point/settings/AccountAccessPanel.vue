@@ -122,10 +122,10 @@ defineExpose({ reset })
 
 <template>
   <section class="point-settings__panel rounded-lg border border-border bg-card p-4 space-y-4">
-    <div class="point-settings__panel-header flex items-center justify-between pb-3 border-b border-border/60">
+    <div class="point-settings__panel-header flex-between pb-3 border-b border-border/60">
       <div class="point-settings__panel-title flex items-center gap-2.5">
         <span
-          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0"
+          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
         >
           <component
             :is="Person24Regular"
@@ -191,7 +191,7 @@ defineExpose({ reset })
             'opacity-85': item.token !== auth.biliToken,
           }"
         >
-          <Avatar class="size-9 shrink-0">
+          <Avatar class="size-9">
             <AvatarImage :src="item.token === auth.biliToken ? auth.biliAuth.avatar : undefined" />
             <AvatarFallback>{{ item.name?.slice(0, 1) ?? 'B' }}</AvatarFallback>
           </Avatar>
@@ -199,11 +199,7 @@ defineExpose({ reset })
             <strong class="text-xs text-foreground block truncate">{{ item.name || 'Bilibili 用户' }}</strong>
             <span class="text-[11px] font-mono text-muted-foreground">UID {{ item.uId }}</span>
           </div>
-          <Badge
-            v-if="item.token === auth.biliToken"
-            variant="default"
-            class="text-[10px] h-5 px-1.5"
-          >
+          <Badge v-if="item.token === auth.biliToken" variant="default" size="xs" class="h-5">
             当前
           </Badge>
           <Button
@@ -222,12 +218,7 @@ defineExpose({ reset })
             @positive-click="removeAccount(item.token)"
           >
             <template #trigger>
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-7 text-destructive hover:bg-destructive/10"
-                title="移除账号"
-              >
+              <Button variant="ghost" size="xs" class="size-7 text-destructive hover:bg-destructive/10" aria-label="移除账号">
                 <component
                   :is="Delete24Regular"
                   class="size-3.5"
@@ -250,10 +241,7 @@ defineExpose({ reset })
           class="size-3.5 text-muted-foreground"
         />
         <strong class="text-foreground">快捷登录链接</strong>
-        <Badge
-          variant="secondary"
-          class="text-[10px] h-4.5 px-1 font-normal"
-          >已遮盖</Badge
+        <Badge variant="secondary" size="xs">已遮盖</Badge
         >
       </div>
       <div class="point-settings__credential-row flex items-center gap-2">
@@ -303,7 +291,7 @@ defineExpose({ reset })
   <Dialog v-model:open="adding">
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">添加认证账号</DialogTitle>
+        <DialogTitle class="text-base">添加认证账号</DialogTitle>
       </DialogHeader>
 
       <div class="space-y-3 py-2 text-xs">
@@ -340,7 +328,7 @@ defineExpose({ reset })
   >
     <DialogContent class="sm:max-w-md">
       <DialogHeader>
-        <DialogTitle class="text-base font-semibold">新的快捷登录链接</DialogTitle>
+        <DialogTitle class="text-base">新的快捷登录链接</DialogTitle>
       </DialogHeader>
       <div class="space-y-2 py-2 text-xs">
         <p class="text-muted-foreground">请保存好新的登录链接，原链接已失效：</p>

@@ -59,7 +59,7 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
         <label class="text-xs text-muted-foreground">个人简介</label>
         <Textarea
           v-model="blockProps.bio"
-          class="text-xs min-h-[60px]"
+          class="min-h-[60px]"
           placeholder="个人简介"
         />
       </div>
@@ -100,7 +100,7 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
         <label class="text-xs text-muted-foreground">文本内容</label>
         <Textarea
           v-model="blockProps.text"
-          class="text-xs min-h-[120px]"
+          class="min-h-[120px]"
           placeholder="请输入文本"
         />
       </div>
@@ -151,14 +151,14 @@ const { editor, blockProps } = useBlockPropsEditor(() => props.block)
         <Textarea
           v-model="blockProps.text"
           placeholder="请输入提示内容"
-          class="text-xs min-h-[70px]"
+          class="min-h-[70px]"
         />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示图标</label>
         <Switch v-model:checked="blockProps.showIcon" />
       </div>
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <label class="text-xs text-muted-foreground">显示边框</label>
         <Switch v-model:checked="blockProps.bordered" />
       </div>

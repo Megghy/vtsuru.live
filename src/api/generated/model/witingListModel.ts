@@ -5,9 +5,9 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
-import type { WaitingMusicModel } from './waitingMusicModel'
+import type { WaitingMusicModel } from './waitingMusicModel';
 
 export interface WitingListModel {
-  playing?: WaitingMusicModel
-  waiting: WaitingMusicModel[]
+  playing?: WaitingMusicModel;
+  waiting: WaitingMusicModel[];
 }

@@ -7,6 +7,7 @@ import type { LiveControl } from '@/apps/client/composables/useLiveControl'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 
 const props = defineProps<{ control: LiveControl }>()
@@ -39,33 +40,29 @@ async function handleCopyKey() {
 </script>
 
 <template>
-  <Card class="border bg-card">
-    <CardHeader class="p-3 pb-2 border-b">
-      <CardTitle class="text-sm font-semibold">推流信息</CardTitle>
+  <Card>
+    <CardHeader class="p-3 border-b">
+      <CardTitle>推流信息</CardTitle>
     </CardHeader>
 
     <CardContent class="p-3 space-y-3.5">
-      <Alert
-        v-if="!c.rtmpServer.value"
-        class="py-2 px-2.5 border-primary/20 bg-primary/5 text-primary"
-      >
+      <Alert size="sm" v-if="!c.rtmpServer.value" class="border-primary/20 bg-primary/5 text-primary">
         <div class="flex items-center gap-1.5">
           <Info class="size-4 shrink-0" />
-          <AlertDescription class="text-xs m-0">
+          <AlertDescription class="m-0">
             开播后将自动获取推流地址与推流码，请在 OBS 中配置使用
           </AlertDescription>
         </div>
       </Alert>
 
       <!-- 推流服务器 -->
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-foreground block">推流服务器</label>
+      <FormField label="推流服务器">
         <div class="flex items-center gap-2">
           <Input
             :model-value="c.rtmpServer.value"
             readonly
             placeholder="开播后自动获取推流服务器"
-            class="font-mono text-xs select-all bg-muted/30"
+            class="font-mono select-all bg-muted/30"
           />
           <Button
             type="button"
@@ -85,11 +82,10 @@ async function handleCopyKey() {
             {{ copiedServer ? '已复制' : '复制' }}
           </Button>
         </div>
-      </div>
+      </FormField>
 
       <!-- 推流码 -->
-      <div class="space-y-1.5">
-        <label class="text-xs font-semibold text-foreground block">推流码</label>
+      <FormField label="推流码">
         <div class="flex items-center gap-2">
           <div class="relative flex-1">
             <Input
@@ -97,13 +93,13 @@ async function handleCopyKey() {
               :type="showStreamKey ? 'text' : 'password'"
               readonly
               placeholder="开播后自动获取推流码"
-              class="font-mono text-xs select-all pr-8 bg-muted/30"
+              class="font-mono select-all pr-8 bg-muted/30"
             />
             <Button
               v-if="c.rtmpCode.value"
               variant="ghost"
               size="icon-xs"
-              class="absolute right-1 top-1/2 -translate-y-1/2 size-6 text-muted-foreground hover:text-foreground"
+              class="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground"
               aria-label="切换明文显示"
               @click="showStreamKey = !showStreamKey"
             >
@@ -147,7 +143,7 @@ async function handleCopyKey() {
             同步到 OBS
           </Button>
         </div>
-      </div>
+      </FormField>
 
       <p class="text-[11px] text-muted-foreground">
         请在 OBS 等推流软件的「设置 - 推流」中将服务类型设为自定义，服务器填入上方地址，串流密钥填入上方推流码。

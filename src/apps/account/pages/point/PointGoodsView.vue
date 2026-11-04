@@ -233,7 +233,7 @@ onMounted(async () => {
     <!-- 用户信息与工具栏 -->
     <Card
       v-if="useAuth.isAuthed"
-      class="header-card shadow-sm"
+      class="header-card"
     >
       <CardContent class="p-4 space-y-3 text-xs">
         <!-- 用户简要信息 -->
@@ -245,8 +245,7 @@ onMounted(async () => {
                 class="size-4 text-primary"
               />
               <strong class="text-sm text-foreground">{{ biliAuth.name }}</strong>
-              <Badge
-                v-if="currentRoomGuardLevel > 0"
+              <Badge v-if="currentRoomGuardLevel> 0"
                 variant="secondary"
                 class="text-[10px] h-4.5 px-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400"
               >
@@ -347,30 +346,15 @@ onMounted(async () => {
                   <SelectValue placeholder="排序方式" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    value="default"
-                    class="text-xs"
-                    >默认排序</SelectItem
+                  <SelectItem value="default">默认排序</SelectItem
                   >
-                  <SelectItem
-                    value="price_asc"
-                    class="text-xs"
-                    >价格从低到高</SelectItem
+                  <SelectItem value="price_asc">价格从低到高</SelectItem
                   >
-                  <SelectItem
-                    value="price_desc"
-                    class="text-xs"
-                    >价格从高到低</SelectItem
+                  <SelectItem value="price_desc">价格从高到低</SelectItem
                   >
-                  <SelectItem
-                    value="name_asc"
-                    class="text-xs"
-                    >名称 A-Z</SelectItem
+                  <SelectItem value="name_asc">名称 A-Z</SelectItem
                   >
-                  <SelectItem
-                    value="recent"
-                    class="text-xs"
-                    >最近上架</SelectItem
+                  <SelectItem value="recent">最近上架</SelectItem
                   >
                 </SelectContent>
               </Select>
@@ -398,17 +382,14 @@ onMounted(async () => {
                   class="size-3.5"
                 />
                 购物车
-                <Badge
-                  v-if="cartCount"
-                  class="absolute -top-1.5 -right-1.5 h-4 min-w-4 px-1 text-[10px]"
-                >
+                <Badge v-if="cartCount" size="xs" class="absolute -top-1.5 -right-1.5 min-w-4">
                   {{ cartCount }}
                 </Badge>
               </Button>
               <Button
                 v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder !== 'default'"
                 variant="ghost"
-                class="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                class="flex items-center gap-1 text-muted-foreground"
                 @click="clearFilters"
               >
                 <component
@@ -467,18 +448,10 @@ onMounted(async () => {
                 v-if="item.hasPurchased || !item.canPurchase"
                 class="flex items-center gap-1 flex-wrap"
               >
-                <Badge
-                  v-if="item.hasPurchased"
-                  variant="secondary"
-                  class="text-[10px] h-4.5 px-1 font-normal"
-                >
+                <Badge v-if="item.hasPurchased" variant="secondary" size="xs">
                   {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
                 </Badge>
-                <Badge
-                  v-if="!item.canPurchase && item.cannotPurchaseReason"
-                  variant="destructive"
-                  class="text-[10px] h-4.5 px-1 font-normal"
-                >
+                <Badge v-if="!item.canPurchase && item.cannotPurchaseReason" variant="destructive" size="xs">
                   {{ item.cannotPurchaseReason }}
                 </Badge>
               </div>

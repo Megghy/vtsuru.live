@@ -30,6 +30,7 @@ import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Progress } from '@/shared/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
@@ -116,9 +117,9 @@ function groupSelection() {
 </script>
 
 <template>
-  <Card class="block-property-editor w-full h-full flex flex-col border border-border">
+  <Card class="block-property-editor w-full h-full flex flex-col">
     <CardHeader class="p-3 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
-      <CardTitle class="text-sm font-semibold">
+      <CardTitle>
         {{ isSelectingBlock ? '区块属性' : '页面配置' }}
       </CardTitle>
 
@@ -132,11 +133,7 @@ function groupSelection() {
         >
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="outline"
-                class="h-6 px-2"
-                @click="editor.pageThemeModal.value = true"
-              >
+              <Button size="xs" variant="outline" @click="editor.pageThemeModal.value = true">
                 <component
                   :is="ColorPaletteOutline"
                   class="size-3.5 mr-1"
@@ -144,7 +141,7 @@ function groupSelection() {
                 页面主题
               </Button>
             </TooltipTrigger>
-            <TooltipContent class="text-xs"> 编辑当前子页面的背景与主题（未设置时继承全局主题） </TooltipContent>
+            <TooltipContent> 编辑当前子页面的背景与主题（未设置时继承全局主题） </TooltipContent>
           </Tooltip>
         </TooltipProvider>
 
@@ -164,7 +161,7 @@ function groupSelection() {
         v-if="isSelectingBlock"
         class="py-2 px-2.5 rounded-md bg-[var(--brand-tint,rgba(0,150,255,0.08))] border border-[var(--brand-soft,rgba(0,150,255,0.2))]"
       >
-        <div class="flex items-center justify-between">
+        <div class="flex-between">
           <div class="flex items-center gap-1.5 text-xs font-semibold">
             <component
               :is="ConstructOutline"
@@ -178,11 +175,7 @@ function groupSelection() {
               }}
             </span>
           </div>
-          <Button
-            variant="outline"
-            class="h-6 px-2"
-            @click="deselectBlock"
-          >
+          <Button size="xs" variant="outline" @click="deselectBlock">
             返回页面配置
           </Button>
         </div>
@@ -266,7 +259,7 @@ function groupSelection() {
                 />
               </div>
 
-              <div class="flex items-center justify-between pt-4">
+              <div class="flex-between pt-4">
                 <label class="text-xs text-muted-foreground">在导航菜单中显示</label>
                 <Switch
                   :checked="editor.currentPage.value.navVisible"
@@ -280,7 +273,7 @@ function groupSelection() {
                   v-model="editor.currentPage.value.description"
                   placeholder="可选描述，用于 SEO 和展示"
                   rows="2"
-                  class="text-xs"
+                  
                 />
               </div>
 
@@ -372,29 +365,18 @@ function groupSelection() {
               </div>
             </PropsGrid>
 
-            <Alert
-              v-if="editor.contribConfigError.value"
-              variant="destructive"
-              class="mt-3 py-2 text-xs"
-            >
+            <Alert size="sm" v-if="editor.contribConfigError.value" variant="destructive" class="mt-3">
               <AlertDescription>
                 {{ editor.contribConfigError.value }}
               </AlertDescription>
             </Alert>
-            <Alert
-              v-else-if="editor.contribConfigLoading.value"
-              class="mt-3 py-2 text-xs"
-            >
+            <Alert size="sm" v-else-if="editor.contribConfigLoading.value" class="mt-3">
               <AlertDescription> 扩展页配置加载中... </AlertDescription>
             </Alert>
             <template v-else-if="editor.contribConfigItems.value">
-              <div class="flex items-center justify-between mt-3 mb-2">
+              <div class="flex-between mt-3 mb-2">
                 <span class="text-xs font-semibold">页面配置</span>
-                <Button
-                  variant="outline"
-                  class="h-6 px-2"
-                  @click="editor.resetContribConfigToDefault"
-                >
+                <Button size="xs" variant="outline" @click="editor.resetContribConfigToDefault">
                   重置为默认
                 </Button>
               </div>
@@ -405,10 +387,7 @@ function groupSelection() {
                 />
               </ErrorBoundary>
             </template>
-            <Alert
-              v-else
-              class="mt-3 py-2 text-xs"
-            >
+            <Alert size="sm" v-else class="mt-3">
               <AlertDescription>
                 该扩展组件无需额外属性配置，保存并发布后可在对外页面中查看运行效果。
               </AlertDescription>
@@ -441,75 +420,36 @@ function groupSelection() {
               >
                 <span class="text-xs font-semibold">已选择 {{ editor.selectedBlocks.value.length }} 个区块</span>
                 <div class="flex flex-wrap gap-1.5">
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="batchSetHidden(false)"
-                  >
+                  <Button size="xs" variant="outline" @click="batchSetHidden(false)">
                     显示
                   </Button>
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="batchSetHidden(true)"
-                  >
+                  <Button size="xs" variant="outline" @click="batchSetHidden(true)">
                     隐藏
                   </Button>
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="batchSetChrome('framed', true)"
-                  >
+                  <Button size="xs" variant="outline" @click="batchSetChrome('framed', true)">
                     显示边框
                   </Button>
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="batchSetChrome('framed', false)"
-                  >
+                  <Button size="xs" variant="outline" @click="batchSetChrome('framed', false)">
                     隐藏边框
                   </Button>
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="batchSetChrome('backgrounded', true)"
-                  >
+                  <Button size="xs" variant="outline" @click="batchSetChrome('backgrounded', true)">
                     显示背景
                   </Button>
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="batchSetChrome('backgrounded', false)"
-                  >
+                  <Button size="xs" variant="outline" @click="batchSetChrome('backgrounded', false)">
                     透明背景
                   </Button>
                 </div>
                 <div class="flex flex-wrap gap-1.5 pt-1 border-t border-border">
-                  <Button
-                    class="h-6 px-2"
-                    @click="groupSelection"
-                  >
+                  <Button size="xs" @click="groupSelection">
                     成组
                   </Button>
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="duplicateSelection"
-                  >
+                  <Button size="xs" variant="outline" @click="duplicateSelection">
                     创建副本
                   </Button>
-                  <Button
-                    variant="outline"
-                    class="h-6 px-2"
-                    @click="editor.copyBlocksToClipboard(editor.selectedBlockIds.value)"
-                  >
+                  <Button size="xs" variant="outline" @click="editor.copyBlocksToClipboard(editor.selectedBlockIds.value)">
                     复制
                   </Button>
-                  <Button
-                    variant="destructive"
-                    class="h-6 px-2"
-                    @click="editor.removeBlocks(editor.selectedBlockIds.value)"
-                  >
+                  <Button size="xs" variant="destructive" @click="editor.removeBlocks(editor.selectedBlockIds.value)">
                     删除
                   </Button>
                 </div>
@@ -522,7 +462,7 @@ function groupSelection() {
                 class="p-3 border border-border rounded-lg bg-muted"
               >
                 <div class="flex flex-col gap-1.5">
-                  <div class="flex items-center justify-between">
+                  <div class="flex-between">
                     <div class="flex items-center gap-1.5 text-xs font-semibold">
                       <component
                         :is="LayersOutline"
@@ -530,10 +470,7 @@ function groupSelection() {
                       />
                       <span>页面区块概览</span>
                     </div>
-                    <Badge
-                      variant="secondary"
-                      class="text-[10px] h-4.5 px-1.5"
-                    >
+                    <Badge variant="secondary" size="xs">
                       已添加 {{ blocksCount }} 个区块
                     </Badge>
                   </div>
@@ -542,7 +479,7 @@ function groupSelection() {
                   </div>
                 </div>
 
-                <div class="h-px bg-border my-2" />
+                <Separator class="my-2" />
 
                 <div class="workbench-actions">
                   <span class="text-xs text-muted-foreground mb-2 block font-medium">快速搭建操作</span>
@@ -558,7 +495,7 @@ function groupSelection() {
                             添加区块
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent class="w-56 max-h-72 overflow-y-auto text-xs">
+                        <DropdownMenuContent class="w-56 max-h-72 overflow-y-auto">
                           <template
                             v-for="opt in addBlockOptions"
                             :key="opt.key"
@@ -572,11 +509,7 @@ function groupSelection() {
                             >
                               {{ typeof opt.label === 'function' ? '分组' : opt.label }}
                             </DropdownMenuLabel>
-                            <DropdownMenuItem
-                              v-else
-                              class="text-xs"
-                              @click="handleAddBlockMenuSelect(String(opt.key))"
-                            >
+                            <DropdownMenuItem v-else @click="handleAddBlockMenuSelect(String(opt.key))">
                               <component
                                 :is="opt.icon"
                                 v-if="opt.icon"
@@ -598,13 +531,8 @@ function groupSelection() {
                             起始模板
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent class="w-48 text-xs">
-                          <DropdownMenuItem
-                            v-for="opt in templateOptions"
-                            :key="opt.key"
-                            class="text-xs"
-                            @click="insertTemplate(String(opt.key))"
-                          >
+                        <DropdownMenuContent class="w-48">
+                          <DropdownMenuItem v-for="opt in templateOptions" :key="opt.key" @click="insertTemplate(String(opt.key))">
                             {{ opt.label }}
                           </DropdownMenuItem>
                         </DropdownMenuContent>

@@ -75,8 +75,8 @@ const switches = [
 
 <template>
   <Card class="p-3">
-    <CardHeader class="p-0 pb-2">
-      <CardTitle class="text-sm font-semibold">动效、眨眼与画布</CardTitle>
+    <CardHeader class="p-0">
+      <CardTitle>动效、眨眼与画布</CardTitle>
     </CardHeader>
     <CardContent class="p-0 space-y-3">
       <div class="fields">
@@ -95,12 +95,7 @@ const switches = [
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem
-                v-for="[value, label] in f.options"
-                :key="value"
-                :value="value"
-                class="text-xs"
-              >
+              <SelectItem v-for="[value, label] in f.options" :key="value" :value="value">
                 {{ label }}
               </SelectItem>
             </SelectContent>
@@ -129,7 +124,7 @@ const switches = [
         <div
           v-for="[key, label] in switches"
           :key="key"
-          class="toggle flex items-center justify-between p-1.5 border rounded-md"
+          class="toggle flex-between p-1.5 border rounded-md"
         >
           <span class="text-xs font-medium">{{ label }}</span>
           <Switch

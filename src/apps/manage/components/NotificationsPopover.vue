@@ -181,7 +181,7 @@ watch(
         />
         <span
           v-if="notificationStore.unreadCount > 0"
-          class="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-brand text-brand-foreground text-[10px] font-mono font-bold flex items-center justify-center leading-none"
+          class="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 rounded-full bg-brand text-brand-foreground text-[10px] font-mono font-bold flex-center leading-none"
         >
           {{ notificationStore.unreadCount > 99 ? '99+' : notificationStore.unreadCount }}
         </span>
@@ -193,24 +193,17 @@ watch(
       :side-offset="8"
       class="w-96 p-0 shadow-2xl border border-border bg-popover/95 backdrop-blur-md rounded-lg overflow-hidden"
     >
-      <div class="flex items-center justify-between p-3 border-b border-border bg-muted/20">
+      <div class="flex-between p-3 border-b border-border bg-muted/20">
         <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
           <span>通知</span>
-          <Badge
-            v-if="notificationStore.unreadCount > 0"
+          <Badge v-if="notificationStore.unreadCount> 0"
             variant="secondary"
             class="text-[10px] px-1.5 py-0 h-4"
           >
             {{ notificationStore.unreadCount }} 未读
           </Badge>
         </div>
-        <Button
-          size="xs"
-          variant="ghost"
-          class="h-6 text-[11px] text-muted-foreground hover:text-foreground"
-          :disabled="notificationStore.unreadCount === 0"
-          @click.stop="markAllRead"
-        >
+        <Button size="xs" variant="ghost" class="text-muted-foreground" :disabled="notificationStore.unreadCount === 0" @click.stop="markAllRead">
           全部已读
         </Button>
       </div>
@@ -237,7 +230,7 @@ watch(
             class="p-3 space-y-1.5 hover:bg-muted/40 transition-colors text-xs"
             :class="{ 'bg-brand/5': !item.isReaded }"
           >
-            <div class="flex items-center justify-between gap-2">
+            <div class="flex-between gap-2">
               <div class="flex items-center gap-1.5 font-semibold text-foreground truncate min-w-0">
                 <span
                   v-if="!item.isReaded"
@@ -256,39 +249,17 @@ watch(
 
             <div class="flex items-center gap-1.5 pt-1 justify-end flex-wrap">
               <template v-if="isOrgInviteNotification(item)">
-                <Button
-                  size="xs"
-                  variant="brand"
-                  class="h-6 px-2 text-[11px]"
-                  @click.stop="acceptOrgInvite(item)"
-                >
+                <Button size="xs" variant="brand" @click.stop="acceptOrgInvite(item)">
                   接受
                 </Button>
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="h-6 px-2 text-[11px]"
-                  @click.stop="rejectOrgInvite(item)"
-                >
+                <Button size="xs" variant="outline" @click.stop="rejectOrgInvite(item)">
                   拒绝
                 </Button>
               </template>
-              <Button
-                v-if="resolveOpenUrl(item)"
-                size="xs"
-                variant="brand"
-                class="h-6 px-2 text-[11px]"
-                @click.stop="openNotif(item)"
-              >
+              <Button v-if="resolveOpenUrl(item)" size="xs" variant="brand" @click.stop="openNotif(item)">
                 打开
               </Button>
-              <Button
-                v-if="!item.isReaded"
-                size="xs"
-                variant="ghost"
-                class="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-                @click.stop="markRead(item.id)"
-              >
+              <Button v-if="!item.isReaded" size="xs" variant="ghost" class="text-muted-foreground" @click.stop="markRead(item.id)">
                 标为已读
               </Button>
             </div>

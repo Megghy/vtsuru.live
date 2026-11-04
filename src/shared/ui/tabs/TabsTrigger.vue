@@ -37,13 +37,13 @@ const sizeClasses: Record<string, string> = {
     v-bind="forwardedProps"
     :class="
       cn(
-        'inline-flex items-center justify-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0',
+        'inline-flex-center whitespace-nowrap rounded-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-card data-[state=active]:text-foreground data-[state=active]:shadow-sm cursor-pointer [&_svg]:pointer-events-none [&_svg]:size-3.5 [&_svg]:shrink-0',
         sizeClasses[resolvedSize] || sizeClasses.default,
         props.class,
       )
     "
   >
-    <span class="truncate inline-flex items-center justify-center gap-1">
+    <span class="truncate inline-flex-center gap-1">
       <slot />
     </span>
   </TabsTrigger>

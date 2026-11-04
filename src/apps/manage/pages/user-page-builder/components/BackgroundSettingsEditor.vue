@@ -287,7 +287,7 @@ function clearAll() {
     </div>
 
     <template v-if="type !== 'none'">
-      <div class="flex items-center justify-between py-1">
+      <div class="flex-between py-1">
         <span
           class="text-xs text-foreground cursor-help"
           title="开启后背景将延伸覆盖左侧导航区域"

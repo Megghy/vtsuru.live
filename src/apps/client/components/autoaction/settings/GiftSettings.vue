@@ -1,18 +1,15 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
 import { TriggerType } from '@/apps/client/store/useAutoAction'
-import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
-import { NumberField } from '@/shared/ui/number-field'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
+import { Separator } from '@/shared/ui/separator'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Tag } from '@/shared/ui/tag'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps({
   action: {
@@ -63,24 +60,12 @@ function removeGiftName(index: number) {
     v-if="action.triggerType === TriggerType.GIFT"
     class="gift-trigger-settings space-y-3"
   >
-    <div class="space-y-1">
-      <span class="text-xs text-muted-foreground">礼物过滤模式</span>
-      <Select v-model="action.triggerConfig.filterMode">
-        <SelectTrigger class="w-full">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem
-            v-for="opt in giftFilterModeOptions"
-            :key="opt.value"
-            :value="opt.value"
-            class="text-xs"
-          >
-            {{ opt.label }}
-          </SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
+    <FormField
+      type="select"
+      label="礼物过滤模式"
+      :options="giftFilterModeOptions"
+      v-model="action.triggerConfig.filterMode"
+    />
 
     <div
       v-if="action.triggerConfig.filterMode === 'blacklist' || action.triggerConfig.filterMode === 'whitelist'"
@@ -123,77 +108,44 @@ function removeGiftName(index: number) {
       </div>
     </div>
 
-    <div
+    <SettingRow
       v-if="action.triggerConfig.filterMode === 'value'"
-      class="flex items-center justify-between p-2.5 rounded border bg-muted/20"
-    >
-      <span class="text-xs font-medium text-foreground">最低价值 (元)</span>
-      <NumberField
-        :model-value="action.triggerConfig.minValue"
-        :min="0"
-        placeholder="0"
-        class="w-32"
-        @update:model-value="action.triggerConfig.minValue = $event || 0"
-      />
-    </div>
+      type="number"
+      variant="compact"
+      title="最低价值 (元)"
+      :min="0"
+      placeholder="0"
+      v-model="action.triggerConfig.minValue"
+    />
 
-    <div class="h-px bg-border my-1" />
+    <Separator class="my-1" />
 
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <div class="flex items-center gap-1 cursor-help">
-              <span class="text-xs font-medium text-foreground">包含数量</span>
-              <Info16Regular class="size-3.5 text-muted-foreground" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent class="text-xs"> 在感谢语中使用 {{ '\{\{gift.count\}\}' }} 变量显示礼物数量 </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <Switch v-model:checked="action.triggerConfig.includeQuantity" />
-    </div>
+    <SettingRow
+      type="switch"
+      variant="compact"
+      title="包含数量"
+      hint="在感谢语中使用 {{gift.count}} 变量显示礼物数量"
+      v-model="action.triggerConfig.includeQuantity"
+    />
 
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <div class="flex items-center gap-1 cursor-help">
-              <span class="text-xs font-medium text-foreground">单次合并上限</span>
-              <Info16Regular class="size-3.5 text-muted-foreground" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent class="text-xs"> 单条感谢弹幕中最多合并展示的用户数量 </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <NumberField
-        :model-value="action.actionConfig.maxUsersPerMsg"
-        :min="1"
-        :max="50"
-        class="w-32"
-        @update:model-value="action.actionConfig.maxUsersPerMsg = $event || 1"
-      />
-    </div>
+    <SettingRow
+      type="number"
+      variant="compact"
+      title="单次合并上限"
+      hint="单条感谢弹幕中最多合并展示的用户数量"
+      :min="1"
+      :max="50"
+      v-model="action.actionConfig.maxUsersPerMsg"
+    />
 
-    <div class="flex items-center justify-between p-2.5 rounded border bg-muted/20">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <div class="flex items-center gap-1 cursor-help">
-              <span class="text-xs font-medium text-foreground">单人礼物上限</span>
-              <Info16Regular class="size-3.5 text-muted-foreground" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent class="text-xs"> 单个用户在同一次感谢中最多显示的礼物种类数 </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-      <NumberField
-        :model-value="action.actionConfig.maxItemsPerUser"
-        :min="1"
-        :max="20"
-        class="w-32"
-        @update:model-value="action.actionConfig.maxItemsPerUser = $event || 1"
-      />
-    </div>
+    <SettingRow
+      type="number"
+      variant="compact"
+      title="单人礼物上限"
+      hint="单个用户在同一次感谢中最多显示的礼物种类数"
+      :min="1"
+      :max="20"
+      v-model="action.actionConfig.maxItemsPerUser"
+    />
   </div>
 </template>

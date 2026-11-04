@@ -6,4 +6,4 @@
  * OpenAPI spec version: v1
  */
 
-export type LiveEmojiResponsePlain = { [key: string]: string }
+export type LiveEmojiResponsePlain = {[key: string]: string};

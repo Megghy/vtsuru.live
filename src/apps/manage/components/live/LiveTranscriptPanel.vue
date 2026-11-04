@@ -215,7 +215,7 @@ defineExpose({ load })
 
     <div
       v-else-if="error"
-      class="py-12 flex flex-col items-center justify-center gap-3"
+      class="py-12 flex-col-center gap-3"
     >
       <Empty :description="`转写获取失败: ${error}`" />
       <Button
@@ -228,7 +228,7 @@ defineExpose({ load })
 
     <div
       v-else-if="!sessions.length && loaded"
-      class="py-12 flex flex-col items-center justify-center gap-2"
+      class="py-12 flex-col-center gap-2"
     >
       <component
         :is="Mic24Regular"
@@ -403,15 +403,9 @@ defineExpose({ load })
                   >
                 </td>
                 <td class="p-2.5">
-                  <div class="flex items-center justify-between gap-2">
+                  <div class="flex-between gap-2">
                     <span class="leading-relaxed">{{ row.text }}</span>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      class="size-6 text-muted-foreground hover:text-foreground shrink-0"
-                      aria-label="复制单句"
-                      @click="copySegment(row)"
-                    >
+                    <Button variant="ghost" size="xs" class="size-6 text-muted-foreground shrink-0" aria-label="复制单句" @click="copySegment(row)">
                       <component
                         :is="Copy24Regular"
                         class="size-3.5"

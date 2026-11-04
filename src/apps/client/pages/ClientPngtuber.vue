@@ -84,12 +84,12 @@ onMounted(() => {
 
     <Card>
       <CardHeader class="py-3 px-4 flex flex-row items-center justify-between">
-        <CardTitle class="text-sm font-semibold">音频驱动</CardTitle>
+        <CardTitle>音频驱动</CardTitle>
         <Tag :variant="driver.running && driver.connected ? 'default' : 'secondary'">
           {{ driver.starting ? '正在启动' : driver.running ? (driver.connected ? '运行中' : '等待连接') : '已停止' }}
         </Tag>
       </CardHeader>
-      <CardContent class="px-4 pb-4 pt-0 space-y-4">
+      <CardContent class="px-4 pb-4 space-y-4">
         <div class="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-[var(--muted-foreground)]">频道</label>
@@ -205,9 +205,9 @@ onMounted(() => {
 
     <Card>
       <CardHeader class="py-3 px-4">
-        <CardTitle class="text-sm font-semibold">实时状态</CardTitle>
+        <CardTitle>实时状态</CardTitle>
       </CardHeader>
-      <CardContent class="px-4 pb-4 pt-0 space-y-4">
+      <CardContent class="px-4 pb-4 space-y-4">
         <div class="flex items-center gap-3">
           <Tag :variant="driver.speaking ? 'default' : 'secondary'">
             {{ driver.speaking ? '说话中' : '静默' }}
@@ -220,10 +220,7 @@ onMounted(() => {
           </span>
         </div>
 
-        <Progress
-          :model-value="Math.min(100, Math.max(0, Math.round(driver.volume)))"
-          class="h-2"
-        />
+        <Progress :model-value="Math.min(100, Math.max(0, Math.round(driver.volume)))" />
 
         <div
           class="space-y-3"

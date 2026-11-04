@@ -7,6 +7,6 @@
  */
 
 export interface RequestBuySubItemModel {
-  subItemId: number
-  quantity: number
+  subItemId: number;
+  quantity: number;
 }

@@ -11,6 +11,7 @@ import { defineConfig } from 'vite'
 import checker from 'vite-plugin-checker'
 import svgLoader from 'vite-svg-loader'
 
+import { customHtmlSandboxLibsPlugin } from './customHtmlSandboxLibsPlugin.ts'
 import unoConfig from './uno.config.ts'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
@@ -35,6 +36,7 @@ const removeSodipodiInkscape = {
 export default defineConfig({
   appType: 'spa',
   plugins: [
+    customHtmlSandboxLibsPlugin(),
     checker({
       vueTsc: {
         tsconfigPath: 'tsconfig.json',

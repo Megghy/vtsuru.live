@@ -7,9 +7,10 @@
  */
 
 export enum SongRequestFrom {
-  Manual = 0,
-  Danmaku = 1,
-  SC = 2,
-  Web = 3,
-  Gift = 4,
+  Manual= 0,
+  Danmaku= 1,
+  SC= 2,
+  Web= 3,
+  Gift= 4,
+
 }

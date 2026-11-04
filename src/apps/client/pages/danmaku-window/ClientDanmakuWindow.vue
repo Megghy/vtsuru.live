@@ -237,7 +237,7 @@ watch(
 <template>
   <div
     v-if="!setting"
-    class="flex items-center justify-center w-full h-full"
+    class="flex-center w-full h-full"
   >
     <Spin size="medium" />
   </div>
