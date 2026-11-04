@@ -11,12 +11,9 @@ import { Switch } from '@/shared/ui/switch'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/utils/cn'
 
-defineOptions({ name: 'SettingRow' })
+import type { SelectOption } from './types'
 
-export interface SelectOption {
-  label: string
-  value: any
-}
+defineOptions({ name: 'SettingRow' })
 
 const props = withDefaults(
   defineProps<{

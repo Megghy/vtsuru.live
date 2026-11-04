@@ -10,12 +10,9 @@ import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { cn } from '@/shared/utils/cn'
 
-defineOptions({ name: 'FormField' })
+import type { FormSelectOption } from './types'
 
-export interface FormSelectOption {
-  label: string
-  value: any
-}
+defineOptions({ name: 'FormField' })
 
 const props = defineProps<{
   label?: string

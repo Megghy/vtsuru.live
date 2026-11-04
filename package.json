@@ -12,7 +12,7 @@
     "visual:user-page": "node scripts/capture-user-page-regression.mjs",
     "visual:user-page-theme": "node scripts/capture-user-page-theme-isolation.mjs",
     "typecheck": "vue-tsc --noEmit",
-    "api:gen": "node ./node_modules/orval/dist/bin/orval.mjs",
+    "api:gen": "node ./node_modules/orval/dist/bin/orval.mjs && oxfmt --write src/api/generated",
     "api:check": "bun scripts/check-api-gen.mjs",
     "test": "vitest run",
     "test:watch": "vitest",

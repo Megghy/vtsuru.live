@@ -1,1 +1,2 @@
-export { default as SettingRow, type SelectOption } from './SettingRow.vue'
+export { default as SettingRow } from './SettingRow.vue'
+export type { SelectOption } from './types'
