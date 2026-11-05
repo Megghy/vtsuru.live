@@ -23,6 +23,7 @@ export const buttonVariants = cva(
         'icon-sm': 'size-control-sm',
         'icon-xs': 'size-control-xs',
         'icon-lg': 'size-control-lg',
+        none: '',
       },
     },
     defaultVariants: {

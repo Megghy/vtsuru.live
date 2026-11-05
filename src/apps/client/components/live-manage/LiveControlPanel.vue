@@ -3,6 +3,7 @@ import { AlertTriangle, Play, RefreshCw, Square, Video } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
+import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -18,7 +19,7 @@ import LiveCoverUpload from './LiveCoverUpload.vue'
 
 const props = defineProps<{ control: LiveControl }>()
 const c = props.control
-const obsStore = c.obsStore
+const obsStore = useOBSStore()
 
 // 分区两级级联联动
 const customParentId = ref<string>('')

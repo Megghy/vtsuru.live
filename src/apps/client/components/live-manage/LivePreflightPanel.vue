@@ -19,7 +19,13 @@ defineEmits<{ refresh: []; navigate: [target: CheckTarget] }>()
 const blockers = computed(() => props.checks.filter((check) => check.status === 'error').length)
 const warnings = computed(() => props.checks.filter((check) => check.status === 'warning').length)
 const labels = { success: '通过', error: '需处理', warning: '注意', info: '提示' } as const
-const targets = { fetcher: '连接与凭据', control: '直播设置', obs: 'OBS 设置', account: '账号绑定' } as const
+const targets = {
+  fetcher: '连接设置',
+  control: '直播设置',
+  obs: 'OBS 设置',
+  account: '账号绑定',
+  'account-manage': '账号与凭据',
+} as const
 
 function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
   switch (status) {

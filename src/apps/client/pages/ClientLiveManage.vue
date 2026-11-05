@@ -27,6 +27,10 @@ async function navigateCheck(target: CheckTarget) {
     await openUrl('https://vtsuru.live/manage')
     return
   }
+  if (target === 'account-manage') {
+    await router.push({ name: 'client-account-manage' })
+    return
+  }
   if (target === 'fetcher') {
     await router.push({ name: 'client-fetcher' })
     return

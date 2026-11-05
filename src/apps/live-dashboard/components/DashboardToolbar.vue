@@ -242,16 +242,16 @@ const SEARCH_HELP = [
         <TooltipProvider v-if="key === 'duration'">
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                class="h-auto flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 text-left font-normal"
+              <button
+                type="button"
+                class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 text-left cursor-pointer select-none border-0 transition-colors hover:bg-muted/80 active:scale-[0.98]"
                 @click="stats.reset()"
               >
                 <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">统计时长</span>
                 <span class="text-xs font-semibold text-foreground whitespace-nowrap [font-feature-settings:'tnum']">{{
                   formatDuration(stats.duration)
                 }}</span>
-              </Button>
+              </button>
             </TooltipTrigger>
             <TooltipContent>点击重置统计（仅影响顶部数据）</TooltipContent>
           </Tooltip>

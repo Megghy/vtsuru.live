@@ -56,6 +56,7 @@ const rankViewOptions = [
   { label: '下播感谢合集', value: 'thank_summary' },
   { label: '打赏贡献榜', value: 'rank' },
   { label: '在场大航海', value: 'online_guard' },
+  { label: '在线观众', value: 'online_viewers' },
 ]
 
 const presets = {
@@ -93,6 +94,7 @@ function resetWindowPosition() {
 // 实时感谢数据
 const realtimeRankList = computed(() => giftWindow.getRankedList())
 const realtimeGuardList = computed(() => giftWindow.getOnlineGuardList())
+const realtimeViewerList = computed(() => giftWindow.getOnlineViewerList())
 
 function getGuardTitle(level: GuardLevel): string {
   switch (level) {
@@ -134,6 +136,19 @@ function copyThankText() {
   } else {
     guards.forEach((g) => {
       lines.push(`- ${g.uname} [${getGuardTitle(g.guardLevel)}] (${g.lastAction})`)
+    })
+  }
+
+  const viewers = realtimeViewerList.value
+  lines.push('')
+  lines.push(`【在场陪伴与在线观众 (共 ${viewers.length} 人)】`)
+  if (viewers.length === 0) {
+    lines.push('(暂无在线观众数据)')
+  } else {
+    viewers.forEach((v) => {
+      const formerStr = v.isFormerGuard ? ' [老舰长]' : ''
+      const medalStr = v.medalLevel ? ` [${v.medalName || '粉丝'} Lv.${v.medalLevel}]` : ''
+      lines.push(`- ${v.uname}${formerStr}${medalStr} (${v.lastAction})`)
     })
   }
 
@@ -364,7 +379,8 @@ function toggleFilterType(val: string, checked: boolean) {
                           </span>
                           <div class="relative flex-center">
                             <img
-                              :src="r.uface || 'https://static.hdslb.com/images/member/noface.gif'"
+                              :src="r.uface || 'https://i0.hdslb.com/bfs/face/member/noface.jpg'"
+                              referrerpolicy="no-referrer"
                               class="size-6 rounded-full object-cover"
                               alt="avatar"
                             />
@@ -436,7 +452,8 @@ function toggleFilterType(val: string, checked: boolean) {
                           </Badge>
                           <div class="relative flex-center">
                             <img
-                              :src="g.uface || 'https://static.hdslb.com/images/member/noface.gif'"
+                              :src="g.uface || 'https://i0.hdslb.com/bfs/face/member/noface.jpg'"
+                              referrerpolicy="no-referrer"
                               class="size-6 rounded-full object-cover"
                               alt="avatar"
                             />
@@ -1004,7 +1021,8 @@ function toggleFilterType(val: string, checked: boolean) {
                       {{ index + 1 }}
                     </span>
                     <img
-                      :src="item.uFace || 'https://static.hdslb.com/images/member/noface.gif'"
+                      :src="item.uFace || 'https://i0.hdslb.com/bfs/face/member/noface.jpg'"
+                      referrerpolicy="no-referrer"
                       class="size-6 rounded-full object-cover"
                       alt="avatar"
                     />

@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useAccount } from '@/api/account'
 import { buildPreflightChecks } from '@/apps/client/components/live-manage/preflight'
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
+import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { useSettings } from '@/apps/client/store/useSettings'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -15,7 +16,7 @@ export function useLivePreflight(control: LiveControl) {
   const settings = useSettings()
   const fetcher = useWebFetcher()
   const danmaku = useDanmakuClient()
-  const obs = control.obsStore
+  const obs = useOBSStore()
   const refreshing = ref(false)
   const error = ref('')
   const checkedAt = ref<number>()

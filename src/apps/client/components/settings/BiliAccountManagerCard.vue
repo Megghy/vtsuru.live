@@ -221,6 +221,20 @@ async function handleCheckSingle(acc: BiliAccountItem) {
   }
 }
 
+async function handleRefreshSingle(acc: BiliAccountItem) {
+  try {
+    toast.info(`正在尝试为 [${acc.name}] 换票续期...`)
+    const success = await accountManager.refreshAccountIfNeeded(acc.id, true)
+    if (success) {
+      toast.success(`[${acc.name}] 凭据已成功自动续期！`)
+    } else {
+      toast.info(`[${acc.name}] 当前凭证正常有效，暂无需续期`)
+    }
+  } catch (err: any) {
+    toast.error(`续期失败: ${err.message}`)
+  }
+}
+
 async function handleBatchCheck() {
   if (batchCheckCooldown.isCoolingDown()) {
     toast.warning(`请等待 ${batchCheckCooldown.remaining.value} 秒后再试`)
@@ -469,6 +483,15 @@ async function handleRemoveAccount(id: string) {
                     <CloseCircleOutline class="size-3" />
                     已失效
                   </Badge>
+
+                  <!-- 自动续期能力标识 -->
+                  <Badge
+                    v-if="acc.refreshToken"
+                    variant="secondary"
+                    class="text-[10px] text-muted-foreground/80 border-border/40"
+                  >
+                    支持自动续期
+                  </Badge>
                 </div>
 
                 <div class="text-xs text-muted-foreground mt-0.5">UID: {{ acc.mid }}</div>
@@ -496,6 +519,17 @@ async function handleRemoveAccount(id: string) {
               >
                 <RefreshOutline class="size-3" />
                 检查
+              </Button>
+
+              <Button
+                v-if="acc.refreshToken"
+                size="xs"
+                variant="outline"
+                class="border-emerald-500/40 text-emerald-600 hover:bg-emerald-500/10 gap-1"
+                @click="handleRefreshSingle(acc)"
+              >
+                <RefreshOutline class="size-3" />
+                手动续期
               </Button>
 
               <Button

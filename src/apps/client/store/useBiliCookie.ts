@@ -8,6 +8,7 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 
 import type { BiliUserProfile } from '../data/models'
 import { QueryBiliAPI } from '../data/utils'
+import { refreshBiliCookieAsync } from '../data/cookieRefresh'
 import { useBiliAccountManager } from './useBiliAccountManager'
 import { useTauriStore } from './useTauriStore'
 
@@ -415,7 +416,23 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     // 如果没有尝试云同步，或者云同步失败，则检查本地 Cookie
     if (!cloudSyncAttempted || !cloudSyncSuccess) {
       debug('[BiliCookie] 检查本地存储的 Cookie 有效性...')
-      const storedCookie = biliCookieStore.value?.cookie
+      let storedCookie = biliCookieStore.value?.cookie
+      const storedRefreshToken = biliCookieStore.value?.refreshToken
+
+      // 若拥有 refreshToken，优先按需自动换票续期
+      if (storedCookie && storedRefreshToken) {
+        try {
+          const refreshRes = await refreshBiliCookieAsync(storedCookie, storedRefreshToken)
+          if (refreshRes.success && refreshRes.refreshed && refreshRes.newCookie && refreshRes.newRefreshToken) {
+            info('[BiliCookie] 主播大号 Cookie 自动续期成功！')
+            await setBiliCookie(refreshRes.newCookie, refreshRes.newRefreshToken)
+            storedCookie = refreshRes.newCookie
+          }
+        } catch (err) {
+          warn(`[BiliCookie] 主播大号自动续期失败: ${String(err)}`)
+        }
+      }
+
       if (storedCookie) {
         const { valid } = await _checkCookieValidity(storedCookie)
         // 只有在云同步未成功时才更新状态，避免覆盖云同步设置的状态
@@ -578,6 +595,17 @@ export const useBiliCookie = defineStore('biliCookie', () => {
     check, // 暴露 check 方法，允许手动触发检查 (例如，应用从后台恢复)
     setBiliCookie,
     getBiliCookie, // 获取原始 cookie 字符串的方法
+    refreshCookieIfNeeded: async (force = false): Promise<boolean> => {
+      const storedCookie = biliCookieStore.value?.cookie
+      const storedRefreshToken = biliCookieStore.value?.refreshToken
+      if (!storedCookie || !storedRefreshToken) return false
+      const res = await refreshBiliCookieAsync(storedCookie, storedRefreshToken, force)
+      if (res.success && res.refreshed && res.newCookie && res.newRefreshToken) {
+        await setBiliCookie(res.newCookie, res.newRefreshToken)
+        return true
+      }
+      return false
+    },
     logout,
     setCookieCloudConfig,
     clearCookieCloudConfig,

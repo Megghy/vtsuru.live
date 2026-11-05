@@ -4,6 +4,7 @@ import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
+import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
@@ -12,7 +13,7 @@ import { Input } from '@/shared/ui/input'
 
 const props = defineProps<{ control: LiveControl }>()
 const c = props.control
-const obsStore = c.obsStore
+const obsStore = useOBSStore()
 
 const showStreamKey = ref(false)
 const copiedServer = ref(false)

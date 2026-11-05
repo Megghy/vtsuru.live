@@ -31,7 +31,7 @@ describe('开播前检查', () => {
         .filter((c) => c.status === 'error')
         .map((c) => [c.id, c.target]),
     ).toEqual([
-      ['login', 'fetcher'],
+      ['login', 'account-manage'],
       ['room', 'account'],
       ['area', 'control'],
     ])

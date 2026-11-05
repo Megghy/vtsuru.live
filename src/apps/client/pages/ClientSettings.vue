@@ -391,7 +391,23 @@ function handleTitleClick() {
 
               <!-- B站账号管理 -->
               <template v-else-if="currentTab === 'bili-accounts'">
-                <BiliAccountManagerCard />
+                <div class="flex flex-col gap-3">
+                  <div class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs flex items-center justify-between">
+                    <span class="text-muted-foreground">
+                      B 站账号与主凭据已统一收录至左侧侧边栏专属页面，支持集中维护与批量续期。
+                    </span>
+                    <Button
+                      variant="link"
+                      size="xs"
+                      class="h-auto p-0 gap-1 text-primary shrink-0"
+                      @click="router.push({ name: 'client-account-manage', query: { tab: 'pool' } })"
+                    >
+                      <span>前往账号与凭据中心</span>
+                      <span class="text-[10px]">&rarr;</span>
+                    </Button>
+                  </div>
+                  <BiliAccountManagerCard />
+                </div>
               </template>
 
               <!-- 系统通知 -->

@@ -280,7 +280,8 @@ onMounted(() => {
                   <TooltipTrigger as-child>
                     <Button
                       variant="outline"
-                      class="entry-card tone-cyan h-auto p-4 flex flex-col text-center"
+                      size="none"
+                      class="entry-card tone-cyan h-auto p-4 flex flex-col text-center whitespace-normal"
                       @click="$router.push({ name: 'manage-index' })"
                     >
                       <component
@@ -300,7 +301,8 @@ onMounted(() => {
                   <TooltipTrigger as-child>
                     <Button
                       variant="outline"
-                      class="entry-card tone-yellow h-auto p-4 flex flex-col text-center"
+                      size="none"
+                      class="entry-card tone-yellow h-auto p-4 flex flex-col text-center whitespace-normal"
                       @click="openAudience"
                     >
                       <component
@@ -359,7 +361,8 @@ onMounted(() => {
             v-for="(item, index) in functions"
             :key="item.name"
             variant="outline"
-            class="feature-card h-auto p-4 flex flex-col items-stretch text-left font-normal"
+            size="none"
+            class="feature-card h-auto p-4 flex flex-col items-stretch text-left font-normal whitespace-normal"
             :class="getFeatureTone(index)"
             @click="handleFunctionClick(item)"
           >
@@ -901,7 +904,9 @@ onMounted(() => {
     align-items: stretch;
     gap: 16px;
     min-width: 0;
+    min-height: 140px;
     padding: 18px;
+    white-space: normal;
     border: 1px solid var(--border);
     border-radius: 8px;
     backdrop-filter: blur(12px);
@@ -954,6 +959,8 @@ article.feature-card
     color: var(--muted-foreground);
     font-size: 0.9rem;
     line-height: 1.6;
+    white-space: normal;
+    word-break: break-word;
 
 .feature-badge-new
     display: inline-flex;

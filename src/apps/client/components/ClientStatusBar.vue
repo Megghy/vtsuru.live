@@ -85,7 +85,7 @@ function toggleGiftWindow() {
 
 <template>
   <footer
-    class="flex-between h-6.5 min-h-6.5 px-2.5 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3"
+    class="flex-between h-8 min-h-8 px-3 bg-card border-t border-border text-[11px] leading-none text-muted-foreground select-none box-border shrink-0 z-100 gap-3"
   >
     <!-- 左侧：连接与采集源状态 -->
     <div class="flex items-center gap-2 whitespace-nowrap shrink-0">

@@ -9,16 +9,8 @@ const animatePreflightCSS = `
       scale3d(var(--tw-enter-scale, 1), var(--tw-enter-scale, 1), var(--tw-enter-scale, 1))
       rotate(var(--tw-enter-rotate, 0));
   }
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale3d(1, 1, 1) rotate(0);
-  }
 }
 @keyframes exit {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale3d(1, 1, 1) rotate(0);
-  }
   to {
     opacity: var(--tw-exit-opacity, 1);
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0)
@@ -36,6 +28,34 @@ const animatePreflightCSS = `
 }
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+@keyframes dialog-exit {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+}
+@keyframes overlay-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes overlay-exit {
+  from { opacity: 1; }
+  to { opacity: 0; }
 }
 /* duration-* also sets --tw-animation-duration so animate-in/out respect it */
 .duration-75  { --tw-animation-duration: 75ms;   }
@@ -170,6 +190,12 @@ export default defineConfig({
 
     // ── Spin (standard rotation animation) ───────────────────────────────────
     ['animate-spin', { animation: 'spin 1s linear infinite' }],
+
+    // ── Dialog & Overlay (centered zoom/fade) ──────────────────────────────
+    ['animate-dialog-in', { animation: 'dialog-enter 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards' }],
+    ['animate-dialog-out', { animation: 'dialog-exit 140ms ease-in forwards' }],
+    ['animate-overlay-in', { animation: 'overlay-enter 180ms cubic-bezier(0.16, 1, 0.3, 1) forwards' }],
+    ['animate-overlay-out', { animation: 'overlay-exit 140ms ease-in forwards' }],
 
     // ── Fade modifiers ─────────────────────────────────────────────────────
     [/^fade-in-(\d+)$/, ([, n]) => ({ '--tw-enter-opacity': `${Number(n) / 100}` })],

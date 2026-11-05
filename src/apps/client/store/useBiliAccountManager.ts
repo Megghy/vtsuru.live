@@ -4,10 +4,11 @@ import { AES, enc, MD5 } from 'crypto-js'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 
-import { usePersistedStorage } from '@/shared/storage/persist'
+import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 
 import type { BiliUserProfile } from '../data/models'
 import { QueryBiliAPI } from '../data/utils'
+import { refreshBiliCookieAsync } from '../data/cookieRefresh'
 import type { CookieCloudConfig, CookieCloudExportData } from './useBiliCookie'
 import { useTauriStore } from './useTauriStore'
 
@@ -102,7 +103,9 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
 
   // 4. 工具方法与 API 校验
 
-  const checkCookieValidity = async (cookie: string): Promise<{ valid: boolean; data?: BiliUserProfile }> => {
+  const checkCookieValidity = async (
+    cookie: string,
+  ): Promise<{ valid: boolean | null; data?: BiliUserProfile }> => {
     if (!cookie) return { valid: false }
     try {
       const resp = await QueryBiliAPI('https://api.bilibili.com/x/space/myinfo', 'GET', cookie)
@@ -110,10 +113,17 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
       if (json.code === 0 && json.data) {
         return { valid: true, data: json.data }
       }
-      return { valid: false }
+      // 明确未登录(-101)或凭证异常(-111)判定为失效
+      if (json.code === -101 || json.code === -111) {
+        return { valid: false }
+      }
+      // 其他业务/风控码(如 -412)或服务端故障视为临时不可用，返回 null 保持现状
+      debug(`[AccountManager] 检查 Cookie 接口返回非登录错误: code=${json.code}, msg=${json.message || json.msg}`)
+      return { valid: null }
     } catch (err) {
-      error(`[AccountManager] 检查 Cookie 失败: ${String(err)}`)
-      return { valid: false }
+      error(`[AccountManager] 检查 Cookie 网络请求失败: ${String(err)}`)
+      // 网络故障返回 null，防止网络波动把正常账号误判为失效
+      return { valid: null }
     }
   }
 
@@ -129,7 +139,7 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
   ): Promise<BiliAccountItem> => {
     info('[AccountManager] 正在验证并添加新账号...')
     const { valid, data } = await checkCookieValidity(cookie)
-    if (!valid || !data) {
+    if (valid !== true || !data) {
       throw new Error('该 Cookie 无法通过 B 站 API 验证')
     }
 
@@ -227,24 +237,57 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
     const acc = accounts.value.find((a) => a.id === id)
     if (!acc) return false
     const { valid, data } = await checkCookieValidity(acc.cookie)
-    acc.isValid = valid
+    if (valid !== null) {
+      acc.isValid = valid
+    }
     acc.lastCheckedAt = Date.now()
     if (valid && data) {
       acc.name = data.name
       acc.face = data.face
     }
     await saveState()
-    return valid
+    return acc.isValid
+  }
+
+  /**
+   * 按需静默刷新账号凭证 (换票续期)
+   */
+  const refreshAccountIfNeeded = async (id: string, force = false): Promise<boolean> => {
+    const acc = accounts.value.find((a) => a.id === id)
+    if (!acc || !acc.refreshToken) return false
+
+    try {
+      const res = await refreshBiliCookieAsync(acc.cookie, acc.refreshToken, force)
+      if (res.success && res.refreshed && res.newCookie && res.newRefreshToken) {
+        acc.cookie = res.newCookie
+        acc.refreshToken = res.newRefreshToken
+        acc.isValid = true
+        acc.lastCheckedAt = Date.now()
+        await saveState()
+        info(`[AccountManager] 账号 [${acc.name}] (${acc.id}) 自动续期成功！`)
+        return true
+      }
+    } catch (err) {
+      error(`[AccountManager] 账号 [${acc.name}] 自动续期失败: ${String(err)}`)
+    }
+    return false
   }
 
   /**
    * 检查所有账号有效性
    */
   const checkAllAccounts = async (): Promise<void> => {
-    debug('[AccountManager] 批量检查账号有效性...')
+    debug('[AccountManager] 批量检查账号有效性与自动续期...')
     for (const acc of accounts.value) {
+      // 拥有 refreshToken 的账号优先尝试自动续期
+      if (acc.refreshToken) {
+        await refreshAccountIfNeeded(acc.id)
+      }
+
       const { valid, data } = await checkCookieValidity(acc.cookie)
-      acc.isValid = valid
+      if (valid !== null) {
+        acc.isValid = valid
+      }
       acc.lastCheckedAt = Date.now()
       if (valid && data) {
         acc.name = data.name
@@ -258,8 +301,10 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
    * 保存持久化状态
    */
   const saveState = async (): Promise<void> => {
-    accountsStore.value = accounts.value
-    routingStore.value = routing.value
+    await whenPersistedReady(accountsStore)
+    await whenPersistedReady(routingStore)
+    accountsStore.value = [...accounts.value]
+    routingStore.value = { ...routing.value }
   }
 
   // 6. CookieCloud 批量导入支持
@@ -322,12 +367,15 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
     _isInitialized = true
     info('[AccountManager] 初始化开始...')
 
+    // 严禁在存储就绪前读取默认空值，必须等待持久化加载完毕以防覆盖清空已有账号
+    await Promise.all([whenPersistedReady(accountsStore), whenPersistedReady(routingStore)])
+
     // 从存储加载账号列表与路由规则
-    accounts.value = accountsStore.value || []
-    routing.value = routingStore.value || {
-      mainAccountId: '',
-      danmakuAccountId: 'main',
-      fallbackToMain: true,
+    accounts.value = [...(accountsStore.value || [])]
+    routing.value = {
+      mainAccountId: routingStore.value?.mainAccountId || '',
+      danmakuAccountId: routingStore.value?.danmakuAccountId || 'main',
+      fallbackToMain: routingStore.value?.fallbackToMain ?? true,
     }
 
     // 容错校正
@@ -362,6 +410,7 @@ export const useBiliAccountManager = defineStore('biliAccountManager', () => {
     setFallbackToMain,
     checkAccount,
     checkAllAccounts,
+    refreshAccountIfNeeded,
     importFromCookieCloud,
   }
 })

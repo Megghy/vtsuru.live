@@ -11,6 +11,8 @@ import {
   FlashAuto24Filled,
   Live24Filled,
   Mic24Filled,
+  PeopleSearch24Filled,
+  PersonAccounts24Filled,
   PlugConnected24Filled,
   Record24Filled,
   Settings24Filled,
@@ -74,7 +76,7 @@ const cookieStatusText = computed(() => {
 })
 
 function goCookieManagement() {
-  router.push({ name: 'client-fetcher' })
+  router.push({ name: 'client-account-manage' })
 }
 
 function formatOrigin(origin: string) {
@@ -97,6 +99,7 @@ function formatSince(connectedAt: number) {
 
 const routeNameToMenuKey: Record<string, string> = {
   'client-index': 'go-back-home',
+  'client-account-manage': 'account-manage',
   'client-fetcher': 'fetcher',
   'client-live-manage': 'live-manage',
   'client-live-dashboard': 'live-dashboard',
@@ -106,6 +109,7 @@ const routeNameToMenuKey: Record<string, string> = {
   'client-vts': 'vts',
   'client-read-danmaku': 'read-danmaku',
   'client-transcription': 'transcription',
+  'client-fans-viewer': 'fans-viewer',
   'client-settings': 'settings',
 }
 const activeMenuKey = computed(() => routeNameToMenuKey[route.name as string] ?? '')
@@ -146,6 +150,7 @@ async function login() {
 
 const menuItems = [
   { key: 'go-back-home', name: 'client-index', label: '主页', icon: Home },
+  { key: 'account-manage', name: 'client-account-manage', label: '账号与凭据', icon: PersonAccounts24Filled },
   { key: 'fetcher', name: 'client-fetcher', label: 'EventFetcher', icon: CloudArchive24Filled },
   { key: 'live-manage', name: 'client-live-manage', label: '直播管理', icon: Live24Filled },
   { key: 'live-dashboard', name: 'client-live-dashboard', label: '中控台', icon: Board24Filled },
@@ -173,6 +178,7 @@ const menuItems = [
   { key: 'vts', name: 'client-vts', label: 'VTS 控制', icon: VideoPerson24Filled },
   { key: 'read-danmaku', name: 'client-read-danmaku', label: '读弹幕', icon: Mic24Filled },
   { key: 'transcription', name: 'client-transcription', label: '语音转写', icon: Record24Filled },
+  { key: 'fans-viewer', name: 'client-fans-viewer', label: '粉丝查看', icon: PeopleSearch24Filled },
   { key: 'settings', name: 'client-settings', label: '设置', icon: Settings24Filled },
 ]
 

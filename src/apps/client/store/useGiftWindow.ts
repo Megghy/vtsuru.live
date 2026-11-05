@@ -4,6 +4,7 @@ import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 import { acceptHMRUpdate, defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
+import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
 import { getApiLiveCurrent, getApiLiveRanking } from '@/api/generated/live/live'
 import type {
@@ -12,13 +13,16 @@ import type {
   ResponseLiveRankingEntryModel,
 } from '@/api/generated/model'
 import { EventDataTypes, GuardLevel } from '@/api/generated/model'
+import { QueryBiliAPI } from '@/apps/client/data/utils'
+import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
+import { isTauri } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 export type GiftSortBy = 'time' | 'price' | 'num'
 export type GiftFilterType = 'Gift' | 'SC' | 'Guard'
-export type RankViewMode = 'thank_summary' | 'rank' | 'online_guard'
+export type RankViewMode = 'thank_summary' | 'rank' | 'online_guard' | 'online_viewers'
 
 export interface GiftWindowSettings {
   width: number
@@ -97,6 +101,21 @@ export interface OnlineGuardEntry {
   rankIndex?: number
 }
 
+export interface OnlineViewerEntry {
+  id: string
+  uid: number
+  uname: string
+  uface: string
+  guardLevel: GuardLevel
+  isFormerGuard: boolean
+  medalName?: string
+  medalLevel?: number
+  score?: number
+  isOnline: boolean
+  lastActiveTime: number
+  lastAction: string
+}
+
 export interface ThankSummaryItem {
   id: string
   uid: number
@@ -115,6 +134,7 @@ export type GiftWindowBCData =
   | { type: 'gift-list'; data: GiftEntry[] }
   | { type: 'rank-list'; data: RankEntry[] }
   | { type: 'online-guard-list'; data: OnlineGuardEntry[] }
+  | { type: 'online-viewer-list'; data: OnlineViewerEntry[] }
   | { type: 'update-setting'; data: GiftWindowSettings }
   | { type: 'window-ready' }
   | { type: 'clear' }
@@ -125,6 +145,10 @@ interface UserActivityState {
   uname: string
   uface: string
   guardLevel: GuardLevel
+  isFormerGuard?: boolean
+  medalName?: string
+  medalLevel?: number
+  score?: number
   lastActiveTime: number
   lastAction: string
 }
@@ -173,14 +197,18 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   })
 
   const danmakuClient = useDanmakuClient()
+  const accountInfo = useAccount()
+  const biliCookie = useBiliCookie()
   const isWindowOpened = ref(false)
   const giftList = ref<GiftEntry[]>([])
   const rankMap = ref(new Map<string, RankEntry>())
   const userActivityMap = ref(new Map<string, UserActivityState>())
+  const formerGuardsSet = ref<Set<number>>(new Set())
   const currentLive = ref<ResponseLiveInfoModel | null>(null)
   let bc: BroadcastChannel | undefined
   let isInited = false
   let isSyncingLive = false
+  let _goldRankTimerId: ReturnType<typeof setInterval> | null = null
 
   function closeWindow() {
     giftWindow.value?.hide()
@@ -190,6 +218,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   function openWindow() {
     if (!isInited) init()
     applyWindowSettings()
+    void fetchOnlineGoldRank()
     giftWindow.value?.show()
     isWindowOpened.value = true
   }
@@ -229,12 +258,25 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     const guardLevel =
       data.guard_level && data.guard_level > 0 ? data.guard_level : (existing?.guardLevel ?? GuardLevel.None)
 
+    if (guardLevel > 0 && data.uid) {
+      formerGuardsSet.value.add(data.uid)
+    }
+
+    const uid = data.uid || existing?.uid || 0
+    const wasGuard = (uid > 0 && formerGuardsSet.value.has(uid)) || existing?.isFormerGuard || false
+    const medalName = data.fans_medal_name || existing?.medalName
+    const medalLevel = data.fans_medal_level || existing?.medalLevel
+
     userActivityMap.value.set(id, {
       id,
-      uid: data.uid,
-      uname: data.uname || existing?.uname || `用户${data.uid}`,
+      uid,
+      uname: data.uname || existing?.uname || `用户${data.uid || id}`,
       uface: data.uface || existing?.uface || '',
       guardLevel,
+      isFormerGuard: guardLevel === GuardLevel.None && wasGuard,
+      medalName,
+      medalLevel,
+      score: existing?.score || 0,
       lastActiveTime: now,
       lastAction: actionName,
     })
@@ -470,6 +512,151 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     postBroadcastMessage(bc, { type: 'online-guard-list', data: getOnlineGuardList() } satisfies GiftWindowBCData)
   }
 
+  function getOnlineViewerList(): OnlineViewerEntry[] {
+    const list: OnlineViewerEntry[] = []
+    const now = Date.now()
+    const thresholdMs = (settings.value.onlineThresholdMinutes || 20) * 60 * 1000
+
+    for (const [id, act] of userActivityMap.value.entries()) {
+      const isOnline = now - act.lastActiveTime < thresholdMs
+      // 未在超时窗口内的纯黑听用户不展示
+      if (!isOnline && act.lastAction === '在线黑听') continue
+
+      list.push({
+        id,
+        uid: act.uid,
+        uname: act.uname,
+        uface: act.uface,
+        guardLevel: act.guardLevel,
+        isFormerGuard: act.isFormerGuard,
+        medalName: act.medalName,
+        medalLevel: act.medalLevel,
+        score: act.score,
+        isOnline,
+        lastActiveTime: act.lastActiveTime,
+        lastAction: act.lastAction,
+      })
+    }
+
+    // 智能排序：
+    // 1. 现任大航海优先 (总督 1 > 提督 2 > 舰长 3)
+    // 2. 曾任大航海 (老舰长)
+    // 3. 粉丝牌勋章等级 (从高到低)
+    // 4. 最近活跃时间 / 高能分
+    list.sort((a, b) => {
+      if (a.guardLevel > 0 && b.guardLevel > 0) {
+        if (a.guardLevel !== b.guardLevel) return a.guardLevel - b.guardLevel
+      } else if (a.guardLevel > 0) {
+        return -1
+      } else if (b.guardLevel > 0) {
+        return 1
+      }
+
+      if (a.isFormerGuard !== b.isFormerGuard) {
+        return a.isFormerGuard ? -1 : 1
+      }
+
+      const medalA = a.medalLevel || 0
+      const medalB = b.medalLevel || 0
+      if (medalA !== medalB) {
+        return medalB - medalA
+      }
+
+      return b.lastActiveTime - a.lastActiveTime
+    })
+
+    return list
+  }
+
+  function sendOnlineViewerList() {
+    postBroadcastMessage(bc, { type: 'online-viewer-list', data: getOnlineViewerList() } satisfies GiftWindowBCData)
+  }
+
+  async function fetchOnlineGoldRank() {
+    try {
+      const roomId = accountInfo.value?.biliRoomId
+      const ruid = accountInfo.value?.biliId || biliCookie.uId
+
+      if (!roomId || !ruid) return
+
+      // 非 Tauri 桌面端环境（普通浏览器）直连 B 站 API 会被跨域拦截，直接跳过
+      if (!isTauri) return
+
+      const url = `https://api.live.bilibili.com/xlive/general-interface/v1/rank/getOnlineGoldRank?ruid=${ruid}&roomId=${roomId}&page=1&pageSize=50`
+      const cookie = (await biliCookie.getBiliCookie()) || ''
+      // 统一通过 QueryBiliAPI 注入合法 User-Agent / Referer / Cookie，避免风控阻断
+      const resp = await QueryBiliAPI(url, 'GET', cookie, true)
+      if (!resp.ok) {
+        console.warn(`[GiftWindow] 获取高能榜响应状态码异常: ${resp.status}`)
+        return
+      }
+
+      // 安全读取响应文本并解析，规避流提前终止导致的可读流关闭异常
+      const text = await resp.text()
+      if (!text || !text.trim()) return
+
+      const json = JSON.parse(text) as {
+        code: number
+        message?: string
+        data?: {
+          onlineNum?: number
+          OnlineRankItem?: Array<{
+            userRank: number
+            uid: number
+            name: string
+            face: string
+            score: number
+            guard_level: number
+            medal_info?: {
+              guard_level: number
+              medal_level: number
+              medal_name: string
+            }
+          }>
+        }
+      }
+
+      if (json.code === 0 && json.data?.OnlineRankItem) {
+        const now = Date.now()
+        for (const item of json.data.OnlineRankItem) {
+          const id = String(item.uid)
+          const existing = userActivityMap.value.get(id)
+          const guardLevel =
+            item.guard_level > 0 ? (item.guard_level as GuardLevel) : (existing?.guardLevel ?? GuardLevel.None)
+
+          if (guardLevel > 0) {
+            formerGuardsSet.value.add(item.uid)
+          }
+
+          const medalGuard = item.medal_info?.guard_level ?? 0
+          const wasGuard =
+            formerGuardsSet.value.has(item.uid) ||
+            medalGuard > 0 ||
+            existing?.isFormerGuard ||
+            false
+
+          userActivityMap.value.set(id, {
+            id,
+            uid: item.uid,
+            uname: item.name || existing?.uname || `用户${item.uid}`,
+            uface: item.face || existing?.uface || '',
+            guardLevel,
+            isFormerGuard: guardLevel === GuardLevel.None && wasGuard,
+            medalName: item.medal_info?.medal_name || existing?.medalName,
+            medalLevel: item.medal_info?.medal_level || existing?.medalLevel,
+            score: item.score || existing?.score || 0,
+            lastActiveTime: Math.max(existing?.lastActiveTime || 0, now),
+            lastAction: existing?.lastAction || '在线黑听',
+          })
+        }
+        sendOnlineGuardList()
+        sendOnlineViewerList()
+      }
+    } catch (err) {
+      console.warn('[GiftWindow] 获取高能在线观众榜失败:', err)
+    }
+  }
+
   function replaceRank(entries: ResponseLiveRankingEntryModel[]) {
     rankMap.value = new Map(
       entries.map((entry) => {
@@ -554,6 +741,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     if (rankMap.value.size > 0 || userActivityMap.value.size > 0) {
       sendRankList()
       sendOnlineGuardList()
+      sendOnlineViewerList()
     }
   }
 
@@ -582,10 +770,16 @@ export const useGiftWindow = defineStore('giftWindow', () => {
         sendGiftList()
         sendRankList()
         sendOnlineGuardList()
+        sendOnlineViewerList()
+        void fetchOnlineGoldRank()
       }
     }
     postBroadcastMessage(bc, { type: 'window-ready' } satisfies GiftWindowBCData)
     postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
+    void fetchOnlineGoldRank()
+
+    if (_goldRankTimerId) clearInterval(_goldRankTimerId)
+    _goldRankTimerId = setInterval(fetchOnlineGoldRank, 30 * 1000)
 
     // 全量事件监听以追踪用户在场活跃状态与大航海
     danmakuClient.onEvent('danmaku', (e) => recordUserActivity(e, '发弹幕'))
@@ -616,6 +810,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
         sendGiftList()
         sendRankList()
         sendOnlineGuardList()
+        sendOnlineViewerList()
       },
       { deep: true },
     )
@@ -684,7 +879,10 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     sendTestGift,
     getRankedList,
     getOnlineGuardList,
+    getOnlineViewerList,
     getThankSummaryList,
+    fetchOnlineGoldRank,
+    sendOnlineViewerList,
     init,
   }
 })

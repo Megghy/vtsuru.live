@@ -14,6 +14,16 @@ export default {
       },
     },
     {
+      path: 'accounts',
+      name: 'client-account-manage',
+      component: async () => import('@/apps/client/pages/ClientAccountManage.vue'),
+      meta: {
+        title: '账号与凭据',
+        forceReload: true,
+        pageWidth: 'xl',
+      },
+    },
+    {
       path: 'fetcher',
       name: 'client-fetcher',
       component: async () => import('@/apps/client/pages/ClientFetcher.vue'),
@@ -91,6 +101,15 @@ export default {
       component: async () => import('@/apps/client/pages/ClientTranscription.vue'),
       meta: {
         title: '语音转写',
+        pageWidth: 'xl',
+      },
+    },
+    {
+      path: 'fans-viewer',
+      name: 'client-fans-viewer',
+      component: async () => import('@/apps/client/pages/FansViewerView.vue'),
+      meta: {
+        title: '粉丝查看',
         pageWidth: 'xl',
       },
     },

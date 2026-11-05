@@ -81,12 +81,60 @@ export async function getLoginInfoAsync(qrcodeKey: string): Promise<QRCodeLoginI
     }
   }
 
-  const cookies = response.headers.get('set-cookie')
-  if (!cookies) {
-    throw new Error('无法获取 Cookie')
+  const cookiesHeader = response.headers.get('set-cookie')
+  const urlCookieMap = message.data.url ? extractCookieFromUrl(message.data.url) : new Map<string, string>()
+
+  const mergedCookie = mergeCookies(urlCookieMap, cookiesHeader)
+  if (!mergedCookie) {
+    throw new Error('无法获取 Cookie，响应头与授权链接均无凭据')
   }
 
-  return { status: 'confirmed', cookie: extractCookie(cookies), refresh_token: message.data.refresh_token }
+  return {
+    status: 'confirmed',
+    cookie: mergedCookie,
+    refresh_token: message.data.refresh_token,
+  }
+}
+
+/**
+ * 从 B 站扫码成功的跳转 url (crossDomain) query 参数中提取核心登录凭证
+ * B 站官方以此方式向跨域/原生宿主安全传递 Cookie
+ */
+export function extractCookieFromUrl(targetUrl: string): Map<string, string> {
+  const map = new Map<string, string>()
+  if (!targetUrl) return map
+  try {
+    const parsed = new URL(targetUrl)
+    const allowed = ['DedeUserID', 'DedeUserID__ckMd5', 'SESSDATA', 'bili_jct', 'sid']
+    for (const key of allowed) {
+      const val = parsed.searchParams.get(key)
+      if (val) {
+        map.set(key, val)
+      }
+    }
+  } catch (e) {
+    console.warn('[biliLogin] 从 url 提取 cookie 失败:', e)
+  }
+  return map
+}
+
+/**
+ * 合并 url 查询参数与 Set-Cookie 响应头提取的 Cookie
+ */
+export function mergeCookies(urlCookieMap: Map<string, string>, headerCookieStr?: string | null): string {
+  const finalMap = new Map<string, string>(urlCookieMap)
+  if (headerCookieStr) {
+    const fromHeaders = extractCookie(headerCookieStr)
+    if (fromHeaders) {
+      for (const item of fromHeaders.split('; ')) {
+        const [k, ...v] = item.split('=')
+        if (k && v.length > 0 && !finalMap.has(k)) {
+          finalMap.set(k.trim(), v.join('=').trim())
+        }
+      }
+    }
+  }
+  return Array.from(finalMap, ([k, v]) => `${k}=${v}`).join('; ')
 }
 
 // Cookie 属性名 (非真实 Cookie 键值), 需在解析时跳过

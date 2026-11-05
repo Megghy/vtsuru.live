@@ -312,31 +312,31 @@ onMounted(async () => {
     <!-- 统计卡片 -->
     <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
       <Card>
-        <CardContent class="space-y-1">
+        <CardContent class="p-4 flex-col-center text-center space-y-1">
           <span class="text-xs text-muted-foreground">总用户</span>
           <span class="text-xl font-bold font-mono text-foreground block">{{ userStats.total }}</span>
         </CardContent>
       </Card>
       <Card>
-        <CardContent class="space-y-1">
+        <CardContent class="p-4 flex-col-center text-center space-y-1">
           <span class="text-xs text-muted-foreground">已认证</span>
           <span class="text-xl font-bold font-mono text-emerald-500 block">{{ userStats.authed }}</span>
         </CardContent>
       </Card>
       <Card>
-        <CardContent class="space-y-1">
+        <CardContent class="p-4 flex-col-center text-center space-y-1">
           <span class="text-xs text-muted-foreground">总积分</span>
           <span class="text-xl font-bold font-mono text-primary block">{{ userStats.totalPoints }}</span>
         </CardContent>
       </Card>
       <Card>
-        <CardContent class="space-y-1">
+        <CardContent class="p-4 flex-col-center text-center space-y-1">
           <span class="text-xs text-muted-foreground">总订单</span>
           <span class="text-xl font-bold font-mono text-blue-500 block">{{ userStats.totalOrders }}</span>
         </CardContent>
       </Card>
       <Card>
-        <CardContent class="space-y-1">
+        <CardContent class="p-4 flex-col-center text-center space-y-1">
           <span class="text-xs text-muted-foreground">平均积分</span>
           <span class="text-xl font-bold font-mono text-foreground block">{{ userStats.avgPoints }}</span>
         </CardContent>

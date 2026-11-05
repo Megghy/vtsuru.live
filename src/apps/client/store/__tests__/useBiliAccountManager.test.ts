@@ -20,10 +20,28 @@ vi.mock('@/shared/storage/persist', () => ({
   usePersistedStorage: vi.fn((_key: string, defaultValue: any) => {
     return ref(defaultValue)
   }),
+  whenPersistedReady: vi.fn(async (s: any) => s.value),
+}))
+
+vi.mock('../../data/cookieRefresh', () => ({
+  refreshBiliCookieAsync: vi.fn(async (_cookie: string, refreshToken: string) => {
+    if (refreshToken === 'valid_refresh_token') {
+      return {
+        success: true,
+        refreshed: true,
+        newCookie: 'DedeUserID=10001; bili_jct=new_csrf; SESSDATA=new_sess;',
+        newRefreshToken: 'new_refresh_token_2',
+      }
+    }
+    return { success: false, refreshed: false }
+  }),
 }))
 
 vi.mock('../../data/utils', () => ({
   QueryBiliAPI: vi.fn(async (_url: string, _method: string, cookie: string) => {
+    if (cookie.includes('network_error')) {
+      throw new Error('Connection reset by peer')
+    }
     if (cookie.includes('invalid')) {
       return {
         json: async () => ({ code: -101, message: '账号未登录' }),
@@ -131,5 +149,41 @@ describe('useBiliAccountManager 多账号管理池', () => {
 
     await store.removeAccount('10001')
     expect(store.accounts.length).toBe(0)
+  })
+
+  it('网络抖动或异常时不应将有效账号误判为失效', async () => {
+    const store = useBiliAccountManager()
+    await store.init()
+
+    await store.addOrUpdateAccount('DedeUserID=10001; bili_jct=csrf1;')
+    const acc = store.accounts.find((a) => a.id === '10001')!
+    expect(acc.isValid).toBe(true)
+
+    // 改变 cookie 触发模拟网络异常
+    acc.cookie = 'DedeUserID=10001; network_error=1;'
+    const result = await store.checkAccount('10001')
+    // 网络异常时保留原有 isValid (true)，不把账号打死
+    expect(result).toBe(true)
+    expect(acc.isValid).toBe(true)
+
+    // 改变 cookie 触发明确未登录状态 (-101)
+    acc.cookie = 'DedeUserID=10001; invalid=1;'
+    const invalidResult = await store.checkAccount('10001')
+    expect(invalidResult).toBe(false)
+    expect(acc.isValid).toBe(false)
+  })
+
+  it('拥有 refreshToken 的账号可通过 refreshAccountIfNeeded 自动换票续期', async () => {
+    const store = useBiliAccountManager()
+    await store.init()
+
+    await store.addOrUpdateAccount('DedeUserID=10001; bili_jct=csrf1;', 'valid_refresh_token')
+    const acc = store.accounts.find((a) => a.id === '10001')!
+    expect(acc.refreshToken).toBe('valid_refresh_token')
+
+    const refreshed = await store.refreshAccountIfNeeded('10001', true)
+    expect(refreshed).toBe(true)
+    expect(acc.refreshToken).toBe('new_refresh_token_2')
+    expect(acc.cookie).toContain('SESSDATA=new_sess')
   })
 })

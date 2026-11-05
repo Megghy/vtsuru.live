@@ -91,12 +91,17 @@ async function startLogin() {
       const login = await getLoginInfoAsync(loginKey.value)
       loginStatus.value = login.status
       if (login.status === 'confirmed') {
-        biliCookie.setBiliCookie(login.cookie, login.refresh_token)
-        cookie.value = login.cookie
-        logInfo(`扫码登录成功`)
-        toast.success('登录成功')
-        finishLogin()
-        await biliCookie.check()
+        try {
+          await biliCookie.setBiliCookie(login.cookie, login.refresh_token)
+          logInfo(`扫码登录成功`)
+          toast.success('登录成功')
+        } catch (setErr) {
+          logError(`保存 Cookie 失败: ${String(setErr)}`)
+          toast.error(`登录验证失败: ${String(setErr)}`)
+        } finally {
+          finishLogin()
+          await biliCookie.check()
+        }
       } else if (login.status === 'expired') {
         finishLogin()
         toast.error('二维码已过期')

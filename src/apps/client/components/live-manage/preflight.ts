@@ -1,5 +1,5 @@
 export type CheckStatus = 'success' | 'error' | 'warning' | 'info'
-export type CheckTarget = 'fetcher' | 'control' | 'obs' | 'account'
+export type CheckTarget = 'fetcher' | 'control' | 'obs' | 'account' | 'account-manage'
 export interface PreflightCheck {
   id: string
   title: string
@@ -30,8 +30,8 @@ function basicChecks(s: PreflightState): PreflightCheck[] {
       id: 'login',
       title: 'B 站登录',
       status: s.cookieValid ? 'success' : 'error',
-      detail: s.cookieValid ? '登录验证通过' : '登录尚未通过验证，请到连接与凭据重新登录或检查网络',
-      target: 'fetcher',
+      detail: s.cookieValid ? '登录验证通过' : '登录尚未通过验证，请到账号与凭据重新登录或检查网络',
+      target: 'account-manage',
     },
     {
       id: 'room',

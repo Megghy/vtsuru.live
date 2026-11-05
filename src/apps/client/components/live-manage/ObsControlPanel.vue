@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, HelpCircle, Info, Play, RefreshCw, Square, V
 import { computed } from 'vue'
 
 import type { LiveControl } from '@/apps/client/composables/useLiveControl'
+import { useOBSStore } from '@/apps/client/store/useOBSStore'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -14,8 +15,8 @@ import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
-const props = defineProps<{ control: LiveControl }>()
-const obsStore = props.control.obsStore
+defineProps<{ control?: LiveControl }>()
+const obsStore = useOBSStore()
 const sceneOptions = computed(() => obsStore.obsScenes.map(s => ({ label: s, value: s })))
 
 const handleToggleConnect = () => {

@@ -18,6 +18,7 @@ import {
 } from '@vicons/fluent'
 import type { Component } from 'vue'
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
@@ -50,6 +51,7 @@ const biliCookieStore = useBiliCookie()
 const accountManager = useBiliAccountManager()
 const webFetcherStore = useWebFetcher()
 const biliFunc = useBiliFunction()
+const router = useRouter()
 
 // 状态管理
 const currentMenuKey = ref<string>(TriggerType.GIFT) // 默认选中礼物感谢
@@ -295,10 +297,22 @@ const triggerTypeOptions = [
     </ClientPageHeader>
 
     <Alert size="sm" variant="warning" v-if="!biliCookieStore.isCookieValid">
-      <AlertTitle>B站账号凭据未就绪</AlertTitle>
-      <AlertDescription class="mt-0.5">
-        部分需要发送弹幕或私信的操作（如自动回复、上舰感谢）将无法执行。请前往【设置】完成登录。
-      </AlertDescription>
+      <div class="flex items-center justify-between w-full">
+        <div>
+          <AlertTitle>B站账号凭据未就绪</AlertTitle>
+          <AlertDescription class="mt-0.5">
+            部分需要发送弹幕或私信的操作（如自动回复、上舰感谢）将无法执行。请前往【账号与凭据】完成登录或配置多账号池。
+          </AlertDescription>
+        </div>
+        <Button
+          variant="outline"
+          size="xs"
+          class="shrink-0 ml-3"
+          @click="router.push({ name: 'client-account-manage' })"
+        >
+          前往配置
+        </Button>
+      </div>
     </Alert>
 
     <!-- 双栏工作台卡片 -->

@@ -478,7 +478,6 @@ export function useLiveControl() {
 
   return {
     ...cover,
-    obsStore,
     isLiving,
     rtmpServer,
     rtmpCode,

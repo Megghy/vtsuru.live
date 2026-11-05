@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { Gift20Regular, PeopleCommunity20Regular, Trophy20Regular, VehicleShip20Regular } from '@vicons/fluent'
+import {
+  Checkmark16Regular,
+  Copy20Regular,
+  Gift20Regular,
+  PeopleCommunity20Regular,
+  Trophy20Regular,
+  VehicleShip20Regular,
+} from '@vicons/fluent'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/generated/model'
@@ -9,6 +16,7 @@ import type {
   GiftWindowBCData,
   GiftWindowSettings,
   OnlineGuardEntry,
+  OnlineViewerEntry,
   RankEntry,
   RankViewMode,
   ThankSummaryItem,
@@ -23,10 +31,17 @@ const setting = ref<GiftWindowSettings>()
 const giftList = ref<GiftEntry[]>([])
 const rankList = ref<RankEntry[]>([])
 const onlineGuardList = ref<OnlineGuardEntry[]>([])
+const onlineViewerList = ref<OnlineViewerEntry[]>([])
 const activeRankTab = ref<RankViewMode>('thank_summary')
+const isCopied = ref(false)
+let copyTimer: ReturnType<typeof setTimeout> | null = null
 
 const hasContent = computed(
-  () => giftList.value.length > 0 || rankList.value.length > 0 || onlineGuardList.value.length > 0,
+  () =>
+    giftList.value.length > 0 ||
+    rankList.value.length > 0 ||
+    onlineGuardList.value.length > 0 ||
+    onlineViewerList.value.length > 0,
 )
 
 const thankSummaryList = computed<ThankSummaryItem[]>(() => {
@@ -118,6 +133,51 @@ function formatRankScore(score: number): string {
   return `¥${score.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
 }
 
+function copyOnlineViewersThankText() {
+  const viewers = onlineViewerList.value
+  if (viewers.length === 0) return
+
+  const guards: string[] = []
+  const formerGuards: string[] = []
+  const fansWithMedal: string[] = []
+  const others: string[] = []
+
+  for (const v of viewers) {
+    if (v.guardLevel > 0) {
+      guards.push(`${v.uname} [${getGuardLabel(v.guardLevel)}]`)
+    } else if (v.isFormerGuard) {
+      formerGuards.push(`${v.uname} (老舰长)`)
+    } else if (v.medalLevel && v.medalLevel > 0) {
+      fansWithMedal.push(`${v.uname} [${v.medalName || '粉丝'} Lv.${v.medalLevel}]`)
+    } else {
+      others.push(v.uname)
+    }
+  }
+
+  const sections: string[] = []
+  if (guards.length > 0) {
+    sections.push(`在场大航海：${guards.join('、')}`)
+  }
+  if (formerGuards.length > 0) {
+    sections.push(`老舰长陪伴：${formerGuards.join('、')}`)
+  }
+  if (fansWithMedal.length > 0) {
+    sections.push(`高牌子陪伴：${fansWithMedal.join('、')}`)
+  }
+  if (others.length > 0) {
+    sections.push(`在线观众：${others.join('、')}`)
+  }
+
+  const text = `感谢大家的在线陪伴与支持！\n${sections.join('\n')}`
+  navigator.clipboard.writeText(text).then(() => {
+    isCopied.value = true
+    if (copyTimer) clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => {
+      isCopied.value = false
+    }, 2000)
+  })
+}
+
 onMounted(() => {
   bc = new BroadcastChannel(GIFT_WINDOW_BROADCAST_CHANNEL)
   postBroadcastMessage(bc, { type: 'window-ready' })
@@ -133,6 +193,9 @@ onMounted(() => {
       case 'online-guard-list':
         onlineGuardList.value = data.data
         break
+      case 'online-viewer-list':
+        onlineViewerList.value = data.data
+        break
       case 'update-setting':
         setting.value = data.data
         if (data.data.rankViewMode) {
@@ -144,6 +207,7 @@ onMounted(() => {
         giftList.value = []
         rankList.value = []
         onlineGuardList.value = []
+        onlineViewerList.value = []
         break
     }
   }
@@ -214,6 +278,7 @@ watch(
               <img
                 v-if="item.giftIcon"
                 :src="item.giftIcon"
+                referrerpolicy="no-referrer"
                 class="gw-item__gift-img"
                 alt=""
               />
@@ -264,8 +329,13 @@ watch(
         </TransitionGroup>
       </template>
 
-      <!-- 排行榜与在线舰长 -->
-      <template v-if="setting.showRanking && (rankList.length > 0 || onlineGuardList.length > 0)">
+      <!-- 排行榜与在线舰长/在线观众 -->
+      <template
+        v-if="
+          setting.showRanking &&
+          (rankList.length > 0 || onlineGuardList.length > 0 || onlineViewerList.length > 0)
+        "
+      >
         <div
           v-if="setting.showGiftList && giftList.length > 0"
           class="gw-divider"
@@ -300,6 +370,13 @@ watch(
             >
               <VehicleShip20Regular class="gw-tab-icon size-3.5" />
               <span>在场舰长 ({{ onlineGuardList.length }})</span>
+            </ToggleGroupItem>
+            <ToggleGroupItem
+              value="online_viewers"
+              class="flex-1 gap-1 text-[11px]"
+            >
+              <PeopleCommunity20Regular class="gw-tab-icon size-3.5" />
+              <span>在线观众 ({{ onlineViewerList.length }})</span>
             </ToggleGroupItem>
           </ToggleGroup>
         </div>
@@ -337,6 +414,7 @@ watch(
                 <img
                   v-if="setting.showAvatar && r.uface"
                   :src="r.uface"
+                  referrerpolicy="no-referrer"
                   class="gw-avatar"
                   alt=""
                 />
@@ -406,6 +484,7 @@ watch(
                 <img
                   v-if="setting.showAvatar && r.uface"
                   :src="r.uface"
+                  referrerpolicy="no-referrer"
                   class="gw-avatar"
                   alt=""
                 />
@@ -459,6 +538,7 @@ watch(
                 <img
                   v-if="setting.showAvatar && g.uface"
                   :src="g.uface"
+                  referrerpolicy="no-referrer"
                   class="gw-avatar"
                   alt=""
                 />
@@ -484,6 +564,104 @@ watch(
               </span>
             </div>
           </div>
+        </div>
+
+        <!-- 视图 4: 在线观众 (高能榜 + 活跃观众 + 老舰长 + 高牌子) -->
+        <div
+          v-else-if="activeRankTab === 'online_viewers'"
+          class="gw-rank-list"
+        >
+          <div
+            v-if="onlineViewerList.length === 0"
+            class="gw-sub-empty"
+          >
+            当前暂无在线观众数据，正在获取高能榜...
+          </div>
+          <template v-else>
+            <div
+              v-for="v in onlineViewerList"
+              :key="v.id"
+              class="gw-rank-item"
+            >
+              <div class="gw-rank-left">
+                <div class="gw-avatar-wrap">
+                  <img
+                    v-if="setting.showAvatar && v.uface"
+                    :src="v.uface"
+                    referrerpolicy="no-referrer"
+                    class="gw-avatar"
+                    alt=""
+                  />
+                  <span
+                    class="gw-online-dot"
+                    :class="{ online: v.isOnline }"
+                    :title="v.isOnline ? '在场在线' : '离线'"
+                  />
+                </div>
+
+                <div class="gw-user-info">
+                  <div class="gw-user-name-row">
+                    <span class="gw-rank-name">{{ v.uname }}</span>
+                    <!-- 现任舰长徽标 -->
+                    <span
+                      v-if="v.guardLevel > 0"
+                      class="gw-guard-tag"
+                      :class="`gw-guard-tag--${v.guardLevel}`"
+                    >
+                      {{ getGuardLabel(v.guardLevel) }}
+                    </span>
+                    <!-- 曾是大航海 / 老舰长 荣誉标记 -->
+                    <span
+                      v-else-if="v.isFormerGuard"
+                      class="gw-guard-tag gw-guard-tag--former"
+                      title="曾为大航海老舰长"
+                    >
+                      老舰长
+                    </span>
+                    <!-- 粉丝牌等级 -->
+                    <span
+                      v-if="v.medalLevel && v.medalLevel > 0"
+                      class="gw-medal-tag"
+                      :title="`${v.medalName || '粉丝'} Lv.${v.medalLevel}`"
+                    >
+                      {{ v.medalName || '粉' }} {{ v.medalLevel }}
+                    </span>
+                  </div>
+                  <span class="gw-sub-info">
+                    {{ v.lastAction }} · {{ getTimeDiff(v.lastActiveTime) }}前
+                  </span>
+                </div>
+              </div>
+
+              <div class="gw-rank-right">
+                <span
+                  v-if="v.score && v.score > 0"
+                  class="gw-viewer-score"
+                  title="高能在线贡献"
+                >
+                  {{ v.score }}
+                </span>
+                <span
+                  v-else
+                  class="gw-online-badge"
+                >
+                  在场
+                </span>
+              </div>
+            </div>
+
+            <!-- 底部一键复制在线观众感谢名单 -->
+            <div class="pt-2 pb-1 border-t border-white/10 flex-center">
+              <button
+                class="w-full py-1 px-2 text-xs rounded bg-white/10 hover:bg-white/15 text-white/90 border border-white/15 transition-all flex-center gap-1 active:scale-[0.98]"
+                @click="copyOnlineViewersThankText"
+              >
+                <Checkmark16Regular v-if="isCopied" class="size-3.5 text-emerald-400" />
+                <Copy20Regular v-else class="size-3.5" />
+                <span>{{ isCopied ? '已复制感谢名单' : '一键复制在场名单感谢' }}</span>
+              </button>
+            </div>
+          </template>
         </div>
       </template>
 
@@ -879,6 +1057,27 @@ body {
   background: #38bdf8;
   color: #1a1a2e;
 } /* 舰长 */
+.gw-guard-tag--former {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(202, 138, 4, 0.45));
+  color: #fde047;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+} /* 老舰长 */
+.gw-medal-tag {
+  font-size: 0.65em;
+  padding: 0 4px;
+  border-radius: 4px;
+  font-weight: 600;
+  line-height: 1.4;
+  flex-shrink: 0;
+  background: rgba(99, 102, 241, 0.2);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+}
+.gw-viewer-score {
+  font-size: 0.75em;
+  color: #fbbf24;
+  font-weight: 600;
+}
 .gw-guard-tag--badge {
   font-size: 0.72em;
   padding: 2px 6px;

@@ -10,6 +10,7 @@ import {
   Live24Filled,
   Mic24Filled,
   Open24Regular,
+  PeopleSearch24Filled,
   PlugConnected24Filled,
   Settings24Filled,
   VideoPerson24Filled,
@@ -201,7 +202,7 @@ function toggleGiftWindow() {
       <!-- Bilibili 凭据状态 -->
       <Card
         class="cursor-pointer transition-all duration-200 h-full hover:-translate-y-0.5"
-        @click="router.push({ name: 'client-fetcher' })"
+        @click="router.push({ name: 'client-account-manage' })"
       >
         <CardContent class="p-3">
           <div class="flex-between mb-2">
@@ -212,7 +213,7 @@ function toggleGiftWindow() {
               {{ cookieBadgeMeta.text }}
             </Badge>
           </div>
-          <div class="text-xs font-semibold text-foreground">B站 Cookie</div>
+          <div class="text-xs font-semibold text-foreground">B站账号与凭据</div>
           <div class="text-xs text-muted-foreground mt-0.5">
             {{ biliCookie.isCookieValid ? '凭据正常运作' : '需要重新扫码' }}
           </div>
@@ -472,6 +473,23 @@ function toggleGiftWindow() {
                   <div class="text-[13px] font-medium leading-tight">自动操作</div>
                   <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
                     入场欢迎与进房致谢
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
+                @click="router.push({ name: 'client-fans-viewer' })"
+              >
+                <div
+                  class="size-8 rounded-md flex-center text-lg shrink-0 bg-purple-500/10 text-purple-500"
+                >
+                  <PeopleSearch24Filled class="size-4" />
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[13px] font-medium leading-tight">粉丝查看</div>
+                  <div class="text-[11px] text-muted-foreground mt-0.5 overflow-hidden whitespace-nowrap text-ellipsis">
+                    粉丝量降序与回关
                   </div>
                 </div>
               </div>
