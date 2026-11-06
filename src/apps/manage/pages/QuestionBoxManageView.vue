@@ -11,6 +11,7 @@ import router from '@/app/router'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionBoxOBSModal from '@/apps/manage/components/question-box/QuestionBoxOBSModal.vue'
 import QuestionBoxReceivedTab from '@/apps/manage/components/question-box/QuestionBoxReceivedTab.vue'
+import QuestionBoxSentTab from '@/apps/manage/components/question-box/QuestionBoxSentTab.vue'
 import QuestionBoxReplyModal from '@/apps/manage/components/question-box/QuestionBoxReplyModal.vue'
 import QuestionBoxSettings from '@/apps/manage/components/question-box/QuestionBoxSettings.vue'
 import QuestionBoxShareModal from '@/apps/manage/components/question-box/QuestionBoxShareModal.vue'
@@ -29,8 +30,6 @@ import {
 } from '@/shared/ui/alert-dialog'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Card, CardContent, CardHeader } from '@/shared/ui/card'
-import { ImagePreview } from '@/shared/ui/image-preview'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -68,16 +67,6 @@ async function refresh() {
 watch(selectedTabItem, (tab) => {
   if (tab === '1' && useQB.sendQuestions.length === 0) useQB.GetSendQAInfo()
 })
-
-function formatRelativeTime(timestamp?: number) {
-  if (!timestamp) return '-'
-  const ts = typeof timestamp === 'number' && timestamp < 1e12 ? timestamp * 1000 : timestamp
-  const diffSec = Math.floor((Date.now() - ts) / 1000)
-  if (diffSec < 60) return '刚刚'
-  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}分钟前`
-  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}小时前`
-  return `${Math.floor(diffSec / 86400)}天前`
-}
 
 onMounted(async () => {
   await useQB.GetTags()
@@ -184,7 +173,7 @@ onMounted(async () => {
         <TabsTrigger value="1">
           我发送的
           <Badge variant="secondary" size="xs">
-            {{ useQB.sendQuestions.length }}
+            {{ useQB.sendThreads.length }}
           </Badge>
         </TabsTrigger>
         <TabsTrigger value="2">
@@ -214,87 +203,9 @@ onMounted(async () => {
       <!-- 我发送的 Tab -->
       <TabsContent
         value="1"
-        class="mt-3 space-y-3"
+        class="mt-3"
       >
-        <div
-          v-if="useQB.sendQuestions.length === 0"
-          class="text-center py-16 text-xs text-muted-foreground border border-dashed rounded-lg"
-        >
-          暂无发送的提问
-        </div>
-
-        <div
-          v-else
-          class="space-y-3"
-        >
-          <Card
-            v-for="item in useQB.sendQuestions"
-            :key="item.id"
-            class="hover:border-brand/30 transition-colors"
-          >
-            <CardHeader class="p-3.5">
-              <div class="flex-between text-xs">
-                <div class="flex items-center gap-1.5">
-                  <Badge variant="outline" size="xs">
-                    发给
-                  </Badge>
-                  <Button
-                    variant="link"
-                    class="h-auto p-0 font-semibold text-primary"
-                    @click="router.push(`/user/${item.target.id}`)"
-                  >
-                    {{ item.target.name }}
-                  </Button>
-                </div>
-
-                <span class="text-muted-foreground font-mono">
-                  {{ formatRelativeTime(item.sendAt) }}
-                </span>
-              </div>
-            </CardHeader>
-
-            <CardContent class="space-y-3">
-              <p class="text-sm text-foreground leading-relaxed m-0">
-                {{ item.question?.message }}
-              </p>
-
-              <!-- 提问图片 -->
-              <div
-                v-if="item.questionImages && item.questionImages.length > 0"
-                class="flex items-center gap-2 flex-wrap"
-              >
-                <ImagePreview
-                  v-for="(img, imgIdx) in item.questionImages"
-                  :key="img.id || imgIdx"
-                  :src="img.path || ''"
-                  :alt="img.name || '提问附图'"
-                  :gallery="item.questionImages"
-                  :index="imgIdx"
-                  class="h-16 w-20"
-                />
-              </div>
-
-              <!-- 对方回复 -->
-              <div
-                v-if="item.answer"
-                class="p-3 rounded-md bg-muted/40 border border-border/60 space-y-1.5"
-              >
-                <div class="flex-between text-xs text-muted-foreground">
-                  <span class="font-medium">对方的回复</span>
-                  <span
-                    v-if="item.answer.createdAt"
-                    class="font-mono text-[11px]"
-                  >
-                    {{ formatRelativeTime(item.answer.createdAt) }}
-                  </span>
-                </div>
-                <p class="text-xs text-foreground leading-relaxed m-0">
-                  {{ item.answer.message }}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <QuestionBoxSentTab />
       </TabsContent>
 
       <!-- 垃圾站 Tab -->

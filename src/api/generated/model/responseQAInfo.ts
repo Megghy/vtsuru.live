@@ -13,6 +13,10 @@ import type { ResponseUserBasicInfo } from './responseUserBasicInfo'
 
 export interface ResponseQAInfo {
   id: number
+  /** @nullable */
+  threadRootId?: number | null
+  /** 仅在提问者视角 (get-send) 的首条提问上计算 */
+  canFollowUp: boolean
   sender: ResponseUserBasicInfo
   senderBiliAuthInfo?: ResponseBiliAuthBasicModel
   target: ResponseUserBasicInfo

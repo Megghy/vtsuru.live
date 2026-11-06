@@ -20,6 +20,7 @@ import {
   postApiQaSetCurrent,
   postApiQaUpdateTagVisible,
 } from '@/api/generated/qa/qa'
+import { groupQuestionThreads, threadContextOf } from '@/shared/questionThread'
 
 export type SortMode = 'default' | 'newest' | 'oldest' | 'unreadFirst' | 'repliedFirst' | 'unrepliedFirst'
 
@@ -139,6 +140,12 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     } finally {
       isLoading.value = false
     }
+  }
+
+  const sendThreads = computed(() => groupQuestionThreads(sendQuestions.value))
+
+  function threadContext(item: ResponseQAInfoToTarget) {
+    return threadContextOf(recieveQuestions.value, item)
   }
 
   async function DelQA(id: number) {
@@ -485,6 +492,8 @@ export const useQuestionBox = defineStore('QuestionBox', () => {
     displayQuestion,
     trashQuestions,
     recieveQuestionsFiltered,
+    sendThreads,
+    threadContext,
     GetRecieveQAInfo,
     GetSendQAInfo,
     DelQA,

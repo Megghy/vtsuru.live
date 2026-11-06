@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
+import QuestionThreadContext from '@/components/QuestionThreadContext.vue'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { ImagePreview } from '@/shared/ui/image-preview'
@@ -11,6 +12,7 @@ import { useQuestionBox } from '@/store/useQuestionBox'
 const show = defineModel<boolean>('show', { required: true })
 const useQB = useQuestionBox()
 const replyMessage = ref('')
+const threadContext = computed(() => (useQB.currentQuestion ? useQB.threadContext(useQB.currentQuestion) : []))
 
 watch(show, (v) => {
   if (v && useQB.currentQuestion) {
@@ -47,6 +49,13 @@ function handleKeydown(e: KeyboardEvent) {
               {{ useQB.currentQuestion.sender?.name || useQB.currentQuestion.anonymousName || '匿名用户' }}
             </span>
           </div>
+
+          <QuestionThreadContext
+            v-if="threadContext.length"
+            :items="threadContext"
+            answer-label="我的回复"
+            class="max-h-40 overflow-y-auto scrollbar-thin"
+          />
 
           <div
             class="p-3 rounded-lg bg-muted/40 text-xs text-foreground whitespace-pre-wrap max-h-36 overflow-y-auto border border-border"

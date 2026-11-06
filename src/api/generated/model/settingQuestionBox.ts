@@ -20,4 +20,6 @@ export interface SettingQuestionBox {
   /** @nullable */
   defaultPublic?: boolean | null
   readonly publishByDefault: boolean
+  allowFollowUp: boolean
+  maxFollowUps: number
 }

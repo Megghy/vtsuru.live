@@ -1,27 +1,14 @@
 <script setup lang="ts">
 import { Chat24Regular } from '@vicons/fluent'
-import { formatDistanceToNow } from 'date-fns'
-import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'
-import { AVATAR_URL } from '@/shared/config'
-import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
+import PublicQuestionEntry from '@/apps/user/components/question-box/PublicQuestionEntry.vue'
+import { groupQuestionThreads } from '@/shared/questionThread'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
-import { ImagePreview } from '@/shared/ui/image-preview'
 import { Pagination } from '@/shared/ui/pagination'
 import { Spin } from '@/shared/ui/spin'
-
-function formatRelativeTime(val: number | string | Date | undefined | null) {
-  if (!val) return ''
-  try {
-    const d = typeof val === 'number' ? new Date(val > 1e11 ? val : val * 1000) : new Date(val)
-    return formatDistanceToNow(d, { addSuffix: true, locale: zhCN })
-  } catch {
-    return String(val)
-  }
-}
 
 const props = defineProps<{
   questions: ResponseQAInfoToTarget[]
@@ -39,12 +26,13 @@ const filterRail = ref<HTMLElement | null>(null)
 const indicatorStyle = ref({ width: '0px', transform: 'translateX(0px)', opacity: '0' })
 let indicatorFrame = 0
 
-const availableTags = computed(() => [...new Set(props.questions.map((item) => item.tag).filter(Boolean) as string[])])
-const filteredQuestions = computed(() =>
-  selectedTag.value ? props.questions.filter((item) => item.tag === selectedTag.value) : props.questions,
+const threads = computed(() => groupQuestionThreads(props.questions))
+const availableTags = computed(() => [...new Set(threads.value.map((t) => t.root.tag).filter(Boolean) as string[])])
+const filteredThreads = computed(() =>
+  selectedTag.value ? threads.value.filter((t) => t.root.tag === selectedTag.value) : threads.value,
 )
-const pagedQuestions = computed(() => filteredQuestions.value.slice((page.value - 1) * pageSize, page.value * pageSize))
-const displayCount = computed(() => filteredQuestions.value.length)
+const pagedThreads = computed(() => filteredThreads.value.slice((page.value - 1) * pageSize, page.value * pageSize))
+const displayCount = computed(() => filteredThreads.value.length)
 const listKey = computed(() => `${selectedTag.value ?? 'all'}:${page.value}:${listPhase.value}`)
 
 function selectTag(tag: string | null) {
@@ -86,7 +74,7 @@ watch(selectedTag, () => {
 watch(
   () => props.questions.length,
   () => {
-    const maxPage = Math.max(1, Math.ceil(filteredQuestions.value.length / pageSize))
+    const maxPage = Math.max(1, Math.ceil(filteredThreads.value.length / pageSize))
     if (page.value > maxPage) page.value = maxPage
     scheduleIndicator()
   },
@@ -113,7 +101,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
           <p class="m-0 mt-0.5 text-xs text-muted-foreground">
             <template v-if="!questions.length">还没有公开内容</template>
             <template v-else-if="selectedTag">话题「{{ selectedTag }}」· {{ displayCount }} 条</template>
-            <template v-else>已公开 {{ questions.length }} 条留言</template>
+            <template v-else>已公开 {{ threads.length }} 条留言</template>
           </p>
         </div>
         <span
@@ -165,7 +153,7 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
         mode="out-in"
       >
         <div
-          v-if="pagedQuestions.length"
+          v-if="pagedThreads.length"
           :key="listKey"
           class="min-w-0"
         >
@@ -176,8 +164,8 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
             :class="{ '!gap-0': embedded }"
           >
             <article
-              v-for="(item, index) in pagedQuestions"
-              :key="item.id"
+              v-for="(thread, index) in pagedThreads"
+              :key="thread.root.id"
               class="question-thread grid grid-cols-[auto_minmax(0,1fr)] gap-3 p-4 bg-card border border-border rounded-lg shadow-sm backdrop-blur-sm @[max-width:480px]:grid-cols-[minmax(0,1fr)] @[max-width:480px]:p-3.5"
               :class="{
                 '!p-4 !px-0 !bg-transparent !border-0 !border-t !border-border !rounded-none !shadow-none': embedded,
@@ -190,80 +178,25 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
                 <Chat24Regular class="size-4" />
               </div>
               <div class="min-w-0">
-                <div class="flex items-center gap-2 text-xs text-muted-foreground/70">
-                  <span
-                    class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground"
-                    >{{ formatRelativeTime(item.sendAt) }}</span
-                  >
-                  <span
-                    v-if="item.tag"
-                    class="max-w-[260px] truncate px-2 py-0.5 rounded-full border border-border bg-secondary/50 text-muted-foreground"
-                    >{{ item.tag }}</span
-                  >
-                </div>
-                <p class="m-0 mt-2 text-[15px] leading-relaxed break-words whitespace-pre-wrap">
-                  {{ item.question.message }}
-                </p>
-                <div
-                  v-if="item.questionImages?.length"
-                  class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 mt-2.5 @[max-width:480px]:grid-cols-2"
+                <PublicQuestionEntry
+                  :item="thread.root"
+                  :user-info="userInfo"
+                />
+                <ol
+                  v-if="thread.followUps.length"
+                  class="m-0 mt-4 p-0 pl-3.5 list-none space-y-4 border-l-2 border-border"
                 >
-                  <ImagePreview
-                    v-for="(image, imgIdx) in item.questionImages"
-                    :key="image.path || imgIdx"
-                    :src="image.path || ''"
-                    :alt="image.name || '提问附图'"
-                    :gallery="item.questionImages"
-                    :index="imgIdx"
-                    class="w-full aspect-[4/3] h-auto"
-                  />
-                </div>
-
-                <div
-                  v-if="item.answer"
-                  class="relative mt-4 p-3.5 bg-secondary/40 border-l-3 border-primary rounded-md @[max-width:480px]:p-3"
-                >
-                  <div
-                    class="flex items-center gap-1.5 min-w-0 text-xs text-muted-foreground @[max-width:480px]:flex-wrap"
+                  <li
+                    v-for="(followUp, followIdx) in thread.followUps"
+                    :key="followUp.id"
                   >
-                    <Avatar class="size-7">
-                      <AvatarImage
-                        :src="
-                          userInfo?.faceUrl ||
-                          userInfo?.streamerInfo?.faceUrl ||
-                          (userInfo?.biliId ? `${AVATAR_URL + userInfo.biliId}?size=64` : undefined)
-                        "
-                        referrerpolicy="no-referrer"
-                        :alt="`${userInfo?.name || '主播'} 的头像`"
-                      />
-                      <AvatarFallback>{{ (userInfo?.name || '主')[0] }}</AvatarFallback>
-                    </Avatar>
-                    <strong class="truncate font-semibold text-primary">{{ userInfo?.name || '主播' }}</strong>
-                    <span>的回复</span>
-                    <span
-                      v-if="item.answer.createdAt"
-                      class="text-xs text-muted-foreground/70 ml-auto @[max-width:480px]:w-full @[max-width:480px]:ml-8"
-                    >
-                      {{ formatRelativeTime(item.answer.createdAt) }}
-                    </span>
-                  </div>
-                  <p class="m-0 mt-2 text-sm leading-relaxed break-words whitespace-pre-wrap">
-                    {{ item.answer.message }}
-                  </p>
-                  <div
-                    v-if="item.answerImages?.length"
-                    class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 mt-2.5 @[max-width:480px]:grid-cols-2"
-                  >
-                    <img
-                      v-for="image in item.answerImages"
-                      :key="image.path"
-                      :src="image.path"
-                      alt=""
-                      class="w-full aspect-[4/3] object-cover rounded-md border border-border bg-secondary/50 cursor-pointer"
-                      loading="lazy"
+                    <PublicQuestionEntry
+                      :item="followUp"
+                      :user-info="userInfo"
+                      :label="`追问 ${followIdx + 1}`"
                     />
-                  </div>
-                </div>
+                  </li>
+                </ol>
               </div>
             </article>
           </TransitionGroup>
@@ -279,9 +212,9 @@ onBeforeUnmount(() => cancelAnimationFrame(indicatorFrame))
     </Spin>
 
     <Pagination
-      v-if="filteredQuestions.length > pageSize"
+      v-if="filteredThreads.length > pageSize"
       v-model:page="page"
-      :total="filteredQuestions.length"
+      :total="filteredThreads.length"
       :page-size="pageSize"
       class="justify-center mt-4.5"
     />

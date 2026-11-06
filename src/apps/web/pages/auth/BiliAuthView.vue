@@ -111,7 +111,7 @@ async function readStatus() {
   if (response.code === 200) {
     stopPolling()
     clearInterval(countdownTimer)
-    if (!biliAuth.usesAccountIdentity) await biliAuth.setCurrentAuth(response.data as string)
+    // 不保存独立认证凭据: 必须在 BiliAccountSetup 设置密码/绑定账号后, 以站内账号身份使用
     const prepared = await prepareBiliAccount(key)
     if (key !== guidKey.value) return
     accountProof.value = prepared.code === 200 ? prepared.data : undefined
@@ -427,10 +427,12 @@ onBeforeUnmount(() => {
                 class="size-6 text-emerald-500"
               />
             </div>
-            <p class="m-0 mb-3 text-[#18a058] text-xs font-bold">认证完成</p>
-            <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">账户已成功连接</h2>
+            <p class="m-0 mb-3 text-[#18a058] text-xs font-bold">身份已确认</p>
+            <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">
+              {{ biliAuth.isAuthed ? '账户已成功连接' : '还差一步：设置本站密码' }}
+            </h2>
             <p class="mt-3.5 mb-7 text-muted-foreground text-sm leading-[1.75]">
-              完成账号设置后，可以使用 B 站 UID 和本站密码登录。
+              之后使用 B 站 UID 和本站密码登录。
             </p>
 
             <BiliAccountSetup
@@ -483,7 +485,10 @@ onBeforeUnmount(() => {
               </div>
             </template>
 
-            <div class="success-actions flex flex-col gap-2 pt-2">
+            <div
+              v-if="biliAuth.isAuthed"
+              class="success-actions flex flex-col gap-2 pt-2"
+            >
               <Button
                 size="lg"
                 class="w-full bg-[#18a058] hover:bg-[#18a058]/90 text-white"

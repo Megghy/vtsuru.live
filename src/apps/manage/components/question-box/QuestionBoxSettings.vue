@@ -207,6 +207,25 @@ function addTag() {
               }
             "
           />
+          <SettingRow
+            type="switch"
+            variant="compact"
+            title="允许有身份的提问者在回复后追问"
+            :disabled="useQB.isLoading"
+            v-model="accountInfo.settings.questionBox.allowFollowUp"
+            @change="saveQuestionBoxSettings"
+          />
+          <SettingRow
+            v-if="accountInfo.settings.questionBox.allowFollowUp"
+            type="number"
+            variant="compact"
+            title="每条提问最多追问次数"
+            :min="1"
+            :max="10"
+            :disabled="useQB.isLoading"
+            v-model="accountInfo.settings.questionBox.maxFollowUps"
+            @change="saveQuestionBoxSettings"
+          />
         </CardContent>
       </Card>
 

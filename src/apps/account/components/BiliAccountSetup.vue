@@ -121,12 +121,18 @@ async function submit() {
         {{ resetting ? '重置密码并查看积分' : account.id ? '确认绑定' : '设置密码并查看积分' }}
       </Button>
     </template>
-    <Alert
-      v-else-if="error"
-      variant="destructive"
-    >
-      <AlertDescription>{{ error }}</AlertDescription>
-    </Alert>
+    <template v-else-if="error">
+      <Alert variant="destructive">
+        <AlertDescription>{{ error }}</AlertDescription>
+      </Alert>
+      <Button
+        variant="secondary"
+        class="w-full"
+        @click="emit('restart')"
+      >
+        重新认证
+      </Button>
+    </template>
     <p v-else-if="bound">已连接站内账号，可使用 B 站 UID 和本站密码登录。</p>
     <template v-else>
       <p>重新确认 B 站身份后，可设置本站密码，下次直接通过 UID 登录。</p>

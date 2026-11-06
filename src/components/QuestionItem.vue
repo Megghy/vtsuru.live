@@ -14,6 +14,8 @@ import { Separator } from '@/shared/ui/separator'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useQuestionBox } from '@/store/useQuestionBox'
 
+import QuestionThreadContext from './QuestionThreadContext.vue'
+
 const props = defineProps<{
   item: ResponseQAInfoToTarget
   selectable?: boolean
@@ -29,6 +31,8 @@ const showContent = ref(!isViolation.value)
 const showFullMessage = ref(false)
 const message = computed(() => props.item.question?.message ?? '')
 const shouldClampMessage = computed(() => message.value.length > 240)
+const threadContext = computed(() => useQA.threadContext(props.item))
+const showThreadContext = ref(false)
 
 function getScoreColor(score: number | undefined): string {
   if (score === undefined) return 'grey'
@@ -92,6 +96,10 @@ function formatRelative(time: number) {
             已注册
           </Badge>
 
+          <Badge v-if="item.threadRootId" variant="secondary" size="xs" class="text-violet-600 dark:text-violet-400 bg-violet-500/10">
+            追问
+          </Badge>
+
           <Badge v-if="item.isPublic" variant="secondary" size="xs" class="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
             公开
           </Badge>
@@ -151,6 +159,26 @@ function formatRelative(time: number) {
       </CardHeader>
 
       <CardContent class="p-3 space-y-2 text-xs">
+        <template v-if="threadContext.length">
+          <Button
+            variant="link"
+            size="xs"
+            class="h-auto p-0 text-[11px] gap-1 text-muted-foreground"
+            @click="showThreadContext = !showThreadContext"
+          >
+            <component
+              :is="showThreadContext ? ChevronUp12Regular : ChevronDown12Regular"
+              class="size-3"
+            />
+            {{ showThreadContext ? '收起上文' : `查看上文 (${threadContext.length})` }}
+          </Button>
+          <QuestionThreadContext
+            v-if="showThreadContext"
+            :items="threadContext"
+            answer-label="我的回复"
+          />
+        </template>
+
         <div
           v-if="item.questionImages && item.questionImages.length > 0"
           class="flex items-center gap-2 flex-wrap"

@@ -46,6 +46,7 @@ export function createMockQuestion(overrides?: Partial<ResponseQAInfoToTarget>):
     isPublic: true,
     tag: '杂谈',
     sendAt: 1700000000,
+    canFollowUp: false,
     questionImages: [],
     answerImages: [],
     ...overrides,
