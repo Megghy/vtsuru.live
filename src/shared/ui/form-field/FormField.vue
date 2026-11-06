@@ -14,25 +14,28 @@ import type { FormSelectOption } from './types'
 
 defineOptions({ name: 'FormField' })
 
-const props = defineProps<{
-  label?: string
-  required?: boolean
-  hint?: string
-  description?: string
-  error?: string
-  extra?: string | number
-  type?: 'text' | 'number' | 'select' | 'textarea' | 'password'
-  disabled?: boolean
-  placeholder?: string
-  min?: number | string
-  max?: number | string
-  step?: number | string
-  rows?: number | string
-  maxlength?: number | string
-  options?: Array<FormSelectOption | string>
-  controlClass?: HTMLAttributes['class']
-  class?: HTMLAttributes['class']
-}>()
+const props = withDefaults(
+  defineProps<{
+    label?: string
+    required?: boolean
+    hint?: string
+    description?: string
+    error?: string
+    extra?: string | number
+    type?: 'text' | 'number' | 'select' | 'textarea' | 'password'
+    disabled?: boolean
+    placeholder?: string
+    min?: number | string
+    max?: number | string
+    step?: number | string
+    rows?: number | string
+    maxlength?: number | string
+    options?: Array<FormSelectOption | string>
+    controlClass?: HTMLAttributes['class']
+    class?: HTMLAttributes['class']
+  }>(),
+  { type: 'text' },
+)
 
 const emit = defineEmits<{
   (e: 'change', val: any): void

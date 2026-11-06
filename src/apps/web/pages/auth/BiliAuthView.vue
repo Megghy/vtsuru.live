@@ -111,7 +111,7 @@ async function readStatus() {
   if (response.code === 200) {
     stopPolling()
     clearInterval(countdownTimer)
-    // 不保存独立认证凭据: 必须在 BiliAccountSetup 设置密码/绑定账号后, 以站内账号身份使用
+    // 认证完成不签发独立凭据, 必须在 BiliAccountSetup 设置密码/绑定账号后以站内账号身份使用
     const prepared = await prepareBiliAccount(key)
     if (key !== guidKey.value) return
     accountProof.value = prepared.code === 200 ? prepared.data : undefined
