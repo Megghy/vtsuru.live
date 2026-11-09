@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 import type { ShippingAddressInfo } from '@/api/generated/model'
 import { Badge } from '@/shared/ui/badge'
 
@@ -8,8 +6,6 @@ const { size = 'default' } = defineProps<{
   address: ShippingAddressInfo | undefined
   size?: 'small' | 'default'
 }>()
-
-const elementRef = ref()
 </script>
 
 <template>
@@ -21,30 +17,25 @@ const elementRef = ref()
   </span>
   <div
     v-else
-    ref="elementRef"
     class="flex-between gap-3 text-xs"
   >
     <div class="flex flex-col gap-1 min-w-0 flex-1">
       <div
         v-if="size !== 'small'"
-        class="font-medium text-foreground truncate"
+        class="font-medium text-foreground break-words"
       >
-        {{ address.province }}
-        <span class="text-muted-foreground font-normal">省</span>
-        {{ address.city }}
-        <span class="text-muted-foreground font-normal">市</span>
-        {{ address.district }}
-        <span class="text-muted-foreground font-normal">区</span>
-        {{ address.street }}
+        {{ address.province }} {{ address.city }} {{ address.district }} {{ address.street }}
       </div>
 
       <div class="flex items-center gap-1.5 text-muted-foreground">
-        <Badge variant="secondary" size="xs">
+        <Badge
+          variant="secondary"
+          size="xs"
+        >
           详细地址
         </Badge>
         <span
-          class="truncate"
-          :class="{ 'max-w-32': size === 'small' }"
+          :class="size === 'small' ? 'truncate max-w-32' : 'min-w-0 break-words'"
           :title="address.address"
         >
           {{ address.address }}
@@ -55,10 +46,13 @@ const elementRef = ref()
         v-if="size !== 'small'"
         class="flex items-center gap-1.5 text-muted-foreground"
       >
-        <Badge variant="secondary" size="xs">
+        <Badge
+          variant="secondary"
+          size="xs"
+        >
           收货人
         </Badge>
-        <span class="truncate">{{ address.phone }} {{ address.name }}</span>
+        <span class="min-w-0 break-words">{{ address.phone }} {{ address.name }}</span>
       </div>
     </div>
 

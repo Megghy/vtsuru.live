@@ -24,7 +24,6 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
-import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { toast } from '@/shared/utils'
@@ -284,7 +283,11 @@ function formatRelativeTime(time: number) {
                 {{ Number(row.point.toFixed(1)) }}
               </TableCell>
               <TableCell class="py-2.5">
-                <Badge :variant="getStatusVariant(row)" size="xs" class="flex items-center gap-1 w-fit">
+                <Badge
+                  :variant="getStatusVariant(row)"
+                  size="xs"
+                  class="flex items-center gap-1 w-fit"
+                >
                   <component
                     :is="statusMeta[row.status].icon"
                     class="size-3"
@@ -293,7 +296,11 @@ function formatRelativeTime(time: number) {
                 </Badge>
               </TableCell>
               <TableCell class="py-2.5">
-                <Badge variant="outline" size="xs" class="text-muted-foreground">
+                <Badge
+                  variant="outline"
+                  size="xs"
+                  class="text-muted-foreground"
+                >
                   {{ row.type === GoodsTypes.Physical ? '实体' : row.type === GoodsTypes.Service ? '服务' : '虚拟' }}
                 </Badge>
               </TableCell>
@@ -336,7 +343,11 @@ function formatRelativeTime(time: number) {
               />
               <span>#{{ item.id }}</span>
             </label>
-            <Badge :variant="getStatusVariant(item)" size="xs" class="flex items-center gap-1">
+            <Badge
+              :variant="getStatusVariant(item)"
+              size="xs"
+              class="flex items-center gap-1"
+            >
               <component
                 :is="statusMeta[item.status].icon"
                 class="size-3"
@@ -384,7 +395,7 @@ function formatRelativeTime(time: number) {
           <DialogTitle class="text-sm">订单详情</DialogTitle>
         </DialogHeader>
 
-        <ScrollArea class="flex-1 min-h-0 pr-2">
+        <div class="flex-1 min-h-0 overflow-y-auto scrollbar-thin pr-2">
           <div class="space-y-3.5 text-xs">
             <div class="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/60">
               <div>
@@ -401,7 +412,11 @@ function formatRelativeTime(time: number) {
               </div>
               <div>
                 <span class="text-muted-foreground block text-[11px]">当前状态</span>
-                <Badge :variant="getStatusVariant(detail)" size="xs" class="flex items-center gap-1 w-fit mt-0.5">
+                <Badge
+                  :variant="getStatusVariant(detail)"
+                  size="xs"
+                  class="flex items-center gap-1 w-fit mt-0.5"
+                >
                   <component
                     :is="statusMeta[detail.status].icon"
                     class="size-3"
@@ -431,7 +446,11 @@ function formatRelativeTime(time: number) {
                     <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
                     <div class="flex items-center gap-2">
                       <span class="text-muted-foreground">x {{ item.quantity }}</span>
-                      <Badge variant="secondary" size="xs" class="font-mono">
+                      <Badge
+                        variant="secondary"
+                        size="xs"
+                        class="font-mono"
+                      >
                         {{ item.priceSnapshot }} 积分
                       </Badge>
                     </div>
@@ -440,16 +459,20 @@ function formatRelativeTime(time: number) {
               </div>
             </template>
 
-            <Alert size="sm" v-if="detail.remark">
+            <Alert
+              size="sm"
+              v-if="detail.remark"
+            >
               <AlertTitle>订单备注</AlertTitle>
               <AlertDescription class="text-muted-foreground">{{ detail.remark }}</AlertDescription>
             </Alert>
 
-            <Alert size="sm" class="bg-muted/40 border-border/80">
+            <Alert
+              size="sm"
+              class="bg-muted/40 border-border/80"
+            >
               <AlertTitle>状态说明</AlertTitle>
-              <AlertDescription class="text-muted-foreground">{{
-                statusMeta[detail.status].hint
-              }}</AlertDescription>
+              <AlertDescription class="text-muted-foreground">{{ statusMeta[detail.status].hint }}</AlertDescription>
             </Alert>
 
             <template v-if="detail.type === GoodsTypes.Physical">
@@ -498,7 +521,7 @@ function formatRelativeTime(time: number) {
               </div>
             </template>
           </div>
-        </ScrollArea>
+        </div>
 
         <DialogFooter class="pt-2 border-t border-border/60">
           <Popconfirm
