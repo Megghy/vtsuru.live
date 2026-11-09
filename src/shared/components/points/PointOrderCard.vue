@@ -24,6 +24,7 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { ScrollArea } from '@/shared/ui/scroll-area'
 import { Separator } from '@/shared/ui/separator'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { toast } from '@/shared/utils'
@@ -395,7 +396,7 @@ function formatRelativeTime(time: number) {
           <DialogTitle class="text-sm">订单详情</DialogTitle>
         </DialogHeader>
 
-        <div class="flex-1 min-h-0 overflow-y-auto scrollbar-thin pr-2">
+        <ScrollArea class="flex-1 min-h-0 pr-2">
           <div class="space-y-3.5 text-xs">
             <div class="grid grid-cols-2 gap-2 p-2.5 rounded-lg bg-muted/30 border border-border/60">
               <div>
@@ -521,7 +522,7 @@ function formatRelativeTime(time: number) {
               </div>
             </template>
           </div>
-        </div>
+        </ScrollArea>
 
         <DialogFooter class="pt-2 border-t border-border/60">
           <Popconfirm
