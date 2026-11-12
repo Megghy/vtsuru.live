@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertCircleOutline } from '@vicons/ionicons5'
+import AlertCircleOutline from '@vicons/ionicons5/es/AlertCircleOutline'
 import { computed, shallowRef, watch } from 'vue'
 import type { Component } from 'vue'
 

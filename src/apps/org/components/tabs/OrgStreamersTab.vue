@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { SearchOutline, TrashOutline } from '@vicons/ionicons5'
+import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { format } from 'date-fns'
 import { onMounted } from 'vue'
 
@@ -122,10 +123,21 @@ async function onSaved() {
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-2">
                   <strong class="font-medium text-foreground text-sm truncate">{{ s.streamer.name }}</strong>
-                  <Badge variant="secondary" size="xs">
+                  <Badge
+                    variant="secondary"
+                    size="xs"
+                  >
                     {{ streamerStatusLabel(s.status) }}
                   </Badge>
-                  <Badge variant="outline" size="xs" :class=" s.streamer.isBiliAuthed ? 'text-emerald-600 border-emerald-500/30' : 'text-muted-foreground border-border/60' ">
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                    :class="
+                      s.streamer.isBiliAuthed
+                        ? 'text-emerald-600 border-emerald-500/30'
+                        : 'text-muted-foreground border-border/60'
+                    "
+                  >
                     {{ s.streamer.isBiliAuthed ? '已绑定B站' : '未绑定' }}
                   </Badge>
                 </div>
@@ -150,7 +162,11 @@ async function onSaved() {
                   @positive-click="remove(s.streamer.id)"
                 >
                   <template #trigger>
-                    <Button size="xs" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                    >
                       <component
                         :is="TrashOutline"
                         class="size-3.5"

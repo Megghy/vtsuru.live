@@ -1,4 +1,4 @@
-import { Dismiss12Regular } from '@vicons/fluent'
+import Dismiss12Regular from '@vicons/fluent/es/Dismiss12Regular'
 import { h, ref } from 'vue'
 
 import type { ExtractConfigData } from '@/shared/types/VTsuruConfigTypes'

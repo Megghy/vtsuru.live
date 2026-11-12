@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { Dismiss12Regular, Image24Regular, Mic24Filled, Mic24Regular, Send24Filled, Stop24Filled } from '@vicons/fluent'
+import Dismiss12Regular from '@vicons/fluent/es/Dismiss12Regular'
+import Image24Regular from '@vicons/fluent/es/Image24Regular'
+import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import Mic24Regular from '@vicons/fluent/es/Mic24Regular'
+import Send24Filled from '@vicons/fluent/es/Send24Filled'
+import Stop24Filled from '@vicons/fluent/es/Stop24Filled'
 import { nextTick, onBeforeUnmount, ref } from 'vue'
 
 import { useFilePicker, validatePickedFiles } from '@/composables/useFilePicker'
@@ -16,7 +21,7 @@ const emit = defineEmits<{
 const text = ref('')
 /** 待发送图片 (base64 data URL) */
 const images = ref<string[]>([])
-const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const textareaRef = ref<{ focus: () => void } | null>(null)
 
 /** 把文本填入输入框并聚焦, 供预置操作点击使用 (不直接发送) */
 async function fill(value: string) {

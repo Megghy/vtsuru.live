@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Info24Filled, Mail24Filled, PersonFeedback24Filled } from '@vicons/fluent'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Mail24Filled from '@vicons/fluent/es/Mail24Filled'
+import PersonFeedback24Filled from '@vicons/fluent/es/PersonFeedback24Filled'
 import { computed, onUnmounted, ref, watchEffect } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 
@@ -122,7 +124,10 @@ async function resendEmail() {
 
     <template v-else-if="showBindEmail">
       <div class="manage-page manage-page--md">
-        <Alert variant="info" class="mb-3">
+        <Alert
+          variant="info"
+          class="mb-3"
+        >
           <AlertTitle>绑定邮箱后使用主播后台</AlertTitle>
           <AlertDescription>
             主播功能需要已验证的邮箱。绑定后我们会发送验证邮件，完成验证即可进入后台。
@@ -148,7 +153,10 @@ async function resendEmail() {
               </p>
             </div>
 
-            <Alert variant="warning" class="text-left">
+            <Alert
+              variant="warning"
+              class="text-left"
+            >
               <Info24Filled class="size-4 shrink-0" />
               <AlertDescription class="ml-2">
                 如果长时间未收到邮件，请检查垃圾邮件文件夹，或点击下方按钮重新发送

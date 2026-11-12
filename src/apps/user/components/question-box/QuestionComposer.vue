@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {
-  ArrowRight24Regular,
-  CheckmarkCircle24Regular,
-  Dismiss24Regular,
-  History24Regular,
-  Image24Regular,
-  LockClosed24Regular,
-  Mail24Regular,
-  Send24Regular,
-} from '@vicons/fluent'
+import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import Image24Regular from '@vicons/fluent/es/Image24Regular'
+import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
+import Mail24Regular from '@vicons/fluent/es/Mail24Regular'
+import Send24Regular from '@vicons/fluent/es/Send24Regular'
 import { onBeforeUnmount, toRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 

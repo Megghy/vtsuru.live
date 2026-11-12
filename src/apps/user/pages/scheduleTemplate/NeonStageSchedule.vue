@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Live24Regular } from '@vicons/fluent'
+import Live24Regular from '@vicons/fluent/es/Live24Regular'
 import { computed, ref } from 'vue'
 
 import type { APIFileModel } from '@/api/generated/model'

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { MusicalNotesOutline, OpenOutline, RefreshOutline, SearchOutline } from '@vicons/ionicons5'
+import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -129,10 +132,17 @@ function requestStatus(song: ResponseSongModel) {
       </div>
     </template>
 
-    <Alert size="sm" v-if="!songListEnabled">
+    <Alert
+      size="sm"
+      v-if="!songListEnabled"
+    >
       <AlertDescription> 歌单功能未启用 </AlertDescription>
     </Alert>
-    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+    <Alert
+      size="sm"
+      v-else-if="query.status.value === 'error'"
+      variant="destructive"
+    >
       <AlertDescription class="flex-between w-full">
         <span>歌单加载失败</span>
         <Button
@@ -206,11 +216,21 @@ function requestStatus(song: ResponseSongModel) {
             v-if="variant === 'full' && song.tags?.length"
             class="song-tags col-span-2 flex flex-wrap gap-1"
           >
-            <Badge v-for="tag in song.tags.slice(0, 4)" :key="tag" variant="secondary" size="xs">
+            <Badge
+              v-for="tag in song.tags.slice(0, 4)"
+              :key="tag"
+              variant="secondary"
+              size="xs"
+            >
               {{ tag }}
             </Badge>
           </div>
-          <Badge v-if="showRequestStatus" :variant="requestStatus(song).variant" size="xs" class="@max-[420px]:col-start-1 @max-[420px]:row-auto @max-[420px]:justify-self-start">
+          <Badge
+            v-if="showRequestStatus"
+            :variant="requestStatus(song).variant"
+            size="xs"
+            class="@max-[420px]:col-start-1 @max-[420px]:row-auto @max-[420px]:justify-self-start"
+          >
             {{ requestStatus(song).label }}
           </Badge>
         </article>

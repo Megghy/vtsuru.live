@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { CodeOutline, HeartOutline, LogoGithub, ServerOutline } from '@vicons/ionicons5'
+import CodeOutline from '@vicons/ionicons5/es/CodeOutline'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
+import LogoGithub from '@vicons/ionicons5/es/LogoGithub'
+import ServerOutline from '@vicons/ionicons5/es/ServerOutline'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
@@ -179,11 +182,20 @@ const timelineData: TimelineRecord[] = [
                 />
                 <span class="font-medium">前端:</span>
                 <div class="flex gap-1.5 flex-wrap">
-                  <Badge variant="secondary" size="sm">Vue 3</Badge
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    >Vue 3</Badge
                   >
-                  <Badge variant="secondary" size="sm">TypeScript</Badge
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    >TypeScript</Badge
                   >
-                  <Badge variant="secondary" size="sm">shadcn + UnoCSS</Badge
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    >shadcn + UnoCSS</Badge
                   >
                 </div>
               </div>
@@ -194,11 +206,20 @@ const timelineData: TimelineRecord[] = [
                 />
                 <span class="font-medium">后端:</span>
                 <div class="flex gap-1.5 flex-wrap">
-                  <Badge variant="secondary" size="sm">C# .NET 10</Badge
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    >C# .NET 10</Badge
                   >
-                  <Badge variant="secondary" size="sm">PostgreSQL</Badge
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    >PostgreSQL</Badge
                   >
-                  <Badge variant="secondary" size="sm">Garnet</Badge
+                  <Badge
+                    variant="secondary"
+                    size="sm"
+                    >Garnet</Badge
                   >
                 </div>
               </div>

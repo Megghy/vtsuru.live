@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { Delete24Regular } from '@vicons/fluent'
-import { ArrowDownOutline, ArrowUpOutline } from '@vicons/ionicons5'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import ArrowDownOutline from '@vicons/ionicons5/es/ArrowDownOutline'
+import ArrowUpOutline from '@vicons/ionicons5/es/ArrowUpOutline'
 import { computed, ref } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
@@ -395,7 +396,6 @@ await loadIndexInfo()
       <Textarea
         v-model="accountInfo.settings.index.notification"
         placeholder="可选，向访问你主页的访客展示的置顶通知"
-        
         rows="3"
       />
       <div class="flex justify-end">
@@ -437,13 +437,28 @@ await loadIndexInfo()
         >
           <SimpleVideoCard :video="item" />
           <div class="flex items-center gap-1.5">
-            <Button size="xs" variant="outline" :disabled="isLoading" @click="moveVideo(item.id, 'up')">
+            <Button
+              size="xs"
+              variant="outline"
+              :disabled="isLoading"
+              @click="moveVideo(item.id, 'up')"
+            >
               上移
             </Button>
-            <Button size="xs" variant="outline" :disabled="isLoading" @click="moveVideo(item.id, 'down')">
+            <Button
+              size="xs"
+              variant="outline"
+              :disabled="isLoading"
+              @click="moveVideo(item.id, 'down')"
+            >
               下移
             </Button>
-            <Button size="xs" variant="destructive" :disabled="isLoading" @click="removeVideo(item.id)">
+            <Button
+              size="xs"
+              variant="destructive"
+              :disabled="isLoading"
+              @click="removeVideo(item.id)"
+            >
               删除
             </Button>
           </div>
@@ -521,19 +536,33 @@ await loadIndexInfo()
             </TooltipProvider>
 
             <div class="flex items-center gap-1">
-              <Button size="icon-xs" variant="ghost" aria-label="上移链接" @click="moveLink(link[0], 'up')">
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                aria-label="上移链接"
+                @click="moveLink(link[0], 'up')"
+              >
                 <component
                   :is="ArrowUpOutline"
                   class="size-3.5"
                 />
               </Button>
-              <Button size="icon-xs" variant="ghost" aria-label="下移链接" @click="moveLink(link[0], 'down')">
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                aria-label="下移链接"
+                @click="moveLink(link[0], 'down')"
+              >
                 <component
                   :is="ArrowDownOutline"
                   class="size-3.5"
                 />
               </Button>
-              <Button size="xs" variant="outline" @click="startEditLink(link[0])">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="startEditLink(link[0])"
+              >
                 改名
               </Button>
               <Popconfirm
@@ -542,7 +571,12 @@ await loadIndexInfo()
                 cancel-text="取消"
                 @confirm="removeLink(link[0])"
               >
-                <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive" aria-label="删除链接">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-destructive hover:text-destructive"
+                  aria-label="删除链接"
+                >
                   <component
                     :is="Delete24Regular"
                     class="size-3.5"

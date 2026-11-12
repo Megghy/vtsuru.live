@@ -1,12 +1,10 @@
-import {
-  CursorClick20Regular,
-  Eye20Regular,
-  Filter20Regular,
-  Flash20Regular,
-  LockClosed20Regular,
-  MusicNote220Regular,
-  Options20Regular,
-} from '@vicons/fluent'
+import CursorClick20Regular from '@vicons/fluent/es/CursorClick20Regular'
+import Eye20Regular from '@vicons/fluent/es/Eye20Regular'
+import Filter20Regular from '@vicons/fluent/es/Filter20Regular'
+import Flash20Regular from '@vicons/fluent/es/Flash20Regular'
+import LockClosed20Regular from '@vicons/fluent/es/LockClosed20Regular'
+import MusicNote220Regular from '@vicons/fluent/es/MusicNote220Regular'
+import Options20Regular from '@vicons/fluent/es/Options20Regular'
 /**
  * 模板能力 (Capability) 通用注册表
  *

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import {
-  CloudArchive24Filled,
-  DataTrending24Filled,
-  Desktop24Filled,
-  PersonAccounts24Filled,
-} from '@vicons/fluent'
+import CloudArchive24Filled from '@vicons/fluent/es/CloudArchive24Filled'
+import DataTrending24Filled from '@vicons/fluent/es/DataTrending24Filled'
+import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
+import PersonAccounts24Filled from '@vicons/fluent/es/PersonAccounts24Filled'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -44,15 +42,24 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
       class="w-full mt-0.5"
     >
       <TabsList class="grid w-full max-w-md grid-cols-3">
-        <TabsTrigger value="connection" class="gap-1.5" >
+        <TabsTrigger
+          value="connection"
+          class="gap-1.5"
+        >
           <CloudArchive24Filled class="size-3.5" />
           连接设置
         </TabsTrigger>
-        <TabsTrigger value="stats" class="gap-1.5" >
+        <TabsTrigger
+          value="stats"
+          class="gap-1.5"
+        >
           <DataTrending24Filled class="size-3.5" />
           监控与统计
         </TabsTrigger>
-        <TabsTrigger value="system" class="gap-1.5" >
+        <TabsTrigger
+          value="system"
+          class="gap-1.5"
+        >
           <Desktop24Filled class="size-3.5" />
           系统与诊断
         </TabsTrigger>
@@ -76,14 +83,16 @@ const activeTab = ref<'connection' | 'stats' | 'system'>('connection')
                   <Badge
                     variant="outline"
                     size="xs"
-                    :class="biliCookie.isCookieValid ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : 'border-amber-500/40 text-amber-600 bg-amber-500/10'"
+                    :class="
+                      biliCookie.isCookieValid
+                        ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
+                        : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
+                    "
                   >
-                    {{ biliCookie.isCookieValid ? (biliCookie.userInfo?.name || '已登录') : '未登录 / 需重新验证' }}
+                    {{ biliCookie.isCookieValid ? biliCookie.userInfo?.name || '已登录' : '未登录 / 需重新验证' }}
                   </Badge>
                 </div>
-                <div class="text-[11px] text-muted-foreground mt-0.5">
-                  主播主凭据登录、有效性监控与多账号池
-                </div>
+                <div class="text-[11px] text-muted-foreground mt-0.5">主播主凭据登录、有效性监控与多账号池</div>
               </div>
             </div>
             <Button

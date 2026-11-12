@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { Add24Regular, ArrowImport24Regular, Checkmark24Regular, Delete24Regular, Edit24Regular } from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import ArrowImport24Regular from '@vicons/fluent/es/ArrowImport24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
 import { Loader2 } from 'lucide-vue-next'
 import { computed, reactive, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -102,7 +106,11 @@ function addExpressions() {
       >
         拖动格子调整顺序，点击格子修改动作、颜色与全局快捷键
       </div>
-      <Alert size="sm" variant="warning" v-if="vts.deckShortcutError">
+      <Alert
+        size="sm"
+        variant="warning"
+        v-if="vts.deckShortcutError"
+      >
         <AlertDescription class="m-0"> 全局快捷键注册失败：{{ vts.deckShortcutError }} </AlertDescription>
       </Alert>
 

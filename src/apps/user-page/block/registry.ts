@@ -1,35 +1,33 @@
-import {
-  AlertCircleOutline,
-  AppsOutline,
-  CalendarOutline,
-  ChatboxOutline,
-  ChatbubbleEllipsesOutline,
-  CodeSlashOutline,
-  DocumentTextOutline,
-  GridOutline,
-  HeartOutline,
-  HelpCircleOutline,
-  ImageOutline,
-  ImagesOutline,
-  LinkOutline,
-  MegaphoneOutline,
-  MusicalNotesOutline,
-  OpenOutline,
-  PersonCircleOutline,
-  PlayOutline,
-  PricetagsOutline,
-  QrCodeOutline,
-  RadioOutline,
-  ReorderThreeOutline,
-  RemoveOutline,
-  ResizeOutline,
-  ShareSocialOutline,
-  StatsChartOutline,
-  StorefrontOutline,
-  TextOutline,
-  TimerOutline,
-  VideocamOutline,
-} from '@vicons/ionicons5'
+import AlertCircleOutline from '@vicons/ionicons5/es/AlertCircleOutline'
+import AppsOutline from '@vicons/ionicons5/es/AppsOutline'
+import CalendarOutline from '@vicons/ionicons5/es/CalendarOutline'
+import ChatboxOutline from '@vicons/ionicons5/es/ChatboxOutline'
+import ChatbubbleEllipsesOutline from '@vicons/ionicons5/es/ChatbubbleEllipsesOutline'
+import CodeSlashOutline from '@vicons/ionicons5/es/CodeSlashOutline'
+import DocumentTextOutline from '@vicons/ionicons5/es/DocumentTextOutline'
+import GridOutline from '@vicons/ionicons5/es/GridOutline'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
+import HelpCircleOutline from '@vicons/ionicons5/es/HelpCircleOutline'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import ImagesOutline from '@vicons/ionicons5/es/ImagesOutline'
+import LinkOutline from '@vicons/ionicons5/es/LinkOutline'
+import MegaphoneOutline from '@vicons/ionicons5/es/MegaphoneOutline'
+import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import PersonCircleOutline from '@vicons/ionicons5/es/PersonCircleOutline'
+import PlayOutline from '@vicons/ionicons5/es/PlayOutline'
+import PricetagsOutline from '@vicons/ionicons5/es/PricetagsOutline'
+import QrCodeOutline from '@vicons/ionicons5/es/QrCodeOutline'
+import RadioOutline from '@vicons/ionicons5/es/RadioOutline'
+import RemoveOutline from '@vicons/ionicons5/es/RemoveOutline'
+import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
+import ResizeOutline from '@vicons/ionicons5/es/ResizeOutline'
+import ShareSocialOutline from '@vicons/ionicons5/es/ShareSocialOutline'
+import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
+import StorefrontOutline from '@vicons/ionicons5/es/StorefrontOutline'
+import TextOutline from '@vicons/ionicons5/es/TextOutline'
+import TimerOutline from '@vicons/ionicons5/es/TimerOutline'
+import VideocamOutline from '@vicons/ionicons5/es/VideocamOutline'
 import type { AsyncComponentLoader, Component } from 'vue'
 import { defineAsyncComponent, h } from 'vue'
 

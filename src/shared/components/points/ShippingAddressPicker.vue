@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Add24Regular, ArrowSync24Regular } from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
 import { computed, ref } from 'vue'
 
 import type { ShippingAddressInfo } from '@/api/generated/model'
@@ -116,7 +117,11 @@ async function save() {
           <SelectValue placeholder="请选择收货地址" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="addr in addressList" :key="addr.id" :value="String(addr.id)">
+          <SelectItem
+            v-for="addr in addressList"
+            :key="addr.id"
+            :value="String(addr.id)"
+          >
             {{ addr.name }} ({{ addr.phone }}) · {{ addr.province }}{{ addr.city }}{{ addr.district }}{{ addr.address }}
           </SelectItem>
         </SelectContent>
@@ -180,7 +185,11 @@ async function save() {
                 <SelectValue :placeholder="field.label" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in field.options" :key="opt" :value="opt">
+                <SelectItem
+                  v-for="opt in field.options"
+                  :key="opt"
+                  :value="opt"
+                >
                   {{ opt }}
                 </SelectItem>
               </SelectContent>

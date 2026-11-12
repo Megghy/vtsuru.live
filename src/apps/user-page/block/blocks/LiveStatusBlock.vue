@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { CalendarOutline, GameControllerOutline, HomeOutline, PlayCircleOutline, TvOutline } from '@vicons/ionicons5'
+import CalendarOutline from '@vicons/ionicons5/es/CalendarOutline'
+import GameControllerOutline from '@vicons/ionicons5/es/GameControllerOutline'
+import HomeOutline from '@vicons/ionicons5/es/HomeOutline'
+import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
+import TvOutline from '@vicons/ionicons5/es/TvOutline'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
@@ -135,7 +139,11 @@ const hasCover = computed(
     :backgrounded="cfg.backgrounded"
     :content-style="{ padding: 0 }"
   >
-    <Alert size="sm" v-if="!model.available" class="m-2">
+    <Alert
+      size="sm"
+      v-if="!model.available"
+      class="m-2"
+    >
       <AlertDescription> 直播信息暂不可用 </AlertDescription>
     </Alert>
 
@@ -175,7 +183,11 @@ const hasCover = computed(
           :class="cfg.variant === 'compact' ? 'col-span-full @max-[520px]:col-span-1' : ''"
         >
           <div class="flex items-center gap-2.5 min-w-0">
-            <Avatar v-if="model.avatarUrl" class="border border-border" :class="cfg.variant === 'compact' ? 'size-8.5' : 'size-10.5'" >
+            <Avatar
+              v-if="model.avatarUrl"
+              class="border border-border"
+              :class="cfg.variant === 'compact' ? 'size-8.5' : 'size-10.5'"
+            >
               <AvatarImage
                 :src="model.avatarUrl"
                 :alt="model.displayName"
@@ -301,7 +313,6 @@ const hasCover = computed(
             v-if="model.spaceUrl"
             as="a"
             variant="outline"
-            
             :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover }"
             target="_blank"
             rel="noopener noreferrer"
@@ -318,7 +329,6 @@ const hasCover = computed(
             v-if="model.liveRoomUrl"
             as="a"
             :variant="model.isStreaming ? 'default' : 'outline'"
-            
             :class="{ 'bg-white/10 text-white border-white/20 hover:bg-white/20': hasCover && !model.isStreaming }"
             target="_blank"
             rel="noopener noreferrer"

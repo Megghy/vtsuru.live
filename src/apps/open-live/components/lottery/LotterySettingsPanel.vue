@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  Add24Filled,
-  Delete24Filled,
-  Pause24Filled,
-  Play24Filled,
-  Sparkle24Filled,
-  Target24Filled,
-} from '@vicons/fluent'
+import Add24Filled from '@vicons/fluent/es/Add24Filled'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import Pause24Filled from '@vicons/fluent/es/Pause24Filled'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
+import Sparkle24Filled from '@vicons/fluent/es/Sparkle24Filled'
+import Target24Filled from '@vicons/fluent/es/Target24Filled'
 
 import type { LotteryOption } from '@/apps/open-live/components/lottery/lotteryTypes'
 import { Button } from '@/shared/ui/button'
@@ -45,7 +43,12 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
         <Sparkle24Filled class="size-5 text-amber-500" />
         <span class="font-bold text-base text-foreground">抽奖设置</span>
       </div>
-      <Button size="xs" variant="secondary" :disabled="isStartLottery" @click="emit('reset')">
+      <Button
+        size="xs"
+        variant="secondary"
+        :disabled="isStartLottery"
+        @click="emit('reset')"
+      >
         恢复默认
       </Button>
     </div>
@@ -70,7 +73,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                 size="xs"
                 :model-value="option.type"
                 :disabled="isLottering || isStartLottery"
-                @update:model-value="(val) => { if (val) option.type = val as any }"
+                @update:model-value="
+                  (val) => {
+                    if (val) option.type = val as any
+                  }
+                "
               >
                 <ToggleGroupItem value="danmaku">弹幕</ToggleGroupItem>
                 <ToggleGroupItem value="gift">礼物</ToggleGroupItem>
@@ -99,7 +106,11 @@ const lotteryTypeDescriptions: Record<LotteryOption['lotteryType'], string> = {
                   size="xs"
                   :model-value="option.danmakuFilterType"
                   :disabled="isStartLottery"
-                  @update:model-value="(val) => { if (val) option.danmakuFilterType = val as any }"
+                  @update:model-value="
+                    (val) => {
+                      if (val) option.danmakuFilterType = val as any
+                    }
+                  "
                 >
                   <ToggleGroupItem value="all">完全一致</ToggleGroupItem>
                   <ToggleGroupItem value="contains">包含</ToggleGroupItem>

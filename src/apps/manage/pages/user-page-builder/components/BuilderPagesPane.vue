@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ChevronBackOutline, ChevronForwardOutline, HomeOutline } from '@vicons/ionicons5'
+import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
+import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
+import HomeOutline from '@vicons/ionicons5/es/HomeOutline'
 import { inject } from 'vue'
 
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bot24Regular } from '@vicons/fluent'
+import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 

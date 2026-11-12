@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Delete24Regular, Edit24Regular } from '@vicons/fluent'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
 import { computed, ref } from 'vue'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
@@ -183,13 +184,26 @@ async function checkout() {
                   class="w-28"
                   @update:model-value="updateCount(line.item, $event)"
                 />
-                <Button v-if="line.good" variant="ghost" size="xs" class="size-7" aria-label="修改" @click="emit('edit', line.good)">
+                <Button
+                  v-if="line.good"
+                  variant="ghost"
+                  size="xs"
+                  class="size-7"
+                  aria-label="修改"
+                  @click="emit('edit', line.good)"
+                >
                   <component
                     :is="Edit24Regular"
                     class="size-3.5"
                   />
                 </Button>
-                <Button variant="ghost" size="xs" class="size-7 text-muted-foreground hover:text-destructive" aria-label="移除" @click="cart.remove(line.item.goodsId)">
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  class="size-7 text-muted-foreground hover:text-destructive"
+                  aria-label="移除"
+                  @click="cart.remove(line.item.goodsId)"
+                >
                   <component
                     :is="Delete24Regular"
                     class="size-3.5"

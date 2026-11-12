@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Wrench24Regular } from '@vicons/fluent'
+import Wrench24Regular from '@vicons/fluent/es/Wrench24Regular'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 

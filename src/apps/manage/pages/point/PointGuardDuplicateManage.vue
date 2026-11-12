@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ArrowSync24Regular, Delete24Regular, Eye24Regular } from '@vicons/fluent'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -449,14 +451,20 @@ async function applyCleanup(applyAll: boolean) {
       </CardContent>
     </Card>
 
-    <Alert v-if="scanResult" variant="success">
+    <Alert
+      v-if="scanResult"
+      variant="success"
+    >
       <AlertDescription>
         扫描结果：{{ scanResult.duplicatedUserCount }} 位用户，{{ scanResult.duplicateGroupCount }} 组重复，事件重复
         {{ scanResult.duplicateEventCount }} 条，Live 重复 {{ scanResult.duplicateLiveCount }} 条。
       </AlertDescription>
     </Alert>
 
-    <Alert v-if="applyResult" variant="warning">
+    <Alert
+      v-if="applyResult"
+      variant="warning"
+    >
       <AlertDescription>
         本次执行：扣除 {{ formatPoints(applyResult.totalPointsDeducted) }} 积分，删除事件
         {{ applyResult.eventRowsDeleted }} 条，删除临时 Live 记录 {{ applyResult.tempEventRowsDeleted }} 条，更新 Live

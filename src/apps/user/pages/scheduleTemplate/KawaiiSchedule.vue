@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Sparkle24Filled } from '@vicons/fluent'
+import Sparkle24Filled from '@vicons/fluent/es/Sparkle24Filled'
 import { computed, ref } from 'vue'
 
 import type { APIFileModel } from '@/api/generated/model'

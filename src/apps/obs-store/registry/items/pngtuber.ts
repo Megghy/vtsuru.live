@@ -1,4 +1,4 @@
-import { PersonOutline } from '@vicons/ionicons5'
+import PersonOutline from '@vicons/ionicons5/es/PersonOutline'
 
 import type { ObsComponentDefinition } from '../types'
 

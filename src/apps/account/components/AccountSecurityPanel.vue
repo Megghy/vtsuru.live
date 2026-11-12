@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Key24Regular, Mail24Regular } from '@vicons/fluent'
+import Key24Regular from '@vicons/fluent/es/Key24Regular'
+import Mail24Regular from '@vicons/fluent/es/Mail24Regular'
 import { computed, onUnmounted, ref } from 'vue'
 
 import { GetSelfAccount, logoutAccount, useAccount } from '@/api/account'
@@ -179,7 +180,10 @@ defineExpose({ reset })
         </div>
 
         <div class="flex items-center gap-2 shrink-0">
-          <Badge :variant="account.isEmailVerified ? 'success' : account.bindEmail ? 'warning' : 'outline'" size="sm">
+          <Badge
+            :variant="account.isEmailVerified ? 'success' : account.bindEmail ? 'warning' : 'outline'"
+            size="sm"
+          >
             {{ account.isEmailVerified ? '已验证' : account.bindEmail ? '待验证' : '未绑定' }}
           </Badge>
           <Button

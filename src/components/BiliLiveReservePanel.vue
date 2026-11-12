@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { CalendarLtr20Regular, Clock20Regular } from '@vicons/fluent'
+import CalendarLtr20Regular from '@vicons/fluent/es/CalendarLtr20Regular'
+import Clock20Regular from '@vicons/fluent/es/Clock20Regular'
 import { computed } from 'vue'
 
 import type { ResponseBiliLiveReserveItem } from '@/api/generated/model'

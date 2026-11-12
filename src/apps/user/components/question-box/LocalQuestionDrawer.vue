@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Delete24Regular, History24Regular, Image24Regular, LockClosed24Regular } from '@vicons/fluent'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import Image24Regular from '@vicons/fluent/es/Image24Regular'
+import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
@@ -40,9 +43,7 @@ function formatRelativeTime(time: number) {
     >
       <SheetHeader class="px-5 py-4 border-b border-border/80">
         <div class="drawer-heading flex items-center gap-3">
-          <span
-            class="drawer-icon size-9 rounded-full bg-primary/10 text-primary flex-center shrink-0"
-          >
+          <span class="drawer-icon size-9 rounded-full bg-primary/10 text-primary flex-center shrink-0">
             <component
               :is="History24Regular"
               class="size-5"
@@ -73,7 +74,11 @@ function formatRelativeTime(time: number) {
               {{ item.message }}
             </p>
             <div class="history-tags flex items-center gap-2 text-xs flex-wrap">
-              <Badge v-if="item.tag" variant="secondary" size="xs">
+              <Badge
+                v-if="item.tag"
+                variant="secondary"
+                size="xs"
+              >
                 {{ item.tag }}
               </Badge>
               <span

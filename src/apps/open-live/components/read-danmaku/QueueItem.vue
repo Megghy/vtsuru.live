@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ArrowUp20Filled, Copy20Filled, Delete20Filled, Play20Filled, ReOrder24Filled } from '@vicons/fluent'
+import ArrowUp20Filled from '@vicons/fluent/es/ArrowUp20Filled'
+import Copy20Filled from '@vicons/fluent/es/Copy20Filled'
+import Delete20Filled from '@vicons/fluent/es/Delete20Filled'
+import Play20Filled from '@vicons/fluent/es/Play20Filled'
+import ReOrder24Filled from '@vicons/fluent/es/ReOrder24Filled'
 import { useTimeAgo } from '@vueuse/core'
 import { computed } from 'vue'
 
@@ -146,16 +150,29 @@ function handleSelect(action: string) {
           class="flex gap-0.5 shrink-0"
           @click.stop
         >
-          <Button size="icon-xs" variant="ghost" class="rounded-full" @click="speechService.forceSpeak(item.data)">
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            class="rounded-full"
+            @click="speechService.forceSpeak(item.data)"
+          >
             <Play20Filled class="size-3.5" />
           </Button>
-          <Button size="icon-xs" variant="ghost" class="rounded-full text-destructive hover:bg-destructive/10" @click="speechService.removeFromQueue(item)">
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            class="rounded-full text-destructive hover:bg-destructive/10"
+            @click="speechService.removeFromQueue(item)"
+          >
             <Delete20Filled class="size-3.5" />
           </Button>
         </div>
       </div>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="start" class="w-36">
+    <DropdownMenuContent
+      align="start"
+      class="w-36"
+    >
       <DropdownMenuItem @click="handleSelect('play')">
         <Play20Filled class="size-3.5 mr-2" />
         立即播放

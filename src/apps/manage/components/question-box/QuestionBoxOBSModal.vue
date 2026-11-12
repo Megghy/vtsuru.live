@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Copy24Regular, Open24Regular } from '@vicons/fluent'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 

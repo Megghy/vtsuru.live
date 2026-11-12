@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  AddOutline,
-  ChevronDownOutline,
-  ContractOutline,
-  CopyOutline,
-  ExpandOutline,
-  ReorderThreeOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
+import AddOutline from '@vicons/ionicons5/es/AddOutline'
+import ChevronDownOutline from '@vicons/ionicons5/es/ChevronDownOutline'
+import ContractOutline from '@vicons/ionicons5/es/ContractOutline'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import ExpandOutline from '@vicons/ionicons5/es/ExpandOutline'
+import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, ref, watchEffect } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -76,14 +74,22 @@ function duplicateItem(index: number) {
     >
       <span class="text-[11px] text-muted-foreground">共 {{ itemsModel.length }} 项</span>
       <div class="flex items-center gap-1">
-        <Button size="xs" variant="ghost" @click="expandAll">
+        <Button
+          size="xs"
+          variant="ghost"
+          @click="expandAll"
+        >
           <component
             :is="ExpandOutline"
             class="size-3.5 mr-1"
           />
           全部展开
         </Button>
-        <Button size="xs" variant="ghost" @click="collapseAll">
+        <Button
+          size="xs"
+          variant="ghost"
+          @click="collapseAll"
+        >
           <component
             :is="ContractOutline"
             class="size-3.5 mr-1"
@@ -140,7 +146,12 @@ function duplicateItem(index: number) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button size="icon-xs" variant="ghost" aria-label="复制项目" @click="duplicateItem(index)">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label="复制项目"
+                  @click="duplicateItem(index)"
+                >
                   <component
                     :is="CopyOutline"
                     class="size-3.5"
@@ -157,7 +168,12 @@ function duplicateItem(index: number) {
             cancel-text="取消"
             @confirm="itemsModel.splice(index, 1)"
           >
-            <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive" aria-label="删除项目">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-destructive hover:text-destructive"
+              aria-label="删除项目"
+            >
               <component
                 :is="TrashOutline"
                 class="size-3.5"

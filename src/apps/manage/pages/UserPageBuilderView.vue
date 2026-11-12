@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ReorderThreeOutline } from '@vicons/ionicons5'
+import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
 import { useEventListener } from '@vueuse/core'
 import { AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-vue-next'
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
@@ -379,7 +379,11 @@ onBeforeRouteLeave(() => {
           <AlertDescription>{{ editor.error.value }}</AlertDescription>
         </Alert>
 
-        <Alert variant="warning" v-if="editor.localDraftConflict.value" class="mb-3">
+        <Alert
+          variant="warning"
+          v-if="editor.localDraftConflict.value"
+          class="mb-3"
+        >
           <AlertTriangle class="h-4 w-4" />
           <AlertTitle>版本冲突</AlertTitle>
           <AlertDescription>
@@ -421,7 +425,11 @@ onBeforeRouteLeave(() => {
             size="xs"
             :model-value="selectedResponsivePane"
             class="shrink-0 max-w-full overflow-x-auto"
-            @update:model-value="(val) => { if (val) selectResponsivePane(val as any) }"
+            @update:model-value="
+              (val) => {
+                if (val) selectResponsivePane(val as any)
+              }
+            "
           >
             <ToggleGroupItem
               v-for="id in responsivePaneIds"
@@ -583,12 +591,18 @@ onBeforeRouteLeave(() => {
                   </Button>
                 </AlertDescription>
               </Alert>
-              <Alert variant="success" v-else>
+              <Alert
+                variant="success"
+                v-else
+              >
                 <CheckCircle2 class="h-4 w-4" />
                 <AlertDescription>校验通过，可以发布</AlertDescription>
               </Alert>
 
-              <Alert variant="warning" v-if="editor.publishCheckWarnings.value.length">
+              <Alert
+                variant="warning"
+                v-if="editor.publishCheckWarnings.value.length"
+              >
                 <AlertTriangle class="h-4 w-4" />
                 <AlertTitle>提示建议</AlertTitle>
                 <AlertDescription class="mt-1 flex flex-col gap-0.5">

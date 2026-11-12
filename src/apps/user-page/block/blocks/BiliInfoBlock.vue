@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { HomeOutline, PeopleOutline, PlayCircleOutline, VideocamOutline } from '@vicons/ionicons5'
+import HomeOutline from '@vicons/ionicons5/es/HomeOutline'
+import PeopleOutline from '@vicons/ionicons5/es/PeopleOutline'
+import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
+import VideocamOutline from '@vicons/ionicons5/es/VideocamOutline'
 import { computed } from 'vue'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
@@ -110,10 +113,19 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
         <Skeleton class="h-3 w-4/5" />
       </div>
     </div>
-    <Alert size="sm" v-else-if="displayStatus === 'error'" variant="destructive" class="m-2">
+    <Alert
+      size="sm"
+      v-else-if="displayStatus === 'error'"
+      variant="destructive"
+      class="m-2"
+    >
       <AlertDescription> B站信息加载失败，请稍后刷新页面重试 </AlertDescription>
     </Alert>
-    <Alert size="sm" v-else-if="displayStatus === 'empty' || !hasContent" class="m-2">
+    <Alert
+      size="sm"
+      v-else-if="displayStatus === 'empty' || !hasContent"
+      class="m-2"
+    >
       <AlertDescription> B站信息暂不可用 </AlertDescription>
     </Alert>
     <div
@@ -124,7 +136,10 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
         <div class="p-4">
           <div class="flex-between gap-3 @max-[480px]:items-start @max-[480px]:flex-col">
             <div class="flex items-center gap-2.5 min-w-0">
-              <Avatar v-if="cfg.showAvatar && model.face" class="size-8.5 border border-border" >
+              <Avatar
+                v-if="cfg.showAvatar && model.face"
+                class="size-8.5 border border-border"
+              >
                 <AvatarImage
                   :src="model.face"
                   :alt="model.name || 'B站头像'"
@@ -235,7 +250,10 @@ const displayStatus = computed(() => props.biliStatus ?? (hasContent.value ? 're
       <template v-else>
         <div class="bili-header p-3.5">
           <div class="flex items-center gap-2.5 min-w-0">
-            <Avatar v-if="cfg.showAvatar && model.face" class="size-10 border border-border" >
+            <Avatar
+              v-if="cfg.showAvatar && model.face"
+              class="size-10 border border-border"
+            >
               <AvatarImage
                 :src="model.face"
                 :alt="model.name || 'B站头像'"

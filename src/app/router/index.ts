@@ -1,6 +1,7 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
 
+import { isStaleChunkMessage, reloadOnStaleChunk } from '@/shared/services/staleChunkReload'
 import { useLoadingBarStore } from '@/store/useLoadingBarStore'
 
 import client from './client'
@@ -199,6 +200,10 @@ router.beforeEach((to, from) => {
 router.afterEach(() => {
   const loadingBar = useLoadingBarStore().loadingBar
   loadingBar?.finish()
+})
+router.onError((error) => {
+  const message = error instanceof Error ? error.message : String(error)
+  if (isStaleChunkMessage(message) || message.includes('Couldn\'t resolve component')) reloadOnStaleChunk()
 })
 
 export default router

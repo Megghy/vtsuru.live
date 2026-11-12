@@ -1,4 +1,5 @@
-import { KeypadOutline, SparklesOutline } from '@vicons/ionicons5'
+import KeypadOutline from '@vicons/ionicons5/es/KeypadOutline'
+import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
 
 import type { ObsComponentDefinition } from '../types'
 

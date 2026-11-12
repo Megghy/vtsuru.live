@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DocumentText24Regular } from '@vicons/fluent'
+import DocumentText24Regular from '@vicons/fluent/es/DocumentText24Regular'
 import { ref } from 'vue'
 
 import { useAccount } from '@/api/account'

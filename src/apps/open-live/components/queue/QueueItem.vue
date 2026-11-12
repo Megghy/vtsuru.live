@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {
-  Checkmark12Regular,
-  ClipboardTextLtr24Filled,
-  Dismiss16Filled,
-  Info24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
+import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
+import ClipboardTextLtr24Filled from '@vicons/fluent/es/ClipboardTextLtr24Filled'
+import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
 import { computed } from 'vue'
 
 import type { ResponseQueueModel } from '@/api/client-types'
@@ -107,7 +105,10 @@ function formatRelativeTime(timestamp: number) {
       <TooltipProvider v-if="store.settings.showPayment && paymentMeta.hasMysteryBoxPayment">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Badge variant="warning" size="xs">
+            <Badge
+              variant="warning"
+              size="xs"
+            >
               {{ paymentMeta.shortText }}
             </Badge>
           </TooltipTrigger>
@@ -117,7 +118,11 @@ function formatRelativeTime(timestamp: number) {
         </Tooltip>
       </TooltipProvider>
 
-      <Badge v-if="store.settings.showPayment && paymentMeta.giftPriceText" variant="destructive" size="xs">
+      <Badge
+        v-if="store.settings.showPayment && paymentMeta.giftPriceText"
+        variant="destructive"
+        size="xs"
+      >
         ￥ {{ paymentMeta.giftPriceText }}
       </Badge>
 

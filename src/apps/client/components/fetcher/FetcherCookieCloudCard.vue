@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { error as logError } from '@tauri-apps/plugin-log'
-import { CloudDownloadOutline, RefreshOutline } from '@vicons/ionicons5'
+import CloudDownloadOutline from '@vicons/ionicons5/es/CloudDownloadOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
 import { onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -109,7 +110,20 @@ async function handleClearCookieCloudConfig() {
   <Card class="w-full">
     <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
       <CardTitle>Cookie Cloud 配置</CardTitle>
-      <Badge variant="success" size="xs" class="h-5" :class=" biliCookie.cookieCloudState === 'valid' ? ' ' : biliCookie.cookieCloudState === 'syncing' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : biliCookie.cookieCloudState === 'invalid' ? 'border-destructive/40 text-destructive bg-destructive/10' : 'border-border text-muted-foreground' ">
+      <Badge
+        variant="success"
+        size="xs"
+        class="h-5"
+        :class="
+          biliCookie.cookieCloudState === 'valid'
+            ? ' '
+            : biliCookie.cookieCloudState === 'syncing'
+              ? 'border-sky-500/40 text-sky-600 bg-sky-500/10'
+              : biliCookie.cookieCloudState === 'invalid'
+                ? 'border-destructive/40 text-destructive bg-destructive/10'
+                : 'border-border text-muted-foreground'
+        "
+      >
         {{
           biliCookie.cookieCloudState === 'valid'
             ? '已配置'
@@ -122,7 +136,10 @@ async function handleClearCookieCloudConfig() {
       </Badge>
     </CardHeader>
     <CardContent class="p-3 space-y-3">
-      <Alert size="sm" variant="info">
+      <Alert
+        size="sm"
+        variant="info"
+      >
         <AlertDescription class="m-0"> 设置 CookieCloud 后扫码登陆的登陆信息将被覆盖 </AlertDescription>
       </Alert>
 

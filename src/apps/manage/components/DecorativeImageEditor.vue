@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ArrowDown20Filled, ArrowUp20Filled, Delete20Filled } from '@vicons/fluent'
+import ArrowDown20Filled from '@vicons/fluent/es/ArrowDown20Filled'
+import ArrowUp20Filled from '@vicons/fluent/es/ArrowUp20Filled'
+import Delete20Filled from '@vicons/fluent/es/Delete20Filled'
 import { ref, watch } from 'vue'
 
 import type { DecorativeImageProperties } from '@/shared/types/VTsuruConfigTypes'
@@ -161,7 +163,10 @@ function moveImage(id: number, offset: -1 | 1) {
         </div>
       </CardHeader>
 
-      <CardFooter v-if="selectedImageId === image.id" class="p-3 flex flex-col gap-3 border-t bg-muted/10">
+      <CardFooter
+        v-if="selectedImageId === image.id"
+        class="p-3 flex flex-col gap-3 border-t bg-muted/10"
+      >
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full pt-3">
           <div class="space-y-1">
             <span class="text-[11px] text-muted-foreground">X (%)</span>

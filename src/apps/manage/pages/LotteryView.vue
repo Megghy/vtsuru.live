@@ -1,22 +1,20 @@
 <script setup lang="ts">
-import {
-  ArrowDownload24Regular,
-  Comment24Regular,
-  Copy24Regular,
-  Delete24Filled,
-  Games24Filled,
-  Games24Regular,
-  History24Filled,
-  Link24Regular,
-  Pause24Filled,
-  PeopleQueue24Regular,
-  PersonAdd24Filled,
-  Play24Filled,
-  Settings24Regular,
-  Sparkle24Filled,
-  Target24Regular,
-  Trophy24Filled,
-} from '@vicons/fluent'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import Comment24Regular from '@vicons/fluent/es/Comment24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import Games24Filled from '@vicons/fluent/es/Games24Filled'
+import Games24Regular from '@vicons/fluent/es/Games24Regular'
+import History24Filled from '@vicons/fluent/es/History24Filled'
+import Link24Regular from '@vicons/fluent/es/Link24Regular'
+import Pause24Filled from '@vicons/fluent/es/Pause24Filled'
+import PeopleQueue24Regular from '@vicons/fluent/es/PeopleQueue24Regular'
+import PersonAdd24Filled from '@vicons/fluent/es/PersonAdd24Filled'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import Sparkle24Filled from '@vicons/fluent/es/Sparkle24Filled'
+import Target24Regular from '@vicons/fluent/es/Target24Regular'
+import Trophy24Filled from '@vicons/fluent/es/Trophy24Filled'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -489,15 +487,24 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList size="xs" class="grid w-full grid-cols-2 max-w-sm p-0.5 bg-muted">
-        <TabsTrigger value="live" class="gap-1" >
+      <TabsList
+        size="xs"
+        class="grid w-full grid-cols-2 max-w-sm p-0.5 bg-muted"
+      >
+        <TabsTrigger
+          value="live"
+          class="gap-1"
+        >
           <component
             :is="Games24Regular"
             class="h-3.5 w-3.5"
           />
           直播间实时弹幕抽奖
         </TabsTrigger>
-        <TabsTrigger value="dynamic" class="gap-1" >
+        <TabsTrigger
+          value="dynamic"
+          class="gap-1"
+        >
           <component
             :is="Comment24Regular"
             class="h-3.5 w-3.5"
@@ -517,10 +524,9 @@ onUnmounted(() => {
               <Badge :variant="isStartLiveLottery ? 'success' : 'outline'">
                 {{ isStartLiveLottery ? '正在抓取弹幕/送礼' : '已暂停采集' }}
               </Badge>
-              <Badge variant="brand">
-                奖池观众: {{ currentUsers.length }} 人
-              </Badge>
-              <Badge v-if="liveResultUsers.length> 0"
+              <Badge variant="brand"> 奖池观众: {{ currentUsers.length }} 人 </Badge>
+              <Badge
+                v-if="liveResultUsers.length > 0"
                 variant="warning"
                 class="text-xs"
               >
@@ -664,7 +670,11 @@ onUnmounted(() => {
                   >
                     {{ user.name }}
                   </span>
-                  <Badge v-if="cardStates[user.openId]?.isWinner" variant="warning" class="text-[9px] px-1 py-0 h-3.5 mt-1">
+                  <Badge
+                    v-if="cardStates[user.openId]?.isWinner"
+                    variant="warning"
+                    class="text-[9px] px-1 py-0 h-3.5 mt-1"
+                  >
                     中奖
                   </Badge>
                 </div>
@@ -814,7 +824,8 @@ onUnmounted(() => {
                     <AvatarFallback>{{ user.name.slice(0, 1) }}</AvatarFallback>
                   </Avatar>
                   <span class="truncate max-w-[100px]">{{ user.name }}</span>
-                  <Badge v-if="dynamicResultUsers.some((w) => w.uId === user.uId)"
+                  <Badge
+                    v-if="dynamicResultUsers.some((w) => w.uId === user.uId)"
                     variant="warning"
                     class="text-[9px] px-1 py-0 h-3.5"
                   >
@@ -847,7 +858,12 @@ onUnmounted(() => {
               <CardContent class="space-y-3.5">
                 <div class="flex-between gap-3">
                   <span class="text-xs font-medium text-foreground">抽取人数</span>
-                  <NumberField v-model="dynamicOption.resultCount" min="1" class="w-24 font-mono" :show-buttons="false" />
+                  <NumberField
+                    v-model="dynamicOption.resultCount"
+                    min="1"
+                    class="w-24 font-mono"
+                    :show-buttons="false"
+                  />
                 </div>
 
                 <Separator />
@@ -871,7 +887,14 @@ onUnmounted(() => {
                     class="pl-6 pt-1 flex items-center gap-2"
                   >
                     <span class="text-xs text-muted-foreground">最低等级:</span>
-                    <NumberField size="xs" v-model="dynamicOption.fanCardLevel" min="1" max="40" class="w-20 font-mono" :show-buttons="false" />
+                    <NumberField
+                      size="xs"
+                      v-model="dynamicOption.fanCardLevel"
+                      min="1"
+                      max="40"
+                      class="w-20 font-mono"
+                      :show-buttons="false"
+                    />
                   </div>
                 </div>
               </CardContent>

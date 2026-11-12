@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  ArrowCounterclockwise24Regular,
-  Checkmark24Regular,
-  Copy24Regular,
-  Open24Regular,
-  Pause24Regular,
-  Play24Regular,
-} from '@vicons/fluent'
+import ArrowCounterclockwise24Regular from '@vicons/fluent/es/ArrowCounterclockwise24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Pause24Regular from '@vicons/fluent/es/Pause24Regular'
+import Play24Regular from '@vicons/fluent/es/Play24Regular'
 import { useClipboard } from '@vueuse/core'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -21,8 +19,8 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
-import { Slider } from '@/shared/ui/slider'
 import { Separator } from '@/shared/ui/separator'
+import { Slider } from '@/shared/ui/slider'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -192,7 +190,11 @@ const modeOptions: { label: string; value: ClockMode }[] = [
             type="single"
             size="xs"
             :model-value="state.mode"
-            @update:model-value="(v) => { if (v) updateState({ mode: v as ClockMode }) }"
+            @update:model-value="
+              (v) => {
+                if (v) updateState({ mode: v as ClockMode })
+              }
+            "
           >
             <ToggleGroupItem
               v-for="opt in modeOptions"
@@ -533,7 +535,11 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                   type="single"
                   size="xs"
                   :model-value="previewBg"
-                  @update:model-value="(val) => { if (val) previewBg = val as any }"
+                  @update:model-value="
+                    (val) => {
+                      if (val) previewBg = val as any
+                    }
+                  "
                 >
                   <ToggleGroupItem value="checker">网格底</ToggleGroupItem>
                   <ToggleGroupItem value="dark">暗黑底</ToggleGroupItem>

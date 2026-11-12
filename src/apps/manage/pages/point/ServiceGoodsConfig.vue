@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Add24Filled, Delete24Filled, Info24Filled } from '@vicons/fluent'
+import Add24Filled from '@vicons/fluent/es/Add24Filled'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { computed, ref, watch } from 'vue'
 
 import { ServiceFieldType, type ServiceConfigData, type ServiceField } from '@/api/point-service'

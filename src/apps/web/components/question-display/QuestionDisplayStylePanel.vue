@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowReset24Regular, Checkmark16Regular } from '@vicons/fluent'
+import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
+import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
 import { computed } from 'vue'
 
 import type { SettingQuestionDisplay } from '@/api/generated/model'
@@ -115,7 +116,11 @@ function resetToDefault() {
           @positive-click="resetToDefault"
         >
           <template #trigger>
-            <Button size="xs" variant="ghost" class="text-muted-foreground flex items-center gap-1">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="text-muted-foreground flex items-center gap-1"
+            >
               <component
                 :is="ArrowReset24Regular"
                 class="size-3.5"
@@ -224,7 +229,11 @@ function resetToDefault() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in fontWeightOptions" :key="opt.value" :value="String(opt.value)">
+              <SelectItem
+                v-for="opt in fontWeightOptions"
+                :key="opt.value"
+                :value="String(opt.value)"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -249,7 +258,11 @@ function resetToDefault() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in fontWeightOptions" :key="opt.value" :value="String(opt.value)">
+              <SelectItem
+                v-for="opt in fontWeightOptions"
+                :key="opt.value"
+                :value="String(opt.value)"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -289,7 +302,11 @@ function resetToDefault() {
             size="xs"
             class="w-full"
             :model-value="String(setting.align ?? QuestionDisplayAlign.Left)"
-            @update:model-value="(val) => { if (val) setting.align = Number(val) }"
+            @update:model-value="
+              (val) => {
+                if (val) setting.align = Number(val)
+              }
+            "
           >
             <ToggleGroupItem
               v-for="al in [
@@ -312,7 +329,11 @@ function resetToDefault() {
             size="xs"
             class="w-full"
             :model-value="String(setting.verticalAlign ?? QuestionDisplayVerticalAlign.Top)"
-            @update:model-value="(val) => { if (val) setting.verticalAlign = Number(val) }"
+            @update:model-value="
+              (val) => {
+                if (val) setting.verticalAlign = Number(val)
+              }
+            "
           >
             <ToggleGroupItem
               v-for="val in [
@@ -364,7 +385,11 @@ function resetToDefault() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="opt in textShadowOptions" :key="opt.value" :value="opt.value">
+            <SelectItem
+              v-for="opt in textShadowOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -470,7 +495,11 @@ function resetToDefault() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in shadowOptions" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in shadowOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>

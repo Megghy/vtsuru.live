@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import {
-  Checkmark16Regular,
-  Copy20Regular,
-  Gift20Regular,
-  PeopleCommunity20Regular,
-  Trophy20Regular,
-  VehicleShip20Regular,
-} from '@vicons/fluent'
+import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
+import Copy20Regular from '@vicons/fluent/es/Copy20Regular'
+import Gift20Regular from '@vicons/fluent/es/Gift20Regular'
+import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
+import Trophy20Regular from '@vicons/fluent/es/Trophy20Regular'
+import VehicleShip20Regular from '@vicons/fluent/es/VehicleShip20Regular'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { EventDataTypes, GuardLevel } from '@/api/generated/model'
@@ -22,9 +20,9 @@ import type {
   ThankSummaryItem,
 } from '@/apps/client/store/useGiftWindow'
 import { GIFT_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useGiftWindow'
-import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { Spin } from '@/shared/ui/spin'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 
 let bc: BroadcastChannel | undefined
 const setting = ref<GiftWindowSettings>()
@@ -331,10 +329,7 @@ watch(
 
       <!-- 排行榜与在线舰长/在线观众 -->
       <template
-        v-if="
-          setting.showRanking &&
-          (rankList.length > 0 || onlineGuardList.length > 0 || onlineViewerList.length > 0)
-        "
+        v-if="setting.showRanking && (rankList.length > 0 || onlineGuardList.length > 0 || onlineViewerList.length > 0)"
       >
         <div
           v-if="setting.showGiftList && giftList.length > 0"
@@ -348,7 +343,11 @@ watch(
             size="xs"
             class="w-full"
             :model-value="activeRankTab"
-            @update:model-value="(val) => { if (val) activeRankTab = val as RankViewMode }"
+            @update:model-value="
+              (val) => {
+                if (val) activeRankTab = val as RankViewMode
+              }
+            "
           >
             <ToggleGroupItem
               value="thank_summary"
@@ -627,9 +626,7 @@ watch(
                       {{ v.medalName || '粉' }} {{ v.medalLevel }}
                     </span>
                   </div>
-                  <span class="gw-sub-info">
-                    {{ v.lastAction }} · {{ getTimeDiff(v.lastActiveTime) }}前
-                  </span>
+                  <span class="gw-sub-info"> {{ v.lastAction }} · {{ getTimeDiff(v.lastActiveTime) }}前 </span>
                 </div>
               </div>
 
@@ -656,8 +653,14 @@ watch(
                 class="w-full py-1 px-2 text-xs rounded bg-white/10 hover:bg-white/15 text-white/90 border border-white/15 transition-all flex-center gap-1 active:scale-[0.98]"
                 @click="copyOnlineViewersThankText"
               >
-                <Checkmark16Regular v-if="isCopied" class="size-3.5 text-emerald-400" />
-                <Copy20Regular v-else class="size-3.5" />
+                <Checkmark16Regular
+                  v-if="isCopied"
+                  class="size-3.5 text-emerald-400"
+                />
+                <Copy20Regular
+                  v-else
+                  class="size-3.5"
+                />
                 <span>{{ isCopied ? '已复制感谢名单' : '一键复制在场名单感谢' }}</span>
               </button>
             </div>

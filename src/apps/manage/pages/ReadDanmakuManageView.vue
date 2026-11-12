@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import {
-  ChartMultiple24Regular,
-  CloudArrowDown20Filled,
-  DocumentText24Regular,
-  Mic24Filled,
-  MicOff24Filled,
-  Next20Filled,
-  Pause20Filled,
-  Play20Filled,
-  ShieldCheckmark24Regular,
-  Speaker224Regular,
-  SpeakerSettings24Regular,
-} from '@vicons/fluent'
+import ChartMultiple24Regular from '@vicons/fluent/es/ChartMultiple24Regular'
+import CloudArrowDown20Filled from '@vicons/fluent/es/CloudArrowDown20Filled'
+import DocumentText24Regular from '@vicons/fluent/es/DocumentText24Regular'
+import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import MicOff24Filled from '@vicons/fluent/es/MicOff24Filled'
+import Next20Filled from '@vicons/fluent/es/Next20Filled'
+import Pause20Filled from '@vicons/fluent/es/Pause20Filled'
+import Play20Filled from '@vicons/fluent/es/Play20Filled'
+import ShieldCheckmark24Regular from '@vicons/fluent/es/ShieldCheckmark24Regular'
+import Speaker224Regular from '@vicons/fluent/es/Speaker224Regular'
+import SpeakerSettings24Regular from '@vicons/fluent/es/SpeakerSettings24Regular'
 import { computed, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -246,7 +244,10 @@ onDeactivated(unbindKeydown)
             v-model="activeConfigTab"
             class="w-full"
           >
-            <TabsList size="xs" class="grid grid-cols-4 w-full mb-4">
+            <TabsList
+              size="xs"
+              class="grid grid-cols-4 w-full mb-4"
+            >
               <TabsTrigger value="voice">
                 <component
                   :is="Speaker224Regular"
@@ -326,7 +327,10 @@ onDeactivated(unbindKeydown)
                 <span>运行状态与统计</span>
               </div>
 
-              <Badge :variant="speechState.canSpeech ? (isPaused ? 'warning' : 'brand') : 'secondary'" size="xs">
+              <Badge
+                :variant="speechState.canSpeech ? (isPaused ? 'warning' : 'brand') : 'secondary'"
+                size="xs"
+              >
                 {{ speechState.canSpeech ? (isPaused ? '已暂停' : '监听中') : '未启动' }}
               </Badge>
             </div>
@@ -392,19 +396,24 @@ onDeactivated(unbindKeydown)
               v-model="activeQueueTab"
               class="w-full"
             >
-              <TabsList size="xs" class="grid grid-cols-2 w-full p-0.5 bg-muted mb-3">
-                <TabsTrigger value="queue" class="gap-1" >
+              <TabsList
+                size="xs"
+                class="grid grid-cols-2 w-full p-0.5 bg-muted mb-3"
+              >
+                <TabsTrigger
+                  value="queue"
+                  class="gap-1"
+                >
                   待读队列
-                  <Badge v-if="queueStats.total> 0"
+                  <Badge
+                    v-if="queueStats.total > 0"
                     variant="brand"
                     class="text-[10px] px-1 py-0 h-4 ml-1"
                   >
                     {{ queueStats.total }}
                   </Badge>
                 </TabsTrigger>
-                <TabsTrigger value="history" >
-                  已读历史
-                </TabsTrigger>
+                <TabsTrigger value="history"> 已读历史 </TabsTrigger>
               </TabsList>
 
               <TabsContent

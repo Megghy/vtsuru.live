@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MoreHorizontal24Filled } from '@vicons/fluent'
+import MoreHorizontal24Filled from '@vicons/fluent/es/MoreHorizontal24Filled'
 import { format } from 'date-fns'
 // @ts-ignore
 import { saveAs } from 'file-saver'

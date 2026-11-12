@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowCounterclockwise24Regular, Delete24Filled } from '@vicons/fluent'
+import ArrowCounterclockwise24Regular from '@vicons/fluent/es/ArrowCounterclockwise24Regular'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import { format } from 'date-fns'
 import { computed, ref } from 'vue'
 
@@ -157,7 +158,11 @@ function getStatusBadge(status: SongRequestStatus) {
             <SelectValue placeholder="状态筛选" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="opt in statusFilterOptions" :key="opt.value" :value="opt.value">
+            <SelectItem
+              v-for="opt in statusFilterOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -197,7 +202,11 @@ function getStatusBadge(status: SongRequestStatus) {
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Badge variant="outline" size="xs" class="cursor-help">
+                      <Badge
+                        variant="outline"
+                        size="xs"
+                        class="cursor-help"
+                      >
                         {{ row.from === 3 ? '手动添加' : row.user?.name || '未知用户' }}
                       </Badge>
                     </TooltipTrigger>
@@ -209,13 +218,21 @@ function getStatusBadge(status: SongRequestStatus) {
               </TableCell>
 
               <TableCell>
-                <Badge variant="outline" size="xs" :class="getFromBadge(row).class">
+                <Badge
+                  variant="outline"
+                  size="xs"
+                  :class="getFromBadge(row).class"
+                >
                   {{ getFromBadge(row).text }}
                 </Badge>
               </TableCell>
 
               <TableCell>
-                <Badge variant="outline" size="xs" :class="getStatusBadge(row.status).class">
+                <Badge
+                  variant="outline"
+                  size="xs"
+                  :class="getStatusBadge(row.status).class"
+                >
                   {{ getStatusBadge(row.status).text }}
                 </Badge>
               </TableCell>
@@ -229,7 +246,13 @@ function getStatusBadge(status: SongRequestStatus) {
                   <TooltipProvider>
                     <Tooltip v-if="row.status === SongRequestStatus.Finish || row.status === SongRequestStatus.Cancel">
                       <TooltipTrigger as-child>
-                        <Button size="icon-xs" variant="ghost" class="text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40" :disabled="songRequest.isLoading" @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)">
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-sky-600 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/40"
+                          :disabled="songRequest.isLoading"
+                          @click="songRequest.updateSongStatus(row, SongRequestStatus.Waiting)"
+                        >
                           <ArrowCounterclockwise24Regular class="size-3.5" />
                         </Button>
                       </TooltipTrigger>
@@ -244,7 +267,12 @@ function getStatusBadge(status: SongRequestStatus) {
                             @positive-click="songRequest.deleteSongs([row])"
                           >
                             <template #trigger>
-                              <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive hover:bg-destructive/10" :disabled="songRequest.isLoading">
+                              <Button
+                                size="icon-xs"
+                                variant="ghost"
+                                class="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                :disabled="songRequest.isLoading"
+                              >
                                 <Delete24Filled class="size-3.5" />
                               </Button>
                             </template>

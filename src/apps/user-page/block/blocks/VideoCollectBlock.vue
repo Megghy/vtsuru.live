@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { OpenOutline, RefreshOutline, TimerOutline, VideocamOutline } from '@vicons/ionicons5'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import TimerOutline from '@vicons/ionicons5/es/TimerOutline'
+import VideocamOutline from '@vicons/ionicons5/es/VideocamOutline'
 import { useNow } from '@vueuse/core'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -113,10 +116,17 @@ watch(
       </div>
     </template>
 
-    <Alert size="sm" v-if="!enabled">
+    <Alert
+      size="sm"
+      v-if="!enabled"
+    >
       <AlertDescription> 视频征集未开放 </AlertDescription>
     </Alert>
-    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+    <Alert
+      size="sm"
+      v-else-if="query.status.value === 'error'"
+      variant="destructive"
+    >
       <AlertDescription class="flex-between w-full">
         <span>视频征集加载失败</span>
         <Button

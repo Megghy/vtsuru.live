@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import { WindowWrench20Filled } from '@vicons/fluent'
-import {
-  ChevronBackOutline,
-  ChevronForwardOutline,
-  ColorPaletteOutline,
-  HeartOutline,
-  Home,
-  Moon,
-  Sunny,
-} from '@vicons/ionicons5'
+import WindowWrench20Filled from '@vicons/fluent/es/WindowWrench20Filled'
+import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
+import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
+import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
+import Home from '@vicons/ionicons5/es/Home'
+import Moon from '@vicons/ionicons5/es/Moon'
+import Sunny from '@vicons/ionicons5/es/Sunny'
 import { useElementSize, useMediaQuery } from '@vueuse/core'
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -565,7 +563,13 @@ function scrollToTop() {
 
         <div class="layout-header__right flex items-center gap-2">
           <!-- 主题切换开关 -->
-          <Button size="icon-xs" variant="ghost" :disabled="isLoading || pageThemeMode !== 'auto'" :aria-label="themeSwitchTitle" @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark">
+          <Button
+            size="icon-xs"
+            variant="ghost"
+            :disabled="isLoading || pageThemeMode !== 'auto'"
+            :aria-label="themeSwitchTitle"
+            @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
+          >
             <component
               :is="effectiveIsDark ? Moon : Sunny"
               class="size-4"
@@ -951,7 +955,10 @@ function scrollToTop() {
         <DialogTitle class="text-sm">注册 / 登录</DialogTitle>
       </DialogHeader>
       <div class="flex flex-col gap-3 py-2">
-        <Alert size="sm" class="bg-primary/5 border-primary/20">
+        <Alert
+          size="sm"
+          class="bg-primary/5 border-primary/20"
+        >
           <AlertDescription>
             <div class="text-center text-xs">
               查看积分和订单，用 Bilibili 认证即可，不用注册。主播或需要提问时再登录。

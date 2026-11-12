@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {
-  Checkmark12Regular,
-  Dismiss16Filled,
-  Mic24Filled,
-  Play24Filled,
-  PresenceBlocked16Regular,
-} from '@vicons/fluent'
+import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
+import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
+import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
+import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import type { CSSProperties } from 'vue'
@@ -129,7 +127,10 @@ function formatTimeAbsolute(time: number | string | Date) {
 
         <!-- 用户信息 -->
         <template v-if="song.from === SongRequestFrom.Manual">
-          <Badge variant="secondary" size="xs">
+          <Badge
+            variant="secondary"
+            size="xs"
+          >
             手动添加
           </Badge>
         </template>
@@ -137,7 +138,11 @@ function formatTimeAbsolute(time: number | string | Date) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Badge variant="outline" size="xs" class="border-sky-500/40 text-sky-600 bg-sky-500/10 cursor-help">
+                <Badge
+                  variant="outline"
+                  size="xs"
+                  class="border-sky-500/40 text-sky-600 bg-sky-500/10 cursor-help"
+                >
                   {{ song.user?.name || '未知用户' }}
                 </Badge>
               </TooltipTrigger>
@@ -154,10 +159,20 @@ function formatTimeAbsolute(time: number | string | Date) {
         />
 
         <!-- SC/礼物 -->
-        <Badge v-if="song.from === SongRequestFrom.SC" size="xs" class="text-white" :style="{ backgroundColor: songRequest.getSCColor(song.price ?? 0) }">
+        <Badge
+          v-if="song.from === SongRequestFrom.SC"
+          size="xs"
+          class="text-white"
+          :style="{ backgroundColor: songRequest.getSCColor(song.price ?? 0) }"
+        >
           SC{{ song.price ? ` | ${song.price}` : '' }}
         </Badge>
-        <Badge v-if="song.from === SongRequestFrom.Gift" size="xs" class="text-white" :style="{ backgroundColor: songRequest.getSCColor(song.price ?? 0) }">
+        <Badge
+          v-if="song.from === SongRequestFrom.Gift"
+          size="xs"
+          class="text-white"
+          :style="{ backgroundColor: songRequest.getSCColor(song.price ?? 0) }"
+        >
           礼物{{ song.price ? ` | ${song.price}` : '' }}
         </Badge>
 

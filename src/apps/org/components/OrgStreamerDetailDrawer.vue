@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ChatbubblesOutline, PeopleOutline, TimeOutline, WalletOutline } from '@vicons/ionicons5'
+import ChatbubblesOutline from '@vicons/ionicons5/es/ChatbubblesOutline'
+import PeopleOutline from '@vicons/ionicons5/es/PeopleOutline'
+import TimeOutline from '@vicons/ionicons5/es/TimeOutline'
+import WalletOutline from '@vicons/ionicons5/es/WalletOutline'
 import { format } from 'date-fns'
 import { computed, watch } from 'vue'
 
@@ -64,7 +67,12 @@ function getHeatmapColor(val: number) {
             </span>
           </div>
 
-          <Badge v-if="d.detail.value" variant="secondary" size="xs" class="ml-auto">
+          <Badge
+            v-if="d.detail.value"
+            variant="secondary"
+            size="xs"
+            class="ml-auto"
+          >
             {{ streamerStatusLabel(d.detail.value.status) }}
           </Badge>
         </div>
@@ -164,10 +172,8 @@ function getHeatmapColor(val: number) {
                     <SelectValue placeholder="状态" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">Active</SelectItem
-                    >
-                    <SelectItem value="3">Removed</SelectItem
-                    >
+                    <SelectItem value="1">Active</SelectItem>
+                    <SelectItem value="3">Removed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

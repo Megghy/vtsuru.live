@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import {
-  Add24Regular,
-  ArrowDownload24Regular,
-  ArrowUpload24Regular,
-  Copy24Regular,
-  Delete24Regular,
-  Desktop24Regular,
-  History24Regular,
-  MusicNote224Filled,
-  MusicNote224Regular,
-  Play24Regular,
-  Search24Regular,
-  Settings24Regular,
-  ShieldDismiss24Regular,
-} from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import ArrowUpload24Regular from '@vicons/fluent/es/ArrowUpload24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Desktop24Regular from '@vicons/fluent/es/Desktop24Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import MusicNote224Filled from '@vicons/fluent/es/MusicNote224Filled'
+import MusicNote224Regular from '@vicons/fluent/es/MusicNote224Regular'
+import Play24Regular from '@vicons/fluent/es/Play24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import ShieldDismiss24Regular from '@vicons/fluent/es/ShieldDismiss24Regular'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
@@ -490,10 +488,14 @@ onUnmounted(() => {
         <Card>
           <CardContent class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
-              <Badge variant="brand" size="sm">
+              <Badge
+                variant="brand"
+                size="sm"
+              >
                 待播歌曲: {{ musicRequestStore.waitingMusics.length }} 首
               </Badge>
-              <Badge v-if="activeCooldowns.length> 0"
+              <Badge
+                v-if="activeCooldowns.length > 0"
                 variant="warning"
                 size="sm"
               >
@@ -582,7 +584,10 @@ onUnmounted(() => {
         <Card>
           <CardContent class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
-              <Badge variant="brand" size="sm">
+              <Badge
+                variant="brand"
+                size="sm"
+              >
                 闲置曲库: {{ originMusics.length }} 首
               </Badge>
               <span class="text-xs text-muted-foreground hidden sm:inline">观众点歌可命中此曲库，空闲时亦可轮播</span>
@@ -790,7 +795,10 @@ onUnmounted(() => {
                   class="flex-between py-2 px-2 text-xs"
                 >
                   <div class="flex items-center gap-2 min-w-0">
-                    <Badge :variant="entry.status === 'played' ? 'success' : 'destructive'" size="xs">
+                    <Badge
+                      :variant="entry.status === 'played' ? 'success' : 'destructive'"
+                      size="xs"
+                    >
                       {{ entry.status === 'played' ? '已播' : '已取消' }}
                     </Badge>
                     <span class="font-medium text-foreground truncate max-w-[200px]">{{ entry.music.name }}</span>

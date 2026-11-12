@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {
-  CloudUploadOutline,
-  CodeWorkingOutline,
-  CopyOutline,
-  DesktopOutline,
-  FolderOpenOutline,
-  MoonOutline,
-  PhonePortraitOutline,
-  SunnyOutline,
-} from '@vicons/ionicons5'
+import CloudUploadOutline from '@vicons/ionicons5/es/CloudUploadOutline'
+import CodeWorkingOutline from '@vicons/ionicons5/es/CodeWorkingOutline'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import DesktopOutline from '@vicons/ionicons5/es/DesktopOutline'
+import FolderOpenOutline from '@vicons/ionicons5/es/FolderOpenOutline'
+import MoonOutline from '@vicons/ionicons5/es/MoonOutline'
+import PhonePortraitOutline from '@vicons/ionicons5/es/PhonePortraitOutline'
+import SunnyOutline from '@vicons/ionicons5/es/SunnyOutline'
 import { watchDebounced } from '@vueuse/core'
 import { ClipboardPaste, FileUp, Trash2 } from 'lucide-vue-next'
 import { computed, inject, ref, watch } from 'vue'
@@ -17,11 +15,7 @@ import { FileKind } from '@/api/generated/model'
 import type { APIFileModel } from '@/api/generated/model'
 import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
 import { compileCustomVueSfc } from '@/apps/user-page/block/customHtmlCompile'
-import {
-  CUSTOM_HTML_MAX_ASSETS,
-  CUSTOM_VUE_MAX_BYTES,
-  utf8ByteLength,
-} from '@/apps/user-page/block/customHtmlContract'
+import { CUSTOM_HTML_MAX_ASSETS, CUSTOM_VUE_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
 import type { CustomHtmlProps } from '@/apps/user-page/block/customHtmlContract'
 import { collectCustomHtmlAssetKeys, inspectCustomSource } from '@/apps/user-page/block/customHtmlRuntime'
 import type { CustomCodeIssue, CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
@@ -32,6 +26,7 @@ import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import { useFilePicker } from '@/composables/useFilePicker'
 import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
+import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
@@ -42,7 +37,6 @@ import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 import { isDarkMode, useDialog } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
@@ -108,7 +102,10 @@ const compiledIssues = ref<CustomCodeIssue[]>([])
 const previewStale = computed(() => draft.value.source !== previewProps.value.source)
 
 function collectIssues(targetProps: CustomHtmlProps): CustomCodeIssue[] {
-  const issues = [...inspectCustomSource(targetProps.source, targetProps.assets), ...compileCustomVueSfc(targetProps.source).issues]
+  const issues = [
+    ...inspectCustomSource(targetProps.source, targetProps.assets),
+    ...compileCustomVueSfc(targetProps.source).issues,
+  ]
   if (targetProps.assets.length > CUSTOM_HTML_MAX_ASSETS)
     issues.push({ field: 'assets', message: `资源不能超过 ${CUSTOM_HTML_MAX_ASSETS} 项`, line: 1, column: 1 })
   if (utf8ByteLength(targetProps.source) > CUSTOM_VUE_MAX_BYTES)
@@ -490,7 +487,14 @@ function confirmManualPaste() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="size-7" :disabled="uploading" aria-label="上传图片" @click="openImageUpload()">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="size-7"
+                      :disabled="uploading"
+                      aria-label="上传图片"
+                      @click="openImageUpload()"
+                    >
                       <CloudUploadOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -586,7 +590,13 @@ function confirmManualPaste() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="size-7" aria-label="从剪贴板粘贴" @click="handlePasteFromClipboard">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="从剪贴板粘贴"
+                      @click="handlePasteFromClipboard"
+                    >
                       <ClipboardPaste class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -594,7 +604,13 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="size-7" aria-label="导入代码文件" @click="triggerCodeFileInput">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="导入代码文件"
+                      @click="triggerCodeFileInput"
+                    >
                       <FileUp class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -602,7 +618,13 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="size-7" aria-label="清空当前代码" @click="handleClearCode">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="清空当前代码"
+                      @click="handleClearCode"
+                    >
                       <Trash2 class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -610,7 +632,13 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="size-7" aria-label="格式化代码" @click="codeEditor?.formatDocument()">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="格式化代码"
+                      @click="codeEditor?.formatDocument()"
+                    >
                       <CodeWorkingOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -618,7 +646,13 @@ function confirmManualPaste() {
                 </Tooltip>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="size-7" aria-label="切换资源栏" @click="resourcesVisible = !resourcesVisible">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="size-7"
+                      aria-label="切换资源栏"
+                      @click="resourcesVisible = !resourcesVisible"
+                    >
                       <FolderOpenOutline class="size-4" />
                     </Button>
                   </TooltipTrigger>
@@ -667,14 +701,32 @@ function confirmManualPaste() {
             </div>
             <div class="flex items-center gap-1.5">
               <div class="inline-flex rounded-md border p-0.5 bg-muted">
-                <Button size="xs" :variant="previewDevice === 'desktop' ? 'default' : 'ghost'" class="size-6" aria-label="桌面预览" @click="previewDevice = 'desktop'">
+                <Button
+                  size="xs"
+                  :variant="previewDevice === 'desktop' ? 'default' : 'ghost'"
+                  class="size-6"
+                  aria-label="桌面预览"
+                  @click="previewDevice = 'desktop'"
+                >
                   <DesktopOutline class="size-3.5" />
                 </Button>
-                <Button size="xs" :variant="previewDevice === 'mobile' ? 'default' : 'ghost'" class="size-6" aria-label="移动预览" @click="previewDevice = 'mobile'">
+                <Button
+                  size="xs"
+                  :variant="previewDevice === 'mobile' ? 'default' : 'ghost'"
+                  class="size-6"
+                  aria-label="移动预览"
+                  @click="previewDevice = 'mobile'"
+                >
                   <PhonePortraitOutline class="size-3.5" />
                 </Button>
               </div>
-              <Button size="xs" variant="ghost" class="size-7" :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'" @click="previewDark = !previewDark">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="size-7"
+                :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
+                @click="previewDark = !previewDark"
+              >
                 <SunnyOutline
                   v-if="previewDark"
                   class="size-4"

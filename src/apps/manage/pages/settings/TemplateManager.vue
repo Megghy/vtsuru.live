@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ChevronDown20Regular, PanelLeftContract20Filled, PanelLeftExpand20Filled } from '@vicons/fluent'
+import ChevronDown20Regular from '@vicons/fluent/es/ChevronDown20Regular'
+import PanelLeftContract20Filled from '@vicons/fluent/es/PanelLeftContract20Filled'
+import PanelLeftExpand20Filled from '@vicons/fluent/es/PanelLeftExpand20Filled'
 import { useElementBounding, useWindowSize } from '@vueuse/core'
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 
@@ -271,7 +273,10 @@ async function setAsDisplayTemplate() {
     :show="isSaving"
     class="relative flex flex-col gap-3"
   >
-    <Alert size="sm" class="bg-primary/5 border-primary/20 text-primary">
+    <Alert
+      size="sm"
+      class="bg-primary/5 border-primary/20 text-primary"
+    >
       <AlertDescription> 如果有合适的设计稿或者想法可以给我说然后做成模板捏 </AlertDescription>
     </Alert>
 

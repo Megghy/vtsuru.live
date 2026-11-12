@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ArrowSync24Regular, Cart24Regular, Filter24Regular, Person24Regular, Search24Regular } from '@vicons/fluent'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Cart24Regular from '@vicons/fluent/es/Cart24Regular'
+import Filter24Regular from '@vicons/fluent/es/Filter24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, onMounted, ref, watch } from 'vue'
 
@@ -245,7 +249,8 @@ onMounted(async () => {
                 class="size-4 text-primary"
               />
               <strong class="text-sm text-foreground">{{ biliAuth.name }}</strong>
-              <Badge v-if="currentRoomGuardLevel> 0"
+              <Badge
+                v-if="currentRoomGuardLevel > 0"
                 variant="secondary"
                 class="text-[10px] h-4.5 px-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400"
               >
@@ -346,16 +351,11 @@ onMounted(async () => {
                   <SelectValue placeholder="排序方式" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">默认排序</SelectItem
-                  >
-                  <SelectItem value="price_asc">价格从低到高</SelectItem
-                  >
-                  <SelectItem value="price_desc">价格从高到低</SelectItem
-                  >
-                  <SelectItem value="name_asc">名称 A-Z</SelectItem
-                  >
-                  <SelectItem value="recent">最近上架</SelectItem
-                  >
+                  <SelectItem value="default">默认排序</SelectItem>
+                  <SelectItem value="price_asc">价格从低到高</SelectItem>
+                  <SelectItem value="price_desc">价格从高到低</SelectItem>
+                  <SelectItem value="name_asc">名称 A-Z</SelectItem>
+                  <SelectItem value="recent">最近上架</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -382,7 +382,11 @@ onMounted(async () => {
                   class="size-3.5"
                 />
                 购物车
-                <Badge v-if="cartCount" size="xs" class="absolute -top-1.5 -right-1.5 min-w-4">
+                <Badge
+                  v-if="cartCount"
+                  size="xs"
+                  class="absolute -top-1.5 -right-1.5 min-w-4"
+                >
                   {{ cartCount }}
                 </Badge>
               </Button>
@@ -448,10 +452,18 @@ onMounted(async () => {
                 v-if="item.hasPurchased || !item.canPurchase"
                 class="flex items-center gap-1 flex-wrap"
               >
-                <Badge v-if="item.hasPurchased" variant="secondary" size="xs">
+                <Badge
+                  v-if="item.hasPurchased"
+                  variant="secondary"
+                  size="xs"
+                >
                   {{ item.isAllowRebuy ? `已兑换 ${item.purchasedCount} 次` : '已兑换' }}
                 </Badge>
-                <Badge v-if="!item.canPurchase && item.cannotPurchaseReason" variant="destructive" size="xs">
+                <Badge
+                  v-if="!item.canPurchase && item.cannotPurchaseReason"
+                  variant="destructive"
+                  size="xs"
+                >
                   {{ item.cannotPurchaseReason }}
                 </Badge>
               </div>

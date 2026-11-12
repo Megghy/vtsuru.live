@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { CheckmarkCircle16Regular, ChevronDown12Regular, ErrorCircle16Regular, Toolbox16Regular } from '@vicons/fluent'
+import CheckmarkCircle16Regular from '@vicons/fluent/es/CheckmarkCircle16Regular'
+import ChevronDown12Regular from '@vicons/fluent/es/ChevronDown12Regular'
+import ErrorCircle16Regular from '@vicons/fluent/es/ErrorCircle16Regular'
+import Toolbox16Regular from '@vicons/fluent/es/Toolbox16Regular'
 import { computed, reactive } from 'vue'
 
 import { Button } from '@/shared/ui/button'

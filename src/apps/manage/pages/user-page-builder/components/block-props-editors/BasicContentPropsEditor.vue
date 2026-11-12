@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PersonCircleOutline } from '@vicons/ionicons5'
+import PersonCircleOutline from '@vicons/ionicons5/es/PersonCircleOutline'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
 import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue'

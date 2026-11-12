@@ -1,13 +1,11 @@
 <script lang="ts" setup>
-import {
-  ArrowClockwise16Filled,
-  Delete16Filled,
-  Flash24Regular,
-  Info24Filled,
-  People24Regular,
-  Search24Regular,
-  Settings24Regular,
-} from '@vicons/fluent'
+import ArrowClockwise16Filled from '@vicons/fluent/es/ArrowClockwise16Filled'
+import Delete16Filled from '@vicons/fluent/es/Delete16Filled'
+import Flash24Regular from '@vicons/fluent/es/Flash24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import People24Regular from '@vicons/fluent/es/People24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, ref } from 'vue'
@@ -28,16 +26,16 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
+import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { SettingRow } from '@/shared/ui/setting-row'
 import { Spin } from '@/shared/ui/spin'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { FormField } from '@/shared/ui/form-field'
-import { SettingRow } from '@/shared/ui/setting-row'
 
 import AutoActionEditor from '../AutoActionEditor.vue'
 import { CHECKIN_PLACEHOLDERS } from '../placeholders'
@@ -327,9 +325,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <Card
-    v-if="config"
-  >
+  <Card v-if="config">
     <CardHeader class="p-3 border-b">
       <CardTitle>弹幕签到设置</CardTitle>
     </CardHeader>
@@ -337,15 +333,24 @@ onMounted(() => {
     <CardContent class="p-3">
       <Tabs default-value="settings">
         <TabsList class="grid w-full grid-cols-3">
-          <TabsTrigger value="settings" class="gap-1.5" >
+          <TabsTrigger
+            value="settings"
+            class="gap-1.5"
+          >
             <Settings24Regular class="size-3.5" />
             功能设置
           </TabsTrigger>
-          <TabsTrigger value="ranking" class="gap-1.5" >
+          <TabsTrigger
+            value="ranking"
+            class="gap-1.5"
+          >
             <People24Regular class="size-3.5" />
             签到排行榜
           </TabsTrigger>
-          <TabsTrigger value="test" class="gap-1.5" >
+          <TabsTrigger
+            value="test"
+            class="gap-1.5"
+          >
             <Flash24Regular class="size-3.5" />
             模拟测试
           </TabsTrigger>
@@ -356,7 +361,11 @@ onMounted(() => {
           value="settings"
           class="pt-3 space-y-4"
         >
-          <Alert size="sm" variant="warning" v-if="!canEdit">
+          <Alert
+            size="sm"
+            variant="warning"
+            v-if="!canEdit"
+          >
             <AlertDescription class="m-0"> 加载中或无法编辑设置，请稍后再试 </AlertDescription>
           </Alert>
 
@@ -528,10 +537,11 @@ onMounted(() => {
           value="ranking"
           class="pt-3 space-y-3"
         >
-          <Alert size="sm" variant="info">
-            <AlertDescription class="m-0">
-              显示用户签到排行榜。选择时间段可查看不同期间的签到数据。
-            </AlertDescription>
+          <Alert
+            size="sm"
+            variant="info"
+          >
+            <AlertDescription class="m-0"> 显示用户签到排行榜。选择时间段可查看不同期间的签到数据。 </AlertDescription>
           </Alert>
 
           <div class="flex-between gap-3 flex-wrap">
@@ -545,7 +555,11 @@ onMounted(() => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="opt in timeRangeOptions" :key="opt.value" :value="opt.value">
+                    <SelectItem
+                      v-for="opt in timeRangeOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -613,7 +627,12 @@ onMounted(() => {
                     :key="row.ouId || idx"
                   >
                     <TableCell class="text-center">
-                      <Badge variant="secondary" size="xs" class="h-5 font-bold" :class="idx === 0 ? 'bg-amber-500 text-white' : idx <= 2 ? 'bg-sky-500 text-white' : ''">
+                      <Badge
+                        variant="secondary"
+                        size="xs"
+                        class="h-5 font-bold"
+                        :class="idx === 0 ? 'bg-amber-500 text-white' : idx <= 2 ? 'bg-sky-500 text-white' : ''"
+                      >
                         {{ (rankingPage - 1) * rankingPageSize + idx + 1 }}
                       </Badge>
                     </TableCell>
@@ -652,7 +671,11 @@ onMounted(() => {
                     </TableCell>
 
                     <TableCell class="text-center">
-                      <Badge v-if="row.isAuthed" variant="success" size="xs">
+                      <Badge
+                        v-if="row.isAuthed"
+                        variant="success"
+                        size="xs"
+                      >
                         已认证
                       </Badge>
                       <span
@@ -668,7 +691,12 @@ onMounted(() => {
                         @positive-click="resetUserCheckInByGuid(row.ouId)"
                       >
                         <template #trigger>
-                          <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10" :disabled="isResetting">
+                          <Button
+                            size="icon-xs"
+                            variant="ghost"
+                            class="text-destructive hover:bg-destructive/10"
+                            :disabled="isResetting"
+                          >
                             <Delete16Filled class="size-3.5" />
                           </Button>
                         </template>
@@ -709,7 +737,10 @@ onMounted(() => {
           value="test"
           class="pt-3 space-y-4 max-w-xl"
         >
-          <Alert size="sm" variant="info">
+          <Alert
+            size="sm"
+            variant="info"
+          >
             <AlertDescription class="m-0">
               在此可以模拟用户发送签到命令，验证逻辑和回复消息是否正确。
             </AlertDescription>

@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import {
-  AlbumsOutline as StitchIcon,
-  Cloud,
-  ColorPaletteOutline as StickerIcon,
-  ColorWandOutline as RemoveBgIcon,
-  DesktopOutline,
-  DocumentTextOutline as TextIcon,
-  FilmOutline as MediaIcon,
-  ImagesOutline as NineGridIcon,
-  ImageOutline as CompressIcon,
-  LanguageOutline as TranslateIcon,
-  QrCodeOutline as QrcodeIcon,
-  ScanOutline as OcrIcon,
-  VideocamOutline as CoverIcon,
-} from '@vicons/ionicons5'
+import StitchIcon from '@vicons/ionicons5/es/AlbumsOutline'
+import Cloud from '@vicons/ionicons5/es/Cloud'
+import StickerIcon from '@vicons/ionicons5/es/ColorPaletteOutline'
+import RemoveBgIcon from '@vicons/ionicons5/es/ColorWandOutline'
+import DesktopOutline from '@vicons/ionicons5/es/DesktopOutline'
+import TextIcon from '@vicons/ionicons5/es/DocumentTextOutline'
+import MediaIcon from '@vicons/ionicons5/es/FilmOutline'
+import CompressIcon from '@vicons/ionicons5/es/ImageOutline'
+import NineGridIcon from '@vicons/ionicons5/es/ImagesOutline'
+import TranslateIcon from '@vicons/ionicons5/es/LanguageOutline'
+import QrcodeIcon from '@vicons/ionicons5/es/QrCodeOutline'
+import OcrIcon from '@vicons/ionicons5/es/ScanOutline'
+import CoverIcon from '@vicons/ionicons5/es/VideocamOutline'
 import { useRoute, useRouter } from 'vue-router'
 
 import { getToolRouteName } from '@/app/router/toolRoutes'

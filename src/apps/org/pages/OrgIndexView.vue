@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { AddOutline, ArrowForward, BusinessOutline, RefreshOutline } from '@vicons/ionicons5'
+import AddOutline from '@vicons/ionicons5/es/AddOutline'
+import ArrowForward from '@vicons/ionicons5/es/ArrowForward'
+import BusinessOutline from '@vicons/ionicons5/es/BusinessOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
 import { onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'

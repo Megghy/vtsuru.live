@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Copy24Regular, Open24Regular } from '@vicons/fluent'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import { computed, ref } from 'vue'
 
 import LiveLotteryOBS from '@/apps/obs/pages/LiveLotteryOBS.vue'
@@ -103,7 +104,10 @@ const previewBoxStyle = computed(() => {
         <div class="grid grid-cols-[minmax(320px,1fr)_300px] gap-6 items-start max-[720px]:grid-cols-1">
           <!-- 左侧：链接与配置 -->
           <div class="flex flex-col gap-4 min-w-0">
-            <Alert size="sm" class="bg-muted/50 border-muted">
+            <Alert
+              size="sm"
+              class="bg-muted/50 border-muted"
+            >
               <AlertDescription> 将抽奖等待队列与中奖揭榜结果实时展示在 OBS 浏览器源中。 </AlertDescription>
             </Alert>
 
@@ -152,7 +156,11 @@ const previewBoxStyle = computed(() => {
             <!-- 链接复制 -->
             <div class="flex flex-col gap-2">
               <div class="text-[13px] font-medium text-foreground">OBS 浏览器源链接</div>
-              <Alert size="sm" variant="warning" v-if="!url">
+              <Alert
+                size="sm"
+                variant="warning"
+                v-if="!url"
+              >
                 <AlertDescription class="text-amber-700 dark:text-amber-400">
                   未获取到用户信息，无法生成 OBS 链接。请先登录，或通过幻星平台打开本页。
                 </AlertDescription>

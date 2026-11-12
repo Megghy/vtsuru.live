@@ -1,12 +1,10 @@
-import {
-  AddCircleOutline,
-  ArrowDownOutline,
-  ArrowUpOutline,
-  CopyOutline,
-  CreateOutline,
-  LayersOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
+import AddCircleOutline from '@vicons/ionicons5/es/AddCircleOutline'
+import ArrowDownOutline from '@vicons/ionicons5/es/ArrowDownOutline'
+import ArrowUpOutline from '@vicons/ionicons5/es/ArrowUpOutline'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import CreateOutline from '@vicons/ionicons5/es/CreateOutline'
+import LayersOutline from '@vicons/ionicons5/es/LayersOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, h, inject, ref } from 'vue'
 
 import { BLOCK_LIBRARY, createBlockNode } from '@/apps/user-page/block/registry'

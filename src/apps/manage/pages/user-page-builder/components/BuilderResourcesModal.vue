@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { CopyOutline, RefreshOutline, TrashOutline } from '@vicons/ionicons5'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, inject, reactive, watch } from 'vue'
 
 import { UploadStage } from '@/shared/services/fileUpload'
@@ -139,7 +141,14 @@ function confirmDelete(resource: BuilderResource) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button size="xs" variant="ghost" class="size-7" :disabled="resources.isLoading.value" aria-label="刷新资源" @click="resources.loadResources">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="size-7"
+                    :disabled="resources.isLoading.value"
+                    aria-label="刷新资源"
+                    @click="resources.loadResources"
+                  >
                     <RefreshOutline class="size-4" />
                   </Button>
                 </TooltipTrigger>
@@ -155,19 +164,18 @@ function confirmDelete(resource: BuilderResource) {
           @update:model-value="(val) => (resources.currentView.value = val as any)"
         >
           <TabsList class="w-full justify-start">
-            <TabsTrigger value="all" >
-              全部 {{ resources.resources.value.length }}
-            </TabsTrigger>
-            <TabsTrigger value="used" >
-              引用中 {{ resources.usedCount.value }}
-            </TabsTrigger>
-            <TabsTrigger value="unused" >
-              未使用 {{ resources.unusedCount.value }}
-            </TabsTrigger>
+            <TabsTrigger value="all"> 全部 {{ resources.resources.value.length }} </TabsTrigger>
+            <TabsTrigger value="used"> 引用中 {{ resources.usedCount.value }} </TabsTrigger>
+            <TabsTrigger value="unused"> 未使用 {{ resources.unusedCount.value }} </TabsTrigger>
           </TabsList>
         </Tabs>
 
-        <Alert size="sm" v-if="resources.loadError.value" variant="destructive" class="shrink-0">
+        <Alert
+          size="sm"
+          v-if="resources.loadError.value"
+          variant="destructive"
+          class="shrink-0"
+        >
           <AlertDescription>{{ resources.loadError.value }}</AlertDescription>
         </Alert>
 
@@ -253,7 +261,13 @@ function confirmDelete(resource: BuilderResource) {
                   <TooltipProvider>
                     <Tooltip v-if="file.path">
                       <TooltipTrigger as-child>
-                        <Button size="xs" variant="ghost" class="size-7" aria-label="复制资源链接" @click="copyResourcePath(file.path)">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="size-7"
+                          aria-label="复制资源链接"
+                          @click="copyResourcePath(file.path)"
+                        >
                           <CopyOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>
@@ -261,7 +275,14 @@ function confirmDelete(resource: BuilderResource) {
                     </Tooltip>
                     <Tooltip>
                       <TooltipTrigger as-child>
-                        <Button size="xs" variant="ghost" class="size-7 text-destructive hover:text-destructive" aria-label="删除资源" :disabled="resources.deletingId.value === file.id" @click="confirmDelete(file)">
+                        <Button
+                          size="xs"
+                          variant="ghost"
+                          class="size-7 text-destructive hover:text-destructive"
+                          aria-label="删除资源"
+                          :disabled="resources.deletingId.value === file.id"
+                          @click="confirmDelete(file)"
+                        >
                           <TrashOutline class="size-4" />
                         </Button>
                       </TooltipTrigger>

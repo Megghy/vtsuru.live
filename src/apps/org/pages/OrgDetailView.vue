@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  ArrowLeft20Regular,
-  ArrowSync20Regular,
-  Edit20Regular,
-  People24Regular,
-  SignOut20Regular,
-} from '@vicons/fluent'
-import { TrashOutline } from '@vicons/ionicons5'
+import ArrowLeft20Regular from '@vicons/fluent/es/ArrowLeft20Regular'
+import ArrowSync20Regular from '@vicons/fluent/es/ArrowSync20Regular'
+import Edit20Regular from '@vicons/fluent/es/Edit20Regular'
+import People24Regular from '@vicons/fluent/es/People24Regular'
+import SignOut20Regular from '@vicons/fluent/es/SignOut20Regular'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -116,7 +114,10 @@ function openRename() {
       class="/80"
     >
       <CardContent class="p-4 space-y-3">
-        <Alert size="sm" variant="warning">
+        <Alert
+          size="sm"
+          variant="warning"
+        >
           <AlertDescription>需要先登录才能查看组织数据。</AlertDescription>
         </Alert>
         <RegisterAndLogin />
@@ -154,7 +155,14 @@ function openRename() {
                   <h1 class="text-base font-semibold text-foreground truncate m-0">
                     {{ orgName || `组织 ${orgId}` }}
                   </h1>
-                  <Button v-if="isOrgAdmin" variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground" aria-label="重命名组织" @click="openRename">
+                  <Button
+                    v-if="isOrgAdmin"
+                    variant="ghost"
+                    size="xs"
+                    class="size-6 rounded-full text-muted-foreground"
+                    aria-label="重命名组织"
+                    @click="openRename"
+                  >
                     <component
                       :is="Edit20Regular"
                       class="size-3.5"
@@ -235,7 +243,11 @@ function openRename() {
           <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-3 border-t border-border/60 text-xs">
             <div class="space-y-0.5">
               <span class="text-[11px] text-muted-foreground block">我的角色</span>
-              <Badge variant="outline" size="xs" class="text-primary border-primary/30">
+              <Badge
+                variant="outline"
+                size="xs"
+                class="text-primary border-primary/30"
+              >
                 {{ orgInfo ? roleLabel(orgInfo.role) : '-' }}
               </Badge>
             </div>
@@ -257,21 +269,17 @@ function openRename() {
         class="w-full space-y-3"
         @update:model-value="activeTab = $event as any"
       >
-        <TabsList size="default" class="flex-wrap">
-          <TabsTrigger value="analyze" >数据分析</TabsTrigger
-          >
-          <TabsTrigger value="lives" >直播记录</TabsTrigger
-          >
-          <TabsTrigger value="streamers" >主播管理</TabsTrigger
-          >
-          <TabsTrigger value="members" >成员管理</TabsTrigger
-          >
-          <TabsTrigger value="points" >积分管理</TabsTrigger
-          >
-          <TabsTrigger value="shipping" >订单管理</TabsTrigger
-          >
-          <TabsTrigger value="audit" >操作审计</TabsTrigger
-          >
+        <TabsList
+          size="default"
+          class="flex-wrap"
+        >
+          <TabsTrigger value="analyze">数据分析</TabsTrigger>
+          <TabsTrigger value="lives">直播记录</TabsTrigger>
+          <TabsTrigger value="streamers">主播管理</TabsTrigger>
+          <TabsTrigger value="members">成员管理</TabsTrigger>
+          <TabsTrigger value="points">积分管理</TabsTrigger>
+          <TabsTrigger value="shipping">订单管理</TabsTrigger>
+          <TabsTrigger value="audit">操作审计</TabsTrigger>
         </TabsList>
 
         <TabsContent

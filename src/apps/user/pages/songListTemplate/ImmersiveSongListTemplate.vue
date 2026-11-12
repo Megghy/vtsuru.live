@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { MusicNote224Filled, Search24Regular } from '@vicons/fluent'
+import MusicNote224Filled from '@vicons/fluent/es/MusicNote224Filled'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { useVirtualList } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
@@ -130,10 +131,21 @@ const stageRequestLabel = computed(() => {
             v-if="selectedSong.language?.length || selectedSong.tags?.length"
             class="stage-tags flex flex-wrap gap-1"
           >
-            <Badge v-for="lang in selectedSong.language ?? []" :key="`l-${lang}`" variant="secondary" size="sm" class="bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <Badge
+              v-for="lang in selectedSong.language ?? []"
+              :key="`l-${lang}`"
+              variant="secondary"
+              size="sm"
+              class="bg-blue-500/10 text-blue-600 dark:text-blue-400"
+            >
               {{ lang }}
             </Badge>
-            <Badge v-for="tag in (selectedSong.tags ?? []).slice(0, 4)" :key="`t-${tag}`" variant="secondary" size="sm">
+            <Badge
+              v-for="tag in (selectedSong.tags ?? []).slice(0, 4)"
+              :key="`t-${tag}`"
+              variant="secondary"
+              size="sm"
+            >
               {{ tag }}
             </Badge>
           </div>

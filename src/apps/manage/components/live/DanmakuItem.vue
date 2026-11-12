@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Box24Regular, Money24Regular, VehicleShip24Filled } from '@vicons/fluent'
+import Box24Regular from '@vicons/fluent/es/Box24Regular'
+import Money24Regular from '@vicons/fluent/es/Money24Regular'
+import VehicleShip24Filled from '@vicons/fluent/es/VehicleShip24Filled'
 import { format } from 'date-fns'
 import { computed } from 'vue'
 
@@ -240,14 +242,20 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       </TooltipProvider>
 
       <span>{{ giftDisplay.sourceLabelText }}</span>
-      <Separator orientation="vertical" class="h-3 inline-block" />
+      <Separator
+        orientation="vertical"
+        class="h-3 inline-block"
+      />
       <span
         v-if="giftDisplay.giftPriceText"
         class="inline-flex items-center gap-0.5 text-rose-500 font-medium text-[11px]"
       >
         <Money24Regular class="size-3" /> {{ giftDisplay.giftPriceText }}
       </span>
-      <Separator orientation="vertical" class="h-3 inline-block" />
+      <Separator
+        orientation="vertical"
+        class="h-3 inline-block"
+      />
       <span>{{ danmaku.msg }}</span>
       <span
         v-if="danmaku.num"
@@ -269,7 +277,10 @@ const giftDisplay = computed(() => getDanmakuGiftDisplayMeta(danmaku))
       >
         <VehicleShip24Filled class="size-3.5" /> {{ danmaku.price }}
       </span>
-      <Separator orientation="vertical" class="h-3 inline-block" />
+      <Separator
+        orientation="vertical"
+        class="h-3 inline-block"
+      />
       <span>{{ danmaku.msg }}</span>
     </span>
 

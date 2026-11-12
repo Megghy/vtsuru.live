@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import {
-  ArrowReset24Regular,
-  Color24Filled,
-  Delete24Regular,
-  Desktop24Filled,
-  Eye20Regular,
-  EyeOff20Regular,
-  Filter24Filled,
-  Payment20Regular,
-  PeopleCommunity20Regular,
-  Send24Filled,
-  ThumbLike20Regular,
-  WindowShield20Regular,
-} from '@vicons/fluent'
+import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
+import Color24Filled from '@vicons/fluent/es/Color24Filled'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
+import Eye20Regular from '@vicons/fluent/es/Eye20Regular'
+import EyeOff20Regular from '@vicons/fluent/es/EyeOff20Regular'
+import Filter24Filled from '@vicons/fluent/es/Filter24Filled'
+import Payment20Regular from '@vicons/fluent/es/Payment20Regular'
+import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
+import Send24Filled from '@vicons/fluent/es/Send24Filled'
+import ThumbLike20Regular from '@vicons/fluent/es/ThumbLike20Regular'
+import WindowShield20Regular from '@vicons/fluent/es/WindowShield20Regular'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -28,8 +26,8 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useLiveEmoji } from '@/store/useLiveEmoji'
 
 const danmakuWindow = useDanmakuWindow()
@@ -130,7 +128,11 @@ function toggleFilterType(val: string, checked: boolean) {
       description="桌面半透明置顶弹幕机，支持高自由度外观、穿透、卡片/纯文本样式与智能过滤"
     >
       <template #actions>
-        <Badge variant="success" class="h-6 px-2.5" :class=" danmakuWindow.isDanmakuWindowOpen ? ' ' : 'text-muted-foreground' ">
+        <Badge
+          variant="success"
+          class="h-6 px-2.5"
+          :class="danmakuWindow.isDanmakuWindowOpen ? ' ' : 'text-muted-foreground'"
+        >
           {{ danmakuWindow.isDanmakuWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
         </Badge>
 
@@ -175,15 +177,24 @@ function toggleFilterType(val: string, checked: boolean) {
       class="w-full"
     >
       <TabsList class="grid w-full max-w-sm grid-cols-3">
-        <TabsTrigger value="appearance" class="gap-1.5" >
+        <TabsTrigger
+          value="appearance"
+          class="gap-1.5"
+        >
           <Color24Filled class="size-3.5" />
           外观与预设
         </TabsTrigger>
-        <TabsTrigger value="window" class="gap-1.5" >
+        <TabsTrigger
+          value="window"
+          class="gap-1.5"
+        >
           <Desktop24Filled class="size-3.5" />
           窗口与行为
         </TabsTrigger>
-        <TabsTrigger value="filter" class="gap-1.5" >
+        <TabsTrigger
+          value="filter"
+          class="gap-1.5"
+        >
           <Filter24Filled class="size-3.5" />
           过滤与元素
         </TabsTrigger>
@@ -235,7 +246,11 @@ function toggleFilterType(val: string, checked: boolean) {
             <ToggleGroup
               type="single"
               :model-value="danmakuWindow.danmakuWindowSetting.displayStyle"
-              @update:model-value="(val) => { if (val) danmakuWindow.danmakuWindowSetting.displayStyle = val as any }"
+              @update:model-value="
+                (val) => {
+                  if (val) danmakuWindow.danmakuWindowSetting.displayStyle = val as any
+                }
+              "
             >
               <ToggleGroupItem
                 v-for="opt in displayStyleOptions"
@@ -262,7 +277,11 @@ function toggleFilterType(val: string, checked: boolean) {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem v-for="opt in separatorOptions" :key="opt.value" :value="opt.value">
+                        <SelectItem
+                          v-for="opt in separatorOptions"
+                          :key="opt.value"
+                          :value="opt.value"
+                        >
                           {{ opt.label }}
                         </SelectItem>
                       </SelectContent>
@@ -340,7 +359,12 @@ function toggleFilterType(val: string, checked: boolean) {
                     点赞 {{ danmakuWindow.liveStats.likeCount }} ｜ 收益 ¥{{ danmakuWindow.liveStats.totalIncome }} ｜
                     在线 {{ danmakuWindow.liveStats.onlineCount }} 人
                   </span>
-                  <Button size="xs" variant="secondary" class="gap-1 shrink-0" @click="(danmakuWindow.resetLiveStats(), toast.success('实时统计数据已重置'))">
+                  <Button
+                    size="xs"
+                    variant="secondary"
+                    class="gap-1 shrink-0"
+                    @click="(danmakuWindow.resetLiveStats(), toast.success('实时统计数据已重置'))"
+                  >
                     <ArrowReset24Regular class="size-3" />
                     重置统计
                   </Button>

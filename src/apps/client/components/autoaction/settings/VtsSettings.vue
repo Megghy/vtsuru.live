@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowClockwise16Filled, Info16Regular } from '@vicons/fluent'
+import ArrowClockwise16Filled from '@vicons/fluent/es/ArrowClockwise16Filled'
+import Info16Regular from '@vicons/fluent/es/Info16Regular'
 import { computed } from 'vue'
 
 import type { AutoActionItem } from '@/apps/client/store/useAutoAction'
@@ -70,7 +71,11 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                   <SelectValue placeholder="选择热键" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in hotkeyOptions" :key="opt.value" :value="opt.value">
+                  <SelectItem
+                    v-for="opt in hotkeyOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -108,7 +113,11 @@ const accessoryOptions = computed(() => vts.accessories.map((a) => ({ label: a.n
                     <SelectValue placeholder="选择道具文件" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="opt in itemFileOptions" :key="opt.value" :value="opt.value">
+                    <SelectItem
+                      v-for="opt in itemFileOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Bot24Regular, Copy24Regular, Delete24Regular } from '@vicons/fluent'
+import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
 import { onMounted, ref } from 'vue'
 
 import {

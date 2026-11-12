@@ -1,24 +1,24 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import {
-  Board24Filled,
-  Chat24Filled,
-  ChevronDown16Regular,
-  ChevronLeft16Regular,
-  ChevronRight16Regular,
-  CloudArchive24Filled,
-  Cookies24Filled,
-  FlashAuto24Filled,
-  Live24Filled,
-  Mic24Filled,
-  PeopleSearch24Filled,
-  PersonAccounts24Filled,
-  PlugConnected24Filled,
-  Record24Filled,
-  Settings24Filled,
-  VideoPerson24Filled,
-} from '@vicons/fluent'
-import { CheckmarkCircle, CloseCircle, Home } from '@vicons/ionicons5'
+import Board24Filled from '@vicons/fluent/es/Board24Filled'
+import Chat24Filled from '@vicons/fluent/es/Chat24Filled'
+import ChevronDown16Regular from '@vicons/fluent/es/ChevronDown16Regular'
+import ChevronLeft16Regular from '@vicons/fluent/es/ChevronLeft16Regular'
+import ChevronRight16Regular from '@vicons/fluent/es/ChevronRight16Regular'
+import CloudArchive24Filled from '@vicons/fluent/es/CloudArchive24Filled'
+import Cookies24Filled from '@vicons/fluent/es/Cookies24Filled'
+import FlashAuto24Filled from '@vicons/fluent/es/FlashAuto24Filled'
+import Live24Filled from '@vicons/fluent/es/Live24Filled'
+import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import PeopleSearch24Filled from '@vicons/fluent/es/PeopleSearch24Filled'
+import PersonAccounts24Filled from '@vicons/fluent/es/PersonAccounts24Filled'
+import PlugConnected24Filled from '@vicons/fluent/es/PlugConnected24Filled'
+import Record24Filled from '@vicons/fluent/es/Record24Filled'
+import Settings24Filled from '@vicons/fluent/es/Settings24Filled'
+import VideoPerson24Filled from '@vicons/fluent/es/VideoPerson24Filled'
+import CheckmarkCircle from '@vicons/ionicons5/es/CheckmarkCircle'
+import CloseCircle from '@vicons/ionicons5/es/CloseCircle'
+import Home from '@vicons/ionicons5/es/Home'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -436,9 +436,7 @@ onMounted(() => {
           >
             <Popover>
               <PopoverTrigger as-child>
-                <div
-                  class="status-row status-row--hoverable flex-between text-xs cursor-pointer select-none"
-                >
+                <div class="status-row status-row--hoverable flex-between text-xs cursor-pointer select-none">
                   <div class="status-row-label flex items-center gap-1.5 min-w-0">
                     <PlugConnected24Filled
                       class="size-3.5 shrink-0"
@@ -446,14 +444,21 @@ onMounted(() => {
                     />
                     <span class="text-muted-foreground text-[11px]">本地接口</span>
                   </div>
-                  <Badge variant="outline" size="xs" :class=" rpcServer.connectionCount> 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                    :class="
+                      rpcServer.connectionCount > 0 ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10' : ''
                     "
                   >
                     {{ rpcServer.connectionCount }} 连接
                   </Badge>
                 </div>
               </PopoverTrigger>
-              <PopoverContent side="right" class="w-64 space-y-2">
+              <PopoverContent
+                side="right"
+                class="w-64 space-y-2"
+              >
                 <div class="font-semibold text-foreground text-xs">外部接入连接</div>
                 <Empty
                   v-if="rpcServer.connectionCount === 0"
@@ -468,7 +473,11 @@ onMounted(() => {
                 >
                   <div class="flex-between gap-2">
                     <span class="font-medium text-foreground truncate">{{ formatOrigin(conn.origin) }}</span>
-                    <Badge variant="success" class="text-[9px] h-3.5 px-1" :class="conn.subscribed ? ' ' : ''">
+                    <Badge
+                      variant="success"
+                      class="text-[9px] h-3.5 px-1"
+                      :class="conn.subscribed ? ' ' : ''"
+                    >
                       {{ conn.subscribed ? '已订阅' : '未订阅' }}
                     </Badge>
                   </div>
@@ -497,11 +506,27 @@ onMounted(() => {
                 />
                 <span class="font-medium text-foreground text-[11px]">B站 Cookie</span>
               </div>
-              <Badge variant="success" size="xs" :class=" cookieStatusType === 'success' ? ' ' : cookieStatusType === 'error' ? 'border-destructive/40 text-destructive bg-destructive/10' : 'border-amber-500/40 text-amber-600 bg-amber-500/10' ">
+              <Badge
+                variant="success"
+                size="xs"
+                :class="
+                  cookieStatusType === 'success'
+                    ? ' '
+                    : cookieStatusType === 'error'
+                      ? 'border-destructive/40 text-destructive bg-destructive/10'
+                      : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
+                "
+              >
                 {{ cookieStatusText }}
               </Badge>
             </div>
-            <Button v-if="cookieStatusType !== 'success'" size="xs" variant="outline" class="w-full text-[10px]" @click="goCookieManagement">
+            <Button
+              v-if="cookieStatusType !== 'success'"
+              size="xs"
+              variant="outline"
+              class="w-full text-[10px]"
+              @click="goCookieManagement"
+            >
               前往处理
             </Button>
           </div>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ChevronDown24Regular, ChevronUp24Regular, Filter24Regular } from '@vicons/fluent'
+import ChevronDown24Regular from '@vicons/fluent/es/ChevronDown24Regular'
+import ChevronUp24Regular from '@vicons/fluent/es/ChevronUp24Regular'
+import Filter24Regular from '@vicons/fluent/es/Filter24Regular'
 import { format } from 'date-fns'
 import { computed, ref, watch } from 'vue'
 
@@ -225,10 +227,20 @@ function submit() {
             <!-- 时长限制 -->
             <div class="grid grid-cols-2 gap-3">
               <FormField label="最短时长 (秒，0为不限)">
-                <NumberField size="xs" v-model="model.minVideoDuration" min="0" :show-buttons="false" />
+                <NumberField
+                  size="xs"
+                  v-model="model.minVideoDuration"
+                  min="0"
+                  :show-buttons="false"
+                />
               </FormField>
               <FormField label="最长时长 (秒，0为不限)">
-                <NumberField v-model="model.maxVideoDuration" min="0" size="xs" :show-buttons="false" />
+                <NumberField
+                  v-model="model.maxVideoDuration"
+                  min="0"
+                  size="xs"
+                  :show-buttons="false"
+                />
               </FormField>
             </div>
 
@@ -255,7 +267,14 @@ function submit() {
                 v-if="model.allowedPartitions.length > 0"
                 class="flex flex-wrap gap-1 pt-1"
               >
-                <Badge v-for="p in model.allowedPartitions" :key="p" variant="secondary" size="xs" class="pr-1 flex items-center gap-1 cursor-pointer" @click="removePartition(p)">
+                <Badge
+                  v-for="p in model.allowedPartitions"
+                  :key="p"
+                  variant="secondary"
+                  size="xs"
+                  class="pr-1 flex items-center gap-1 cursor-pointer"
+                  @click="removePartition(p)"
+                >
                   {{ p }}
                   <span class="text-muted-foreground hover:text-foreground">×</span>
                 </Badge>
@@ -280,7 +299,12 @@ function submit() {
               </FormField>
 
               <FormField label="每人最多推荐 (0为不限)">
-                <NumberField size="xs" v-model="model.maxVideoPerUser" min="0" :show-buttons="false" />
+                <NumberField
+                  size="xs"
+                  v-model="model.maxVideoPerUser"
+                  min="0"
+                  :show-buttons="false"
+                />
               </FormField>
             </div>
 

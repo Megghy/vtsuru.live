@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
 
-import { useDanmakuWindow } from '../useDanmakuWindow'
+import { applyTransparentWindowBackground, useDanmakuWindow } from '../useDanmakuWindow'
 
 vi.mock('@tauri-apps/api/dpi', () => ({
   PhysicalPosition: vi.fn(),
@@ -32,6 +32,15 @@ vi.mock('@/store/useDanmakuClient', () => ({
 describe('useDanmakuWindow 弹幕机浮窗与实时数据状态栏', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+  })
+
+  it('旧壳拒绝透明背景时不中断初始化', async () => {
+    const win = {
+      setBackgroundColor: vi.fn().mockRejectedValue(new Error('set_background_color not allowed by ACL')),
+    }
+
+    await expect(applyTransparentWindowBackground(win)).resolves.toBeUndefined()
+    expect(win.setBackgroundColor).toHaveBeenCalledWith([0, 0, 0, 0])
   })
 
   it('状态栏各配置项具有合理的默认值', () => {

@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {
-  Copy24Regular,
-  DocumentArrowDown20Regular,
-  DocumentText24Regular,
-  Mic24Regular,
-  Search24Filled,
-} from '@vicons/fluent'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import DocumentArrowDown20Regular from '@vicons/fluent/es/DocumentArrowDown20Regular'
+import DocumentText24Regular from '@vicons/fluent/es/DocumentText24Regular'
+import Mic24Regular from '@vicons/fluent/es/Mic24Regular'
+import Search24Filled from '@vicons/fluent/es/Search24Filled'
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
@@ -405,7 +403,13 @@ defineExpose({ load })
                 <td class="p-2.5">
                   <div class="flex-between gap-2">
                     <span class="leading-relaxed">{{ row.text }}</span>
-                    <Button variant="ghost" size="xs" class="size-6 text-muted-foreground shrink-0" aria-label="复制单句" @click="copySegment(row)">
+                    <Button
+                      variant="ghost"
+                      size="xs"
+                      class="size-6 text-muted-foreground shrink-0"
+                      aria-label="复制单句"
+                      @click="copySegment(row)"
+                    >
                       <component
                         :is="Copy24Regular"
                         class="size-3.5"

@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import {
-  ArrowRight24Regular,
-  CheckmarkCircle24Regular,
-  Clock24Regular,
-  Copy24Regular,
-  Dismiss24Regular,
-  Eye24Regular,
-  EyeOff24Regular,
-  Key24Regular,
-  Live24Regular,
-  LockClosed24Regular,
-  Open24Regular,
-  ShieldCheckmark24Regular,
-} from '@vicons/fluent'
+import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import EyeOff24Regular from '@vicons/fluent/es/EyeOff24Regular'
+import Key24Regular from '@vicons/fluent/es/Key24Regular'
+import Live24Regular from '@vicons/fluent/es/Live24Regular'
+import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import ShieldCheckmark24Regular from '@vicons/fluent/es/ShieldCheckmark24Regular'
 import { v4 as uuidv4 } from 'uuid'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
@@ -431,9 +429,7 @@ onBeforeUnmount(() => {
             <h2 class="m-0 text-foreground text-[27px] leading-tight max-[520px]:text-2xl">
               {{ biliAuth.isAuthed ? '账户已成功连接' : '还差一步：设置本站密码' }}
             </h2>
-            <p class="mt-3.5 mb-7 text-muted-foreground text-sm leading-[1.75]">
-              之后使用 B 站 UID 和本站密码登录。
-            </p>
+            <p class="mt-3.5 mb-7 text-muted-foreground text-sm leading-[1.75]">之后使用 B 站 UID 和本站密码登录。</p>
 
             <BiliAccountSetup
               :proof="accountProof"
@@ -456,13 +452,25 @@ onBeforeUnmount(() => {
                   class="pr-16 font-mono"
                 />
                 <div class="absolute right-1.5 flex items-center gap-1">
-                  <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="显示/隐藏" @click="showPasswordLink = !showPasswordLink">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    class="size-6 text-muted-foreground"
+                    aria-label="显示/隐藏"
+                    @click="showPasswordLink = !showPasswordLink"
+                  >
                     <component
                       :is="showPasswordLink ? EyeOff24Regular : Eye24Regular"
                       class="size-3.5"
                     />
                   </Button>
-                  <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="复制登录链接" @click="copyText(authUrl, '已复制登录链接')">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    class="size-6 text-muted-foreground"
+                    aria-label="复制登录链接"
+                    @click="copyText(authUrl, '已复制登录链接')"
+                  >
                     <component
                       :is="Copy24Regular"
                       class="size-3.5"

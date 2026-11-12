@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise24Regular,
-  ArrowSync24Regular,
-  CalendarLtr24Regular,
-  CheckmarkCircle24Regular,
-  DismissCircle24Regular,
-  Link24Regular,
-  Prohibited24Regular,
-  Send24Regular,
-  Timer24Regular,
-  VehicleTruck24Regular,
-} from '@vicons/fluent'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import CalendarLtr24Regular from '@vicons/fluent/es/CalendarLtr24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import DismissCircle24Regular from '@vicons/fluent/es/DismissCircle24Regular'
+import Link24Regular from '@vicons/fluent/es/Link24Regular'
+import Prohibited24Regular from '@vicons/fluent/es/Prohibited24Regular'
+import Send24Regular from '@vicons/fluent/es/Send24Regular'
+import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
+import VehicleTruck24Regular from '@vicons/fluent/es/VehicleTruck24Regular'
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
 
@@ -298,7 +296,10 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
           v-else-if="loadError"
           class="space-y-3 py-6 text-center"
         >
-          <Alert size="sm" class="bg-destructive/10 border-destructive/20 text-destructive text-left">
+          <Alert
+            size="sm"
+            class="bg-destructive/10 border-destructive/20 text-destructive text-left"
+          >
             <AlertTitle>服务订单加载失败</AlertTitle>
             <AlertDescription>{{ loadError }}</AlertDescription>
           </Alert>
@@ -340,19 +341,29 @@ const actorLabel: Record<ServiceTimelineActor, string> = {
             </div>
             <div>
               <span class="text-muted-foreground block text-[11px]">状态</span>
-              <Badge :variant="statusMeta[current.status].variant" size="xs">
+              <Badge
+                :variant="statusMeta[current.status].variant"
+                size="xs"
+              >
                 {{ statusMeta[current.status].label }}
               </Badge>
             </div>
           </div>
 
-          <Alert size="sm" class="bg-muted/30 border-border/60">
+          <Alert
+            size="sm"
+            class="bg-muted/30 border-border/60"
+          >
             <AlertDescription class="text-muted-foreground leading-relaxed">
               {{ statusMeta[current.status].hint }}
             </AlertDescription>
           </Alert>
 
-          <Alert size="sm" variant="warning" v-if="orderData?.cancelReason">
+          <Alert
+            size="sm"
+            variant="warning"
+            v-if="orderData?.cancelReason"
+          >
             <AlertTitle>处理原因</AlertTitle>
             <AlertDescription>{{ orderData.cancelReason }}</AlertDescription>
           </Alert>

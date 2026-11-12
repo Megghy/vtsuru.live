@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Dismiss16Filled, MusicNote2Play20Filled, PresenceBlocked16Regular } from '@vicons/fluent'
+import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
+import MusicNote2Play20Filled from '@vicons/fluent/es/MusicNote2Play20Filled'
+import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
 import { computed } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -37,9 +39,7 @@ const platformTag = computed(() => {
     class="flex-between gap-3 p-2.5 rounded-lg border border-border bg-card/60 hover:bg-card hover:border-brand/30 transition-colors"
   >
     <div class="flex items-center gap-2.5 min-w-0">
-      <span
-        class="inline-flex-center font-bold w-6 h-6 rounded-full bg-brand/10 text-brand text-xs shrink-0 font-mono"
-      >
+      <span class="inline-flex-center font-bold w-6 h-6 rounded-full bg-brand/10 text-brand text-xs shrink-0 font-mono">
         {{ index }}
       </span>
 
@@ -47,7 +47,11 @@ const platformTag = computed(() => {
         {{ music.name }}
       </span>
 
-      <Badge v-if="platformTag" :variant="platformTag.variant" size="xs">
+      <Badge
+        v-if="platformTag"
+        :variant="platformTag.variant"
+        size="xs"
+      >
         {{ platformTag.label }}
       </Badge>
 

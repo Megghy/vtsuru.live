@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular, Checkmark24Regular, Copy24Regular, Open24Regular } from '@vicons/fluent'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import { useClipboard } from '@vueuse/core'
 import { computed, defineAsyncComponent, ref, shallowRef, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -10,8 +13,8 @@ import type { ObsComponentDefinition } from '@/apps/obs-store/registry'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
-import { Spin } from '@/shared/ui/spin'
 import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
 const props = defineProps<{
@@ -114,7 +117,10 @@ async function handleCopy() {
           返回组件库
         </Button>
 
-        <Separator orientation="vertical" class="h-4 shrink-0" />
+        <Separator
+          orientation="vertical"
+          class="h-4 shrink-0"
+        />
 
         <div class="flex-center size-8 rounded-lg bg-brand-soft text-brand shrink-0">
           <component

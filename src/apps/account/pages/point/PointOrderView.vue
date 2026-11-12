@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowSync24Regular, Search24Regular } from '@vicons/fluent'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/generated/model'
@@ -174,20 +175,13 @@ onMounted(() => void loadOrders())
                   <SelectValue placeholder="订单状态" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部状态</SelectItem
-                  >
-                  <SelectItem :value="String(PointOrderStatus.Pending)">待处理</SelectItem
-                  >
-                  <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem
-                  >
-                  <SelectItem :value="String(PointOrderStatus.InProgress)">服务进行中</SelectItem
-                  >
-                  <SelectItem :value="String(PointOrderStatus.Rejected)">已拒绝</SelectItem
-                  >
-                  <SelectItem :value="String(PointOrderStatus.Cancelled)">已取消</SelectItem
-                  >
-                  <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem
-                  >
+                  <SelectItem value="all">全部状态</SelectItem>
+                  <SelectItem :value="String(PointOrderStatus.Pending)">待处理</SelectItem>
+                  <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem>
+                  <SelectItem :value="String(PointOrderStatus.InProgress)">服务进行中</SelectItem>
+                  <SelectItem :value="String(PointOrderStatus.Rejected)">已拒绝</SelectItem>
+                  <SelectItem :value="String(PointOrderStatus.Cancelled)">已取消</SelectItem>
+                  <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 
 import type { SettingQueue } from '@/api/generated/model'
 import { KeywordMatchType, QueueGiftFilterType } from '@/api/generated/model'
@@ -33,11 +33,12 @@ function onChange() {
 <template>
   <Spin :show="isLoading">
     <div class="flex flex-col gap-3">
-      <Alert size="sm" class="bg-muted/50 border-muted">
+      <Alert
+        size="sm"
+        class="bg-muted/50 border-muted"
+      >
         <AlertTitle>提示</AlertTitle>
-        <AlertDescription>
-          修改后会自动保存并实时生效（部分配置可能需要重新开启功能后生效）。
-        </AlertDescription>
+        <AlertDescription> 修改后会自动保存并实时生效（部分配置可能需要重新开启功能后生效）。 </AlertDescription>
       </Alert>
 
       <Card>

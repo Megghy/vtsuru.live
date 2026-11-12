@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bot24Regular } from '@vicons/fluent'
+import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -133,7 +133,10 @@ function openAssistant() {
 
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
         <Spin :show="isModalLoading">
-          <Alert size="sm" variant="info">
+          <Alert
+            size="sm"
+            variant="info"
+          >
             <div class="flex-between flex-wrap gap-2 w-full">
               <div class="space-y-0.5">
                 <AlertTitle>也可以使用 VTsuru 助手</AlertTitle>

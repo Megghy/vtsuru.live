@@ -1,27 +1,23 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise24Regular,
-  BookCoins20Filled,
-  Chat24Filled,
-  ChevronLeft24Regular,
-  ChevronRight24Regular,
-  Info24Filled,
-  Lottery24Filled,
-  MoreHorizontal24Filled,
-  PersonFeedback24Filled,
-  TabletSpeaker24Filled,
-  VehicleShip24Filled,
-  VideoAdd20Filled,
-} from '@vicons/fluent'
-import {
-  AnalyticsSharp,
-  BrowsersOutline,
-  Calendar,
-  Chatbox,
-  ListCircle,
-  MusicalNote,
-  OpenOutline,
-} from '@vicons/ionicons5'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import BookCoins20Filled from '@vicons/fluent/es/BookCoins20Filled'
+import Chat24Filled from '@vicons/fluent/es/Chat24Filled'
+import ChevronLeft24Regular from '@vicons/fluent/es/ChevronLeft24Regular'
+import ChevronRight24Regular from '@vicons/fluent/es/ChevronRight24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Lottery24Filled from '@vicons/fluent/es/Lottery24Filled'
+import MoreHorizontal24Filled from '@vicons/fluent/es/MoreHorizontal24Filled'
+import PersonFeedback24Filled from '@vicons/fluent/es/PersonFeedback24Filled'
+import TabletSpeaker24Filled from '@vicons/fluent/es/TabletSpeaker24Filled'
+import VehicleShip24Filled from '@vicons/fluent/es/VehicleShip24Filled'
+import VideoAdd20Filled from '@vicons/fluent/es/VideoAdd20Filled'
+import AnalyticsSharp from '@vicons/ionicons5/es/AnalyticsSharp'
+import BrowsersOutline from '@vicons/ionicons5/es/BrowsersOutline'
+import Calendar from '@vicons/ionicons5/es/Calendar'
+import Chatbox from '@vicons/ionicons5/es/Chatbox'
+import ListCircle from '@vicons/ionicons5/es/ListCircle'
+import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import { useResizeObserver } from '@vueuse/core'
 import { nextTick, onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'

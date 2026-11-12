@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Play24Filled, Search24Regular } from '@vicons/fluent'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { useVirtualList } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
@@ -101,9 +102,12 @@ function requestSong(song: ResponseSongModel) {
           <SelectValue placeholder="歌手" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">全部歌手</SelectItem
+          <SelectItem value="all">全部歌手</SelectItem>
+          <SelectItem
+            v-for="opt in authorOptions"
+            :key="opt.value"
+            :value="opt.value"
           >
-          <SelectItem v-for="opt in authorOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -116,9 +120,12 @@ function requestSong(song: ResponseSongModel) {
           <SelectValue placeholder="标签" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">全部标签</SelectItem
+          <SelectItem value="all">全部标签</SelectItem>
+          <SelectItem
+            v-for="opt in tagOptions"
+            :key="opt.value"
+            :value="opt.value"
           >
-          <SelectItem v-for="opt in tagOptions" :key="opt.value" :value="opt.value">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -222,7 +229,15 @@ function requestSong(song: ResponseSongModel) {
               </button>
             </div>
             <div class="row-actions flex items-center gap-1">
-              <Button v-if="song.url" variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground" :disabled="isLrcLoading === song.key" aria-label="试听" @click="previewSong = song">
+              <Button
+                v-if="song.url"
+                variant="ghost"
+                size="xs"
+                class="size-7 rounded-full text-muted-foreground"
+                :disabled="isLrcLoading === song.key"
+                aria-label="试听"
+                @click="previewSong = song"
+              >
                 <component
                   :is="Play24Filled"
                   class="size-3.5"

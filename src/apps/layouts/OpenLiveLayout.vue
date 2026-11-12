@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import {
-  ChevronLeft16Regular,
-  ChevronRight16Regular,
-  Lottery24Filled,
-  PeopleQueue24Filled,
-  TabletSpeaker24Filled,
-} from '@vicons/fluent'
-import { ChatbubblesOutline, GridOutline, Moon, MusicalNote, Sunny } from '@vicons/ionicons5'
+import ChevronLeft16Regular from '@vicons/fluent/es/ChevronLeft16Regular'
+import ChevronRight16Regular from '@vicons/fluent/es/ChevronRight16Regular'
+import Lottery24Filled from '@vicons/fluent/es/Lottery24Filled'
+import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
+import TabletSpeaker24Filled from '@vicons/fluent/es/TabletSpeaker24Filled'
+import ChatbubblesOutline from '@vicons/ionicons5/es/ChatbubblesOutline'
+import GridOutline from '@vicons/ionicons5/es/GridOutline'
+import Moon from '@vicons/ionicons5/es/Moon'
+import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
+import Sunny from '@vicons/ionicons5/es/Sunny'
 import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -147,7 +149,18 @@ watch(
       </div>
 
       <div class="flex items-center gap-4">
-        <Badge v-if="needsOpenLiveAuth" variant="success" class="h-6 px-2 gap-1.5" :class=" danmakuClient.phase === 'error' ? 'border-destructive/40 text-destructive bg-destructive/10' : danmakuClient.connected ? ' ' : 'border-amber-500/40 text-amber-600 bg-amber-500/10' ">
+        <Badge
+          v-if="needsOpenLiveAuth"
+          variant="success"
+          class="h-6 px-2 gap-1.5"
+          :class="
+            danmakuClient.phase === 'error'
+              ? 'border-destructive/40 text-destructive bg-destructive/10'
+              : danmakuClient.connected
+                ? ' '
+                : 'border-amber-500/40 text-amber-600 bg-amber-500/10'
+          "
+        >
           <Sunny
             v-if="danmakuClient.connected"
             class="size-3.5"
@@ -180,7 +193,13 @@ watch(
         :class="siderCollapsed ? 'w-16' : 'w-[180px]'"
       >
         <div class="flex items-center justify-end p-2 border-b">
-          <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" :aria-label="siderCollapsed ? '展开边栏' : '折叠边栏'" @click="siderCollapsed = !siderCollapsed">
+          <Button
+            variant="ghost"
+            size="xs"
+            class="size-6 text-muted-foreground"
+            :aria-label="siderCollapsed ? '展开边栏' : '折叠边栏'"
+            @click="siderCollapsed = !siderCollapsed"
+          >
             <ChevronRight16Regular
               v-if="siderCollapsed"
               class="size-3.5"
@@ -312,9 +331,7 @@ watch(
     </div>
 
     <!-- 底部信息栏 -->
-    <footer
-      class="h-10 border-t border-border flex-center px-5 shrink-0 bg-card text-xs text-muted-foreground"
-    >
+    <footer class="h-10 border-t border-border flex-center px-5 shrink-0 bg-card text-xs text-muted-foreground">
       <span>
         © {{ new Date().getFullYear() }}
         <a

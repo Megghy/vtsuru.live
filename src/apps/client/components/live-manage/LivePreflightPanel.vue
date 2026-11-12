@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowSync24Regular, CheckmarkCircle24Regular } from '@vicons/fluent'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
 import { computed } from 'vue'
 
 import { Alert, AlertDescription } from '@/shared/ui/alert'
@@ -77,7 +78,11 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
         <span v-if="checkedAt && !refreshing && !error">上次检查 {{ new Date(checkedAt).toLocaleTimeString() }}</span>
       </div>
 
-      <Alert size="sm" v-if="error" class="border-destructive/20 bg-destructive/10 text-destructive my-2">
+      <Alert
+        size="sm"
+        v-if="error"
+        class="border-destructive/20 bg-destructive/10 text-destructive my-2"
+      >
         <AlertDescription class="m-0"> {{ error }}，请处理后重新检查。 </AlertDescription>
       </Alert>
 
@@ -91,14 +96,25 @@ function getTagBadgeClass(status: 'success' | 'error' | 'warning' | 'info') {
           :data-check="check.id"
           class="flex items-center gap-3 py-2.5 max-[480px]:gap-2 max-[480px]:flex-wrap"
         >
-          <Badge variant="outline" size="xs" class="h-5" :class="getTagBadgeClass(check.status)">
+          <Badge
+            variant="outline"
+            size="xs"
+            class="h-5"
+            :class="getTagBadgeClass(check.status)"
+          >
             {{ labels[check.status] }}
           </Badge>
           <div class="flex-1 min-w-0 break-words max-[480px]:basis-[calc(100%-60px)]">
             <strong class="text-xs font-medium text-foreground block">{{ check.title }}</strong>
             <p class="text-xs text-muted-foreground mt-0.5">{{ check.detail }}</p>
           </div>
-          <Button v-if="check.status !== 'success'" size="xs" variant="ghost" class="shrink-0 max-[480px]:ml-auto" @click="$emit('navigate', check.target)">
+          <Button
+            v-if="check.status !== 'success'"
+            size="xs"
+            variant="ghost"
+            class="shrink-0 max-[480px]:ml-auto"
+            @click="$emit('navigate', check.target)"
+          >
             {{ targets[check.target] }}
           </Button>
         </li>

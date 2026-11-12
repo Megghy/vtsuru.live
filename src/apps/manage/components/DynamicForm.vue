@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import { UploadConfig } from '@/api/account'
@@ -449,7 +449,12 @@ onBeforeUnmount(() => {
       class="dynamic-form__header flex-between px-4 py-3 border-b border-border bg-card shrink-0"
     >
       <span class="text-xs font-semibold text-foreground">模板配置</span>
-      <Button size="xs" type="submit" :disabled="isUploading" class="text-xs px-3">
+      <Button
+        size="xs"
+        type="submit"
+        :disabled="isUploading"
+        class="text-xs px-3"
+      >
         {{ isUploading ? '保存中...' : '提交' }}
       </Button>
     </div>

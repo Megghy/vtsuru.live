@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise16Filled,
-  Copy16Regular,
-  Database20Regular,
-  Delete16Filled,
-  Flash24Regular,
-  Search16Regular,
-} from '@vicons/fluent'
+import ArrowClockwise16Filled from '@vicons/fluent/es/ArrowClockwise16Filled'
+import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
+import Database20Regular from '@vicons/fluent/es/Database20Regular'
+import Delete16Filled from '@vicons/fluent/es/Delete16Filled'
+import Flash24Regular from '@vicons/fluent/es/Flash24Regular'
+import Search16Regular from '@vicons/fluent/es/Search16Regular'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -236,14 +234,20 @@ onMounted(() => {
         <div class="flex items-center gap-2">
           <Flash24Regular class="size-4 text-amber-500" />
           <CardTitle>运行时数据 (SessionStorage)</CardTitle>
-          <Badge variant="warning" size="xs">
+          <Badge
+            variant="warning"
+            size="xs"
+          >
             临时
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent class="p-3 space-y-3">
-        <Alert size="sm" variant="warning">
+        <Alert
+          size="sm"
+          variant="warning"
+        >
           <AlertDescription class="m-0">
             这里显示通过 <code>getData</code> / <code>setData</code> 管理的数据。仅在程序运行期间保留，重启即逝。
           </AlertDescription>
@@ -311,7 +315,13 @@ onMounted(() => {
                     {{ row.key }}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" size="xs" :class=" row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : '' ">
+                    <Badge
+                      variant="secondary"
+                      size="xs"
+                      :class="
+                        row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''
+                      "
+                    >
                       {{ row.type }}
                     </Badge>
                   </TableCell>
@@ -320,7 +330,12 @@ onMounted(() => {
                       <pre
                         class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1"
                         >{{ row.valueDisplay }}</pre>
-                      <Button size="icon-xs" variant="ghost" class="text-muted-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        class="text-muted-foreground shrink-0"
+                        @click="copyToClipboard(row.valueDisplay)"
+                      >
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -331,7 +346,11 @@ onMounted(() => {
                       @positive-click="deleteRuntimeItem(row.key)"
                     >
                       <template #trigger>
-                        <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10">
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-destructive hover:bg-destructive/10"
+                        >
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>
@@ -362,14 +381,21 @@ onMounted(() => {
         <div class="flex items-center gap-2">
           <Database20Regular class="size-4 text-sky-500" />
           <CardTitle>持久化数据 (IndexedDB)</CardTitle>
-          <Badge variant="outline" size="xs" class="border-sky-500/40 text-sky-600 bg-sky-500/10">
+          <Badge
+            variant="outline"
+            size="xs"
+            class="border-sky-500/40 text-sky-600 bg-sky-500/10"
+          >
             永久
           </Badge>
         </div>
       </CardHeader>
 
       <CardContent class="p-3 space-y-3">
-        <Alert size="sm" variant="info">
+        <Alert
+          size="sm"
+          variant="info"
+        >
           <AlertDescription class="m-0">
             这里显示通过 <code>getStorageData</code> / <code>setStorageData</code> 管理的数据。程序关闭后依然保留。
           </AlertDescription>
@@ -437,7 +463,13 @@ onMounted(() => {
                     {{ row.key }}
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary" size="xs" :class=" row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : '' ">
+                    <Badge
+                      variant="secondary"
+                      size="xs"
+                      :class="
+                        row.type === 'error' || row.type === 'parse-error' ? 'border-destructive text-destructive' : ''
+                      "
+                    >
                       {{ row.type }}
                     </Badge>
                   </TableCell>
@@ -446,7 +478,12 @@ onMounted(() => {
                       <pre
                         class="font-mono text-xs max-h-16 overflow-hidden text-ellipsis whitespace-pre-wrap flex-1"
                         >{{ row.valueDisplay }}</pre>
-                      <Button size="icon-xs" variant="ghost" class="text-muted-foreground shrink-0" @click="copyToClipboard(row.valueDisplay)">
+                      <Button
+                        size="icon-xs"
+                        variant="ghost"
+                        class="text-muted-foreground shrink-0"
+                        @click="copyToClipboard(row.valueDisplay)"
+                      >
                         <Copy16Regular class="size-3.5" />
                       </Button>
                     </div>
@@ -457,7 +494,11 @@ onMounted(() => {
                       @positive-click="deletePersistentItem(row.key)"
                     >
                       <template #trigger>
-                        <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10">
+                        <Button
+                          size="icon-xs"
+                          variant="ghost"
+                          class="text-destructive hover:bg-destructive/10"
+                        >
                           <Delete16Filled class="size-3.5" />
                         </Button>
                       </template>

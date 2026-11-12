@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { Open16Regular, Stop16Regular } from '@vicons/fluent'
+import Open16Regular from '@vicons/fluent/es/Open16Regular'
+import Stop16Regular from '@vicons/fluent/es/Stop16Regular'
 import { useNow } from '@vueuse/core'
 import { computed, ref } from 'vue'
 
@@ -121,12 +122,24 @@ function openManage() {
         <div class="flex items-center gap-1.5">
           <span class="mr-auto text-xs text-muted-foreground">{{ outcome }}</span>
           <template v-if="active">
-            <Button size="xs" v-for="seconds in [30, 60]" :key="seconds" variant="secondary" :disabled="busy" @click="vote.extend(seconds)">
+            <Button
+              size="xs"
+              v-for="seconds in [30, 60]"
+              :key="seconds"
+              variant="secondary"
+              :disabled="busy"
+              @click="vote.extend(seconds)"
+            >
               +{{ seconds }}s
             </Button>
             <Popconfirm @positive-click="vote.end(session.id)">
               <template #trigger>
-                <Button size="xs" variant="outline" class="text-amber-500 border-amber-500 hover:bg-amber-500/10" :disabled="busy">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="text-amber-500 border-amber-500 hover:bg-amber-500/10"
+                  :disabled="busy"
+                >
                   <component
                     :is="Stop16Regular"
                     class="h-3.5 w-3.5 mr-1"
@@ -137,7 +150,12 @@ function openManage() {
               提前结束并展示结果？
             </Popconfirm>
           </template>
-          <Button size="xs" v-else variant="secondary" @click="reuse">
+          <Button
+            size="xs"
+            v-else
+            variant="secondary"
+            @click="reuse"
+          >
             复用选项
           </Button>
         </div>
@@ -148,7 +166,14 @@ function openManage() {
         class="grid gap-1.5"
       >
         <div class="vote__presets flex flex-wrap gap-1">
-          <Button size="xs" v-for="(preset, index) in presets" :key="index" variant="ghost" class="text-muted-foreground" @click="applyPreset(preset)">
+          <Button
+            size="xs"
+            v-for="(preset, index) in presets"
+            :key="index"
+            variant="ghost"
+            class="text-muted-foreground"
+            @click="applyPreset(preset)"
+          >
             {{ preset.name }}
           </Button>
         </div>

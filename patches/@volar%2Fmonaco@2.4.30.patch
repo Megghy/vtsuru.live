@@ -1,0 +1,44 @@
+diff --git a/lib/editor.js b/lib/editor.js
+index 5a34a4a9db460ffb9c360e8c069b84b32595ee6f..85a739d97dc08d20526dedf4205e37306c3dadf3 100644
+--- a/lib/editor.js
++++ b/lib/editor.js
+@@ -125,7 +125,7 @@ export function activateAutoInsertion(worker, languages, getSyncUris, editor) {
+         const version = model.getVersionId();
+         timeout = setTimeout(() => {
+             (async () => {
+-                if (model.getVersionId() !== version) {
++                if (isModelGone(model) || model.getVersionId() !== version) {
+                     return;
+                 }
+                 const languageService = await worker.withSyncedResources(getSyncUris());
+@@ -139,7 +139,7 @@ export function activateAutoInsertion(worker, languages, getSyncUris, editor) {
+                     rangeLength: lastChange.rangeLength,
+                 });
+                 token.dispose();
+-                if (token.token.isCancellationRequested) {
++                if (token.token.isCancellationRequested || isModelGone(model)) {
+                     return;
+                 }
+                 const codeEditor = editor.getEditors().find(e => e.getModel() === model);
+@@ -158,14 +158,20 @@ export function activateAutoInsertion(worker, languages, getSyncUris, editor) {
+         }, 100);
+     }
+ }
++function isModelGone(model) {
++    return typeof model.isDisposed === 'function' && model.isDisposed();
++}
+ function createTokenForModelChange(model) {
+     const lastVersionId = model.getVersionId();
+     let callbacks;
+     const token = {
+         get isCancellationRequested() {
+-            return model.getVersionId() !== lastVersionId;
++            return isModelGone(model) || model.getVersionId() !== lastVersionId;
+         },
+         onCancellationRequested(cb) {
++            if (isModelGone(model)) {
++                return { dispose() { } };
++            }
+             const disposable = model.onDidChangeContent(() => {
+                 cb(undefined);
+                 disposable.dispose();

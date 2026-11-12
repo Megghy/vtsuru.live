@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  ArrowHookUpLeft16Regular,
-  Checkmark16Regular,
-  Copy16Regular,
-  Filter16Regular,
-  Image16Regular,
-  Open16Regular,
-  PersonProhibited16Regular,
-} from '@vicons/fluent'
+import ArrowHookUpLeft16Regular from '@vicons/fluent/es/ArrowHookUpLeft16Regular'
+import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
+import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
+import Filter16Regular from '@vicons/fluent/es/Filter16Regular'
+import Image16Regular from '@vicons/fluent/es/Image16Regular'
+import Open16Regular from '@vicons/fluent/es/Open16Regular'
+import PersonProhibited16Regular from '@vicons/fluent/es/PersonProhibited16Regular'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'

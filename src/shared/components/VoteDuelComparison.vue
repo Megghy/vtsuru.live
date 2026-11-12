@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ArrowLeft24Filled, ArrowRight24Filled, Ribbon24Filled } from '@vicons/fluent'
+import ArrowLeft24Filled from '@vicons/fluent/es/ArrowLeft24Filled'
+import ArrowRight24Filled from '@vicons/fluent/es/ArrowRight24Filled'
+import Ribbon24Filled from '@vicons/fluent/es/Ribbon24Filled'
 import { computed } from 'vue'
 
 import type { VoteOptionDto } from '@/api/generated/model'

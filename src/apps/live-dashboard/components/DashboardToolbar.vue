@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise16Regular,
-  Board16Regular,
-  Dismiss16Regular,
-  Eye16Regular,
-  EyeOff16Regular,
-  History24Regular,
-  Keyboard20Regular,
-  Search16Regular,
-  Settings16Regular,
-  WeatherMoon16Regular,
-  WeatherSunny16Regular,
-} from '@vicons/fluent'
-import { OpenOutline } from '@vicons/ionicons5'
+import ArrowClockwise16Regular from '@vicons/fluent/es/ArrowClockwise16Regular'
+import Board16Regular from '@vicons/fluent/es/Board16Regular'
+import Dismiss16Regular from '@vicons/fluent/es/Dismiss16Regular'
+import Eye16Regular from '@vicons/fluent/es/Eye16Regular'
+import EyeOff16Regular from '@vicons/fluent/es/EyeOff16Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import Keyboard20Regular from '@vicons/fluent/es/Keyboard20Regular'
+import Search16Regular from '@vicons/fluent/es/Search16Regular'
+import Settings16Regular from '@vicons/fluent/es/Settings16Regular'
+import WeatherMoon16Regular from '@vicons/fluent/es/WeatherMoon16Regular'
+import WeatherSunny16Regular from '@vicons/fluent/es/WeatherSunny16Regular'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -178,16 +176,31 @@ const SEARCH_HELP = [
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent align="start" class="w-80 space-y-3">
+        <PopoverContent
+          align="start"
+          class="w-80 space-y-3"
+        >
           <div class="font-semibold text-xs text-foreground">历史事件回溯筛选</div>
           <div class="grid grid-cols-3 gap-1.5">
-            <Button size="xs" variant="outline" @click="applyQuickRange(3600_000)">
+            <Button
+              size="xs"
+              variant="outline"
+              @click="applyQuickRange(3600_000)"
+            >
               最近 1 小时
             </Button>
-            <Button size="xs" variant="outline" @click="applyTodayRange">
+            <Button
+              size="xs"
+              variant="outline"
+              @click="applyTodayRange"
+            >
               今天
             </Button>
-            <Button size="xs" variant="outline" @click="applyQuickRange(7 * 86400_000)">
+            <Button
+              size="xs"
+              variant="outline"
+              @click="applyQuickRange(7 * 86400_000)"
+            >
               最近 7 天
             </Button>
           </div>
@@ -207,10 +220,19 @@ const SEARCH_HELP = [
               />
             </div>
             <div class="flex-between pt-1">
-              <Button size="xs" variant="ghost" class="text-muted-foreground" :disabled="!range" @click="range = null">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="text-muted-foreground"
+                :disabled="!range"
+                @click="range = null"
+              >
                 清除时间筛选
               </Button>
-              <Button size="xs" @click="applyCustomRange">
+              <Button
+                size="xs"
+                @click="applyCustomRange"
+              >
                 应用
               </Button>
             </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowClockwise24Regular, Info24Filled } from '@vicons/fluent'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { addDays, endOfDay, format, formatDistanceToNow, startOfDay } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { BarChart, LineChart } from 'echarts/charts'
@@ -471,9 +472,7 @@ watch(
       variant="default"
     >
       <AlertTitle>尚未进行 Bilibili 认证</AlertTitle>
-      <AlertDescription>
-        尚未绑定认证 Bilibili 账号，无法加载历史数据。请前往面板完成认证。
-      </AlertDescription>
+      <AlertDescription> 尚未绑定认证 Bilibili 账号，无法加载历史数据。请前往面板完成认证。 </AlertDescription>
     </Alert>
 
     <div

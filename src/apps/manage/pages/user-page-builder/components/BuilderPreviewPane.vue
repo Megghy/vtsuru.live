@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {
-  CodeSlashOutline,
-  DesktopOutline,
-  HandLeftOutline,
-  NavigateOutline,
-  OpenOutline,
-  OptionsOutline,
-  PhonePortraitOutline,
-  TabletPortraitOutline,
-} from '@vicons/ionicons5'
+import CodeSlashOutline from '@vicons/ionicons5/es/CodeSlashOutline'
+import DesktopOutline from '@vicons/ionicons5/es/DesktopOutline'
+import HandLeftOutline from '@vicons/ionicons5/es/HandLeftOutline'
+import NavigateOutline from '@vicons/ionicons5/es/NavigateOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import OptionsOutline from '@vicons/ionicons5/es/OptionsOutline'
+import PhonePortraitOutline from '@vicons/ionicons5/es/PhonePortraitOutline'
+import TabletPortraitOutline from '@vicons/ionicons5/es/TabletPortraitOutline'
 import { useNow } from '@vueuse/core'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
@@ -169,16 +167,19 @@ watch(
 <template>
   <Card class="pane-card w-full h-full flex flex-col">
     <CardHeader class="p-3 border-b border-border flex flex-row items-center justify-between space-y-0 shrink-0">
-      <CardTitle class="truncate max-w-[200px]">
-        预览 - {{ editor.currentLabel.value }}
-      </CardTitle>
+      <CardTitle class="truncate max-w-[200px]"> 预览 - {{ editor.currentLabel.value }} </CardTitle>
 
       <div class="flex items-center gap-1.5">
         <div class="flex items-center bg-muted p-0.5 rounded-lg">
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button size="icon-xs" :variant="previewMode === 'select' ? 'default' : 'ghost'" aria-label="选择区块" @click="previewMode = 'select'">
+                <Button
+                  size="icon-xs"
+                  :variant="previewMode === 'select' ? 'default' : 'ghost'"
+                  aria-label="选择区块"
+                  @click="previewMode = 'select'"
+                >
                   <component
                     :is="NavigateOutline"
                     class="size-3.5"
@@ -192,7 +193,12 @@ watch(
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button size="icon-xs" :variant="previewMode === 'interact' ? 'default' : 'ghost'" aria-label="操作页面" @click="previewMode = 'interact'">
+                <Button
+                  size="icon-xs"
+                  :variant="previewMode === 'interact' ? 'default' : 'ghost'"
+                  aria-label="操作页面"
+                  @click="previewMode = 'interact'"
+                >
                   <component
                     :is="HandLeftOutline"
                     class="size-3.5"
@@ -211,7 +217,12 @@ watch(
           >
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button size="icon-xs" :variant="viewport === option.value ? 'default' : 'ghost'" :aria-label="`${option.label}预览`" @click="viewport = option.value">
+                <Button
+                  size="icon-xs"
+                  :variant="viewport === option.value ? 'default' : 'ghost'"
+                  :aria-label="`${option.label}预览`"
+                  @click="viewport = option.value"
+                >
                   <component
                     :is="option.icon"
                     class="size-3.5"
@@ -225,7 +236,11 @@ watch(
 
         <Popover>
           <PopoverTrigger as-child>
-            <Button size="icon-xs" variant="ghost" aria-label="预览条件">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              aria-label="预览条件"
+            >
               <component
                 :is="OptionsOutline"
                 class="size-3.5"
@@ -252,7 +267,12 @@ watch(
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button size="icon-xs" variant="ghost" aria-label="在真实页面中预览草稿" @click="editor.openPreview">
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                aria-label="在真实页面中预览草稿"
+                @click="editor.openPreview"
+              >
                 <component
                   :is="OpenOutline"
                   class="size-3.5"
@@ -265,10 +285,12 @@ watch(
       </div>
     </CardHeader>
 
-    <CardContent
-      ref="previewRoot"
-      class="p-0 flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col"
-    >
+    <CardContent class="p-0 flex-1 min-w-0 min-h-0 overflow-hidden flex flex-col">
+      <!-- ref 必须落在 DOM 上。CardContent 的 ref 是组件实例，没有 querySelectorAll。 -->
+      <div
+        ref="previewRoot"
+        class="contents"
+      >
       <PhonePreview
         :style="[previewUiVars, previewBgVars]"
         :is-dark="previewEffectiveIsDark"
@@ -352,7 +374,10 @@ watch(
               </div>
             </template>
             <template v-else>
-              <Alert size="sm" class="m-4">
+              <Alert
+                size="sm"
+                class="m-4"
+              >
                 <AlertDescription>
                   当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
                 </AlertDescription>
@@ -361,6 +386,7 @@ watch(
           </div>
         </Transition>
       </PhonePreview>
+      </div>
     </CardContent>
   </Card>
 </template>

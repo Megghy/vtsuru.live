@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { TextFont24Regular } from '@vicons/fluent'
-import { SearchOutline } from '@vicons/ionicons5'
+import TextFont24Regular from '@vicons/fluent/es/TextFont24Regular'
+import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
 import { computed, ref } from 'vue'
 
 import {
@@ -144,10 +144,18 @@ function applyPreviewFont() {
               <SelectValue :placeholder="placeholder" />
             </SelectTrigger>
             <SelectContent class="max-h-60">
-              <SelectItem v-if="clearable" value="__default__" class="text-muted-foreground">
+              <SelectItem
+                v-if="clearable"
+                value="__default__"
+                class="text-muted-foreground"
+              >
                 默认字体
               </SelectItem>
-              <SelectItem v-for="opt in fontOptions" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in fontOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -215,9 +223,12 @@ function applyPreviewFont() {
                 <SelectValue placeholder="全部分类" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部分类</SelectItem
+                <SelectItem value="all">全部分类</SelectItem>
+                <SelectItem
+                  v-for="cat in fontCategoryOptions"
+                  :key="cat.value"
+                  :value="cat.value"
                 >
-                <SelectItem v-for="cat in fontCategoryOptions" :key="cat.value" :value="cat.value">
                   {{ cat.label }}
                 </SelectItem>
               </SelectContent>

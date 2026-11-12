@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled } from '@vicons/fluent'
+import Add20Filled from '@vicons/fluent/es/Add20Filled'
+import Delete20Filled from '@vicons/fluent/es/Delete20Filled'
 import { ref } from 'vue'
 
 import { Badge } from '@/shared/ui/badge'
@@ -12,7 +13,6 @@ import { Separator } from '@/shared/ui/separator'
 import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { useSpeechService } from '@/store/useSpeechService'
-
 
 const { settings } = useSpeechService()
 

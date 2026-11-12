@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import {
-  ArrowLeft24Regular,
-  ArrowRight24Regular,
-  Checkmark24Regular,
-  Copy24Regular,
-  Dismiss24Regular,
-  PanelRight24Regular,
-  PanelRightContract24Regular,
-  Save24Regular,
-} from '@vicons/fluent'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
+import PanelRight24Regular from '@vicons/fluent/es/PanelRight24Regular'
+import PanelRightContract24Regular from '@vicons/fluent/es/PanelRightContract24Regular'
+import Save24Regular from '@vicons/fluent/es/Save24Regular'
+import Heart from '@vicons/ionicons5/es/Heart'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
 import { useDebounceFn, useElementSize } from '@vueuse/core'
 import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
@@ -397,7 +396,10 @@ onBeforeUnmount(() => {
               复制 OBS 链接
             </Button>
 
-            <Badge :variant="questionBox.displayQuestion ? 'default' : 'secondary'" class="h-6 px-2">
+            <Badge
+              :variant="questionBox.displayQuestion ? 'default' : 'secondary'"
+              class="h-6 px-2"
+            >
               {{ questionBox.displayQuestion ? '正在展示' : '画面已清空' }}
             </Badge>
 
@@ -595,10 +597,8 @@ onBeforeUnmount(() => {
             class="w-full"
           >
             <TabsList class="w-full grid grid-cols-2">
-              <TabsTrigger value="style" >外观</TabsTrigger
-              >
-              <TabsTrigger value="obs" >OBS</TabsTrigger
-              >
+              <TabsTrigger value="style">外观</TabsTrigger>
+              <TabsTrigger value="obs">OBS</TabsTrigger>
             </TabsList>
             <TabsContent
               value="style"

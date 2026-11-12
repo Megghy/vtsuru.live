@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ArrowDown24Filled, ArrowUp24Filled, Delete24Filled, NotepadEdit20Filled, Play24Filled } from '@vicons/fluent'
+import ArrowDown24Filled from '@vicons/fluent/es/ArrowDown24Filled'
+import ArrowUp24Filled from '@vicons/fluent/es/ArrowUp24Filled'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import NotepadEdit20Filled from '@vicons/fluent/es/NotepadEdit20Filled'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import type { VNodeChild } from 'vue'
 import { computed, ref } from 'vue'
 
@@ -202,9 +206,12 @@ async function handleBatchDelete() {
             <SelectValue placeholder="筛选歌手" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
-            <SelectItem value="all">全部歌手</SelectItem
+            <SelectItem value="all">全部歌手</SelectItem>
+            <SelectItem
+              v-for="a in authorOptions"
+              :key="a.value"
+              :value="a.value"
             >
-            <SelectItem v-for="a in authorOptions" :key="a.value" :value="a.value">
               {{ a.label }}
             </SelectItem>
           </SelectContent>
@@ -295,10 +302,18 @@ async function handleBatchDelete() {
             <!-- 曲名 -->
             <TableCell>
               <div class="flex items-center gap-1.5 flex-wrap">
-                <Badge v-if="singingKeySet.has(row.key)" variant="warning" size="xs">
+                <Badge
+                  v-if="singingKeySet.has(row.key)"
+                  variant="warning"
+                  size="xs"
+                >
                   演唱中
                 </Badge>
-                <Badge v-else-if="queuedKeySet.has(row.key)" variant="success" size="xs">
+                <Badge
+                  v-else-if="queuedKeySet.has(row.key)"
+                  variant="success"
+                  size="xs"
+                >
                   排队中
                 </Badge>
 
@@ -370,19 +385,44 @@ async function handleBatchDelete() {
                 v-if="hasSongOptions(row.options)"
                 class="flex items-center gap-1 flex-wrap"
               >
-                <Badge v-if="row.options!.needJianzhang" size="xs" class="text-white" :style="{ backgroundColor: getGuardColor(3) }">
+                <Badge
+                  v-if="row.options!.needJianzhang"
+                  size="xs"
+                  class="text-white"
+                  :style="{ backgroundColor: getGuardColor(3) }"
+                >
                   舰长
                 </Badge>
-                <Badge v-if="row.options!.needTidu" size="xs" class="text-white" :style="{ backgroundColor: getGuardColor(2) }">
+                <Badge
+                  v-if="row.options!.needTidu"
+                  size="xs"
+                  class="text-white"
+                  :style="{ backgroundColor: getGuardColor(2) }"
+                >
                   提督
                 </Badge>
-                <Badge v-if="row.options!.needZongdu" size="xs" class="text-white" :style="{ backgroundColor: getGuardColor(1) }">
+                <Badge
+                  v-if="row.options!.needZongdu"
+                  size="xs"
+                  class="text-white"
+                  :style="{ backgroundColor: getGuardColor(1) }"
+                >
                   总督
                 </Badge>
-                <Badge v-if="row.options!.scMinPrice" size="xs" class="text-white" :style="{ backgroundColor: getSCColor(row.options!.scMinPrice) }">
+                <Badge
+                  v-if="row.options!.scMinPrice"
+                  size="xs"
+                  class="text-white"
+                  :style="{ backgroundColor: getSCColor(row.options!.scMinPrice) }"
+                >
                   SC ≥ {{ row.options!.scMinPrice }}
                 </Badge>
-                <Badge v-if="row.options!.fanMedalMinLevel" variant="secondary" size="xs" class="text-sky-600 bg-sky-500/10">
+                <Badge
+                  v-if="row.options!.fanMedalMinLevel"
+                  variant="secondary"
+                  size="xs"
+                  class="text-sky-600 bg-sky-500/10"
+                >
                   牌 ≥ {{ row.options!.fanMedalMinLevel }}
                 </Badge>
               </div>
@@ -399,7 +439,12 @@ async function handleBatchDelete() {
                 v-if="row.tags?.length"
                 class="flex items-center gap-1 flex-wrap"
               >
-                <Badge v-for="t in row.tags" :key="t" variant="secondary" size="xs">
+                <Badge
+                  v-for="t in row.tags"
+                  :key="t"
+                  variant="secondary"
+                  size="xs"
+                >
                   {{ t }}
                 </Badge>
               </div>
@@ -416,7 +461,13 @@ async function handleBatchDelete() {
                 <template v-if="showListenButton && /\.(?:mp3|flac|ogg|wav|m4a)$/i.test(row.url ?? '')">
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="xs" variant="ghost" class="size-7 rounded-full text-primary hover:bg-primary/10" :disabled="isLrcLoading === row.key" @click="playingSong = row">
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="size-7 rounded-full text-primary hover:bg-primary/10"
+                        :disabled="isLrcLoading === row.key"
+                        @click="playingSong = row"
+                      >
                         <component
                           :is="Play24Filled"
                           class="size-3.5"
@@ -430,7 +481,12 @@ async function handleBatchDelete() {
                 <template v-if="isSelf">
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="xs" variant="ghost" class="size-7 rounded-full text-muted-foreground" @click="moveSong(row.key, -1)">
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground"
+                        @click="moveSong(row.key, -1)"
+                      >
                         <component
                           :is="ArrowUp24Filled"
                           class="size-3.5"
@@ -442,7 +498,12 @@ async function handleBatchDelete() {
 
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="xs" variant="ghost" class="size-7 rounded-full text-muted-foreground" @click="moveSong(row.key, 1)">
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground"
+                        @click="moveSong(row.key, 1)"
+                      >
                         <component
                           :is="ArrowDown24Filled"
                           class="size-3.5"
@@ -454,7 +515,12 @@ async function handleBatchDelete() {
 
                   <Tooltip>
                     <TooltipTrigger as-child>
-                      <Button size="xs" variant="ghost" class="size-7 rounded-full text-muted-foreground" @click="editModalRef?.open(row)">
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="size-7 rounded-full text-muted-foreground"
+                        @click="editModalRef?.open(row)"
+                      >
                         <component
                           :is="NotepadEdit20Filled"
                           class="size-3.5"
@@ -471,7 +537,11 @@ async function handleBatchDelete() {
                     @positive-click="deleteSong(row)"
                   >
                     <template #trigger>
-                      <Button size="xs" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
+                      <Button
+                        size="xs"
+                        variant="ghost"
+                        class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                      >
                         <component
                           :is="Delete24Filled"
                           class="size-3.5"

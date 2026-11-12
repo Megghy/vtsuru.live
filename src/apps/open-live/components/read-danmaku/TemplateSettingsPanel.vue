@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled } from '@vicons/fluent'
+import Add20Filled from '@vicons/fluent/es/Add20Filled'
+import Delete20Filled from '@vicons/fluent/es/Delete20Filled'
 import { reactive } from 'vue'
 
 import { EventDataTypes } from '@/api/generated/model'
@@ -265,7 +266,11 @@ function fireMock() {
 
 <template>
   <div class="flex flex-col gap-2.5">
-    <Alert size="sm" variant="warning" v-if="!supportsFollow">
+    <Alert
+      size="sm"
+      variant="warning"
+      v-if="!supportsFollow"
+    >
       <AlertDescription class="text-amber-700 dark:text-amber-400">
         开放平台不推送关注事件。关注播报需要使用桌面客户端的直连弹幕源。
       </AlertDescription>
@@ -276,7 +281,13 @@ function fireMock() {
     </span>
 
     <div class="flex flex-wrap gap-1 my-1">
-      <Button size="xs" v-for="item in Object.values(templateConstants)" :key="item.name" variant="outline" @click="copyToClipboard(item.words)">
+      <Button
+        size="xs"
+        v-for="item in Object.values(templateConstants)"
+        :key="item.name"
+        variant="outline"
+        @click="copyToClipboard(item.words)"
+      >
         {{ item.words }}
       </Button>
     </div>
@@ -309,7 +320,17 @@ function fireMock() {
             </span>
           </div>
           <div class="flex items-center gap-2">
-            <Button size="xs" variant="outline" class="text-primary" :disabled=" !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] || (row.type === EventDataTypes.Follow && !supportsFollow) " :loading="speechState.isApiAudioLoading" @click.stop="test(row.type, row.eventKey)">
+            <Button
+              size="xs"
+              variant="outline"
+              class="text-primary"
+              :disabled="
+                !settings.enabledEvents[row.eventKey as keyof typeof settings.enabledEvents] ||
+                (row.type === EventDataTypes.Follow && !supportsFollow)
+              "
+              :loading="speechState.isApiAudioLoading"
+              @click.stop="test(row.type, row.eventKey)"
+            >
               测试
             </Button>
             <AccordionTrigger class="p-0 hover:no-underline" />
@@ -326,10 +347,21 @@ function fireMock() {
               <div class="flex-between">
                 <span class="text-[11px] text-muted-foreground">规则 {{ ri + 1 }}</span>
                 <div class="flex items-center gap-1">
-                  <Button size="xs" variant="ghost" class="text-primary hover:bg-primary/10" :loading="speechState.isApiAudioLoading" @click="test(row.type, row.eventKey, rule)">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-primary hover:bg-primary/10"
+                    :loading="speechState.isApiAudioLoading"
+                    @click="test(row.type, row.eventKey, rule)"
+                  >
                     测试此条
                   </Button>
-                  <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="removeRule(row.eventKey, ri)">
+                  <Button
+                    size="icon-xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    @click="removeRule(row.eventKey, ri)"
+                  >
                     <Delete20Filled class="size-3.5" />
                   </Button>
                 </div>
@@ -343,7 +375,12 @@ function fireMock() {
                   <span class="text-[11px] text-muted-foreground">
                     {{ rule.conditions.length === 0 ? '无条件 (随机选取)' : '条件 (全部满足时使用此模板)' }}
                   </span>
-                  <Button size="xs" variant="outline" class="gap-1" @click="addCondition(rule, row.eventKey)">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="gap-1"
+                    @click="addCondition(rule, row.eventKey)"
+                  >
                     <Add20Filled class="size-3" />
                     添加条件
                   </Button>
@@ -364,7 +401,11 @@ function fireMock() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem v-for="f in fieldOptionsByEvent[row.eventKey]" :key="f.value" :value="f.value">
+                      <SelectItem
+                        v-for="f in fieldOptionsByEvent[row.eventKey]"
+                        :key="f.value"
+                        :value="f.value"
+                      >
                         {{ f.label }}
                       </SelectItem>
                     </SelectContent>
@@ -378,7 +419,11 @@ function fireMock() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem v-for="op in getOpsForField(cond.field)" :key="op.value" :value="op.value">
+                      <SelectItem
+                        v-for="op in getOpsForField(cond.field)"
+                        :key="op.value"
+                        :value="op.value"
+                      >
                         {{ op.label }}
                       </SelectItem>
                     </SelectContent>
@@ -451,7 +496,11 @@ function fireMock() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in mockTypeOptions" :key="opt.value" :value="String(opt.value)">
+                  <SelectItem
+                    v-for="opt in mockTypeOptions"
+                    :key="opt.value"
+                    :value="String(opt.value)"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>

@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import {
-  ArrowDownload20Regular,
-  ArrowSync20Regular,
-  Checkmark16Regular,
-  Open20Regular,
-  PeopleCommunity20Regular,
-  PersonAdd24Regular,
-  Search24Regular,
-  Stop20Regular,
-} from '@vicons/fluent'
+import ArrowDownload20Regular from '@vicons/fluent/es/ArrowDownload20Regular'
+import ArrowSync20Regular from '@vicons/fluent/es/ArrowSync20Regular'
+import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
+import Open20Regular from '@vicons/fluent/es/Open20Regular'
+import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
+import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Stop20Regular from '@vicons/fluent/es/Stop20Regular'
 import { computed, onMounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -397,7 +395,8 @@ onMounted(async () => {
       </div>
 
       <p class="text-xs text-muted-foreground leading-normal">
-        按粉丝体量洞察关注你的粉丝与大V同行，快速发现未回关用户并一键互关（受 B 站官方接口限制，最多仅可获取最新 1,000 位粉丝）
+        按粉丝体量洞察关注你的粉丝与大V同行，快速发现未回关用户并一键互关（受 B 站官方接口限制，最多仅可获取最新 1,000
+        位粉丝）
       </p>
     </div>
 
@@ -419,7 +418,11 @@ onMounted(async () => {
           <ToggleGroup
             type="single"
             :model-value="filterType"
-            @update:model-value="(val) => { if (val) filterType = val as any }"
+            @update:model-value="
+              (val) => {
+                if (val) filterType = val as any
+              }
+            "
           >
             <ToggleGroupItem
               v-for="opt in filterOptions"
@@ -440,7 +443,11 @@ onMounted(async () => {
           <ToggleGroup
             type="single"
             :model-value="minFansThreshold"
-            @update:model-value="(val) => { if (val !== undefined && val !== null) minFansThreshold = Number(val) }"
+            @update:model-value="
+              (val) => {
+                if (val !== undefined && val !== null) minFansThreshold = Number(val)
+              }
+            "
           >
             <ToggleGroupItem
               v-for="opt in thresholdOptions"
@@ -457,7 +464,11 @@ onMounted(async () => {
             <ToggleGroup
               type="single"
               :model-value="sortBy"
-              @update:model-value="(val) => { if (val) sortBy = val as any }"
+              @update:model-value="
+                (val) => {
+                  if (val) sortBy = val as any
+                }
+              "
             >
               <ToggleGroupItem
                 v-for="opt in sortOptions"
@@ -563,9 +574,7 @@ onMounted(async () => {
             </p>
 
             <!-- 关注时间 -->
-            <span class="text-[10px] text-muted-foreground/60 block">
-              关注于 {{ formatTime(item.mtime) }}
-            </span>
+            <span class="text-[10px] text-muted-foreground/60 block"> 关注于 {{ formatTime(item.mtime) }} </span>
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CopyOutline } from '@vicons/ionicons5'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
 import { computed, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -72,7 +72,9 @@ async function copySnippet(snippet: string) {
             @click="emit('insert', api.snippet)"
           >
             <div class="flex items-start justify-between gap-2">
-              <code class="min-w-0 break-all text-[13px] font-medium text-foreground">{{ api.name }}({{ api.args }})</code>
+              <code class="min-w-0 break-all text-[13px] font-medium text-foreground"
+                >{{ api.name }}({{ api.args }})</code
+              >
               <span class="shrink-0 text-[10px] text-muted-foreground">{{ api.await ? 'await' : 'sync' }}</span>
             </div>
             <p class="mt-1 break-words text-xs leading-relaxed text-muted-foreground">{{ api.doc }}</p>

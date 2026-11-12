@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import {
-  ArrowReset24Regular,
-  ArrowSync24Filled,
-  Color24Filled,
-  Copy24Regular,
-  Delete24Regular,
-  Desktop24Filled,
-  Filter24Filled,
-  History24Filled,
-  Megaphone24Filled,
-  Send24Filled,
-  Trophy20Regular,
-  VehicleShip20Regular,
-  WindowShield20Regular,
-} from '@vicons/fluent'
+import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
+import ArrowSync24Filled from '@vicons/fluent/es/ArrowSync24Filled'
+import Color24Filled from '@vicons/fluent/es/Color24Filled'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
+import Filter24Filled from '@vicons/fluent/es/Filter24Filled'
+import History24Filled from '@vicons/fluent/es/History24Filled'
+import Megaphone24Filled from '@vicons/fluent/es/Megaphone24Filled'
+import Send24Filled from '@vicons/fluent/es/Send24Filled'
+import Trophy20Regular from '@vicons/fluent/es/Trophy20Regular'
+import VehicleShip20Regular from '@vicons/fluent/es/VehicleShip20Regular'
+import WindowShield20Regular from '@vicons/fluent/es/WindowShield20Regular'
 import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -35,8 +33,8 @@ import { Separator } from '@/shared/ui/separator'
 import { Slider } from '@/shared/ui/slider'
 import { Spin } from '@/shared/ui/spin'
 import { Switch } from '@/shared/ui/switch'
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 const giftWindow = useGiftWindow()
 
@@ -251,7 +249,11 @@ function toggleFilterType(val: string, checked: boolean) {
       description="桌面半透明置顶礼物浮窗与高能排行榜，同窗口分屏或独立展示，支持实时打赏动画、在场舰长名单与下播感谢"
     >
       <template #actions>
-        <Badge variant="success" class="h-6 px-2.5" :class=" giftWindow.isGiftWindowOpen ? ' ' : 'text-muted-foreground' ">
+        <Badge
+          variant="success"
+          class="h-6 px-2.5"
+          :class="giftWindow.isGiftWindowOpen ? ' ' : 'text-muted-foreground'"
+        >
           {{ giftWindow.isGiftWindowOpen ? '● 浮窗运行中' : '○ 浮窗已关闭' }}
         </Badge>
 
@@ -295,23 +297,38 @@ function toggleFilterType(val: string, checked: boolean) {
       @update:model-value="onTabChange"
     >
       <TabsList class="grid w-full max-w-xl grid-cols-5">
-        <TabsTrigger value="thank" class="gap-1.5" >
+        <TabsTrigger
+          value="thank"
+          class="gap-1.5"
+        >
           <Megaphone24Filled class="size-3.5" />
           下播感谢
         </TabsTrigger>
-        <TabsTrigger value="appearance" class="gap-1.5" >
+        <TabsTrigger
+          value="appearance"
+          class="gap-1.5"
+        >
           <Color24Filled class="size-3.5" />
           外观与主题
         </TabsTrigger>
-        <TabsTrigger value="window" class="gap-1.5" >
+        <TabsTrigger
+          value="window"
+          class="gap-1.5"
+        >
           <Desktop24Filled class="size-3.5" />
           窗口与布局
         </TabsTrigger>
-        <TabsTrigger value="filter" class="gap-1.5" >
+        <TabsTrigger
+          value="filter"
+          class="gap-1.5"
+        >
           <Filter24Filled class="size-3.5" />
           筛选与规则
         </TabsTrigger>
-        <TabsTrigger value="history" class="gap-1.5" >
+        <TabsTrigger
+          value="history"
+          class="gap-1.5"
+        >
           <History24Filled class="size-3.5" />
           往期榜单
         </TabsTrigger>
@@ -344,7 +361,11 @@ function toggleFilterType(val: string, checked: boolean) {
                     <Trophy20Regular class="size-4 text-amber-500" />
                     本场打赏贡献榜 (前 {{ realtimeRankList.length }} 名)
                   </span>
-                  <Badge variant="secondary" size="xs" class="text-amber-600 bg-amber-500/10">
+                  <Badge
+                    variant="secondary"
+                    size="xs"
+                    class="text-amber-600 bg-amber-500/10"
+                  >
                     上限 {{ giftWindow.settings.rankDisplayCount }} 人
                   </Badge>
                 </div>
@@ -391,7 +412,8 @@ function toggleFilterType(val: string, checked: boolean) {
                             />
                           </div>
                           <span class="text-xs font-semibold text-foreground">{{ r.uname }}</span>
-                          <Badge v-if="r.guardLevel> 0"
+                          <Badge
+                            v-if="r.guardLevel > 0"
                             variant="outline"
                             class="text-[9px] h-4 px-1"
                             :class="
@@ -407,7 +429,12 @@ function toggleFilterType(val: string, checked: boolean) {
                         </div>
 
                         <div class="flex items-center gap-1.5">
-                          <Badge v-if="r.isOnline" variant="success" size="xs" class="text-[9px]">
+                          <Badge
+                            v-if="r.isOnline"
+                            variant="success"
+                            size="xs"
+                            class="text-[9px]"
+                          >
                             在场
                           </Badge>
                           <span class="text-xs font-bold text-amber-500"> ¥{{ r.score.toLocaleString() }} </span>
@@ -447,7 +474,18 @@ function toggleFilterType(val: string, checked: boolean) {
                     >
                       <div class="flex-between w-full">
                         <div class="flex items-center gap-2">
-                          <Badge variant="warning" size="xs" class="text-[9px]" :class=" g.guardLevel === GuardLevel.Zongdu ? 'text-destructive border-destructive/40 bg-destructive/10' : g.guardLevel === GuardLevel.Tidu ? ' ' : 'text-sky-600 border-sky-500/40 bg-sky-500/10' ">
+                          <Badge
+                            variant="warning"
+                            size="xs"
+                            class="text-[9px]"
+                            :class="
+                              g.guardLevel === GuardLevel.Zongdu
+                                ? 'text-destructive border-destructive/40 bg-destructive/10'
+                                : g.guardLevel === GuardLevel.Tidu
+                                  ? ' '
+                                  : 'text-sky-600 border-sky-500/40 bg-sky-500/10'
+                            "
+                          >
                             {{ getGuardTitle(g.guardLevel) }}
                           </Badge>
                           <div class="relative flex-center">
@@ -468,7 +506,12 @@ function toggleFilterType(val: string, checked: boolean) {
                           <span class="text-[11px] text-muted-foreground">
                             {{ g.lastAction }}
                           </span>
-                          <Badge v-if="g.rankIndex" variant="warning" size="xs" class="text-[9px]">
+                          <Badge
+                            v-if="g.rankIndex"
+                            variant="warning"
+                            size="xs"
+                            class="text-[9px]"
+                          >
                             榜 #{{ g.rankIndex }}
                           </Badge>
                         </div>
@@ -749,7 +792,11 @@ function toggleFilterType(val: string, checked: boolean) {
               <ToggleGroup
                 type="single"
                 :model-value="giftWindow.settings.rankViewMode"
-                @update:model-value="(val) => { if (val) giftWindow.settings.rankViewMode = val as any }"
+                @update:model-value="
+                  (val) => {
+                    if (val) giftWindow.settings.rankViewMode = val as any
+                  }
+                "
               >
                 <ToggleGroupItem
                   v-for="opt in rankViewOptions"
@@ -830,7 +877,11 @@ function toggleFilterType(val: string, checked: boolean) {
             <ToggleGroup
               type="single"
               :model-value="giftWindow.settings.sortBy"
-              @update:model-value="(val) => { if (val) giftWindow.settings.sortBy = val as any }"
+              @update:model-value="
+                (val) => {
+                  if (val) giftWindow.settings.sortBy = val as any
+                }
+              "
             >
               <ToggleGroupItem
                 v-for="opt in sortOptions"
@@ -965,7 +1016,11 @@ function toggleFilterType(val: string, checked: boolean) {
                     <SelectValue placeholder="选择已结束的直播场次" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="opt in historyLiveOptions" :key="opt.value" :value="opt.value">
+                    <SelectItem
+                      v-for="opt in historyLiveOptions"
+                      :key="opt.value"
+                      :value="opt.value"
+                    >
                       {{ opt.label }}
                     </SelectItem>
                   </SelectContent>
@@ -1028,7 +1083,10 @@ function toggleFilterType(val: string, checked: boolean) {
                     />
                     <span class="text-xs font-semibold text-foreground">{{ item.uName }}</span>
                   </div>
-                  <Badge variant="secondary" class="font-bold text-amber-500">
+                  <Badge
+                    variant="secondary"
+                    class="font-bold text-amber-500"
+                  >
                     {{ formatPaid(item.totalPaid) }}
                   </Badge>
                 </div>

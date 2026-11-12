@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Play24Filled, Search24Regular } from '@vicons/fluent'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -119,9 +120,12 @@ function requestSong(song: ResponseSongModel) {
                   <SelectValue placeholder="筛选歌手" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部歌手</SelectItem
+                  <SelectItem value="all">全部歌手</SelectItem>
+                  <SelectItem
+                    v-for="opt in authorOptions"
+                    :key="opt.value"
+                    :value="opt.value"
                   >
-                  <SelectItem v-for="opt in authorOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -266,7 +270,15 @@ function requestSong(song: ResponseSongModel) {
                 </div>
 
                 <div class="actions flex items-center gap-1 shrink-0">
-                  <Button v-if="item.url" variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground" :aria-label="`试听《${item.name}》`" :disabled="isLrcLoading === item.key" @click="selectedSong = item">
+                  <Button
+                    v-if="item.url"
+                    variant="ghost"
+                    size="xs"
+                    class="size-7 rounded-full text-muted-foreground"
+                    :aria-label="`试听《${item.name}》`"
+                    :disabled="isLrcLoading === item.key"
+                    @click="selectedSong = item"
+                  >
                     <component
                       :is="Play24Filled"
                       class="size-3.5"

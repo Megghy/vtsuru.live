@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { Add20Filled, Delete20Filled, Edit20Filled, Mic20Filled, TextDescription20Filled } from '@vicons/fluent'
+import Add20Filled from '@vicons/fluent/es/Add20Filled'
+import Delete20Filled from '@vicons/fluent/es/Delete20Filled'
+import Edit20Filled from '@vicons/fluent/es/Edit20Filled'
+import Mic20Filled from '@vicons/fluent/es/Mic20Filled'
+import TextDescription20Filled from '@vicons/fluent/es/TextDescription20Filled'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -218,7 +222,13 @@ watch(
         <span class="text-[11px] text-muted-foreground">
           {{ account.id ? `${customVoices.length} 个自定义音色` : '登录后可用' }}
         </span>
-        <Button size="xs" variant="secondary" class="gap-1" :disabled="!account.id" @click="showCreateDialog = true">
+        <Button
+          size="xs"
+          variant="secondary"
+          class="gap-1"
+          :disabled="!account.id"
+          @click="showCreateDialog = true"
+        >
           <Add20Filled class="size-3.5" />
           新建
         </Button>
@@ -251,15 +261,28 @@ watch(
 
           <span class="flex-1 font-medium overflow-hidden text-ellipsis whitespace-nowrap">{{ v.name }}</span>
 
-          <Badge variant="success" size="xs" :class=" v.type === 'clone' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ' ' ">
+          <Badge
+            variant="success"
+            size="xs"
+            :class="v.type === 'clone' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ' '"
+          >
             {{ v.type === 'clone' ? '克隆' : '描述' }}
           </Badge>
 
           <div class="flex items-center gap-0.5 shrink-0">
-            <Button size="xs" :variant="isCustomSelected(v) ? 'default' : 'ghost'" @click="useCustomVoice(v)">
+            <Button
+              size="xs"
+              :variant="isCustomSelected(v) ? 'default' : 'ghost'"
+              @click="useCustomVoice(v)"
+            >
               {{ isCustomSelected(v) ? '使用中' : '使用' }}
             </Button>
-            <Button size="icon-xs" variant="ghost" class="text-muted-foreground" @click="editCustomVoice(v)">
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              class="text-muted-foreground"
+              @click="editCustomVoice(v)"
+            >
               <Edit20Filled class="size-3.5" />
             </Button>
             <Popconfirm
@@ -267,7 +290,11 @@ watch(
               @positive-click="deleteCustomVoice(v.id)"
             >
               <template #trigger>
-                <Button size="icon-xs" variant="ghost" class="text-destructive hover:text-destructive">
+                <Button
+                  size="icon-xs"
+                  variant="ghost"
+                  class="text-destructive hover:text-destructive"
+                >
                   <Delete20Filled class="size-3.5" />
                 </Button>
               </template>

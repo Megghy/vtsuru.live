@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Copy20Regular } from '@vicons/fluent'
+import Copy20Regular from '@vicons/fluent/es/Copy20Regular'
 import { format } from 'date-fns'
 import { ref } from 'vue'
 
@@ -90,10 +90,8 @@ function submit() {
                 <SelectValue placeholder="角色" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="1">Admin</SelectItem
-                >
-                <SelectItem value="2">Member</SelectItem
-                >
+                <SelectItem value="1">Admin</SelectItem>
+                <SelectItem value="2">Member</SelectItem>
               </SelectContent>
             </Select>
 
@@ -166,11 +164,19 @@ function submit() {
           >
             <div class="flex-between gap-2 flex-wrap">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <Badge variant="secondary" size="xs">
+                <Badge
+                  variant="secondary"
+                  size="xs"
+                >
                   {{ inviteStatusLabel(inv.status) }}
                 </Badge>
                 <strong class="font-medium text-foreground text-xs">{{ targetName(inv) }}</strong>
-                <Badge v-if="withRole && 'role' in inv" variant="outline" size="xs" class="text-primary border-primary/30">
+                <Badge
+                  v-if="withRole && 'role' in inv"
+                  variant="outline"
+                  size="xs"
+                  class="text-primary border-primary/30"
+                >
                   {{ roleLabel(inv.role) }}
                 </Badge>
               </div>

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import {
-  ArrowSync24Regular,
-  Cookies24Filled,
-  PeopleCommunity24Filled,
-  PersonAccounts24Filled,
-} from '@vicons/fluent'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Cookies24Filled from '@vicons/fluent/es/Cookies24Filled'
+import PeopleCommunity24Filled from '@vicons/fluent/es/PeopleCommunity24Filled'
+import PersonAccounts24Filled from '@vicons/fluent/es/PersonAccounts24Filled'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -55,10 +53,7 @@ async function handleCheckAll() {
   if (isCheckingAll.value) return
   isCheckingAll.value = true
   try {
-    await Promise.allSettled([
-      biliCookie.check(),
-      accountManager.checkAllAccounts(),
-    ])
+    await Promise.allSettled([biliCookie.check(), accountManager.checkAllAccounts()])
   } finally {
     isCheckingAll.value = false
   }
@@ -99,7 +94,11 @@ const poolCountBadge = computed(() => {
       >
         <template #actions>
           <div class="flex items-center gap-2">
-            <Badge variant="outline" size="xs" :class="mainCookieBadge.class">
+            <Badge
+              variant="outline"
+              size="xs"
+              :class="mainCookieBadge.class"
+            >
               {{ mainCookieBadge.text }}
             </Badge>
             <Button
@@ -127,16 +126,20 @@ const poolCountBadge = computed(() => {
       @update:model-value="onTabChange"
     >
       <TabsList class="grid w-full max-w-md grid-cols-2">
-        <TabsTrigger value="main" class="gap-1.5">
+        <TabsTrigger
+          value="main"
+          class="gap-1.5"
+        >
           <Cookies24Filled class="size-3.5" />
           <span>主播主凭据</span>
         </TabsTrigger>
-        <TabsTrigger value="pool" class="gap-1.5">
+        <TabsTrigger
+          value="pool"
+          class="gap-1.5"
+        >
           <PeopleCommunity24Filled class="size-3.5" />
           <span>多账号管理池</span>
-          <span class="text-[10px] text-muted-foreground ml-1">
-            ({{ accountManager.accounts.length }})
-          </span>
+          <span class="text-[10px] text-muted-foreground ml-1"> ({{ accountManager.accounts.length }}) </span>
         </TabsTrigger>
       </TabsList>
 
@@ -145,12 +148,18 @@ const poolCountBadge = computed(() => {
         value="main"
         class="pt-3 space-y-3 mt-0"
       >
-        <div class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs text-muted-foreground flex items-center justify-between">
+        <div
+          class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs text-muted-foreground flex items-center justify-between"
+        >
           <div>
             <span class="font-medium text-foreground mr-1.5">主播核心凭据:</span>
             用于直播管理（开播/关播/改标题分区）、房间禁言、获取弹幕流等官方核心接口。
           </div>
-          <Badge variant="outline" size="xs" class="border-border">
+          <Badge
+            variant="outline"
+            size="xs"
+            class="border-border"
+          >
             单例凭据
           </Badge>
         </div>
@@ -163,12 +172,18 @@ const poolCountBadge = computed(() => {
         value="pool"
         class="pt-3 space-y-3 mt-0"
       >
-        <div class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs text-muted-foreground flex items-center justify-between">
+        <div
+          class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs text-muted-foreground flex items-center justify-between"
+        >
           <div>
             <span class="font-medium text-foreground mr-1.5">自动化账号池:</span>
             可添加任意多个 B 站账号，用于欢迎进场、感谢礼物、自动回复、定时弹幕等自动化操作的分流与代发。
           </div>
-          <Badge variant="outline" size="xs" class="border-border">
+          <Badge
+            variant="outline"
+            size="xs"
+            class="border-border"
+          >
             {{ poolCountBadge }}
           </Badge>
         </div>

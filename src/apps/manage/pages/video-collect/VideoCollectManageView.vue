@@ -1,19 +1,17 @@
 <script setup lang="ts">
-import {
-  Add20Regular,
-  ArrowRight24Regular,
-  ArrowSync24Regular,
-  Copy24Regular,
-  Delete24Regular,
-  Edit24Regular,
-  Folder24Regular,
-  MoreVertical24Regular,
-  Open24Regular,
-  Search24Regular,
-  TableDismiss24Regular,
-  Timer24Regular,
-  Video24Regular,
-} from '@vicons/fluent'
+import Add20Regular from '@vicons/fluent/es/Add20Regular'
+import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
+import Folder24Regular from '@vicons/fluent/es/Folder24Regular'
+import MoreVertical24Regular from '@vicons/fluent/es/MoreVertical24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import TableDismiss24Regular from '@vicons/fluent/es/TableDismiss24Regular'
+import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { format } from 'date-fns'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -407,7 +405,12 @@ async function confirmDelete() {
         <!-- 主体信息 -->
         <div class="min-w-0 flex-1 space-y-1">
           <div class="flex items-center gap-2">
-            <Badge :variant=" tableStatus(table) === '进行中' ? 'secondary' : tableStatus(table) === '未开始' ? 'outline' : 'default' " size="xs">
+            <Badge
+              :variant="
+                tableStatus(table) === '进行中' ? 'secondary' : tableStatus(table) === '未开始' ? 'outline' : 'default'
+              "
+              size="xs"
+            >
               {{ tableStatus(table) }}
             </Badge>
             <strong

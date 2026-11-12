@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import {
-  ArrowSwap24Regular,
-  Checkmark24Regular,
-  CheckmarkCircle24Regular,
-  Clock24Regular,
-  Comment24Regular,
-  Heart24Regular,
-  Open24Regular,
-  Person24Regular,
-  Question24Regular,
-} from '@vicons/fluent'
+import ArrowSwap24Regular from '@vicons/fluent/es/ArrowSwap24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import Comment24Regular from '@vicons/fluent/es/Comment24Regular'
+import Heart24Regular from '@vicons/fluent/es/Heart24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
+import Question24Regular from '@vicons/fluent/es/Question24Regular'
 import { computed } from 'vue'
 
 import type { VideoCollectInfo, VideoData } from '@/api/generated/model'
@@ -128,7 +126,13 @@ function handleCardClick() {
             >
               {{ item.video.title }}
             </strong>
-            <Button variant="ghost" size="xs" class="open-link-btn size-7 text-muted-foreground" aria-label="在哔哩哔哩打开" @click.stop.prevent="emit('select')">
+            <Button
+              variant="ghost"
+              size="xs"
+              class="open-link-btn size-7 text-muted-foreground"
+              aria-label="在哔哩哔哩打开"
+              @click.stop.prevent="emit('select')"
+            >
               <component
                 :is="Open24Regular"
                 class="size-4"
@@ -164,7 +168,8 @@ function handleCardClick() {
                 />
                 <span class="sender-name">{{ primarySender.sender || '匿名粉丝' }}</span>
               </span>
-              <Badge v-if="otherSendersCount> 0"
+              <Badge
+                v-if="otherSendersCount > 0"
                 variant="secondary"
                 class="extra-senders-tag text-[10px] h-4.5 px-1 font-normal"
               >

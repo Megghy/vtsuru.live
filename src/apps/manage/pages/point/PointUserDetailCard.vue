@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { AddSquare24Regular, Info24Filled } from '@vicons/fluent'
+import AddSquare24Regular from '@vicons/fluent/es/AddSquare24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { computed, onMounted, ref } from 'vue'
 
 import type { ResponsePointGoodModel, ResponsePointHisrotyModel } from '@/api/client-types'
@@ -342,7 +343,6 @@ onMounted(async () => {
               v-model="addPointReason"
               placeholder="请输入调整备注"
               :maxlength="100"
-              
               :rows="3"
             />
           </div>

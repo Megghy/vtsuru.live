@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Maximize24Filled, SquareMultiple24Regular } from '@vicons/fluent'
-import { Close, RemoveOutline as Minus } from '@vicons/ionicons5'
+import Maximize24Filled from '@vicons/fluent/es/Maximize24Filled'
+import SquareMultiple24Regular from '@vicons/fluent/es/SquareMultiple24Regular'
+import Close from '@vicons/ionicons5/es/Close'
+import Minus from '@vicons/ionicons5/es/RemoveOutline'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -127,7 +129,12 @@ function goToLiveManage() {
       <TooltipProvider v-if="isLiving">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Badge variant="destructive" size="sm" class="cursor-pointer" @click="goToLiveManage">
+            <Badge
+              variant="destructive"
+              size="sm"
+              class="cursor-pointer"
+              @click="goToLiveManage"
+            >
               <span class="inline-block size-1.5 rounded-full bg-current mr-1 animate-pulse" />
               直播中
             </Badge>
@@ -140,7 +147,11 @@ function goToLiveManage() {
         </Tooltip>
       </TooltipProvider>
 
-      <Badge v-else variant="secondary" size="sm">
+      <Badge
+        v-else
+        variant="secondary"
+        size="sm"
+      >
         未开播
       </Badge>
     </div>

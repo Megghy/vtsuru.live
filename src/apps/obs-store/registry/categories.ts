@@ -1,5 +1,8 @@
-import { Apps24Regular } from '@vicons/fluent'
-import { ConstructOutline, GameControllerOutline, LayersOutline, SparklesOutline } from '@vicons/ionicons5'
+import Apps24Regular from '@vicons/fluent/es/Apps24Regular'
+import ConstructOutline from '@vicons/ionicons5/es/ConstructOutline'
+import GameControllerOutline from '@vicons/ionicons5/es/GameControllerOutline'
+import LayersOutline from '@vicons/ionicons5/es/LayersOutline'
+import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
 
 import type { ObsCategory, ObsCategoryMeta } from './types'
 

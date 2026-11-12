@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Add24Regular, Delete24Regular, Edit24Regular, Location24Regular } from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
+import Location24Regular from '@vicons/fluent/es/Location24Regular'
 import { computed, ref } from 'vue'
 
 import type { ShippingAddressInfo } from '@/api/generated/model'
@@ -195,9 +198,7 @@ defineExpose({ reset })
   <section class="point-settings__panel rounded-lg border border-border bg-card p-4 space-y-4">
     <div class="point-settings__panel-header flex-between pb-3 border-b border-border/60">
       <div class="point-settings__panel-title flex items-center gap-2.5">
-        <span
-          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
-        >
+        <span class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex-center shrink-0">
           <component
             :is="Location24Regular"
             class="size-4"
@@ -324,7 +325,11 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择省份" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in provinceOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in provinceOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -344,7 +349,11 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择城市" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in cityOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in cityOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -364,7 +373,11 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择区县" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in districtOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in districtOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -381,7 +394,11 @@ defineExpose({ reset })
                 <SelectValue placeholder="选择街道" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in streetOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in streetOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>

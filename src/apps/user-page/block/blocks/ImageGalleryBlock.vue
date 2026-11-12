@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ChevronBackOutline, ChevronForwardOutline } from '@vicons/ionicons5'
+import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
+import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { Button } from '@/shared/ui/button'

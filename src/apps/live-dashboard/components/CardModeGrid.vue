@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { EyeOff16Regular } from '@vicons/fluent'
+import EyeOff16Regular from '@vicons/fluent/es/EyeOff16Regular'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'

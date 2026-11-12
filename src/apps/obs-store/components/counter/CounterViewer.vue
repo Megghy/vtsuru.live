@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  Add24Regular,
-  ArrowCounterclockwise24Regular,
-  Checkmark24Regular,
-  Copy24Regular,
-  Open24Regular,
-  Subtract24Regular,
-} from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import ArrowCounterclockwise24Regular from '@vicons/fluent/es/ArrowCounterclockwise24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Subtract24Regular from '@vicons/fluent/es/Subtract24Regular'
 import { useClipboard } from '@vueuse/core'
 import { computed, onActivated, onDeactivated, ref } from 'vue'
 import { useRoute } from 'vue-router'
@@ -21,8 +19,8 @@ import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Switch } from '@/shared/ui/switch'
 import { Separator } from '@/shared/ui/separator'
+import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 
@@ -322,7 +320,11 @@ activateKeyboard()
                 type="single"
                 size="xs"
                 :model-value="previewBg"
-                @update:model-value="(val) => { if (val) previewBg = val as any }"
+                @update:model-value="
+                  (val) => {
+                    if (val) previewBg = val as any
+                  }
+                "
               >
                 <ToggleGroupItem value="checker">网格底</ToggleGroupItem>
                 <ToggleGroupItem value="dark">暗黑底</ToggleGroupItem>
@@ -390,7 +392,11 @@ activateKeyboard()
                 <SelectValue placeholder="选择风格" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in themeOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in themeOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>

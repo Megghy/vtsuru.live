@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Grid16Regular, TextBulletListLtr16Regular } from '@vicons/fluent'
+import Grid16Regular from '@vicons/fluent/es/Grid16Regular'
+import TextBulletListLtr16Regular from '@vicons/fluent/es/TextBulletListLtr16Regular'
 import { Pane, Splitpanes } from 'splitpanes'
 import { computed } from 'vue'
 

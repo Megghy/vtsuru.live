@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CloudAdd20Filled } from '@vicons/fluent'
+import CloudAdd20Filled from '@vicons/fluent/es/CloudAdd20Filled'
 import { computed } from 'vue'
 
 import type { ResponseSongModel, SettingSongRequest } from '@/api/generated/model'

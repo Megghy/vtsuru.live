@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { TrendingUpOutline } from '@vicons/ionicons5'
+import TrendingUpOutline from '@vicons/ionicons5/es/TrendingUpOutline'
 import { BarChart } from 'echarts/charts'
 import {
   DataZoomComponent,
@@ -177,7 +177,11 @@ onMounted(loadHistoricalData)
                         {{ row.rank }}
                       </TableCell>
                       <TableCell class="text-[11px] py-1">
-                        <Badge variant="outline" size="xs" class="border-sky-500/40 text-sky-600 bg-sky-500/10 truncate max-w-full">
+                        <Badge
+                          variant="outline"
+                          size="xs"
+                          class="border-sky-500/40 text-sky-600 bg-sky-500/10 truncate max-w-full"
+                        >
                           {{ row.type }}
                         </Badge>
                       </TableCell>

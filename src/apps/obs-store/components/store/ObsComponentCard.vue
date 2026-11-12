@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Checkmark24Regular, Copy24Regular, Open24Regular, Settings24Regular } from '@vicons/fluent'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
 import { useClipboard } from '@vueuse/core'
 import { computed, ref } from 'vue'
 import { toast } from 'vue-sonner'

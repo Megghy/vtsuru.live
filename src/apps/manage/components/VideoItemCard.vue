@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise24Regular,
-  Checkmark24Regular,
-  Clock24Regular,
-  Comment24Regular,
-  Dismiss24Regular,
-  Open24Regular,
-  Person24Regular,
-  Play24Filled,
-  Video24Regular,
-} from '@vicons/fluent'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import Comment24Regular from '@vicons/fluent/es/Comment24Regular'
+import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
+import Play24Filled from '@vicons/fluent/es/Play24Filled'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, ref } from 'vue'
@@ -157,9 +155,7 @@ function triggerPreview() {
         />
       </div>
 
-      <div
-        class="absolute inset-0 bg-black/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity"
-      >
+      <div class="absolute inset-0 bg-black/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity">
         <component
           :is="Play24Filled"
           class="h-7 w-7 text-white drop-shadow"
@@ -256,7 +252,8 @@ function triggerPreview() {
             <span>· {{ formatRelative(primarySender.sendAt) }}</span>
           </div>
 
-          <Badge v-if="otherSenders.length> 0"
+          <Badge
+            v-if="otherSenders.length > 0"
             variant="outline"
             class="more-senders-pill text-[10px] cursor-pointer hover:bg-muted py-0 h-4"
             @click="isExpandedSenders = !isExpandedSenders"
@@ -350,9 +347,7 @@ function triggerPreview() {
           <span>封面无法加载</span>
         </div>
 
-        <div
-          class="absolute inset-0 bg-black/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity"
-        >
+        <div class="absolute inset-0 bg-black/40 flex-center opacity-0 group-hover:opacity-100 transition-opacity">
           <component
             :is="Play24Filled"
             class="h-10 w-10 text-white drop-shadow"

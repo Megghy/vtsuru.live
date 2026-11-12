@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  Color24Regular,
-  Copy24Regular,
-  Desktop24Regular,
-  Eye24Regular,
-  Settings24Regular,
-  ShieldCheckmark24Regular,
-  Video24Regular,
-} from '@vicons/fluent'
+import Color24Regular from '@vicons/fluent/es/Color24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Desktop24Regular from '@vicons/fluent/es/Desktop24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import ShieldCheckmark24Regular from '@vicons/fluent/es/ShieldCheckmark24Regular'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, provide, ref } from 'vue'
 
 import { useAccount } from '@/api/account'

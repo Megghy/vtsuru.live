@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ReorderThreeOutline } from '@vicons/ionicons5'
+import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 

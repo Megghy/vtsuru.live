@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {
-  ArrowDownload24Regular,
-  ArrowSync24Regular,
-  Delete24Regular,
-  Edit24Regular,
-  Filter24Regular,
-} from '@vicons/fluent'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
+import Filter24Regular from '@vicons/fluent/es/Filter24Regular'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
@@ -315,9 +313,12 @@ onMounted(async () => {
                 <SelectValue placeholder="主播" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部主播</SelectItem
+                <SelectItem value="all">全部主播</SelectItem>
+                <SelectItem
+                  v-for="s in streamerOptions"
+                  :key="s.value"
+                  :value="String(s.value)"
                 >
-                <SelectItem v-for="s in streamerOptions" :key="s.value" :value="String(s.value)">
                   {{ s.label }}
                 </SelectItem>
               </SelectContent>
@@ -331,14 +332,10 @@ onMounted(async () => {
                 <SelectValue placeholder="订单类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部类型</SelectItem
-                >
-                <SelectItem :value="String(GoodsTypes.Physical)">实体订单</SelectItem
-                >
-                <SelectItem :value="String(GoodsTypes.Virtual)">虚拟订单</SelectItem
-                >
-                <SelectItem :value="String(GoodsTypes.Service)">服务订单</SelectItem
-                >
+                <SelectItem value="all">全部类型</SelectItem>
+                <SelectItem :value="String(GoodsTypes.Physical)">实体订单</SelectItem>
+                <SelectItem :value="String(GoodsTypes.Virtual)">虚拟订单</SelectItem>
+                <SelectItem :value="String(GoodsTypes.Service)">服务订单</SelectItem>
               </SelectContent>
             </Select>
 
@@ -350,20 +347,13 @@ onMounted(async () => {
                 <SelectValue placeholder="订单状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部状态</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.Pending)">待处理</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.InProgress)">进行中</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.Rejected)">已拒绝</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.Cancelled)">已取消</SelectItem
-                >
+                <SelectItem value="all">全部状态</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.Pending)">待处理</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.InProgress)">进行中</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.Rejected)">已拒绝</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.Cancelled)">已取消</SelectItem>
               </SelectContent>
             </Select>
 
@@ -375,8 +365,7 @@ onMounted(async () => {
                 <SelectValue placeholder="按用户筛选" />
               </SelectTrigger>
               <SelectContent class="max-h-56">
-                <SelectItem value="all">全部用户</SelectItem
-                >
+                <SelectItem value="all">全部用户</SelectItem>
                 <SelectItem
                   v-for="c in new List(orders).DistinctBy((s) => s.customer.userId).ToArray()"
                   :key="c.customer.userId"
@@ -512,12 +501,9 @@ onMounted(async () => {
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.Pending)">等待发货</SelectItem
-                >
-                <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem
-                >
+                <SelectItem :value="String(PointOrderStatus.Completed)">已完成</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.Pending)">等待发货</SelectItem>
+                <SelectItem :value="String(PointOrderStatus.Shipped)">已发货</SelectItem>
               </SelectContent>
             </Select>
           </div>

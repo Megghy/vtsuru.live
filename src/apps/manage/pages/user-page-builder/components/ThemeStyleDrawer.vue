@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import {
-  ArrowUndoOutline,
-  CheckmarkOutline,
-  CodeSlashOutline,
-  ColorPaletteOutline,
-  ContrastOutline,
-  ImageOutline,
-  RefreshOutline,
-  SparklesOutline,
-  TextOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
+import ArrowUndoOutline from '@vicons/ionicons5/es/ArrowUndoOutline'
+import CheckmarkOutline from '@vicons/ionicons5/es/CheckmarkOutline'
+import CodeSlashOutline from '@vicons/ionicons5/es/CodeSlashOutline'
+import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
+import ContrastOutline from '@vicons/ionicons5/es/ContrastOutline'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
+import TextOutline from '@vicons/ionicons5/es/TextOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, inject, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -321,9 +319,7 @@ function clearCurrentTheme() {
         <div class="bg-muted border border-border rounded-lg py-2.5 px-3.5">
           <template v-if="isCurrentHome">
             <div class="flex items-center gap-2">
-              <Badge variant="default">
-                全局主页
-              </Badge>
+              <Badge variant="default"> 全局主页 </Badge>
               <span class="block text-xs text-muted-foreground mt-1 leading-snug"
                 >配置将直接应用到主页，并作为全站各页面的默认底色。</span
               >
@@ -372,10 +368,21 @@ function clearCurrentTheme() {
               <span>智能提取配色</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <Button size="xs" variant="outline" :disabled="isExtracting || !avatarUrl" @click="runExtractFromUrl(avatarUrl, '头像')">
+              <Button
+                size="xs"
+                variant="outline"
+                :disabled="isExtracting || !avatarUrl"
+                @click="runExtractFromUrl(avatarUrl, '头像')"
+              >
                 从头像提取
               </Button>
-              <Button size="xs" v-if="currentBackgroundImageUrl" variant="outline" :disabled="isExtracting" @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')">
+              <Button
+                size="xs"
+                v-if="currentBackgroundImageUrl"
+                variant="outline"
+                :disabled="isExtracting"
+                @click="runExtractFromUrl(currentBackgroundImageUrl, '背景图')"
+              >
                 从壁纸提取
               </Button>
             </div>
@@ -395,10 +402,17 @@ function clearCurrentTheme() {
                 <span>主色：{{ extractedResult.primaryColor }}</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <Button size="xs" variant="outline" @click="applyExtracted('light')">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click="applyExtracted('light')"
+                >
                   套用浅色
                 </Button>
-                <Button size="xs" @click="applyExtracted('dark')">
+                <Button
+                  size="xs"
+                  @click="applyExtracted('dark')"
+                >
                   套用深色
                 </Button>
               </div>
@@ -461,12 +475,9 @@ function clearCurrentTheme() {
           class="w-full"
         >
           <TabsList class="grid grid-cols-3 w-full">
-            <TabsTrigger value="colors" >色彩与模式</TabsTrigger
-            >
-            <TabsTrigger value="background" >壁纸与背景</TabsTrigger
-            >
-            <TabsTrigger value="advanced" >排版与质感</TabsTrigger
-            >
+            <TabsTrigger value="colors">色彩与模式</TabsTrigger>
+            <TabsTrigger value="background">壁纸与背景</TabsTrigger>
+            <TabsTrigger value="advanced">排版与质感</TabsTrigger>
           </TabsList>
 
           <TabsContent

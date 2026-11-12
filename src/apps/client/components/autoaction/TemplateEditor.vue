@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { AppsListDetail24Regular, Code24Regular, Info24Filled, LiveOff24Regular } from '@vicons/fluent'
+import AppsListDetail24Regular from '@vicons/fluent/es/AppsListDetail24Regular'
+import Code24Regular from '@vicons/fluent/es/Code24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import LiveOff24Regular from '@vicons/fluent/es/LiveOff24Regular'
 import { useDebounceFn } from '@vueuse/core'
 import { computed, nextTick, ref, watch } from 'vue'
 
@@ -298,7 +301,11 @@ function handleVariableInsert(text: string) {
         <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div class="md:col-span-3 flex flex-col gap-2">
             <!-- 长度检查警告 -->
-            <Alert size="sm" v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'" :variant="lengthStatus.status === 'error' ? 'destructive' : 'default'">
+            <Alert
+              size="sm"
+              v-if="checkLength && lengthStatus.message && lengthStatus.status !== 'normal'"
+              :variant="lengthStatus.status === 'error' ? 'destructive' : 'default'"
+            >
               <AlertDescription>{{ lengthStatus.message }}</AlertDescription>
             </Alert>
 
@@ -447,7 +454,10 @@ function handleVariableInsert(text: string) {
                 数据存储函数说明 (在 js+ 或 js-run 中使用)
               </AccordionTrigger>
               <AccordionContent class="text-xs space-y-3">
-                <Alert size="sm" variant="default">
+                <Alert
+                  size="sm"
+                  variant="default"
+                >
                   <AlertDescription>
                     <strong>运行时数据</strong>仅在本次运行有效, 重启后失效，且操作是<strong>同步</strong>的。
                   </AlertDescription>
@@ -463,7 +473,10 @@ function handleVariableInsert(text: string) {
 
                 <Separator class="my-2" />
 
-                <Alert size="sm" variant="default">
+                <Alert
+                  size="sm"
+                  variant="default"
+                >
                   <AlertDescription>
                     <strong>持久化数据</strong>会长期保留，但操作是<strong>异步</strong>的 (返回 Promise)。<br />
                     在 <code>js+</code> 中使用 <code>await</code> 或 <code>.then()</code>。

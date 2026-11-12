@@ -1,4 +1,4 @@
-import { GameControllerOutline } from '@vicons/ionicons5'
+import GameControllerOutline from '@vicons/ionicons5/es/GameControllerOutline'
 
 import type { ObsComponentDefinition } from '../types'
 

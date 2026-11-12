@@ -1,21 +1,19 @@
 <script setup lang="ts">
-import {
-  Add24Filled,
-  ArrowTrending24Filled,
-  Clock24Regular,
-  Color24Regular,
-  Copy24Regular,
-  Delete24Regular,
-  Desktop24Regular,
-  Eye24Regular,
-  Flash24Regular,
-  Pause24Regular,
-  Play24Regular,
-  Settings24Regular,
-  Sparkle24Regular,
-  Timer24Regular,
-  Trophy24Regular,
-} from '@vicons/fluent'
+import Add24Filled from '@vicons/fluent/es/Add24Filled'
+import ArrowTrending24Filled from '@vicons/fluent/es/ArrowTrending24Filled'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import Color24Regular from '@vicons/fluent/es/Color24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Desktop24Regular from '@vicons/fluent/es/Desktop24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import Flash24Regular from '@vicons/fluent/es/Flash24Regular'
+import Pause24Regular from '@vicons/fluent/es/Pause24Regular'
+import Play24Regular from '@vicons/fluent/es/Play24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import Sparkle24Regular from '@vicons/fluent/es/Sparkle24Regular'
+import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
+import Trophy24Regular from '@vicons/fluent/es/Trophy24Regular'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 
@@ -629,9 +627,7 @@ onUnmounted(() => {
                 <CardTitle>
                   {{ currentVote.title }}
                 </CardTitle>
-                <Badge variant="warning">
-                  剩余：{{ formatTime(timeLeftMs) }}
-                </Badge>
+                <Badge variant="warning"> 剩余：{{ formatTime(timeLeftMs) }} </Badge>
               </div>
 
               <span class="text-xs text-muted-foreground">
@@ -653,7 +649,11 @@ onUnmounted(() => {
                   <div class="flex items-center gap-1.5 font-medium">
                     <span class="font-mono text-muted-foreground">#{{ idx + 1 }}</span>
                     <span>{{ opt.text }}</span>
-                    <Badge v-if="idx === leadingOptionIndex" variant="warning" size="xs">
+                    <Badge
+                      v-if="idx === leadingOptionIndex"
+                      variant="warning"
+                      size="xs"
+                    >
                       领先
                     </Badge>
                   </div>
@@ -750,7 +750,14 @@ onUnmounted(() => {
             <!-- 快捷预设芯片 -->
             <div class="flex items-center gap-1.5 flex-wrap">
               <span class="text-xs text-muted-foreground">快捷预设:</span>
-              <Button v-for="p in VOTE_QUICK_PRESETS" :key="p.name" size="xs" variant="outline" class="gap-1" @click="applyPreset(p)">
+              <Button
+                v-for="p in VOTE_QUICK_PRESETS"
+                :key="p.name"
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                @click="applyPreset(p)"
+              >
                 <component
                   :is="Sparkle24Regular"
                   class="h-3 w-3 text-brand"
@@ -832,7 +839,14 @@ onUnmounted(() => {
               <div class="flex items-center gap-4 flex-wrap">
                 <div class="flex items-center gap-1.5">
                   <span class="text-xs text-muted-foreground">时长:</span>
-                  <NumberField v-model="formDuration" min="0" max="3600" step="30" class="w-20 font-mono" :show-buttons="false" />
+                  <NumberField
+                    v-model="formDuration"
+                    min="0"
+                    max="3600"
+                    step="30"
+                    class="w-20 font-mono"
+                    :show-buttons="false"
+                  />
                   <span class="text-xs text-muted-foreground">秒</span>
                 </div>
 
@@ -1012,13 +1026,27 @@ onUnmounted(() => {
                 class="h-4 w-4 text-muted-foreground"
               />
               <CardTitle class="text-xs"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
-              <Badge :variant="previewMode === 'live' ? 'success' : 'outline'" size="xs">
+              <Badge
+                :variant="previewMode === 'live' ? 'success' : 'outline'"
+                size="xs"
+              >
                 {{ previewMode === 'live' ? '真实数据源' : '模拟仿真模式' }}
               </Badge>
             </div>
 
             <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-              <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '纯黑' }, { key: 'light', label: '浅色' }, { key: 'game', label: '直播场景' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" @click="previewBg = bg.key as any">
+              <Button
+                v-for="bg in [
+                  { key: 'checker', label: '网格' },
+                  { key: 'dark', label: '纯黑' },
+                  { key: 'light', label: '浅色' },
+                  { key: 'game', label: '直播场景' },
+                ]"
+                :key="bg.key"
+                size="xs"
+                :variant="previewBg === bg.key ? 'default' : 'ghost'"
+                @click="previewBg = bg.key as any"
+              >
                 {{ bg.label }}
               </Button>
             </div>
@@ -1178,7 +1206,13 @@ onUnmounted(() => {
 
             <div class="flex-between">
               <span class="text-xs text-muted-foreground">排行榜最大显示行数:</span>
-              <NumberField v-model="previewMaxDisplay" min="2" max="20" class="w-20 font-mono" :show-buttons="false" />
+              <NumberField
+                v-model="previewMaxDisplay"
+                min="2"
+                max="20"
+                class="w-20 font-mono"
+                :show-buttons="false"
+              />
             </div>
           </CardContent>
         </Card>
@@ -1205,13 +1239,28 @@ onUnmounted(() => {
               >
                 <span class="font-medium truncate max-w-[140px]">{{ opt.index }}. {{ opt.text }}</span>
                 <div class="flex items-center gap-1">
-                  <Button size="xs" variant="outline" class="px-1.5" @click="mockAddVote(opt.index, 1)">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="px-1.5"
+                    @click="mockAddVote(opt.index, 1)"
+                  >
                     +1
                   </Button>
-                  <Button size="xs" variant="outline" class="px-1.5" @click="mockAddVote(opt.index, 10)">
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    class="px-1.5"
+                    @click="mockAddVote(opt.index, 10)"
+                  >
                     +10
                   </Button>
-                  <Button size="xs" variant="ghost" class="px-1.5 text-amber-500 hover:bg-amber-500/10" @click="mockOvertake(opt.index)">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="px-1.5 text-amber-500 hover:bg-amber-500/10"
+                    @click="mockOvertake(opt.index)"
+                  >
                     <component
                       :is="ArrowTrending24Filled"
                       class="h-3 w-3 mr-0.5"

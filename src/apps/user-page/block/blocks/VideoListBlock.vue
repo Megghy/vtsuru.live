@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { PlayCircleOutline, RefreshOutline } from '@vicons/ionicons5'
+import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ResponseUserIndexModel, ResponseUserInfo, VideoData } from '@/api/generated/model'
@@ -151,7 +152,12 @@ const containerStyle = computed(() => {
         <Spin />
       </div>
 
-      <Alert size="sm" v-else-if="error" variant="destructive" class="mb-2.5">
+      <Alert
+        size="sm"
+        v-else-if="error"
+        variant="destructive"
+        class="mb-2.5"
+      >
         <AlertDescription class="flex-between w-full">
           <span>{{ error }}</span>
           <Button
@@ -170,7 +176,10 @@ const containerStyle = computed(() => {
       </Alert>
 
       <template v-else-if="cfg.source === 'userIndex'">
-        <Alert size="sm" v-if="videos.length === 0">
+        <Alert
+          size="sm"
+          v-if="videos.length === 0"
+        >
           <AlertDescription> 暂无视频 </AlertDescription>
         </Alert>
         <div
@@ -193,7 +202,10 @@ const containerStyle = computed(() => {
       </template>
 
       <template v-else>
-        <Alert size="sm" v-if="manualItems.length === 0">
+        <Alert
+          size="sm"
+          v-if="manualItems.length === 0"
+        >
           <AlertDescription> 未配置视频链接 </AlertDescription>
         </Alert>
         <div

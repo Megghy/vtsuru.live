@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { FlagOutline } from '@vicons/ionicons5'
+import FlagOutline from '@vicons/ionicons5/es/FlagOutline'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'

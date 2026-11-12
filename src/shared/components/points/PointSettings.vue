@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Delete24Regular, Info24Filled } from '@vicons/fluent'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import { SaveSetting, useAccount } from '@/api/account'
@@ -260,7 +261,11 @@ watch(
 <template>
   <TooltipProvider>
     <div class="space-y-4">
-      <Alert size="sm" variant="warning" v-if="!orgId && !accountInfo.eventFetcherState.online">
+      <Alert
+        size="sm"
+        variant="warning"
+        v-if="!orgId && !accountInfo.eventFetcherState.online"
+      >
         <AlertDescription>
           由于你尚未部署
           <a
@@ -274,10 +279,11 @@ watch(
         </AlertDescription>
       </Alert>
 
-      <Alert size="sm" class="bg-muted/40 border-border/80">
-        <AlertDescription class="text-muted-foreground">
-          积分总是最多保留两位小数，四舍五入。
-        </AlertDescription>
+      <Alert
+        size="sm"
+        class="bg-muted/40 border-border/80"
+      >
+        <AlertDescription class="text-muted-foreground"> 积分总是最多保留两位小数，四舍五入。 </AlertDescription>
       </Alert>
 
       <div
@@ -595,7 +601,10 @@ watch(
             </label>
           </CardHeader>
           <CardContent class="space-y-3 text-xs">
-            <Alert size="sm" class="bg-muted/40 border-border/80">
+            <Alert
+              size="sm"
+              class="bg-muted/40 border-border/80"
+            >
               <AlertDescription class="text-muted-foreground">
                 每日首次发送弹幕或礼物时可以给予额外积分，每个用户每天只能获得一次。
               </AlertDescription>
@@ -650,7 +659,12 @@ watch(
                 <RadioGroup
                   :model-value="setting.useDailyFirstGiftPercent ? 'percent' : 'fixed'"
                   class="flex items-center gap-3"
-                  @update:model-value="(val) => { setting.useDailyFirstGiftPercent = val === 'percent'; updateSettings() }"
+                  @update:model-value="
+                    (val) => {
+                      setting.useDailyFirstGiftPercent = val === 'percent'
+                      updateSettings()
+                    }
+                  "
                 >
                   <label class="flex items-center gap-1.5 cursor-pointer text-xs">
                     <RadioGroupItem value="fixed" />
@@ -706,7 +720,12 @@ watch(
             <RadioGroup
               :model-value="String(setting.giftAllowType)"
               class="flex items-center gap-4"
-              @update:model-value="(val) => { setting.giftAllowType = Number(val) as any; updateSettings() }"
+              @update:model-value="
+                (val) => {
+                  setting.giftAllowType = Number(val) as any
+                  updateSettings()
+                }
+              "
             >
               <label class="flex items-center gap-1.5 cursor-pointer text-xs">
                 <RadioGroupItem :value="String(GiftPointType.WhiteList)" />
@@ -747,7 +766,8 @@ watch(
               <div class="flex-between">
                 <div class="flex items-center gap-1.5 font-medium text-foreground">
                   <span>自定义礼物列表</span>
-                  <Badge v-if="Object.keys(setting.giftPercentMap).length> 0"
+                  <Badge
+                    v-if="Object.keys(setting.giftPercentMap).length > 0"
                     variant="secondary"
                     class="text-[10px] h-4.5 px-1.5 font-normal"
                   >
@@ -795,7 +815,12 @@ watch(
                       @positive-click="deleteGift(item[0])"
                     >
                       <template #trigger>
-                        <Button variant="ghost" size="xs" class="size-7 text-destructive hover:bg-destructive/10" :disabled="!canEdit">
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          class="size-7 text-destructive hover:bg-destructive/10"
+                          :disabled="!canEdit"
+                        >
                           <component
                             :is="Delete24Regular"
                             class="size-3.5"
@@ -819,7 +844,10 @@ watch(
             <DialogTitle class="text-sm">添加礼物</DialogTitle>
           </DialogHeader>
 
-          <Alert size="sm" class="bg-muted/40 border-border/80">
+          <Alert
+            size="sm"
+            class="bg-muted/40 border-border/80"
+          >
             <AlertDescription class="text-muted-foreground">
               这里填写的积分是指这个礼物直接对应多少积分，而不是兑换比例。
             </AlertDescription>

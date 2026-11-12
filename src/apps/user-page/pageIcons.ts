@@ -76,6 +76,7 @@ export function resolveUserPageNavIcon(value: unknown): Component {
       return (await loadUserPageNavIconComponent(value)) ?? BrowsersOutline
     },
     loadingComponent: BrowsersOutline,
+    errorComponent: BrowsersOutline,
     delay: 0,
     suspensible: false,
   })

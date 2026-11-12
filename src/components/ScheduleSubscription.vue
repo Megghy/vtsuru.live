@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  CalendarNumberOutline,
-  CheckmarkOutline,
-  ChevronDownOutline,
-  CopyOutline,
-  OpenOutline,
-  SettingsOutline,
-} from '@vicons/ionicons5'
+import CalendarNumberOutline from '@vicons/ionicons5/es/CalendarNumberOutline'
+import CheckmarkOutline from '@vicons/ionicons5/es/CheckmarkOutline'
+import ChevronDownOutline from '@vicons/ionicons5/es/ChevronDownOutline'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
 import { computed, onBeforeUnmount, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -183,7 +181,10 @@ onBeforeUnmount(() => {
           </Button>
         </PopoverTrigger>
 
-        <PopoverContent align="end" class="w-72 space-y-3">
+        <PopoverContent
+          align="end"
+          class="w-72 space-y-3"
+        >
           <div class="space-y-0.5 pb-1.5 border-b border-border">
             <strong class="text-xs font-semibold block text-foreground">订阅参数设置</strong>
             <span class="text-[11px] text-muted-foreground block truncate">{{ settingsSummary }}</span>
@@ -195,7 +196,11 @@ onBeforeUnmount(() => {
               type="single"
               size="xs"
               :model-value="String(reminder)"
-              @update:model-value="(val) => { if (val !== undefined && val !== '') reminder = val === 'null' ? null : Number(val) }"
+              @update:model-value="
+                (val) => {
+                  if (val !== undefined && val !== '') reminder = val === 'null' ? null : Number(val)
+                }
+              "
             >
               <ToggleGroupItem
                 v-for="opt in reminderOptions"
@@ -213,7 +218,11 @@ onBeforeUnmount(() => {
               type="single"
               size="xs"
               :model-value="String(withTag)"
-              @update:model-value="(val) => { if (val !== undefined && val !== '') withTag = val === 'true' }"
+              @update:model-value="
+                (val) => {
+                  if (val !== undefined && val !== '') withTag = val === 'true'
+                }
+              "
             >
               <ToggleGroupItem
                 v-for="opt in tagOptions"
@@ -277,7 +286,11 @@ onBeforeUnmount(() => {
             type="single"
             size="xs"
             :model-value="String(reminder)"
-            @update:model-value="(val) => { if (val !== undefined && val !== '') reminder = val === 'null' ? null : Number(val) }"
+            @update:model-value="
+              (val) => {
+                if (val !== undefined && val !== '') reminder = val === 'null' ? null : Number(val)
+              }
+            "
           >
             <ToggleGroupItem
               v-for="opt in reminderOptions"
@@ -295,7 +308,11 @@ onBeforeUnmount(() => {
             type="single"
             size="xs"
             :model-value="String(withTag)"
-            @update:model-value="(val) => { if (val !== undefined && val !== '') withTag = val === 'true' }"
+            @update:model-value="
+              (val) => {
+                if (val !== undefined && val !== '') withTag = val === 'true'
+              }
+            "
           >
             <ToggleGroupItem
               v-for="opt in tagOptions"

@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  CashOutline,
-  CubeOutline,
-  GiftOutline,
-  PeopleOutline,
-  RefreshOutline,
-  StorefrontOutline,
-  TimeOutline,
-} from '@vicons/ionicons5'
+import CashOutline from '@vicons/ionicons5/es/CashOutline'
+import CubeOutline from '@vicons/ionicons5/es/CubeOutline'
+import GiftOutline from '@vicons/ionicons5/es/GiftOutline'
+import PeopleOutline from '@vicons/ionicons5/es/PeopleOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import StorefrontOutline from '@vicons/ionicons5/es/StorefrontOutline'
+import TimeOutline from '@vicons/ionicons5/es/TimeOutline'
 import { computed, onMounted, ref } from 'vue'
 
 import { getApiOrgOrgIdAudit, getApiOrgOrgIdPointsGoods, getApiOrgOrgIdPointsStats } from '@/api/generated/org/org'
@@ -98,9 +96,12 @@ onMounted(async () => {
             <SelectValue placeholder="选择主播后，可单独查看/修改积分规则与筛选统计" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
-            <SelectItem value="all">全部主播</SelectItem
+            <SelectItem value="all">全部主播</SelectItem>
+            <SelectItem
+              v-for="opt in streamerOptions"
+              :key="opt.value"
+              :value="String(opt.value)"
             >
-            <SelectItem v-for="opt in streamerOptions" :key="opt.value" :value="String(opt.value)">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -201,10 +202,17 @@ onMounted(async () => {
               <p class="text-[11px] text-muted-foreground truncate m-0">{{ goods.description }}</p>
             </div>
             <div class="flex items-center gap-1.5 shrink-0">
-              <Badge variant="secondary" size="xs">
+              <Badge
+                variant="secondary"
+                size="xs"
+              >
                 {{ goods.price }} 积分
               </Badge>
-              <Badge variant="outline" size="xs" :class=" goods.stock> 0 ? 'text-emerald-600 border-emerald-500/30' : 'text-destructive border-destructive/30'
+              <Badge
+                variant="outline"
+                size="xs"
+                :class="
+                  goods.stock > 0 ? 'text-emerald-600 border-emerald-500/30' : 'text-destructive border-destructive/30'
                 "
               >
                 {{ goods.stock > 0 ? `库存: ${goods.stock}` : '缺货' }}
@@ -221,7 +229,11 @@ onMounted(async () => {
         <CardTitle class="text-xs">积分规则</CardTitle>
       </CardHeader>
       <CardContent class="p-3">
-        <Alert size="sm" variant="warning" v-if="!selectedStreamerId">
+        <Alert
+          size="sm"
+          variant="warning"
+          v-if="!selectedStreamerId"
+        >
           <AlertDescription>请选择一个主播后再修改积分规则</AlertDescription>
         </Alert>
         <PointSettings

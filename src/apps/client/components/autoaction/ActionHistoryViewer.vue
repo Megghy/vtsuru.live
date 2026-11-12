@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise16Filled,
-  CheckmarkCircle16Filled,
-  Delete16Filled,
-  DismissCircle16Filled,
-  History16Regular,
-} from '@vicons/fluent'
+import ArrowClockwise16Filled from '@vicons/fluent/es/ArrowClockwise16Filled'
+import CheckmarkCircle16Filled from '@vicons/fluent/es/CheckmarkCircle16Filled'
+import Delete16Filled from '@vicons/fluent/es/Delete16Filled'
+import DismissCircle16Filled from '@vicons/fluent/es/DismissCircle16Filled'
+import History16Regular from '@vicons/fluent/es/History16Regular'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -175,7 +173,11 @@ onUnmounted(() => {
         class="w-full"
       >
         <TabsList class="grid w-full grid-cols-3 max-w-[360px]">
-          <TabsTrigger v-for="(label, type) in typeNameMap" :key="type" :value="type" >
+          <TabsTrigger
+            v-for="(label, type) in typeNameMap"
+            :key="type"
+            :value="type"
+          >
             {{ label }}
           </TabsTrigger>
         </TabsList>
@@ -217,17 +219,29 @@ onUnmounted(() => {
                     </TableCell>
 
                     <TableCell>
-                      <Badge variant="secondary" size="xs" class="h-5 max-w-[130px] truncate">
+                      <Badge
+                        variant="secondary"
+                        size="xs"
+                        class="h-5 max-w-[130px] truncate"
+                      >
                         {{ row.actionName || '未命名' }}
                       </Badge>
                     </TableCell>
 
-                    <TableCell class="font-mono max-w-[300px] truncate" :title="row.content">
+                    <TableCell
+                      class="font-mono max-w-[300px] truncate"
+                      :title="row.content"
+                    >
                       {{ row.content }}
                     </TableCell>
 
                     <TableCell>
-                      <Badge v-if="row.target" variant="outline" size="xs" class="h-5 border-sky-500/40 text-sky-600 bg-sky-500/10">
+                      <Badge
+                        v-if="row.target"
+                        variant="outline"
+                        size="xs"
+                        class="h-5 border-sky-500/40 text-sky-600 bg-sky-500/10"
+                      >
                         {{ row.target }}
                       </Badge>
                       <span
@@ -278,7 +292,11 @@ onUnmounted(() => {
               @positive-click="handleClearHistory(type as HistoryType)"
             >
               <template #trigger>
-                <Button size="xs" variant="ghost" class="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/30 gap-1"
+                >
                   <Delete16Filled class="size-3" />
                   清空{{ label }}历史
                 </Button>

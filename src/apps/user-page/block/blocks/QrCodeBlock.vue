@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { DownloadOutline, OpenOutline } from '@vicons/ionicons5'
+import DownloadOutline from '@vicons/ionicons5/es/DownloadOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import QrcodeVue from 'qrcode.vue'
 import { computed, ref } from 'vue'
 

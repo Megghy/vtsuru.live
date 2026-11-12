@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  ArrowSync24Regular,
-  CheckmarkCircle24Regular,
-  DismissCircle24Regular,
-  Open24Regular,
-  Prohibited24Regular,
-  Timer24Regular,
-  VehicleTruck24Regular,
-} from '@vicons/fluent'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import DismissCircle24Regular from '@vicons/fluent/es/DismissCircle24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Prohibited24Regular from '@vicons/fluent/es/Prohibited24Regular'
+import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
+import VehicleTruck24Regular from '@vicons/fluent/es/VehicleTruck24Regular'
 import type { Component } from 'vue'
 import { computed, ref, watch } from 'vue'
 
@@ -209,9 +207,7 @@ function formatDateTime(ts: number) {
         >
           {{ order.selectedSubItems.map((item) => `${item.nameSnapshot} x ${item.quantity}`).join(' / ') }}
         </span>
-        <span
-          class="flex-between mt-2 pt-1.5 border-t border-border/50 text-xs text-muted-foreground"
-        >
+        <span class="flex-between mt-2 pt-1.5 border-t border-border/50 text-xs text-muted-foreground">
           <span>{{ formatRelativeTime(order.createAt) }}</span>
           <b class="text-foreground font-semibold">{{ Number(order.point.toFixed(1)) }} 积分</b>
         </span>

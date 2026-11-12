@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowSync20Regular, LockClosed16Filled } from '@vicons/fluent'
+import ArrowSync20Regular from '@vicons/fluent/es/ArrowSync20Regular'
+import LockClosed16Filled from '@vicons/fluent/es/LockClosed16Filled'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -122,7 +123,13 @@ watch(hasUserKey, (value) => {
           <SelectValue placeholder="选择模型" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="opt in modelOptions" :key="opt.value" :value="opt.value" :disabled="opt.disabled" class="py-2">
+          <SelectItem
+            v-for="opt in modelOptions"
+            :key="opt.value"
+            :value="opt.value"
+            :disabled="opt.disabled"
+            class="py-2"
+          >
             <div class="flex-between gap-3 w-full">
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-1.5 font-semibold">
@@ -176,7 +183,11 @@ watch(hasUserKey, (value) => {
           </TooltipProvider>
         </div>
 
-        <Alert size="sm" variant="warning" v-if="customVoiceOnly && customVoices.length === 0">
+        <Alert
+          size="sm"
+          variant="warning"
+          v-if="customVoiceOnly && customVoices.length === 0"
+        >
           <AlertDescription class="m-0">
             CosyVoice3.5 不支持系统音色。请刷新并选择声音复刻/声音设计音色。
           </AlertDescription>
@@ -204,7 +215,11 @@ watch(hasUserKey, (value) => {
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="opt in COSYVOICE_LANGUAGE_HINTS" :key="opt.value" :value="opt.value">
+          <SelectItem
+            v-for="opt in COSYVOICE_LANGUAGE_HINTS"
+            :key="opt.value"
+            :value="opt.value"
+          >
             {{ opt.label }}
           </SelectItem>
         </SelectContent>

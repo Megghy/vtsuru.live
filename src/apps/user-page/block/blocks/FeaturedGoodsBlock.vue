@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { OpenOutline, RefreshOutline, StorefrontOutline } from '@vicons/ionicons5'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import StorefrontOutline from '@vicons/ionicons5/es/StorefrontOutline'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -128,10 +130,17 @@ watch(
       </div>
     </template>
 
-    <Alert size="sm" v-if="!enabled">
+    <Alert
+      size="sm"
+      v-if="!enabled"
+    >
       <AlertDescription> 积分兑换未开放 </AlertDescription>
     </Alert>
-    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+    <Alert
+      size="sm"
+      v-else-if="query.status.value === 'error'"
+      variant="destructive"
+    >
       <AlertDescription class="flex-between w-full">
         <span>积分商品加载失败</span>
         <Button
@@ -192,7 +201,12 @@ watch(
                 class="size-8"
               />
             </div>
-            <Badge v-if="isSoldOut(item)" variant="secondary" size="xs" class="stock-tag absolute right-1.5 bottom-1.5">
+            <Badge
+              v-if="isSoldOut(item)"
+              variant="secondary"
+              size="xs"
+              class="stock-tag absolute right-1.5 bottom-1.5"
+            >
               已售罄
             </Badge>
           </div>

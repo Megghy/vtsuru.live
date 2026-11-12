@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular, Chat24Regular, DataPie24Regular, Mic24Regular } from '@vicons/fluent'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import DataPie24Regular from '@vicons/fluent/es/DataPie24Regular'
+import Mic24Regular from '@vicons/fluent/es/Mic24Regular'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -144,7 +147,12 @@ onBeforeUnmount(async () => {
             返回列表
           </Button>
 
-          <Badge v-if="liveInfo" :variant="isLiveFinished ? 'secondary' : 'destructive'" size="xs" class="h-5">
+          <Badge
+            v-if="liveInfo"
+            :variant="isLiveFinished ? 'secondary' : 'destructive'"
+            size="xs"
+            class="h-5"
+          >
             <span
               v-if="!isLiveFinished"
               class="w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse"

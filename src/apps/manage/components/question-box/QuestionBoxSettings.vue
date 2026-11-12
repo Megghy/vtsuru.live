@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { Delete24Regular, Eye24Filled, EyeOff24Filled, Info24Filled } from '@vicons/fluent'
-import { SettingsOutline } from '@vicons/ionicons5'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Eye24Filled from '@vicons/fluent/es/Eye24Filled'
+import EyeOff24Filled from '@vicons/fluent/es/EyeOff24Filled'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
 import { computed, ref, watch } from 'vue'
 
 import { SaveAccountSettings, SaveSetting, useAccount } from '@/api/account'
@@ -397,7 +400,13 @@ function addTag() {
               </div>
 
               <div class="flex items-center gap-1">
-                <Button size="xs" variant="ghost" class="size-6 text-muted-foreground" :aria-label="item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题'" @click="useQB.changeTagVisiable(item.name, !item.visiable)">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  class="size-6 text-muted-foreground"
+                  :aria-label="item.visiable ? '在提问页隐藏该话题' : '在提问页显示该话题'"
+                  @click="useQB.changeTagVisiable(item.name, !item.visiable)"
+                >
                   <Eye24Filled
                     v-if="item.visiable"
                     class="size-3.5"
@@ -413,7 +422,12 @@ function addTag() {
                   :description="`确认删除话题「${item.name}」吗？`"
                   @confirm="useQB.delTag(item.name)"
                 >
-                  <Button size="xs" variant="ghost" class="size-6 text-muted-foreground hover:text-destructive" aria-label="删除话题">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="size-6 text-muted-foreground hover:text-destructive"
+                    aria-label="删除话题"
+                  >
                     <Delete24Regular class="size-3.5" />
                   </Button>
                 </Popconfirm>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Live24Filled, Person48Filled } from '@vicons/fluent'
+import Live24Filled from '@vicons/fluent/es/Live24Filled'
+import Person48Filled from '@vicons/fluent/es/Person48Filled'
 
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'

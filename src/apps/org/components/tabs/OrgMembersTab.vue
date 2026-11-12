@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { SearchOutline, TrashOutline } from '@vicons/ionicons5'
+import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { format } from 'date-fns'
 import { onMounted } from 'vue'
 
@@ -97,7 +98,11 @@ onMounted(async () => {
               <div class="min-w-0 flex flex-col gap-0.5">
                 <div class="flex items-center gap-2">
                   <strong class="font-medium text-foreground text-sm truncate">{{ m.user.name }}</strong>
-                  <Badge variant="outline" size="xs" class="text-primary border-primary/30">
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                    class="text-primary border-primary/30"
+                  >
                     {{ roleLabel(m.role) }}
                   </Badge>
                 </div>
@@ -116,7 +121,11 @@ onMounted(async () => {
                   @positive-click="() => updateRole(m.user.id, 1)"
                 >
                   <template #trigger>
-                    <Button size="xs" variant="outline" class="text-primary">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      class="text-primary"
+                    >
                       设为 Admin
                     </Button>
                   </template>
@@ -130,7 +139,10 @@ onMounted(async () => {
                   @positive-click="() => updateRole(m.user.id, 2)"
                 >
                   <template #trigger>
-                    <Button size="xs" variant="outline">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                    >
                       设为 Member
                     </Button>
                   </template>
@@ -144,7 +156,11 @@ onMounted(async () => {
                   @positive-click="() => transferOwner(m.user.id)"
                 >
                   <template #trigger>
-                    <Button size="xs" variant="outline" class="text-amber-600 border-amber-500/30 hover:bg-amber-500/10">
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      class="text-amber-600 border-amber-500/30 hover:bg-amber-500/10"
+                    >
                       移交所有权
                     </Button>
                   </template>
@@ -160,7 +176,11 @@ onMounted(async () => {
                 @positive-click="() => remove(m.user.id)"
               >
                 <template #trigger>
-                  <Button size="xs" variant="ghost" class="size-7 rounded-full text-destructive hover:bg-destructive/10">
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="size-7 rounded-full text-destructive hover:bg-destructive/10"
+                  >
                     <component
                       :is="TrashOutline"
                       class="size-3.5"

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ImageOutline, TextOutline, TrashOutline } from '@vicons/ionicons5'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import TextOutline from '@vicons/ionicons5/es/TextOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import { computed, onMounted, reactive, ref } from 'vue'
@@ -217,10 +219,17 @@ async function onRemoveBgConfirm(blob: Blob) {
             <div class="flex justify-between items-center panel-title">
               <span class="font-medium text-foreground text-sm"> 图层 </span>
               <div class="flex items-center gap-1">
-                <Button size="icon-xs" variant="outline" @click="editorRef?.addTextLayer()">
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  @click="editorRef?.addTextLayer()"
+                >
                   <TextOutline class="w-3.5 h-3.5" />
                 </Button>
-                <Button size="icon-xs" variant="outline" @click="() => openImgPicker()"
+                <Button
+                  size="icon-xs"
+                  variant="outline"
+                  @click="() => openImgPicker()"
                 >
                   <ImageOutline class="w-3.5 h-3.5" />
                 </Button>
@@ -310,18 +319,22 @@ async function onRemoveBgConfirm(blob: Blob) {
                 <ToggleGroup
                   type="multiple"
                   size="xs"
-                  :model-value="[
-                    (selectedLayer as TextLayer).bold ? 'bold' : '',
-                    (selectedLayer as TextLayer).italic ? 'italic' : '',
-                    (selectedLayer as TextLayer).underline ? 'underline' : '',
-                  ].filter(Boolean)"
-                  @update:model-value="(val) => {
-                    const arr = (val as string[]) || []
-                    const l = selectedLayer as TextLayer
-                    l.bold = arr.includes('bold')
-                    l.italic = arr.includes('italic')
-                    l.underline = arr.includes('underline')
-                  }"
+                  :model-value="
+                    [
+                      (selectedLayer as TextLayer).bold ? 'bold' : '',
+                      (selectedLayer as TextLayer).italic ? 'italic' : '',
+                      (selectedLayer as TextLayer).underline ? 'underline' : '',
+                    ].filter(Boolean)
+                  "
+                  @update:model-value="
+                    (val) => {
+                      const arr = (val as string[]) || []
+                      const l = selectedLayer as TextLayer
+                      l.bold = arr.includes('bold')
+                      l.italic = arr.includes('italic')
+                      l.underline = arr.includes('underline')
+                    }
+                  "
                 >
                   <ToggleGroupItem
                     value="bold"

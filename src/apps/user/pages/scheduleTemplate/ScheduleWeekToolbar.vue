@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import {
-  ArrowDownload20Regular,
-  CalendarLtr20Regular,
-  ChevronLeft20Regular,
-  ChevronRight20Regular,
-} from '@vicons/fluent'
+import ArrowDownload20Regular from '@vicons/fluent/es/ArrowDownload20Regular'
+import CalendarLtr20Regular from '@vicons/fluent/es/CalendarLtr20Regular'
+import ChevronLeft20Regular from '@vicons/fluent/es/ChevronLeft20Regular'
+import ChevronRight20Regular from '@vicons/fluent/es/ChevronRight20Regular'
 import { snapdom } from '@zumer/snapdom'
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
@@ -125,11 +123,18 @@ async function saveScheduleImage() {
           :model-value="selectedWeek"
           @update:model-value="selectedWeek = String($event)"
         >
-          <SelectTrigger size="default" class="bg-secondary border-border text-card-foreground">
+          <SelectTrigger
+            size="default"
+            class="bg-secondary border-border text-card-foreground"
+          >
             <SelectValue placeholder="选择周次" />
           </SelectTrigger>
           <SelectContent class="bg-card border-border text-card-foreground">
-            <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
+            <SelectItem
+              v-for="opt in options"
+              :key="opt.value"
+              :value="opt.value"
+            >
               {{ opt.label }}
             </SelectItem>
           </SelectContent>

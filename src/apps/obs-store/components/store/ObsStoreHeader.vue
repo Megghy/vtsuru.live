@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Search24Regular } from '@vicons/fluent'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import { computed } from 'vue'
 
 import { OBS_CATEGORIES, getCategoryCounts, obsComponentList } from '@/apps/obs-store/registry'

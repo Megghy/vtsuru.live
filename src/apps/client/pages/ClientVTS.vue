@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  Flash24Filled,
-  Grid24Regular,
-  PlugConnected24Filled,
-  PlugDisconnected24Filled,
-  Settings24Filled,
-  VideoPerson24Filled,
-} from '@vicons/fluent'
+import Flash24Filled from '@vicons/fluent/es/Flash24Filled'
+import Grid24Regular from '@vicons/fluent/es/Grid24Regular'
+import PlugConnected24Filled from '@vicons/fluent/es/PlugConnected24Filled'
+import PlugDisconnected24Filled from '@vicons/fluent/es/PlugDisconnected24Filled'
+import Settings24Filled from '@vicons/fluent/es/Settings24Filled'
+import VideoPerson24Filled from '@vicons/fluent/es/VideoPerson24Filled'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -83,7 +81,11 @@ const macroProgress = computed(() => {
     >
       <template #actions>
         <div class="flex items-center gap-2">
-          <Badge variant="outline" class="h-6 px-2.5" :class="status.class">
+          <Badge
+            variant="outline"
+            class="h-6 px-2.5"
+            :class="status.class"
+          >
             {{ status.text }}
           </Badge>
           <Button
@@ -108,40 +110,63 @@ const macroProgress = computed(() => {
       </template>
     </ClientPageHeader>
 
-    <Alert size="sm" v-if="!isTauri()" class="border-destructive/20 bg-destructive/10 text-destructive">
+    <Alert
+      size="sm"
+      v-if="!isTauri()"
+      class="border-destructive/20 bg-destructive/10 text-destructive"
+    >
       <AlertDescription class="m-0"> 当前不是桌面客户端环境，无法连接本地 VTube Studio。 </AlertDescription>
     </Alert>
 
     <template v-else>
-      <Alert size="sm" variant="info" v-if="vts.connecting">
+      <Alert
+        size="sm"
+        variant="info"
+        v-if="vts.connecting"
+      >
         <AlertDescription class="m-0">
           正在等待 VTube Studio：请确认 VTS 已启动并开启「启动 API」；首次连接需在 VTS 弹窗中点击「允许」。
         </AlertDescription>
       </Alert>
 
-      <Card
-        v-else-if="vts.connected"
-      >
+      <Card v-else-if="vts.connected">
         <CardContent class="p-3">
           <div class="flex items-center gap-2.5 flex-wrap">
             <span class="model-badge flex items-center gap-1.5 text-xs">
               <span class="text-muted-foreground">当前模型</span>
               <span class="font-semibold text-foreground">{{ vts.currentModelName || '未加载模型' }}</span>
             </span>
-            <Badge v-if="vts.statistics?.framerate" variant="secondary" size="sm">
+            <Badge
+              v-if="vts.statistics?.framerate"
+              variant="secondary"
+              size="sm"
+            >
               {{ vts.statistics.framerate }} FPS
             </Badge>
-            <Badge v-if="vts.lastRttMs != null" variant="success" size="sm" :class=" vts.lastRttMs < 50 ? ' ' : 'border-amber-500/40 text-amber-600 bg-amber-500/10' ">
+            <Badge
+              v-if="vts.lastRttMs != null"
+              variant="success"
+              size="sm"
+              :class="vts.lastRttMs < 50 ? ' ' : 'border-amber-500/40 text-amber-600 bg-amber-500/10'"
+            >
               延迟 {{ vts.lastRttMs }}ms
             </Badge>
-            <Badge v-if="vts.faceFound === false" variant="warning" size="sm">
+            <Badge
+              v-if="vts.faceFound === false"
+              variant="warning"
+              size="sm"
+            >
               面部丢失
             </Badge>
           </div>
         </CardContent>
       </Card>
 
-      <Alert size="sm" v-if="vts.lastError" class="border-destructive/20 bg-destructive/10 text-destructive flex-between">
+      <Alert
+        size="sm"
+        v-if="vts.lastError"
+        class="border-destructive/20 bg-destructive/10 text-destructive flex-between"
+      >
         <AlertDescription class="m-0">
           {{ vts.lastError }}
         </AlertDescription>
@@ -157,12 +182,13 @@ const macroProgress = computed(() => {
       </Alert>
 
       <Transition name="vts-slide">
-        <Card
-          v-if="macroProgress"
-        >
+        <Card v-if="macroProgress">
           <CardContent class="p-3 flex items-center gap-3">
             <span class="font-semibold text-xs text-foreground">{{ macroProgress.name }}</span>
-            <Badge variant="secondary" size="xs">
+            <Badge
+              variant="secondary"
+              size="xs"
+            >
               {{ macroProgress.step }} / {{ macroProgress.total }}
             </Badge>
             <Progress
@@ -178,19 +204,31 @@ const macroProgress = computed(() => {
         class="w-full vts-tabs"
       >
         <TabsList class="grid w-full max-w-lg grid-cols-4">
-          <TabsTrigger value="deck" class="gap-1.5" >
+          <TabsTrigger
+            value="deck"
+            class="gap-1.5"
+          >
             <Grid24Regular class="size-3.5" />
             操作台
           </TabsTrigger>
-          <TabsTrigger value="actions" class="gap-1.5" >
+          <TabsTrigger
+            value="actions"
+            class="gap-1.5"
+          >
             <VideoPerson24Filled class="size-3.5" />
             热键与宏
           </TabsTrigger>
-          <TabsTrigger value="items" class="gap-1.5" >
+          <TabsTrigger
+            value="items"
+            class="gap-1.5"
+          >
             <Flash24Filled class="size-3.5" />
             道具与参数
           </TabsTrigger>
-          <TabsTrigger value="settings" class="gap-1.5" >
+          <TabsTrigger
+            value="settings"
+            class="gap-1.5"
+          >
             <Settings24Filled class="size-3.5" />
             设置
           </TabsTrigger>
@@ -259,7 +297,11 @@ const macroProgress = computed(() => {
                   :key="a.id"
                   class="flex items-center gap-2 p-2 rounded border bg-muted/20"
                 >
-                  <Badge variant="success" size="xs" :class=" a.enabled ? ' ' : 'text-muted-foreground' ">
+                  <Badge
+                    variant="success"
+                    size="xs"
+                    :class="a.enabled ? ' ' : 'text-muted-foreground'"
+                  >
                     {{ a.enabled ? '启用' : '禁用' }}
                   </Badge>
                   <span class="font-medium text-xs text-foreground">{{ a.name || '未命名操作' }}</span>

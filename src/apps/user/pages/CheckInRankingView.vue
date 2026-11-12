@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ArrowClockwise24Regular, Info24Filled, Search24Regular, Trophy24Filled } from '@vicons/fluent'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Trophy24Filled from '@vicons/fluent/es/Trophy24Filled'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, ref, watch } from 'vue'
@@ -169,7 +172,11 @@ onMounted(() => {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in timeRangeOptions" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in timeRangeOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -266,7 +273,12 @@ onMounted(() => {
 
               <div class="user-cell flex items-center gap-1.5 truncate">
                 <strong class="user-name text-foreground truncate">{{ item.name }}</strong>
-                <Badge v-if="item.isAuthed" variant="secondary" size="xs" class="bg-emerald-500/10 text-emerald-600">
+                <Badge
+                  v-if="item.isAuthed"
+                  variant="secondary"
+                  size="xs"
+                  class="bg-emerald-500/10 text-emerald-600"
+                >
                   已认证
                 </Badge>
               </div>
@@ -313,7 +325,11 @@ onMounted(() => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in pageSizeOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in pageSizeOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>

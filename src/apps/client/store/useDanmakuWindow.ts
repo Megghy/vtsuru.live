@@ -9,6 +9,17 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
+export async function applyTransparentWindowBackground(win: {
+  setBackgroundColor: (color: [number, number, number, number]) => Promise<void>
+}) {
+  try {
+    await win.setBackgroundColor([0, 0, 0, 0])
+  } catch (error) {
+    // 已安装的旧壳没有 core:window:allow-set-background-color，拒绝不能中断窗口初始化。
+    console.warn('[danmaku-window] 透明背景未生效', error)
+  }
+}
+
 export interface DanmakuWindowSettings {
   width: number
   height: number
@@ -337,7 +348,7 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     }
     console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value)
     // WebView2 默认底色不透明, CSS 全透明时会露出黑底, 需显式清空窗口与 webview 背景
-    await danmakuWindow.value.setBackgroundColor([0, 0, 0, 0])
+    await applyTransparentWindowBackground(danmakuWindow.value)
 
     danmakuWindow.value.onCloseRequested((event) => {
       event.preventDefault() // 阻止默认关闭行为

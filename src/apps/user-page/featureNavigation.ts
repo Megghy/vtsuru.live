@@ -1,5 +1,10 @@
-import { BookCoins20Filled, CalendarClock24Filled, CheckmarkCircle24Filled, VideoAdd20Filled } from '@vicons/fluent'
-import { ChatboxOutline, ChatbubblesOutline, MusicalNotesOutline } from '@vicons/ionicons5'
+import BookCoins20Filled from '@vicons/fluent/es/BookCoins20Filled'
+import CalendarClock24Filled from '@vicons/fluent/es/CalendarClock24Filled'
+import CheckmarkCircle24Filled from '@vicons/fluent/es/CheckmarkCircle24Filled'
+import VideoAdd20Filled from '@vicons/fluent/es/VideoAdd20Filled'
+import ChatboxOutline from '@vicons/ionicons5/es/ChatboxOutline'
+import ChatbubblesOutline from '@vicons/ionicons5/es/ChatbubblesOutline'
+import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
 import type { Component } from 'vue'
 
 import { FunctionTypes } from '@/api/generated/model'

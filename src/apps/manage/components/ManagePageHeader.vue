@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Copy24Regular, Info24Filled } from '@vicons/fluent'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'

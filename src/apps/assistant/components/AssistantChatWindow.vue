@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Alert24Regular, ArrowSync20Regular, Sparkle24Regular } from '@vicons/fluent'
+import Alert24Regular from '@vicons/fluent/es/Alert24Regular'
+import ArrowSync20Regular from '@vicons/fluent/es/ArrowSync20Regular'
+import Sparkle24Regular from '@vicons/fluent/es/Sparkle24Regular'
 import { nextTick, onMounted, ref, watch } from 'vue'
 
 import { Button } from '@/shared/ui/button'

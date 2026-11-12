@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowReset24Regular, Copy24Regular } from '@vicons/fluent'
+import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
 import { useElementSize, useIntervalFn } from '@vueuse/core'
 import { computed, onActivated, onDeactivated, ref, shallowRef } from 'vue'
 
@@ -247,7 +248,11 @@ onActivated(() => {
       <!-- 左侧：设置面板 (7 列) -->
       <Card class="lg:col-span-7">
         <CardContent class="p-4 space-y-4">
-          <Alert size="sm" v-if="isLoading" class="border-border bg-muted/40">
+          <Alert
+            size="sm"
+            v-if="isLoading"
+            class="border-border bg-muted/40"
+          >
             <AlertDescription> 正在读取配置… </AlertDescription>
           </Alert>
 
@@ -255,17 +260,19 @@ onActivated(() => {
             v-model="activeTab"
             class="w-full"
           >
-            <TabsList size="xs" class="grid w-full grid-cols-2 max-w-xs p-0.5 bg-muted mb-3">
-              <TabsTrigger value="style" >
-                样式定制
-              </TabsTrigger>
-              <TabsTrigger value="rules" >
-                功能规则
-              </TabsTrigger>
+            <TabsList
+              size="xs"
+              class="grid w-full grid-cols-2 max-w-xs p-0.5 bg-muted mb-3"
+            >
+              <TabsTrigger value="style"> 样式定制 </TabsTrigger>
+              <TabsTrigger value="rules"> 功能规则 </TabsTrigger>
             </TabsList>
 
             <!-- 样式定制 Tab -->
-            <TabsContent value="style" class="space-y-4">
+            <TabsContent
+              value="style"
+              class="space-y-4"
+            >
               <DanmujiStyleEditor v-model="config.style" />
 
               <Alert
@@ -402,7 +409,18 @@ onActivated(() => {
               >实时预览 <span class="text-muted-foreground font-normal ml-1">示例消息</span></span
             >
             <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-              <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '深色' }, { key: 'light', label: '浅色' }, { key: 'game', label: '游戏' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" @click="previewBg = bg.key">
+              <Button
+                v-for="bg in [
+                  { key: 'checker', label: '网格' },
+                  { key: 'dark', label: '深色' },
+                  { key: 'light', label: '浅色' },
+                  { key: 'game', label: '游戏' },
+                ]"
+                :key="bg.key"
+                size="xs"
+                :variant="previewBg === bg.key ? 'default' : 'ghost'"
+                @click="previewBg = bg.key"
+              >
                 {{ bg.label }}
               </Button>
             </div>
@@ -412,12 +430,26 @@ onActivated(() => {
           <div class="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
             <div class="flex items-center gap-1">
               <span>宽</span>
-              <NumberField size="xs" v-model="sourceWidth" min="200" max="3840" class="w-16 font-mono" :show-buttons="false" />
+              <NumberField
+                size="xs"
+                v-model="sourceWidth"
+                min="200"
+                max="3840"
+                class="w-16 font-mono"
+                :show-buttons="false"
+              />
             </div>
             <span>×</span>
             <div class="flex items-center gap-1">
               <span>高</span>
-              <NumberField size="xs" v-model="sourceHeight" min="200" max="2160" class="w-16 font-mono" :show-buttons="false" />
+              <NumberField
+                size="xs"
+                v-model="sourceHeight"
+                min="200"
+                max="2160"
+                class="w-16 font-mono"
+                :show-buttons="false"
+              />
             </div>
             <label class="flex items-center gap-1.5 cursor-pointer ml-auto select-none text-foreground font-medium">
               <Checkbox v-model="fullCanvas" />
@@ -468,11 +500,24 @@ onActivated(() => {
           <div class="flex-between gap-2 pt-1 border-t border-border flex-wrap">
             <div class="flex items-center gap-1.5">
               <span class="text-xs text-muted-foreground">测试:</span>
-              <Button v-for="event in eventOptions" :key="event.value" size="xs" variant="outline" :disabled="!previewReady" @click="sendTest(event.value)">
+              <Button
+                v-for="event in eventOptions"
+                :key="event.value"
+                size="xs"
+                variant="outline"
+                :disabled="!previewReady"
+                @click="sendTest(event.value)"
+              >
                 {{ event.label }}
               </Button>
             </div>
-            <Button size="xs" variant="ghost" class="text-muted-foreground" :disabled="!previewReady" @click="preview?.clearMessages()">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="text-muted-foreground"
+              :disabled="!previewReady"
+              @click="preview?.clearMessages()"
+            >
               清空
             </Button>
           </div>
@@ -487,7 +532,15 @@ onActivated(() => {
               />
               <span class="text-muted-foreground select-none">自动轮播</span>
               <div class="flex items-center gap-1">
-                <NumberField size="xs" v-model="interval" step="0.2" min="0.3" max="5" class="w-16 font-mono" :show-buttons="false" />
+                <NumberField
+                  size="xs"
+                  v-model="interval"
+                  step="0.2"
+                  min="0.3"
+                  max="5"
+                  class="w-16 font-mono"
+                  :show-buttons="false"
+                />
                 <span class="text-muted-foreground">秒</span>
               </div>
             </div>
@@ -518,7 +571,13 @@ onActivated(() => {
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">金额 (元)</span>
-                <NumberField size="xs" v-model="testPrice" min="0" class="font-mono" :show-buttons="false" />
+                <NumberField
+                  size="xs"
+                  v-model="testPrice"
+                  min="0"
+                  class="font-mono"
+                  :show-buttons="false"
+                />
               </div>
               <div class="space-y-1">
                 <span class="text-muted-foreground">大航海等级</span>
@@ -538,7 +597,6 @@ onActivated(() => {
                 <Textarea
                   v-model="testMessage"
                   :rows="2"
-                  
                 />
               </div>
             </div>

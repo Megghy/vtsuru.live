@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import {
-  Apps24Regular,
-  ArrowClockwise24Regular,
-  ArrowLeft24Regular,
-  ArrowRight24Regular,
-  ArrowSwap24Regular,
-  CheckmarkCircle24Regular,
-  Clock24Regular,
-  Eye24Regular,
-  EyeOff24Regular,
-  Grid24Regular,
-  History24Regular,
-  Person24Regular,
-  PlayCircle24Regular,
-  Search24Regular,
-  Sparkle24Regular,
-  Trophy24Regular,
-  Video24Regular,
-} from '@vicons/fluent'
+import Apps24Regular from '@vicons/fluent/es/Apps24Regular'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
+import ArrowSwap24Regular from '@vicons/fluent/es/ArrowSwap24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import EyeOff24Regular from '@vicons/fluent/es/EyeOff24Regular'
+import Grid24Regular from '@vicons/fluent/es/Grid24Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
+import PlayCircle24Regular from '@vicons/fluent/es/PlayCircle24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Sparkle24Regular from '@vicons/fluent/es/Sparkle24Regular'
+import Trophy24Regular from '@vicons/fluent/es/Trophy24Regular'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -464,9 +462,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
           <div
             class="summary-card stat-videos p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
           >
-            <div
-              class="stat-icon-wrapper size-9 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
-            >
+            <div class="stat-icon-wrapper size-9 rounded-lg bg-primary/10 text-primary flex-center shrink-0">
               <component
                 :is="Video24Regular"
                 class="size-5"
@@ -481,9 +477,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
           <div
             class="summary-card stat-duration p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
           >
-            <div
-              class="stat-icon-wrapper size-9 rounded-lg bg-blue-500/10 text-blue-500 flex-center shrink-0"
-            >
+            <div class="stat-icon-wrapper size-9 rounded-lg bg-blue-500/10 text-blue-500 flex-center shrink-0">
               <component
                 :is="Clock24Regular"
                 class="size-5"
@@ -498,9 +492,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
           <div
             class="summary-card stat-watched p-3.5 rounded-xl border border-border/80 bg-card flex items-center gap-3"
           >
-            <div
-              class="stat-icon-wrapper size-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex-center shrink-0"
-            >
+            <div class="stat-icon-wrapper size-9 rounded-lg bg-emerald-500/10 text-emerald-500 flex-center shrink-0">
               <component
                 :is="CheckmarkCircle24Regular"
                 class="size-5"
@@ -528,7 +520,10 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
               </div>
               <strong class="progress-value font-mono font-bold">{{ progressPercentage }}%</strong>
             </div>
-            <Progress :model-value="progressPercentage" class="mt-2" />
+            <Progress
+              :model-value="progressPercentage"
+              class="mt-2"
+            />
           </div>
         </section>
 
@@ -542,30 +537,46 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
             <ToggleGroup
               type="single"
               :model-value="mode"
-              @update:model-value="(val) => { if (val) mode = val as any }"
+              @update:model-value="
+                (val) => {
+                  if (val) mode = val as any
+                }
+              "
             >
-              <ToggleGroupItem value="list" class="gap-1.5">
+              <ToggleGroupItem
+                value="list"
+                class="gap-1.5"
+              >
                 <component
                   :is="Grid24Regular"
                   class="size-3.5"
                 />
                 全部视频
               </ToggleGroupItem>
-              <ToggleGroupItem value="draw" class="gap-1.5">
+              <ToggleGroupItem
+                value="draw"
+                class="gap-1.5"
+              >
                 <component
                   :is="ArrowSwap24Regular"
                   class="size-3.5"
                 />
                 随机抽取
               </ToggleGroupItem>
-              <ToggleGroupItem value="sequence" class="gap-1.5">
+              <ToggleGroupItem
+                value="sequence"
+                class="gap-1.5"
+              >
                 <component
                   :is="PlayCircle24Regular"
                   class="size-3.5"
                 />
                 逐个观看
               </ToggleGroupItem>
-              <ToggleGroupItem value="flip" class="gap-1.5">
+              <ToggleGroupItem
+                value="flip"
+                class="gap-1.5"
+              >
                 <component
                   :is="Apps24Regular"
                   class="size-3.5"
@@ -594,7 +605,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                   type="single"
                   size="xs"
                   :model-value="watchFilter"
-                  @update:model-value="(val) => { if (val) watchFilter = val as any }"
+                  @update:model-value="
+                    (val) => {
+                      if (val) watchFilter = val as any
+                    }
+                  "
                 >
                   <ToggleGroupItem value="all">全部</ToggleGroupItem>
                   <ToggleGroupItem value="unwatched">未看</ToggleGroupItem>
@@ -607,7 +622,11 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                       <SelectValue placeholder="排序方式" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+                      <SelectItem
+                        v-for="opt in sortOptions"
+                        :key="opt.value"
+                        :value="opt.value"
+                      >
                         {{ opt.label }}
                       </SelectItem>
                     </SelectContent>
@@ -764,9 +783,7 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown))
                     class="draw-trigger-placeholder w-full aspect-video rounded-xl border-2 border-dashed border-border/80 hover:border-primary/50 bg-muted/20 hover:bg-muted/40 transition flex-col-center gap-2 text-muted-foreground hover:text-foreground h-auto p-4"
                     @click="drawRandomVideo"
                   >
-                    <div
-                      class="placeholder-icon size-12 rounded-full bg-primary/10 text-primary flex-center"
-                    >
+                    <div class="placeholder-icon size-12 rounded-full bg-primary/10 text-primary flex-center">
                       <component
                         :is="Sparkle24Regular"
                         class="size-6"

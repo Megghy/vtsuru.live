@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Add16Regular, Subtract16Regular } from '@vicons/fluent'
+import Add16Regular from '@vicons/fluent/es/Add16Regular'
+import Subtract16Regular from '@vicons/fluent/es/Subtract16Regular'
 import { ref, watch } from 'vue'
 
 import { getUserPointHistories, giveUserPoint } from '@/api/point-user'

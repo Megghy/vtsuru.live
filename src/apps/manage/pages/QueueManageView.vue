@@ -1,20 +1,18 @@
 <script setup lang="ts">
-import {
-  Add24Regular,
-  Checkmark12Regular,
-  Color24Regular,
-  Copy24Regular,
-  Desktop24Regular,
-  Eye24Regular,
-  Flash24Regular,
-  History24Regular,
-  PeopleQueue24Filled,
-  PeopleQueue24Regular,
-  PersonAdd24Regular,
-  Search24Regular,
-  Settings24Regular,
-  ShieldCheckmark24Regular,
-} from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
+import Color24Regular from '@vicons/fluent/es/Color24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Desktop24Regular from '@vicons/fluent/es/Desktop24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import Flash24Regular from '@vicons/fluent/es/Flash24Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
+import PeopleQueue24Regular from '@vicons/fluent/es/PeopleQueue24Regular'
+import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import ShieldCheckmark24Regular from '@vicons/fluent/es/ShieldCheckmark24Regular'
 import { isSameDay } from 'date-fns'
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref } from 'vue'
 
@@ -211,22 +209,34 @@ onUnmounted(() => {
       v-model="activeMainTab"
       class="w-full"
     >
-      <TabsList size="xs" class="grid w-full grid-cols-3 max-w-md p-0.5 bg-muted">
-        <TabsTrigger value="queue" class="gap-1" >
+      <TabsList
+        size="xs"
+        class="grid w-full grid-cols-3 max-w-md p-0.5 bg-muted"
+      >
+        <TabsTrigger
+          value="queue"
+          class="gap-1"
+        >
           <component
             :is="PeopleQueue24Regular"
             class="h-3.5 w-3.5"
           />
           当前排队队列
         </TabsTrigger>
-        <TabsTrigger value="preview" class="gap-1" >
+        <TabsTrigger
+          value="preview"
+          class="gap-1"
+        >
           <component
             :is="Desktop24Regular"
             class="h-3.5 w-3.5"
           />
           OBS 舞台预览
         </TabsTrigger>
-        <TabsTrigger value="settings" class="gap-1" >
+        <TabsTrigger
+          value="settings"
+          class="gap-1"
+        >
           <component
             :is="Settings24Regular"
             class="h-3.5 w-3.5"
@@ -243,14 +253,20 @@ onUnmounted(() => {
         <Card>
           <CardContent class="flex-between gap-3 flex-wrap">
             <div class="flex items-center gap-2">
-              <Badge variant="brand" class="gap-1">
+              <Badge
+                variant="brand"
+                class="gap-1"
+              >
                 <component
                   :is="PeopleQueue24Filled"
                   class="h-3.5 w-3.5"
                 />
                 等待中: {{ waitingCount }} 人
               </Badge>
-              <Badge variant="success" class="gap-1">
+              <Badge
+                variant="success"
+                class="gap-1"
+              >
                 <component
                   :is="Checkmark12Regular"
                   class="h-3.5 w-3.5"
@@ -365,7 +381,18 @@ onUnmounted(() => {
                 </div>
 
                 <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-                  <Button v-for="bg in [ { key: 'checker', label: '网格' }, { key: 'dark', label: '纯黑' }, { key: 'light', label: '浅色' }, { key: 'game', label: '模拟游戏' }, ]" :key="bg.key" size="xs" :variant="previewBg === bg.key ? 'default' : 'ghost'" @click="previewBg = bg.key as any">
+                  <Button
+                    v-for="bg in [
+                      { key: 'checker', label: '网格' },
+                      { key: 'dark', label: '纯黑' },
+                      { key: 'light', label: '浅色' },
+                      { key: 'game', label: '模拟游戏' },
+                    ]"
+                    :key="bg.key"
+                    size="xs"
+                    :variant="previewBg === bg.key ? 'default' : 'ghost'"
+                    @click="previewBg = bg.key as any"
+                  >
                     {{ bg.label }}
                   </Button>
                 </div>
@@ -544,7 +571,10 @@ onUnmounted(() => {
                           {{ item.user?.name || '未知用户' }}
                         </TableCell>
                         <TableCell>
-                          <Badge :variant="getFromBadgeVariant(item.from)" size="xs">
+                          <Badge
+                            :variant="getFromBadgeVariant(item.from)"
+                            size="xs"
+                          >
                             {{ getQueueSourceText(item) }}
                           </Badge>
                         </TableCell>

@@ -4,6 +4,7 @@ import {
   CHUNK_RELOAD_COOLDOWN_MS,
   CHUNK_RELOAD_KEY,
   isStaleChunkMessage,
+  onVitePreloadError,
   reloadOnStaleChunk,
   shouldReloadForStaleChunk,
 } from '../staleChunkReload'
@@ -12,6 +13,7 @@ describe('staleChunkReload', () => {
   it('识别发版后的旧 chunk 错误', () => {
     expect(isStaleChunkMessage('Failed to fetch dynamically imported module: https://x/bootstrap.js')).toBe(true)
     expect(isStaleChunkMessage('Importing a module script failed.')).toBe(true)
+    expect(isStaleChunkMessage('error loading dynamically imported module: https://x.js')).toBe(true)
     expect(
       isStaleChunkMessage("'text/html' is not a valid JavaScript MIME type for module script 'https://x.js'."),
     ).toBe(true)
@@ -45,5 +47,31 @@ describe('staleChunkReload', () => {
 
     expect(reloadOnStaleChunk(storage, reload, 1000 + CHUNK_RELOAD_COOLDOWN_MS)).toBe(true)
     expect(reload).toHaveBeenCalledTimes(2)
+  })
+
+  it('旧 chunk 预加载失败只刷新，不把 import 吞成成功', () => {
+    const store: Record<string, string> = {}
+    const storage = {
+      getItem: (key: string) => store[key] ?? null,
+      setItem: (key: string, value: string) => {
+        store[key] = value
+      },
+    }
+    const reload = vi.fn()
+    const preventDefault = vi.fn()
+
+    expect(
+      onVitePreloadError(
+        {
+          payload: new Error('Failed to fetch dynamically imported module: https://x/pageIconLoaders.js'),
+          preventDefault,
+        },
+        storage,
+        reload,
+        1000,
+      ),
+    ).toBe(true)
+    expect(reload).toHaveBeenCalledTimes(1)
+    expect(preventDefault).not.toHaveBeenCalled()
   })
 })

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular, Wrench24Regular } from '@vicons/fluent'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import Wrench24Regular from '@vicons/fluent/es/Wrench24Regular'
 import { useClipboard } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import { computed, onActivated, onDeactivated, onScopeDispose, ref, watch } from 'vue'
@@ -273,10 +274,18 @@ function changeChannel() {
     </Button>
 
     <div class="flex flex-col gap-3">
-      <Alert size="sm" variant="warning" v-if="!userId">
+      <Alert
+        size="sm"
+        variant="warning"
+        v-if="!userId"
+      >
         <AlertDescription class="text-current m-0"> 请登录后编辑立绘配置。 </AlertDescription>
       </Alert>
-      <Alert size="sm" variant="warning" v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error">
+      <Alert
+        size="sm"
+        variant="warning"
+        v-else-if="lastSyncError || !isReady || runtimeError || !connected || normalized.error"
+      >
         <div class="flex-between gap-2">
           <AlertDescription class="text-current m-0">
             {{
@@ -286,7 +295,12 @@ function changeChannel() {
               (!isReady ? '配置尚未加载完成' : '立绘控制连接尚未就绪')
             }}
           </AlertDescription>
-          <Button size="xs" variant="outline" class="shrink-0" @click="retry">
+          <Button
+            size="xs"
+            variant="outline"
+            class="shrink-0"
+            @click="retry"
+          >
             重试连接
           </Button>
         </div>
@@ -355,10 +369,16 @@ function changeChannel() {
                 <Badge :variant="previewSpeaking ? 'default' : 'secondary'">
                   {{ previewAway ? '暂离' : previewMuted ? '静音' : previewSpeaking ? '说话中' : '待机' }}
                 </Badge>
-                <Badge v-if="isSimulating" variant="warning">
+                <Badge
+                  v-if="isSimulating"
+                  variant="warning"
+                >
                   模拟运行中
                 </Badge>
-                <Badge v-else variant="outline">
+                <Badge
+                  v-else
+                  variant="outline"
+                >
                   {{ isSyncing ? '保存中' : lastSyncError ? '保存失败' : isReady ? '配置已就绪' : '加载中' }}
                 </Badge>
                 <span class="text-xs text-muted-foreground">音量 {{ Math.round(previewVolume) }}%</span>
@@ -441,14 +461,10 @@ function changeChannel() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="checker">透明棋盘</SelectItem
-                  >
-                  <SelectItem value="dark">暗色</SelectItem
-                  >
-                  <SelectItem value="green">绿幕</SelectItem
-                  >
-                  <SelectItem value="transparent">透明</SelectItem
-                  >
+                  <SelectItem value="checker">透明棋盘</SelectItem>
+                  <SelectItem value="dark">暗色</SelectItem>
+                  <SelectItem value="green">绿幕</SelectItem>
+                  <SelectItem value="transparent">透明</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -468,7 +484,11 @@ function changeChannel() {
                 />
               </div>
 
-              <Alert size="sm" variant="warning" v-if="assetError">
+              <Alert
+                size="sm"
+                variant="warning"
+                v-if="assetError"
+              >
                 <AlertDescription class="m-0">
                   {{ assetError }}
                 </AlertDescription>

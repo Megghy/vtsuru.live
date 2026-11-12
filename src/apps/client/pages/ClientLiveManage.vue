@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import { Desktop24Filled, Live24Filled } from '@vicons/fluent'
+import Desktop24Filled from '@vicons/fluent/es/Desktop24Filled'
+import Live24Filled from '@vicons/fluent/es/Live24Filled'
 import { nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -49,7 +50,11 @@ async function navigateCheck(target: CheckTarget) {
       description="管理 B 站直播间标题、分区、封面与推流码，联动控制 OBS 本地推流"
     >
       <template #actions>
-        <Badge variant="success" class="h-6 px-2.5 gap-1.5" :class=" control.isLiving.value ? ' ' : 'text-muted-foreground' ">
+        <Badge
+          variant="success"
+          class="h-6 px-2.5 gap-1.5"
+          :class="control.isLiving.value ? ' ' : 'text-muted-foreground'"
+        >
           <div
             class="size-1.5 rounded-full"
             :class="control.isLiving.value ? 'bg-emerald-500 shadow-[0_0_6px_#10b981]' : 'bg-muted-foreground/40'"
@@ -74,11 +79,17 @@ async function navigateCheck(target: CheckTarget) {
         class="w-full"
       >
         <TabsList class="grid w-full max-w-xs grid-cols-2">
-          <TabsTrigger value="control" class="gap-1.5" >
+          <TabsTrigger
+            value="control"
+            class="gap-1.5"
+          >
             <Live24Filled class="size-3.5" />
             直播控制
           </TabsTrigger>
-          <TabsTrigger value="obs" class="gap-1.5" >
+          <TabsTrigger
+            value="obs"
+            class="gap-1.5"
+          >
             <Desktop24Filled class="size-3.5" />
             OBS 与统计
           </TabsTrigger>

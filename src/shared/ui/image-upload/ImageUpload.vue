@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Image24Regular } from '@vicons/fluent'
+import Image24Regular from '@vicons/fluent/es/Image24Regular'
 import { X } from 'lucide-vue-next'
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 
@@ -206,7 +206,10 @@ const labelText = computed(() => {
       :disabled="disabled"
       :aria-label="placeholder || '添加图片'"
       class="flex-col-center border border-dashed text-muted-foreground hover:border-primary hover:text-foreground hover:bg-muted/30 transition-colors cursor-pointer p-1 text-center disabled:opacity-50 disabled:pointer-events-none"
-      :class="[slotSizeClasses, isOverDropZone && !disabled ? 'border-primary bg-primary/5 text-primary' : 'border-input bg-background/50']"
+      :class="[
+        slotSizeClasses,
+        isOverDropZone && !disabled ? 'border-primary bg-primary/5 text-primary' : 'border-input bg-background/50',
+      ]"
       @click="triggerPick"
     >
       <Image24Regular

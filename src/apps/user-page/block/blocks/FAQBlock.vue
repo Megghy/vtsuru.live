@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HelpCircleOutline } from '@vicons/ionicons5'
+import HelpCircleOutline from '@vicons/ionicons5/es/HelpCircleOutline'
 import { computed } from 'vue'
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'

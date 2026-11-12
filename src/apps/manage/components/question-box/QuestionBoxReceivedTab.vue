@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import {
-  Checkmark24Regular,
-  Delete24Filled,
-  Dismiss24Regular,
-  Eye24Regular,
-  EyeOff24Regular,
-  MailUnread24Regular,
-  Tv20Regular,
-} from '@vicons/fluent'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import EyeOff24Regular from '@vicons/fluent/es/EyeOff24Regular'
+import MailUnread24Regular from '@vicons/fluent/es/MailUnread24Regular'
+import Tv20Regular from '@vicons/fluent/es/Tv20Regular'
+import Heart from '@vicons/ionicons5/es/Heart'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -127,9 +126,12 @@ const sortOptions = [
             <SelectValue placeholder="全部话题" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部话题</SelectItem
+            <SelectItem value="all">全部话题</SelectItem>
+            <SelectItem
+              v-for="t in useQB.tags"
+              :key="t.name"
+              :value="t.name"
             >
-            <SelectItem v-for="t in useQB.tags" :key="t.name" :value="t.name">
               #{{ t.name }}
             </SelectItem>
           </SelectContent>
@@ -143,7 +145,11 @@ const sortOptions = [
             <SelectValue placeholder="排序方式" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+            <SelectItem
+              v-for="opt in sortOptions"
+              :key="opt.value"
+              :value="opt.value"
+            >
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -373,7 +379,10 @@ const sortOptions = [
         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center bg-card border border-border rounded-full shadow-lg px-4 py-2 gap-2 text-xs"
       >
         <span class="font-medium text-foreground whitespace-nowrap">已选 {{ useQB.selectedIds.length }} 项</span>
-        <Separator orientation="vertical" class="h-4 mx-1" />
+        <Separator
+          orientation="vertical"
+          class="h-4 mx-1"
+        />
 
         <Button
           size="xs"
@@ -436,9 +445,18 @@ const sortOptions = [
           </Button>
         </Popconfirm>
 
-        <Separator orientation="vertical" class="h-4 mx-1" />
+        <Separator
+          orientation="vertical"
+          class="h-4 mx-1"
+        />
 
-        <Button size="xs" variant="ghost" class="size-6 rounded-full" aria-label="取消选择" @click="useQB.clearSelection">
+        <Button
+          size="xs"
+          variant="ghost"
+          class="size-6 rounded-full"
+          aria-label="取消选择"
+          @click="useQB.clearSelection"
+        >
           <Dismiss24Regular class="size-3.5" />
         </Button>
       </div>

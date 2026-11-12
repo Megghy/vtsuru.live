@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Alert24Filled, Chat24Filled } from '@vicons/fluent'
+import Alert24Filled from '@vicons/fluent/es/Alert24Filled'
+import Chat24Filled from '@vicons/fluent/es/Chat24Filled'
 import { useRouter } from 'vue-router'
 
 import type { ResponseQAInfoToTarget } from '@/api/generated/model'

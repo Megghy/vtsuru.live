@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { CheckmarkCircle24Regular, Clock24Regular, Person24Regular, Video24Regular } from '@vicons/fluent'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { useNow } from '@vueuse/core'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -428,7 +431,13 @@ onUnmounted(() => turnstile.value?.remove())
                   </div>
                   <div class="space-y-1.5">
                     <label class="text-xs font-medium text-foreground">哔哩哔哩 UID</label>
-                    <NumberField :model-value="addModel.uid != null ? String(addModel.uid) : ''" placeholder="选填" size="default" @update:model-value="addModel.uid = $event ? Number($event) : undefined" :show-buttons="false" />
+                    <NumberField
+                      :model-value="addModel.uid != null ? String(addModel.uid) : ''"
+                      placeholder="选填"
+                      size="default"
+                      @update:model-value="addModel.uid = $event ? Number($event) : undefined"
+                      :show-buttons="false"
+                    />
                   </div>
                 </div>
 
@@ -441,7 +450,6 @@ onUnmounted(() => turnstile.value?.remove())
                     :placeholder="table.requireDescription ? '请说明推荐这个视频的原因' : '可补充推荐原因或看点'"
                     maxlength="200"
                     rows="3"
-                    
                   />
                 </div>
 

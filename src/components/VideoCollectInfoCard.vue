@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Clock24Regular, NumberRow24Regular } from '@vicons/fluent'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import NumberRow24Regular from '@vicons/fluent/es/NumberRow24Regular'
 import { useNow } from '@vueuse/core'
 import { format } from 'date-fns'
 import { computed } from 'vue'
@@ -60,13 +61,26 @@ function onClick() {
     >
       <CardHeader class="p-3 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2">
         <div class="flex items-center gap-2 min-w-0">
-          <Badge v-if="item.isFinish" variant="secondary" size="xs">
+          <Badge
+            v-if="item.isFinish"
+            variant="secondary"
+            size="xs"
+          >
             已结束
           </Badge>
-          <Badge v-else-if="isUpcoming" variant="default" size="xs" class="bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30">
+          <Badge
+            v-else-if="isUpcoming"
+            variant="default"
+            size="xs"
+            class="bg-sky-500/15 text-sky-600 dark:text-sky-400 border border-sky-500/30"
+          >
             未开始
           </Badge>
-          <Badge v-else variant="success" size="xs">
+          <Badge
+            v-else
+            variant="success"
+            size="xs"
+          >
             进行中
           </Badge>
 

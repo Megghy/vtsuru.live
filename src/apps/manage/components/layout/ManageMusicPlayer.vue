@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import {
-  ChevronDown,
-  ChevronUp,
-  MusicalNote,
-  Pause,
-  Play,
-  PlayBack,
-  PlayForward,
-  TrashBin,
-  VolumeHigh,
-} from '@vicons/ionicons5'
+import ChevronDown from '@vicons/ionicons5/es/ChevronDown'
+import ChevronUp from '@vicons/ionicons5/es/ChevronUp'
+import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
+import Pause from '@vicons/ionicons5/es/Pause'
+import Play from '@vicons/ionicons5/es/Play'
+import PlayBack from '@vicons/ionicons5/es/PlayBack'
+import PlayForward from '@vicons/ionicons5/es/PlayForward'
+import TrashBin from '@vicons/ionicons5/es/TrashBin'
+import VolumeHigh from '@vicons/ionicons5/es/VolumeHigh'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 // @ts-ignore
@@ -133,7 +131,12 @@ function togglePlayerMinimize() {
           />
           <span class="font-semibold text-foreground shrink-0">音乐播放器</span>
 
-          <Badge v-if="currentPlayingInfo && !isPlayerMinimized" :variant="currentPlayingInfo.type === 'request' ? 'brand' : 'secondary'" size="sm" class="truncate">
+          <Badge
+            v-if="currentPlayingInfo && !isPlayerMinimized"
+            :variant="currentPlayingInfo.type === 'request' ? 'brand' : 'secondary'"
+            size="sm"
+            class="truncate"
+          >
             {{ currentPlayingInfo.info }}
           </Badge>
 
@@ -155,7 +158,8 @@ function togglePlayerMinimize() {
 
         <div class="flex items-center gap-2 shrink-0 pr-12">
           <template v-if="isPlayerMinimized">
-            <Badge v-if="musicRquestStore.waitingMusics.length> 0"
+            <Badge
+              v-if="musicRquestStore.waitingMusics.length > 0"
               variant="destructive"
               class="text-[10px] px-1.5 py-0 h-4"
             >
@@ -272,10 +276,16 @@ function togglePlayerMinimize() {
           <div class="flex flex-col items-center gap-1">
             <span class="text-[11px] font-medium text-muted-foreground">队列管理</span>
             <div class="flex items-center gap-1.5">
-              <Badge variant="secondary" size="sm">
+              <Badge
+                variant="secondary"
+                size="sm"
+              >
                 等待: {{ musicRquestStore.waitingMusics.length }}
               </Badge>
-              <Badge variant="outline" size="sm">
+              <Badge
+                variant="outline"
+                size="sm"
+              >
                 歌单: {{ musicRquestStore.originMusics.length }}
               </Badge>
               <Button

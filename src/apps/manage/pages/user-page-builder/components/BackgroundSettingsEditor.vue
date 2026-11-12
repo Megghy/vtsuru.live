@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ImageOutline, TrashOutline } from '@vicons/ionicons5'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'

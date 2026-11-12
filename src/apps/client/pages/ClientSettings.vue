@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  Alert24Filled,
-  ArrowSync24Regular,
-  Info24Filled,
-  People24Regular,
-  Save24Filled,
-  Settings24Filled,
-} from '@vicons/fluent'
+import Alert24Filled from '@vicons/fluent/es/Alert24Filled'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import People24Regular from '@vicons/fluent/es/People24Regular'
+import Save24Filled from '@vicons/fluent/es/Save24Filled'
+import Settings24Filled from '@vicons/fluent/es/Settings24Filled'
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -284,7 +282,11 @@ function handleTitleClick() {
             <AlertTitle>操作错误</AlertTitle>
             <AlertDescription class="flex-between">
               <span>{{ errorMsg }}</span>
-              <Button size="xs" variant="ghost" @click="errorMsg = null">
+              <Button
+                size="xs"
+                variant="ghost"
+                @click="errorMsg = null"
+              >
                 关闭
               </Button>
             </AlertDescription>
@@ -392,7 +394,9 @@ function handleTitleClick() {
               <!-- B站账号管理 -->
               <template v-else-if="currentTab === 'bili-accounts'">
                 <div class="flex flex-col gap-3">
-                  <div class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs flex items-center justify-between">
+                  <div
+                    class="p-3 bg-muted/40 rounded-lg border border-border/60 text-xs flex items-center justify-between"
+                  >
                     <span class="text-muted-foreground">
                       B 站账号与主凭据已统一收录至左侧侧边栏专属页面，支持集中维护与批量续期。
                     </span>

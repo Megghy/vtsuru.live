@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { AppsOutline, CopyOutline, EllipsisHorizontalOutline, TrashOutline } from '@vicons/ionicons5'
+import AppsOutline from '@vicons/ionicons5/es/AppsOutline'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import EllipsisHorizontalOutline from '@vicons/ionicons5/es/EllipsisHorizontalOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, inject, nextTick, ref } from 'vue'
 
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
@@ -11,8 +14,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { FormField } from '@/shared/ui/form-field'
 import { Input } from '@/shared/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/shared/ui/radio-group'
-import { Tag } from '@/shared/ui/tag'
 import { Separator } from '@/shared/ui/separator'
+import { Tag } from '@/shared/ui/tag'
 
 import { UserPageEditorKey } from '../context'
 import { PAGE_MODE_OPTIONS } from '../editorPageConfig'
@@ -168,7 +171,10 @@ function confirmDuplicatePage() {
                   />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" class="min-w-32">
+              <DropdownMenuContent
+                align="end"
+                class="min-w-32"
+              >
                 <DropdownMenuItem @click="openIconPicker(p.slug)">
                   <component
                     :is="AppsOutline"
@@ -249,7 +255,10 @@ function confirmDuplicatePage() {
             </RadioGroup>
           </div>
 
-          <Alert size="sm" class="bg-primary/5 border-primary/20">
+          <Alert
+            size="sm"
+            class="bg-primary/5 border-primary/20"
+          >
             <AlertDescription>
               创建后访问地址：/@{{ editor.account.value.name || 'name' }}/{{ newSlug || 'slug' }}
             </AlertDescription>
@@ -277,7 +286,10 @@ function confirmDuplicatePage() {
           <DialogTitle class="text-sm">复制子页面</DialogTitle>
         </DialogHeader>
         <div class="flex flex-col gap-3 py-2">
-          <Alert size="sm" class="bg-primary/5 border-primary/20">
+          <Alert
+            size="sm"
+            class="bg-primary/5 border-primary/20"
+          >
             <AlertDescription>复制自：/{{ duplicateFromSlug || 'slug' }}</AlertDescription>
           </Alert>
           <FormField

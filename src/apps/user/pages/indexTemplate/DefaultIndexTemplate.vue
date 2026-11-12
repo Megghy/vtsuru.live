@@ -1,12 +1,10 @@
 <script lang="ts" setup>
-import {
-  ArrowUpOutline,
-  CalendarOutline,
-  ColorPaletteOutline,
-  PlayOutline,
-  RadioOutline,
-  SparklesOutline,
-} from '@vicons/ionicons5'
+import ArrowUpOutline from '@vicons/ionicons5/es/ArrowUpOutline'
+import CalendarOutline from '@vicons/ionicons5/es/CalendarOutline'
+import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
+import PlayOutline from '@vicons/ionicons5/es/PlayOutline'
+import RadioOutline from '@vicons/ionicons5/es/RadioOutline'
+import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ChatbubbleOutline, OpenOutline } from '@vicons/ionicons5'
+import ChatbubbleOutline from '@vicons/ionicons5/es/ChatbubbleOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import { computed } from 'vue'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
@@ -127,7 +128,10 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           :default-tag="cfg.defaultTag"
           :show-public-questions="cfg.showPublicQuestions"
         />
-        <Alert size="sm" v-else>
+        <Alert
+          size="sm"
+          v-else
+        >
           <AlertDescription> 未加载到用户信息，无法展示站内提问箱 </AlertDescription>
         </Alert>
       </template>
@@ -140,7 +144,10 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
           {{ cfg.description }}
         </div>
 
-        <Alert size="sm" v-if="!url">
+        <Alert
+          size="sm"
+          v-if="!url"
+        >
           <AlertDescription> 未配置跳转链接 </AlertDescription>
         </Alert>
 
@@ -179,7 +186,11 @@ const externalEmbedRejected = computed(() => cfg.value.embed && embedMode.value 
               loading="lazy"
             />
           </div>
-          <Alert size="sm" v-else-if="externalEmbedRejected" class="embed-notice">
+          <Alert
+            size="sm"
+            v-else-if="externalEmbedRejected"
+            class="embed-notice"
+          >
             <AlertDescription> 该来源暂不支持安全内嵌，请使用上方按钮访问 </AlertDescription>
           </Alert>
         </template>

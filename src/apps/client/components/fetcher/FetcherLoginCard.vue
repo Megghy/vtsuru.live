@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import { error as logError, info as logInfo } from '@tauri-apps/plugin-log'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import {
-  CheckmarkCircleOutline,
-  CloseCircleOutline,
-  EyeOffOutline,
-  EyeOutline,
-  HelpCircle,
-  LogInOutline,
-  LogOutOutline,
-} from '@vicons/ionicons5'
+import CheckmarkCircleOutline from '@vicons/ionicons5/es/CheckmarkCircleOutline'
+import CloseCircleOutline from '@vicons/ionicons5/es/CloseCircleOutline'
+import EyeOffOutline from '@vicons/ionicons5/es/EyeOffOutline'
+import EyeOutline from '@vicons/ionicons5/es/EyeOutline'
+import HelpCircle from '@vicons/ionicons5/es/HelpCircle'
+import LogInOutline from '@vicons/ionicons5/es/LogInOutline'
+import LogOutOutline from '@vicons/ionicons5/es/LogOutOutline'
 import { intervalToDuration } from 'date-fns'
 import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
@@ -152,11 +150,21 @@ onUnmounted(() => {
   <Card class="w-full">
     <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
       <CardTitle>凭据 & 账户</CardTitle>
-      <Badge v-if="biliCookie.isCookieValid" variant="success" size="xs" class="h-5 gap-1">
+      <Badge
+        v-if="biliCookie.isCookieValid"
+        variant="success"
+        size="xs"
+        class="h-5 gap-1"
+      >
         <CheckmarkCircleOutline class="size-3" />
         已登录
       </Badge>
-      <Badge v-else variant="outline" size="xs" class="h-5 gap-1 border-destructive/40 text-destructive bg-destructive/10">
+      <Badge
+        v-else
+        variant="outline"
+        size="xs"
+        class="h-5 gap-1 border-destructive/40 text-destructive bg-destructive/10"
+      >
         <CloseCircleOutline class="size-3" />
         未登录
       </Badge>
@@ -186,7 +194,13 @@ onUnmounted(() => {
           <span class="w-24 text-muted-foreground shrink-0">登录状态</span>
           <div class="flex items-center gap-1.5 font-medium text-foreground">
             <span>{{ loginStatusString ?? (biliCookie.isCookieValid ? '已登录' : '未登录') }}</span>
-            <Badge v-if="loginStatus === 'waiting' || loginStatus === 'scanned'" :key="countdownKey" variant="outline" size="xs" class="border-sky-500/40 text-sky-600 bg-sky-500/10">
+            <Badge
+              v-if="loginStatus === 'waiting' || loginStatus === 'scanned'"
+              :key="countdownKey"
+              variant="outline"
+              size="xs"
+              class="border-sky-500/40 text-sky-600 bg-sky-500/10"
+            >
               {{ formatTimeDifference(Date.now(), startAt + QRCODE_EXPIRE_MS) }}
             </Badge>
           </div>
@@ -200,7 +214,12 @@ onUnmounted(() => {
       >
         <div class="flex-between">
           <span class="text-xs text-muted-foreground">登录凭据 (Cookie - 敏感信息)</span>
-          <Button size="xs" variant="ghost" class="gap-1" @click="showCookie = !showCookie">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="gap-1"
+            @click="showCookie = !showCookie"
+          >
             <EyeOffOutline
               v-if="showCookie"
               class="size-3.5"
@@ -245,12 +264,8 @@ onUnmounted(() => {
         @update:model-value="settings.save()"
       >
         <TabsList class="grid w-full grid-cols-2">
-          <TabsTrigger value="qrcode" >
-            扫码登录
-          </TabsTrigger>
-          <TabsTrigger value="cookiecloud" >
-            Cookie Cloud
-          </TabsTrigger>
+          <TabsTrigger value="qrcode"> 扫码登录 </TabsTrigger>
+          <TabsTrigger value="cookiecloud"> Cookie Cloud </TabsTrigger>
         </TabsList>
 
         <TabsContent

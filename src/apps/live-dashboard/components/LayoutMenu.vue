@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ReOrderDotsVertical16Regular } from '@vicons/fluent'
+import ReOrderDotsVertical16Regular from '@vicons/fluent/es/ReOrderDotsVertical16Regular'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 

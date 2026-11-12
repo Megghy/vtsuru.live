@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Chat24Regular } from '@vicons/fluent'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
 import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'

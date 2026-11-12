@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import {
-  ArrowCounterclockwise20Filled,
-  ArrowSortDown20Filled,
-  ArrowSortUp20Filled,
-  SquareArrowForward24Filled,
-} from '@vicons/fluent'
+import ArrowCounterclockwise20Filled from '@vicons/fluent/es/ArrowCounterclockwise20Filled'
+import ArrowSortDown20Filled from '@vicons/fluent/es/ArrowSortDown20Filled'
+import ArrowSortUp20Filled from '@vicons/fluent/es/ArrowSortUp20Filled'
+import SquareArrowForward24Filled from '@vicons/fluent/es/SquareArrowForward24Filled'
 import { computed, ref, watch } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -342,9 +340,12 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="歌手" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部歌手</SelectItem
+                <SelectItem value="all">全部歌手</SelectItem>
+                <SelectItem
+                  v-for="opt in artistOptions"
+                  :key="opt.value"
+                  :value="opt.value"
                 >
-                <SelectItem v-for="opt in artistOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -357,9 +358,12 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="语言" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部语言</SelectItem
+                <SelectItem value="all">全部语言</SelectItem>
+                <SelectItem
+                  v-for="opt in languageOptions"
+                  :key="opt.value"
+                  :value="opt.value"
                 >
-                <SelectItem v-for="opt in languageOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -372,9 +376,12 @@ function getSafeUrl(value?: string) {
                 <SelectValue placeholder="标签" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部标签</SelectItem
+                <SelectItem value="all">全部标签</SelectItem>
+                <SelectItem
+                  v-for="opt in tagOptions"
+                  :key="opt.value"
+                  :value="opt.value"
                 >
-                <SelectItem v-for="opt in tagOptions" :key="opt.value" :value="opt.value">
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>
@@ -388,7 +395,11 @@ function getSafeUrl(value?: string) {
                   <SelectValue placeholder="排序" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in sortOptions" :key="opt.value" :value="opt.value">
+                  <SelectItem
+                    v-for="opt in sortOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>

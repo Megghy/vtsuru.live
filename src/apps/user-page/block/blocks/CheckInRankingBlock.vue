@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { OpenOutline, RefreshOutline, TrophyOutline } from '@vicons/ionicons5'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import TrophyOutline from '@vicons/ionicons5/es/TrophyOutline'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 
@@ -94,10 +96,17 @@ watch(
       </div>
     </template>
 
-    <Alert size="sm" v-if="!enabled">
+    <Alert
+      size="sm"
+      v-if="!enabled"
+    >
       <AlertDescription> 签到排行未开放 </AlertDescription>
     </Alert>
-    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+    <Alert
+      size="sm"
+      v-else-if="query.status.value === 'error'"
+      variant="destructive"
+    >
       <AlertDescription class="flex-between w-full">
         <span>签到排行加载失败</span>
         <Button

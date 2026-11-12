@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { HourglassOutline, TimerOutline } from '@vicons/ionicons5'
+import HourglassOutline from '@vicons/ionicons5/es/HourglassOutline'
+import TimerOutline from '@vicons/ionicons5/es/TimerOutline'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import BlockCard from '../BlockCard.vue'

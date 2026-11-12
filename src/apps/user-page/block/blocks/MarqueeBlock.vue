@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MegaphoneOutline } from '@vicons/ionicons5'
+import MegaphoneOutline from '@vicons/ionicons5/es/MegaphoneOutline'
 import { useResizeObserver } from '@vueuse/core'
 import { computed, nextTick, ref, watch } from 'vue'
 import { Vue3Marquee } from 'vue3-marquee'

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Copy24Regular, Info24Filled, Open24Regular } from '@vicons/fluent'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -97,7 +99,10 @@ const obsUrl = computed(() =>
         <div class="grid grid-cols-[minmax(320px,1fr)_280px] gap-6 items-start max-[720px]:grid-cols-1">
           <!-- 左侧：操作、链接与配置 -->
           <div class="flex flex-col gap-4 min-w-0">
-            <Alert size="sm" class="bg-muted/50 border-muted">
+            <Alert
+              size="sm"
+              class="bg-muted/50 border-muted"
+            >
               <AlertDescription>{{ description }}</AlertDescription>
             </Alert>
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Dismiss20Filled } from '@vicons/fluent'
+import Dismiss20Filled from '@vicons/fluent/es/Dismiss20Filled'
 import { ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'

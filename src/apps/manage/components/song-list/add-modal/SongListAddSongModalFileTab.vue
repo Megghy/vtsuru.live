@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
-import { ArchiveOutline } from '@vicons/ionicons5'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import ArchiveOutline from '@vicons/ionicons5/es/ArchiveOutline'
 import { computed, ref } from 'vue'
 import * as XLSX from 'xlsx'
 
@@ -219,7 +219,10 @@ async function addUploadFileSong() {
 
 <template>
   <div class="space-y-4">
-    <Alert size="sm" variant="info">
+    <Alert
+      size="sm"
+      variant="info"
+    >
       <AlertDescription>
         Excel 文件格式详见:
         <a
@@ -328,11 +331,7 @@ async function addUploadFileSong() {
         ref="dropZoneRef"
         variant="outline"
         class="w-full h-auto border-dashed rounded-lg p-6 flex-col-center font-normal"
-        :class="
-          isOverDropZone
-            ? 'border-primary bg-primary/5'
-            : 'bg-card'
-        "
+        :class="isOverDropZone ? 'border-primary bg-primary/5' : 'bg-card'"
         @click="openSheetPicker()"
       >
         <ArchiveOutline class="size-8 text-muted-foreground/60 mb-2" />

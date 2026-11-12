@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { GlobeOutline, LinkOutline } from '@vicons/ionicons5'
+import GlobeOutline from '@vicons/ionicons5/es/GlobeOutline'
+import LinkOutline from '@vicons/ionicons5/es/LinkOutline'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 

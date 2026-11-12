@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {
-  Add24Filled,
-  ArrowSync24Filled,
-  Copy24Regular,
-  Delete24Filled,
-  Edit24Filled,
-  Info24Filled,
-  Open24Regular,
-  ShoppingBag24Filled,
-} from '@vicons/fluent'
+import Add24Filled from '@vicons/fluent/es/Add24Filled'
+import ArrowSync24Filled from '@vicons/fluent/es/ArrowSync24Filled'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import Edit24Filled from '@vicons/fluent/es/Edit24Filled'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import ShoppingBag24Filled from '@vicons/fluent/es/ShoppingBag24Filled'
 import { useRouteHash } from '@vueuse/router'
 import { Plus } from 'lucide-vue-next'
 import { computed, ref, watch } from 'vue'
@@ -434,7 +432,11 @@ function resetGoods() {
       </template>
     </ManagePageHeader>
 
-    <Alert size="sm" v-if="!accountInfo.eventFetcherState.online" variant="warning">
+    <Alert
+      size="sm"
+      v-if="!accountInfo.eventFetcherState.online"
+      variant="warning"
+    >
       <AlertDescription class="flex items-center gap-1.5 flex-wrap">
         <span>
           此功能依赖
@@ -853,7 +855,6 @@ function resetGoods() {
                       v-model="currentGoodsModel.goods.content"
                       placeholder="请输入兑换成功后展示给用户的文本、下载链接或提取码（支持 {key} 占位符）"
                       :rows="3"
-                      
                     />
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { CalendarNumberOutline, RefreshOutline } from '@vicons/ionicons5'
+import CalendarNumberOutline from '@vicons/ionicons5/es/CalendarNumberOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
 import { computed, onMounted, watch } from 'vue'
 
 import type { ResponseScheduleDayModel, ResponseScheduleModel, ResponseUserInfo } from '@/api/generated/model'
@@ -171,7 +172,11 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
         >
           <Spin />
         </div>
-        <Alert size="sm" v-else-if="failed" variant="destructive">
+        <Alert
+          size="sm"
+          v-else-if="failed"
+          variant="destructive"
+        >
           <AlertDescription class="flex-between w-full">
             <span>日程加载失败，请稍后重试</span>
             <Button
@@ -227,7 +232,11 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
                 <td class="p-2.5">
                   <div class="flex items-center gap-1.5">
                     <span>{{ dayLabel(row.dayIndex) }}</span>
-                    <Badge v-if="cfg.highlightToday && row.isToday" variant="default" size="xs">
+                    <Badge
+                      v-if="cfg.highlightToday && row.isToday"
+                      variant="default"
+                      size="xs"
+                    >
                       今天
                     </Badge>
                   </div>
@@ -238,7 +247,12 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
                 <td class="p-2.5">
                   <div class="flex items-center gap-1.5">
                     <span>{{ row.title }}</span>
-                    <Badge v-if="cfg.showTag && row.tag" variant="secondary" size="xs" :style="{ color: row.tagColor || undefined }">
+                    <Badge
+                      v-if="cfg.showTag && row.tag"
+                      variant="secondary"
+                      size="xs"
+                      :style="{ color: row.tagColor || undefined }"
+                    >
                       {{ row.tag }}
                     </Badge>
                   </div>
@@ -265,7 +279,11 @@ const icsUrl = computed(() => (props.userInfo?.id ? `${SCHEDULE_API_URL}${props.
             <div class="timeline-content min-w-0">
               <div class="item-heading flex items-center gap-2">
                 <strong class="text-xs font-semibold leading-relaxed">{{ row.title }}</strong>
-                <Badge v-if="cfg.highlightToday && row.isToday" variant="default" size="xs">
+                <Badge
+                  v-if="cfg.highlightToday && row.isToday"
+                  variant="default"
+                  size="xs"
+                >
                   今天
                 </Badge>
               </div>

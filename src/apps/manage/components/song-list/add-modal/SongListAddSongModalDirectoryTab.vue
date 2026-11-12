@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArchiveOutline } from '@vicons/ionicons5'
+import ArchiveOutline from '@vicons/ionicons5/es/ArchiveOutline'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -259,7 +259,10 @@ async function selectFolder() {
 
 <template>
   <div class="space-y-4">
-    <Alert size="sm" variant="info">
+    <Alert
+      size="sm"
+      variant="info"
+    >
       <AlertTitle>功能说明</AlertTitle>
       <AlertDescription class="space-y-1 mt-1">
         <div>选择本地文件夹，自动扫描其中的音频文件（支持 MP3、WAV、OGG、FLAC、M4A 等格式）</div>

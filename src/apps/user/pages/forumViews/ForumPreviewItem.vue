@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ArrowReply24Filled, Chat24Regular, Delete24Filled, MoreVertical24Filled, Star24Filled } from '@vicons/fluent'
-import { SyncCircleSharp } from '@vicons/ionicons5'
+import ArrowReply24Filled from '@vicons/fluent/es/ArrowReply24Filled'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import MoreVertical24Filled from '@vicons/fluent/es/MoreVertical24Filled'
+import Star24Filled from '@vicons/fluent/es/Star24Filled'
+import SyncCircleSharp from '@vicons/ionicons5/es/SyncCircleSharp'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
@@ -80,7 +84,11 @@ function formatFullTime(time: number) {
   <TooltipProvider>
     <div class="flex-between gap-3 text-xs w-full py-1">
       <div class="flex items-center gap-2 min-w-0 flex-1">
-        <Badge v-if="item.isDeleted" variant="secondary" size="xs">
+        <Badge
+          v-if="item.isDeleted"
+          variant="secondary"
+          size="xs"
+        >
           已删除
         </Badge>
         <span
@@ -93,7 +101,11 @@ function formatFullTime(time: number) {
             class="size-3.5"
           />
         </span>
-        <Badge variant="outline" size="xs" class="flex items-center gap-1">
+        <Badge
+          variant="outline"
+          size="xs"
+          class="flex items-center gap-1"
+        >
           <component
             :is="Chat24Regular"
             class="size-3"
@@ -138,7 +150,11 @@ function formatFullTime(time: number) {
 
         <DropdownMenu v-if="forum.isAdmin">
           <DropdownMenuTrigger as-child>
-            <Button variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground">
+            <Button
+              variant="ghost"
+              size="xs"
+              class="size-6 rounded-full text-muted-foreground"
+            >
               <component
                 :is="MoreVertical24Filled"
                 class="size-3.5"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChatbubbleEllipsesOutline } from '@vicons/ionicons5'
+import ChatbubbleEllipsesOutline from '@vicons/ionicons5/es/ChatbubbleEllipsesOutline'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useVModel } from '@vueuse/core'
 import type { HTMLAttributes } from 'vue'
+import { ref } from 'vue'
 
 import { cn } from '@/shared/utils/cn'
 
@@ -18,10 +19,18 @@ const modelValue = useVModel(props, 'modelValue', emits, {
   passive: true,
   defaultValue: props.defaultValue,
 })
+const textarea = ref<HTMLTextAreaElement | null>(null)
+
+function focus() {
+  textarea.value?.focus()
+}
+
+defineExpose({ focus })
 </script>
 
 <template>
   <textarea
+    ref="textarea"
     v-model="modelValue"
     :class="
       cn(

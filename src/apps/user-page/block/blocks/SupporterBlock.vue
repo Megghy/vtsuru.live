@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {
-  ArrowForwardOutline,
-  CafeOutline,
-  CardOutline,
-  CashOutline,
-  FlashOutline,
-  Heart as HeartIcon,
-  LogoTwitch,
-  LogoYoutube,
-} from '@vicons/ionicons5'
+import ArrowForwardOutline from '@vicons/ionicons5/es/ArrowForwardOutline'
+import CafeOutline from '@vicons/ionicons5/es/CafeOutline'
+import CardOutline from '@vicons/ionicons5/es/CardOutline'
+import CashOutline from '@vicons/ionicons5/es/CashOutline'
+import FlashOutline from '@vicons/ionicons5/es/FlashOutline'
+import HeartIcon from '@vicons/ionicons5/es/Heart'
+import LogoTwitch from '@vicons/ionicons5/es/LogoTwitch'
+import LogoYoutube from '@vicons/ionicons5/es/LogoYoutube'
 import { computed } from 'vue'
 
 import BlockCard from '../BlockCard.vue'

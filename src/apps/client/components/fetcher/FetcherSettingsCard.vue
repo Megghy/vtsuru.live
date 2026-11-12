@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { HelpCircle } from '@vicons/ionicons5'
+import HelpCircle from '@vicons/ionicons5/es/HelpCircle'
 import { toast } from 'vue-sonner'
 
 // Fix vue-tsc type inference issue in template inline functions
@@ -13,8 +13,8 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Separator } from '@/shared/ui/separator'
-import { Switch } from '@/shared/ui/switch'
 import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -119,54 +119,60 @@ async function handleForceRestartDanmaku() {
           />
         </SettingRow>
 
-        <Alert size="sm" variant="warning" v-if="!settings.settings.enableEventFetcher">
-          <AlertDescription class="m-0">
-            EventFetcher 功能已禁用，直播间事件数据将不会被收集和上传
-          </AlertDescription>
+        <Alert
+          size="sm"
+          variant="warning"
+          v-if="!settings.settings.enableEventFetcher"
+        >
+          <AlertDescription class="m-0"> EventFetcher 功能已禁用，直播间事件数据将不会被收集和上传 </AlertDescription>
         </Alert>
       </div>
 
       <Separator />
 
-        <!-- 弹幕客户端模式选择 -->
-        <div class="space-y-2">
-          <span class="text-xs font-semibold text-foreground block">弹幕客户端模式</span>
-          <ToggleGroup
-            type="single"
-            :model-value="settings.settings.useDanmakuClientType"
-            @update:model-value="(val) => { if (val) onSwitchDanmakuClientMode(val as any) }"
+      <!-- 弹幕客户端模式选择 -->
+      <div class="space-y-2">
+        <span class="text-xs font-semibold text-foreground block">弹幕客户端模式</span>
+        <ToggleGroup
+          type="single"
+          :model-value="settings.settings.useDanmakuClientType"
+          @update:model-value="
+            (val) => {
+              if (val) onSwitchDanmakuClientMode(val as any)
+            }
+          "
+        >
+          <ToggleGroupItem
+            value="openlive"
+            :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
           >
+            开放平台
+          </ToggleGroupItem>
+
+          <TooltipProvider>
+            <Tooltip v-if="!biliCookie.isCookieValid">
+              <TooltipTrigger as-child>
+                <span>
+                  <ToggleGroupItem
+                    value="direct"
+                    disabled
+                  >
+                    直接连接
+                  </ToggleGroupItem>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
+            </Tooltip>
             <ToggleGroupItem
-              value="openlive"
+              v-else
+              value="direct"
               :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
             >
-              开放平台
+              直接连接
             </ToggleGroupItem>
-
-            <TooltipProvider>
-              <Tooltip v-if="!biliCookie.isCookieValid">
-                <TooltipTrigger as-child>
-                  <span>
-                    <ToggleGroupItem
-                      value="direct"
-                      disabled
-                    >
-                      直接连接
-                    </ToggleGroupItem>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent> 请先登录 B 站账号以使用直接连接模式 </TooltipContent>
-              </Tooltip>
-              <ToggleGroupItem
-                v-else
-                value="direct"
-                :disabled="webfetcher.state === 'connecting' || !settings.settings.enableEventFetcher"
-              >
-                直接连接
-              </ToggleGroupItem>
-            </TooltipProvider>
-          </ToggleGroup>
-        </div>
+          </TooltipProvider>
+        </ToggleGroup>
+      </div>
 
       <div>
         <Popconfirm

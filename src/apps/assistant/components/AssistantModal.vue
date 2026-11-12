@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Add20Regular, LineHorizontal320Regular, QuestionCircle20Regular } from '@vicons/fluent'
+import Add20Regular from '@vicons/fluent/es/Add20Regular'
+import LineHorizontal320Regular from '@vicons/fluent/es/LineHorizontal320Regular'
+import QuestionCircle20Regular from '@vicons/fluent/es/QuestionCircle20Regular'
 import { computed, ref } from 'vue'
 
 import { Badge } from '@/shared/ui/badge'
@@ -47,7 +49,12 @@ function onClose() {
         class="px-4 py-3 border-b border-border/80 flex flex-row items-center justify-between space-y-0 shrink-0"
       >
         <div class="flex items-center gap-2 min-w-0">
-          <Button variant="ghost" size="xs" class="hidden max-[720px]:inline-flex size-7 -ml-1 text-muted-foreground" @click="drawerVisible = true">
+          <Button
+            variant="ghost"
+            size="xs"
+            class="hidden max-[720px]:inline-flex size-7 -ml-1 text-muted-foreground"
+            @click="drawerVisible = true"
+          >
             <component
               :is="LineHorizontal320Regular"
               class="size-4"
@@ -58,7 +65,11 @@ function onClose() {
 
           <Popover>
             <PopoverTrigger as-child>
-              <Button variant="ghost" size="xs" class="size-6 text-muted-foreground">
+              <Button
+                variant="ghost"
+                size="xs"
+                class="size-6 text-muted-foreground"
+              >
                 <component
                   :is="QuestionCircle20Regular"
                   class="size-3.5"
@@ -80,7 +91,11 @@ function onClose() {
             </PopoverContent>
           </Popover>
 
-          <Badge variant="secondary" size="xs" class="h-5 text-muted-foreground bg-muted">
+          <Badge
+            variant="secondary"
+            size="xs"
+            class="h-5 text-muted-foreground bg-muted"
+          >
             {{ ctx.title || '管理后台' }}
           </Badge>
         </div>

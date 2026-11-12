@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { Mic24Filled, MicOff24Filled, Next20Filled, Pause20Filled, Play20Filled } from '@vicons/fluent'
+import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import MicOff24Filled from '@vicons/fluent/es/MicOff24Filled'
+import Next20Filled from '@vicons/fluent/es/Next20Filled'
+import Pause20Filled from '@vicons/fluent/es/Pause20Filled'
+import Play20Filled from '@vicons/fluent/es/Play20Filled'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -50,7 +54,8 @@ function goToPage() {
           {{ speechState.isSpeaking ? speechState.speakingText : isPaused ? '已暂停' : '待机' }}
         </span>
 
-        <Badge v-if="queueCount> 0"
+        <Badge
+          v-if="queueCount > 0"
           variant="secondary"
           size="xs"
           class="min-w-[18px] px-1 justify-center"

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ArrowReply16Filled } from '@vicons/fluent'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import ArrowReply16Filled from '@vicons/fluent/es/ArrowReply16Filled'
+import Heart from '@vicons/ionicons5/es/Heart'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
@@ -86,7 +87,11 @@ function formatFullTime(time: number) {
 
       <div class="flex-1 min-w-0 space-y-2">
         <div class="flex items-center gap-2">
-          <Badge v-if="item.isDeleted" variant="destructive" size="xs">
+          <Badge
+            v-if="item.isDeleted"
+            variant="destructive"
+            size="xs"
+          >
             已删除
           </Badge>
           <strong class="font-medium text-foreground">{{ item.user.name }}</strong>

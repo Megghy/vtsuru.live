@@ -1,4 +1,4 @@
-import { SquareArrowForward24Filled } from '@vicons/fluent'
+import SquareArrowForward24Filled from '@vicons/fluent/es/SquareArrowForward24Filled'
 import { usePreferredDark } from '@vueuse/core'
 import type { Component, VNode } from 'vue'
 import { computed, h, shallowRef } from 'vue'
@@ -129,13 +129,39 @@ export function NavigateToNewTab(url: string) {
   window.open(url, '_blank')
 }
 
-export function copyToClipboard(text: string) {
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text)
-    message.success('已复制到剪切板')
-  } else {
-    message.warning('当前环境不支持自动复制, 请手动选择并复制')
+function copyWithExecCommand(text: string) {
+  const area = document.createElement('textarea')
+  area.value = text
+  area.setAttribute('readonly', '')
+  area.style.position = 'fixed'
+  area.style.left = '-9999px'
+  document.body.append(area)
+  area.select()
+  try {
+    return document.execCommand('copy')
+  } catch {
+    return false
+  } finally {
+    area.remove()
   }
+}
+
+export async function copyToClipboard(text: string) {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      message.success('已复制到剪切板')
+      return true
+    }
+  } catch {
+    // 插件 iframe 的 Permissions-Policy 会拒绝 clipboard-write，回退到选区复制。
+  }
+  if (copyWithExecCommand(text)) {
+    message.success('已复制到剪切板')
+    return true
+  }
+  message.warning('当前环境不支持自动复制, 请手动选择并复制')
+  return false
 }
 
 export function hexToRgba(hex: string, alpha: number): string | null {

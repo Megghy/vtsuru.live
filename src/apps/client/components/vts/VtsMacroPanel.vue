@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { AddOutline, CopyOutline, ReorderThreeOutline, TrashOutline } from '@vicons/ionicons5'
+import AddOutline from '@vicons/ionicons5/es/AddOutline'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, ref } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -278,7 +281,11 @@ function runMacro(macroId: string) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem v-for="opt in stepTypeOptions" :key="opt.key" @select="addStep(opt.key)">
+              <DropdownMenuItem
+                v-for="opt in stepTypeOptions"
+                :key="opt.key"
+                @select="addStep(opt.key)"
+              >
                 {{ opt.label }}
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -321,7 +328,11 @@ function runMacro(macroId: string) {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem v-for="o in stepTypeOptions" :key="o.key" :value="o.key">
+                      <SelectItem
+                        v-for="o in stepTypeOptions"
+                        :key="o.key"
+                        :value="o.key"
+                      >
                         {{ o.label }}
                       </SelectItem>
                     </SelectContent>
@@ -329,7 +340,12 @@ function runMacro(macroId: string) {
                 </div>
               </div>
 
-              <Button size="icon-xs" variant="ghost" class="text-destructive hover:bg-destructive/10" @click="removeStep(element.id)">
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                class="text-destructive hover:bg-destructive/10"
+                @click="removeStep(element.id)"
+              >
                 <TrashOutline class="size-3.5" />
               </Button>
             </div>
@@ -349,7 +365,11 @@ function runMacro(macroId: string) {
                   <SelectValue placeholder="选择热键" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="h in hotkeyOptions" :key="h.value" :value="h.value">
+                  <SelectItem
+                    v-for="h in hotkeyOptions"
+                    :key="h.value"
+                    :value="h.value"
+                  >
                     {{ h.label }}
                   </SelectItem>
                 </SelectContent>
@@ -369,7 +389,11 @@ function runMacro(macroId: string) {
                   <SelectValue placeholder="选择预设" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="p in presetOptions" :key="p.value" :value="p.value">
+                  <SelectItem
+                    v-for="p in presetOptions"
+                    :key="p.value"
+                    :value="p.value"
+                  >
                     {{ p.label }}
                   </SelectItem>
                 </SelectContent>
@@ -433,7 +457,11 @@ function runMacro(macroId: string) {
                     <SelectValue placeholder="选择配饰" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem v-for="a in accessoryOptions" :key="a.value" :value="a.value">
+                    <SelectItem
+                      v-for="a in accessoryOptions"
+                      :key="a.value"
+                      :value="a.value"
+                    >
                       {{ a.label }}
                     </SelectItem>
                   </SelectContent>
@@ -461,7 +489,11 @@ function runMacro(macroId: string) {
                   <SelectValue placeholder="选择整活" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="p in prankOptions" :key="p.value" :value="p.value">
+                  <SelectItem
+                    v-for="p in prankOptions"
+                    :key="p.value"
+                    :value="p.value"
+                  >
                     {{ p.label }}
                   </SelectItem>
                 </SelectContent>
@@ -507,7 +539,12 @@ function runMacro(macroId: string) {
             />
             <span class="text-muted-foreground">JSON 预览</span>
           </div>
-          <Button size="xs" variant="ghost" class="text-muted-foreground" @click="macroSteps = []">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="text-muted-foreground"
+            @click="macroSteps = []"
+          >
             清空步骤
           </Button>
         </div>

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import {
-  ArrowLeft24Regular,
-  CheckmarkCircle24Regular,
-  Send24Regular,
-  Settings24Regular,
-} from '@vicons/fluent'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import Send24Regular from '@vicons/fluent/es/Send24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, ref, watch } from 'vue'
@@ -28,9 +26,9 @@ import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
+import { Empty } from '@/shared/ui/empty'
 import { ImagePreview } from '@/shared/ui/image-preview'
 import { getPendingUploadFiles, ImageUpload, type UploadImageItem } from '@/shared/ui/image-upload'
-import { Empty } from '@/shared/ui/empty'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Spin } from '@/shared/ui/spin'
 import { Textarea } from '@/shared/ui/textarea'
@@ -172,7 +170,10 @@ function formatRelative(time: number) {
           <div class="ticket-detail__heading min-w-0 space-y-1">
             <div class="ticket-detail__title-row flex items-center gap-2 flex-wrap">
               <h2 class="text-sm font-semibold text-foreground truncate m-0">{{ ticket.title }}</h2>
-              <Badge variant="secondary" size="xs">
+              <Badge
+                variant="secondary"
+                size="xs"
+              >
                 {{ supportTicketStatusMeta[ticket.status].label }}
               </Badge>
             </div>

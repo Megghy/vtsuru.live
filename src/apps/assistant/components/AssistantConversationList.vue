@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { Add16Regular, Delete16Regular, Edit16Regular, Search16Regular } from '@vicons/fluent'
+import Add16Regular from '@vicons/fluent/es/Add16Regular'
+import Delete16Regular from '@vicons/fluent/es/Delete16Regular'
+import Edit16Regular from '@vicons/fluent/es/Edit16Regular'
+import Search16Regular from '@vicons/fluent/es/Search16Regular'
 import { computed, ref } from 'vue'
 
 import {

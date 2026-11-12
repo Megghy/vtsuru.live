@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
+import Info16Regular from '@vicons/fluent/es/Info16Regular'
 import { ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -110,14 +110,10 @@ function getGuardLevelName(level: number): string {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">总督</SelectItem
-              >
-              <SelectItem value="2">提督</SelectItem
-              >
-              <SelectItem value="3">舰长</SelectItem
-              >
-              <SelectItem value="0">通用</SelectItem
-              >
+              <SelectItem value="1">总督</SelectItem>
+              <SelectItem value="2">提督</SelectItem>
+              <SelectItem value="3">舰长</SelectItem>
+              <SelectItem value="0">通用</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -139,7 +135,18 @@ function getGuardLevelName(level: number): string {
           :key="levelIndex"
           class="flex items-center gap-2 p-1.5 rounded border bg-muted/20"
         >
-          <Badge variant="warning" size="xs" class="h-5" :class=" levelCodes.level === 3 ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : levelCodes.level === 0 ? '' : ' ' ">
+          <Badge
+            variant="warning"
+            size="xs"
+            class="h-5"
+            :class="
+              levelCodes.level === 3
+                ? 'border-sky-500/40 text-sky-600 bg-sky-500/10'
+                : levelCodes.level === 0
+                  ? ''
+                  : ' '
+            "
+          >
             {{ getGuardLevelName(levelCodes.level) }}
           </Badge>
 

@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import { error as logError, info as logInfo } from '@tauri-apps/plugin-log'
-import {
-  AddOutline,
-  ChatbubbleEllipsesOutline,
-  CheckmarkCircleOutline,
-  CloseCircleOutline,
-  CreateOutline,
-  PersonOutline,
-  QrCodeOutline,
-  RefreshOutline,
-  StarOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
+import AddOutline from '@vicons/ionicons5/es/AddOutline'
+import ChatbubbleEllipsesOutline from '@vicons/ionicons5/es/ChatbubbleEllipsesOutline'
+import CheckmarkCircleOutline from '@vicons/ionicons5/es/CheckmarkCircleOutline'
+import CloseCircleOutline from '@vicons/ionicons5/es/CloseCircleOutline'
+import CreateOutline from '@vicons/ionicons5/es/CreateOutline'
+import PersonOutline from '@vicons/ionicons5/es/PersonOutline'
+import QrCodeOutline from '@vicons/ionicons5/es/QrCodeOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import StarOutline from '@vicons/ionicons5/es/StarOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import QrcodeVue from 'qrcode.vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { toast } from 'vue-sonner'
@@ -330,7 +328,12 @@ async function handleRemoveAccount(id: string) {
                   <SelectValue placeholder="请选择主账号" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in mainAccountOptions" :key="opt.value" :value="opt.value" :disabled="opt.disabled">
+                  <SelectItem
+                    v-for="opt in mainAccountOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                    :disabled="opt.disabled"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -350,7 +353,11 @@ async function handleRemoveAccount(id: string) {
                   <SelectValue placeholder="选择发弹幕账号" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in danmakuAccountOptions" :key="opt.value" :value="opt.value">
+                  <SelectItem
+                    v-for="opt in danmakuAccountOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -460,7 +467,12 @@ async function handleRemoveAccount(id: string) {
                       取消
                     </Button>
                   </div>
-                  <Badge v-else-if="acc.alias" variant="outline" class="cursor-pointer border-sky-500/40 text-sky-600 bg-sky-500/10" @click="startEditAlias(acc)">
+                  <Badge
+                    v-else-if="acc.alias"
+                    variant="outline"
+                    class="cursor-pointer border-sky-500/40 text-sky-600 bg-sky-500/10"
+                    @click="startEditAlias(acc)"
+                  >
                     {{ acc.alias }}
                   </Badge>
                   <Button
@@ -475,11 +487,20 @@ async function handleRemoveAccount(id: string) {
                   </Button>
 
                   <!-- 有效性 Badge -->
-                  <Badge v-if="acc.isValid" variant="success" class="gap-0.5">
+                  <Badge
+                    v-if="acc.isValid"
+                    variant="success"
+                    class="gap-0.5"
+                  >
                     <CheckmarkCircleOutline class="size-3" />
                     有效
                   </Badge>
-                  <Badge v-else variant="outline" size="xs" class="border-destructive/40 text-destructive bg-destructive/10 gap-0.5">
+                  <Badge
+                    v-else
+                    variant="outline"
+                    size="xs"
+                    class="border-destructive/40 text-destructive bg-destructive/10 gap-0.5"
+                  >
                     <CloseCircleOutline class="size-3" />
                     已失效
                   </Badge>
@@ -501,11 +522,25 @@ async function handleRemoveAccount(id: string) {
             <!-- 角色徽章与操作 -->
             <div class="flex items-center gap-1.5 flex-wrap">
               <!-- 角色徽章 -->
-              <Badge v-if="acc.id === accountManager.routing.mainAccountId" variant="warning" size="xs" class="h-5 gap-1">
+              <Badge
+                v-if="acc.id === accountManager.routing.mainAccountId"
+                variant="warning"
+                size="xs"
+                class="h-5 gap-1"
+              >
                 <StarOutline class="size-3" />
                 主播管理
               </Badge>
-              <Badge v-if=" acc.id === accountManager.routing.danmakuAccountId || (accountManager.routing.danmakuAccountId === 'main' && acc.id === accountManager.routing.mainAccountId) " variant="outline" size="xs" class="h-5 border-sky-500/40 text-sky-600 bg-sky-500/10 gap-1">
+              <Badge
+                v-if="
+                  acc.id === accountManager.routing.danmakuAccountId ||
+                  (accountManager.routing.danmakuAccountId === 'main' &&
+                    acc.id === accountManager.routing.mainAccountId)
+                "
+                variant="outline"
+                size="xs"
+                class="h-5 border-sky-500/40 text-sky-600 bg-sky-500/10 gap-1"
+              >
                 <ChatbubbleEllipsesOutline class="size-3" />
                 发弹幕
               </Badge>
@@ -585,15 +620,9 @@ async function handleRemoveAccount(id: string) {
           class="w-full mt-2"
         >
           <TabsList class="grid w-full grid-cols-3">
-            <TabsTrigger value="qrcode" >
-              二维码扫码登录
-            </TabsTrigger>
-            <TabsTrigger value="cloud" >
-              CookieCloud 导入
-            </TabsTrigger>
-            <TabsTrigger value="manual" >
-              手动粘贴 Cookie
-            </TabsTrigger>
+            <TabsTrigger value="qrcode"> 二维码扫码登录 </TabsTrigger>
+            <TabsTrigger value="cloud"> CookieCloud 导入 </TabsTrigger>
+            <TabsTrigger value="manual"> 手动粘贴 Cookie </TabsTrigger>
           </TabsList>
 
           <!-- 扫码登录 -->

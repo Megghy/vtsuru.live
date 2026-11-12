@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  ArrowDownload20Regular,
-  CalendarLtr20Regular,
-  ChevronLeft20Regular,
-  ChevronRight20Regular,
-  Clock20Regular,
-  Open20Regular,
-  Tag20Regular,
-} from '@vicons/fluent'
+import ArrowDownload20Regular from '@vicons/fluent/es/ArrowDownload20Regular'
+import CalendarLtr20Regular from '@vicons/fluent/es/CalendarLtr20Regular'
+import ChevronLeft20Regular from '@vicons/fluent/es/ChevronLeft20Regular'
+import ChevronRight20Regular from '@vicons/fluent/es/ChevronRight20Regular'
+import Clock20Regular from '@vicons/fluent/es/Clock20Regular'
+import Open20Regular from '@vicons/fluent/es/Open20Regular'
+import Tag20Regular from '@vicons/fluent/es/Tag20Regular'
 import { snapdom } from '@zumer/snapdom'
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
@@ -529,7 +527,11 @@ defineExpose({ Config, DefaultConfig })
                 <SelectValue placeholder="选择周次" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in weekOptions" :key="opt.value" :value="opt.value">
+                <SelectItem
+                  v-for="opt in weekOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>

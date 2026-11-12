@@ -1,16 +1,15 @@
 <script setup lang="ts">
-import {
-  ArrowSync24Regular,
-  Checkmark24Regular,
-  Comment24Regular,
-  Dismiss24Regular,
-  Eye24Regular,
-  Image24Regular,
-  Location24Regular,
-  LockClosed24Regular,
-  Search24Regular,
-} from '@vicons/fluent'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Comment24Regular from '@vicons/fluent/es/Comment24Regular'
+import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import Image24Regular from '@vicons/fluent/es/Image24Regular'
+import Location24Regular from '@vicons/fluent/es/Location24Regular'
+import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Heart from '@vicons/ionicons5/es/Heart'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, nextTick, ref } from 'vue'
@@ -81,7 +80,13 @@ defineExpose({ scrollToCurrent })
         <div class="heading-actions flex items-center gap-1">
           <Tooltip v-if="currentId">
             <TooltipTrigger as-child>
-              <Button variant="ghost" size="xs" class="size-7" aria-label="定位正在展示的提问" @click="scrollToCurrent">
+              <Button
+                variant="ghost"
+                size="xs"
+                class="size-7"
+                aria-label="定位正在展示的提问"
+                @click="scrollToCurrent"
+              >
                 <component
                   :is="Location24Regular"
                   class="size-4"
@@ -92,7 +97,14 @@ defineExpose({ scrollToCurrent })
           </Tooltip>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button variant="outline" size="xs" class="size-7" :disabled="loading" aria-label="刷新提问队列" @click="emit('refresh')">
+              <Button
+                variant="outline"
+                size="xs"
+                class="size-7"
+                :disabled="loading"
+                aria-label="刷新提问队列"
+                @click="emit('refresh')"
+              >
                 <component
                   :is="ArrowSync24Regular"
                   class="size-4"
@@ -126,9 +138,12 @@ defineExpose({ scrollToCurrent })
             <SelectValue placeholder="全部话题" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部话题</SelectItem
+            <SelectItem value="all">全部话题</SelectItem>
+            <SelectItem
+              v-for="opt in tagOptions"
+              :key="opt.value"
+              :value="opt.value"
             >
-            <SelectItem v-for="opt in tagOptions" :key="opt.value" :value="opt.value">
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -195,20 +210,38 @@ defineExpose({ scrollToCurrent })
                 {{ item.question.message }}
               </p>
               <div class="question-flags flex items-center gap-1.5 flex-wrap pt-0.5">
-                <Badge v-if="item.id === currentId" variant="default" size="xs">
+                <Badge
+                  v-if="item.id === currentId"
+                  variant="default"
+                  size="xs"
+                >
                   正在展示
                 </Badge>
-                <Badge v-else-if="!item.isReaded" variant="secondary" size="xs" class="bg-amber-500/10 text-amber-500">
+                <Badge
+                  v-else-if="!item.isReaded"
+                  variant="secondary"
+                  size="xs"
+                  class="bg-amber-500/10 text-amber-500"
+                >
                   未读
                 </Badge>
-                <Badge v-if="item.answer" variant="outline" size="xs" class="flex items-center gap-0.5 text-blue-500">
+                <Badge
+                  v-if="item.answer"
+                  variant="outline"
+                  size="xs"
+                  class="flex items-center gap-0.5 text-blue-500"
+                >
                   <component
                     :is="Comment24Regular"
                     class="size-3"
                   />
                   已回复
                 </Badge>
-                <Badge v-if="item.tag" variant="outline" size="xs">
+                <Badge
+                  v-if="item.tag"
+                  variant="outline"
+                  size="xs"
+                >
                   {{ item.tag }}
                 </Badge>
                 <span
@@ -229,7 +262,14 @@ defineExpose({ scrollToCurrent })
             >
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="xs" class="size-6" :class="item.id === currentId ? 'text-destructive' : 'text-primary'" :aria-label="item.id === currentId ? '清空当前展示' : '展示这条提问'" @click="item.id === currentId ? emit('clear') : emit('show', item)">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    class="size-6"
+                    :class="item.id === currentId ? 'text-destructive' : 'text-primary'"
+                    :aria-label="item.id === currentId ? '清空当前展示' : '展示这条提问'"
+                    @click="item.id === currentId ? emit('clear') : emit('show', item)"
+                  >
                     <component
                       :is="item.id === currentId ? Dismiss24Regular : Eye24Regular"
                       class="size-3.5"
@@ -241,7 +281,14 @@ defineExpose({ scrollToCurrent })
 
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" :disabled="item.isReaded" aria-label="标记为已读" @click="emit('read', item)">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    class="size-6 text-muted-foreground"
+                    :disabled="item.isReaded"
+                    aria-label="标记为已读"
+                    @click="emit('read', item)"
+                  >
                     <component
                       :is="Checkmark24Regular"
                       class="size-3.5"
@@ -253,7 +300,14 @@ defineExpose({ scrollToCurrent })
 
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button variant="ghost" size="xs" class="size-6" :class="item.isFavorite ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'" :aria-label="item.isFavorite ? '取消收藏' : '收藏'" @click="emit('favorite', item, !item.isFavorite)">
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    class="size-6"
+                    :class="item.isFavorite ? 'text-destructive' : 'text-muted-foreground hover:text-foreground'"
+                    :aria-label="item.isFavorite ? '取消收藏' : '收藏'"
+                    @click="emit('favorite', item, !item.isFavorite)"
+                  >
                     <component
                       :is="item.isFavorite ? Heart : HeartOutline"
                       class="size-3.5"

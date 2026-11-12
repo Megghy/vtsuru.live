@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Add16Regular, Copy16Regular, Search16Regular } from '@vicons/fluent'
+import Add16Regular from '@vicons/fluent/es/Add16Regular'
+import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
+import Search16Regular from '@vicons/fluent/es/Search16Regular'
 import { computed, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -69,10 +71,22 @@ function handleInsert(text: string) {
             </div>
           </div>
           <div class="flex items-center gap-1 shrink-0 opacity-40 transition-opacity group-hover:opacity-100">
-            <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="复制" @click.stop="copyToClipboard(item.name)">
+            <Button
+              variant="ghost"
+              size="xs"
+              class="size-6 text-muted-foreground"
+              aria-label="复制"
+              @click.stop="copyToClipboard(item.name)"
+            >
               <Copy16Regular class="size-3.5" />
             </Button>
-            <Button variant="ghost" size="xs" class="size-6 text-muted-foreground" aria-label="插入" @click.stop="handleInsert(item.name)">
+            <Button
+              variant="ghost"
+              size="xs"
+              class="size-6 text-muted-foreground"
+              aria-label="插入"
+              @click.stop="handleInsert(item.name)"
+            >
               <Add16Regular class="size-3.5" />
             </Button>
           </div>

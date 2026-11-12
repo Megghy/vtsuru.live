@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ArrowSort16Regular, CheckmarkCircle16Regular, Clock16Regular, Filter16Regular } from '@vicons/fluent'
+import ArrowSort16Regular from '@vicons/fluent/es/ArrowSort16Regular'
+import CheckmarkCircle16Regular from '@vicons/fluent/es/CheckmarkCircle16Regular'
+import Clock16Regular from '@vicons/fluent/es/Clock16Regular'
+import Filter16Regular from '@vicons/fluent/es/Filter16Regular'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -46,7 +49,12 @@ function markAllRead() {
       />
       <Popover v-if="panel === 'gift'">
         <PopoverTrigger as-child>
-          <Button variant="ghost" size="icon-xs" aria-label="礼物过滤" :class=" dashboard.settings.giftMinPrice> 0 || dashboard.settings.showFreeGift
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label="礼物过滤"
+            :class="
+              dashboard.settings.giftMinPrice > 0 || dashboard.settings.showFreeGift
                 ? 'text-primary'
                 : 'text-muted-foreground'
             "
@@ -57,7 +65,10 @@ function markAllRead() {
             />
           </Button>
         </PopoverTrigger>
-        <PopoverContent class="w-[220px]" align="end">
+        <PopoverContent
+          class="w-[220px]"
+          align="end"
+        >
           <div class="grid gap-2 w-[200px] text-xs">
             <label class="text-muted-foreground">最低金额（元），大航海不受影响</label>
             <NumberField

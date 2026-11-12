@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  ArrowClockwise16Regular,
-  BrainCircuit20Regular,
-  Checkmark16Regular,
-  ChevronDown12Regular,
-  Copy16Regular,
-  Dismiss16Regular,
-  Edit16Regular,
-} from '@vicons/fluent'
+import ArrowClockwise16Regular from '@vicons/fluent/es/ArrowClockwise16Regular'
+import BrainCircuit20Regular from '@vicons/fluent/es/BrainCircuit20Regular'
+import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
+import ChevronDown12Regular from '@vicons/fluent/es/ChevronDown12Regular'
+import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
+import Dismiss16Regular from '@vicons/fluent/es/Dismiss16Regular'
+import Edit16Regular from '@vicons/fluent/es/Edit16Regular'
 import { reactive } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -295,7 +293,12 @@ function formatTokens(value?: number): string {
           >
             <Tooltip v-if="msg.text">
               <TooltipTrigger as-child>
-                <Button variant="ghost" size="xs" class="msg-action size-6 rounded-full text-muted-foreground" @click="copyMessage(msg)">
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  class="msg-action size-6 rounded-full text-muted-foreground"
+                  @click="copyMessage(msg)"
+                >
                   <component
                     :is="Copy16Regular"
                     class="size-3"
@@ -307,7 +310,13 @@ function formatTokens(value?: number): string {
 
             <Tooltip v-if="msg.role === 'user'">
               <TooltipTrigger as-child>
-                <Button variant="ghost" size="xs" class="msg-action size-6 rounded-full text-muted-foreground" :disabled="busy || !canEditUser(msg)" @click="startEditing(msg)">
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  class="msg-action size-6 rounded-full text-muted-foreground"
+                  :disabled="busy || !canEditUser(msg)"
+                  @click="startEditing(msg)"
+                >
                   <component
                     :is="Edit16Regular"
                     class="size-3"
@@ -319,7 +328,13 @@ function formatTokens(value?: number): string {
 
             <Tooltip v-if="msg.role === 'assistant'">
               <TooltipTrigger as-child>
-                <Button variant="ghost" size="xs" class="msg-action size-6 rounded-full text-muted-foreground" :disabled="busy" @click="emit('rerun', msg.id)">
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  class="msg-action size-6 rounded-full text-muted-foreground"
+                  :disabled="busy"
+                  @click="emit('rerun', msg.id)"
+                >
                   <component
                     :is="ArrowClockwise16Regular"
                     class="size-3"
@@ -335,7 +350,12 @@ function formatTokens(value?: number): string {
             class="msg-error flex-between gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20 text-destructive text-xs"
           >
             <span class="msg-error__text flex-1">{{ msg.error ?? '出错了' }}</span>
-            <Button size="xs" variant="outline" class="border-destructive/30 hover:bg-destructive/20" @click="emit('retry', msg.id)">
+            <Button
+              size="xs"
+              variant="outline"
+              class="border-destructive/30 hover:bg-destructive/20"
+              @click="emit('retry', msg.id)"
+            >
               重试
             </Button>
           </div>

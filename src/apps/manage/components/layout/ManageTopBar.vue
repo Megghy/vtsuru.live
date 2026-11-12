@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ArrowLeft24Regular, Bot24Regular } from '@vicons/fluent'
-import { ChevronBackOutline, ChevronForwardOutline, Moon, Sunny } from '@vicons/ionicons5'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
+import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
+import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
+import Moon from '@vicons/ionicons5/es/Moon'
+import Sunny from '@vicons/ionicons5/es/Sunny'
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 

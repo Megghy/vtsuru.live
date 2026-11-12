@@ -1,38 +1,34 @@
 <script setup lang="ts">
-import {
-  BookCoins20Filled,
-  CalendarClock24Filled,
-  Info24Filled,
-  Live24Filled,
-  Lottery24Filled,
-  PeopleQueue24Filled,
-  History24Regular,
-  Receipt24Regular,
-  Settings24Regular,
-  PersonFeedback24Filled,
-  StoreMicrosoft24Regular,
-  Board24Regular,
-  Bot24Regular,
-  TabletSpeaker24Filled,
-  VehicleShip24Filled,
-  VideoAdd20Filled,
-} from '@vicons/fluent'
-import {
-  AnalyticsSharp,
-  Bookmark,
-  BookmarkOutline,
-  Chatbox,
-  ChatbubbleEllipsesOutline,
-  ColorPaletteOutline,
-  DocumentTextOutline,
-  Eye,
-  GridOutline,
-  ImageOutline,
-  MusicalNote,
-  MusicalNotesOutline,
-  PlayCircleOutline,
-  StatsChartOutline,
-} from '@vicons/ionicons5'
+import Board24Regular from '@vicons/fluent/es/Board24Regular'
+import BookCoins20Filled from '@vicons/fluent/es/BookCoins20Filled'
+import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
+import CalendarClock24Filled from '@vicons/fluent/es/CalendarClock24Filled'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Live24Filled from '@vicons/fluent/es/Live24Filled'
+import Lottery24Filled from '@vicons/fluent/es/Lottery24Filled'
+import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
+import PersonFeedback24Filled from '@vicons/fluent/es/PersonFeedback24Filled'
+import Receipt24Regular from '@vicons/fluent/es/Receipt24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import StoreMicrosoft24Regular from '@vicons/fluent/es/StoreMicrosoft24Regular'
+import TabletSpeaker24Filled from '@vicons/fluent/es/TabletSpeaker24Filled'
+import VehicleShip24Filled from '@vicons/fluent/es/VehicleShip24Filled'
+import VideoAdd20Filled from '@vicons/fluent/es/VideoAdd20Filled'
+import AnalyticsSharp from '@vicons/ionicons5/es/AnalyticsSharp'
+import Bookmark from '@vicons/ionicons5/es/Bookmark'
+import BookmarkOutline from '@vicons/ionicons5/es/BookmarkOutline'
+import Chatbox from '@vicons/ionicons5/es/Chatbox'
+import ChatbubbleEllipsesOutline from '@vicons/ionicons5/es/ChatbubbleEllipsesOutline'
+import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
+import DocumentTextOutline from '@vicons/ionicons5/es/DocumentTextOutline'
+import Eye from '@vicons/ionicons5/es/Eye'
+import GridOutline from '@vicons/ionicons5/es/GridOutline'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
+import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
+import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
+import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
 import { computed, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
@@ -639,7 +635,10 @@ async function go(name: string, query?: Record<string, string>) {
                       />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" class="max-w-xs p-3">
+                  <TooltipContent
+                    side="right"
+                    class="max-w-xs p-3"
+                  >
                     <div class="font-medium text-destructive mb-1">可用性警告</div>
                     <div class="text-[11px] text-muted-foreground space-y-1">
                       <div>

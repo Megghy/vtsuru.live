@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Play20Filled } from '@vicons/fluent'
+import Play20Filled from '@vicons/fluent/es/Play20Filled'
 import { computed, ref } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -53,7 +53,11 @@ async function onPreview() {
           <SelectValue :placeholder="placeholder ?? '选择音色'" />
         </SelectTrigger>
         <SelectContent class="max-h-60">
-          <SelectItem v-for="opt in normalizedOptions" :key="opt.value" :value="opt.value">
+          <SelectItem
+            v-for="opt in normalizedOptions"
+            :key="opt.value"
+            :value="opt.value"
+          >
             {{ opt.label }}
           </SelectItem>
         </SelectContent>

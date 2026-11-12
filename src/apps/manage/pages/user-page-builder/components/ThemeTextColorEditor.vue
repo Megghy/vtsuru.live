@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info16Regular } from '@vicons/fluent'
+import Info16Regular from '@vicons/fluent/es/Info16Regular'
 import { computed } from 'vue'
 
 import type { UserPageTextTheme } from '@/apps/user-page/theme'

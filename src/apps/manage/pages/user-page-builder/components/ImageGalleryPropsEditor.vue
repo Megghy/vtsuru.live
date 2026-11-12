@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { AddOutline, ImageOutline, TrashOutline } from '@vicons/ionicons5'
+import AddOutline from '@vicons/ionicons5/es/AddOutline'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -332,13 +334,27 @@ function propertyAvailable(property: string) {
             </div>
 
             <div class="flex items-center gap-1.5">
-              <Button size="xs" variant="outline" :disabled="props.editor.isUploading.value" @click="props.editor.triggerUploadItemImage(props.block, index)">
+              <Button
+                size="xs"
+                variant="outline"
+                :disabled="props.editor.isUploading.value"
+                @click="props.editor.triggerUploadItemImage(props.block, index)"
+              >
                 上传
               </Button>
-              <Button size="xs" variant="ghost" @click="props.editor.clearUploadedItemImage(props.block, index)">
+              <Button
+                size="xs"
+                variant="ghost"
+                @click="props.editor.clearUploadedItemImage(props.block, index)"
+              >
                 清除
               </Button>
-              <Button size="xs" variant="ghost" class="text-destructive hover:text-destructive" @click="removeItem(index)">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="text-destructive hover:text-destructive"
+                @click="removeItem(index)"
+              >
                 <component
                   :is="TrashOutline"
                   class="size-3.5"

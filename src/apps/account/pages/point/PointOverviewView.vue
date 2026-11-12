@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ArrowRight24Regular, ArrowSync24Regular, Gift24Regular, Open24Regular, Wallet24Regular } from '@vicons/fluent'
+import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Gift24Regular from '@vicons/fluent/es/Gift24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Wallet24Regular from '@vicons/fluent/es/Wallet24Regular'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -76,9 +80,7 @@ onMounted(loadPoints)
         <div
           class="summary-item summary-item--primary flex items-center gap-3.5 p-4 rounded-lg border border-primary/30 bg-primary/5"
         >
-          <span
-            class="summary-icon size-10 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
-          >
+          <span class="summary-icon size-10 rounded-lg bg-primary/10 text-primary flex-center shrink-0">
             <component
               :is="Wallet24Regular"
               class="size-5"
@@ -90,9 +92,7 @@ onMounted(loadPoints)
           </div>
         </div>
         <div class="summary-item flex items-center gap-3.5 p-4 rounded-lg border border-border bg-card">
-          <span
-            class="summary-icon size-10 rounded-lg bg-muted text-muted-foreground flex-center shrink-0"
-          >
+          <span class="summary-icon size-10 rounded-lg bg-muted text-muted-foreground flex-center shrink-0">
             <component
               :is="Gift24Regular"
               class="size-5"

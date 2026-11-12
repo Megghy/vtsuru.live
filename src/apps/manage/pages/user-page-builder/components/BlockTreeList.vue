@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  AlertCircleOutline,
-  ChevronForwardOutline,
-  EllipsisHorizontalOutline,
-  EyeOffOutline,
-  EyeOutline,
-  LocateOutline,
-  ReorderThreeOutline,
-} from '@vicons/ionicons5'
+import AlertCircleOutline from '@vicons/ionicons5/es/AlertCircleOutline'
+import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
+import EllipsisHorizontalOutline from '@vicons/ionicons5/es/EllipsisHorizontalOutline'
+import EyeOffOutline from '@vicons/ionicons5/es/EyeOffOutline'
+import EyeOutline from '@vicons/ionicons5/es/EyeOutline'
+import LocateOutline from '@vicons/ionicons5/es/LocateOutline'
+import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
 import { computed, inject } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
@@ -323,7 +321,12 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button size="icon-xs" variant="ghost" :aria-label="b.hidden ? '显示区块' : '隐藏区块'" @click.stop="b.hidden = !b.hidden">
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                :aria-label="b.hidden ? '显示区块' : '隐藏区块'"
+                @click.stop="b.hidden = !b.hidden"
+              >
                 <component
                   :is="b.hidden ? EyeOffOutline : EyeOutline"
                   class="size-3.5"
@@ -337,7 +340,12 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger as-child>
-              <Button size="icon-xs" variant="ghost" aria-label="在预览中定位" @click.stop="scrollToPreviewBlock(b.id)">
+              <Button
+                size="icon-xs"
+                variant="ghost"
+                aria-label="在预览中定位"
+                @click.stop="scrollToPreviewBlock(b.id)"
+              >
                 <component
                   :is="LocateOutline"
                   class="size-3.5"
@@ -350,14 +358,22 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
 
         <DropdownMenu>
           <DropdownMenuTrigger as-child>
-            <Button size="icon-xs" variant="ghost" aria-label="更多区块操作" @click.stop>
+            <Button
+              size="icon-xs"
+              variant="ghost"
+              aria-label="更多区块操作"
+              @click.stop
+            >
               <component
                 :is="EllipsisHorizontalOutline"
                 class="size-3.5"
               />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" class="w-44">
+          <DropdownMenuContent
+            align="end"
+            class="w-44"
+          >
             <template
               v-for="item in props.blockActionOptions"
               :key="item.key"

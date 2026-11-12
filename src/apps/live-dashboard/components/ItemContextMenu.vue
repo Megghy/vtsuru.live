@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import {
-  Checkmark16Regular,
-  Copy16Regular,
-  Filter16Regular,
-  Image16Regular,
-  Person16Regular,
-  PersonProhibited16Regular,
-  Speaker216Regular,
-  TextQuote16Regular,
-  Translate16Regular,
-} from '@vicons/fluent'
+import Checkmark16Regular from '@vicons/fluent/es/Checkmark16Regular'
+import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
+import Filter16Regular from '@vicons/fluent/es/Filter16Regular'
+import Image16Regular from '@vicons/fluent/es/Image16Regular'
+import Person16Regular from '@vicons/fluent/es/Person16Regular'
+import PersonProhibited16Regular from '@vicons/fluent/es/PersonProhibited16Regular'
+import Speaker216Regular from '@vicons/fluent/es/Speaker216Regular'
+import TextQuote16Regular from '@vicons/fluent/es/TextQuote16Regular'
+import Translate16Regular from '@vicons/fluent/es/Translate16Regular'
 import type { Component } from 'vue'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Pin16Filled } from '@vicons/fluent'
+import Pin16Filled from '@vicons/fluent/es/Pin16Filled'
 import { computed } from 'vue'
 
 import type { ResponsePointGoodModel } from '@/api/client-types'
@@ -97,15 +97,25 @@ const priceRangeText = computed(() => {
       >
         <!-- 左侧标签组 -->
         <div class="overlay-tags flex items-center gap-1 flex-wrap">
-          <Badge variant="secondary" size="xs" class="bg-black/60 text-white border-0">
+          <Badge
+            variant="secondary"
+            size="xs"
+            class="bg-black/60 text-white border-0"
+          >
             {{ goods.type === GoodsTypes.Physical ? '实物' : goods.type === GoodsTypes.Service ? '服务' : '虚拟' }}
           </Badge>
 
-          <Badge v-if="hasSubItems" variant="secondary" size="xs" class="bg-black/60 text-white border-0">
+          <Badge
+            v-if="hasSubItems"
+            variant="secondary"
+            size="xs"
+            class="bg-black/60 text-white border-0"
+          >
             多选
           </Badge>
 
-          <Badge v-if="goods.allowGuardLevel> 0"
+          <Badge
+            v-if="goods.allowGuardLevel > 0"
             variant="secondary"
             class="text-[10px] h-4.5 px-1 font-normal bg-amber-500/80 text-white border-0"
           >
@@ -163,13 +173,29 @@ const priceRangeText = computed(() => {
         v-if="!isManage"
         class="tags-row flex items-center gap-1 flex-wrap pt-1"
       >
-        <Badge v-if="goods.canFreeBuy" variant="secondary" size="xs" class="bg-emerald-500/10 text-emerald-600">
+        <Badge
+          v-if="goods.canFreeBuy"
+          variant="secondary"
+          size="xs"
+          class="bg-emerald-500/10 text-emerald-600"
+        >
           ⭐ 舰长免费
         </Badge>
-        <Badge v-if="!goods.isAllowRebuy" variant="secondary" size="xs" class="bg-destructive/10 text-destructive">
+        <Badge
+          v-if="!goods.isAllowRebuy"
+          variant="secondary"
+          size="xs"
+          class="bg-destructive/10 text-destructive"
+        >
           🔒 限购一次
         </Badge>
-        <Badge v-for="tag in goods.tags" :key="tag" variant="outline" size="xs" class="text-muted-foreground">
+        <Badge
+          v-for="tag in goods.tags"
+          :key="tag"
+          variant="outline"
+          size="xs"
+          class="text-muted-foreground"
+        >
           {{ tag }}
         </Badge>
       </div>
@@ -225,7 +251,10 @@ const priceRangeText = computed(() => {
     </CardContent>
 
     <!-- 页脚插槽 -->
-    <CardFooter v-if="$slots.footer" class="p-3">
+    <CardFooter
+      v-if="$slots.footer"
+      class="p-3"
+    >
       <slot name="footer" />
     </CardFooter>
   </Card>

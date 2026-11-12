@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Box24Regular, Heart24Filled, VehicleShip24Filled } from '@vicons/fluent'
+import Box24Regular from '@vicons/fluent/es/Box24Regular'
+import Heart24Filled from '@vicons/fluent/es/Heart24Filled'
+import VehicleShip24Filled from '@vicons/fluent/es/VehicleShip24Filled'
 import { storeToRefs } from 'pinia'
 
 import { EventDataTypes } from '@/api/generated/model'

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NotificationsOutline } from '@vicons/ionicons5'
+import NotificationsOutline from '@vicons/ionicons5/es/NotificationsOutline'
 import { format } from 'date-fns'
 import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -196,14 +196,21 @@ watch(
       <div class="flex-between p-3 border-b border-border bg-muted/20">
         <div class="flex items-center gap-1.5 font-semibold text-xs text-foreground">
           <span>通知</span>
-          <Badge v-if="notificationStore.unreadCount> 0"
+          <Badge
+            v-if="notificationStore.unreadCount > 0"
             variant="secondary"
             class="text-[10px] px-1.5 py-0 h-4"
           >
             {{ notificationStore.unreadCount }} 未读
           </Badge>
         </div>
-        <Button size="xs" variant="ghost" class="text-muted-foreground" :disabled="notificationStore.unreadCount === 0" @click.stop="markAllRead">
+        <Button
+          size="xs"
+          variant="ghost"
+          class="text-muted-foreground"
+          :disabled="notificationStore.unreadCount === 0"
+          @click.stop="markAllRead"
+        >
           全部已读
         </Button>
       </div>
@@ -249,17 +256,36 @@ watch(
 
             <div class="flex items-center gap-1.5 pt-1 justify-end flex-wrap">
               <template v-if="isOrgInviteNotification(item)">
-                <Button size="xs" variant="brand" @click.stop="acceptOrgInvite(item)">
+                <Button
+                  size="xs"
+                  variant="brand"
+                  @click.stop="acceptOrgInvite(item)"
+                >
                   接受
                 </Button>
-                <Button size="xs" variant="outline" @click.stop="rejectOrgInvite(item)">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  @click.stop="rejectOrgInvite(item)"
+                >
                   拒绝
                 </Button>
               </template>
-              <Button v-if="resolveOpenUrl(item)" size="xs" variant="brand" @click.stop="openNotif(item)">
+              <Button
+                v-if="resolveOpenUrl(item)"
+                size="xs"
+                variant="brand"
+                @click.stop="openNotif(item)"
+              >
                 打开
               </Button>
-              <Button v-if="!item.isReaded" size="xs" variant="ghost" class="text-muted-foreground" @click.stop="markRead(item.id)">
+              <Button
+                v-if="!item.isReaded"
+                size="xs"
+                variant="ghost"
+                class="text-muted-foreground"
+                @click.stop="markRead(item.id)"
+              >
                 标为已读
               </Button>
             </div>

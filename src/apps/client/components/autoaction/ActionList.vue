@@ -1,16 +1,14 @@
 <script setup lang="ts">
-import {
-  Add16Regular,
-  ArrowDown24Regular,
-  ArrowUp24Regular,
-  CheckmarkCircle16Regular,
-  Copy16Regular,
-  Delete16Regular,
-  DismissCircle16Regular,
-  Edit16Regular,
-  MoreHorizontal24Regular,
-  Search16Regular,
-} from '@vicons/fluent'
+import Add16Regular from '@vicons/fluent/es/Add16Regular'
+import ArrowDown24Regular from '@vicons/fluent/es/ArrowDown24Regular'
+import ArrowUp24Regular from '@vicons/fluent/es/ArrowUp24Regular'
+import CheckmarkCircle16Regular from '@vicons/fluent/es/CheckmarkCircle16Regular'
+import Copy16Regular from '@vicons/fluent/es/Copy16Regular'
+import Delete16Regular from '@vicons/fluent/es/Delete16Regular'
+import DismissCircle16Regular from '@vicons/fluent/es/DismissCircle16Regular'
+import Edit16Regular from '@vicons/fluent/es/Edit16Regular'
+import MoreHorizontal24Regular from '@vicons/fluent/es/MoreHorizontal24Regular'
+import Search16Regular from '@vicons/fluent/es/Search16Regular'
 import { computed, nextTick, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -229,9 +227,7 @@ function toggleActionOnlyLive(row: AutoActionItem) {
 
 <template>
   <div class="flex flex-col h-full">
-    <div
-      class="py-2.5 px-3.5 bg-muted rounded-md border border-border flex-between gap-3 flex-wrap"
-    >
+    <div class="py-2.5 px-3.5 bg-muted rounded-md border border-border flex-between gap-3 flex-wrap">
       <div class="flex items-center gap-4 flex-wrap">
         <div class="flex items-center gap-2 cursor-pointer select-none">
           <Switch v-model:checked="typeEnabled" />
@@ -247,11 +243,21 @@ function toggleActionOnlyLive(row: AutoActionItem) {
           v-if="filteredActions.length > 0"
           class="border-l border-border pl-3 flex items-center gap-1.5"
         >
-          <Button size="xs" variant="ghost" class="gap-1" @click="handleBatchEnable(true)">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="gap-1"
+            @click="handleBatchEnable(true)"
+          >
             <CheckmarkCircle16Regular class="size-3" />
             全部启用
           </Button>
-          <Button size="xs" variant="ghost" class="gap-1" @click="handleBatchEnable(false)">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="gap-1"
+            @click="handleBatchEnable(false)"
+          >
             <DismissCircle16Regular class="size-3" />
             全部禁用
           </Button>
@@ -280,12 +286,8 @@ function toggleActionOnlyLive(row: AutoActionItem) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem @select="exportActions">
-              导出配置
-            </DropdownMenuItem>
-            <DropdownMenuItem @select="importActions">
-              导入配置
-            </DropdownMenuItem>
+            <DropdownMenuItem @select="exportActions"> 导出配置 </DropdownMenuItem>
+            <DropdownMenuItem @select="importActions"> 导入配置 </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -342,7 +344,10 @@ function toggleActionOnlyLive(row: AutoActionItem) {
             <TableRow>
               <TableHead>名称</TableHead>
               <TableHead class="text-center w-[100px]">状态</TableHead>
-              <TableHead v-if="triggerType === TriggerType.SCHEDULED" class="text-center w-[120px]">
+              <TableHead
+                v-if="triggerType === TriggerType.SCHEDULED"
+                class="text-center w-[120px]"
+              >
                 下次触发
               </TableHead>
               <TableHead class="text-right w-[160px]">操作</TableHead>
@@ -372,7 +377,12 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger as-child>
-                            <Badge variant="outline" size="xs" class="h-5 px-2 cursor-pointer" :class="getStatusBadge(row).class">
+                            <Badge
+                              variant="outline"
+                              size="xs"
+                              class="h-5 px-2 cursor-pointer"
+                              :class="getStatusBadge(row).class"
+                            >
                               {{ getStatusBadge(row).text }}
                             </Badge>
                           </TooltipTrigger>
@@ -392,7 +402,10 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                 </DropdownMenu>
               </TableCell>
 
-              <TableCell v-if="triggerType === TriggerType.SCHEDULED" class="text-center">
+              <TableCell
+                v-if="triggerType === TriggerType.SCHEDULED"
+                class="text-center"
+              >
                 <template v-if="!typeEnabled || !row.enabled">-</template>
                 <TimerCountdown
                   v-else
@@ -404,12 +417,18 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                 <div class="flex items-center justify-end gap-1.5">
                   <!-- 上下移动排序 (仅定时) -->
                   <template v-if="triggerType === TriggerType.SCHEDULED">
-                    <Button size="icon-xs" variant="ghost" :disabled="orderedActions.findIndex((a) => a.id === row.id) === 0"
+                    <Button
+                      size="icon-xs"
+                      variant="ghost"
+                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === 0"
                       @click="autoActionStore.moveAction(row.id, 'up')"
                     >
                       <ArrowUp24Regular class="size-3.5" />
                     </Button>
-                    <Button size="icon-xs" variant="ghost" :disabled="orderedActions.findIndex((a) => a.id === row.id) === orderedActions.length - 1"
+                    <Button
+                      size="icon-xs"
+                      variant="ghost"
+                      :disabled="orderedActions.findIndex((a) => a.id === row.id) === orderedActions.length - 1"
                       @click="autoActionStore.moveAction(row.id, 'down')"
                     >
                       <ArrowDown24Regular class="size-3.5" />
@@ -437,11 +456,17 @@ function toggleActionOnlyLive(row: AutoActionItem) {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem class="gap-1.5" @select="duplicateAction(row)">
+                      <DropdownMenuItem
+                        class="gap-1.5"
+                        @select="duplicateAction(row)"
+                      >
                         <Copy16Regular class="size-3.5" />
                         复制
                       </DropdownMenuItem>
-                      <DropdownMenuItem class="gap-1.5 text-destructive focus:text-destructive" @select="deleteAction(row)">
+                      <DropdownMenuItem
+                        class="gap-1.5 text-destructive focus:text-destructive"
+                        @select="deleteAction(row)"
+                      >
                         <Delete16Regular class="size-3.5" />
                         删除
                       </DropdownMenuItem>

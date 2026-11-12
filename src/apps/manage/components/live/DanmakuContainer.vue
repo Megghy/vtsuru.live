@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { DocumentArrowDown20Regular, Money24Regular, Search24Filled } from '@vicons/fluent'
+import DocumentArrowDown20Regular from '@vicons/fluent/es/DocumentArrowDown20Regular'
+import Money24Regular from '@vicons/fluent/es/Money24Regular'
+import Search24Filled from '@vicons/fluent/es/Search24Filled'
 import { saveAs } from 'file-saver'
 import { computed, nextTick, ref, shallowRef, watch } from 'vue'
 
@@ -433,7 +435,10 @@ defineExpose({
               >
             </div>
 
-            <Separator orientation="vertical" class="h-4" />
+            <Separator
+              orientation="vertical"
+              class="h-4"
+            />
 
             <Button
               variant="outline"
@@ -508,7 +513,10 @@ defineExpose({
               <ToggleGroupItem value="100">≥100</ToggleGroupItem>
             </ToggleGroup>
 
-            <Separator orientation="vertical" class="h-4" />
+            <Separator
+              orientation="vertical"
+              class="h-4"
+            />
 
             <div class="flex items-center gap-1.5">
               <Checkbox

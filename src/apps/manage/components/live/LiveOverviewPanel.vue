@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  Chat24Regular,
-  Clock24Regular,
-  DataTrending24Regular,
-  HandRight24Regular,
-  Money24Regular,
-  Person24Regular,
-  Trophy24Filled,
-} from '@vicons/fluent'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import DataTrending24Regular from '@vicons/fluent/es/DataTrending24Regular'
+import HandRight24Regular from '@vicons/fluent/es/HandRight24Regular'
+import Money24Regular from '@vicons/fluent/es/Money24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
+import Trophy24Filled from '@vicons/fluent/es/Trophy24Filled'
 import { computed, onMounted, ref, watch } from 'vue'
 
 import type { DanmakuModel } from '@/api/client-types'

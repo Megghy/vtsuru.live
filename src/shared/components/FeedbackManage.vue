@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Add24Regular, ArrowClockwise24Regular } from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -205,14 +206,14 @@ watch(
           type="single"
           size="sm"
           :model-value="view"
-          @update:model-value="(v) => { if (v) view = v as 'mine' | 'public' }"
+          @update:model-value="
+            (v) => {
+              if (v) view = v as 'mine' | 'public'
+            }
+          "
         >
-          <ToggleGroupItem value="mine">
-            我的工单
-          </ToggleGroupItem>
-          <ToggleGroupItem value="public">
-            公开工单
-          </ToggleGroupItem>
+          <ToggleGroupItem value="mine"> 我的工单 </ToggleGroupItem>
+          <ToggleGroupItem value="public"> 公开工单 </ToggleGroupItem>
         </ToggleGroup>
       </div>
       <strong
@@ -265,9 +266,12 @@ watch(
           <SelectValue placeholder="状态" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">全部状态</SelectItem
+          <SelectItem value="all">全部状态</SelectItem>
+          <SelectItem
+            v-for="opt in supportTicketStatusOptions"
+            :key="opt.value"
+            :value="String(opt.value)"
           >
-          <SelectItem v-for="opt in supportTicketStatusOptions" :key="opt.value" :value="String(opt.value)">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -277,9 +281,12 @@ watch(
           <SelectValue placeholder="类型" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">全部类型</SelectItem
+          <SelectItem value="all">全部类型</SelectItem>
+          <SelectItem
+            v-for="opt in supportTicketTypeOptions"
+            :key="opt.value"
+            :value="String(opt.value)"
           >
-          <SelectItem v-for="opt in supportTicketTypeOptions" :key="opt.value" :value="String(opt.value)">
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -379,7 +386,11 @@ watch(
                 <SelectValue placeholder="选择类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem v-for="opt in supportTicketTypeOptions" :key="opt.value" :value="String(opt.value)">
+                <SelectItem
+                  v-for="opt in supportTicketTypeOptions"
+                  :key="opt.value"
+                  :value="String(opt.value)"
+                >
                   {{ opt.label }}
                 </SelectItem>
               </SelectContent>

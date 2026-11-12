@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ReorderThreeOutline } from '@vicons/ionicons5'
+import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
 import { saveAs } from 'file-saver'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -148,7 +148,12 @@ function resetToolbarOrder() {
         <Separator />
         <div class="settings__stat-header flex justify-between items-center">
           <div class="font-semibold">顶栏指标项 (支持拖拽排序)</div>
-          <Button size="xs" variant="ghost" class="text-muted-foreground" @click="resetToolbarOrder">
+          <Button
+            size="xs"
+            variant="ghost"
+            class="text-muted-foreground"
+            @click="resetToolbarOrder"
+          >
             重置排序
           </Button>
         </div>

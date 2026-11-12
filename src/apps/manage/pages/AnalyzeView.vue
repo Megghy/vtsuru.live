@@ -1,24 +1,22 @@
 <script lang="ts" setup>
-import {
-  ArrowClockwise24Regular,
-  ArrowDown24Regular,
-  ArrowTrending24Regular,
-  CalendarClock24Regular,
-  CalendarLtr24Regular,
-  ChatMultiple24Regular,
-  ChevronDown24Regular,
-  ChevronUp24Regular,
-  DataTrending24Regular,
-  Grid24Regular,
-  MoneyHand24Regular,
-  People24Regular,
-  Sparkle24Regular,
-  Star24Regular,
-  Table24Regular,
-  Timer24Regular,
-  Trophy24Regular,
-  Wallet24Regular,
-} from '@vicons/fluent'
+import ArrowClockwise24Regular from '@vicons/fluent/es/ArrowClockwise24Regular'
+import ArrowDown24Regular from '@vicons/fluent/es/ArrowDown24Regular'
+import ArrowTrending24Regular from '@vicons/fluent/es/ArrowTrending24Regular'
+import CalendarClock24Regular from '@vicons/fluent/es/CalendarClock24Regular'
+import CalendarLtr24Regular from '@vicons/fluent/es/CalendarLtr24Regular'
+import ChatMultiple24Regular from '@vicons/fluent/es/ChatMultiple24Regular'
+import ChevronDown24Regular from '@vicons/fluent/es/ChevronDown24Regular'
+import ChevronUp24Regular from '@vicons/fluent/es/ChevronUp24Regular'
+import DataTrending24Regular from '@vicons/fluent/es/DataTrending24Regular'
+import Grid24Regular from '@vicons/fluent/es/Grid24Regular'
+import MoneyHand24Regular from '@vicons/fluent/es/MoneyHand24Regular'
+import People24Regular from '@vicons/fluent/es/People24Regular'
+import Sparkle24Regular from '@vicons/fluent/es/Sparkle24Regular'
+import Star24Regular from '@vicons/fluent/es/Star24Regular'
+import Table24Regular from '@vicons/fluent/es/Table24Regular'
+import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
+import Trophy24Regular from '@vicons/fluent/es/Trophy24Regular'
+import Wallet24Regular from '@vicons/fluent/es/Wallet24Regular'
 import { addDays, endOfDay, format, startOfDay } from 'date-fns'
 import { BarChart, LineChart, PieChart } from 'echarts/charts'
 import {
@@ -834,7 +832,9 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}总收益</span>
             </div>
-            <Badge v-if="currentSummary.incomeTrend !== undefined" :variant="currentSummary.incomeTrend>= 0 ? 'brand' : 'destructive'"
+            <Badge
+              v-if="currentSummary.incomeTrend !== undefined"
+              :variant="currentSummary.incomeTrend >= 0 ? 'brand' : 'destructive'"
               class="text-[10px] px-1 py-0 h-4"
             >
               <component
@@ -905,7 +905,9 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}弹幕数</span>
             </div>
-            <Badge v-if="currentSummary.danmakuTrend !== undefined" :variant="currentSummary.danmakuTrend>= 0 ? 'brand' : 'destructive'"
+            <Badge
+              v-if="currentSummary.danmakuTrend !== undefined"
+              :variant="currentSummary.danmakuTrend >= 0 ? 'brand' : 'destructive'"
               class="text-[10px] px-1 py-0 h-4"
             >
               {{ Math.abs(currentSummary.danmakuTrend) }}%
@@ -952,7 +954,10 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}互动人数</span>
             </div>
-            <Badge variant="secondary" size="xs">
+            <Badge
+              variant="secondary"
+              size="xs"
+            >
               转化率 {{ currentSummary.payingRate.toFixed(1) }}%
             </Badge>
           </CardHeader>
@@ -998,7 +1003,10 @@ onUnmounted(() => {
               </div>
               <span class="text-xs font-semibold">{{ currentSummary.titlePrefix }}直播时长</span>
             </div>
-            <Badge variant="secondary" size="xs">
+            <Badge
+              variant="secondary"
+              size="xs"
+            >
               开播 {{ currentSummary.activeLiveDays }} 天
             </Badge>
           </CardHeader>
@@ -1239,7 +1247,11 @@ onUnmounted(() => {
               />
               <span>周开播习惯与黄金日</span>
             </div>
-            <Badge v-if="bestDayInsight" variant="brand" size="xs">
+            <Badge
+              v-if="bestDayInsight"
+              variant="brand"
+              size="xs"
+            >
               黄金日: {{ bestDayInsight.income.dayName }}
             </Badge>
           </div>
@@ -1321,7 +1333,10 @@ onUnmounted(() => {
             >
               <div>
                 <div class="flex items-center gap-1.5">
-                  <Badge variant="outline" size="xs">
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                  >
                     {{ area.parentArea }}
                   </Badge>
                   <span class="font-semibold">{{ area.area }}</span>
@@ -1399,7 +1414,10 @@ onUnmounted(() => {
                     :title="session.title"
                     >{{ session.title }}</span
                   >
-                  <Badge variant="outline" class="text-[9px] px-1 py-0 h-3.5">
+                  <Badge
+                    variant="outline"
+                    class="text-[9px] px-1 py-0 h-3.5"
+                  >
                     {{ session.area }}
                   </Badge>
                 </div>
@@ -1525,7 +1543,8 @@ onUnmounted(() => {
                   {{ row.payingUsers > 0 ? `${row.payingUsers} 人` : '-' }}
                 </TableCell>
                 <TableCell class="text-right">
-                  <Badge v-if="row.liveMinutes> 0"
+                  <Badge
+                    v-if="row.liveMinutes > 0"
                     variant="outline"
                     class="text-[10px] px-1 py-0 h-4"
                   >

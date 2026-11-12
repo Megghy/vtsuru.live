@@ -1,4 +1,4 @@
-import { AddCircleOutline } from '@vicons/ionicons5'
+import AddCircleOutline from '@vicons/ionicons5/es/AddCircleOutline'
 
 import type { ObsComponentDefinition } from '../types'
 

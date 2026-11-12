@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Bed20Regular, Clock20Regular } from '@vicons/fluent'
+import Bed20Regular from '@vicons/fluent/es/Bed20Regular'
+import Clock20Regular from '@vicons/fluent/es/Clock20Regular'
 import { format } from 'date-fns'
 
 import type { ResponseScheduleDayModel, ResponseScheduleModel } from '@/api/generated/model'
@@ -110,10 +111,16 @@ function tagChipStyle(color?: string | null) {
       class="/80 transition-shadow"
       :class="{ 'ring-1 ring-primary/40': isCurrentWeek(item.year, item.week) }"
     >
-      <CardHeader class="p-3.5 pb-2.5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2">
+      <CardHeader
+        class="p-3.5 pb-2.5 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2"
+      >
         <div class="flex items-center gap-2 flex-wrap">
           <span class="font-semibold text-sm text-foreground">{{ item.year }}年第{{ item.week }}周</span>
-          <Badge v-if="isCurrentWeek(item.year, item.week)" variant="success" size="xs">
+          <Badge
+            v-if="isCurrentWeek(item.year, item.week)"
+            variant="success"
+            size="xs"
+          >
             本周
           </Badge>
           <span class="text-xs text-muted-foreground font-mono">

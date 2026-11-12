@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {
-  CheckmarkCircle24Filled,
-  FlashCheckmark16Filled,
-  Info24Filled,
-  PlugDisconnected24Regular,
-  Warning24Filled,
-} from '@vicons/fluent'
+import CheckmarkCircle24Filled from '@vicons/fluent/es/CheckmarkCircle24Filled'
+import FlashCheckmark16Filled from '@vicons/fluent/es/FlashCheckmark16Filled'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import PlugDisconnected24Regular from '@vicons/fluent/es/PlugDisconnected24Regular'
+import Warning24Filled from '@vicons/fluent/es/Warning24Filled'
 import { AlertCircle } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
@@ -136,7 +134,11 @@ function goBindBili() {
           <TooltipProvider v-if="status === 'success' && !accountInfo?.isServerFetcherOnline">
             <Tooltip>
               <TooltipTrigger as-child>
-                <Badge variant="secondary" size="xs" class="cursor-help gap-1">
+                <Badge
+                  variant="secondary"
+                  size="xs"
+                  class="cursor-help gap-1"
+                >
                   <component
                     :is="FlashCheckmark16Filled"
                     class="size-3"

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { MusicalNotesOutline, OpenOutline, RefreshOutline } from '@vicons/ionicons5'
+import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
 import { useIntervalFn } from '@vueuse/core'
 import { computed, onMounted, watch } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -98,10 +100,17 @@ useIntervalFn(() => {
       </div>
     </template>
 
-    <Alert size="sm" v-if="!enabled">
+    <Alert
+      size="sm"
+      v-if="!enabled"
+    >
       <AlertDescription> 点歌功能未开放 </AlertDescription>
     </Alert>
-    <Alert size="sm" v-else-if="query.status.value === 'error'" variant="destructive">
+    <Alert
+      size="sm"
+      v-else-if="query.status.value === 'error'"
+      variant="destructive"
+    >
       <AlertDescription class="flex-between w-full">
         <span>当前点歌状态加载失败</span>
         <Button
@@ -129,9 +138,7 @@ useIntervalFn(() => {
         v-if="current"
         class="@container flex items-center gap-3 p-1"
       >
-        <div
-          class="size-10 @max-[340px]:size-9 rounded-full flex-center shrink-0 bg-primary/10 text-primary"
-        >
+        <div class="size-10 @max-[340px]:size-9 rounded-full flex-center shrink-0 bg-primary/10 text-primary">
           <component
             :is="MusicalNotesOutline"
             class="size-5"

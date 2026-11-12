@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  ArrowReset24Regular,
-  Checkmark24Regular,
-  Copy24Regular,
-  Open24Regular,
-  People24Regular,
-  Settings24Regular,
-  Wrench24Regular,
-} from '@vicons/fluent'
+import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import People24Regular from '@vicons/fluent/es/People24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import Wrench24Regular from '@vicons/fluent/es/Wrench24Regular'
 import { useClipboard } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
@@ -28,9 +26,9 @@ import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
-import { Separator } from '@/shared/ui/separator'
 import { Input } from '@/shared/ui/input'
 import { Progress } from '@/shared/ui/progress'
+import { Separator } from '@/shared/ui/separator'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -175,12 +173,20 @@ const displayMembers = computed(() => {
           <CardTitle>多人联动（组队模式）</CardTitle>
         </div>
 
-        <Badge v-if="inRoom" variant="success" class="gap-1 font-mono">
+        <Badge
+          v-if="inRoom"
+          variant="success"
+          class="gap-1 font-mono"
+        >
           组队中 · {{ currentRoomCode }}
           <span class="font-sans">({{ isHost ? '房主' : '队员' }})</span>
         </Badge>
 
-        <Badge v-else-if="isMockCollab" variant="warning" class="gap-1 font-mono">
+        <Badge
+          v-else-if="isMockCollab"
+          variant="warning"
+          class="gap-1 font-mono"
+        >
           模拟调试中 (3人)
         </Badge>
       </div>
@@ -410,7 +416,10 @@ const displayMembers = computed(() => {
             </Button>
           </div>
 
-          <Separator orientation="vertical" class="h-4 hidden sm:block shrink-0" />
+          <Separator
+            orientation="vertical"
+            class="h-4 hidden sm:block shrink-0"
+          />
 
           <Button
             class="shrink-0"
@@ -488,13 +497,27 @@ const displayMembers = computed(() => {
               </div>
 
               <div class="flex items-center gap-1 shrink-0">
-                <Badge v-if="member.muted" variant="outline" size="xs" class="border-amber-500/40 text-amber-500">
+                <Badge
+                  v-if="member.muted"
+                  variant="outline"
+                  size="xs"
+                  class="border-amber-500/40 text-amber-500"
+                >
                   静音
                 </Badge>
-                <Badge v-else-if="member.away" variant="outline" size="xs" class="border-muted text-muted-foreground">
+                <Badge
+                  v-else-if="member.away"
+                  variant="outline"
+                  size="xs"
+                  class="border-muted text-muted-foreground"
+                >
                   暂离
                 </Badge>
-                <Badge v-else-if="member.isSpeaking" variant="success" size="xs">
+                <Badge
+                  v-else-if="member.isSpeaking"
+                  variant="success"
+                  size="xs"
+                >
                   说话中
                 </Badge>
                 <span class="text-[11px] font-mono text-muted-foreground">{{ Math.round(member.volume) }}%</span>

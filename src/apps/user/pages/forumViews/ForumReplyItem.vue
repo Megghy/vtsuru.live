@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowReply16Filled, Delete24Filled } from '@vicons/fluent'
+import ArrowReply16Filled from '@vicons/fluent/es/ArrowReply16Filled'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
@@ -104,7 +105,13 @@ function formatFullTime(time: number) {
 
         <Tooltip v-if="showReplyButton">
           <TooltipTrigger as-child>
-            <Button variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground" :disabled="!canOprate" @click="useForum.SetReplyingComment(comment, item)">
+            <Button
+              variant="ghost"
+              size="xs"
+              class="size-6 rounded-full text-muted-foreground"
+              :disabled="!canOprate"
+              @click="useForum.SetReplyingComment(comment, item)"
+            >
               <component
                 :is="ArrowReply16Filled"
                 class="size-3"
@@ -124,7 +131,12 @@ function formatFullTime(time: number) {
           <template #trigger>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button variant="ghost" size="xs" class="size-6 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10" :disabled="!canOprate">
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  class="size-6 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  :disabled="!canOprate"
+                >
                   <component
                     :is="Delete24Filled"
                     class="size-3"

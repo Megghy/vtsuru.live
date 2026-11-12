@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SearchOutline } from '@vicons/ionicons5'
+import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
 import { useElementSize } from '@vueuse/core'
 import { computed, ref, shallowRef, watch } from 'vue'
 
@@ -128,7 +128,11 @@ watch(show, (visible) => {
             type="single"
             size="sm"
             :model-value="styleFilter"
-            @update:model-value="(v) => { if (v) styleFilter = v as IconStyle }"
+            @update:model-value="
+              (v) => {
+                if (v) styleFilter = v as IconStyle
+              }
+            "
           >
             <ToggleGroupItem
               v-for="option in styleOptions"

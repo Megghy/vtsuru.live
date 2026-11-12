@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  ChatbubblesOutline,
-  DownloadOutline,
-  PeopleOutline,
-  SearchOutline,
-  TimeOutline,
-  WalletOutline,
-} from '@vicons/ionicons5'
+import ChatbubblesOutline from '@vicons/ionicons5/es/ChatbubblesOutline'
+import DownloadOutline from '@vicons/ionicons5/es/DownloadOutline'
+import PeopleOutline from '@vicons/ionicons5/es/PeopleOutline'
+import SearchOutline from '@vicons/ionicons5/es/SearchOutline'
+import TimeOutline from '@vicons/ionicons5/es/TimeOutline'
+import WalletOutline from '@vicons/ionicons5/es/WalletOutline'
 import { format } from 'date-fns'
 import { computed, onMounted } from 'vue'
 
@@ -80,7 +78,11 @@ onMounted(() => load())
             <SelectValue placeholder="筛选主播" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
-            <SelectItem v-for="opt in streamerSelectOptions" :key="opt.value" :value="String(opt.value)">
+            <SelectItem
+              v-for="opt in streamerSelectOptions"
+              :key="opt.value"
+              :value="String(opt.value)"
+            >
               {{ opt.label }}
             </SelectItem>
           </SelectContent>
@@ -94,7 +96,11 @@ onMounted(() => load())
             <SelectValue placeholder="排序" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem v-for="s in sortOptions" :key="s.value" :value="s.value">
+            <SelectItem
+              v-for="s in sortOptions"
+              :key="s.value"
+              :value="s.value"
+            >
               {{ s.label }}
             </SelectItem>
           </SelectContent>
@@ -160,10 +166,20 @@ onMounted(() => load())
 
             <!-- 状态标签 -->
             <div class="absolute top-2 right-2">
-              <Badge v-if="!item.live.isFinish" variant="default" size="xs" class="bg-emerald-600 hover:bg-emerald-600 text-white shadow-xs">
+              <Badge
+                v-if="!item.live.isFinish"
+                variant="default"
+                size="xs"
+                class="bg-emerald-600 hover:bg-emerald-600 text-white shadow-xs"
+              >
                 LIVE
               </Badge>
-              <Badge v-else variant="secondary" size="xs" class="bg-black/60 text-white border-none shadow-xs">
+              <Badge
+                v-else
+                variant="secondary"
+                size="xs"
+                class="bg-black/60 text-white border-none shadow-xs"
+              >
                 已结束
               </Badge>
             </div>
@@ -206,9 +222,7 @@ onMounted(() => load())
               </div>
             </div>
 
-            <div
-              class="pt-2 border-t border-border/60 flex-between text-[11px] text-muted-foreground"
-            >
+            <div class="pt-2 border-t border-border/60 flex-between text-[11px] text-muted-foreground">
               <span
                 class="inline-flex items-center gap-1"
                 title="营收"

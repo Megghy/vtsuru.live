@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { ArrowSync24Filled, Delete24Filled, Link24Filled, Share24Filled } from '@vicons/fluent'
-import { TrashBin } from '@vicons/ionicons5'
+import ArrowSync24Filled from '@vicons/fluent/es/ArrowSync24Filled'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import Link24Filled from '@vicons/fluent/es/Link24Filled'
+import Share24Filled from '@vicons/fluent/es/Share24Filled'
+import TrashBin from '@vicons/ionicons5/es/TrashBin'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
@@ -11,8 +14,8 @@ import router from '@/app/router'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import QuestionBoxOBSModal from '@/apps/manage/components/question-box/QuestionBoxOBSModal.vue'
 import QuestionBoxReceivedTab from '@/apps/manage/components/question-box/QuestionBoxReceivedTab.vue'
-import QuestionBoxSentTab from '@/apps/manage/components/question-box/QuestionBoxSentTab.vue'
 import QuestionBoxReplyModal from '@/apps/manage/components/question-box/QuestionBoxReplyModal.vue'
+import QuestionBoxSentTab from '@/apps/manage/components/question-box/QuestionBoxSentTab.vue'
 import QuestionBoxSettings from '@/apps/manage/components/question-box/QuestionBoxSettings.vue'
 import QuestionBoxShareModal from '@/apps/manage/components/question-box/QuestionBoxShareModal.vue'
 import QuestionItem from '@/components/QuestionItem.vue'
@@ -80,248 +83,255 @@ onMounted(async () => {
       v-if="accountInfo"
       class="space-y-4 w-full"
     >
-    <ManagePageHeader
-      title="提问箱管理"
-      subtitle="收集观众的匿名提问并互动回复，支持话题标签分类、公开展示与 OBS 弹幕投屏"
-      :function-type="FunctionTypes.QuestionBox"
-      :loading="useQB.isLoading"
-      :links="[{ label: '我的提问链接', value: directShareUrl }]"
-    >
-      <template #action>
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <Button
-            size="icon-sm"
-            variant="outline"
-            :loading="useQB.isLoading"
-            aria-label="刷新"
-            @click="refresh"
-          >
+      <ManagePageHeader
+        title="提问箱管理"
+        subtitle="收集观众的匿名提问并互动回复，支持话题标签分类、公开展示与 OBS 弹幕投屏"
+        :function-type="FunctionTypes.QuestionBox"
+        :loading="useQB.isLoading"
+        :links="[{ label: '我的提问链接', value: directShareUrl }]"
+      >
+        <template #action>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <Button
+              size="icon-sm"
+              variant="outline"
+              :loading="useQB.isLoading"
+              aria-label="刷新"
+              @click="refresh"
+            >
+              <component
+                :is="ArrowSync24Filled"
+                class="h-3.5 w-3.5"
+              />
+            </Button>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="icon-sm"
+                    variant="outline"
+                    @click="shareModalVisible = true"
+                  >
+                    <component
+                      :is="Share24Filled"
+                      class="h-3.5 w-3.5"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent> 分享提问箱 </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <Button
+              variant="outline"
+              @click="showOBSModal = true"
+            >
+              OBS 组件
+            </Button>
+
+            <Button
+              variant="default"
+              @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
+            >
+              <component
+                :is="Link24Filled"
+                class="h-3.5 w-3.5 mr-1"
+              />
+              前往提问页
+            </Button>
+          </div>
+        </template>
+
+        <template #links-extra>
+          <Select v-model="selectedDirectShareTag">
+            <SelectTrigger class="w-40">
+              <SelectValue placeholder="附加话题 (可选)" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="tag in useQB.tags.filter((t) => t.visiable)"
+                :key="tag.name"
+                :value="tag.name"
+              >
+                {{ tag.name }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </template>
+      </ManagePageHeader>
+
+      <!-- 主要内容 Tabs -->
+      <Tabs
+        v-model="selectedTabItem"
+        class="w-full"
+      >
+        <TabsList class="grid w-full grid-cols-4 max-w-lg">
+          <TabsTrigger value="0">
+            我收到的
+            <Badge
+              variant="secondary"
+              size="xs"
+            >
+              {{ useQB.recieveQuestionsFiltered.length }}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="1">
+            我发送的
+            <Badge
+              variant="secondary"
+              size="xs"
+            >
+              {{ useQB.sendThreads.length }}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="2">
             <component
-              :is="ArrowSync24Filled"
+              :is="TrashBin"
               class="h-3.5 w-3.5"
             />
-          </Button>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <Button
-                  size="icon-sm"
-                  variant="outline"
-                  @click="shareModalVisible = true"
-                >
-                  <component
-                    :is="Share24Filled"
-                    class="h-3.5 w-3.5"
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent> 分享提问箱 </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <Button
-            variant="outline"
-            @click="showOBSModal = true"
-          >
-            OBS 组件
-          </Button>
-
-          <Button
-            variant="default"
-            @click="router.push({ name: 'user-questionBox', params: { id: accountInfo.name } })"
-          >
-            <component
-              :is="Link24Filled"
-              class="h-3.5 w-3.5 mr-1"
-            />
-            前往提问页
-          </Button>
-        </div>
-      </template>
-
-      <template #links-extra>
-        <Select v-model="selectedDirectShareTag">
-          <SelectTrigger class="w-40">
-            <SelectValue placeholder="附加话题 (可选)" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem
-              v-for="tag in useQB.tags.filter((t) => t.visiable)"
-              :key="tag.name"
-              :value="tag.name"
+            垃圾站
+            <Badge
+              v-if="useQB.trashQuestions.length > 0"
+              variant="warning"
+              size="xs"
             >
-              {{ tag.name }}
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </template>
-    </ManagePageHeader>
+              {{ useQB.trashQuestions.length }}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="3"> 设置 </TabsTrigger>
+        </TabsList>
 
-    <!-- 主要内容 Tabs -->
-    <Tabs
-      v-model="selectedTabItem"
-      class="w-full"
-    >
-      <TabsList class="grid w-full grid-cols-4 max-w-lg">
-        <TabsTrigger value="0">
-          我收到的
-          <Badge variant="secondary" size="xs">
-            {{ useQB.recieveQuestionsFiltered.length }}
-          </Badge>
-        </TabsTrigger>
-        <TabsTrigger value="1">
-          我发送的
-          <Badge variant="secondary" size="xs">
-            {{ useQB.sendThreads.length }}
-          </Badge>
-        </TabsTrigger>
-        <TabsTrigger value="2">
-          <component
-            :is="TrashBin"
-            class="h-3.5 w-3.5"
-          />
-          垃圾站
-          <Badge v-if="useQB.trashQuestions.length> 0"
-            variant="warning"
-            size="xs"
-          >
-            {{ useQB.trashQuestions.length }}
-          </Badge>
-        </TabsTrigger>
-        <TabsTrigger value="3"> 设置 </TabsTrigger>
-      </TabsList>
-
-      <!-- 我收到的 Tab -->
-      <TabsContent
-        value="0"
-        class="mt-3"
-      >
-        <QuestionBoxReceivedTab @reply="onOpenReply" />
-      </TabsContent>
-
-      <!-- 我发送的 Tab -->
-      <TabsContent
-        value="1"
-        class="mt-3"
-      >
-        <QuestionBoxSentTab />
-      </TabsContent>
-
-      <!-- 垃圾站 Tab -->
-      <TabsContent
-        value="2"
-        class="mt-3 space-y-3"
-      >
-        <div
-          v-if="useQB.trashQuestions.length === 0"
-          class="text-center py-16 text-xs text-muted-foreground border border-dashed rounded-lg"
+        <!-- 我收到的 Tab -->
+        <TabsContent
+          value="0"
+          class="mt-3"
         >
-          暂无被过滤的提问
-        </div>
+          <QuestionBoxReceivedTab @reply="onOpenReply" />
+        </TabsContent>
 
-        <div
-          v-else
-          class="space-y-2.5"
+        <!-- 我发送的 Tab -->
+        <TabsContent
+          value="1"
+          class="mt-3"
         >
-          <QuestionItem
-            v-for="question in useQB.trashQuestions"
-            :key="question.id"
-            :item="question"
+          <QuestionBoxSentTab />
+        </TabsContent>
+
+        <!-- 垃圾站 Tab -->
+        <TabsContent
+          value="2"
+          class="mt-3 space-y-3"
+        >
+          <div
+            v-if="useQB.trashQuestions.length === 0"
+            class="text-center py-16 text-xs text-muted-foreground border border-dashed rounded-lg"
           >
-            <template #footer="{ item }">
-              <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
-                <Button
-                  size="xs"
-                  variant="outline"
-                  class="text-primary"
-                  @click="useQB.markAsNormal(item)"
-                >
-                  标记为正常
-                </Button>
-                <Popconfirm
-                  v-if="!item.isAnonymous && item.sender?.id"
-                  title="确认拉黑？"
-                  :description="`确认拉黑 ${item.sender.name} 吗？该用户的所有提问将被清理。`"
-                  @confirm="useQB.blacklist(item)"
-                >
+            暂无被过滤的提问
+          </div>
+
+          <div
+            v-else
+            class="space-y-2.5"
+          >
+            <QuestionItem
+              v-for="question in useQB.trashQuestions"
+              :key="question.id"
+              :item="question"
+            >
+              <template #footer="{ item }">
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-border">
                   <Button
                     size="xs"
                     variant="outline"
-                    class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
+                    class="text-primary"
+                    @click="useQB.markAsNormal(item)"
                   >
-                    拉黑提问者
+                    标记为正常
                   </Button>
-                </Popconfirm>
-
-                <TooltipProvider v-else>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        disabled
-                      >
-                        拉黑
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p class="text-xs">匿名提问无法拉黑账号</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-
-                <AlertDialog>
-                  <AlertDialogTrigger as-child>
+                  <Popconfirm
+                    v-if="!item.isAnonymous && item.sender?.id"
+                    title="确认拉黑？"
+                    :description="`确认拉黑 ${item.sender.name} 吗？该用户的所有提问将被清理。`"
+                    @confirm="useQB.blacklist(item)"
+                  >
                     <Button
                       size="xs"
-                      variant="destructive"
+                      variant="outline"
+                      class="text-amber-500 border-amber-500/40 hover:bg-amber-500/10"
                     >
-                      <component
-                        :is="Delete24Filled"
-                        class="h-3.5 w-3.5 mr-1"
-                      />
-                      彻底删除
+                      拉黑提问者
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent class="sm:max-w-md">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>彻底删除此提问？</AlertDialogTitle>
-                      <AlertDialogDescription class="text-xs"> 删除后将无法恢复该提问内容。 </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>取消</AlertDialogCancel>
-                      <AlertDialogAction
-                        class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        @click="useQB.DelQA(item.id)"
-                      >
-                        确认彻底删除
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </template>
-            <template #header-extra />
-          </QuestionItem>
-        </div>
-      </TabsContent>
+                  </Popconfirm>
 
-      <!-- 设置 Tab -->
-      <TabsContent
-        value="3"
-        class="mt-3"
-      >
-        <QuestionBoxSettings />
-      </TabsContent>
-    </Tabs>
-  </div>
-  <div
-    v-else
-    class="text-center py-20 text-xs text-muted-foreground"
-  >
-    正在加载账户信息...
-  </div>
+                  <TooltipProvider v-else>
+                    <Tooltip>
+                      <TooltipTrigger as-child>
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          disabled
+                        >
+                          拉黑
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p class="text-xs">匿名提问无法拉黑账号</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger as-child>
+                      <Button
+                        size="xs"
+                        variant="destructive"
+                      >
+                        <component
+                          :is="Delete24Filled"
+                          class="h-3.5 w-3.5 mr-1"
+                        />
+                        彻底删除
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent class="sm:max-w-md">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>彻底删除此提问？</AlertDialogTitle>
+                        <AlertDialogDescription class="text-xs"> 删除后将无法恢复该提问内容。 </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                          class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          @click="useQB.DelQA(item.id)"
+                        >
+                          确认彻底删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </template>
+              <template #header-extra />
+            </QuestionItem>
+          </div>
+        </TabsContent>
+
+        <!-- 设置 Tab -->
+        <TabsContent
+          value="3"
+          class="mt-3"
+        >
+          <QuestionBoxSettings />
+        </TabsContent>
+      </Tabs>
+    </div>
+    <div
+      v-else
+      class="text-center py-20 text-xs text-muted-foreground"
+    >
+      正在加载账户信息...
+    </div>
 
     <!-- 模态框 -->
     <QuestionBoxReplyModal v-model:show="replyModalVisible" />

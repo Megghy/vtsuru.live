@@ -1,14 +1,12 @@
-import {
-  ArrowDown24Regular,
-  ArrowReset24Regular,
-  DocumentFlowchart24Regular,
-  EmojiSmileSlight24Regular,
-  Eraser24Regular,
-  Glasses24Regular,
-  Keyboard24Regular,
-  Target24Regular,
-  Video24Regular,
-} from '@vicons/fluent'
+import ArrowDown24Regular from '@vicons/fluent/es/ArrowDown24Regular'
+import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
+import DocumentFlowchart24Regular from '@vicons/fluent/es/DocumentFlowchart24Regular'
+import EmojiSmileSlight24Regular from '@vicons/fluent/es/EmojiSmileSlight24Regular'
+import Eraser24Regular from '@vicons/fluent/es/Eraser24Regular'
+import Glasses24Regular from '@vicons/fluent/es/Glasses24Regular'
+import Keyboard24Regular from '@vicons/fluent/es/Keyboard24Regular'
+import Target24Regular from '@vicons/fluent/es/Target24Regular'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 

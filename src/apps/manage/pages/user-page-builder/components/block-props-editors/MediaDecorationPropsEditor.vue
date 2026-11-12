@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ImageOutline } from '@vicons/ionicons5'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
 import { computed, onMounted, ref } from 'vue'
 
 import { getApiQaGetTags } from '@/api/generated/qa/qa'

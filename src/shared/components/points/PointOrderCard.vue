@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  ArrowSync24Regular,
-  CheckmarkCircle24Regular,
-  DismissCircle24Regular,
-  Prohibited24Regular,
-  Timer24Regular,
-  VehicleTruck24Regular,
-} from '@vicons/fluent'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
+import DismissCircle24Regular from '@vicons/fluent/es/DismissCircle24Regular'
+import Prohibited24Regular from '@vicons/fluent/es/Prohibited24Regular'
+import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
+import VehicleTruck24Regular from '@vicons/fluent/es/VehicleTruck24Regular'
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import type { Component } from 'vue'

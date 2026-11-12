@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { ChevronDown12Regular, ChevronUp12Regular, Tv20Regular } from '@vicons/fluent'
+import ChevronDown12Regular from '@vicons/fluent/es/ChevronDown12Regular'
+import ChevronUp12Regular from '@vicons/fluent/es/ChevronUp12Regular'
+import Tv20Regular from '@vicons/fluent/es/Tv20Regular'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, ref } from 'vue'
@@ -56,7 +58,9 @@ function formatRelative(time: number) {
     }"
   >
     <TooltipProvider>
-      <CardHeader class="p-3 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2 flex-wrap">
+      <CardHeader
+        class="p-3 border-b border-border/60 flex flex-row items-center justify-between space-y-0 gap-2 flex-wrap"
+      >
         <div class="flex items-center gap-1.5 flex-wrap">
           <Checkbox
             v-if="selectable"
@@ -66,7 +70,12 @@ function formatRelative(time: number) {
             @update:checked="emit('select', item.id)"
           />
 
-          <Badge v-if="isDisplaying" variant="success" size="xs" class="flex items-center gap-1 displaying-tag">
+          <Badge
+            v-if="isDisplaying"
+            variant="success"
+            size="xs"
+            class="flex items-center gap-1 displaying-tag"
+          >
             <component
               :is="Tv20Regular"
               class="size-3"
@@ -74,7 +83,11 @@ function formatRelative(time: number) {
             OBS 展示中
           </Badge>
 
-          <Badge v-if="!item.isReaded" variant="warning" size="xs">
+          <Badge
+            v-if="!item.isReaded"
+            variant="warning"
+            size="xs"
+          >
             未读
           </Badge>
 
@@ -92,24 +105,47 @@ function formatRelative(time: number) {
             {{ item.isAnonymous ? item.anonymousName || '匿名用户' : item.sender?.name || '观众' }}
           </strong>
 
-          <Badge v-if="item.isSenderRegisted" variant="secondary" size="xs" class="text-sky-600 dark:text-sky-400 bg-sky-500/10">
+          <Badge
+            v-if="item.isSenderRegisted"
+            variant="secondary"
+            size="xs"
+            class="text-sky-600 dark:text-sky-400 bg-sky-500/10"
+          >
             已注册
           </Badge>
 
-          <Badge v-if="item.threadRootId" variant="secondary" size="xs" class="text-violet-600 dark:text-violet-400 bg-violet-500/10">
+          <Badge
+            v-if="item.threadRootId"
+            variant="secondary"
+            size="xs"
+            class="text-violet-600 dark:text-violet-400 bg-violet-500/10"
+          >
             追问
           </Badge>
 
-          <Badge v-if="item.isPublic" variant="secondary" size="xs" class="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10">
+          <Badge
+            v-if="item.isPublic"
+            variant="secondary"
+            size="xs"
+            class="text-emerald-600 dark:text-emerald-400 bg-emerald-500/10"
+          >
             公开
           </Badge>
-          <Badge v-if="item.senderAllowsPublic === false" variant="secondary" size="xs" class="text-amber-600 dark:text-amber-400 bg-amber-500/10">
+          <Badge
+            v-if="item.senderAllowsPublic === false"
+            variant="secondary"
+            size="xs"
+            class="text-amber-600 dark:text-amber-400 bg-amber-500/10"
+          >
             提问者不公开
           </Badge>
 
           <Tooltip v-if="item.tag">
             <TooltipTrigger as-child>
-              <Badge variant="outline" size="xs">
+              <Badge
+                variant="outline"
+                size="xs"
+              >
                 {{ item.tag }}
               </Badge>
             </TooltipTrigger>
@@ -130,7 +166,12 @@ function formatRelative(time: number) {
           <template v-if="item.reviewResult && item.reviewResult.violationType?.length">
             <span class="text-border">|</span>
             <div class="flex items-center gap-1 flex-wrap">
-              <Badge v-for="v in item.reviewResult.violationType" :key="v" variant="destructive" size="xs">
+              <Badge
+                v-for="v in item.reviewResult.violationType"
+                :key="v"
+                variant="destructive"
+                size="xs"
+              >
                 {{ useQA.getViolationString(v) }}
               </Badge>
             </div>
@@ -229,7 +270,10 @@ function formatRelative(time: number) {
         </template>
       </CardContent>
 
-      <CardFooter v-if="$slots.footer" class="p-3 border-t border-border/40 mt-1 pt-2">
+      <CardFooter
+        v-if="$slots.footer"
+        class="p-3 border-t border-border/40 mt-1 pt-2"
+      >
         <slot
           name="footer"
           :item="item"

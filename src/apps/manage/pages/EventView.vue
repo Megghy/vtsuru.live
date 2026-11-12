@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ArrowDownload24Regular, ArrowSync24Filled, Delete24Regular, Grid28Filled, List16Filled } from '@vicons/fluent'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import ArrowSync24Filled from '@vicons/fluent/es/ArrowSync24Filled'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Grid28Filled from '@vicons/fluent/es/Grid28Filled'
+import List16Filled from '@vicons/fluent/es/List16Filled'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { List } from 'linqts'
@@ -664,8 +668,20 @@ function onTabChange(value: string | number) {
                 type="datetime-local"
                 class="w-48"
               />
-              <NumberField v-model="manualGuardNum" min="1" placeholder="数量" class="w-20" :show-buttons="false" />
-              <NumberField v-model="manualGuardPrice" min="0" placeholder="价格(可选)" class="w-28" :show-buttons="false" />
+              <NumberField
+                v-model="manualGuardNum"
+                min="1"
+                placeholder="数量"
+                class="w-20"
+                :show-buttons="false"
+              />
+              <NumberField
+                v-model="manualGuardPrice"
+                min="0"
+                placeholder="价格(可选)"
+                class="w-28"
+                :show-buttons="false"
+              />
 
               <Button
                 variant="default"
@@ -684,13 +700,26 @@ function onTabChange(value: string | number) {
               <span class="text-muted-foreground">
                 已加载 {{ eventSummary.count }} 条{{ hasMore ? ' (可继续加载)' : '' }}
               </span>
-              <Badge variant="secondary" size="sm" class="py-0.5">
+              <Badge
+                variant="secondary"
+                size="sm"
+                class="py-0.5"
+              >
                 人数 {{ eventSummary.uniqueUsers }}
               </Badge>
-              <Badge variant="outline" size="sm" class="py-0.5 font-medium">
+              <Badge
+                variant="outline"
+                size="sm"
+                class="py-0.5 font-medium"
+              >
                 金额合计 ¥{{ eventSummary.totalPrice }}
               </Badge>
-              <Badge v-if="selectedType === EventDataTypes.Guard" variant="outline" size="sm" class="py-0.5">
+              <Badge
+                v-if="selectedType === EventDataTypes.Guard"
+                variant="outline"
+                size="sm"
+                class="py-0.5"
+              >
                 数量合计 {{ eventSummary.totalNum }}
               </Badge>
             </div>
@@ -746,7 +775,12 @@ function onTabChange(value: string | number) {
                 >
                   <AlertDialog>
                     <AlertDialogTrigger as-child>
-                      <Button variant="ghost" size="xs" class="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10" aria-label="删除">
+                      <Button
+                        variant="ghost"
+                        size="xs"
+                        class="size-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        aria-label="删除"
+                      >
                         <component
                           :is="Delete24Regular"
                           class="size-3"
@@ -775,7 +809,11 @@ function onTabChange(value: string | number) {
 
                 <!-- 标签 -->
                 <div class="flex items-center gap-1">
-                  <Badge v-if="selectedType === EventDataTypes.Guard" variant="outline" class="text-[9px] px-1 py-0 h-3.5">
+                  <Badge
+                    v-if="selectedType === EventDataTypes.Guard"
+                    variant="outline"
+                    class="text-[9px] px-1 py-0 h-3.5"
+                  >
                     {{ item.msg }}
                   </Badge>
                   <span
@@ -856,7 +894,10 @@ function onTabChange(value: string | number) {
                     v-if="selectedEvents.length === 0"
                     class="text-center"
                   >
-                    <TableCell colspan="7" class="py-8 text-muted-foreground">
+                    <TableCell
+                      colspan="7"
+                      class="py-8 text-muted-foreground"
+                    >
                       没有找到事件记录
                     </TableCell>
                   </TableRow>
@@ -889,7 +930,11 @@ function onTabChange(value: string | number) {
                         ¥{{ item.price }}
                       </span>
                     </TableCell>
-                    <TableCell v-if="selectedType === EventDataTypes.SC" class="text-muted-foreground max-w-xs truncate" :title="item.msg">
+                    <TableCell
+                      v-if="selectedType === EventDataTypes.SC"
+                      class="text-muted-foreground max-w-xs truncate"
+                      :title="item.msg"
+                    >
                       {{ item.msg }}
                     </TableCell>
                     <TableCell
@@ -1020,7 +1065,10 @@ function onTabChange(value: string | number) {
                   v-if="guardList.length === 0"
                   class="text-center"
                 >
-                  <TableCell colspan="4" class="py-8 text-muted-foreground">
+                  <TableCell
+                    colspan="4"
+                    class="py-8 text-muted-foreground"
+                  >
                     暂无在舰用户记录
                   </TableCell>
                 </TableRow>
@@ -1047,9 +1095,7 @@ function onTabChange(value: string | number) {
                       {{ row.guardLevel }}
                     </span>
                   </TableCell>
-                  <TableCell class="text-right font-mono text-muted-foreground">
-                    {{ row.accompanyDays }} 天
-                  </TableCell>
+                  <TableCell class="text-right font-mono text-muted-foreground"> {{ row.accompanyDays }} 天 </TableCell>
                 </TableRow>
               </TableBody>
             </Table>

@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { Clock24Regular, Ribbon24Filled, Trophy24Filled } from '@vicons/fluent'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import Ribbon24Filled from '@vicons/fluent/es/Ribbon24Filled'
+import Trophy24Filled from '@vicons/fluent/es/Trophy24Filled'
 import { computed } from 'vue'
 
 import type { VoteOBSData, VoteOptionDto } from '@/api/generated/model'

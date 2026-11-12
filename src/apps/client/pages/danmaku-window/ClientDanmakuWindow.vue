@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  Eye20Regular,
-  LockClosed20Regular,
-  LockOpen20Regular,
-  Payment20Regular,
-  PeopleCommunity20Regular,
-  ThumbLike20Regular,
-} from '@vicons/fluent'
+import Eye20Regular from '@vicons/fluent/es/Eye20Regular'
+import LockClosed20Regular from '@vicons/fluent/es/LockClosed20Regular'
+import LockOpen20Regular from '@vicons/fluent/es/LockOpen20Regular'
+import Payment20Regular from '@vicons/fluent/es/Payment20Regular'
+import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
+import ThumbLike20Regular from '@vicons/fluent/es/ThumbLike20Regular'
 import { nanoid } from 'nanoid'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -15,10 +13,10 @@ import { EventDataTypes } from '@/api/generated/model'
 import ClientDanmakuItem from '@/apps/client/components/danmaku/ClientDanmakuItem.vue'
 import type { DanmakuWindowBCData, DanmakuWindowSettings, LiveStatsData } from '@/apps/client/store/useDanmakuWindow'
 import { DANMAKU_WINDOW_BROADCAST_CHANNEL } from '@/apps/client/store/useDanmakuWindow'
-import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
-import { getDanmakuWindowFilterType, removeDeletedSuperChats } from '@/shared/utils/danmakuWindowEvents'
 import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
+import { postBroadcastMessage } from '@/shared/utils/broadcastChannel'
+import { getDanmakuWindowFilterType, removeDeletedSuperChats } from '@/shared/utils/danmakuWindowEvents'
 
 type TempDanmakuType = EventModel & {
   randomId: string

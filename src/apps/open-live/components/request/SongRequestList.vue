@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { Checkmark12Regular, PeopleQueue24Filled } from '@vicons/fluent'
+import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
+import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
 import { isSameDay } from 'date-fns'
 import { computed, provide } from 'vue'
 import { toast } from 'vue-sonner'
@@ -77,11 +78,17 @@ async function updateSettings() {
         <div class="flex flex-wrap items-center justify-between gap-3">
           <!-- 左侧统计指示 -->
           <div class="flex items-center gap-2 flex-wrap">
-            <Badge variant="outline" class="h-6 px-2 gap-1 border-sky-500/40 text-sky-600 bg-sky-500/10">
+            <Badge
+              variant="outline"
+              class="h-6 px-2 gap-1 border-sky-500/40 text-sky-600 bg-sky-500/10"
+            >
               <PeopleQueue24Filled class="size-3.5" />
               待唱: {{ waitingCount }}
             </Badge>
-            <Badge variant="success" class="h-6 px-2 gap-1">
+            <Badge
+              variant="success"
+              class="h-6 px-2 gap-1"
+            >
               <Checkmark12Regular class="size-3.5" />
               今日已点: {{ todayFinishedCount }}
             </Badge>
@@ -112,7 +119,14 @@ async function updateSettings() {
               size="xs"
               :model-value="String(sortType)"
               :disabled="!songRequest.configCanEdit"
-              @update:model-value="(val) => { if (val) { sortType = Number(val) as any; updateSettings() } }"
+              @update:model-value="
+                (val) => {
+                  if (val) {
+                    sortType = Number(val) as any
+                    updateSettings()
+                  }
+                }
+              "
             >
               <ToggleGroupItem
                 v-for="opt in sortOptions"

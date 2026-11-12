@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  ArrowSync24Filled,
-  Chat24Regular,
-  Clock24Regular,
-  DataTrending24Regular,
-  Money24Regular,
-  Search24Filled,
-  Video24Regular,
-} from '@vicons/fluent'
+import ArrowSync24Filled from '@vicons/fluent/es/ArrowSync24Filled'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import DataTrending24Regular from '@vicons/fluent/es/DataTrending24Regular'
+import Money24Regular from '@vicons/fluent/es/Money24Regular'
+import Search24Filled from '@vicons/fluent/es/Search24Filled'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { useSessionStorage } from '@vueuse/core'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -320,7 +318,8 @@ onBeforeUnmount(() => {
             <span class="text-xs text-muted-foreground">场</span>
           </div>
           <div class="mt-2 text-[11px]">
-            <Badge v-if="overviewStats.livingCount> 0"
+            <Badge
+              v-if="overviewStats.livingCount > 0"
               variant="destructive"
               class="text-[9px] px-1 py-0 h-4"
             >
@@ -456,7 +455,14 @@ onBeforeUnmount(() => {
                 :checked="enableAutoRefresh"
                 @update:checked="(val) => (enableAutoRefresh = val)"
               />
-              <NumberField v-if="enableAutoRefresh" v-model="refreshSeconds" min="10" max="300" class="w-16" :show-buttons="false" />
+              <NumberField
+                v-if="enableAutoRefresh"
+                v-model="refreshSeconds"
+                min="10"
+                max="300"
+                class="w-16"
+                :show-buttons="false"
+              />
             </div>
           </div>
         </div>

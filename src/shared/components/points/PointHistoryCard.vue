@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import {
-  CalendarCheckmark24Regular,
-  Chat24Regular,
-  Gift24Regular,
-  Person24Regular,
-  Star24Regular,
-} from '@vicons/fluent'
+import CalendarCheckmark24Regular from '@vicons/fluent/es/CalendarCheckmark24Regular'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import Gift24Regular from '@vicons/fluent/es/Gift24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
+import Star24Regular from '@vicons/fluent/es/Star24Regular'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import type { Component } from 'vue'
@@ -183,7 +181,11 @@ function formatFullTime(time: number) {
 
               <TableCell class="py-2.5">
                 <div class="flex items-center gap-1.5 flex-wrap">
-                  <Badge :variant="sourceMeta(row).badgeVariant" size="xs" class="flex items-center gap-1">
+                  <Badge
+                    :variant="sourceMeta(row).badgeVariant"
+                    size="xs"
+                    class="flex items-center gap-1"
+                  >
                     <component
                       :is="sourceMeta(row).icon"
                       class="size-3"
@@ -241,7 +243,11 @@ function formatFullTime(time: number) {
           class="p-3 rounded-lg border border-border/80 bg-card space-y-2 text-xs"
         >
           <div class="flex-between">
-            <Badge :variant="sourceMeta(item).badgeVariant" size="xs" class="flex items-center gap-1">
+            <Badge
+              :variant="sourceMeta(item).badgeVariant"
+              size="xs"
+              class="flex items-center gap-1"
+            >
               <component
                 :is="sourceMeta(item).icon"
                 class="size-3"
@@ -258,9 +264,7 @@ function formatFullTime(time: number) {
 
           <p class="text-xs text-foreground m-0 break-words">{{ detailText(item) }}</p>
 
-          <div
-            class="flex-between text-[11px] text-muted-foreground pt-1 border-t border-border/40"
-          >
+          <div class="flex-between text-[11px] text-muted-foreground pt-1 border-t border-border/40">
             <a
               v-if="item.extra?.user?.name"
               :href="`/@${item.extra.user.name}`"
@@ -327,7 +331,11 @@ function formatFullTime(time: number) {
                   <strong class="font-medium text-foreground">{{ item.nameSnapshot }}</strong>
                   <div class="flex items-center gap-2">
                     <span class="text-muted-foreground">x {{ item.quantity }}</span>
-                    <Badge variant="secondary" size="xs" class="font-mono">
+                    <Badge
+                      variant="secondary"
+                      size="xs"
+                      class="font-mono"
+                    >
                       {{ item.priceSnapshot }} 积分
                     </Badge>
                   </div>

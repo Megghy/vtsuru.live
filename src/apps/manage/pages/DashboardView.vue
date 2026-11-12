@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { Info24Filled, Mic24Filled, Question24Regular } from '@vicons/fluent'
-import {
-  ColorPaletteOutline,
-  CopyOutline,
-  EyeOffOutline,
-  EyeOutline,
-  ImageOutline,
-  OpenOutline,
-} from '@vicons/ionicons5'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import Question24Regular from '@vicons/fluent/es/Question24Regular'
+import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
+import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
+import EyeOffOutline from '@vicons/ionicons5/es/EyeOffOutline'
+import EyeOutline from '@vicons/ionicons5/es/EyeOutline'
+import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
+import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -317,17 +317,17 @@ onUnmounted(() => {
       class="w-full"
       :class="{ 'dashboard-view--wide': selectedTab === 'template' }"
     >
-      <TabsList size="xs" class="inline-flex p-1 bg-muted rounded-lg">
-        <TabsTrigger value="info" >
-          个人信息
-        </TabsTrigger>
-        <TabsTrigger value="setting" >
-          设置
-        </TabsTrigger>
-        <TabsTrigger value="template" >
-          模板
-        </TabsTrigger>
-        <TabsTrigger v-if="isDev" value="billing" >
+      <TabsList
+        size="xs"
+        class="inline-flex p-1 bg-muted rounded-lg"
+      >
+        <TabsTrigger value="info"> 个人信息 </TabsTrigger>
+        <TabsTrigger value="setting"> 设置 </TabsTrigger>
+        <TabsTrigger value="template"> 模板 </TabsTrigger>
+        <TabsTrigger
+          v-if="isDev"
+          value="billing"
+        >
           增值 (dev)
         </TabsTrigger>
       </TabsList>
@@ -446,13 +446,26 @@ onUnmounted(() => {
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="text-xs font-medium text-primary">已认证 | {{ accountInfo?.biliId }}</span>
 
-                    <Badge v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active" variant="success" size="sm">
+                    <Badge
+                      v-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Active"
+                      variant="success"
+                      size="sm"
+                    >
                       身份码: 有效
                     </Badge>
-                    <Badge v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive" variant="destructive" size="sm">
+                    <Badge
+                      v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Inactive"
+                      variant="destructive"
+                      size="sm"
+                    >
                       身份码: 需更新
                     </Badge>
-                    <Badge v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound" variant="warning" size="sm" class="gap-1">
+                    <Badge
+                      v-else-if="accountInfo.biliAuthCodeStatus === BiliAuthCodeStatusType.Notfound"
+                      variant="warning"
+                      size="sm"
+                      class="gap-1"
+                    >
                       身份码: 需绑定
                       <TooltipProvider>
                         <Tooltip>
@@ -513,7 +526,11 @@ onUnmounted(() => {
                   class="flex-between gap-3 flex-wrap"
                 >
                   <div class="flex items-center gap-2">
-                    <Badge variant="destructive" size="sm" class="gap-1">
+                    <Badge
+                      variant="destructive"
+                      size="sm"
+                      class="gap-1"
+                    >
                       未绑定
                       <TooltipProvider>
                         <Tooltip>

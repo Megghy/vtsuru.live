@@ -1,20 +1,18 @@
 <script setup lang="ts">
 import { openUrl } from '@tauri-apps/plugin-opener'
-import {
-  ArrowReset24Regular,
-  Chat24Filled,
-  CloudArchive24Filled,
-  Cookies24Filled,
-  FlashAuto24Filled,
-  Gift24Filled,
-  Live24Filled,
-  Mic24Filled,
-  Open24Regular,
-  PeopleSearch24Filled,
-  PlugConnected24Filled,
-  Settings24Filled,
-  VideoPerson24Filled,
-} from '@vicons/fluent'
+import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
+import Chat24Filled from '@vicons/fluent/es/Chat24Filled'
+import CloudArchive24Filled from '@vicons/fluent/es/CloudArchive24Filled'
+import Cookies24Filled from '@vicons/fluent/es/Cookies24Filled'
+import FlashAuto24Filled from '@vicons/fluent/es/FlashAuto24Filled'
+import Gift24Filled from '@vicons/fluent/es/Gift24Filled'
+import Live24Filled from '@vicons/fluent/es/Live24Filled'
+import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import PeopleSearch24Filled from '@vicons/fluent/es/PeopleSearch24Filled'
+import PlugConnected24Filled from '@vicons/fluent/es/PlugConnected24Filled'
+import Settings24Filled from '@vicons/fluent/es/Settings24Filled'
+import VideoPerson24Filled from '@vicons/fluent/es/VideoPerson24Filled'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -120,7 +118,11 @@ function toggleGiftWindow() {
                 <span class="font-bold text-base text-foreground tracking-tight">
                   {{ accountInfo.name }}
                 </span>
-                <Badge variant="success" size="sm" :class=" isStreaming ? ' ' : 'text-muted-foreground' ">
+                <Badge
+                  variant="success"
+                  size="sm"
+                  :class="isStreaming ? ' ' : 'text-muted-foreground'"
+                >
                   {{ isStreaming ? '● 直播中' : '未开播' }}
                 </Badge>
               </div>
@@ -188,7 +190,13 @@ function toggleGiftWindow() {
             <div class="size-7 rounded-md flex-center text-base bg-blue-500/12 text-blue-500">
               <CloudArchive24Filled class="size-4" />
             </div>
-            <Badge variant="success" size="xs" :class=" webfetcher.state === 'connected' ? ' ' : 'border-destructive/40 text-destructive bg-destructive/10' ">
+            <Badge
+              variant="success"
+              size="xs"
+              :class="
+                webfetcher.state === 'connected' ? ' ' : 'border-destructive/40 text-destructive bg-destructive/10'
+              "
+            >
               {{ webfetcher.state === 'connected' ? '运行中' : '已断开' }}
             </Badge>
           </div>
@@ -209,7 +217,11 @@ function toggleGiftWindow() {
             <div class="size-7 rounded-md flex-center text-base bg-amber-500/12 text-amber-500">
               <Cookies24Filled class="size-4" />
             </div>
-            <Badge variant="outline" size="xs" :class="cookieBadgeMeta.class">
+            <Badge
+              variant="outline"
+              size="xs"
+              :class="cookieBadgeMeta.class"
+            >
               {{ cookieBadgeMeta.text }}
             </Badge>
           </div>
@@ -230,7 +242,11 @@ function toggleGiftWindow() {
             <div class="size-7 rounded-md flex-center text-base bg-purple-500/12 text-purple-500">
               <VideoPerson24Filled class="size-4" />
             </div>
-            <Badge variant="success" size="xs" :class=" vtsStore.connected ? ' ' : 'text-muted-foreground' ">
+            <Badge
+              variant="success"
+              size="xs"
+              :class="vtsStore.connected ? ' ' : 'text-muted-foreground'"
+            >
               {{ vtsStore.connected ? '已连接' : '未连接' }}
             </Badge>
           </div>
@@ -248,12 +264,14 @@ function toggleGiftWindow() {
       >
         <CardContent class="p-3">
           <div class="flex-between mb-2">
-            <div
-              class="size-7 rounded-md flex-center text-base bg-emerald-500/12 text-emerald-500"
-            >
+            <div class="size-7 rounded-md flex-center text-base bg-emerald-500/12 text-emerald-500">
               <FlashAuto24Filled class="size-4" />
             </div>
-            <Badge variant="outline" size="xs" :class=" activeAutoActionCount> 0
+            <Badge
+              variant="outline"
+              size="xs"
+              :class="
+                activeAutoActionCount > 0
                   ? 'border-emerald-500/40 text-emerald-600 bg-emerald-500/10'
                   : 'text-muted-foreground'
               "
@@ -281,7 +299,11 @@ function toggleGiftWindow() {
                 <Chat24Filled class="size-4 text-primary" />
                 <span class="font-semibold text-xs text-foreground">弹幕机</span>
               </div>
-              <Badge variant="success" size="xs" :class=" danmakuWindow.isDanmakuWindowOpen ? ' ' : 'text-muted-foreground' ">
+              <Badge
+                variant="success"
+                size="xs"
+                :class="danmakuWindow.isDanmakuWindowOpen ? ' ' : 'text-muted-foreground'"
+              >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '运行中' : '未开启' }}
               </Badge>
             </div>
@@ -289,13 +311,28 @@ function toggleGiftWindow() {
             <div class="text-xs text-muted-foreground leading-normal flex-1">在桌面上显示弹幕机悬浮窗</div>
 
             <div class="flex items-center gap-1.5 mt-1">
-              <Button size="xs" variant="secondary" :class=" danmakuWindow.isDanmakuWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary' " @click="toggleDanmakuWindow">
+              <Button
+                size="xs"
+                variant="secondary"
+                :class="
+                  danmakuWindow.isDanmakuWindowOpen
+                    ? 'text-destructive hover:text-destructive'
+                    : 'text-primary hover:text-primary'
+                "
+                @click="toggleDanmakuWindow"
+              >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="gap-1" :disabled="!danmakuWindow.isDanmakuWindowOpen" @click="danmakuWindow.setDanmakuWindowPosition(100, 100)">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="gap-1"
+                      :disabled="!danmakuWindow.isDanmakuWindowOpen"
+                      @click="danmakuWindow.setDanmakuWindowPosition(100, 100)"
+                    >
                       <ArrowReset24Regular class="size-3" />
                       重置
                     </Button>
@@ -303,7 +340,12 @@ function toggleGiftWindow() {
                   <TooltipContent> 重置浮窗至默认坐标 </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Button size="xs" variant="ghost" class="text-muted-foreground" @click="router.push({ name: 'client-danmaku-window-manage' })">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="text-muted-foreground"
+                @click="router.push({ name: 'client-danmaku-window-manage' })"
+              >
                 设置
               </Button>
             </div>
@@ -316,7 +358,11 @@ function toggleGiftWindow() {
                 <Gift24Filled class="size-4 text-amber-500" />
                 <span class="font-semibold text-xs text-foreground">礼物与排行</span>
               </div>
-              <Badge variant="success" size="xs" :class=" giftWindow.isGiftWindowOpen ? ' ' : 'text-muted-foreground' ">
+              <Badge
+                variant="success"
+                size="xs"
+                :class="giftWindow.isGiftWindowOpen ? ' ' : 'text-muted-foreground'"
+              >
                 {{ giftWindow.isGiftWindowOpen ? '运行中' : '未开启' }}
               </Badge>
             </div>
@@ -324,13 +370,28 @@ function toggleGiftWindow() {
             <div class="text-xs text-muted-foreground leading-normal flex-1">在桌面上显示礼物展示与舰队排行悬浮窗</div>
 
             <div class="flex items-center gap-1.5 mt-1">
-              <Button size="xs" variant="secondary" :class=" giftWindow.isGiftWindowOpen ? 'text-destructive hover:text-destructive' : 'text-primary hover:text-primary' " @click="toggleGiftWindow">
+              <Button
+                size="xs"
+                variant="secondary"
+                :class="
+                  giftWindow.isGiftWindowOpen
+                    ? 'text-destructive hover:text-destructive'
+                    : 'text-primary hover:text-primary'
+                "
+                @click="toggleGiftWindow"
+              >
                 {{ giftWindow.isGiftWindowOpen ? '关闭浮窗' : '开启浮窗' }}
               </Button>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger as-child>
-                    <Button size="xs" variant="ghost" class="gap-1" :disabled="!giftWindow.isGiftWindowOpen" @click="giftWindow.setPosition(100, 100)">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="gap-1"
+                      :disabled="!giftWindow.isGiftWindowOpen"
+                      @click="giftWindow.setPosition(100, 100)"
+                    >
                       <ArrowReset24Regular class="size-3" />
                       重置
                     </Button>
@@ -338,7 +399,12 @@ function toggleGiftWindow() {
                   <TooltipContent> 重置浮窗至默认坐标 </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <Button size="xs" variant="ghost" class="text-muted-foreground" @click="router.push({ name: 'client-gift-window-manage' })">
+              <Button
+                size="xs"
+                variant="ghost"
+                class="text-muted-foreground"
+                @click="router.push({ name: 'client-gift-window-manage' })"
+              >
                 设置
               </Button>
             </div>
@@ -355,7 +421,11 @@ function toggleGiftWindow() {
           <CardHeader class="p-3 border-b flex flex-row items-center justify-between">
             <CardTitle>当前直播间</CardTitle>
             <div class="flex items-center gap-2">
-              <Button size="xs" variant="outline" @click="router.push({ name: 'client-live-manage' })">
+              <Button
+                size="xs"
+                variant="outline"
+                @click="router.push({ name: 'client-live-manage' })"
+              >
                 直播管理
               </Button>
             </div>
@@ -391,7 +461,11 @@ function toggleGiftWindow() {
               <div
                 class="absolute top-2.5 right-2.5 z-3 opacity-0 -translate-y-1 transition-all duration-250 pointer-events-none group-hover:opacity-100 group-hover:translate-y-0"
               >
-                <Badge variant="secondary" size="xs" class="h-5 px-2 bg-primary text-primary-foreground gap-1">
+                <Badge
+                  variant="secondary"
+                  size="xs"
+                  class="h-5 px-2 bg-primary text-primary-foreground gap-1"
+                >
                   <span>点击前往直播间</span>
                   <Open24Regular class="size-3" />
                 </Badge>
@@ -430,9 +504,7 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-live-manage' })"
               >
-                <div
-                  class="size-8 rounded-md flex-center text-lg shrink-0 bg-blue-500/10 text-blue-500"
-                >
+                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-blue-500/10 text-blue-500">
                   <Live24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
@@ -447,9 +519,7 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-read-danmaku' })"
               >
-                <div
-                  class="size-8 rounded-md flex-center text-lg shrink-0 bg-emerald-500/10 text-emerald-500"
-                >
+                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-emerald-500/10 text-emerald-500">
                   <Mic24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
@@ -464,9 +534,7 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-auto-action-manage' })"
               >
-                <div
-                  class="size-8 rounded-md flex-center text-lg shrink-0 bg-amber-500/10 text-amber-500"
-                >
+                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-amber-500/10 text-amber-500">
                   <FlashAuto24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
@@ -481,9 +549,7 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-fans-viewer' })"
               >
-                <div
-                  class="size-8 rounded-md flex-center text-lg shrink-0 bg-purple-500/10 text-purple-500"
-                >
+                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-purple-500/10 text-purple-500">
                   <PeopleSearch24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">
@@ -498,9 +564,7 @@ function toggleGiftWindow() {
                 class="flex items-center gap-2.5 p-2.5 px-3 border border-border rounded-md bg-card cursor-pointer transition-all duration-200 hover:bg-muted/60 hover:border-primary hover:-translate-y-0.5"
                 @click="router.push({ name: 'client-settings' })"
               >
-                <div
-                  class="size-8 rounded-md flex-center text-lg shrink-0 bg-muted text-muted-foreground"
-                >
+                <div class="size-8 rounded-md flex-center text-lg shrink-0 bg-muted text-muted-foreground">
                   <Settings24Filled class="size-4" />
                 </div>
                 <div class="min-w-0">

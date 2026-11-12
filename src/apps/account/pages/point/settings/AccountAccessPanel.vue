@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import {
-  Add24Regular,
-  ArrowSync24Regular,
-  Copy24Regular,
-  Delete24Regular,
-  Key24Regular,
-  Person24Regular,
-} from '@vicons/fluent'
+import Add24Regular from '@vicons/fluent/es/Add24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Key24Regular from '@vicons/fluent/es/Key24Regular'
+import Person24Regular from '@vicons/fluent/es/Person24Regular'
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -124,9 +122,7 @@ defineExpose({ reset })
   <section class="point-settings__panel rounded-lg border border-border bg-card p-4 space-y-4">
     <div class="point-settings__panel-header flex-between pb-3 border-b border-border/60">
       <div class="point-settings__panel-title flex items-center gap-2.5">
-        <span
-          class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex-center shrink-0"
-        >
+        <span class="point-settings__panel-icon size-8 rounded-lg bg-primary/10 text-primary flex-center shrink-0">
           <component
             :is="Person24Regular"
             class="size-4"
@@ -199,7 +195,12 @@ defineExpose({ reset })
             <strong class="text-xs text-foreground block truncate">{{ item.name || 'Bilibili 用户' }}</strong>
             <span class="text-[11px] font-mono text-muted-foreground">UID {{ item.uId }}</span>
           </div>
-          <Badge v-if="item.token === auth.biliToken" variant="default" size="xs" class="h-5">
+          <Badge
+            v-if="item.token === auth.biliToken"
+            variant="default"
+            size="xs"
+            class="h-5"
+          >
             当前
           </Badge>
           <Button
@@ -218,7 +219,12 @@ defineExpose({ reset })
             @positive-click="removeAccount(item.token)"
           >
             <template #trigger>
-              <Button variant="ghost" size="xs" class="size-7 text-destructive hover:bg-destructive/10" aria-label="移除账号">
+              <Button
+                variant="ghost"
+                size="xs"
+                class="size-7 text-destructive hover:bg-destructive/10"
+                aria-label="移除账号"
+              >
                 <component
                   :is="Delete24Regular"
                   class="size-3.5"
@@ -241,7 +247,10 @@ defineExpose({ reset })
           class="size-3.5 text-muted-foreground"
         />
         <strong class="text-foreground">快捷登录链接</strong>
-        <Badge variant="secondary" size="xs">已遮盖</Badge
+        <Badge
+          variant="secondary"
+          size="xs"
+          >已遮盖</Badge
         >
       </div>
       <div class="point-settings__credential-row flex items-center gap-2">

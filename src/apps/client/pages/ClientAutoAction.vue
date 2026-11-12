@@ -1,21 +1,19 @@
 <script setup lang="ts">
-import {
-  AppGeneric24Regular,
-  ArrowLeft24Filled,
-  Bot24Regular,
-  Chat24Regular,
-  DataUsage24Regular,
-  DoorArrowLeft24Regular,
-  Edit16Regular,
-  Gift24Regular,
-  History24Regular,
-  PersonAdd24Regular,
-  Settings24Regular,
-  Shield24Regular,
-  Star24Regular,
-  Target24Filled,
-  Timer24Regular,
-} from '@vicons/fluent'
+import AppGeneric24Regular from '@vicons/fluent/es/AppGeneric24Regular'
+import ArrowLeft24Filled from '@vicons/fluent/es/ArrowLeft24Filled'
+import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import DataUsage24Regular from '@vicons/fluent/es/DataUsage24Regular'
+import DoorArrowLeft24Regular from '@vicons/fluent/es/DoorArrowLeft24Regular'
+import Edit16Regular from '@vicons/fluent/es/Edit16Regular'
+import Gift24Regular from '@vicons/fluent/es/Gift24Regular'
+import History24Regular from '@vicons/fluent/es/History24Regular'
+import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import Shield24Regular from '@vicons/fluent/es/Shield24Regular'
+import Star24Regular from '@vicons/fluent/es/Star24Regular'
+import Target24Filled from '@vicons/fluent/es/Target24Filled'
+import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
 import type { Component } from 'vue'
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -268,7 +266,14 @@ const triggerTypeOptions = [
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Badge variant="outline" class="cursor-pointer h-6 px-2 gap-1.5" :class=" biliFunc.activeDanmakuAccountType === 'bot' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : '' " @click="currentMenuKey = 'account-settings'">
+                <Badge
+                  variant="outline"
+                  class="cursor-pointer h-6 px-2 gap-1.5"
+                  :class="
+                    biliFunc.activeDanmakuAccountType === 'bot' ? 'border-sky-500/40 text-sky-600 bg-sky-500/10' : ''
+                  "
+                  @click="currentMenuKey = 'account-settings'"
+                >
                   <component
                     :is="biliFunc.activeDanmakuAccountType === 'bot' ? Bot24Regular : PersonAdd24Regular"
                     class="size-3.5"
@@ -282,13 +287,14 @@ const triggerTypeOptions = [
                   </span>
                 </Badge>
               </TooltipTrigger>
-              <TooltipContent>
-                点击管理 B 站账号池，自由选择发弹幕账号（支持添加多个账号随时切换）
-              </TooltipContent>
+              <TooltipContent> 点击管理 B 站账号池，自由选择发弹幕账号（支持添加多个账号随时切换） </TooltipContent>
             </Tooltip>
           </TooltipProvider>
 
-          <Badge variant="secondary" class="h-6 px-2" :class="activeRulesCount> 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ''"
+          <Badge
+            variant="secondary"
+            class="h-6 px-2"
+            :class="activeRulesCount > 0 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : ''"
           >
             {{ `${activeRulesCount} 条规则已启用` }}
           </Badge>
@@ -296,7 +302,11 @@ const triggerTypeOptions = [
       </template>
     </ClientPageHeader>
 
-    <Alert size="sm" variant="warning" v-if="!biliCookieStore.isCookieValid">
+    <Alert
+      size="sm"
+      variant="warning"
+      v-if="!biliCookieStore.isCookieValid"
+    >
       <div class="flex items-center justify-between w-full">
         <div>
           <AlertTitle>B站账号凭据未就绪</AlertTitle>
@@ -428,11 +438,19 @@ const triggerTypeOptions = [
                     <div class="flex items-center gap-2 text-xs text-foreground">
                       <Target24Filled class="size-4 text-primary" />
                       <span>下一个执行:</span>
-                      <Badge variant="secondary" size="sm">
+                      <Badge
+                        variant="secondary"
+                        size="sm"
+                      >
                         {{ autoActionStore.nextScheduledAction?.name || '未命名操作' }}
                       </Badge>
                     </div>
-                    <Button size="xs" variant="ghost" class="gap-1 text-primary hover:text-primary" @click="openSetNextModal">
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      class="gap-1 text-primary hover:text-primary"
+                      @click="openSetNextModal"
+                    >
                       <Edit16Regular class="size-3" />
                       手动指定
                     </Button>
@@ -440,7 +458,12 @@ const triggerTypeOptions = [
                 </div>
 
                 <!-- 舰长专属提示 -->
-                <Alert size="sm" variant="warning" v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'" class="mb-3">
+                <Alert
+                  size="sm"
+                  variant="warning"
+                  v-if="currentMenuKey === TriggerType.GUARD && webFetcherStore.webfetcherType === 'openlive'"
+                  class="mb-3"
+                >
                   <AlertTitle>功能限制提醒</AlertTitle>
                   <AlertDescription class="mt-0.5">
                     当前连接模式 (OpenLive) 无法获取用户
@@ -525,7 +548,11 @@ const triggerTypeOptions = [
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in triggerTypeOptions" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in triggerTypeOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -555,7 +582,11 @@ const triggerTypeOptions = [
               <SelectValue placeholder="选择操作" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in eligibleGlobalActions" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in eligibleGlobalActions"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>

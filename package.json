@@ -163,5 +163,8 @@
   },
   "overrides": {
     "@vueuse/core": "15.0.0"
+  },
+  "patchedDependencies": {
+    "@volar/monaco@2.4.30": "patches/@volar%2Fmonaco@2.4.30.patch"
   }
 }

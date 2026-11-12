@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {
-  Board20Regular,
-  Chat20Regular,
-  Eye20Regular,
-  Gift20Regular,
-  Payment20Regular,
-  PeopleCommunity20Regular,
-  PlugConnected20Regular,
-  ThumbLike20Regular,
-} from '@vicons/fluent'
+import Board20Regular from '@vicons/fluent/es/Board20Regular'
+import Chat20Regular from '@vicons/fluent/es/Chat20Regular'
+import Eye20Regular from '@vicons/fluent/es/Eye20Regular'
+import Gift20Regular from '@vicons/fluent/es/Gift20Regular'
+import Payment20Regular from '@vicons/fluent/es/Payment20Regular'
+import PeopleCommunity20Regular from '@vicons/fluent/es/PeopleCommunity20Regular'
+import PlugConnected20Regular from '@vicons/fluent/es/PlugConnected20Regular'
+import ThumbLike20Regular from '@vicons/fluent/es/ThumbLike20Regular'
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 
@@ -250,13 +248,17 @@ function toggleGiftWindow() {
               <span>弹幕浮窗</span>
               <span
                 class="inline-flex-center px-1 rounded text-[9px] font-semibold leading-tight"
-                :class="danmakuWindow.isDanmakuWindowOpen ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'"
+                :class="
+                  danmakuWindow.isDanmakuWindowOpen ? 'bg-emerald-500 text-white' : 'bg-muted text-muted-foreground'
+                "
               >
                 {{ danmakuWindow.isDanmakuWindowOpen ? '开' : '关' }}
               </span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{{ danmakuWindow.isDanmakuWindowOpen ? '弹幕浮窗运行中 (点击关闭)' : '弹幕浮窗已关闭 (点击打开)' }}</TooltipContent>
+          <TooltipContent>{{
+            danmakuWindow.isDanmakuWindowOpen ? '弹幕浮窗运行中 (点击关闭)' : '弹幕浮窗已关闭 (点击打开)'
+          }}</TooltipContent>
         </Tooltip>
 
         <!-- 礼物与排行浮窗开关 -->
@@ -288,7 +290,9 @@ function toggleGiftWindow() {
               </span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>{{ giftWindow.isGiftWindowOpen ? '礼物与排行浮窗运行中 (点击关闭)' : '礼物与排行浮窗已关闭 (点击打开)' }}</TooltipContent>
+          <TooltipContent>{{
+            giftWindow.isGiftWindowOpen ? '礼物与排行浮窗运行中 (点击关闭)' : '礼物与排行浮窗已关闭 (点击打开)'
+          }}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     </div>

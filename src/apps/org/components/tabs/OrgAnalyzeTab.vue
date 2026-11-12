@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { DownloadOutline, TrendingDown, TrendingUp } from '@vicons/ionicons5'
+import DownloadOutline from '@vicons/ionicons5/es/DownloadOutline'
+import TrendingDown from '@vicons/ionicons5/es/TrendingDown'
+import TrendingUp from '@vicons/ionicons5/es/TrendingUp'
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { Badge } from '@/shared/ui/badge'
@@ -151,7 +153,13 @@ onUnmounted(disposeChart)
                 class="text-[11px] text-muted-foreground"
                 >{{ card.suffix }}</span
               >
-              <Badge v-if="card.trend != null" variant="outline" size="xs" class="ml-auto" :class=" card.trend>= 0
+              <Badge
+                v-if="card.trend != null"
+                variant="outline"
+                size="xs"
+                class="ml-auto"
+                :class="
+                  card.trend >= 0
                     ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/10'
                     : 'text-destructive border-destructive/30 bg-destructive/10'
                 "
@@ -175,7 +183,11 @@ onUnmounted(disposeChart)
             type="multiple"
             size="xs"
             :model-value="selectedMetrics"
-            @update:model-value="(val) => { selectedMetrics = val as string[] }"
+            @update:model-value="
+              (val) => {
+                selectedMetrics = val as string[]
+              }
+            "
           >
             <ToggleGroupItem
               v-for="m in chartMetrics"

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Dismiss16Regular } from '@vicons/fluent'
+import Dismiss16Regular from '@vicons/fluent/es/Dismiss16Regular'
 import { computed, onUnmounted, ref, watch } from 'vue'
 
 import { GetSelfAccount, useAccount } from '@/api/account'
@@ -464,7 +464,14 @@ onUnmounted(() => {
       <h2 class="text-base font-semibold m-0 text-foreground">登录或注册</h2>
       <div class="flex items-center gap-2">
         <slot name="header-extra" />
-        <Button v-if="props.closable" variant="ghost" size="xs" class="size-7 rounded-full text-muted-foreground" aria-label="关闭" @click="closePanel">
+        <Button
+          v-if="props.closable"
+          variant="ghost"
+          size="xs"
+          class="size-7 rounded-full text-muted-foreground"
+          aria-label="关闭"
+          @click="closePanel"
+        >
           <component
             :is="Dismiss16Regular"
             class="size-4"
@@ -526,11 +533,12 @@ onUnmounted(() => {
           class="grid w-full"
           :class="isForgetPassword ? 'grid-cols-3' : 'grid-cols-2'"
         >
-          <TabsTrigger value="login" >登录</TabsTrigger
-          >
-          <TabsTrigger value="register" >注册</TabsTrigger
-          >
-          <TabsTrigger v-if="isForgetPassword" value="forget" >忘记密码</TabsTrigger
+          <TabsTrigger value="login">登录</TabsTrigger>
+          <TabsTrigger value="register">注册</TabsTrigger>
+          <TabsTrigger
+            v-if="isForgetPassword"
+            value="forget"
+            >忘记密码</TabsTrigger
           >
         </TabsList>
 

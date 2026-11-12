@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BarChartOutline } from '@vicons/ionicons5'
+import BarChartOutline from '@vicons/ionicons5/es/BarChartOutline'
 import { BarChart, GaugeChart, LineChart, PieChart } from 'echarts/charts'
 import {
   DataZoomComponent,

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Info24Filled } from '@vicons/fluent'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel, SongRequestOption } from '@/api/generated/model'

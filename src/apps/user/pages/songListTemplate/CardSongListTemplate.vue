@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Search24Regular } from '@vicons/fluent'
-import { MusicalNote } from '@vicons/ionicons5'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
 import { computed, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -113,9 +113,7 @@ function getMetaText(song: ResponseSongModel) {
         >
           <div class="card-top flex items-start justify-between gap-2">
             <div class="title-left flex items-start gap-2.5 min-w-0 flex-1">
-              <div
-                class="left-icon size-8 rounded-md bg-muted/60 flex-center shrink-0 text-muted-foreground"
-              >
+              <div class="left-icon size-8 rounded-md bg-muted/60 flex-center shrink-0 text-muted-foreground">
                 <component
                   :is="MusicalNote"
                   class="size-4"

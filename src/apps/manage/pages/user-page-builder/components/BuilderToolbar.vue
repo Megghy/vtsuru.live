@@ -1,18 +1,16 @@
 <script setup lang="ts">
-import {
-  AlertCircleOutline,
-  ArrowRedoOutline,
-  ArrowUndoOutline,
-  ColorPaletteOutline,
-  EllipsisHorizontalOutline,
-  EyeOutline,
-  FolderOpenOutline,
-  GridOutline,
-  RefreshOutline,
-  SaveOutline,
-  SettingsOutline,
-  TrashOutline,
-} from '@vicons/ionicons5'
+import AlertCircleOutline from '@vicons/ionicons5/es/AlertCircleOutline'
+import ArrowRedoOutline from '@vicons/ionicons5/es/ArrowRedoOutline'
+import ArrowUndoOutline from '@vicons/ionicons5/es/ArrowUndoOutline'
+import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
+import EllipsisHorizontalOutline from '@vicons/ionicons5/es/EllipsisHorizontalOutline'
+import EyeOutline from '@vicons/ionicons5/es/EyeOutline'
+import FolderOpenOutline from '@vicons/ionicons5/es/FolderOpenOutline'
+import GridOutline from '@vicons/ionicons5/es/GridOutline'
+import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
+import SaveOutline from '@vicons/ionicons5/es/SaveOutline'
+import SettingsOutline from '@vicons/ionicons5/es/SettingsOutline'
+import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { computed, inject } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -203,7 +201,10 @@ function handleMoreAction(key: string) {
           />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" class="w-48">
+      <DropdownMenuContent
+        align="end"
+        class="w-48"
+      >
         <div class="px-2 py-1.5 text-[11px] text-muted-foreground select-none">
           编辑来源：{{ editor.loadedFromLabel.value }}
         </div>

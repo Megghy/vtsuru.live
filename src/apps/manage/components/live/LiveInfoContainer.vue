@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import {
-  Chat24Regular,
-  Clock24Regular,
-  HandRight24Regular,
-  Info24Filled,
-  Money24Regular,
-  Open24Regular,
-  Video24Regular,
-} from '@vicons/fluent'
+import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
+import Clock24Regular from '@vicons/fluent/es/Clock24Regular'
+import HandRight24Regular from '@vicons/fluent/es/HandRight24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Money24Regular from '@vicons/fluent/es/Money24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Video24Regular from '@vicons/fluent/es/Video24Regular'
 import { format } from 'date-fns'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -116,11 +114,18 @@ function onClickRow() {
       </div>
 
       <div class="flex items-center gap-2 flex-wrap text-xs text-muted-foreground">
-        <Badge :variant="!live.isFinish ? 'destructive' : 'secondary'" size="xs">
+        <Badge
+          :variant="!live.isFinish ? 'destructive' : 'secondary'"
+          size="xs"
+        >
           {{ !live.isFinish ? '直播中' : '已结束' }}
         </Badge>
 
-        <Badge v-if="live.parentArea || live.area" variant="outline" size="xs">
+        <Badge
+          v-if="live.parentArea || live.area"
+          variant="outline"
+          size="xs"
+        >
           {{ live.parentArea ? `${live.parentArea} / ` : '' }}{{ live.area }}
         </Badge>
 

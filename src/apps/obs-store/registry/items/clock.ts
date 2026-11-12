@@ -1,4 +1,4 @@
-import { TimerOutline } from '@vicons/ionicons5'
+import TimerOutline from '@vicons/ionicons5/es/TimerOutline'
 
 import type { ObsComponentDefinition } from '../types'
 

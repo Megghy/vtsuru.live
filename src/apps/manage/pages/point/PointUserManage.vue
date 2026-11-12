@@ -1,14 +1,12 @@
 <script setup lang="ts">
-import {
-  AddSquare24Regular,
-  ArrowDownload24Regular,
-  ArrowSync24Regular,
-  Delete24Regular,
-  Info24Filled,
-  Search24Regular,
-  Settings24Regular,
-  Warning24Regular,
-} from '@vicons/fluent'
+import AddSquare24Regular from '@vicons/fluent/es/AddSquare24Regular'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Info24Filled from '@vicons/fluent/es/Info24Filled'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
+import Warning24Regular from '@vicons/fluent/es/Warning24Regular'
 import { useDebounceFn } from '@vueuse/core'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
@@ -344,7 +342,15 @@ onMounted(async () => {
     </div>
 
     <!-- 积分来源提示 -->
-    <Alert variant="warning" class="border" :class=" pointSourceAlertType === 'warning' ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400' : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400' ">
+    <Alert
+      variant="warning"
+      class="border"
+      :class="
+        pointSourceAlertType === 'warning'
+          ? 'border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400'
+          : 'border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400'
+      "
+    >
       <div class="flex-between flex-wrap gap-2 w-full">
         <div>
           <span class="text-xs font-semibold block">当前积分来源：{{ pointSourceText }}</span>

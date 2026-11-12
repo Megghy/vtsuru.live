@@ -1,23 +1,21 @@
 <script setup lang="ts">
-import {
-  ArrowDownload24Regular,
-  ArrowLeft24Regular,
-  ArrowSync24Regular,
-  Checkmark24Regular,
-  Copy24Regular,
-  Delete24Regular,
-  Dismiss24Regular,
-  Edit24Regular,
-  Grid24Regular,
-  Info24Regular,
-  Link24Regular,
-  MoreVertical24Regular,
-  Open24Regular,
-  Search24Regular,
-  Share24Regular,
-  TableDismiss24Regular,
-  TableSimple24Regular,
-} from '@vicons/fluent'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
+import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
+import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import Delete24Regular from '@vicons/fluent/es/Delete24Regular'
+import Dismiss24Regular from '@vicons/fluent/es/Dismiss24Regular'
+import Edit24Regular from '@vicons/fluent/es/Edit24Regular'
+import Grid24Regular from '@vicons/fluent/es/Grid24Regular'
+import Info24Regular from '@vicons/fluent/es/Info24Regular'
+import Link24Regular from '@vicons/fluent/es/Link24Regular'
+import MoreVertical24Regular from '@vicons/fluent/es/MoreVertical24Regular'
+import Open24Regular from '@vicons/fluent/es/Open24Regular'
+import Search24Regular from '@vicons/fluent/es/Search24Regular'
+import Share24Regular from '@vicons/fluent/es/Share24Regular'
+import TableDismiss24Regular from '@vicons/fluent/es/TableDismiss24Regular'
+import TableSimple24Regular from '@vicons/fluent/es/TableSimple24Regular'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import Qrcode from 'qrcode.vue'
@@ -449,7 +447,12 @@ function openVideoInBili(bvid: string) {
               <h1 class="text-base font-bold text-foreground truncate">
                 {{ table.name }}
               </h1>
-              <Badge :variant=" collectionStatus === '进行中' ? 'secondary' : collectionStatus === '未开始' ? 'outline' : 'default' " size="xs">
+              <Badge
+                :variant="
+                  collectionStatus === '进行中' ? 'secondary' : collectionStatus === '未开始' ? 'outline' : 'default'
+                "
+                size="xs"
+              >
                 {{ collectionStatus }}
               </Badge>
             </div>
@@ -571,30 +574,53 @@ function openVideoInBili(bvid: string) {
             {{ format(toTimestamp(table.endAt), 'MM-dd HH:mm') }}
           </span>
 
-          <Badge variant="outline" size="xs">
+          <Badge
+            variant="outline"
+            size="xs"
+          >
             {{ table.allowUnregisteredUser ? '游客可投' : '仅限绑定' }}
           </Badge>
-          <Badge variant="outline" size="xs">
+          <Badge
+            variant="outline"
+            size="xs"
+          >
             {{ table.duplicatePolicy === DuplicateVideoPolicy.Reject ? '拒绝重复' : '重复合并' }}
           </Badge>
-          <Badge v-if="table.maxVideoPerUser" variant="outline" size="xs">
+          <Badge
+            v-if="table.maxVideoPerUser"
+            variant="outline"
+            size="xs"
+          >
             每人限 {{ table.maxVideoPerUser }} 个
           </Badge>
-          <Badge v-if="table.minVideoDuration || table.maxVideoDuration" variant="outline" size="xs">
+          <Badge
+            v-if="table.minVideoDuration || table.maxVideoDuration"
+            variant="outline"
+            size="xs"
+          >
             时长 {{ table.minVideoDuration ? formatDuration(table.minVideoDuration) : '0' }} ~
             {{ table.maxVideoDuration ? formatDuration(table.maxVideoDuration) : '不限' }}
           </Badge>
 
           <Popover v-if="table.allowedPartitions?.length">
             <PopoverTrigger as-child>
-              <Badge variant="outline" size="xs" class="cursor-pointer hover:text-foreground">
+              <Badge
+                variant="outline"
+                size="xs"
+                class="cursor-pointer hover:text-foreground"
+              >
                 限定 {{ table.allowedPartitions.length }} 个分区
               </Badge>
             </PopoverTrigger>
             <PopoverContent class="w-64 p-2 space-y-1.5">
               <div class="font-semibold text-foreground">限定投稿分区：</div>
               <div class="flex flex-wrap gap-1">
-                <Badge v-for="p in table.allowedPartitions" :key="p" variant="secondary" size="xs">
+                <Badge
+                  v-for="p in table.allowedPartitions"
+                  :key="p"
+                  variant="secondary"
+                  size="xs"
+                >
                   {{ p }}
                 </Badge>
               </div>
@@ -622,7 +648,11 @@ function openVideoInBili(bvid: string) {
             type="single"
             size="xs"
             :model-value="String(activeStatus)"
-            @update:model-value="(val) => { if (val !== undefined && val !== '') activeStatus = Number(val) }"
+            @update:model-value="
+              (val) => {
+                if (val !== undefined && val !== '') activeStatus = Number(val)
+              }
+            "
           >
             <ToggleGroupItem
               :value="String(VideoStatus.Pending)"
@@ -719,7 +749,12 @@ function openVideoInBili(bvid: string) {
         >
           <div class="flex items-center gap-2">
             <span class="font-semibold text-foreground">已选中 {{ selectedBvids.length }} 项</span>
-            <Button size="xs" variant="ghost" class="text-muted-foreground" @click="clearSelection">
+            <Button
+              size="xs"
+              variant="ghost"
+              class="text-muted-foreground"
+              @click="clearSelection"
+            >
               取消勾选
             </Button>
           </div>

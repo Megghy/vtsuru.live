@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { ArrowCircleLeft12Regular, Comment24Regular, Eye24Regular } from '@vicons/fluent'
-import { Heart, HeartOutline } from '@vicons/ionicons5'
+import ArrowCircleLeft12Regular from '@vicons/fluent/es/ArrowCircleLeft12Regular'
+import Comment24Regular from '@vicons/fluent/es/Comment24Regular'
+import Eye24Regular from '@vicons/fluent/es/Eye24Regular'
+import Heart from '@vicons/ionicons5/es/Heart'
+import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
 import { format, formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 import { computed, onMounted, ref } from 'vue'
@@ -199,7 +202,11 @@ onMounted(async () => {
               orientation="vertical"
               class="h-4"
             />
-            <Badge v-if="topic.isDeleted" variant="destructive" size="xs">
+            <Badge
+              v-if="topic.isDeleted"
+              variant="destructive"
+              size="xs"
+            >
               已删除
             </Badge>
             <h1 class="text-sm font-semibold text-foreground truncate max-w-xl">
@@ -243,7 +250,11 @@ onMounted(async () => {
             v-if="topic.sampleLikedBy?.length"
             class="flex items-center -space-x-1.5 pt-2"
           >
-            <Avatar v-for="uid in topic.sampleLikedBy.slice(0, 8)" :key="uid" class="size-6 border border-background ring-1 ring-border" >
+            <Avatar
+              v-for="uid in topic.sampleLikedBy.slice(0, 8)"
+              :key="uid"
+              class="size-6 border border-background ring-1 ring-border"
+            >
               <AvatarImage
                 :src="getUserAvatarUrl(uid)"
                 referrerpolicy="no-referrer"

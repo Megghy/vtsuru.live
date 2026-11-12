@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ArrowDownload24Regular, ArrowSync24Regular } from '@vicons/fluent'
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
 import { format } from 'date-fns'
 import { saveAs } from 'file-saver'
 import { computed, onMounted, ref } from 'vue'
@@ -207,9 +208,12 @@ onMounted(() => void loadHistories())
                   <SelectValue placeholder="全部主播" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部主播</SelectItem
+                  <SelectItem value="all">全部主播</SelectItem>
+                  <SelectItem
+                    v-for="opt in streamerOptions"
+                    :key="opt.value"
+                    :value="opt.value"
                   >
-                  <SelectItem v-for="opt in streamerOptions" :key="opt.value" :value="opt.value">
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
