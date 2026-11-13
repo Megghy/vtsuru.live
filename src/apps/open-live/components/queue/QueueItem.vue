@@ -126,6 +126,22 @@ function formatRelativeTime(timestamp: number) {
         ￥ {{ paymentMeta.giftPriceText }}
       </Badge>
 
+      <Badge
+        v-if="queueData.priorityLevel > 0"
+        variant="default"
+        size="xs"
+      >
+        插队{{ queueData.priorityLevel > 1 ? ` ×${queueData.priorityLevel}` : '' }}
+      </Badge>
+
+      <Badge
+        v-if="queueData.pointCost && queueData.pointCost > 0"
+        variant="secondary"
+        size="xs"
+      >
+        {{ queueData.pointCost }} 积分
+      </Badge>
+
       <!-- 附加弹幕/留言内容 -->
       <TooltipProvider v-if="queueData.content">
         <Tooltip>

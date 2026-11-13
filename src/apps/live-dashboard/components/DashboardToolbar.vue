@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import ArrowClockwise16Regular from '@vicons/fluent/es/ArrowClockwise16Regular'
 import Board16Regular from '@vicons/fluent/es/Board16Regular'
+import BookmarkAdd24Regular from '@vicons/fluent/es/BookmarkAdd24Regular'
 import Dismiss16Regular from '@vicons/fluent/es/Dismiss16Regular'
 import Eye16Regular from '@vicons/fluent/es/Eye16Regular'
 import EyeOff16Regular from '@vicons/fluent/es/EyeOff16Regular'
@@ -14,8 +15,10 @@ import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import { computed, ref, watch } from 'vue'
 import { VueDraggable } from 'vue-draggable-plus'
 
+import { isTauri } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Tag } from '@/shared/ui/tag'
@@ -83,6 +86,19 @@ const range = computed({
   get: () => dashboard.historyRange,
   set: (value) => void dashboard.setHistoryRange(value),
 })
+
+const markerInput = ref('')
+const markerSaveReplay = ref(isTauri())
+
+async function submitMarker() {
+  await dashboard.addMarker(markerInput.value || '高光时刻', 'manual', undefined, markerSaveReplay.value)
+  markerInput.value = ''
+}
+
+function formatMarkerClock(ts: number) {
+  const d = new Date(ts)
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
+}
 
 const customStart = ref('')
 const customEnd = ref('')
@@ -416,6 +432,28 @@ const SEARCH_HELP = [
           }}</span>
         </div>
 
+        <!-- 盲盒盈亏 -->
+        <div
+          v-else-if="key === 'mysteryBox'"
+          class="flex flex-col py-0.5 px-2 rounded-[var(--radius)] bg-muted shrink-0 cursor-grab select-none active:cursor-grabbing"
+          :title="`共 ${stats.totals.mysteryBoxCount} 个盲盒｜投入 ${formatPrice(stats.totals.mysteryBoxCost)} → 爆出 ${formatPrice(stats.totals.mysteryBoxValue)}`"
+        >
+          <span class="text-[10px] text-muted-foreground leading-tight whitespace-nowrap">盲盒盈亏</span>
+          <span
+            class="text-xs font-semibold whitespace-nowrap [font-feature-settings:'tnum']"
+            :class="
+              stats.totals.mysteryBoxProfit > 0
+                ? 'text-emerald-500'
+                : stats.totals.mysteryBoxProfit < 0
+                  ? 'text-rose-500'
+                  : 'text-foreground'
+            "
+          >
+            {{ stats.totals.mysteryBoxProfit >= 0 ? '+' : '-'
+            }}{{ formatPrice(Math.abs(stats.totals.mysteryBoxProfit)) }}
+          </span>
+        </div>
+
         <!-- Top Payers -->
         <template v-else-if="key === 'topPayers'">
           <div
@@ -462,6 +500,92 @@ const SEARCH_HELP = [
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
+
+      <Popover>
+        <PopoverTrigger as-child>
+          <Button
+            variant="ghost"
+            size="xs"
+            class="gap-1 px-2 text-muted-foreground hover:text-foreground"
+            title="记录直播高光打点 (快捷键 Alt+M)"
+          >
+            <BookmarkAdd24Regular class="size-4" />
+            <span class="hidden sm:inline">打点</span>
+            <Badge
+              v-if="dashboard.markers.length > 0"
+              size="xs"
+              variant="secondary"
+            >
+              {{ dashboard.markers.length }}
+            </Badge>
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="end"
+          class="w-72 p-3 space-y-2.5 text-xs"
+        >
+          <div class="flex-between">
+            <span class="font-semibold">高光打点</span>
+            <span class="text-muted-foreground">Alt+M 一键记录</span>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <Input
+              v-model="markerInput"
+              placeholder="高光备注（可选）"
+              @keyup.enter="submitMarker"
+            />
+            <Button
+              size="xs"
+              class="shrink-0"
+              @click="submitMarker"
+            >
+              打点
+            </Button>
+          </div>
+          <label
+            v-if="isTauri()"
+            class="flex items-center gap-2 cursor-pointer text-muted-foreground"
+          >
+            <Checkbox v-model:checked="markerSaveReplay" />
+            <span>同时保存 OBS 回放缓存片段</span>
+          </label>
+          <div
+            v-if="dashboard.markers.length > 0"
+            class="max-h-40 overflow-y-auto scrollbar-thin space-y-1 border-t pt-2"
+          >
+            <div
+              v-for="m in dashboard.markers.slice(0, 12)"
+              :key="m.id ?? m.time"
+              class="flex-between gap-2 py-0.5"
+            >
+              <span class="truncate">
+                <span class="font-mono text-muted-foreground mr-1.5">{{ formatMarkerClock(m.time) }}</span>
+                <span>{{ m.label }}</span>
+                <span
+                  v-if="m.replaySaved"
+                  class="ml-1 text-[10px] text-emerald-500"
+                >
+                  [已存回放]
+                </span>
+              </span>
+              <button
+                v-if="m.id"
+                type="button"
+                class="text-muted-foreground hover:text-destructive shrink-0"
+                @click="dashboard.removeMarker(m.id)"
+              >
+                <Dismiss16Regular class="size-3.5" />
+              </button>
+            </div>
+          </div>
+          <div
+            v-else
+            class="text-muted-foreground text-center py-2 border-t"
+          >
+            暂无打点记录，下播后可在场次复盘导出时间轴
+          </div>
+        </PopoverContent>
+      </Popover>
 
       <IconAction
         :icon="ArrowClockwise16Regular"

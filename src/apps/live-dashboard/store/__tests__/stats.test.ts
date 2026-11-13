@@ -75,6 +75,36 @@ describe('useDashboardStats 中控台实时统计', () => {
     expect(stats.totals.value.totalRevenue).toBe(278)
   })
 
+  it('正确统计盲盒投入、爆出价值与盈亏差值', () => {
+    const paid = shallowRef<DashboardEvent[]>([])
+    const stats = useDashboardStats(paid)
+
+    const now = Date.now()
+    paid.value = [
+      createEvent({
+        type: EventDataTypes.Gift,
+        price: 15,
+        num: 1,
+        time: now,
+        mysteryBoxName: '心动盲盒',
+        mysteryBoxPrice: 52,
+      }),
+      createEvent({
+        type: EventDataTypes.Gift,
+        price: 30,
+        num: 2,
+        time: now,
+        mysteryBoxName: '心动盲盒',
+        mysteryBoxPrice: 12,
+      }),
+    ]
+
+    expect(stats.totals.value.mysteryBoxCount).toBe(3)
+    expect(stats.totals.value.mysteryBoxCost).toBe(45)
+    expect(stats.totals.value.mysteryBoxValue).toBe(64)
+    expect(stats.totals.value.mysteryBoxProfit).toBe(19)
+  })
+
   it('重置时清理点赞数与在场用户', () => {
     const paid = shallowRef<DashboardEvent[]>([])
     const stats = useDashboardStats(paid)

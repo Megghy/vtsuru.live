@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
 import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
 import CheckmarkCircle24Regular from '@vicons/fluent/es/CheckmarkCircle24Regular'
 import DismissCircle24Regular from '@vicons/fluent/es/DismissCircle24Regular'
@@ -11,6 +12,8 @@ import { computed, ref, watch } from 'vue'
 
 import type { ResponsePointOrder2UserModel } from '@/api/generated/model'
 import { GoodsTypes, PointOrderStatus } from '@/api/generated/model'
+import { getApiPointUserOrderAttachment } from '@/api/generated/point/point'
+import { toast } from '@/shared/utils'
 import AddressDisplay from '@/shared/components/points/AddressDisplay.vue'
 import PointGoodsItem from '@/shared/components/points/PointGoodsItem.vue'
 import ServiceOrderPanel from '@/shared/components/points/ServiceOrderPanel.vue'
@@ -80,6 +83,29 @@ function formatRelativeTime(ts: number) {
 
 function formatDateTime(ts: number) {
   return new Date(ts).toLocaleString('zh-CN', { hour12: false })
+}
+
+const downloadingAttachmentId = ref<number | null>(null)
+async function downloadPrivateAttachment(orderId: number, fileId: number) {
+  downloadingAttachmentId.value = fileId
+  try {
+    const res = await getApiPointUserOrderAttachment({ orderId, fileId })
+    if (res.code === 200 && res.data) {
+      window.open(res.data, '_blank', 'noopener,noreferrer')
+    } else {
+      toast.error(res.message || '获取下载链接失败')
+    }
+  } catch {
+    toast.error('获取下载链接失败')
+  } finally {
+    downloadingAttachmentId.value = null
+  }
+}
+
+function formatAttachmentSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 </script>
 
@@ -329,6 +355,28 @@ function formatDateTime(ts: number) {
                 placeholder="暂无内容"
                 rows="4"
               />
+              <div v-if="detail.privateAttachments?.length" class="space-y-1.5 pt-1">
+                <div class="text-xs font-medium text-muted-foreground">私有附件（点击签发 15 分钟有效下载链接）</div>
+                <div
+                  v-for="file in detail.privateAttachments"
+                  :key="file.id"
+                  class="flex-between p-2 rounded border border-border bg-muted/30 text-xs"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="truncate font-medium">{{ file.name }}</span>
+                    <span class="text-muted-foreground shrink-0 tabular-nums">{{ formatAttachmentSize(file.size) }}</span>
+                  </div>
+                  <Button
+                    size="xs"
+                    variant="outline"
+                    :loading="downloadingAttachmentId === file.id"
+                    @click="downloadPrivateAttachment(detail.id, file.id)"
+                  >
+                    <component :is="ArrowDownload24Regular" class="size-3.5 mr-1" />
+                    下载
+                  </Button>
+                </div>
+              </div>
             </div>
           </template>
 

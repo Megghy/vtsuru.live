@@ -12,6 +12,7 @@ export enum TriggerType {
   ENTER = 'enter', // 进入直播间
   SCHEDULED = 'scheduled', // 定时触发
   SUPER_CHAT = 'super_chat', // SC
+  POINT_REDEEM = 'point_redeem', // 积分商品兑换
 }
 
 // 操作类型
@@ -19,6 +20,7 @@ export enum ActionType {
   SEND_DANMAKU = 'send_danmaku', // 发送弹幕
   SEND_PRIVATE_MSG = 'send_private_msg', // 发送私信
   EXECUTE_COMMAND = 'execute_command', // 执行命令
+  PLAY_AUDIO = 'play_audio', // 播放本地/URL 音效（不依赖 VTS）
   PNGTUBER_EXPRESSION = 'pngtuber_expression', // 切换 PNGtuber 表情
   VTS_HOTKEY = 'vts_hotkey', // 触发 VTS hotkey
   VTS_PRESET = 'vts_preset', // 应用 VTS 机位预设
@@ -73,6 +75,11 @@ export interface AutoActionItem {
     pngtuberExpressionId?: string
     pngtuberDurationMs?: number
     pngtuberChannel?: string
+
+    // --- 独立音效播放配置 ---
+    audioSource?: string
+    audioVolume?: number
+    audioWaitForEnd?: boolean
 
     // --- VTS 动作配置（按 actionType 使用） ---
     vtsHotkeyId?: string
@@ -173,4 +180,9 @@ export interface TriggerConfig {
   // Confirm message options
   sendDanmakuConfirm?: boolean // 是否发送弹幕确认
   isConfirmMessage?: boolean // 标记这是一个确认消息
+
+  // Point redeem filters
+  pointGoodsIds?: number[]
+  pointGoodsNameKeywords?: string[]
+  pointIncludeFree?: boolean
 }

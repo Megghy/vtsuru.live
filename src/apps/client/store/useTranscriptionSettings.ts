@@ -49,6 +49,8 @@ export const useTranscriptionSettings = defineStore('transcription-settings', ()
   const settings = ref<TranscriptionSettings>({
     activeProfileId: firstProfile.id,
     profiles: [firstProfile],
+    syncObsSubtitle: false,
+    obsSubtitleChannel: 'default',
   })
   const initialized = ref(false)
 

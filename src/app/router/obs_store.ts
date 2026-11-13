@@ -58,6 +58,60 @@ export default {
       },
     },
     {
+      path: 'goal-manage',
+      name: 'obs-store-goal-manage',
+      component: async () => import('@/apps/obs-store/components/goal/GoalViewer.vue'),
+      meta: {
+        title: '目标进度与耐久加钟控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'goal',
+      name: 'obs-store-goal-display',
+      component: async () => import('@/apps/obs-store/components/goal/GoalDisplay.vue'),
+      meta: {
+        title: '目标进度与耐久加钟',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'wheel-manage',
+      name: 'obs-store-wheel-manage',
+      component: async () => import('@/apps/obs-store/components/wheel/WheelViewer.vue'),
+      meta: {
+        title: '直播大转盘控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'wheel',
+      name: 'obs-store-wheel-display',
+      component: async () => import('@/apps/obs-store/components/wheel/WheelDisplay.vue'),
+      meta: {
+        title: '直播大转盘',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'subtitle-manage',
+      name: 'obs-store-subtitle-manage',
+      component: async () => import('@/apps/obs-store/components/subtitle/SubtitleViewer.vue'),
+      meta: {
+        title: '实时字幕条控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'subtitle',
+      name: 'obs-store-subtitle-display',
+      component: async () => import('@/apps/obs-store/components/subtitle/SubtitleDisplay.vue'),
+      meta: {
+        title: '实时语音字幕条',
+        forceReload: true,
+      },
+    },
+    {
       path: 'pngtuber-manage',
       name: 'obs-store-pngtuber-manage',
       component: async () => import('@/apps/obs-store/components/pngtuber/PngtuberViewer.vue'),

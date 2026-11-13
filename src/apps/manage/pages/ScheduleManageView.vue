@@ -19,6 +19,7 @@ import {
   postApiScheduleUpdate,
 } from '@/api/generated/schedule/schedule'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import ScheduleView from '@/apps/user/pages/ScheduleView.vue'
 import BiliLiveReservePanel from '@/components/BiliLiveReservePanel.vue'
 import ScheduleList from '@/components/ScheduleList.vue'
 import { CURRENT_HOST, SCHEDULE_API_URL } from '@/shared/config'
@@ -34,6 +35,7 @@ import { useMessage } from '@/shared/utils'
 
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 const currentYear = new Date().getFullYear()
+const showPosterExportModal = ref(false)
 const yearOptions = [
   { label: currentYear.toString(), value: currentYear.toString() },
   { label: (currentYear + 1).toString(), value: (currentYear + 1).toString() },
@@ -856,6 +858,14 @@ onMounted(() => {
           >
             修改模板
           </Button>
+          <Button
+            size="xs"
+            variant="outline"
+            :disabled="!schedules?.length"
+            @click="showPosterExportModal = true"
+          >
+            导出海报
+          </Button>
         </div>
       </template>
     </ManagePageHeader>
@@ -1409,6 +1419,25 @@ onMounted(() => {
             批量添加
           </Button>
         </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <Dialog v-model:open="showPosterExportModal">
+      <DialogContent class="max-w-5xl max-h-[90vh] flex flex-col p-4">
+        <DialogHeader>
+          <DialogTitle class="text-base">导出周程海报图</DialogTitle>
+          <DialogDescription class="text-xs">
+            直接复用当前选定的公开展示模板渲染，可在上方切换周次并一键保存 2x 高清 PNG 图片
+          </DialogDescription>
+        </DialogHeader>
+        <div class="flex-1 min-h-0 overflow-y-auto scrollbar-thin rounded border border-border/60 p-2 bg-muted/20">
+          <ScheduleView
+            v-if="showPosterExportModal"
+            :user-info="accountInfo"
+            :bili-info="undefined"
+            :fake-data="schedules ?? []"
+          />
+        </div>
       </DialogContent>
     </Dialog>
   </div>

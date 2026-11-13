@@ -8,6 +8,7 @@ import {
   type RequestPointGoodsModel,
   type TempGuardFreeDate,
   type TempSubPointGoodsModel,
+  type VirtualAttachmentModel,
   VirtualKeySelectionMode,
 } from '@/api/generated/model'
 import { postApiPointUpdateGoods } from '@/api/generated/point/point'
@@ -30,6 +31,7 @@ import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
 import { Add24Filled, ArrowDown24Filled, ArrowUp24Filled, Delete24Filled, Info24Regular } from '@vicons/fluent'
+import DocumentLock24Regular from '@vicons/fluent/es/DocumentLock24Regular'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import ServiceGoodsConfig from './ServiceGoodsConfig.vue'
@@ -134,6 +136,9 @@ const isAllowedPrivacyPolicy = ref(false)
 const isLoading = ref(false)
 const tagInput = ref('')
 const virtualKeyInput = ref('')
+const privateAttachments = ref<VirtualAttachmentModel[]>([])
+const uploadingPrivateFile = ref(false)
+const privateFileInputRef = ref<HTMLInputElement>()
 
 const isEditMode = computed(() => Boolean(currentGoodsModel.value.goods.id))
 const isDirectCollect = computed(() => currentGoodsModel.value.goods.collectUrl === undefined)
@@ -175,6 +180,7 @@ function initFromEditingGoods(item?: ResponsePointGoodModel) {
   tagInput.value = ''
   virtualKeyInput.value = ''
   subItemCoverFiles.value = {}
+  privateAttachments.value = []
 
   if (!item) {
     currentGoodsModel.value = createDefaultGoodsModel()
@@ -214,6 +220,7 @@ function initFromEditingGoods(item?: ResponsePointGoodModel) {
     return { ...sub, id }
   })
   subItemCoverFiles.value = coversMap
+  privateAttachments.value = [...(item.privateAttachments ?? [])]
   currentGoodsModel.value = {
     goods: copied,
     cover: buildCoverUploadItems(item.cover),
@@ -475,6 +482,12 @@ function buildSubmitPayload(coverFile?: APIFileModel, subCoverResults?: Map<numb
   if (g.keySelectionMode === VirtualKeySelectionMode.None) {
     g.virtualKeys = []
   }
+  if (g.setting) {
+    g.setting.privateFileIds =
+      g.type === GoodsTypes.Virtual && privateAttachments.value.length > 0
+        ? privateAttachments.value.map((f) => f.id)
+        : []
+  }
 
   if (g.subItems) {
     g.subItems = g.subItems.map((sub) => {
@@ -522,6 +535,41 @@ async function updateGoods() {
   } finally {
     isLoading.value = false
   }
+}
+
+async function handlePrivateFileChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const files = input.files ? Array.from(input.files) : []
+  input.value = ''
+  if (!files.length) return
+  uploadingPrivateFile.value = true
+  try {
+    const uploaded = await uploadFiles(files, FileStore.GoodsPrivate)
+    for (const file of uploaded) {
+      if (!privateAttachments.value.some((existing) => existing.id === file.id)) {
+        privateAttachments.value.push({
+          id: file.id,
+          name: file.name || `附件_${file.id}`,
+          size: file.size ?? 0,
+        })
+      }
+    }
+    toast.success(`已上传 ${uploaded.length} 个私有附件`)
+  } catch (err) {
+    toast.error(err instanceof Error ? err.message : '私有附件上传失败')
+  } finally {
+    uploadingPrivateFile.value = false
+  }
+}
+
+function removePrivateAttachment(fileId: number) {
+  privateAttachments.value = privateAttachments.value.filter((f) => f.id !== fileId)
+}
+
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
 </script>
 
@@ -752,6 +800,52 @@ async function updateGoods() {
                     >
                       {{ key }}
                     </Tag>
+                  </div>
+                </div>
+              </FormField>
+
+              <FormField
+                label="私有附件文件"
+                extra="仅对已兑换该虚拟商品的用户签发 15 分钟临期签名下载链接，未兑换用户无法获取"
+              >
+                <div class="space-y-2">
+                  <div class="flex items-center gap-2">
+                    <input
+                      ref="privateFileInputRef"
+                      type="file"
+                      multiple
+                      class="hidden"
+                      @change="handlePrivateFileChange"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      :loading="uploadingPrivateFile"
+                      @click="privateFileInputRef?.click()"
+                    >
+                      <component :is="DocumentLock24Regular" class="size-3.5 mr-1" />
+                      上传私有附件 (≤10MB)
+                    </Button>
+                  </div>
+                  <div v-if="privateAttachments.length" class="space-y-1">
+                    <div
+                      v-for="file in privateAttachments"
+                      :key="file.id"
+                      class="flex-between px-2.5 py-1.5 rounded border border-border bg-muted/30 text-xs"
+                    >
+                      <span class="truncate font-medium">{{ file.name }}</span>
+                      <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-muted-foreground tabular-nums">{{ formatFileSize(file.size) }}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="xs"
+                          @click="removePrivateAttachment(file.id)"
+                        >
+                          <component :is="Delete24Filled" class="size-3.5 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </FormField>

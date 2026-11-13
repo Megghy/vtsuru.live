@@ -29,6 +29,7 @@ declare module 'vue' {
     SongList: typeof import('./components/SongList.vue')['default']
     SongListTable: typeof import('./components/song-list/SongListTable.vue')['default']
     SongPlayer: typeof import('./components/SongPlayer.vue')['default']
+    SongTimelineExportDialog: typeof import('./components/song/SongTimelineExportDialog.vue')['default']
     UserAutocompleteSelect: typeof import('./components/common/UserAutocompleteSelect.vue')['default']
     VideoCollectInfoCard: typeof import('./components/VideoCollectInfoCard.vue')['default']
   }
@@ -53,6 +54,7 @@ declare global {
   const SongList: typeof import('./components/SongList.vue')['default']
   const SongListTable: typeof import('./components/song-list/SongListTable.vue')['default']
   const SongPlayer: typeof import('./components/SongPlayer.vue')['default']
+  const SongTimelineExportDialog: typeof import('./components/song/SongTimelineExportDialog.vue')['default']
   const UserAutocompleteSelect: typeof import('./components/common/UserAutocompleteSelect.vue')['default']
   const VideoCollectInfoCard: typeof import('./components/VideoCollectInfoCard.vue')['default']
 }

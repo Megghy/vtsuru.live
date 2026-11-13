@@ -50,4 +50,10 @@ export interface SettingSongRequest {
   /** @nullable */
   obsTitleToday?: string | null
   isReverse: boolean
+  enablePointRequest: boolean
+  pointRequestCost: number
+  pointIgnoreLimit: boolean
+  allowPointPriority: boolean
+  pointPriorityKeyword: string
+  pointPriorityCost: number
 }

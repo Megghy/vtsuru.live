@@ -1,4 +1,6 @@
 import { useAccount } from '@/api/account'
+import { getObsSyncState, ObsSyncConflict, updateObsSyncState } from '@/api/obs-store'
+import { DEFAULT_SUBTITLE_STATE, type SubtitleState } from '@/apps/obs-store/components/subtitle/types'
 import { AudioFrameBuffer, pcmFrameSize } from '@/apps/client/services/transcription/audio'
 import { resolveBilibiliStream } from '@/apps/client/services/transcription/bilibili'
 import {
@@ -69,10 +71,72 @@ export const useTranscription = defineStore('transcription', () => {
   let finishTask: Promise<void> | undefined
   let stopTask: Promise<void> | undefined
   let reconnectTask: Promise<void> | undefined
+  let obsPushTimer: ReturnType<typeof setTimeout> | undefined
+  let obsLastHash = ''
+  let obsCachedBase: SubtitleState | undefined
+  let obsPushing = false
+  let obsDirty = false
   let stopping = false
   let pipelineClosing = false
   let pipelineEpoch = 0
   let reconnects = 0
+
+  async function flushObsSubtitle() {
+    if (!settingsStore.settings.syncObsSubtitle || !account.value.id) return
+    if (obsPushing) {
+      obsDirty = true
+      return
+    }
+    obsPushing = true
+    const channel = settingsStore.settings.obsSubtitleChannel || 'default'
+    try {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        if (!obsCachedBase) {
+          const snap = await getObsSyncState('subtitle', channel, undefined, account.value.id)
+          obsLastHash = snap.hash
+          obsCachedBase = snap.data ? { ...DEFAULT_SUBTITLE_STATE, ...JSON.parse(snap.data) } : { ...DEFAULT_SUBTITLE_STATE }
+        }
+        const nextState: SubtitleState = {
+          ...obsCachedBase,
+          lines: lines.value.slice(-6).map((item) => ({ text: item.text, ts: item.startMs })),
+          partialText: partialText.value.trim(),
+          updatedAt: Date.now(),
+        }
+        try {
+          const updated = await updateObsSyncState('subtitle', channel, JSON.stringify(nextState), obsLastHash)
+          obsLastHash = updated.hash
+          obsCachedBase = nextState
+          break
+        } catch (error) {
+          if (error instanceof ObsSyncConflict) {
+            obsLastHash = error.snapshot.hash
+            obsCachedBase = error.snapshot.data
+              ? { ...DEFAULT_SUBTITLE_STATE, ...JSON.parse(error.snapshot.data) }
+              : { ...DEFAULT_SUBTITLE_STATE }
+            continue
+          }
+          break
+        }
+      }
+    } catch {
+      // 忽略网络瞬断，避免阻塞本地语音转写归档
+    } finally {
+      obsPushing = false
+      if (obsDirty) {
+        obsDirty = false
+        scheduleObsSubtitlePush(150)
+      }
+    }
+  }
+
+  function scheduleObsSubtitlePush(delayMs = 250) {
+    if (!settingsStore.settings.syncObsSubtitle) return
+    if (obsPushTimer) clearTimeout(obsPushTimer)
+    obsPushTimer = setTimeout(() => {
+      obsPushTimer = undefined
+      void flushObsSubtitle()
+    }, delayMs)
+  }
   let pipelineFault: unknown
   let sequence = 0
   let lastEndMs = 0
@@ -175,7 +239,10 @@ export const useTranscription = defineStore('transcription', () => {
     }
     const next = createProvider(profile, {
       onPartial: (result) => {
-        if (epoch === pipelineEpoch) partialText.value = result.text
+        if (epoch === pipelineEpoch) {
+          partialText.value = result.text
+          scheduleObsSubtitlePush(260)
+        }
       },
       onFinal: (result) => {
         if (epoch === pipelineEpoch) enqueueFinal(result)
@@ -302,6 +369,7 @@ export const useTranscription = defineStore('transcription', () => {
     if (lines.value.length > MAX_VISIBLE_LINES) {
       lines.value.splice(0, lines.value.length - MAX_VISIBLE_LINES)
     }
+    scheduleObsSubtitlePush(50)
     if (pendingSegments.length >= MAX_PENDING_SEGMENTS) {
       pauseArchive('待上传字幕已满，归档暂停，转写仍在继续')
       return

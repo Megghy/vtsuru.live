@@ -464,6 +464,97 @@ function onChange() {
           </label>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader class="py-3 px-4 border-b">
+          <CardTitle class="text-xs">积分消费与插队</CardTitle>
+        </CardHeader>
+        <CardContent class="p-4 flex flex-col gap-3">
+          <div class="flex flex-wrap items-center gap-4">
+            <label class="flex items-center gap-2 cursor-pointer text-xs">
+              <Checkbox
+                :checked="settings.enablePointJoin"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.enablePointJoin = val
+                    onChange()
+                  }
+                "
+              />
+              <span>启用积分排队（发送排队弹幕时扣除积分）</span>
+            </label>
+            <label
+              v-if="settings.enablePointJoin"
+              class="flex items-center gap-2 cursor-pointer text-xs"
+            >
+              <Checkbox
+                :checked="settings.pointIgnoreLimit"
+                @update:checked="
+                  (val: boolean) => {
+                    settings.pointIgnoreLimit = val
+                    onChange()
+                  }
+                "
+              />
+              <span>积分排队忽略粉丝牌/舰长与冷却限制</span>
+            </label>
+          </div>
+
+          <div
+            v-if="settings.enablePointJoin"
+            class="flex items-center gap-2 text-xs"
+          >
+            <span class="text-muted-foreground shrink-0">每次排队消耗</span>
+            <NumberField
+              v-model="settings.pointJoinCost"
+              :min="0"
+              class="w-28"
+              @update:model-value="onChange"
+            />
+            <span class="text-muted-foreground">积分</span>
+          </div>
+
+          <Separator />
+
+          <label class="flex items-center gap-2 cursor-pointer text-xs">
+            <Checkbox
+              :checked="settings.allowPointPriority"
+              @update:checked="
+                (val: boolean) => {
+                  settings.allowPointPriority = val
+                  onChange()
+                }
+              "
+            />
+            <span>允许观众使用积分插队</span>
+          </label>
+
+          <div
+            v-if="settings.allowPointPriority"
+            class="flex flex-wrap items-center gap-4 text-xs"
+          >
+            <div class="flex items-center gap-2">
+              <span class="text-muted-foreground shrink-0">弹幕插队关键词</span>
+              <Input
+                v-model="settings.pointPriorityKeyword"
+                placeholder="例如：插队"
+                class="w-36"
+                @change="onChange"
+              />
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-muted-foreground shrink-0">每次插队消耗</span>
+              <NumberField
+                v-model="settings.pointPriorityCost"
+                :min="0"
+                class="w-28"
+                @update:model-value="onChange"
+              />
+              <span class="text-muted-foreground">积分</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   </Spin>
 </template>

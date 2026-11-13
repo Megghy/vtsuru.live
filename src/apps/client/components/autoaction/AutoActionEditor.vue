@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/shared/ui/card'
 import { Separator } from '@/shared/ui/separator'
 
 import AdvancedSettings from './settings/AdvancedSettings.vue'
+import AudioSettings from './settings/AudioSettings.vue'
 import BasicSettings from './settings/BasicSettings.vue'
 import DanmakuSettings from './settings/DanmakuSettings.vue'
 import EnterSettings from './settings/EnterSettings.vue'
@@ -15,6 +16,7 @@ import FollowSettings from './settings/FollowSettings.vue'
 import GiftSettings from './settings/GiftSettings.vue'
 import GuardSettings from './settings/GuardSettings.vue'
 import PngtuberSettings from './settings/PngtuberSettings.vue'
+import PointRedeemSettings from './settings/PointRedeemSettings.vue'
 import ScheduledSettings from './settings/ScheduledSettings.vue'
 import SuperChatSettings from './settings/SuperChatSettings.vue'
 import TemplateSettings from './settings/TemplateSettings.vue'
@@ -60,7 +62,10 @@ const showVtsSettings = computed(() => {
   ].includes(props.action.actionType)
 })
 
-function getTriggerSettings() {
+const showAudioSettings = computed(() => props.action.actionType === ActionType.PLAY_AUDIO)
+const showPngtuberSettings = computed(() => props.action.actionType === ActionType.PNGTUBER_EXPRESSION)
+
+const TriggerSettings = computed(() => {
   switch (props.action.triggerType) {
     case TriggerType.DANMAKU:
       return DanmakuSettings
@@ -76,12 +81,12 @@ function getTriggerSettings() {
       return ScheduledSettings
     case TriggerType.SUPER_CHAT:
       return SuperChatSettings
+    case TriggerType.POINT_REDEEM:
+      return PointRedeemSettings
     default:
       return null
   }
-}
-
-const TriggerSettings = getTriggerSettings()
+})
 
 function getAdvancedSummary() {
   const summaries: string[] = []
@@ -109,7 +114,7 @@ function getAdvancedSummary() {
 
     <!-- 2. 内容配置 (模板或VTS) -->
     <Card
-      v-if="showTemplate || showVtsSettings || action.actionType === ActionType.PNGTUBER_EXPRESSION"
+      v-if="showTemplate || showVtsSettings || showPngtuberSettings || showAudioSettings"
       class="content-settings-card border-none bg-muted/40"
     >
       <CardContent class="p-0">
@@ -118,8 +123,12 @@ function getAdvancedSummary() {
           :action="action"
           :custom-test-context="customTestContext"
         />
+        <AudioSettings
+          v-if="showAudioSettings"
+          :action="action"
+        />
         <PngtuberSettings
-          v-if="action.actionType === ActionType.PNGTUBER_EXPRESSION"
+          v-if="showPngtuberSettings"
           :action="action"
         />
         <VtsSettings

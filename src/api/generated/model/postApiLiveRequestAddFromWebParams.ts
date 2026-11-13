@@ -9,4 +9,5 @@
 export type PostApiLiveRequestAddFromWebParams = {
   target?: number
   song?: string
+  usePriority?: boolean
 }

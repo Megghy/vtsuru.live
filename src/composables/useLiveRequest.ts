@@ -80,6 +80,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       guardLevel: (q) => q.user?.guard_level,
       price: (q) => q.price,
       fansMedalLevel: (q) => q.user?.fans_medal_level,
+      priorityLevel: (q) => q.priorityLevel,
     })
   })
 
@@ -160,8 +161,18 @@ export const useLiveRequest = defineStore('songRequest', () => {
         }>
       ).then((data) => {
         if (data.code == 200) {
-          window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
-          if (data.message != 'EventFetcher') originSongs.value.unshift(data.data)
+          if (data.message != 'EventFetcher') {
+            const idx = originSongs.value.findIndex((s) => s.id === data.data.id)
+            if (idx > -1) {
+              originSongs.value.splice(idx, 1, data.data)
+              window.$message.success(`[${danmaku.uname}] 使用积分插队: ${data.data.songName}`)
+            } else {
+              originSongs.value.unshift(data.data)
+              window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
+            }
+          } else {
+            window.$message.success(`[${danmaku.uname}] 添加曲目: ${data.data.songName}`)
+          }
         } else {
           const time = Date.now()
           window.$notification.warning({
@@ -191,6 +202,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
           guard_level: danmaku.guard_level,
         },
         createAt: Date.now(),
+        priorityLevel: 0,
         isInLocal: true,
         id: songs.value.length == 0 ? 1 : (new List(songs.value).Max((s) => s.id) ?? 0) + 1,
       } as SongRequestInfo
@@ -234,6 +246,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
         scPrice: undefined,
         user: undefined,
         createAt: Date.now(),
+        priorityLevel: 0,
         isInLocal: true,
         id: songs.value.length == 0 ? 1 : (new List(songs.value).Max((s) => s.id) ?? 0) + 1,
       } as SongRequestInfo
@@ -289,7 +302,9 @@ export const useLiveRequest = defineStore('songRequest', () => {
         if (data.code == 200) {
           console.log(`[SONG-REQUEST] 更新状态: ${song.songName} -> ${statusString}`)
           song.status = status
-          if (status > SongRequestStatus.Singing) {
+          if (status === SongRequestStatus.Singing) {
+            song.startSingAt = Date.now()
+          } else if (status > SongRequestStatus.Singing) {
             song.finishAt = Date.now()
           }
           window.$message.success(`已更新状态为: ${statusString2}`)
@@ -367,6 +382,10 @@ export const useLiveRequest = defineStore('songRequest', () => {
           const song = originSongs.value.find((s) => s.id == item.id)
           if (song) {
             if (song.status != item.status) song.status = item.status
+            if (song.priorityLevel !== item.priorityLevel) song.priorityLevel = item.priorityLevel
+            if (song.pointCost !== item.pointCost) song.pointCost = item.pointCost
+            if (item.startSingAt && !song.startSingAt) song.startSingAt = item.startSingAt
+            if (item.finishAt && !song.finishAt) song.finishAt = item.finishAt
           } else {
             originSongs.value.unshift(item)
             if (item.from == SongRequestFrom.Web) {
@@ -409,7 +428,12 @@ export const useLiveRequest = defineStore('songRequest', () => {
     if (isLoggedIn.value && accountInfo.value?.settings?.enableFunctions?.includes(FunctionTypes.SongRequest) != true) {
       return false
     }
-    const prefix = accountInfo.value?.settings?.songRequest?.orderPrefix || defaultPrefix.value
+    const reqSettings = accountInfo.value?.settings?.songRequest
+    const priorityKeyword = reqSettings?.allowPointPriority ? reqSettings.pointPriorityKeyword?.trim() : ''
+    if (priorityKeyword && msg.trim().toLowerCase().startsWith(priorityKeyword.toLowerCase())) {
+      return true
+    }
+    const prefix = reqSettings?.orderPrefix || defaultPrefix.value
     return msg.trim().toLowerCase().startsWith(prefix.toLowerCase())
   }
 

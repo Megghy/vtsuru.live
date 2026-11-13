@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { DEFAULT_LAYOUT, DEFAULT_TOOLBAR_STATS, mergeLayout, TOOLBAR_STAT_OPTIONS } from '../settings'
+import {
+  DEFAULT_LAYOUT,
+  DEFAULT_TOOLBAR_STATS,
+  filterByPaidReadMode,
+  mergeLayout,
+  TOOLBAR_STAT_OPTIONS,
+} from '../settings'
 
 describe('mergeLayout', () => {
   it('旧配置追加新面板并沿用默认隐藏，保留用户顺序与尺寸', () => {
@@ -35,8 +41,24 @@ describe('mergeLayout', () => {
     expect(DEFAULT_TOOLBAR_STATS.gift).toBe(false)
     expect(DEFAULT_TOOLBAR_STATS.guard).toBe(false)
     expect(DEFAULT_TOOLBAR_STATS.perMinute).toBe(false)
+    expect(DEFAULT_TOOLBAR_STATS.mysteryBox).toBe(false)
 
     // 所有选项均在 options 清单中注册
-    expect(TOOLBAR_STAT_OPTIONS.length).toBe(13)
+    expect(TOOLBAR_STAT_OPTIONS.length).toBe(14)
+  })
+})
+
+describe('filterByPaidReadMode', () => {
+  const items = [{ key: 'a' }, { key: 'b' }, { key: 'c' }]
+  const readKeys = new Set(['b'])
+
+  it('all 模式遵循全局 hideRead 设置', () => {
+    expect(filterByPaidReadMode(items, readKeys, 'all', false).map((i) => i.key)).toEqual(['a', 'b', 'c'])
+    expect(filterByPaidReadMode(items, readKeys, 'all', true).map((i) => i.key)).toEqual(['a', 'c'])
+  })
+
+  it('unread 与 read 模式不受全局 hideRead 干扰', () => {
+    expect(filterByPaidReadMode(items, readKeys, 'unread', false).map((i) => i.key)).toEqual(['a', 'c'])
+    expect(filterByPaidReadMode(items, readKeys, 'read', true).map((i) => i.key)).toEqual(['b'])
   })
 })

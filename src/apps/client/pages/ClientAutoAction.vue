@@ -9,6 +9,7 @@ import Edit16Regular from '@vicons/fluent/es/Edit16Regular'
 import Gift24Regular from '@vicons/fluent/es/Gift24Regular'
 import History24Regular from '@vicons/fluent/es/History24Regular'
 import PersonAdd24Regular from '@vicons/fluent/es/PersonAdd24Regular'
+import Receipt24Regular from '@vicons/fluent/es/Receipt24Regular'
 import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
 import Shield24Regular from '@vicons/fluent/es/Shield24Regular'
 import Star24Regular from '@vicons/fluent/es/Star24Regular'
@@ -88,6 +89,7 @@ const menuGroups: MenuGroup[] = [
       { label: '入场欢迎', key: TriggerType.ENTER, icon: DoorArrowLeft24Regular },
       { label: '定时发送', key: TriggerType.SCHEDULED, icon: Timer24Regular },
       { label: 'SC感谢', key: TriggerType.SUPER_CHAT, icon: Star24Regular },
+      { label: '积分兑换', key: TriggerType.POINT_REDEEM, icon: Receipt24Regular },
     ],
   },
   {
@@ -138,6 +140,7 @@ const typeMap: Record<string, string> = {
   [TriggerType.ENTER]: '入场欢迎',
   [TriggerType.SCHEDULED]: '定时发送',
   [TriggerType.SUPER_CHAT]: 'SC感谢',
+  [TriggerType.POINT_REDEEM]: '积分兑换',
 }
 
 const enabledTriggerTypes = computed(() => autoActionStore.enabledTriggerTypes)
@@ -251,6 +254,7 @@ const triggerTypeOptions = [
   { label: '入场欢迎', value: TriggerType.ENTER },
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
+  { label: '积分兑换', value: TriggerType.POINT_REDEEM },
 ]
 </script>
 

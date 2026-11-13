@@ -76,6 +76,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
       KeyC: () => (settings.cardMode = !settings.cardMode),
       KeyR: () => (settings.hideRead = !settings.hideRead),
       KeyD: () => ui.toggleTheme(),
+      KeyM: () => void dashboard.addMarker('高光时刻', 'shortcut'),
     }
     const action = PANEL_KEYS[e.code] ? () => togglePanel(PANEL_KEYS[e.code]) : actions[e.code]
     if (!action) return

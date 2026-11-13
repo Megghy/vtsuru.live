@@ -1,5 +1,3 @@
-import { List } from 'linqts'
-
 import { KeywordMatchType, QueueSortType } from '@/api/generated/model'
 
 /** 舰长等级对应主题色 (1 总督 / 2 提督 / 3 舰长), 其它返回次要文本色 */
@@ -42,10 +40,13 @@ export interface QueueSortAccessor<T> {
   fansMedalLevel: (item: T) => number | null | undefined
   /** 仅粉丝牌排序需要: 是否佩戴粉丝牌 */
   fansMedalWearing?: (item: T) => boolean | null | undefined
+  /** 积分插队优先级（降序，数值越大越靠前） */
+  priorityLevel?: (item: T) => number | null | undefined
 }
 
 /**
  * 按队列排序策略对列表排序, 队列与点播共用。
+ * 插队优先级永远优先；同优先级内再按指定排序策略比较。
  * 舰长等级原始值越小代表越高 (1 总督 > 2 提督 > 3 舰长 > 0 普通), 排序时把 0/空映射为 4 置后。
  */
 export function sortByQueueType<T>(
@@ -54,28 +55,36 @@ export function sortByQueueType<T>(
   isReverse: boolean,
   accessor: QueueSortAccessor<T>,
 ): T[] {
-  let list = new List([...items])
+  const result = [...items].toSorted((a, b) => {
+    const priorityDiff = (accessor.priorityLevel?.(b) ?? 0) - (accessor.priorityLevel?.(a) ?? 0)
+    if (priorityDiff !== 0) return priorityDiff
 
-  switch (sortType) {
-    case QueueSortType.GuardFirst:
-      list = list.OrderBy((q) => accessor.guardLevel(q) || 4).ThenBy((q) => accessor.createAt(q))
-      break
-    case QueueSortType.PaymentFist:
-      list = list.OrderByDescending((q) => accessor.price(q) ?? 0).ThenBy((q) => accessor.createAt(q))
-      break
-    case QueueSortType.FansMedalFirst:
-      list = list
-        .OrderByDescending((q) => (accessor.fansMedalWearing?.(q) ? 1 : 0))
-        .ThenByDescending((q) => accessor.fansMedalLevel(q) ?? 0)
-        .ThenBy((q) => accessor.createAt(q))
-      break
-    case QueueSortType.TimeFirst:
-    default:
-      list = list.OrderBy((q) => accessor.createAt(q))
-      break
-  }
+    switch (sortType) {
+      case QueueSortType.GuardFirst: {
+        const guardDiff = (accessor.guardLevel(a) || 4) - (accessor.guardLevel(b) || 4)
+        if (guardDiff !== 0) return guardDiff
+        break
+      }
+      case QueueSortType.PaymentFist: {
+        const priceDiff = (accessor.price(b) ?? 0) - (accessor.price(a) ?? 0)
+        if (priceDiff !== 0) return priceDiff
+        break
+      }
+      case QueueSortType.FansMedalFirst: {
+        const wearingDiff = (accessor.fansMedalWearing?.(b) ? 1 : 0) - (accessor.fansMedalWearing?.(a) ? 1 : 0)
+        if (wearingDiff !== 0) return wearingDiff
+        const medalDiff = (accessor.fansMedalLevel(b) ?? 0) - (accessor.fansMedalLevel(a) ?? 0)
+        if (medalDiff !== 0) return medalDiff
+        break
+      }
+      case QueueSortType.TimeFirst:
+      default:
+        break
+    }
 
-  const result = list.ToArray()
+    return accessor.createAt(a) - accessor.createAt(b)
+  })
+
   return isReverse ? result.toReversed() : result
 }
 

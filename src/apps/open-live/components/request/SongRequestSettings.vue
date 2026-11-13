@@ -35,6 +35,12 @@ const defaultSettings = {
   enableWebCooldown: true,
   webCooldownSecond: 600,
   isReverse: false,
+  enablePointRequest: false,
+  pointRequestCost: 0,
+  pointIgnoreLimit: false,
+  allowPointPriority: false,
+  pointPriorityKeyword: '插队',
+  pointPriorityCost: 100,
 } as SettingSongRequest
 
 const liveRequest = useLiveRequest()
@@ -477,6 +483,104 @@ async function updateSettings() {
             />
             <span>显示点播用户粉丝牌</span>
           </label>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- 积分消费与插队 -->
+    <Card>
+      <CardHeader class="p-3 pb-1">
+        <CardTitle>积分点歌与插队</CardTitle>
+      </CardHeader>
+      <CardContent class="p-3 pt-2 space-y-3 text-xs">
+        <div class="flex flex-wrap items-center gap-4">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <Checkbox
+              :checked="settings.enablePointRequest"
+              :disabled="!configCanEdit"
+              @update:checked="((settings.enablePointRequest = $event), updateSettings())"
+            />
+            <span>启用积分点播与网页积分点歌</span>
+          </label>
+          <label
+            v-if="settings.enablePointRequest"
+            class="flex items-center gap-1.5 cursor-pointer"
+          >
+            <Checkbox
+              :checked="settings.pointIgnoreLimit"
+              :disabled="!configCanEdit"
+              @update:checked="((settings.pointIgnoreLimit = $event), updateSettings())"
+            />
+            <span>消耗积分时忽略粉丝牌/舰长与冷却限制</span>
+          </label>
+        </div>
+
+        <div
+          v-if="settings.enablePointRequest"
+          class="flex items-center gap-1.5 w-[260px] max-w-full"
+        >
+          <span class="text-muted-foreground shrink-0">点播消耗</span>
+          <NumberField
+            :model-value="settings.pointRequestCost"
+            :min="0"
+            :disabled="!configCanEdit"
+            class="flex-1"
+            @update:model-value="settings.pointRequestCost = $event ?? 0"
+          />
+          <span class="text-muted-foreground shrink-0">积分</span>
+          <Button
+            variant="secondary"
+            class="shrink-0"
+            :disabled="!configCanEdit"
+            @click="updateSettings"
+          >
+            保存
+          </Button>
+        </div>
+
+        <div class="border-t pt-3 space-y-2.5">
+          <label class="flex items-center gap-1.5 cursor-pointer">
+            <Checkbox
+              :checked="settings.allowPointPriority"
+              :disabled="!configCanEdit"
+              @update:checked="((settings.allowPointPriority = $event), updateSettings())"
+            />
+            <span>允许观众使用积分插队（支持弹幕指令与网页插队）</span>
+          </label>
+
+          <div
+            v-if="settings.allowPointPriority"
+            class="flex flex-wrap items-center gap-3"
+          >
+            <div class="flex items-center gap-1.5 w-[240px] max-w-full">
+              <span class="text-muted-foreground shrink-0">插队关键词</span>
+              <Input
+                v-model="settings.pointPriorityKeyword"
+                placeholder="例如：插队"
+                :disabled="!configCanEdit"
+                class="flex-1"
+              />
+            </div>
+            <div class="flex items-center gap-1.5 w-[220px] max-w-full">
+              <span class="text-muted-foreground shrink-0">插队消耗</span>
+              <NumberField
+                :model-value="settings.pointPriorityCost"
+                :min="0"
+                :disabled="!configCanEdit"
+                class="flex-1"
+                @update:model-value="settings.pointPriorityCost = $event ?? 0"
+              />
+              <span class="text-muted-foreground shrink-0">积分</span>
+            </div>
+            <Button
+              variant="secondary"
+              class="shrink-0"
+              :disabled="!configCanEdit"
+              @click="updateSettings"
+            >
+              保存
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -16,6 +16,9 @@ export interface ResponseQueueModel {
   /** @nullable */
   giftPrice?: number | null
   /** @nullable */
+  pointCost?: number | null
+  priorityLevel: number
+  /** @nullable */
   mysteryBoxName?: string | null
   /** @nullable */
   mysteryBoxPrice?: number | null

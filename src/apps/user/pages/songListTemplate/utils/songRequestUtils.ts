@@ -56,7 +56,9 @@ export function getSongRequestTooltip(
   if (song.options) return TOOLTIP_REASONS.special
   if (isAnonymousWebRequestBlocked(liveRequestSettings, authState)) return TOOLTIP_REASONS.anonymousDisabled
   if (liveRequestSettings?.allowFromWeb === false) return TOOLTIP_REASONS.webDisabled
-  return '点歌'
+  const pointCost = liveRequestSettings?.enablePointRequest ? (liveRequestSettings.pointRequestCost ?? 0) : 0
+  const priorityHint = liveRequestSettings?.allowPointPriority ? ' · 可积分插队' : ''
+  return pointCost > 0 ? `点歌 (消耗 ${pointCost} 积分${priorityHint})` : `点歌${priorityHint}`
 }
 
 /**

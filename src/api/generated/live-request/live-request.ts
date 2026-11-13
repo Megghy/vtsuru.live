@@ -18,6 +18,7 @@ import type {
   PostApiLiveRequestAddParams,
   PostApiLiveRequestCancelParams,
   PostApiLiveRequestFinishParams,
+  PostApiLiveRequestPriorityFromWebParams,
   PostApiLiveRequestSingingParams,
   ResponseResult,
   ResponseResultOfInt64Array,
@@ -341,6 +342,32 @@ export const getApiLiveRequestGet = async (
   return vtsuruMutator<PaginationResponseOfListOfResponseSongRequestModel>(getGetApiLiveRequestGetUrl(params), {
     ...options,
     method: 'GET',
+  })
+}
+
+export const getPostApiLiveRequestPriorityFromWebUrl = (params?: PostApiLiveRequestPriorityFromWebParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/live-request/priority-from-web?${stringifiedParams}`
+    : `/api/live-request/priority-from-web`
+}
+
+export const postApiLiveRequestPriorityFromWeb = async (
+  params?: PostApiLiveRequestPriorityFromWebParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseSongRequestModel> => {
+  return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestPriorityFromWebUrl(params), {
+    ...options,
+    method: 'POST',
   })
 }
 

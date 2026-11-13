@@ -56,6 +56,12 @@ const defaultSettings = {
   showPayment: true,
   sendGiftDirectJoin: true,
   sendGiftIgnoreLimit: false,
+  enablePointJoin: false,
+  pointJoinCost: 0,
+  pointIgnoreLimit: false,
+  allowPointPriority: false,
+  pointPriorityKeyword: '插队',
+  pointPriorityCost: 100,
 } as SettingQueue
 
 export const STATUS_MAP = {
@@ -144,6 +150,7 @@ export const useQueue = defineStore('queue', () => {
       price: (q) => q.giftPrice,
       fansMedalLevel: (q) => q.user?.fans_medal_level,
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
+      priorityLevel: (q) => q.priorityLevel,
     })
     return new List(sorted).OrderByDescending((q) => (q.status === QueueStatus.Progressing ? 1 : 0)).ToArray()
   })
@@ -171,6 +178,10 @@ export const useQueue = defineStore('queue', () => {
     }
 
     if (eventData.type === EventDataTypes.Message) {
+      const priorityKeyword = settings.value.allowPointPriority ? settings.value.pointPriorityKeyword?.trim() : ''
+      if (priorityKeyword && eventData.msg.trim().toLowerCase().startsWith(priorityKeyword.toLowerCase())) {
+        return true
+      }
       if (!settings.value.keyword) return false
       return checkMatch(eventData.msg)
     }
@@ -242,7 +253,8 @@ export const useQueue = defineStore('queue', () => {
           if (data.message === 'EventFetcher') return
           const existingIndex = originQueue.value.findIndex((q) => q.id === data.data.id)
           if (existingIndex > -1) {
-            const oldPrice = originQueue.value[existingIndex]?.giftPrice ?? 0
+            const prev = originQueue.value[existingIndex]
+            const oldPrice = prev?.giftPrice ?? 0
             const newPrice = data.data?.giftPrice ?? 0
             if (newPrice > oldPrice) {
               window.$message.info(
@@ -256,6 +268,8 @@ export const useQueue = defineStore('queue', () => {
                   newPrice,
                 ),
               )
+            } else if ((data.data?.priorityLevel ?? 0) > (prev?.priorityLevel ?? 0)) {
+              window.$message.success(`[${danmaku.uname}] 使用积分插队成功`)
             }
             originQueue.value.splice(existingIndex, 1, data.data)
           } else {
@@ -292,6 +306,8 @@ export const useQueue = defineStore('queue', () => {
           guard_level: danmaku.guard_level,
         } as DanmakuUserInfo,
         createAt: Date.now(),
+        priorityLevel: 0,
+        requestBy: '',
         isInLocal: true,
         id: nextLocalId(),
       } as ResponseQueueModel
@@ -330,6 +346,8 @@ export const useQueue = defineStore('queue', () => {
         from: QueueFrom.Manual,
         user: { name: newQueueName.value } as DanmakuUserInfo,
         createAt: Date.now(),
+        priorityLevel: 0,
+        requestBy: '',
         isInLocal: true,
         id: nextLocalId(),
       } as ResponseQueueModel
@@ -441,6 +459,8 @@ export const useQueue = defineStore('queue', () => {
         const existing = originQueue.value.find((s) => s.id === item.id)
         if (existing) {
           if (existing.status !== item.status) existing.status = item.status
+          if (existing.priorityLevel !== item.priorityLevel) existing.priorityLevel = item.priorityLevel
+          if (existing.pointCost !== item.pointCost) existing.pointCost = item.pointCost
           const paymentChanged =
             existing.giftPrice !== item.giftPrice ||
             existing.mysteryBoxName !== item.mysteryBoxName ||

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import ArrowCounterclockwise24Regular from '@vicons/fluent/es/ArrowCounterclockwise24Regular'
 import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
+import Timeline24Regular from '@vicons/fluent/es/Timeline24Regular'
 import { format } from 'date-fns'
 import { computed, ref } from 'vue'
 
 import type { SongRequestInfo } from '@/api/client-types'
 import { SongRequestFrom, SongRequestStatus } from '@/api/generated/model'
+import SongTimelineExportDialog from '@/components/song/SongTimelineExportDialog.vue'
 import { useLiveRequest } from '@/composables/useLiveRequest'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -23,6 +25,18 @@ const songRequest = useLiveRequest()
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedStatusFilter = ref<string>('all')
+const showTimelineExport = ref(false)
+
+const timelineEntries = computed(() =>
+  (songRequest.songs || [])
+    .filter((s) => s.status === SongRequestStatus.Finish || s.status === SongRequestStatus.Singing)
+    .map((s) => ({
+      title: s.songName,
+      artist: s.song?.author?.join('/'),
+      requester: s.from === SongRequestFrom.Manual ? undefined : s.user?.name,
+      timeMs: s.startSingAt || s.finishAt || s.createAt,
+    })),
+)
 
 const statusFilterOptions = [
   { label: '全部状态', value: 'all' },
@@ -168,7 +182,23 @@ function getStatusBadge(status: SongRequestStatus) {
           </SelectContent>
         </Select>
       </div>
+
+      <Button
+        variant="outline"
+        class="ml-auto gap-1.5"
+        :disabled="timelineEntries.length === 0"
+        @click="showTimelineExport = true"
+      >
+        <Timeline24Regular class="size-4" />
+        导出时间轴
+      </Button>
     </div>
+
+    <SongTimelineExportDialog
+      v-model:open="showTimelineExport"
+      :entries="timelineEntries"
+      title="导出弹幕点歌歌回时间轴"
+    />
 
     <!-- 数据表格 -->
     <div class="border rounded-md overflow-hidden bg-card">

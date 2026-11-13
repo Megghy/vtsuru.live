@@ -6,6 +6,7 @@ export const FileStore = {
   Questions: 'questions',
   Configs: 'configs',
   Goods: 'goods',
+  GoodsPrivate: 'goods-private',
   Tickets: 'tickets',
   Voices: 'voices',
   Assistant: 'assistant',

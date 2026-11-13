@@ -89,7 +89,17 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
   const paidInPeriod = computed(() => paid.value.filter((e) => e.time >= since.value))
 
   const totals = computed(() => {
-    const result = { sc: 0, gift: 0, guard: 0, guardCount: 0, totalRevenue: 0 }
+    const result = {
+      sc: 0,
+      gift: 0,
+      guard: 0,
+      guardCount: 0,
+      totalRevenue: 0,
+      mysteryBoxCount: 0,
+      mysteryBoxCost: 0,
+      mysteryBoxValue: 0,
+      mysteryBoxProfit: 0,
+    }
     for (const event of paidInPeriod.value) {
       if (event.type === EventDataTypes.SC) {
         result.sc += event.price
@@ -97,6 +107,11 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
       } else if (event.type === EventDataTypes.Gift) {
         result.gift += event.price
         result.totalRevenue += event.price
+        if (event.mysteryBoxName || (event.mysteryBoxPrice ?? 0) > 0) {
+          result.mysteryBoxCount += Math.max(1, event.num || 1)
+          result.mysteryBoxCost += event.price
+          result.mysteryBoxValue += event.mysteryBoxPrice ?? 0
+        }
       } else {
         result.guard += event.price
         result.guardCount += event.num
@@ -104,6 +119,9 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
       }
     }
     result.totalRevenue = Math.round(result.totalRevenue * 100) / 100
+    result.mysteryBoxCost = Math.round(result.mysteryBoxCost * 100) / 100
+    result.mysteryBoxValue = Math.round(result.mysteryBoxValue * 100) / 100
+    result.mysteryBoxProfit = Math.round((result.mysteryBoxValue - result.mysteryBoxCost) * 100) / 100
     return result
   })
 

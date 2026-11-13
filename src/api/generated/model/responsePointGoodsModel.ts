@@ -12,6 +12,7 @@ import type { GuardLevel } from './guardLevel'
 import type { ResponseSubPointGoodsModel } from './responseSubPointGoodsModel'
 import type { ServiceConfigData } from './serviceConfigData'
 import type { TempRequestGoodsSetting } from './tempRequestGoodsSetting'
+import type { VirtualAttachmentModel } from './virtualAttachmentModel'
 import type { VirtualKeySelectionMode } from './virtualKeySelectionMode'
 
 export interface ResponsePointGoodsModel {
@@ -22,6 +23,8 @@ export interface ResponsePointGoodsModel {
   serviceConfig?: ServiceConfigData
   virtualKeys: string[]
   keySelectionMode: VirtualKeySelectionMode
+  /** @nullable */
+  privateAttachments?: VirtualAttachmentModel[] | null
   id: number
   name: string
   description: string
@@ -39,6 +42,7 @@ export interface ResponsePointGoodsModel {
   maxSubItemSelections?: number | null
   createAt: number
   canFreeBuy: boolean
+  hasGuardFreePrivilege: boolean
   allowGuardLevel: GuardLevel
   cover?: APIFileModel
   purchasedCount: number

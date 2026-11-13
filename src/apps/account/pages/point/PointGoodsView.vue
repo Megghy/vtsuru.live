@@ -48,6 +48,7 @@ const { count: cartCount } = usePointCart(props.userInfo.id)
 // 筛选相关状态
 const selectedTag = ref<string>() // 选中的标签
 const onlyCanBuy = ref(false) // 只显示可兑换
+const onlyGuardFree = ref(false) // 只看舰长免费福利
 const ignoreGuard = ref(false) // 忽略舰长限制
 const sortOrder = ref<string>('default') // 排序方式
 const searchKeyword = ref('') // 搜索关键词
@@ -108,6 +109,8 @@ const selectedItems = computed(() => {
     .filter((item) => !selectedTag.value || item.tags.includes(selectedTag.value))
     // 可兑换筛选 (只显示 getTooltip 返回 '开始兑换' 的礼物)
     .filter((item) => !onlyCanBuy.value || getTooltip(item) === '开始兑换')
+    // 舰长免费福利筛选
+    .filter((item) => !onlyGuardFree.value || item.hasGuardFreePrivilege || item.canFreeBuy)
     // 等级筛选：开启后只保留不属于任何等级专属的商品
     .filter((item) => !ignoreGuard.value || (item.allowGuardLevel ?? item.setting?.allowGuardLevel ?? 0) <= 0)
     // 关键词搜索 (匹配名称或描述)
@@ -192,6 +195,7 @@ function clearFilters() {
   selectedTag.value = undefined
   searchKeyword.value = ''
   onlyCanBuy.value = false
+  onlyGuardFree.value = false
   ignoreGuard.value = false
   sortOrder.value = 'default'
 }
@@ -365,6 +369,10 @@ onMounted(async () => {
                   <span>仅显示可兑换</span>
                 </label>
                 <label class="flex items-center gap-1.5 cursor-pointer">
+                  <Checkbox v-model:checked="onlyGuardFree" />
+                  <span>舰长免费福利</span>
+                </label>
+                <label class="flex items-center gap-1.5 cursor-pointer">
                   <Checkbox v-model:checked="ignoreGuard" />
                   <span>只看非等级专属</span>
                 </label>
@@ -391,7 +399,7 @@ onMounted(async () => {
                 </Badge>
               </Button>
               <Button
-                v-if="selectedTag || searchKeyword || onlyCanBuy || ignoreGuard || sortOrder !== 'default'"
+                v-if="selectedTag || searchKeyword || onlyCanBuy || onlyGuardFree || ignoreGuard || sortOrder !== 'default'"
                 variant="ghost"
                 class="flex items-center gap-1 text-muted-foreground"
                 @click="clearFilters"

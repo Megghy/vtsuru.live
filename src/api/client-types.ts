@@ -63,7 +63,7 @@ export type ResponsePointGoodModel = ResponseBasePointGoodsModel &
   Partial<
     Pick<
       ResponsePointGoodsModel,
-      'content' | 'collectUrl' | 'embedCollectUrl' | 'setting' | 'serviceConfig' | 'virtualKeys' | 'keySelectionMode'
+      'content' | 'collectUrl' | 'embedCollectUrl' | 'setting' | 'serviceConfig' | 'virtualKeys' | 'keySelectionMode' | 'privateAttachments'
     >
   >
 

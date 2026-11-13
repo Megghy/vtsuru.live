@@ -1,8 +1,11 @@
 import { clockComponent } from './items/clock'
 import { counterComponent } from './items/counter'
 import { gamepadComponent } from './items/gamepad'
+import { goalComponent } from './items/goal'
 import { plannedComponents } from './items/planned'
 import { pngtuberComponent } from './items/pngtuber'
+import { subtitleComponent } from './items/subtitle'
+import { wheelComponent } from './items/wheel'
 import type { ObsCategory, ObsComponentDefinition, ObsComponentStatus } from './types'
 
 export * from './categories'
@@ -16,6 +19,9 @@ export const obsComponentList: ObsComponentDefinition[] = [
   gamepadComponent,
   counterComponent,
   clockComponent,
+  goalComponent,
+  wheelComponent,
+  subtitleComponent,
   pngtuberComponent,
   ...plannedComponents,
 ]

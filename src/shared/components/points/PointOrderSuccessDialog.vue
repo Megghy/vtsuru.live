@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import ArrowDownload24Regular from '@vicons/fluent/es/ArrowDownload24Regular'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import type { ResponsePointOrder2UserModel } from '@/api/generated/model'
 import { GoodsTypes } from '@/api/generated/model'
+import { getApiPointUserOrderAttachment } from '@/api/generated/point/point'
+import { toast } from '@/shared/utils'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -11,6 +15,23 @@ import { ScrollArea } from '@/shared/ui/scroll-area'
 defineProps<{ orders: ResponsePointOrder2UserModel[] }>()
 const show = defineModel<boolean>('show', { required: true })
 const router = useRouter()
+const downloadingId = ref<number | null>(null)
+
+async function downloadAttachment(orderId: number, fileId: number) {
+  downloadingId.value = fileId
+  try {
+    const res = await getApiPointUserOrderAttachment({ orderId, fileId })
+    if (res.code === 200 && res.data) {
+      window.open(res.data, '_blank', 'noopener,noreferrer')
+    } else {
+      toast.error(res.message || '获取下载链接失败')
+    }
+  } catch {
+    toast.error('获取下载链接失败')
+  } finally {
+    downloadingId.value = null
+  }
+}
 </script>
 
 <template>
@@ -42,6 +63,27 @@ const router = useRouter()
             <Alert size="sm" v-if="order.type === GoodsTypes.Virtual && order.goods?.content" class="bg-muted/40 whitespace-pre-wrap break-words">
               <AlertDescription>{{ order.goods.content }}</AlertDescription>
             </Alert>
+            <div
+              v-if="order.type === GoodsTypes.Virtual && order.privateAttachments?.length"
+              class="space-y-1 pt-1"
+            >
+              <div
+                v-for="file in order.privateAttachments"
+                :key="file.id"
+                class="flex-between px-2 py-1.5 rounded border border-border bg-muted/30"
+              >
+                <span class="truncate pr-2">{{ file.name }}</span>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  :loading="downloadingId === file.id"
+                  @click="downloadAttachment(order.id, file.id)"
+                >
+                  <component :is="ArrowDownload24Regular" class="size-3.5 mr-1" />
+                  下载
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </ScrollArea>

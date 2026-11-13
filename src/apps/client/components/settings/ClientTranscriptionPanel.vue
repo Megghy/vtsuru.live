@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useClipboard } from '@vueuse/core'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
@@ -7,6 +8,7 @@ import { getApiLiveCurrent } from '@/api/generated/live/live'
 import type { ResponseCurrentLiveModel } from '@/api/generated/model'
 import { useTranscription } from '@/apps/client/store/useTranscription'
 import { createTranscriptionProfile, useTranscriptionSettings } from '@/apps/client/store/useTranscriptionSettings'
+import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import {
   clientSupportsTranscription,
   clientVersion,
@@ -21,9 +23,11 @@ import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
+import { Switch } from '@/shared/ui/switch'
 import { Tag } from '@/shared/ui/tag'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
+const { copy } = useClipboard()
 const settingsStore = useTranscriptionSettings()
 const transcription = useTranscription()
 const account = useAccount()
@@ -40,6 +44,27 @@ const isBusy = computed(() =>
   ['resolving_stream', 'connecting_provider', 'starting_ffmpeg', 'stopping'].includes(transcription.status.phase),
 )
 const isSupported = computed(() => clientSupportsTranscription())
+const obsSubtitleUrl = computed(() => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const channel = settingsStore.settings.obsSubtitleChannel
+  return buildObsSourceUrl({
+    path: '/obs-store/subtitle',
+    host: origin,
+    credential: 'public-id',
+    userId: account.value.id,
+    params: channel && channel !== 'default' ? { channel } : undefined,
+  })
+})
+
+async function copyObsSubtitleUrl() {
+  await copy(obsSubtitleUrl.value)
+  toast.success('已复制 OBS 字幕条地址')
+}
+
+async function toggleObsSubtitleSync(enabled: boolean) {
+  settingsStore.settings.syncObsSubtitle = enabled
+  await settingsStore.save()
+}
 const transcriptEl = ref<HTMLElement>()
 const liveState = ref<'loading' | 'ready' | 'missing' | 'unknown'>('loading')
 const liveTitle = ref('')
@@ -320,6 +345,21 @@ function removeHotword(index: number) {
           <template v-if="transcription.pendingCount"> ，待上传 {{ transcription.pendingCount }} 条 </template>
           <template v-if="sourceLabel"> · {{ sourceLabel }} </template>
         </span>
+        <div class="ml-auto flex items-center gap-2 text-xs">
+          <Switch
+            :checked="Boolean(settingsStore.settings.syncObsSubtitle)"
+            @update:checked="(v) => void toggleObsSubtitleSync(Boolean(v))"
+          />
+          <span class="text-muted-foreground">推送 OBS 字幕条</span>
+          <Button
+            v-if="settingsStore.settings.syncObsSubtitle"
+            size="xs"
+            variant="outline"
+            @click="copyObsSubtitleUrl"
+          >
+            复制 OBS 地址
+          </Button>
+        </div>
       </div>
 
       <Alert size="sm" v-if="notice" :class="notice.class">

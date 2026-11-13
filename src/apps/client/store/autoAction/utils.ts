@@ -49,6 +49,7 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
     [TriggerType.ENTER]: '欢迎 {{user.name}} 进入直播间',
     [TriggerType.SCHEDULED]: '这是一条定时消息，当前时间: {{date.formatted}}',
     [TriggerType.SUPER_CHAT]: '感谢 {{user.name}} 的SC!',
+    [TriggerType.POINT_REDEEM]: '感谢 {{user.name}} 兑换了 {{pointOrder.goodsName}} x{{pointOrder.count}}！',
   }
 
   // 根据不同触发类型设置默认名称
@@ -60,6 +61,7 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
     [TriggerType.ENTER]: '入场欢迎',
     [TriggerType.SCHEDULED]: '定时消息',
     [TriggerType.SUPER_CHAT]: 'SC感谢',
+    [TriggerType.POINT_REDEEM]: '积分兑换互动',
   }
 
   return {
@@ -87,6 +89,8 @@ export function createDefaultAutoAction(triggerType: TriggerType): AutoActionIte
       cooldownSeconds: 5,
       maxUsersPerMsg: 5,
       maxItemsPerUser: 3,
+      audioVolume: 0.8,
+      audioWaitForEnd: false,
     },
   }
 }

@@ -22,6 +22,10 @@ export interface DashboardEvent {
   medalName: string
   medalWearing: boolean
   giftIcon?: string
+  /** 盲盒名称 */
+  mysteryBoxName?: string
+  /** 盲盒爆出总价值（元） */
+  mysteryBoxPrice?: number
   /** SC message_id，用于 SC 删除事件 */
   scId?: number
   read: boolean
@@ -95,6 +99,8 @@ export function normalizeEvent(event: EventModel): DashboardEvent {
     medalName: event.fans_medal_name ?? '',
     medalWearing: !!event.fans_medal_wearing_status,
     giftIcon: event.gift_icon,
+    mysteryBoxName: event.mystery_box_name ?? undefined,
+    mysteryBoxPrice: event.mystery_box_price ?? undefined,
     scId: event.type === EventDataTypes.SC ? event.id : undefined,
     read: false,
     deleted: false,
@@ -126,5 +132,7 @@ export function toEventModel(event: DashboardEvent): EventModel {
     fans_medal_wearing_status: event.medalWearing,
     emoji: event.emoji,
     gift_icon: event.giftIcon,
+    mystery_box_name: event.mysteryBoxName,
+    mystery_box_price: event.mysteryBoxPrice,
   }
 }

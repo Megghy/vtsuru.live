@@ -1,10 +1,10 @@
-import { List } from 'linqts'
 import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue'
 
 import type { SongRequestInfo } from '@/api/client-types'
 import { getApiLiveRequestGetActiveAndSettings } from '@/api/generated/live-request/live-request'
 import type { SettingSongRequest } from '@/api/generated/model'
-import { QueueSortType, SongRequestStatus } from '@/api/generated/model'
+import { SongRequestStatus } from '@/api/generated/model'
+import { sortByQueueType } from '@/shared/utils/queue'
 import { useWebRTC } from '@/store/useRTC'
 
 export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
@@ -15,32 +15,14 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
 
   // 计算属性
   const songs = computed(() => {
-    let result = new List(originSongs.value)
-    switch (settings.value.sortType) {
-      case QueueSortType.TimeFirst: {
-        result = result.ThenBy((q) => q.createAt)
-        break
-      }
-      case QueueSortType.GuardFirst: {
-        result = result
-          .OrderBy((q) => (q.user?.guard_level == 0 || q.user?.guard_level == null ? 4 : q.user.guard_level))
-          .ThenBy((q) => q.createAt)
-        break
-      }
-      case QueueSortType.PaymentFist: {
-        result = result.OrderByDescending((q) => q.price ?? 0).ThenBy((q) => q.createAt)
-        break
-      }
-      case QueueSortType.FansMedalFirst: {
-        result = result.OrderByDescending((q) => q.user?.fans_medal_level ?? 0).ThenBy((q) => q.createAt)
-        break
-      }
-    }
-    if (settings.value.isReverse) {
-      return result.Reverse().ToArray()
-    } else {
-      return result.ToArray()
-    }
+    return sortByQueueType(originSongs.value, settings.value.sortType, Boolean(settings.value.isReverse), {
+      createAt: (q) => q.createAt,
+      guardLevel: (q) => q.user?.guard_level,
+      price: (q) => q.price,
+      fansMedalLevel: (q) => q.user?.fans_medal_level,
+      fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
+      priorityLevel: (q) => q.priorityLevel,
+    })
   })
 
   const singing = computed(() => {

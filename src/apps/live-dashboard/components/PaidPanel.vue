@@ -2,14 +2,24 @@
 import ArrowSort16Regular from '@vicons/fluent/es/ArrowSort16Regular'
 import CheckmarkCircle16Regular from '@vicons/fluent/es/CheckmarkCircle16Regular'
 import Clock16Regular from '@vicons/fluent/es/Clock16Regular'
+import Eye16Regular from '@vicons/fluent/es/Eye16Regular'
+import EyeOff16Regular from '@vicons/fluent/es/EyeOff16Regular'
 import Filter16Regular from '@vicons/fluent/es/Filter16Regular'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from '@/shared/ui/dropdown-menu'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Switch } from '@/shared/ui/switch'
 
+import type { PaidReadFilter } from '../store/settings'
 import { useLiveDashboard } from '../store/useLiveDashboard'
 import EventList from './EventList.vue'
 import IconAction from './IconAction.vue'
@@ -24,6 +34,13 @@ const sort = computed({
   get: () => dashboard.settings.sort[props.panel],
   set: (value) => (dashboard.settings.sort[props.panel] = value),
 })
+const readFilter = computed({
+  get: () => dashboard.settings.paidReadFilter[props.panel],
+  set: (value: PaidReadFilter) => (dashboard.settings.paidReadFilter[props.panel] = value),
+})
+const readFilterLabel = computed(() =>
+  readFilter.value === 'unread' ? '未读' : readFilter.value === 'read' ? '已读' : '',
+)
 
 function markAllRead() {
   dashboard.setRead(
@@ -83,6 +100,48 @@ function markAllRead() {
           </div>
         </PopoverContent>
       </Popover>
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button
+            variant="ghost"
+            :size="readFilterLabel ? 'xs' : 'icon-xs'"
+            :class="[
+              readFilter !== 'all' ? 'text-primary gap-1 px-1.5' : 'text-muted-foreground',
+            ]"
+            aria-label="筛选已读状态"
+            :title="
+              readFilter === 'unread'
+                ? '仅显示未读'
+                : readFilter === 'read'
+                  ? '仅显示已读'
+                  : '已读筛选（当前显示全部，受全局隐藏已读影响）'
+            "
+          >
+            <component
+              :is="readFilter === 'unread' ? EyeOff16Regular : Eye16Regular"
+              class="h-4 w-4 shrink-0"
+            />
+            <span
+              v-if="readFilterLabel"
+              class="leading-none"
+              >{{ readFilterLabel }}</span
+            >
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuRadioGroup v-model="readFilter">
+            <DropdownMenuRadioItem value="all">
+              全部
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="unread">
+              仅未读
+            </DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="read">
+              仅已读
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <IconAction
         :icon="CheckmarkCircle16Regular"
         tip="全部标为已读"

@@ -18,8 +18,13 @@ export interface ResponseSongRequestModel {
   from: SongRequestFrom
   /** @nullable */
   price?: number | null
+  /** @nullable */
+  pointCost?: number | null
+  priorityLevel: number
   user?: DanmakuUserInfo
   createAt: number
+  /** @nullable */
+  startSingAt?: number | null
   /** @nullable */
   finishAt?: number | null
   /** @nullable */

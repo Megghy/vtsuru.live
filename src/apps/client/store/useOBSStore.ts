@@ -530,6 +530,29 @@ export const useOBSStore = defineStore('obs', () => {
     }
   }
 
+  async function saveReplayBuffer(): Promise<{ ok: boolean; savedPath?: string; message: string }> {
+    if (!obs || !obsConnected.value) {
+      return { ok: false, message: 'OBS 未连接' }
+    }
+    try {
+      const status = await obs.call('GetReplayBufferStatus')
+      if (!status.outputActive) {
+        return { ok: false, message: 'OBS 回放缓存未开启，请在 OBS 中先开启「回放缓存」' }
+      }
+      await obs.call('SaveReplayBuffer')
+      let savedPath: string | undefined
+      try {
+        const last = await obs.call('GetLastReplayBufferReplay')
+        savedPath = last.savedReplayPath || undefined
+      } catch {
+        // 部分 OBS 版本 Save 后写入异步完成，路径可能尚未就绪
+      }
+      return { ok: true, savedPath, message: '已触发保存 OBS 回放缓存' }
+    } catch (err: any) {
+      return { ok: false, message: err?.message || '保存 OBS 回放缓存失败' }
+    }
+  }
+
   // 保存场景配置
   async function saveSceneConfig() {
     try {
@@ -596,6 +619,7 @@ export const useOBSStore = defineStore('obs', () => {
     fetchObsInputs,
     subscribeInputVolume,
     inspectPreflight,
+    saveReplayBuffer,
     // 状态
     obsAddress,
     obsPassword,

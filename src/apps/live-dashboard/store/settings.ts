@@ -4,6 +4,7 @@ import type { PanelId } from '../core/types'
 import { PANEL_IDS } from '../core/types'
 
 export type PanelSort = 'time' | 'price'
+export type PaidReadFilter = 'all' | 'unread' | 'read'
 
 export type ToolbarStatKey =
   | 'duration'
@@ -19,6 +20,7 @@ export type ToolbarStatKey =
   | 'guard'
   | 'perMinute'
   | 'topPayers'
+  | 'mysteryBox'
 
 export interface ToolbarStatOption {
   key: ToolbarStatKey
@@ -40,6 +42,7 @@ export const TOOLBAR_STAT_OPTIONS: ToolbarStatOption[] = [
   { key: 'gift', label: '礼物收益', description: '金瓜子礼物收益总额' },
   { key: 'guard', label: '大航海', description: '本场上舰人数' },
   { key: 'perMinute', label: '每分钟事件', description: '当前事件互动速率' },
+  { key: 'mysteryBox', label: '盲盒盈亏', description: '盲盒开出总价值与投入成本差值' },
 ]
 
 export const DEFAULT_TOOLBAR_STATS: Record<ToolbarStatKey, boolean> = {
@@ -56,6 +59,7 @@ export const DEFAULT_TOOLBAR_STATS: Record<ToolbarStatKey, boolean> = {
   gift: false,
   guard: false,
   perMinute: false,
+  mysteryBox: false,
 }
 
 export const DEFAULT_TOOLBAR_ORDER: ToolbarStatKey[] = [
@@ -72,6 +76,7 @@ export const DEFAULT_TOOLBAR_ORDER: ToolbarStatKey[] = [
   'gift',
   'guard',
   'perMinute',
+  'mysteryBox',
 ]
 
 export interface DashboardSettings {
@@ -93,6 +98,7 @@ export interface DashboardSettings {
   cardMode: boolean
   card: { size: number; autoHide: boolean; autoHideThreshold: number; autoHideSeconds: number }
   sort: Record<'sc' | 'gift', PanelSort>
+  paidReadFilter: Record<'sc' | 'gift', PaidReadFilter>
   /** 礼物面板最低金额（元），0 为不过滤；大航海不受影响 */
   giftMinPrice: number
   showFreeGift: boolean
@@ -106,6 +112,12 @@ export interface DashboardSettings {
   toolbarStats: Record<ToolbarStatKey, boolean>
   /** 顶栏统计指标项排序 */
   toolbarOrder: ToolbarStatKey[]
+  /** 直播高光打点设置 */
+  highlight: {
+    danmakuMarkPrefix: string
+    danmakuMarkRole: 'owner' | 'guard' | 'all'
+    autoSaveReplayOnMark: boolean
+  }
 }
 
 export const DEFAULT_LAYOUT: DashboardSettings['layout'] = {
@@ -124,6 +136,7 @@ const DEFAULT_SETTINGS: DashboardSettings = {
   cardMode: false,
   card: { size: 24, autoHide: false, autoHideThreshold: 10, autoHideSeconds: 60 },
   sort: { sc: 'time', gift: 'time' },
+  paidReadFilter: { sc: 'all', gift: 'all' },
   giftMinPrice: 0,
   showFreeGift: false,
   showAvatar: true,
@@ -133,6 +146,11 @@ const DEFAULT_SETTINGS: DashboardSettings = {
   historyHours: 12,
   toolbarStats: DEFAULT_TOOLBAR_STATS,
   toolbarOrder: DEFAULT_TOOLBAR_ORDER,
+  highlight: {
+    danmakuMarkPrefix: '!mark',
+    danmakuMarkRole: 'guard',
+    autoSaveReplayOnMark: false,
+  },
 }
 
 /** 旧配置缺少后加入的面板时，追加到末尾并沿用其默认显隐 */
@@ -154,6 +172,17 @@ export function mergeToolbarOrder(stored: ToolbarStatKey[] | undefined, defaults
   return [...valid, ...missing]
 }
 
+export function filterByPaidReadMode<T extends { key: string }>(
+  list: T[],
+  readKeys: ReadonlySet<string>,
+  mode: PaidReadFilter,
+  globalHideRead: boolean,
+): T[] {
+  if (mode === 'unread') return list.filter((e) => !readKeys.has(e.key))
+  if (mode === 'read') return list.filter((e) => readKeys.has(e.key))
+  return globalHideRead ? list.filter((e) => !readKeys.has(e.key)) : list
+}
+
 export function useDashboardSettings() {
   return usePersistedStorage<DashboardSettings>('vtsuru:settings:live-dashboard', structuredClone(DEFAULT_SETTINGS), {
     mergeDefaults: (stored, defaults) => ({
@@ -162,8 +191,10 @@ export function useDashboardSettings() {
       layout: mergeLayout(stored.layout, defaults.layout),
       card: { ...defaults.card, ...stored.card },
       sort: { ...defaults.sort, ...stored.sort },
+      paidReadFilter: { ...defaults.paidReadFilter, ...stored.paidReadFilter },
       toolbarStats: { ...defaults.toolbarStats, ...stored.toolbarStats },
       toolbarOrder: mergeToolbarOrder(stored.toolbarOrder, defaults.toolbarOrder),
+      highlight: { ...defaults.highlight, ...stored.highlight },
     }),
   })
 }

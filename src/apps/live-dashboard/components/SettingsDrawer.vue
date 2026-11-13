@@ -6,8 +6,10 @@ import { VueDraggable } from 'vue-draggable-plus'
 
 import { useFilePicker } from '@/composables/useFilePicker'
 import { Button } from '@/shared/ui/button'
+import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Popconfirm } from '@/shared/ui/popconfirm'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Separator } from '@/shared/ui/separator'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Slider } from '@/shared/ui/slider'
@@ -216,6 +218,34 @@ function resetToolbarOrder() {
             />
           </label>
         </template>
+
+        <Separator />
+        <div class="font-semibold">高光打点与 OBS 回放联动</div>
+        <label class="flex-between gap-2">
+          弹幕打点指令前缀（留空关闭）
+          <Input
+            v-model="dashboard.settings.highlight.danmakuMarkPrefix"
+            placeholder="!mark"
+            class="w-28"
+          />
+        </label>
+        <label class="flex-between gap-2">
+          弹幕打点允许权限
+          <Select v-model="dashboard.settings.highlight.danmakuMarkRole">
+            <SelectTrigger class="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="owner">仅主播本人</SelectItem>
+              <SelectItem value="guard">主播与大航海</SelectItem>
+              <SelectItem value="all">全部观众</SelectItem>
+            </SelectContent>
+          </Select>
+        </label>
+        <label class="flex-between gap-2">
+          <span>打点时自动保存 OBS 回放缓存 (仅客户端)</span>
+          <Switch v-model="dashboard.settings.highlight.autoSaveReplayOnMark" />
+        </label>
 
         <Separator />
         <div class="font-semibold">用户备注</div>

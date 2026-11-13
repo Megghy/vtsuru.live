@@ -12,6 +12,7 @@ import Play24Regular from '@vicons/fluent/es/Play24Regular'
 import Search24Regular from '@vicons/fluent/es/Search24Regular'
 import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
 import ShieldDismiss24Regular from '@vicons/fluent/es/ShieldDismiss24Regular'
+import Timeline24Regular from '@vicons/fluent/es/Timeline24Regular'
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { clearInterval, setInterval } from 'worker-timers'
@@ -28,6 +29,7 @@ import { getApiSongListGet, getApiSongListGetNeteaseList } from '@/api/generated
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import MusicRequestOBS from '@/apps/obs/pages/request/MusicRequestOBS.vue'
 import MusicRequestItem from '@/apps/open-live/components/request/MusicRequestItem.vue'
+import SongTimelineExportDialog from '@/components/song/SongTimelineExportDialog.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -78,6 +80,17 @@ const cooldown = usePersistedStorage<{ [id: number]: number }>('Setting.MusicReq
 
 // 主 Tab
 const activeMainTab = ref<'queue' | 'songlist' | 'history' | 'blacklist' | 'preview' | 'settings'>('queue')
+const showTimelineExport = ref(false)
+const musicTimelineEntries = computed(() =>
+  musicRequestStore.history
+    .filter((entry) => entry.status === 'played')
+    .map((entry) => ({
+      title: entry.music.name,
+      artist: entry.music.author?.join('/'),
+      requester: entry.from?.name,
+      timeMs: entry.time,
+    })),
+)
 
 // OBS 调试与样式
 const obsStyleType = ref<'glass' | 'transparent' | 'classic' | 'fresh' | 'minimal'>('glass')
@@ -752,33 +765,45 @@ onUnmounted(() => {
             <span class="text-xs text-muted-foreground"
               >本地记录最近 {{ musicRequestStore.history.length }} 条点歌流水 (最多保留 200 条)</span
             >
-            <AlertDialog>
-              <AlertDialogTrigger as-child>
-                <Button
-                  size="xs"
-                  variant="ghost"
-                  class="text-destructive hover:bg-destructive/10"
-                  :disabled="musicRequestStore.history.length === 0"
-                >
-                  清空历史
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent class="sm:max-w-md">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>清空点歌历史？</AlertDialogTitle>
-                  <AlertDialogDescription class="text-xs"> 此操作将抹去本地点歌历史流水。 </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>取消</AlertDialogCancel>
-                  <AlertDialogAction
-                    class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    @click="musicRequestStore.clearHistory"
+            <div class="flex items-center gap-2">
+              <Button
+                size="xs"
+                variant="outline"
+                class="gap-1"
+                :disabled="musicTimelineEntries.length === 0"
+                @click="showTimelineExport = true"
+              >
+                <Timeline24Regular class="size-3.5" />
+                导出时间轴
+              </Button>
+              <AlertDialog>
+                <AlertDialogTrigger as-child>
+                  <Button
+                    size="xs"
+                    variant="ghost"
+                    class="text-destructive hover:bg-destructive/10"
+                    :disabled="musicRequestStore.history.length === 0"
                   >
-                    确认清空
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    清空历史
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent class="sm:max-w-md">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>清空点歌历史？</AlertDialogTitle>
+                    <AlertDialogDescription class="text-xs"> 此操作将抹去本地点歌历史流水。 </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>取消</AlertDialogCancel>
+                    <AlertDialogAction
+                      class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      @click="musicRequestStore.clearHistory"
+                    >
+                      确认清空
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
           </CardContent>
         </Card>
 
@@ -822,6 +847,12 @@ onUnmounted(() => {
             </div>
           </CardContent>
         </Card>
+
+        <SongTimelineExportDialog
+          v-model:open="showTimelineExport"
+          :entries="musicTimelineEntries"
+          title="导出音乐点歌歌回时间轴"
+        />
       </TabsContent>
 
       <!-- Tab 4: 黑名单 -->

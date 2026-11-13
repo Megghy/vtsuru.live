@@ -18,6 +18,8 @@ import { useEntryWelcome } from './autoAction/modules/entryWelcome'
 import { useFollowThank } from './autoAction/modules/followThank'
 import { useGiftThank } from './autoAction/modules/giftThank'
 import { useGuardPm } from './autoAction/modules/guardPm'
+import type { PointOrderRedeemedHubEvent } from './autoAction/modules/pointRedeem'
+import { usePointRedeem } from './autoAction/modules/pointRedeem'
 import { useSuperChatThank } from './autoAction/modules/superChatThank'
 import type { AutoActionItem, RuntimeState } from './autoAction/types.js'
 import { ActionType, KeywordMatchType, Priority, TriggerType } from './autoAction/types.js'
@@ -56,6 +58,7 @@ export const useAutoAction = defineStore('autoAction', () => {
     [TriggerType.ENTER]: true,
     [TriggerType.SCHEDULED]: true,
     [TriggerType.SUPER_CHAT]: true,
+    [TriggerType.POINT_REDEEM]: true,
   })
   const isTriggersLoaded = persistLoaded(enabledTriggerTypes)
 
@@ -119,7 +122,7 @@ export const useAutoAction = defineStore('autoAction', () => {
         actionToExecute = eligibleActions[lastGlobalActionIndex.value]
       }
 
-      if (actionToExecute?.actionType === ActionType.PNGTUBER_EXPRESSION) {
+      if (actionToExecute && actionToExecute.actionType !== ActionType.SEND_DANMAKU && actionToExecute.actionType !== ActionType.SEND_PRIVATE_MSG) {
         executeActions([actionToExecute], null, TriggerType.SCHEDULED, roomId.value, runtimeState.value, {})
       } else if (actionToExecute) {
         const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
@@ -235,7 +238,7 @@ export const useAutoAction = defineStore('autoAction', () => {
         (!currentAction.triggerConfig.onlyDuringLive || isLive.value) &&
         (!currentAction.triggerConfig.ignoreTianXuan || !isTianXuanActive.value)
 
-      if (shouldExecute && currentAction.actionType === ActionType.PNGTUBER_EXPRESSION) {
+      if (shouldExecute && currentAction.actionType !== ActionType.SEND_DANMAKU && currentAction.actionType !== ActionType.SEND_PRIVATE_MSG) {
         executeActions([currentAction], null, TriggerType.SCHEDULED, roomId.value, runtimeState.value, {})
       } else if (shouldExecute) {
         const context = buildExecutionContext(null, roomId.value, TriggerType.SCHEDULED)
@@ -333,6 +336,7 @@ export const useAutoAction = defineStore('autoAction', () => {
             [TriggerType.ENTER]: true,
             [TriggerType.SCHEDULED]: true,
             [TriggerType.SUPER_CHAT]: true,
+            [TriggerType.POINT_REDEEM]: true,
           }
           let patched = false
           for (const triggerType of Object.values(TriggerType)) {
@@ -385,6 +389,13 @@ export const useAutoAction = defineStore('autoAction', () => {
   const autoReplyModule = useAutoReply(isLive, roomId, biliFunc.sendLiveDanmaku)
   const superChatThankModule = useSuperChatThank(isLive, roomId, isTianXuanActive, biliFunc.sendLiveDanmaku)
   const checkInModule = useCheckIn(isLive, roomId, liveStartTime, isTianXuanActive, biliFunc.sendLiveDanmaku)
+  const pointRedeemModule = usePointRedeem(
+    isLive,
+    roomId,
+    isTianXuanActive,
+    biliFunc.sendLiveDanmaku,
+    async (userId: number, message: string) => biliFunc.sendPrivateMessage(userId, message),
+  )
 
   /**
    * 向弹幕客户端注册事件监听器
@@ -411,14 +422,21 @@ export const useAutoAction = defineStore('autoAction', () => {
       await hub.Init()
       await hub.off('CheckInResult', onCheckInResult)
       await hub.on('CheckInResult', onCheckInResult)
-      console.log('[AutoAction] 签到结果监听器已注册.')
+      await hub.off('PointOrderRedeemed', onPointOrderRedeemed)
+      await hub.on('PointOrderRedeemed', onPointOrderRedeemed)
+      console.log('[AutoAction] Hub 事件监听器已注册.')
     } catch (err) {
-      console.error('[AutoAction] 注册签到结果监听器时出错:', err)
+      console.error('[AutoAction] 注册 Hub 事件监听器时出错:', err)
     }
   }
 
   function onCheckInResult(payload: CheckInHubEvent) {
     checkInModule.processCheckInResult(payload, runtimeState.value)
+  }
+
+  function onPointOrderRedeemed(payload: PointOrderRedeemedHubEvent) {
+    if (!enabledTriggerTypes.value?.[TriggerType.POINT_REDEEM]) return
+    pointRedeemModule.processPointRedeem(payload, autoActions.value, runtimeState.value)
   }
 
   /**
@@ -738,6 +756,25 @@ export const useAutoAction = defineStore('autoAction', () => {
           price: Math.floor(Math.random() * 1000) + 10,
         } as EventModel
         break
+      case TriggerType.POINT_REDEEM: {
+        const testPayload: PointOrderRedeemedHubEvent = {
+          OrderId: 99999,
+          GoodsId: 1,
+          GoodsName: '测试整活道具',
+          GoodsType: 0,
+          Count: 1,
+          Point: 100,
+          IsFree: false,
+          BuyerName: baseTestEvent.uname || '测试用户',
+          BuyerUid: testUid || baseTestEvent.uid || 10000,
+          BuyerOpenId: baseTestEvent.open_id || 'test-open-id',
+          Remark: '测试下单备注',
+          SelectedSubItems: ['默认款式'],
+          Timestamp: Date.now(),
+        }
+        pointRedeemModule.processPointRedeem(testPayload, autoActions.value, runtimeState.value, true)
+        return
+      }
       case TriggerType.SCHEDULED:
         if (actionsToTest.length > 0) {
           const action = actionsToTest[0]

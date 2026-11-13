@@ -17,6 +17,7 @@ import type {
   GetApiPointServiceOrderOwnerParams,
   GetApiPointServiceOrderUserParams,
   GetApiPointUserGetPointParams,
+  GetApiPointUserOrderAttachmentParams,
   PaginationResponseOfListOfResponsePointUserModel,
   PostApiPointDeleteGoodsParams,
   PostApiPointDeleteUserParams,
@@ -53,6 +54,7 @@ import type {
   ResponseResultOfResponsePointOrder2UserModelArray,
   ResponseResultOfResponseTestPointModel,
   ResponseResultOfShippingAddressInfo,
+  ResponseResultOfString,
   ServiceOwnerUpdateRequest,
   ServiceUserUpdateRequest,
   SettingPoint,
@@ -936,6 +938,32 @@ export const getApiPointUserGetPoint = async (
   options?: Parameters<typeof vtsuruMutator>[1],
 ): Promise<ResponseResultOfDecimal> => {
   return vtsuruMutator<ResponseResultOfDecimal>(getGetApiPointUserGetPointUrl(params), {
+    ...options,
+    method: 'GET',
+  })
+}
+
+export const getGetApiPointUserOrderAttachmentUrl = (params?: GetApiPointUserOrderAttachmentParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/point/user/order-attachment?${stringifiedParams}`
+    : `/api/point/user/order-attachment`
+}
+
+export const getApiPointUserOrderAttachment = async (
+  params?: GetApiPointUserOrderAttachmentParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfString> => {
+  return vtsuruMutator<ResponseResultOfString>(getGetApiPointUserOrderAttachmentUrl(params), {
     ...options,
     method: 'GET',
   })

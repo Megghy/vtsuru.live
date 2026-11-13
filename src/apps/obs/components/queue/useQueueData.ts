@@ -23,6 +23,7 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
       price: (q) => q.giftPrice,
       fansMedalLevel: (q) => q.user?.fans_medal_level,
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
+      priorityLevel: (q) => q.priorityLevel,
     })
     return new List(sorted).OrderByDescending((item) => (item.from === QueueFrom.Manual ? 1 : 0)).ToArray()
   })

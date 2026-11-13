@@ -1,19 +1,22 @@
 import { defineStore } from 'pinia'
 import { computed, reactive, ref, shallowRef, triggerRef, watch } from 'vue'
+import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
-import { EventDataTypes } from '@/api/generated/model'
+import { EventDataTypes, GuardLevel } from '@/api/generated/model'
+import { isTauri } from '@/shared/config'
 import { fetchOfficialLiveStats, officialLiveStats } from '@/shared/services/officialLiveStats'
 import { getDeletedSuperChatIds } from '@/shared/utils/danmakuWindowEvents'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
 import { CardGrid } from '../core/cardGrid'
+import type { LiveHighlightMarker } from '../core/db'
 import { dashboardDB } from '../core/db'
 import { createSearchPredicate } from '../core/search'
 import type { DashboardEvent } from '../core/types'
 import { normalizeEvent, panelOf, userKeyOf } from '../core/types'
-import { useDashboardSettings } from './settings'
+import { filterByPaidReadMode, useDashboardSettings } from './settings'
 import { useDashboardStats } from './stats'
 import { useUserNotes } from './userNotes'
 
@@ -52,6 +55,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const cardGrid = reactive(new CardGrid(settings.value.card.size))
   const stats = useDashboardStats(paid)
   const officialOnline = ref<number | null>(null)
+  const markers = ref<LiveHighlightMarker[]>([])
   let officialTimer: ReturnType<typeof setInterval> | undefined
 
   const pageLoadedAt = Date.now()
@@ -118,6 +122,21 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     else append(paid, event)
     stats.record(event)
     queueWrite(event)
+
+    // 弹幕打点指令识别（例如 !mark 精彩五杀）
+    const markPrefix = settings.value.highlight.danmakuMarkPrefix?.trim()
+    if (event.type === EventDataTypes.Message && markPrefix && event.time > pageLoadedAt) {
+      const text = event.msg.trim()
+      if (text.toLowerCase().startsWith(markPrefix.toLowerCase())) {
+        const role = settings.value.highlight.danmakuMarkRole
+        const isOwner = event.uid > 0 && event.uid === account.value.biliId
+        const isGuard = event.guardLevel !== GuardLevel.None
+        if (role === 'all' || (role === 'guard' && (isOwner || isGuard)) || (role === 'owner' && isOwner)) {
+          const note = text.slice(markPrefix.length).trim() || '弹幕打点'
+          void addMarker(note, 'danmaku', event.uname)
+        }
+      }
+    }
   }
 
   async function loadRecent() {
@@ -139,6 +158,48 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     interactions.value = buckets.interaction.slice(-MAX_INTERACTIONS)
     paid.value = buckets.paid
     for (const event of messages.value) cardGrid.ingest(event, settings.value.card)
+    markers.value = await dashboardDB.markers.where('time').aboveOrEqual(since).reverse().toArray()
+  }
+
+  async function addMarker(
+    label = '高光时刻',
+    source: LiveHighlightMarker['source'] = 'manual',
+    author?: string,
+    saveReplay?: boolean,
+  ) {
+    const cleanLabel = label.trim() || '高光时刻'
+    let replaySaved = false
+    const shouldSaveReplay = saveReplay ?? settings.value.highlight.autoSaveReplayOnMark
+    if (shouldSaveReplay && isTauri()) {
+      try {
+        const { useOBSStore } = await import('@/apps/client/store/useOBSStore')
+        const obsStore = useOBSStore()
+        const res = await obsStore.saveReplayBuffer()
+        replaySaved = res.ok
+        if (!res.ok && saveReplay) {
+          toast.warning(res.message)
+        }
+      } catch {
+        // 客户端 OBS Store 加载失败时不阻塞本地打点
+      }
+    }
+
+    const entry: LiveHighlightMarker = {
+      time: Date.now(),
+      label: cleanLabel,
+      source,
+      author,
+      replaySaved,
+    }
+    const id = await dashboardDB.markers.add(entry)
+    markers.value.unshift({ ...entry, id })
+    if (markers.value.length > 200) markers.value.pop()
+    toast.success(replaySaved ? `已打点并保存回放：${cleanLabel}` : `已打点：${cleanLabel}`)
+  }
+
+  async function removeMarker(id: number) {
+    await dashboardDB.markers.delete(id)
+    markers.value = markers.value.filter((m) => m.id !== id)
   }
 
   /** 页面入口调用；网页端按开放平台连接，客户端内复用已建立的连接 */
@@ -213,15 +274,22 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     scrollTarget.value = contextKey
   }
 
-  const predicate = computed(() => {
+  const basePredicate = computed(() => {
     const searchPredicate = createSearchPredicate(search.value, (event) => notes.get(userKeyOf(event))?.note)
     const user = userFilter.value?.userKey
-    const hideRead = settings.value.hideRead
-    if (!searchPredicate && !user && !hideRead) return undefined
+    if (!searchPredicate && !user) return undefined
     return (event: DashboardEvent) =>
       (!user || userKeyOf(event) === user) &&
-      (!hideRead || !readKeys.has(event.key)) &&
       (!searchPredicate || searchPredicate(event))
+  })
+
+  const predicate = computed(() => {
+    const base = basePredicate.value
+    const hideRead = settings.value.hideRead
+    if (!base && !hideRead) return undefined
+    return (event: DashboardEvent) =>
+      (!hideRead || !readKeys.has(event.key)) &&
+      (!base || base(event))
   })
 
   const source = computed(() => {
@@ -241,35 +309,40 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
 
   // 源列表原地追加，必须产出新数组，否则下游 computed 视为未变化
   const applyFilter = (list: DashboardEvent[]) => (predicate.value ? list.filter(predicate.value) : list.slice())
+  const applyBaseFilter = (list: DashboardEvent[]) =>
+    basePredicate.value ? list.filter(basePredicate.value) : list.slice()
+
+  const filterByReadMode = (list: DashboardEvent[], mode: Parameters<typeof filterByPaidReadMode>[2]) =>
+    filterByPaidReadMode(list, readKeys, mode, settings.value.hideRead)
 
   const sortPaid = (list: DashboardEvent[], sort: 'time' | 'price') =>
     list.toSorted(sort === 'price' ? (a, b) => b.price - a.price || b.time - a.time : (a, b) => b.time - a.time)
 
   const danmakuList = computed(() => applyFilter(source.value.messages))
   const interactionList = computed(() => applyFilter(source.value.interactions))
-  const scList = computed(() =>
-    sortPaid(
-      applyFilter(source.value.paid.filter((e) => e.type === EventDataTypes.SC && !deletedKeys.has(e.key))),
-      settings.value.sort.sc,
-    ),
+  const scBaseList = computed(() =>
+    applyBaseFilter(source.value.paid.filter((e) => e.type === EventDataTypes.SC && !deletedKeys.has(e.key))),
   )
-  const giftList = computed(() => {
+  const giftBaseList = computed(() => {
     const { giftMinPrice, showFreeGift } = settings.value
-    return sortPaid(
-      applyFilter(
-        source.value.paid.filter(
-          (e) =>
-            e.type === EventDataTypes.Guard ||
-            (e.type === EventDataTypes.Gift && (e.price > 0 || showFreeGift) && e.price >= giftMinPrice),
-        ),
+    return applyBaseFilter(
+      source.value.paid.filter(
+        (e) =>
+          e.type === EventDataTypes.Guard ||
+          (e.type === EventDataTypes.Gift && (e.price > 0 || showFreeGift) && e.price >= giftMinPrice),
       ),
-      settings.value.sort.gift,
     )
   })
+  const scList = computed(() =>
+    sortPaid(filterByReadMode(scBaseList.value, settings.value.paidReadFilter.sc), settings.value.sort.sc),
+  )
+  const giftList = computed(() =>
+    sortPaid(filterByReadMode(giftBaseList.value, settings.value.paidReadFilter.gift), settings.value.sort.gift),
+  )
 
   const unreadCounts = computed(() => {
     const unread = (list: DashboardEvent[]) => list.reduce((n, e) => n + (readKeys.has(e.key) ? 0 : 1), 0)
-    return { danmaku: 0, sc: unread(scList.value), gift: unread(giftList.value) }
+    return { danmaku: 0, sc: unread(scBaseList.value), gift: unread(giftBaseList.value) }
   })
 
   return {
@@ -278,6 +351,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     stats,
     officialOnline,
     officialStats: officialLiveStats,
+    markers,
     client,
     readKeys,
     cardGrid,
@@ -300,5 +374,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     filterByUser,
     backToContext,
     flushWrites,
+    addMarker,
+    removeMarker,
   }
 })

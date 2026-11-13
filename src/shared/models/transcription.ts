@@ -28,6 +28,8 @@ export type TranscriptionProfile = TencentTranscriptionProfile | OpenAITranscrip
 export interface TranscriptionSettings {
   activeProfileId: string
   profiles: TranscriptionProfile[]
+  syncObsSubtitle?: boolean
+  obsSubtitleChannel?: string
 }
 
 export type TranscriptionPhase =

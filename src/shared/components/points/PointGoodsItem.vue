@@ -115,6 +115,14 @@ const priceRangeText = computed(() => {
           </Badge>
 
           <Badge
+            v-if="goods.hasGuardFreePrivilege || goods.canFreeBuy"
+            variant="secondary"
+            class="text-[10px] h-4.5 px-1 font-normal bg-emerald-600/85 text-white border-0"
+          >
+            舰长福利
+          </Badge>
+
+          <Badge
             v-if="goods.allowGuardLevel > 0"
             variant="secondary"
             class="text-[10px] h-4.5 px-1 font-normal bg-amber-500/80 text-white border-0"

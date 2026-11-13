@@ -41,6 +41,7 @@ const triggerTypeOptions = [
   { label: '入场欢迎', value: TriggerType.ENTER },
   { label: '定时发送', value: TriggerType.SCHEDULED },
   { label: 'SC感谢', value: TriggerType.SUPER_CHAT },
+  { label: '积分商品兑换', value: TriggerType.POINT_REDEEM },
 ]
 
 // 操作类型选项
@@ -48,6 +49,7 @@ const actionTypeOptions = [
   { label: '发送弹幕', value: ActionType.SEND_DANMAKU },
   { label: '发送私信', value: ActionType.SEND_PRIVATE_MSG },
   { label: '执行命令', value: ActionType.EXECUTE_COMMAND },
+  { label: '播放音效（无需VTS）', value: ActionType.PLAY_AUDIO },
   { label: 'PNGtuber：切换表情', value: ActionType.PNGTUBER_EXPRESSION },
   { label: 'VTS：触发热键', value: ActionType.VTS_HOTKEY },
   { label: 'VTS：机位预设', value: ActionType.VTS_PRESET },

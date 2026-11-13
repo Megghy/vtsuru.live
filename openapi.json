@@ -4938,6 +4938,14 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          {
+            "name": "usePriority",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
           }
         ],
         "responses": {
@@ -5430,6 +5438,54 @@
         "security": [
           { }
         ]
+      }
+    },
+    "/api/live-request/priority-from-web": {
+      "post": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "postApiLiveRequestPriorityFromWeb",
+        "parameters": [
+          {
+            "name": "target",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseSongRequestModel"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseSongRequestModel"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseSongRequestModel"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/live-request/singing": {
@@ -10745,6 +10801,57 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResponseResultOfDecimal"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/point/user/order-attachment": {
+      "get": {
+        "tags": [
+          "Point"
+        ],
+        "operationId": "getApiPointUserOrderAttachment",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fileId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfString"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfString"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfString"
                 }
               }
             }
@@ -21904,6 +22011,7 @@
           "maxBuyCount",
           "createAt",
           "canFreeBuy",
+          "hasGuardFreePrivilege",
           "allowGuardLevel",
           "purchasedCount",
           "soldCount",
@@ -21970,6 +22078,9 @@
             "format": "int64"
           },
           "canFreeBuy": {
+            "type": "boolean"
+          },
+          "hasGuardFreePrivilege": {
             "type": "boolean"
           },
           "allowGuardLevel": {
@@ -23306,6 +23417,7 @@
           "maxBuyCount",
           "createAt",
           "canFreeBuy",
+          "hasGuardFreePrivilege",
           "allowGuardLevel",
           "purchasedCount",
           "soldCount",
@@ -23337,6 +23449,13 @@
           },
           "keySelectionMode": {
             "$ref": "#/components/schemas/VirtualKeySelectionMode"
+          },
+          "privateAttachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VirtualAttachmentModel"
+            },
+            "nullable": true
           },
           "id": {
             "type": "integer",
@@ -23396,6 +23515,9 @@
             "format": "int64"
           },
           "canFreeBuy": {
+            "type": "boolean"
+          },
+          "hasGuardFreePrivilege": {
             "type": "boolean"
           },
           "allowGuardLevel": {
@@ -23900,6 +24022,13 @@
           },
           "serviceData": {
             "$ref": "#/components/schemas/ServiceOrderData"
+          },
+          "privateAttachments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VirtualAttachmentModel"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -24157,6 +24286,7 @@
           "id",
           "status",
           "from",
+          "priorityLevel",
           "createAt",
           "requestBy"
         ],
@@ -24176,6 +24306,15 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "pointCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priorityLevel": {
+            "type": "integer",
+            "format": "int32"
           },
           "mysteryBoxName": {
             "type": "string",
@@ -27539,6 +27678,7 @@
           "songName",
           "status",
           "from",
+          "priorityLevel",
           "createAt"
         ],
         "type": "object",
@@ -27564,12 +27704,26 @@
             "format": "double",
             "nullable": true
           },
+          "pointCost": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "priorityLevel": {
+            "type": "integer",
+            "format": "int32"
+          },
           "user": {
             "$ref": "#/components/schemas/DanmakuUserInfo"
           },
           "createAt": {
             "type": "integer",
             "format": "int64"
+          },
+          "startSingAt": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
           },
           "finishAt": {
             "type": "integer",
@@ -28954,7 +29108,13 @@
           "showRequireInfo",
           "showPayment",
           "showFanMadelInfo",
-          "isReverse"
+          "isReverse",
+          "enablePointJoin",
+          "pointJoinCost",
+          "pointIgnoreLimit",
+          "allowPointPriority",
+          "pointPriorityKeyword",
+          "pointPriorityCost"
         ],
         "type": "object",
         "properties": {
@@ -29054,6 +29214,26 @@
           },
           "isReverse": {
             "type": "boolean"
+          },
+          "enablePointJoin": {
+            "type": "boolean"
+          },
+          "pointJoinCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "pointIgnoreLimit": {
+            "type": "boolean"
+          },
+          "allowPointPriority": {
+            "type": "boolean"
+          },
+          "pointPriorityKeyword": {
+            "type": "string"
+          },
+          "pointPriorityCost": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -29109,7 +29289,13 @@
           "showRequireInfo",
           "showUserName",
           "showFanMadelInfo",
-          "isReverse"
+          "isReverse",
+          "enablePointRequest",
+          "pointRequestCost",
+          "pointIgnoreLimit",
+          "allowPointPriority",
+          "pointPriorityKeyword",
+          "pointPriorityCost"
         ],
         "type": "object",
         "properties": {
@@ -29237,6 +29423,26 @@
           },
           "isReverse": {
             "type": "boolean"
+          },
+          "enablePointRequest": {
+            "type": "boolean"
+          },
+          "pointRequestCost": {
+            "type": "number",
+            "format": "double"
+          },
+          "pointIgnoreLimit": {
+            "type": "boolean"
+          },
+          "allowPointPriority": {
+            "type": "boolean"
+          },
+          "pointPriorityKeyword": {
+            "type": "string"
+          },
+          "pointPriorityCost": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -29876,6 +30082,14 @@
           },
           "allowGuardLevel": {
             "$ref": "#/components/schemas/GuardLevel"
+          },
+          "privateFileIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -30635,6 +30849,28 @@
           "THREAT",
           "TEASING"
         ]
+      },
+      "VirtualAttachmentModel": {
+        "required": [
+          "id",
+          "name",
+          "size"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
       },
       "VirtualKeySelectionMode": {
         "enum": [

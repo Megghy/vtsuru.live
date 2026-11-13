@@ -426,6 +426,38 @@ export function executeActions(
         break
       }
 
+      case ActionType.PLAY_AUDIO: {
+        runtimeState.lastExecutionTime[action.id] = Date.now()
+        const run = async () => {
+          let failure: unknown
+          let playedSource = action.actionConfig.audioSource || ''
+          try {
+            const { executePlayAudio } = await import('./modules/audioPlayer')
+            playedSource = await executePlayAudio(action)
+            options?.onSuccess?.(action, context)
+          } catch (cause) {
+            failure = cause
+            options?.onError?.(action, context, cause)
+            if (options?.isTest) window.$message?.error(String(cause))
+          }
+          await logCommandHistory(
+            action.id,
+            action.name || '播放音效',
+            `PLAY_AUDIO ${playedSource}`,
+            !failure,
+            failure ? String(failure) : undefined,
+            ActionType.PLAY_AUDIO,
+          )
+        }
+        const execute = () => {
+          void run().catch((cause) => console.error('记录播放音效操作失败', cause))
+        }
+        if (action.actionConfig.delaySeconds && action.actionConfig.delaySeconds > 0)
+          setTimeout(execute, action.actionConfig.delaySeconds * 1000)
+        else execute()
+        break
+      }
+
       case ActionType.PNGTUBER_EXPRESSION: {
         // Reserve cooldown before delay to prevent burst events queuing duplicates.
         runtimeState.lastExecutionTime[action.id] = Date.now()

@@ -46,6 +46,15 @@ export const TRIGGER_PLACEHOLDERS: Partial<Record<TriggerType, Placeholder[]>> =
     { name: '{{sc.message}}', description: 'SC留言内容' },
     { name: '{{sc.price}}', description: 'SC金额(元)' },
   ],
+  [TriggerType.POINT_REDEEM]: [
+    { name: '{{pointOrder.goodsName}}', description: '兑换商品名称' },
+    { name: '{{pointOrder.goodsId}}', description: '兑换商品ID' },
+    { name: '{{pointOrder.count}}', description: '兑换数量' },
+    { name: '{{pointOrder.point}}', description: '消耗积分' },
+    { name: '{{pointOrder.subItems}}', description: '选择的规格款式' },
+    { name: '{{pointOrder.remark}}', description: '下单备注' },
+    { name: '{{pointOrder.orderId}}', description: '订单ID' },
+  ],
 }
 
 // 签到模板特有的占位符

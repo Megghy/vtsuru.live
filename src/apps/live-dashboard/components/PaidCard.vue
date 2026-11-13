@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
 import { useNow } from '@vueuse/core'
 import { computed } from 'vue'
 
@@ -20,6 +21,10 @@ const now = useNow({ scheduler: (cb) => useIntervalFn(cb, 30_000) })
 
 const read = computed(() => !props.ignoreRead && dashboard.readKeys.has(props.event.key))
 const isSc = computed(() => props.event.type === EventDataTypes.SC)
+const mysteryBoxProfit = computed(() => {
+  if (!props.event.mysteryBoxName && props.event.mysteryBoxPrice == null) return null
+  return Math.round(((props.event.mysteryBoxPrice ?? 0) - props.event.price) * 100) / 100
+})
 const colors = computed(() => {
   if (isSc.value) return superChatTier(props.event.price)
   if (props.event.type === EventDataTypes.Guard) {
@@ -36,8 +41,8 @@ const timeText = computed(() => {
 
 <template>
   <div
-    class="my-1 mx-1.5 rounded-md overflow-hidden text-white bg-[var(--paid-body)] select-text"
-    :class="{ 'opacity-40': read, 'text-foreground bg-popover border border-border': !colors }"
+    class="my-1 mx-1.5 rounded-md overflow-hidden text-white bg-[var(--paid-body)] select-text transition-opacity duration-150"
+    :class="{ 'opacity-55': read, 'text-foreground bg-popover border border-border': !colors }"
     :style="colors ? { '--paid-header': colors.header, '--paid-body': colors.body } : undefined"
     :data-key="event.key"
     @dblclick="dashboard.toggleRead(event)"
@@ -84,7 +89,43 @@ const timeText = computed(() => {
             />
             {{ paidSummary(event) }}
           </span>
-          <span class="ml-auto text-[0.8em] opacity-75">{{ timeText }}</span>
+          <span
+            v-if="mysteryBoxProfit !== null"
+            class="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[0.78em] font-medium tabular-nums"
+            :class="
+              mysteryBoxProfit >= 0
+                ? 'bg-emerald-500/15 text-emerald-500'
+                : 'bg-rose-500/15 text-rose-500'
+            "
+            :title="`盲盒 ${event.mysteryBoxName || ''} 投入 ${formatPrice(event.price)} → 爆出 ${formatPrice(event.mysteryBoxPrice ?? 0)}`"
+          >
+            {{ event.mysteryBoxName ? `${event.mysteryBoxName} · ` : '' }}爆出{{
+              formatPrice(event.mysteryBoxPrice ?? 0)
+            }}
+            ({{ mysteryBoxProfit >= 0 ? '+' : '-' }}{{ formatPrice(Math.abs(mysteryBoxProfit)) }})
+          </span>
+          <span class="ml-auto inline-flex items-center gap-1.5">
+            <Button
+              v-if="read"
+              variant="ghost"
+              size="xs"
+              class="h-auto gap-0.5 px-1.5 py-0.5 rounded-full text-[0.75em] leading-none border"
+              :class="
+                colors
+                  ? 'bg-black/25 text-white border-white/25 hover:bg-black/40 hover:text-white'
+                  : 'bg-muted text-muted-foreground border-border hover:bg-muted/80'
+              "
+              title="已读（点击标为未读）"
+              @click.stop="dashboard.toggleRead(event)"
+            >
+              <component
+                :is="Checkmark12Regular"
+                class="size-3"
+              />
+              已读
+            </Button>
+            <span class="text-[0.8em] opacity-75">{{ timeText }}</span>
+          </span>
         </div>
       </div>
     </div>

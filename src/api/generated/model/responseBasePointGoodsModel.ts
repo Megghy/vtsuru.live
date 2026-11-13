@@ -32,6 +32,7 @@ export interface ResponseBasePointGoodsModel {
   maxSubItemSelections?: number | null
   createAt: number
   canFreeBuy: boolean
+  hasGuardFreePrivilege: boolean
   allowGuardLevel: GuardLevel
   cover?: APIFileModel
   purchasedCount: number

@@ -176,6 +176,22 @@ function formatTimeAbsolute(time: number | string | Date) {
           礼物{{ song.price ? ` | ${song.price}` : '' }}
         </Badge>
 
+        <Badge
+          v-if="song.priorityLevel > 0"
+          variant="default"
+          size="xs"
+        >
+          插队{{ song.priorityLevel > 1 ? ` ×${song.priorityLevel}` : '' }}
+        </Badge>
+
+        <Badge
+          v-if="song.pointCost && song.pointCost > 0"
+          variant="secondary"
+          size="xs"
+        >
+          {{ song.pointCost }} 积分
+        </Badge>
+
         <!-- 时间 -->
         <TooltipProvider>
           <Tooltip>

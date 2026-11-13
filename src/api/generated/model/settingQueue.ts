@@ -41,4 +41,10 @@ export interface SettingQueue {
   showPayment: boolean
   showFanMadelInfo: boolean
   isReverse: boolean
+  enablePointJoin: boolean
+  pointJoinCost: number
+  pointIgnoreLimit: boolean
+  allowPointPriority: boolean
+  pointPriorityKeyword: string
+  pointPriorityCost: number
 }

@@ -11,6 +11,7 @@ import type { ResponsePointGoodsModel } from './responsePointGoodsModel'
 import type { ResponseSelectedSubItemOrderInfo } from './responseSelectedSubItemOrderInfo'
 import type { ServiceOrderData } from './serviceOrderData'
 import type { ShippingAddressInfo } from './shippingAddressInfo'
+import type { VirtualAttachmentModel } from './virtualAttachmentModel'
 
 export interface ResponsePointOrder2UserModel {
   id: number
@@ -29,4 +30,6 @@ export interface ResponsePointOrder2UserModel {
   /** @nullable */
   selectedSubItems?: ResponseSelectedSubItemOrderInfo[] | null
   serviceData?: ServiceOrderData
+  /** @nullable */
+  privateAttachments?: VirtualAttachmentModel[] | null
 }

@@ -16,4 +16,6 @@ export interface TempRequestGoodsSetting {
   /** @nullable */
   guardLevelMonths?: TempGuardFreeDate[] | null
   allowGuardLevel?: GuardLevel
+  /** @nullable */
+  privateFileIds?: number[] | null
 }
