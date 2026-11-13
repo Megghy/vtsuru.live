@@ -55,7 +55,7 @@ const priceRangeText = computed(() => {
   />
   <Card
     v-else
-    class="goods-card group overflow-hidden /80 bg-card shadow-xs transition hover:border-primary/50 flex flex-col justify-between"
+    class="goods-card group min-w-0 overflow-hidden bg-card/80 shadow-xs transition hover:border-primary/50 flex flex-col justify-between"
     :class="{ 'is-pinned ring-1 ring-primary/40': goods.isPinned }"
     :style="props.contentStyle"
   >
@@ -253,7 +253,7 @@ const priceRangeText = computed(() => {
     <!-- 页脚插槽 -->
     <CardFooter
       v-if="$slots.footer"
-      class="p-3"
+      class="p-3 flex-col items-stretch"
     >
       <slot name="footer" />
     </CardFooter>
