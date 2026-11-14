@@ -32,10 +32,7 @@ export function InitVTsuru() {
 
 async function loadVersionAndStart() {
   try {
-    const version = (await getApiVtsuruVersion()) as unknown as {
-      code: number
-      data: string
-    }
+    const version = await getApiVtsuruVersion()
     if (version.code == 200) {
       currentVersion = version.data
       const savedVersion = await persistedGetItemRaw('Version')

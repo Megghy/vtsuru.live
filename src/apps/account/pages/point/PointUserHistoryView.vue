@@ -81,13 +81,9 @@ async function loadHistories(force = false) {
   loading.value = true
   const currentGeneration = generation
   const promise = (async () => {
-    const result = (await getApiPointUserGetHistories({
+    const result = await getApiPointUserGetHistories({
       headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponsePointHisrotyModel[]
-    }
+    })
     if (result.code !== 200) throw new Error(result.message || '获取积分记录失败')
     if (currentGeneration !== generation) return
     histories.value = result.data

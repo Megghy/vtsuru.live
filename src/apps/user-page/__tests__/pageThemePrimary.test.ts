@@ -63,4 +63,21 @@ describe('getUserPageThemeCssVars 主色', () => {
     expect(vars['--vtsuru-page-text']).not.toBe(vars['--foreground'])
     expect(contrast(vars, '--vtsuru-page-text', 'rgb(255, 210, 210)')).toBeGreaterThanOrEqual(4.5)
   })
+
+  it('自定义背景色透传给控件 --background 与浮层 --popover 而不被混白洗掉', () => {
+    const lightVars = getUserPageThemeCssVars({ backgroundColor: '#fff1f5' }, false)
+    const bgLight = parseRgb(lightVars['--background'])
+    const popoverLight = parseRgb(lightVars['--popover'])
+
+    expect(bgLight).toBeDefined()
+    expect(sameColor(lightVars['--background'], '#fff1f5')).toBe(true)
+    expect(bgLight!.alpha).toBeCloseTo(0.52, 2)
+    expect(popoverLight).toBeDefined()
+    expect(sameColor(lightVars['--popover'], '#fff1f5')).toBe(true)
+    expect(popoverLight!.alpha).toBeGreaterThanOrEqual(0.92)
+
+    const darkVars = getUserPageThemeCssVars({ backgroundColor: '#1e1b2e' }, true)
+    expect(sameColor(darkVars['--background'], '#1e1b2e')).toBe(true)
+    expect(sameColor(darkVars['--popover'], '#1e1b2e')).toBe(true)
+  })
 })

@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { isLoggedIn } from '@/api/account'
+import { isLoggedIn, useAccount } from '@/api/account'
 import type { PaginationResponse } from '@/api/client-types'
 import type { LevelTypes } from '@/api/generated/model'
 import {
@@ -10,6 +10,7 @@ import {
   getApiNotificationGetUnread,
   postApiNotificationRead,
 } from '@/api/generated/notifaction/notifaction'
+import { getRealtimeBus, useRealtimeTopic } from '@/shared/realtime'
 
 export interface NotificationItem {
   id: string
@@ -40,19 +41,27 @@ function normalizeNotification(raw: any): NotificationItem {
 
 export const useNotificationStore = defineStore('notification', () => {
   const route = useRoute()
+  const account = useAccount()
   const unread = ref<NotificationItem[]>([])
   const latest = ref<NotificationItem[]>([])
 
   const unreadCount = computed(() => unread.value.length)
 
   const isInited = ref(false)
+  const bus = getRealtimeBus()
+  const busStatus = bus.getStatus()
+  const reconnectedCount = bus.getReconnectedCount()
+
+  const userEventsTopic = computed(() => {
+    if (!isInited.value || !isLoggedIn.value || account.value.id <= 0) return ''
+    if (route?.name?.toString().startsWith('obs-')) return ''
+    return `user:events:${account.value.id}`
+  })
+  const { on: onUserEvent } = useRealtimeTopic(userEventsTopic)
 
   async function refreshUnread() {
     try {
-      const result = (await getApiNotificationGetUnread()) as unknown as {
-        code: number
-        data?: any[]
-      }
+      const result = await getApiNotificationGetUnread()
       if (result.code === 200) {
         unread.value = (result.data ?? []).map(normalizeNotification)
       }
@@ -62,15 +71,18 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   async function refreshLatest(pn: number = 0, ps: number = 20, onlyUnread: boolean = false) {
-    const result = (await getApiNotificationGet({
+    const result = await getApiNotificationGet({
       pn,
       ps,
       unread: onlyUnread ? true : undefined,
-    })) as unknown as PaginationResponse<any[]>
+    })
 
     if (result.code === 200) {
       latest.value = (result.data ?? []).map(normalizeNotification)
-      return result as PaginationResponse<NotificationItem[]>
+      return {
+        ...result,
+        data: latest.value,
+      }
     }
     throw new Error(result.message)
   }
@@ -78,10 +90,7 @@ export const useNotificationStore = defineStore('notification', () => {
   async function markRead(ids: string[]) {
     if (!ids.length) return
 
-    const result = (await postApiNotificationRead({ id: ids as any })) as unknown as {
-      code: number
-      message?: string
-    }
+    const result = await postApiNotificationRead({ id: ids as any })
     if (result.code !== 200) {
       throw new Error(result.message)
     }
@@ -101,14 +110,28 @@ export const useNotificationStore = defineStore('notification', () => {
       return
     }
 
+    isInited.value = true
     void updateUnread()
+
+    onUserEvent('NotificationChanged', () => {
+      if (route?.name?.toString().startsWith('obs-')) return
+      void updateUnread()
+    })
+
+    watch(reconnectedCount, () => {
+      if (!route?.name?.toString().startsWith('obs-')) {
+        void updateUnread()
+      }
+    })
+
+    // 仅在实时通道未连接时做低频兜底轮询 (120s)
     setInterval(() => {
+      if (busStatus.value.connected) return
       if (route?.name?.toString().startsWith('obs-')) {
         return
       }
       void updateUnread()
-    }, 10 * 1000)
-    isInited.value = true
+    }, 120 * 1000)
   }
   return {
     init,

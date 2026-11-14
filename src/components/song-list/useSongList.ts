@@ -127,14 +127,10 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
         code,
         data,
         message: err,
-      } = (await postApiSongListUpdate({
+      } = await postApiSongListUpdate({
         key: song.key,
         song: song as any,
-      })) as unknown as {
-        code: number
-        data: ResponseSongModel
-        message: string
-      }
+      })
       if (code === 200 && data) {
         const idx = songsInternal.value.findIndex((s) => s.key === data.key)
         if (idx !== -1) songsInternal.value.splice(idx, 1, data)
@@ -160,11 +156,7 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
         code,
         data,
         message: err,
-      } = (await postApiSongListUpdateBatch(payload as any)) as unknown as {
-        code: number
-        data: ResponseSongModel[]
-        message: string
-      }
+      } = await postApiSongListUpdateBatch(payload as any)
       if (code === 200 && data) {
         const updated = new Map(data.map((song) => [song.key, song]))
         songsInternal.value = songsInternal.value.map((song) => updated.get(song.key) ?? song)

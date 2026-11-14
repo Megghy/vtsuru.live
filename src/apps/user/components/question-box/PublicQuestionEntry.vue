@@ -2,13 +2,13 @@
 import { formatDistanceToNow } from 'date-fns'
 import { zhCN } from 'date-fns/locale'
 
-import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'
+import type { ResponseQAInfo, ResponseUserInfo } from '@/api/generated/model'
 import { AVATAR_URL } from '@/shared/config'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { ImagePreview } from '@/shared/ui/image-preview'
 
 defineProps<{
-  item: ResponseQAInfoToTarget
+  item: ResponseQAInfo
   userInfo?: ResponseUserInfo
   label?: string
 }>()

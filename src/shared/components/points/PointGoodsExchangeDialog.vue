@@ -209,7 +209,7 @@ async function buyGoods() {
   const good = goods.value!
   isLoading.value = true
   try {
-    const data = (await postApiPointBuy(
+    const data = await postApiPointBuy(
       {
         vId: props.vId,
         goodsId: good.id,
@@ -227,7 +227,7 @@ async function buyGoods() {
           : undefined,
       },
       { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
-    )) as unknown as { code: number; message?: string; data: ResponsePointOrder2UserModel }
+    )
 
     if (data.code !== 200) {
       toast.error(`兑换失败: ${data.message}`)

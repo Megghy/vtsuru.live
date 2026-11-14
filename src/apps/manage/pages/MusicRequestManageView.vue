@@ -205,10 +205,7 @@ async function copyObsLink() {
 async function fetchOriginMusics() {
   isLoadingSongs.value = true
   try {
-    const res = (await getApiMusicRequestGet()) as unknown as {
-      code: number
-      data?: ResponseSongModel[]
-    }
+    const res = await getApiMusicRequestGet()
     if (res.code === 200 && res.data) {
       musicRequestStore.originMusics = res.data
     }
@@ -221,10 +218,7 @@ async function fetchOriginMusics() {
 
 async function delMusic(song: ResponseSongModel) {
   try {
-    const res = (await postApiMusicRequestDelete([song.key])) as unknown as {
-      code: number
-      message?: string
-    }
+    const res = await postApiMusicRequestDelete([song.key])
     if (res.code === 200) {
       message.success(`已删除歌曲: ${song.name}`)
       await fetchOriginMusics()
@@ -255,10 +249,7 @@ const isSyncingMySongList = ref(false)
 async function syncFromMySongList() {
   isSyncingMySongList.value = true
   try {
-    const res = (await getApiSongListGet()) as unknown as {
-      code: number
-      data?: ResponseSongModel[]
-    }
+    const res = await getApiSongListGet()
     if (res.code === 200 && res.data && res.data.length > 0) {
       const addRes = await postApiMusicRequestAdd(res.data as any)
       if (addRes.code === 200) {

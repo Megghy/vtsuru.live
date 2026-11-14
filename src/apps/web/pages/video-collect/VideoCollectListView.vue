@@ -177,13 +177,9 @@ async function loadData() {
   isLoading.value = true
   loadError.value = null
   try {
-    const response = (await getApiVideoCollectGet({
+    const response = await getApiVideoCollectGet({
       id: currentId(),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseVideoCollectDetail
-    }
+    })
     if (response.code === 200) {
       videoDetail.value = response.data
       loadProgress()

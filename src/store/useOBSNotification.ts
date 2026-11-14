@@ -4,7 +4,6 @@ import { ref } from 'vue'
 import { useAccount } from '@/api/account'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { useRealtimeBus } from '@/shared/realtime'
-import { useVTsuruHub } from './useVTsuruHub'
 
 export interface ObsNotificationPayload {
   Type: 'success' | 'failed'
@@ -22,8 +21,6 @@ const sourceLabelMap: Record<string, string> = {
 }
 
 export const useOBSNotification = defineStore('obs-notification', () => {
-  const isInited = ref(false)
-  const hub = useVTsuruHub()
   const realtimeBus = useRealtimeBus()
   const account = useAccount()
   const listeners = new Map<string, (payload: ObsNotificationPayload) => void>()
@@ -115,16 +112,6 @@ export const useOBSNotification = defineStore('obs-notification', () => {
       }
     }
 
-    if (!isInited.value && account.value.id) {
-      isInited.value = true
-      try {
-        await hub.Init()
-        await hub.on('ObsNotification', listener)
-      } catch (err) {
-        console.warn('[OBSNotification] VTsuruHub 连接失败，已回退至 RealtimeGateway:', err)
-      }
-    }
-
     const filterInfo = sources && sources.length > 0 ? `(过滤: ${sources.join(', ')})` : '(所有类型)'
     console.log(`[OBS] OBS 通知模块已初始化 ${filterInfo}`)
   }
@@ -138,23 +125,11 @@ export const useOBSNotification = defineStore('obs-notification', () => {
     const targetId = targetUserId ?? account.value.id
     if (targetId) {
       const topic = `obs:notify:${targetId}`
-      try {
-        await realtimeBus.publish(topic, 'PublishObsNotification', {
-          ...payload,
-          Message: message,
-          Timestamp: payload.Timestamp ?? Date.now(),
-        })
-      } catch {
-        // 尝试老 Hub
-        try {
-          await hub.Init()
-          await hub.invoke('PublishObsNotification', {
-            ...payload,
-            Message: message,
-            Timestamp: payload.Timestamp ?? Date.now(),
-          })
-        } catch {}
-      }
+      await realtimeBus.publish(topic, 'PublishObsNotification', {
+        ...payload,
+        Message: message,
+        Timestamp: payload.Timestamp ?? Date.now(),
+      })
     }
   }
 

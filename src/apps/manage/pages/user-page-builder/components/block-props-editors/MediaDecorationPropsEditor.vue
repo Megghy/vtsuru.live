@@ -24,14 +24,10 @@ async function loadFeedbackTags() {
   const userId = editor.account.value?.id
   if (!userId) return
   try {
-    const response = (await getApiQaGetTags({ id: String(userId) })) as unknown as {
-      code: number
-      message?: string
-      data: unknown[]
-    }
+    const response = await getApiQaGetTags({ id: String(userId) })
     if (response.code !== 200) throw new Error(response.message)
     feedbackTags.value = response.data
-      .map((value) => (typeof value === 'string' ? value : (value as Record<string, unknown> | null)?.name))
+      .map((value) => (typeof value === 'string' ? value : value.name))
       .filter((value): value is string => typeof value === 'string')
   } catch {
     feedbackTags.value = []

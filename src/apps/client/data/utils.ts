@@ -81,11 +81,7 @@ export async function getAuthInfo(): Promise<{
   message: string
 }> {
   try {
-    const data = (await postApiOpenLiveStart()) as unknown as {
-      code: number
-      data: any
-      message: string
-    }
+    const data = await postApiOpenLiveStart()
     if (data.code == 200) {
       console.log(`[open-live] 已获取认证信息`)
       return {

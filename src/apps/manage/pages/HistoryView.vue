@@ -156,11 +156,7 @@ function formatRelativeTime(ts: number) {
  */
 async function getHistory() {
   try {
-    const response = (await getApiHistoryGetAll()) as unknown as {
-      code: number
-      data: HistoryModel
-      message?: string
-    }
+    const response = await getApiHistoryGetAll()
     if (response.code === 200) {
       fansHistory.value = response.data.fan.records
       guardHistory.value = response.data.guard.records

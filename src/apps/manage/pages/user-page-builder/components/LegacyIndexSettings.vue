@@ -63,13 +63,9 @@ async function loadIndexInfo() {
   if (!accountInfo.value?.name) return
   isLoading.value = true
   try {
-    const data = (await getApiUserIndexGet({
+    const data = await getApiUserIndexGet({
       id: accountInfo.value.name,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseUserIndexModel
-    }
+    })
     if (data.code === 200) {
       indexDisplayInfo.value = data.data
       return
@@ -128,13 +124,9 @@ async function addVideo() {
   }
   isLoading.value = true
   try {
-    const response = (await postApiUserIndexAddVideo({
+    const response = await postApiUserIndexAddVideo({
       video: addVideoUrl.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: VideoData
-    }
+    })
     if (response.code !== 200) throw new Error(response.message || `保存失败: ${response.code}`)
     message.success('添加成功')
     if (indexDisplayInfo.value) {
@@ -153,13 +145,9 @@ async function addVideo() {
 async function removeVideo(id: string) {
   isLoading.value = true
   try {
-    const response = (await postApiUserIndexDeleteVideo({
+    const response = await postApiUserIndexDeleteVideo({
       video: id,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: VideoData
-    }
+    })
     if (response.code !== 200) throw new Error(response.message || `删除失败: ${response.code}`)
     message.success('删除成功')
     if (indexDisplayInfo.value) {

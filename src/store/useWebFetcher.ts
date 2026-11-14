@@ -14,16 +14,14 @@ import { cookie } from '@/api/auth'
 import { getEventType, recordEvent, streamingInfo } from '@/apps/client/data/info'
 import { onReceivedNotification } from '@/apps/client/data/notification'
 import { QueryBiliAPI } from '@/apps/client/data/utils'
-import { BASE_HUB_URL, isDev, isTauri, mapToCurrentAPI } from '@/shared/config'
+import { getHubBaseUrl, isDev, isTauri } from '@/shared/config'
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 
 import { useDanmakuClient } from './useDanmakuClient'
-import { useWebRTC } from './useRTC'
 
 export const useWebFetcher = defineStore('WebFetcher', () => {
   const route = useRoute()
   const account = useAccount()
-  useWebRTC()
   const webfetcherType = ref<'openlive' | 'direct'>('openlive') // 弹幕客户端类型
   // --- 连接与状态 ---
   const state = ref<'disconnected' | 'connecting' | 'connected'>('disconnected') // SignalR 连接状态
@@ -267,8 +265,10 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       signalRClient.value = undefined
       signalRConnectionId.value = undefined
       console.log(`${prefix.value}正在连接到 vtsuru 服务器...`)
+      const hubUrl = new URL('web-fetcher', getHubBaseUrl())
+      hubUrl.searchParams.set('token', String(route.query.token ?? account.value.token ?? ''))
       const connection = new signalR.HubConnectionBuilder()
-        .withUrl(mapToCurrentAPI(`${BASE_HUB_URL}web-fetcher?token=${route.query.token ?? account.value.token}`), {
+        .withUrl(hubUrl.toString(), {
           // 使用 account.token
           headers: { Authorization: `Bearer ${cookie.value?.cookie}` },
           skipNegotiation: true,

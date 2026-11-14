@@ -176,4 +176,26 @@ describe('OBS owner-scoped synchronization', () => {
     expect(bridge.state.value.title).toBe('pushed')
     expect(bridge.currentHash.value).toBe('push-hash')
   })
+  it('sends and receives transient Action through realtime bus', async () => {
+    const { getRealtimeBus } = await import('@/shared/realtime')
+    const bus = getRealtimeBus()
+    const publishSpy = vi.spyOn(bus, 'publish').mockResolvedValue(undefined)
+
+    const controller = setup('controller')
+    const viewer = setup('viewer')
+    await flushPromises()
+
+    const received: unknown[] = []
+    viewer.onAction((action) => received.push(action))
+
+    controller.sendAction({ type: 'INCREMENT', amount: 3 } as never)
+    expect(publishSpy).toHaveBeenCalledWith('obs-store:state:1:counter:default', 'Action', {
+      type: 'INCREMENT',
+      amount: 3,
+    })
+
+    // @ts-expect-error testing private dispatch
+    bus.dispatchEvent('obs-store:state:1:counter:default', 'Action', { type: 'INCREMENT', amount: 3 })
+    expect(received).toEqual([{ type: 'INCREMENT', amount: 3 }])
+  })
 })

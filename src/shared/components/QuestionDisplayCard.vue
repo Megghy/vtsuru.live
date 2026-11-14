@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { CSSProperties } from 'vue'
 
-import type { ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
+import type { ResponseQAInfo, SettingQuestionDisplay } from '@/api/generated/model'
 import {
   QuestionDisplayAlign,
   QuestionDisplayImageLayout,
@@ -44,7 +44,7 @@ type DisplayStatus = 'loading' | 'empty' | 'ready' | 'stale' | 'error'
 
 const props = withDefaults(
   defineProps<{
-    question?: ResponseQAInfoToTarget
+    question?: ResponseQAInfo
     setting: SettingQuestionDisplay
     status?: DisplayStatus
   }>(),

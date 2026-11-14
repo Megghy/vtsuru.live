@@ -132,13 +132,9 @@ function currentId() {
 async function loadTable() {
   isPageLoading.value = true
   try {
-    const response = (await getApiVideoCollectGet({
+    const response = await getApiVideoCollectGet({
       id: currentId(),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseVideoCollectDetail
-    }
+    })
     table.value =
       response.code === 200
         ? { ...response.data.table, allowedPartitions: [...(response.data.table.allowedPartitions ?? [])] }

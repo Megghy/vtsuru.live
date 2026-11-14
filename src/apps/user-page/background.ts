@@ -165,14 +165,9 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
 
   // 在用户展示页中，控件（Input、Select等）多承载于半透明磨砂卡片内。
   // 若用户配置了 backgroundColor，但未指定透明度，不可直接把 100% 实色纯背景赋给控件底色 --background，
-  // 否则在半透明卡片内会呈现突兀的实心重色块。此处采用与当前表面亮暗协调的半透明磨砂底。
+  // 否则在半透明卡片内会呈现突兀的实心重色块；同时必须保持 backgroundColor 原色相，避免混入过多白色导致输入框变白。
   const controlBg =
-    customSurface ||
-    (backgroundColor
-      ? effectiveIsDark
-        ? `color-mix(in srgb, ${backgroundColor} 28%, rgba(24, 24, 27, 0.75))`
-        : `color-mix(in srgb, ${backgroundColor} 20%, rgba(255, 255, 255, 0.7))`
-      : surfaceVars.surfaceBg)
+    customSurface || (backgroundColor ? mixWithTransparent(backgroundColor, 0.52) : surfaceVars.surfaceBg)
 
   const defaultCardSurface = applyColorOpacity(
     siteTokens.surfaceHover,
@@ -180,6 +175,9 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
   )
   const surfaceColor =
     customSurface || (backgroundColor ? mixWithTransparent(backgroundColor, 0.32) : defaultCardSurface)
+  const popoverColor = backgroundColor
+    ? applyColorOpacity(backgroundColor, Math.max(92, appearance.surfaceOpacity ?? 92))
+    : applyColorOpacity(siteTokens.elevated, 94)
   const surfaceHover = backgroundColor
     ? applyColorOpacity(backgroundColor, Math.min(100, (appearance.surfaceOpacity ?? 32) + 10))
     : surfaceVars.surfaceBgHover
@@ -192,7 +190,7 @@ export function getUserPageThemeCssVars(theme: unknown, effectiveIsDark: boolean
     '--foreground': surfaceText,
     '--card': surfaceColor,
     '--card-foreground': surfaceText,
-    '--popover': surfaceColor,
+    '--popover': popoverColor,
     '--popover-foreground': surfaceText,
     '--primary': pagePrimary,
     '--primary-foreground': resolveReadableForeground(pagePrimary, controlBg, effectiveIsDark),

@@ -88,9 +88,9 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
     const promise = (async () => {
       try {
         isLoading.value = true
-        const data = (await getApiBiliAuthInfo({
+        const data = await getApiBiliAuthInfo({
           headers: Object.fromEntries(await getBiliAuthHeaders()),
-        })) as unknown as { code: number; message: string; data: ResponseBiliAuthModel }
+        })
         // 切换账号后到达的旧响应不能覆盖当前身份。
         if (identity.value !== requestIdentity) return false
         if (data.code == 200) {
@@ -135,12 +135,9 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
 
   async function migrateLegacyToken() {
     if (!legacyToken.value) return false
-    const response = (await postApiBiliAuthMigrate({
+    const response = await postApiBiliAuthMigrate({
       token: legacyToken.value,
-    })) as unknown as {
-      code: number
-      data: SessionResponse
-    }
+    })
     if (response.code !== 200) return false
 
     currentToken.value = response.data.token
@@ -155,9 +152,9 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
   }
 
   async function rotateSession() {
-    const response = (await postApiBiliAuthSessionRotate({
+    const response = await postApiBiliAuthSessionRotate({
       headers: Object.fromEntries(await getBiliAuthHeaders()),
-    })) as unknown as { code: number; data: SessionResponse }
+    })
     if (response.code !== 200) return false
 
     currentToken.value = response.data.token
@@ -197,10 +194,10 @@ export const useBiliAuth = defineStore('BiliAuth', () => {
       return []
     }
     try {
-      const resp = (await getApiPointGetGoods(
+      const resp = await getApiPointGetGoods(
         { id: String(id) },
         { headers: Object.fromEntries(await getBiliAuthHeaders()) },
-      )) as unknown as { code: number; message: string; data: ResponsePointGoodModel[] }
+      )
       if (resp.code == 200) {
         return resp.data
       } else {

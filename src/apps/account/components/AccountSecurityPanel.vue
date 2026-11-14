@@ -111,14 +111,10 @@ async function savePassword() {
   }
   saving.value = true
   try {
-    const result = (await postApiAccountChangePassword({
+    const result = await postApiAccountChangePassword({
       oldPassword: oldPassword.value,
       password: password.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: string
-    }
+    })
     if (result.code !== 200) throw new Error(result.message)
     cookie.value = { cookie: result.data, refreshDate: Date.now() }
     passwordModalVisible.value = false

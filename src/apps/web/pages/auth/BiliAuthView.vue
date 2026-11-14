@@ -131,13 +131,9 @@ async function readStatus() {
 async function startVerify() {
   isStarting.value = true
   try {
-    const response = (await postApiBiliAuthStart({
+    const response = await postApiBiliAuthStart({
       key: guidKey.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: AuthStartModel
-    }
+    })
     if (response.code !== 200) throw new Error(response.message)
 
     startModel.value = response.data

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, toRef, watch } from 'vue'
 
-import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'
+import type { ResponseQAInfo, ResponseUserInfo } from '@/api/generated/model'
 import { getApiQaGetPublic, getApiQaGetTags } from '@/api/generated/qa/qa'
 import LocalQuestionDrawer from '@/apps/user/components/question-box/LocalQuestionDrawer.vue'
 import PublicQuestionFeed from '@/apps/user/components/question-box/PublicQuestionFeed.vue'
@@ -19,7 +19,7 @@ const props = defineProps<{
 const message = useMessage()
 const target = toRef(props, 'userInfo')
 const history = useQuestionBoxHistory()
-const publicQuestions = ref<ResponseQAInfoToTarget[]>([])
+const publicQuestions = ref<ResponseQAInfo[]>([])
 const tags = ref<string[]>([])
 const isLoadingQuestions = ref(false)
 const showHistory = ref(false)
@@ -50,13 +50,9 @@ async function loadPublicQuestions() {
   if (!target.value?.id || !showPublicReplies.value) return
   isLoadingQuestions.value = true
   try {
-    const response = (await getApiQaGetPublic({
+    const response = await getApiQaGetPublic({
       id: String(target.value.id),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseQAInfoToTarget[]
-    }
+    })
     if (response.code !== 200) throw new Error(response.message)
     publicQuestions.value = response.data
   } catch (error) {
@@ -70,13 +66,9 @@ async function loadPublicQuestions() {
 async function loadTags() {
   if (!target.value?.id) return
   try {
-    const response = (await getApiQaGetTags({
+    const response = await getApiQaGetTags({
       id: String(target.value.id),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: unknown[]
-    }
+    })
     if (response.code !== 200) throw new Error(response.message)
     tags.value = response.data.map(normalizeTag)
   } catch (error) {

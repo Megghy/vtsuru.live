@@ -135,13 +135,9 @@ async function getSongRequestInfo() {
   if (!props.userInfo?.id) return { songs: [], setting: settings.value }
 
   try {
-    const data = (await getApiLiveRequestGetActiveAndSettings({
+    const data = await getApiLiveRequestGetActiveAndSettings({
       id: props.userInfo.id,
-    })) as unknown as {
-      code: number
-      data: { songs: SongRequestInfo[]; setting: SettingSongRequest }
-      message?: string
-    }
+    })
 
     if (data.code === 200) {
       return data.data
@@ -168,13 +164,9 @@ async function getSongs() {
   isDataLoading.value = true
 
   try {
-    const data = (await getApiSongListGet({
+    const data = await getApiSongListGet({
       id: String(props.userInfo.id),
-    })) as unknown as {
-      code: number
-      data: ResponseSongModel[]
-      message?: string
-    }
+    })
 
     if (data.code === 200) {
       currentData.value = data.data || []
@@ -284,13 +276,10 @@ async function submitWebSongRequest(song: ResponseSongModel, usePriority: boolea
       song: song.key,
       usePriority,
     }
-    const data = (await postApiLiveRequestAddFromWeb(
+    const data = await postApiLiveRequestAddFromWeb(
       params,
       biliAuth.isAuthed ? { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) } : undefined,
-    )) as unknown as {
-      code: number
-      message?: string
-    }
+    )
 
     if (data.code === 200) {
       message.success(usePriority ? '积分点歌并插队成功' : '点歌成功')
@@ -320,10 +309,10 @@ async function priorityExistingSong(item: SongRequestInfo) {
   }
   prioritizingId.value = item.id
   try {
-    const data = (await postApiLiveRequestPriorityFromWeb(
+    const data = await postApiLiveRequestPriorityFromWeb(
       { target: props.userInfo.id, id: item.id },
       { headers: Object.fromEntries(await biliAuth.getBiliAuthHeaders()) },
-    )) as unknown as { code: number; message?: string }
+    )
     if (data.code === 200) {
       message.success(`已为《${item.songName}》使用积分插队`)
       const songRequestInfo = await getSongRequestInfo()

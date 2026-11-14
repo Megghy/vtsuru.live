@@ -110,11 +110,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
   async function getAllSong() {
     if (isLoggedIn.value) {
       try {
-        const data = (await getApiLiveRequestGetAll()) as unknown as {
-          code: number
-          data: SongRequestInfo[]
-          message: string
-        }
+        const data = await getApiLiveRequestGetAll()
         if (data.code == 200) {
           console.log('[SONG-REQUEST] 已获取所有数据')
           return new List(data.data).OrderByDescending((s) => s.createAt).ToArray()
@@ -369,13 +365,9 @@ export const useLiveRequest = defineStore('songRequest', () => {
     if (!isLoggedIn.value) return
 
     try {
-      const data = (await getApiLiveRequestGetActive({
+      const data = await getApiLiveRequestGetActive({
         id: accountInfo.value?.id,
-      })) as unknown as {
-        code: number
-        data: SongRequestInfo[]
-        message?: string
-      }
+      })
 
       if (data.code == 200) {
         data.data.forEach((item) => {

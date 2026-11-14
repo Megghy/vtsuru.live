@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { useAccount } from '@/api/account'
 import { useQueueObsView } from '@/apps/obs/components/queue/useQueueObsView'
+import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import ObsClassicPanel from '@/apps/obs/components/shared/ObsClassicPanel.vue'
 import ObsFreshPanel from '@/apps/obs/components/shared/ObsFreshPanel.vue'
 import ObsGlassPanel from '@/apps/obs/components/shared/ObsGlassPanel.vue'
 import ObsMinimalPanel from '@/apps/obs/components/shared/ObsMinimalPanel.vue'
 import ObsTransparentPanel from '@/apps/obs/components/shared/ObsTransparentPanel.vue'
+import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { useOBSNotification } from '@/store/useOBSNotification'
 
 const props = defineProps<{
@@ -19,10 +22,12 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
+const account = useAccount()
 const currentId = computed<string>(() => {
   const value = props.id ?? (Array.isArray(route.query.id) ? route.query.id[0] : route.query.id)
   return value === undefined || value === null ? '' : String(value)
 })
+const targetUserId = computed(() => parsePositiveId(currentId.value) || (account.value.id > 0 ? String(account.value.id) : ''))
 
 const speedMultiplier = computed(() => {
   if (props.speedMultiplier !== undefined && props.speedMultiplier > 0) {
@@ -56,17 +61,18 @@ const panelComponent = computed(() => {
 const { title, countText, current, items, footerTags, update } = useQueueObsView(currentId)
 
 const obsNotification = useOBSNotification()
+const { on } = useObsRealtimeSync({
+  topic: () => (targetUserId.value ? `obs:display:queue:${targetUserId.value}` : ''),
+  active: () => props.active ?? true,
+  visible: () => props.visible ?? true,
+  onSync: update,
+})
+on('Changed', () => {
+  void update()
+})
 
 onMounted(() => {
   void obsNotification.init(['queue'])
-  update()
-  window.$mitt.on('onOBSComponentUpdate', () => {
-    update()
-  })
-})
-
-onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate')
 })
 </script>
 

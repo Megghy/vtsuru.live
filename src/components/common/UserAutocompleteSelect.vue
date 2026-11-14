@@ -58,14 +58,10 @@ async function fetchOptions(q: string) {
 
   loading.value = true
   try {
-    const resp = (await getApiUserAutocomplete({
+    const resp = await getApiUserAutocomplete({
       q: keyword,
       limit: props.limit,
-    })) as unknown as {
-      code: number
-      message?: string
-      data?: UserAutocompleteInfo[]
-    }
+    })
 
     if (resp.code !== 200) {
       options.value = []

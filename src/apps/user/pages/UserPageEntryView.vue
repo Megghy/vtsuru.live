@@ -15,6 +15,7 @@ import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import type { BiliProfile, BiliProfileStatus, UserPageConfig } from '@/apps/user-page/types'
 import { IndexTemplateMap } from '@/shared/config/templates'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Button } from '@/shared/ui/button'
 import { isDarkMode } from '@/shared/utils'
 
@@ -98,6 +99,11 @@ const contentThemeVars = computed(() =>
 const contentBackgroundVars = computed(() => {
   return contentBackground.value ? getPageBackgroundCssVars(contentBackground.value, effectiveIsDark.value) : {}
 })
+const mergedContentVars = computed(() => ({
+  ...contentThemeVars.value,
+  ...contentBackgroundVars.value,
+}))
+provideThemeScope(mergedContentVars)
 const contentBackgroundClass = computed(() => ({
   'bg-host': !!contentBackground.value,
   'bg-blur': contentBackground.value?.blurMode === 'background',
@@ -116,7 +122,7 @@ const contentClass = computed(() => ({
   <main
     class="min-h-screen font-[family-name:var(--vtsuru-page-font-family,inherit)]"
     :class="[contentBackgroundClass, contentClass]"
-    :style="[contentThemeVars, contentBackgroundVars]"
+    :style="mergedContentVars"
   >
     <component
       :is="indexTemplateComponent"

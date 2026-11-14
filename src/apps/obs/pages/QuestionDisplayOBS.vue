@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, toRef, watch } from 'vue'
 
+import { useAccount } from '@/api/account'
 import { useQuestionDisplayOBS } from '@/apps/obs/composables/useQuestionDisplayOBS'
 import { useRouteQueryParam } from '@/composables/useRouteQueryParam'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
-import { useWebRTC } from '@/store/useRTC'
+import { getRealtimeBus, useRealtimeTopic } from '@/shared/realtime'
 
 const props = withDefaults(
   defineProps<{
@@ -16,11 +17,12 @@ const props = withDefaults(
   { active: true, visible: true },
 )
 
+const account = useAccount()
 const idFromQuery = useRouteQueryParam('id')
 const token = useRouteQueryParam('token')
 const userId = computed(() => parsePositiveId(props.id ?? idFromQuery.value))
 const tokenStr = computed(() => firstQueryValue(token.value).trim())
-const { question, setting, state } = useQuestionDisplayOBS({
+const { question, setting, state, version, refresh } = useQuestionDisplayOBS({
   userId,
   token: tokenStr,
   active: toRef(props, 'active'),
@@ -29,57 +31,39 @@ const { question, setting, state } = useQuestionDisplayOBS({
 const cardState = computed(() => (state.value === 'unauthorized' ? 'error' : state.value))
 
 const cardRef = ref<{ setScrollProgress: (progress: number) => void }>()
-const rtc = useWebRTC()
-let rtcListening = false
-let lifecycle = 0
-let mounted = false
-
-function handleScroll(progress: number) {
-  cardRef.value?.setScrollProgress(Math.min(1, Math.max(0, progress)))
-}
-
-async function startRTC() {
-  const currentLifecycle = lifecycle
-  try {
-    const initializedRTC = await rtc.Init('slave', { timeoutMs: 5000 })
-    if (currentLifecycle !== lifecycle || rtcListening) return
-    initializedRTC.on('function.question.sync-scroll', handleScroll)
-    rtcListening = true
-  } catch (error) {
-    console.warn('[QuestionDisplayOBS] RTC 滚动同步不可用', error)
+const mounted = ref(false)
+const effectiveUserId = computed(() => userId.value || (account.value.id > 0 ? String(account.value.id) : ''))
+const qaTopic = computed(() =>
+  mounted.value && props.active && props.visible && effectiveUserId.value
+    ? `obs:display:qa:${effectiveUserId.value}`
+    : '',
+)
+const { on: onQaEvent } = useRealtimeTopic(qaTopic)
+onQaEvent<number>('Scroll', (progress) => {
+  cardRef.value?.setScrollProgress(Math.min(1, Math.max(0, Number(progress) || 0)))
+})
+onQaEvent<{ hash?: string }>('Changed', (payload) => {
+  if (payload?.hash && payload.hash === version.value) return
+  void refresh(true)
+})
+watch(getRealtimeBus().getReconnectedCount(), () => {
+  if (mounted.value && props.active && props.visible) {
+    void refresh(true)
   }
-}
-
-function stopRTC() {
-  lifecycle++
-  if (!rtcListening) return
-  rtc.off('function.question.sync-scroll', handleScroll)
-  rtcListening = false
-}
-
-function syncRTC() {
-  if (mounted && props.active && props.visible) void startRTC()
-  else stopRTC()
-}
+})
 
 onMounted(() => {
-  mounted = true
-  syncRTC()
+  mounted.value = true
 })
 onActivated(() => {
-  mounted = true
-  syncRTC()
+  mounted.value = true
 })
 onDeactivated(() => {
-  mounted = false
-  stopRTC()
+  mounted.value = false
 })
 onUnmounted(() => {
-  mounted = false
-  stopRTC()
+  mounted.value = false
 })
-
-watch([() => props.active, () => props.visible], syncRTC)
 </script>
 
 <template>

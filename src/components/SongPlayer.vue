@@ -46,12 +46,7 @@ function OnPlayMusic(song: ResponseSongModel) {
 
 async function GetLyric(song: ResponseSongModel) {
   emits('update:isLrcLoading', song.key)
-  ;(
-    getApiSongListGetNeteaseLyric({ id: song.id }) as unknown as Promise<{
-      code: number
-      data: { lyric: string; tlyric: string }
-    }>
-  )
+  getApiSongListGetNeteaseLyric({ id: song.id })
     .then((data) => {
       if (data.code === 200) {
         aplayerMusic.value = {
@@ -59,7 +54,7 @@ async function GetLyric(song: ResponseSongModel) {
           artist: song.author?.join('/') ?? '',
           src: song.url,
           pic: '',
-          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric, data.data.tlyric) : data.data.lyric,
+          lrc: data.data.tlyric ? mergeLyrics(data.data.lyric ?? '', data.data.tlyric) : (data.data.lyric ?? ''),
         }
       } else {
         aplayerMusic.value = {

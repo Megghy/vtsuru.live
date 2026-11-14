@@ -36,10 +36,7 @@ async function getUserInfo(user: string | number) {
       return
     }
     isLoading.value = true
-    const data = (await getApiUserBasicValue(String(user))) as unknown as {
-      code: number
-      data: ResponseUserBasicInfo
-    }
+    const data = await getApiUserBasicValue(String(user))
     if (data.code === 200) {
       currentUser.value = data.data
     } else {

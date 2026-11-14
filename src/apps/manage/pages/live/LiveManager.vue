@@ -137,11 +137,7 @@ async function getAll() {
   isLoading.value = true
   loadError.value = null
   try {
-    const data = (await getApiLiveGetAll()) as unknown as {
-      code: number
-      message?: string
-      data: ResponseLiveInfoModel[]
-    }
+    const data = await getApiLiveGetAll()
     if (data.code === 200) {
       lives.value = data.data
     } else {

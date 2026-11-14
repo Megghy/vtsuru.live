@@ -216,11 +216,7 @@ export const useQueue = defineStore('queue', () => {
     if (!isLoggedIn.value) return localQueues.value
     try {
       isLoading.value = true
-      const data = (await getApiQueueGetAll()) as unknown as {
-        code: number
-        data: ResponseQueueModel[]
-        message?: string
-      }
+      const data = await getApiQueueGetAll()
       if (data.code === 200) {
         return data.data ?? []
       }
@@ -244,11 +240,7 @@ export const useQueue = defineStore('queue', () => {
     if (isLoggedIn.value) {
       if (!enabled.value) return
       try {
-        const data = (await postApiQueueTryAdd(danmaku as any)) as unknown as {
-          code: number
-          message?: string
-          data: ResponseQueueModel
-        }
+        const data = await postApiQueueTryAdd(danmaku as any)
         if (data.code === 200) {
           if (data.message === 'EventFetcher') return
           const existingIndex = originQueue.value.findIndex((q) => q.id === data.data.id)
@@ -323,13 +315,9 @@ export const useQueue = defineStore('queue', () => {
     }
     if (isLoggedIn.value) {
       try {
-        const data = (await postApiQueueAdd({
+        const data = await postApiQueueAdd({
           name: newQueueName.value,
-        })) as unknown as {
-          code: number
-          message?: string
-          data: ResponseQueueModel
-        }
+        })
         if (data.code === 200) {
           window.$message.success(`已手动添加用户至队列: ${data.data.user?.name}`)
           originQueue.value.unshift(data.data)
@@ -446,11 +434,7 @@ export const useQueue = defineStore('queue', () => {
   async function updateActive() {
     if (!isLoggedIn.value) return
     try {
-      const data = (await getApiQueueGetActive({ id: accountInfo.value?.id })) as unknown as {
-        code: number
-        data: ResponseQueueModel[]
-        message?: string
-      }
+      const data = await getApiQueueGetActive({ id: accountInfo.value?.id })
       if (data.code !== 200) {
         console.warn(`[QUEUE] 无法获取活动队列: ${data.message}`)
         return

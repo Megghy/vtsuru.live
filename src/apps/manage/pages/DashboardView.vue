@@ -166,11 +166,7 @@ function resetName() {
 async function resetToken() {
   isLoading.value = true
   try {
-    const data = (await postApiAccountResetToken()) as unknown as {
-      code: number
-      message?: string
-      data: string
-    }
+    const data = await postApiAccountResetToken()
     if (data.code === 200) {
       message.success('已重新生成 Token')
       accountInfo.value.token = data.data

@@ -61,14 +61,10 @@ export function useTranslate() {
   }
 
   async function translateCloud(text: string): Promise<string> {
-    const resp = (await postApiVtsuruTranslate({
+    const resp = await postApiVtsuruTranslate({
       text,
       targetLang: targetLang.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: string
-    }
+    })
     if (resp.code !== 200) throw new Error(resp.message)
     return resp.data
   }

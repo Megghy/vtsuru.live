@@ -5,9 +5,9 @@ import { useAccount } from '@/api/account.js'
 import type { EventModel } from '@/api/client-types'
 import { EventDataTypes } from '@/api/generated/model'
 import { isDev } from '@/shared/config'
+import { useRealtimeTopic } from '@/shared/realtime'
 import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { useDanmakuClient } from '@/store/useDanmakuClient.js'
-import { useVTsuruHub } from '@/store/useVTsuruHub'
 
 import { executeActions } from './autoAction/actionUtils'
 import { evaluateTemplateExpressions } from './autoAction/expressionEvaluator'
@@ -34,8 +34,10 @@ import { useBiliFunction } from './useBiliFunction.js'
 export const useAutoAction = defineStore('autoAction', () => {
   const danmakuClient = useDanmakuClient()
   const biliFunc = useBiliFunction()
-  const hub = useVTsuruHub()
   const account = useAccount()
+  const userEventsTopic = computed(() => (account.value.id > 0 ? `user:events:${account.value.id}` : ''))
+  const { on: onUserEvent } = useRealtimeTopic(userEventsTopic)
+  let userEventsRegistered = false
 
   // 共享状态
   const isLive = computed(() => account.value.streamerInfo?.isStreaming ?? false)
@@ -418,16 +420,11 @@ export const useAutoAction = defineStore('autoAction', () => {
   }
 
   async function registerCheckInResultListener() {
-    try {
-      await hub.Init()
-      await hub.off('CheckInResult', onCheckInResult)
-      await hub.on('CheckInResult', onCheckInResult)
-      await hub.off('PointOrderRedeemed', onPointOrderRedeemed)
-      await hub.on('PointOrderRedeemed', onPointOrderRedeemed)
-      console.log('[AutoAction] Hub 事件监听器已注册.')
-    } catch (err) {
-      console.error('[AutoAction] 注册 Hub 事件监听器时出错:', err)
-    }
+    if (userEventsRegistered) return
+    userEventsRegistered = true
+    onUserEvent<CheckInHubEvent>('CheckInResult', onCheckInResult)
+    onUserEvent<PointOrderRedeemedHubEvent>('PointOrderRedeemed', onPointOrderRedeemed)
+    console.log('[AutoAction] Hub 事件监听器已注册.')
   }
 
   function onCheckInResult(payload: CheckInHubEvent) {

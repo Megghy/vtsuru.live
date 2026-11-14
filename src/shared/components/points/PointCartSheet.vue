@@ -93,7 +93,7 @@ function updateCount(item: PointCartItem, count: number | null) {
 async function checkout() {
   isLoading.value = true
   try {
-    const data = (await postApiPointBuyBatch(
+    const data = await postApiPointBuyBatch(
       {
         vId: props.vId,
         items: cart.items.value.map((i) => ({
@@ -105,7 +105,7 @@ async function checkout() {
         addressId: needAddress.value ? selectedAddress.value?.id : undefined,
       },
       { headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()) },
-    )) as unknown as { code: number; message?: string; data: ResponsePointOrder2UserModel[] }
+    )
 
     if (data.code !== 200) {
       toast.error(`兑换失败: ${data.message}`)

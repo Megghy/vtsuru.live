@@ -239,10 +239,7 @@ useResizeObserver(roomsScroller, updateRoomsScrollState)
 async function loadIndexData() {
   isRefreshingRooms.value = true
   try {
-    const data = (await getApiVtsuruGetIndexData()) as unknown as {
-      code: number
-      data: IndexDataType
-    }
+    const data = await getApiVtsuruGetIndexData()
     if (data.code !== 200) throw new Error(`Failed to load index data: ${data.code}`)
 
     indexData.value = data.data

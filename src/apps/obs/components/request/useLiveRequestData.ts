@@ -5,10 +5,8 @@ import { getApiLiveRequestGetActiveAndSettings } from '@/api/generated/live-requ
 import type { SettingSongRequest } from '@/api/generated/model'
 import { SongRequestStatus } from '@/api/generated/model'
 import { sortByQueueType } from '@/shared/utils/queue'
-import { useWebRTC } from '@/store/useRTC'
 
 export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number | null | undefined>) {
-  const rtc = ref<any>(null)
   const originSongs = ref<SongRequestInfo[]>([])
   const settings = ref<SettingSongRequest>({} as SettingSongRequest)
   const key = ref(Date.now())
@@ -54,10 +52,7 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
       const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
       const params = idStr ? { id: Number(idStr) } : {}
 
-      const data = (await getApiLiveRequestGetActiveAndSettings(params)) as unknown as {
-        code: number
-        data: { songs: SongRequestInfo[]; setting: SettingSongRequest }
-      }
+      const data = await getApiLiveRequestGetActiveAndSettings(params)
       if (data.code == 200) {
         return data.data
       }
@@ -91,13 +86,6 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
     },
   )
 
-  // RTC初始化
-  async function initRTC() {
-    rtc.value = await useWebRTC().Init('slave')
-    // 接收点播结果消息
-    rtc.value.on('function.live-request.add', async () => update())
-  }
-
   return {
     originSongs,
     songs,
@@ -108,6 +96,5 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
     key,
     get,
     update,
-    initRTC,
   }
 }

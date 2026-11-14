@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
+import { useAccount } from '@/api/account'
 import { getApiLotteryLiveGetUsers } from '@/api/generated/lottery/lottery'
 import type { UpdateLiveLotteryUsersModel } from '@/api/generated/model'
 import { LiveLotteryTypes } from '@/api/generated/model'
+import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import {
   DEFAULT_LOTTERY_AVATAR,
   formatLotteryAvatar,
@@ -18,13 +20,22 @@ import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 const props = defineProps<{
   code?: string
   id?: number | string | null
+  active?: boolean
+  visible?: boolean
   style?: LotteryObsStyle | string
   mode?: LotteryObsMode | string
 }>()
 
 const route = useRoute()
+const account = useAccount()
 const currentId = computed(() => parsePositiveId(props.id ?? route.query.id))
 const currentCode = computed(() => firstQueryValue(props.code ?? route.query.code).trim())
+const lotteryTopic = computed(() => {
+  if (currentId.value) return `obs:display:lottery:id:${currentId.value}`
+  if (currentCode.value) return `obs:display:lottery:code:${currentCode.value}`
+  if (account.value.id > 0) return `obs:display:lottery:id:${account.value.id}`
+  return ''
+})
 
 const activeMode = computed<LotteryObsMode>(() => {
   const queryMode = firstQueryValue(props.mode ?? route.query.mode)
@@ -61,18 +72,13 @@ const isDrawing = computed(() => result.value.type === LiveLotteryTypes.Drawing)
 const isResult = computed(() => result.value.type === LiveLotteryTypes.Result)
 const isMoreThanContainer = computed(() => users.value.length * 44 > (height.value || 200))
 
-let pollTimer: number | undefined
-
 async function refreshUsers() {
   if (!currentId.value && !currentCode.value) return
   try {
-    const data = (await getApiLotteryLiveGetUsers({
+    const data = await getApiLotteryLiveGetUsers({
       ...(currentId.value ? { id: Number(currentId.value) } : {}),
       ...(currentCode.value ? { code: currentCode.value } : {}),
-    })) as unknown as {
-      code: number
-      data?: UpdateLiveLotteryUsersModel
-    }
+    })
     if (data.code === 200 && data.data) {
       result.value = data.data
     }
@@ -81,8 +87,6 @@ async function refreshUsers() {
   }
 }
 
-void refreshUsers()
-
 function handleImageError(e: Event) {
   const img = e.target as HTMLImageElement
   if (img.src !== DEFAULT_LOTTERY_AVATAR) {
@@ -90,14 +94,16 @@ function handleImageError(e: Event) {
   }
 }
 
-onMounted(() => {
-  pollTimer = window.setInterval(() => {
-    void refreshUsers()
-  }, 1000)
+const { on } = useObsRealtimeSync({
+  topic: lotteryTopic,
+  active: () => props.active ?? true,
+  visible: () => props.visible ?? true,
+  onSync: refreshUsers,
 })
-
-onUnmounted(() => {
-  if (pollTimer !== undefined) window.clearInterval(pollTimer)
+on<UpdateLiveLotteryUsersModel>('Updated', (payload) => {
+  if (payload) {
+    result.value = payload
+  }
 })
 </script>
 

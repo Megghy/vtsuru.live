@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { isLoggedIn } from '@/api/account'
+import type { OrgInvitePreviewModel } from '@/api/generated/model'
 import {
   getApiOrgInvitePreview,
   postApiOrgInviteMemberAccept,
@@ -21,23 +22,6 @@ import { toast } from '@/shared/utils'
 import '@/apps/web/styles/web-page.css'
 
 type JoinType = 'member' | 'streamer'
-
-interface OrgJoinResponseModel {
-  orgId: number
-  orgName: string
-}
-
-interface OrgInvitePreviewModel {
-  type: 'member' | 'streamer'
-  orgId: number
-  orgName: string
-  expiresAt: number
-  role: number | null
-  createdByUserId: number
-  createdByUserName: string | null
-  targetUserId: number | null
-  targetStreamerUserId: number | null
-}
 
 const route = useRoute()
 const router = useRouter()
@@ -94,14 +78,10 @@ async function loadPreview() {
   previewLoading.value = true
   previewError.value = ''
   try {
-    const resp = (await getApiOrgInvitePreview({
+    const resp = await getApiOrgInvitePreview({
       type: joinType.value as any,
       token: token.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: OrgInvitePreviewModel
-    }
+    })
     if (resp.code === 200) {
       preview.value = resp.data
       return
@@ -129,13 +109,9 @@ async function acceptMember() {
   if (!isValid.value || joinType.value !== 'member') return
   isBusy.value = true
   try {
-    const resp = (await postApiOrgInviteMemberAccept({
+    const resp = await postApiOrgInviteMemberAccept({
       token: token.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: OrgJoinResponseModel
-    }
+    })
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName
@@ -155,13 +131,9 @@ async function acceptStreamer() {
   if (!isValid.value || joinType.value !== 'streamer') return
   isBusy.value = true
   try {
-    const resp = (await postApiOrgInviteStreamerAccept({
+    const resp = await postApiOrgInviteStreamerAccept({
       token: token.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: OrgJoinResponseModel
-    }
+    })
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName
@@ -180,13 +152,9 @@ async function rejectStreamer() {
   if (!isValid.value || joinType.value !== 'streamer') return
   isBusy.value = true
   try {
-    const resp = (await postApiOrgInviteStreamerReject({
+    const resp = await postApiOrgInviteStreamerReject({
       token: token.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: OrgJoinResponseModel
-    }
+    })
     if (resp.code === 200) {
       done.value = true
       doneOrgName.value = resp.data.orgName

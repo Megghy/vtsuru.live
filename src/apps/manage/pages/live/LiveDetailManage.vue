@@ -3,9 +3,10 @@ import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
 import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
 import DataPie24Regular from '@vicons/fluent/es/DataPie24Regular'
 import Mic24Regular from '@vicons/fluent/es/Mic24Regular'
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
+import { useAccount } from '@/api/account'
 import type { DanmakuModel } from '@/api/client-types'
 import { getApiLiveGet } from '@/api/generated/live/live'
 import type { ResponseLiveInfoModel } from '@/api/generated/model'
@@ -15,13 +16,13 @@ import LiveInfoContainer from '@/apps/manage/components/live/LiveInfoContainer.v
 import LiveOverviewPanel from '@/apps/manage/components/live/LiveOverviewPanel.vue'
 import LiveTranscriptPanel from '@/apps/manage/components/live/LiveTranscriptPanel.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { useRealtimeTopic } from '@/shared/realtime'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Skeleton } from '@/shared/ui/skeleton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useMessage } from '@/shared/utils'
-import { useVTsuruHub } from '@/store/useVTsuruHub'
 
 interface ResponseLiveDetail {
   live: ResponseLiveInfoModel
@@ -31,7 +32,9 @@ interface ResponseLiveDetail {
 const message = useMessage()
 const route = useRoute()
 const router = useRouter()
-const hub = useVTsuruHub()
+const account = useAccount()
+const userEventsTopic = computed(() => (account.value.id > 0 ? `user:events:${account.value.id}` : ''))
+const { on: onUserEvent } = useRealtimeTopic(userEventsTopic)
 
 const isLoading = ref(true)
 const loadError = ref<string | null>(null)
@@ -56,15 +59,11 @@ async function get() {
   isLoading.value = true
   loadError.value = null
   try {
-    const data = (await getApiLiveGet({
+    const data = await getApiLiveGet({
       id: String(route.params.id ?? ''),
       useEmoji: true,
       includeDanmakus: true,
-    })) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseLiveDetail
-    }
+    })
     if (data.code === 200 && data.data) {
       return data.data
     } else {
@@ -116,14 +115,10 @@ function handleTabChange(tab: string | number) {
   }
 }
 
+onUserEvent<DanmakuModel>('NewDanmaku', onNewDanmaku)
+
 onMounted(async () => {
   await loadInitialData()
-  await hub.Init()
-  await hub.on('NewDanmaku', onNewDanmaku)
-})
-
-onBeforeUnmount(async () => {
-  await hub.off('NewDanmaku', onNewDanmaku)
 })
 </script>
 

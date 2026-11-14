@@ -65,11 +65,7 @@ const userIndexQuery = useUserPageRuntimeQuery<ResponseUserIndexModel>({
   loader: async (signal) => {
     const userName = props.userInfo?.name
     if (!userName) throw new Error('missing user name')
-    const response = (await getApiUserIndexGet({ id: userName }, { signal })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseUserIndexModel
-    }
+    const response = await getApiUserIndexGet({ id: userName }, { signal })
     if (response.code !== 200) throw new Error(response.message || `HTTP ${response.code}`)
     return response.data
   },

@@ -211,11 +211,7 @@ function profileReady(profile: TranscriptionProfile | undefined) {
 
 async function refreshLive() {
   try {
-    const current = (await getApiLiveCurrent()) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseCurrentLiveModel
-    }
+    const current = await getApiLiveCurrent()
     const live = current.code === 200 ? current.data?.live : undefined
     if (current.code !== 200) {
       liveState.value = 'unknown'

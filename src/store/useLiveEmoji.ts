@@ -23,11 +23,7 @@ export const useLiveEmoji = defineStore('LiveEmoji', () => {
   }))
 
   async function refresh() {
-    const resp = (await getApiVtsuruClientLiveEmoji()) as unknown as {
-      code: number
-      message?: string
-      data: LiveEmojiData
-    }
+    const resp = await getApiVtsuruClientLiveEmoji()
     if (resp.code !== 200) throw new Error(`获取表情数据失败: ${resp.message}`)
     emojiData.value = { updateAt: Date.now(), data: resp.data }
   }

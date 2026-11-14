@@ -2,12 +2,20 @@
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { useAccount } from '@/api/account'
 import { getApiVoteObsData, getApiVoteObsHash } from '@/api/generated/bullet-vote/bullet-vote'
 import type { VoteOBSData } from '@/api/generated/model'
+import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
+const props = defineProps<{
+  active?: boolean
+  visible?: boolean
+}>()
+
 const route = useRoute()
+const account = useAccount()
 
 // 状态管理
 const voteData = ref<VoteOBSData | null>(null)
@@ -18,6 +26,10 @@ const nowMs = ref(Date.now())
 // 路由与凭证参数
 const targetUserId = computed(() => parsePositiveId(firstQueryValue(route.query.id)))
 const token = computed(() => firstQueryValue(route.query.token) || undefined)
+const voteTopic = computed(() => {
+  const uid = targetUserId.value || (account.value.id > 0 ? String(account.value.id) : '')
+  return uid ? `obs:display:vote:${uid}` : ''
+})
 const currentTheme = computed(() => firstQueryValue(route.query.theme) || undefined)
 // 未显式指定位置时铺满视口：OBS 里一般把本页作为单组件源嵌入，尺寸由源决定
 const currentPosition = computed(() => firstQueryValue(route.query.position) || 'fill')
@@ -26,7 +38,6 @@ const maxDisplayCount = computed(() => {
   return parsed > 0 ? parsed : 6
 })
 
-let pollTimer: number | undefined
 let clockTimer: number | undefined
 
 // 轮询轻量探针 Hash
@@ -41,10 +52,7 @@ async function pollHash() {
     if (targetUserId.value) params.id = targetUserId.value
     if (token.value) params.token = token.value
 
-    const res = (await getApiVoteObsHash(params)) as unknown as {
-      code: number
-      data?: string
-    }
+    const res = await getApiVoteObsHash(params)
     if (res.code === 200) {
       const hash = res.data || 'empty'
       if (hash === 'empty') {
@@ -71,10 +79,7 @@ async function fetchFullData() {
     if (targetUserId.value) params.id = targetUserId.value
     if (token.value) params.token = token.value
 
-    const res = (await getApiVoteObsData(params)) as unknown as {
-      code: number
-      data?: VoteOBSData
-    }
+    const res = await getApiVoteObsData(params)
     if (res.code === 200 && res.data) {
       voteData.value = res.data
     } else {
@@ -85,22 +90,34 @@ async function fetchFullData() {
   }
 }
 
+const { on } = useObsRealtimeSync({
+  topic: voteTopic,
+  active: () => props.active ?? true,
+  visible: () => props.visible ?? true,
+  onSync: pollHash,
+  disconnectedFallbackMs: 2000,
+})
+
+on<{ hash?: string; snapshot?: VoteOBSData | null }>('Snapshot', (payload) => {
+  if (!payload) return
+  lastHash.value = payload.hash ?? ''
+  voteData.value = payload.snapshot ?? null
+  isLoading.value = false
+})
+
 onMounted(() => {
-  pollHash()
-  pollTimer = window.setInterval(pollHash, 1000)
   clockTimer = window.setInterval(() => {
     nowMs.value = Date.now()
   }, 500)
 })
 
 onUnmounted(() => {
-  if (pollTimer) clearInterval(pollTimer)
   if (clockTimer) clearInterval(clockTimer)
 })
 
 watch([targetUserId, token], () => {
   lastHash.value = ''
-  pollHash()
+  void pollHash()
 })
 </script>
 

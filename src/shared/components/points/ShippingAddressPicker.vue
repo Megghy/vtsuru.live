@@ -86,9 +86,9 @@ async function save() {
 
   saving.value = true
   try {
-    const data = (await postApiPointUserUpdateAddress(current.value as any, {
+    const data = await postApiPointUserUpdateAddress(current.value as any, {
       headers: Object.fromEntries(await useAuth.getBiliAuthHeaders()),
-    })) as unknown as { code: number; message?: string; data: ShippingAddressInfo }
+    })
     if (data.code !== 200) {
       toast.error(`保存失败: ${data.message}`)
       return

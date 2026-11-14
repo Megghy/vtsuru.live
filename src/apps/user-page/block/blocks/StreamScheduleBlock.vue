@@ -62,11 +62,7 @@ const scheduleQuery = useUserPageRuntimeQuery<ResponseScheduleModel[]>({
   loader: async (signal) => {
     const userId = props.userInfo?.id
     if (!userId) return []
-    const response = (await getApiScheduleGet({ id: String(userId) }, { signal })) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseScheduleModel[]
-    }
+    const response = await getApiScheduleGet({ id: String(userId) }, { signal })
     if (response.code !== 200) throw new Error(response.message || `HTTP ${response.code}`)
     return Array.isArray(response.data) ? response.data : []
   },

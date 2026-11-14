@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
@@ -7,7 +7,6 @@ import { useOBSNotification } from '@/store/useOBSNotification'
 import { useWebFetcher } from '@/store/useWebFetcher'
 import { Spin } from '@/shared/ui/spin'
 
-const timer = ref<any>()
 const visible = ref(true)
 const active = ref(true)
 const webfetcher = useWebFetcher()
@@ -18,11 +17,6 @@ const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$rou
 const openLiveAuth = accountInfo.value.id ? undefined : (window.$route.query as unknown as AuthInfo)
 
 onMounted(async () => {
-  timer.value = setInterval(() => {
-    if (!visible.value || !active.value) return
-    window.$mitt.emit('onOBSComponentUpdate')
-  }, 1000)
-
   if (accountInfo.value.id) {
     await webfetcher.Start()
   }
@@ -38,10 +32,6 @@ onMounted(async () => {
       active.value = a
     }
   }
-})
-
-onUnmounted(() => {
-  clearInterval(timer.value)
 })
 </script>
 

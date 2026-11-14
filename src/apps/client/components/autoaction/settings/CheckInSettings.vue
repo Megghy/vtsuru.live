@@ -190,11 +190,7 @@ async function loadCheckInRanking() {
   if (isLoadingRanking.value) return
   isLoadingRanking.value = true
   try {
-    const response = (await getApiCheckinAdminUsers()) as unknown as {
-      code: number
-      message?: string
-      data: ResponseUserCheckInModel[]
-    }
+    const response = await getApiCheckinAdminUsers()
 
     if (response.code === 200) {
       rankingData.value = response.data
@@ -270,14 +266,10 @@ async function handleTestCheckIn() {
   }
 
   try {
-    const response = (await postApiCheckinCheckInFor({
+    const response = await postApiCheckinCheckInFor({
       uId: testUid.value,
       name: testUsername.value || '测试用户',
-    })) as unknown as {
-      code: number
-      message?: string
-      data: CheckInResponse
-    }
+    })
 
     if (response.code === 200 && response.data) {
       const result = response.data

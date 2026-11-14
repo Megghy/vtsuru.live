@@ -7,7 +7,6 @@ export declare interface MittType {
   onOpenTemplateSettings: { template: string }
   onMusicRequestPlayerEnded: { music: Music }
   onMusicRequestPlayNextWaitingMusic: never
-  onOBSComponentUpdate: never
   [key: string | symbol]: any
 }
 // 类型

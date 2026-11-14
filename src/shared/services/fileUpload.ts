@@ -34,11 +34,7 @@ export async function uploadFiles(
     onProgress?.(UploadStage.Uploading)
 
     const fileList = Array.isArray(files) ? files : [files]
-    const result = (await postApiFilesUpload({ files: fileList, store })) as unknown as {
-      code: number
-      message?: string
-      data: APIFileModel[]
-    }
+    const result = await postApiFilesUpload({ files: fileList, store })
     if (result.code === 200) {
       onProgress?.(UploadStage.Success)
       return result.data

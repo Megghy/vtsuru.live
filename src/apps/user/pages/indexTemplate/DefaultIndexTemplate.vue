@@ -112,13 +112,9 @@ const orderedLinks = computed(() => {
 
 async function loadIndexInfo() {
   try {
-    const data = (await getApiUserIndexGet({
+    const data = await getApiUserIndexGet({
       id: props.userInfo?.name,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseUserIndexModel
-    }
+    })
     if (data.code === 200) indexInfo.value = data.data
     else if (data.code !== 404) toast.error(`无法获取主页数据: ${data.message}`)
   } catch (error) {

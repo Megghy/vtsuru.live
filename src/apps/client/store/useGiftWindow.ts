@@ -687,11 +687,7 @@ export const useGiftWindow = defineStore('giftWindow', () => {
     if (isSyncingLive) return
     isSyncingLive = true
     try {
-      const current = (await getApiLiveCurrent()) as unknown as {
-        code: number
-        message?: string
-        data: ResponseCurrentLiveModel
-      }
+      const current = await getApiLiveCurrent()
       if (current.code !== 200) throw new Error(current.message)
 
       const nextLive = current.data.live
@@ -705,14 +701,10 @@ export const useGiftWindow = defineStore('giftWindow', () => {
       }
       if (!nextLive) return
 
-      const ranking = (await getApiLiveRanking({
+      const ranking = await getApiLiveRanking({
         liveId: nextLive.liveId,
         limit: Math.max(100, settings.value.rankDisplayCount || 50),
-      })) as unknown as {
-        code: number
-        message?: string
-        data: ResponseLiveRankingEntryModel[]
-      }
+      })
       if (ranking.code !== 200) throw new Error(ranking.message)
       replaceRank(ranking.data)
     } catch (error) {

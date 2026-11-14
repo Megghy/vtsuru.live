@@ -105,13 +105,9 @@ async function getNeteaseSongList() {
 
   emit('loadingChange', true)
   try {
-    const data = (await getApiSongListGetNeteaseList({
+    const data = await getApiSongListGetNeteaseList({
       id: neteaseSongListId.value,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseSongModel[]
-    }
+    })
     if (data.code !== 200) {
       message.error(`获取歌单失败: ${data.message}`)
       return

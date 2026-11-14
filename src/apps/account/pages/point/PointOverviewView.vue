@@ -2,44 +2,33 @@
 import ArrowRight24Regular from '@vicons/fluent/es/ArrowRight24Regular'
 import ArrowSync24Regular from '@vicons/fluent/es/ArrowSync24Regular'
 import Gift24Regular from '@vicons/fluent/es/Gift24Regular'
-import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import Wallet24Regular from '@vicons/fluent/es/Wallet24Regular'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import type { ResponseUserInfo } from '@/api/generated/model'
+import type { ResponseAllPointsModel } from '@/api/generated/model'
 import { getApiPointUserGetAllPoint } from '@/api/generated/point/point'
 import AccountPageHeader from '@/apps/account/components/AccountPageHeader.vue'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
 import { Spin } from '@/shared/ui/spin'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
-
-interface PointAccount {
-  owner: ResponseUserInfo
-  points: number
-}
 
 const auth = useBiliAuth()
 const router = useRouter()
 const isLoading = ref(false)
-const points = ref<PointAccount[]>([])
+const points = ref<ResponseAllPointsModel[]>([])
 
 const totalPoints = computed(() => points.value.reduce((total, item) => total + item.points, 0))
 
 async function loadPoints() {
   isLoading.value = true
   try {
-    const response = (await getApiPointUserGetAllPoint({
+    const response = await getApiPointUserGetAllPoint({
       headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: PointAccount[]
-    }
+    })
     if (response.code !== 200) throw new Error(response.message)
     points.value = response.data
   } catch (error) {
@@ -53,8 +42,7 @@ onMounted(loadPoints)
 </script>
 
 <template>
-  <TooltipProvider>
-    <div class="point-overview flex flex-col gap-4">
+  <div class="point-overview flex flex-col gap-4">
       <AccountPageHeader
         title="我的积分"
         subtitle="查看你在不同主播频道中的积分余额与兑换入口。"
@@ -146,23 +134,6 @@ onMounted(loadPoints)
             <div class="balance-owner flex-1 min-w-0">
               <div class="balance-owner__name-row flex items-center gap-1.5">
                 <strong class="text-sm font-medium truncate">{{ item.owner.name }}</strong>
-                <Tooltip v-if="item.owner.biliId">
-                  <TooltipTrigger as-child>
-                    <a
-                      :href="`https://space.bilibili.com/${item.owner.biliId}`"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-muted-foreground hover:text-primary transition"
-                      title="打开 B 站空间"
-                    >
-                      <component
-                        :is="Open24Regular"
-                        class="size-3.5"
-                      />
-                    </a>
-                  </TooltipTrigger>
-                  <TooltipContent>查看主播 Bilibili 空间</TooltipContent>
-                </Tooltip>
               </div>
               <span class="balance-owner__sub text-xs text-muted-foreground">频道专属积分</span>
             </div>
@@ -189,5 +160,4 @@ onMounted(loadPoints)
         </div>
       </section>
     </div>
-  </TooltipProvider>
 </template>

@@ -81,14 +81,10 @@ watch([timeRange, userFilter, () => pagination.value.pageSize], () => {
 async function loadCheckInRanking() {
   isLoading.value = true
   try {
-    const response = (await getApiCheckinRanking({
+    const response = await getApiCheckinRanking({
       vId: props.userInfo?.id,
       count: 100,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseUserCheckInModel[]
-    }
+    })
 
     if (response.code !== 200) {
       rankingData.value = []
@@ -110,12 +106,9 @@ async function fetchCheckInKeyword() {
   if (!props.userInfo?.id) return
 
   try {
-    const response = (await getApiCheckinKeyword({
+    const response = await getApiCheckinKeyword({
       vId: props.userInfo.id,
-    })) as unknown as {
-      code: number
-      data: { keyword: string }
-    }
+    })
     if (response.code === 200) checkInKeyword.value = response.data.keyword
   } catch (error) {
     console.error('获取签到关键词失败:', error)

@@ -5,6 +5,7 @@ import type { DialogContentEmits, DialogContentProps } from 'reka-ui'
 import { DialogClose, DialogContent, DialogOverlay, DialogPortal, useForwardPropsEmits } from 'reka-ui'
 import type { HTMLAttributes } from 'vue'
 
+import { useThemeScope } from '@/shared/config/theme/scope'
 import { cn } from '@/shared/utils/cn'
 
 import type { SheetVariants } from '.'
@@ -26,6 +27,7 @@ const emits = defineEmits<DialogContentEmits>()
 const delegatedProps = reactiveOmit(props, 'class', 'side')
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
+const themeStyle = useThemeScope()
 </script>
 
 <template>
@@ -36,6 +38,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     <DialogContent
       :class="cn(sheetVariants({ side }), props.class)"
       v-bind="{ ...forwarded, ...$attrs }"
+      :style="themeStyle"
     >
       <slot />
 

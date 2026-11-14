@@ -102,6 +102,14 @@ export function getCurrentAPIUrl(): string {
   return getAPIUrl(currentAPIKey.value)
 }
 
+export function getApiBaseUrl(): string {
+  return new URL('api/', getCurrentAPIUrl()).toString()
+}
+
+export function getHubBaseUrl(): string {
+  return new URL('hub/', getCurrentAPIUrl()).toString()
+}
+
 const FILE_PATH = /^\/f\/\d+(?:\?.*)?$/
 
 /** 后端下发的 /f/{id} 拼到当前 API 源站。已是绝对地址的原样返回。 */

@@ -1,9 +1,9 @@
 import { HttpTransportType, HubConnectionBuilder, HubConnectionState, LogLevel } from '@microsoft/signalr'
 import type { HubConnection } from '@microsoft/signalr'
-import { ref } from 'vue'
+import { effectScope, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { BASE_HUB_URL, mapToCurrentAPI } from '@/shared/config'
+import { getCurrentAPIUrl, isDev, markAPIFailover } from '@/shared/config'
 
 import type { RealtimeBusStatus, RealtimeEventHandler } from './types'
 
@@ -16,22 +16,52 @@ interface TopicRegistration {
 class RealtimeBusService {
   private connection: HubConnection | null = null
   private connectingPromise: Promise<void> | null = null
+  private rebuildingPromise: Promise<void> | null = null
+  private connectedToken = ''
+  private connectedUrl = ''
+  private hasConnectedOnce = false
   private topics = new Map<string, TopicRegistration>()
   private status = ref<RealtimeBusStatus>({
     connected: false,
     connecting: false,
     error: '',
   })
+  private reconnectedCount = ref(0)
+
+  constructor() {
+    const scope = effectScope(true)
+    scope.run(() => {
+      watch(
+        [() => useAccount().value.token, () => getCurrentAPIUrl()],
+        () => {
+          void this.reconnectIfNeeded()
+        },
+      )
+    })
+  }
 
   public getStatus() {
     return this.status
   }
 
-  private buildConnection(): HubConnection {
+  public getReconnectedCount() {
+    return this.reconnectedCount
+  }
+
+  private hasActiveTopics(): boolean {
+    for (const reg of this.topics.values()) {
+      if (reg.refCount > 0) return true
+    }
+    return false
+  }
+
+  private buildConnection(): { conn: HubConnection; token: string; baseUrl: string } {
     const account = useAccount()
-    const url = new URL(mapToCurrentAPI(`${BASE_HUB_URL}realtime`))
-    if (account.value.token) {
-      url.searchParams.set('token', account.value.token)
+    const token = account.value.token || ''
+    const baseUrl = getCurrentAPIUrl()
+    const url = new URL('hub/realtime', baseUrl)
+    if (token) {
+      url.searchParams.set('token', token)
     }
 
     const conn = new HubConnectionBuilder()
@@ -48,11 +78,11 @@ class RealtimeBusService {
     })
 
     conn.on('Subscribed', (_topic: string, _success?: boolean) => {
-      // 服务端订阅确认 ACK，消费避免客户端报 No client method with the name 'subscribed'
+      // 服务端订阅确认 ACK
     })
 
     conn.on('Unsubscribed', (_topic: string) => {
-      // 服务端退订确认 ACK，消费避免客户端报 No client method with the name 'unsubscribed'
+      // 服务端退订确认 ACK
     })
 
     conn.onreconnecting(() => {
@@ -65,18 +95,71 @@ class RealtimeBusService {
       this.status.value.connecting = false
       this.status.value.error = ''
       await this.resubscribeAll()
+      this.reconnectedCount.value++
     })
 
     conn.onclose(() => {
+      if (this.connection !== conn) return
       this.status.value.connected = false
       this.status.value.connecting = false
       this.connection = null
     })
 
-    return conn
+    return { conn, token, baseUrl }
+  }
+
+  private async reconnectIfNeeded(): Promise<void> {
+    if (!this.connection && !this.connectingPromise) return
+    if (this.rebuildingPromise) {
+      await this.rebuildingPromise
+      return
+    }
+
+    const nextToken = useAccount().value.token || ''
+    const nextUrl = getCurrentAPIUrl()
+    if (nextToken === this.connectedToken && nextUrl === this.connectedUrl) {
+      return
+    }
+
+    this.rebuildingPromise = (async () => {
+      try {
+        if (this.connectingPromise) {
+          await this.connectingPromise.catch(() => {})
+        }
+        const staleConn = this.connection
+        this.connection = null
+        this.status.value.connected = false
+        if (staleConn) {
+          await staleConn.stop().catch(() => {})
+        }
+        if (this.hasActiveTopics()) {
+          await this.connectInternal()
+        }
+      } finally {
+        this.rebuildingPromise = null
+      }
+    })()
+
+    await this.rebuildingPromise
   }
 
   public async ensureConnected(): Promise<HubConnection> {
+    if (this.rebuildingPromise) {
+      await this.rebuildingPromise
+    }
+
+    if (this.connection && this.connection.state === HubConnectionState.Connected) {
+      const nextToken = useAccount().value.token || ''
+      const nextUrl = getCurrentAPIUrl()
+      if (nextToken !== this.connectedToken || nextUrl !== this.connectedUrl) {
+        await this.reconnectIfNeeded()
+      }
+    }
+
+    return this.connectInternal()
+  }
+
+  private async connectInternal(): Promise<HubConnection> {
     if (this.connection && this.connection.state === HubConnectionState.Connected) {
       return this.connection
     }
@@ -91,14 +174,38 @@ class RealtimeBusService {
     this.status.value.error = ''
 
     this.connectingPromise = (async () => {
+      const startOnce = async () => {
+        const built = this.buildConnection()
+        this.connection = built.conn
+        this.connectedToken = built.token
+        this.connectedUrl = built.baseUrl
+        await built.conn.start()
+      }
+
       try {
-        if (!this.connection || this.connection.state === HubConnectionState.Disconnected) {
-          this.connection = this.buildConnection()
+        try {
+          await startOnce()
+        } catch (err) {
+          if (!isDev && markAPIFailover()) {
+            const failedConn = this.connection
+            this.connection = null
+            if (failedConn) {
+              await failedConn.stop().catch(() => {})
+            }
+            await startOnce()
+          } else {
+            throw err
+          }
         }
-        await this.connection.start()
+
+        const wasPreviouslyConnected = this.hasConnectedOnce
+        this.hasConnectedOnce = true
         this.status.value.connected = true
         this.status.value.connecting = false
         await this.resubscribeAll()
+        if (wasPreviouslyConnected) {
+          this.reconnectedCount.value++
+        }
       } catch (err: unknown) {
         this.status.value.connected = false
         this.status.value.connecting = false
@@ -199,7 +306,6 @@ class RealtimeBusService {
   }
 }
 
-// 全局单例
 let busInstance: RealtimeBusService | null = null
 
 export function getRealtimeBus(): RealtimeBusService {
@@ -214,6 +320,7 @@ export function useRealtimeBus() {
   return {
     bus,
     status: bus.getStatus(),
+    reconnectedCount: bus.getReconnectedCount(),
     ensureConnected: () => bus.ensureConnected(),
     publish: (topic: string, eventName: string, payload: unknown) => bus.publish(topic, eventName, payload),
     on: (topic: string, eventName: string, handler: RealtimeEventHandler) => bus.on(topic, eventName, handler),

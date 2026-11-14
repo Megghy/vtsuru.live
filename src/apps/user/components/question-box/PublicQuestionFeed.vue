@@ -2,7 +2,7 @@
 import Chat24Regular from '@vicons/fluent/es/Chat24Regular'
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 
-import type { ResponseQAInfoToTarget, ResponseUserInfo } from '@/api/generated/model'
+import type { ResponseQAInfo, ResponseUserInfo } from '@/api/generated/model'
 import PublicQuestionEntry from '@/apps/user/components/question-box/PublicQuestionEntry.vue'
 import { groupQuestionThreads } from '@/shared/questionThread'
 import { Button } from '@/shared/ui/button'
@@ -11,7 +11,7 @@ import { Pagination } from '@/shared/ui/pagination'
 import { Spin } from '@/shared/ui/spin'
 
 const props = defineProps<{
-  questions: ResponseQAInfoToTarget[]
+  questions: ResponseQAInfo[]
   isLoading: boolean
   userInfo?: ResponseUserInfo
   embedded?: boolean

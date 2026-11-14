@@ -10,10 +10,9 @@ import { List } from 'linqts'
 import { computed, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { EventModel } from '@/api/client-types'
 import { getApiEventGet, postApiEventGuardDelete, postApiEventGuardManual } from '@/api/generated/event/event'
 import { getApiHistoryGuardsList, getApiHistoryGuardsStats } from '@/api/generated/history/history'
-import { EventDataTypes } from '@/api/generated/model'
+import { EventDataTypes, type EventModel } from '@/api/generated/model'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import { useApiAction } from '@/apps/manage/composables/useApiAction'
@@ -155,7 +154,7 @@ const selectedEvents = computed(() => {
 
 const eventSummary = computed(() => {
   const list = selectedEvents.value
-  const uniqueUsers = new Set(list.map((e) => e.ouid || String(e.uid) || e.uname)).size
+  const uniqueUsers = new Set(list.map((e) => e.ouId || String(e.uid) || e.uname)).size
   const totalPrice = list.reduce((sum, e) => sum + (Number(e.price) || 0), 0)
   const totalNum = list.reduce((sum, e) => sum + (Number(e.num) || 0), 0)
   return {
@@ -176,7 +175,7 @@ function currentQueryKey() {
 
 async function get(currentOffset: number, currentLimit: number) {
   try {
-    const data = (await getApiEventGet({
+    const data = await getApiEventGet({
       start: selectedDate.value[0],
       end: selectedDate.value[1],
       offset: currentOffset,
@@ -185,11 +184,7 @@ async function get(currentOffset: number, currentLimit: number) {
       uid: userFilterApplied.value.uid,
       ouid: userFilterApplied.value.ouid,
       uname: userFilterApplied.value.uname,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: EventModel[]
-    }
+    })
     if (data.code == 200) {
       return data.data
     } else {
@@ -316,7 +311,7 @@ async function addManualGuard() {
   manualGuardLoading.value = true
   try {
     const timeVal = manualGuardTime.value ? new Date(manualGuardTime.value).getTime() : undefined
-    const resp = (await postApiEventGuardManual({
+    const resp = await postApiEventGuardManual({
       uid,
       ouid,
       uname,
@@ -324,11 +319,7 @@ async function addManualGuard() {
       time: timeVal,
       num,
       price: manualGuardPrice.value ?? undefined,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: EventModel
-    }
+    })
     if (resp.code !== 200) {
       message.error(`添加失败: ${resp.message}`)
       return
@@ -348,14 +339,7 @@ async function deleteGuardEvent(item: EventModel) {
     message.error('无法删除：缺少 id')
     return
   }
-  const ok = await run(
-    () =>
-      postApiEventGuardDelete({ id: item.id }) as unknown as Promise<{
-        code: number
-        message?: string
-        data: string
-      }>,
-    {
+  const ok = await run(() => postApiEventGuardDelete({ id: item.id! }), {
       success: '已删除',
       fail: '删除失败',
     },
@@ -451,13 +435,10 @@ const totalGuardPages = computed(() => Math.ceil(guardList.value.length / guardP
 async function loadGuardList() {
   guardListLoading.value = true
   try {
-    const [listResponse, statsResponse] = (await Promise.all([
+    const [listResponse, statsResponse] = await Promise.all([
       getApiHistoryGuardsList({ activeOnly: true }),
       getApiHistoryGuardsStats(),
-    ])) as unknown as [
-      { code: number; data: GuardMemberModel[]; message?: string },
-      { code: number; data: GuardStatsModel; message?: string },
-    ]
+    ])
 
     if (listResponse.code === 200) {
       guardList.value = listResponse.data
@@ -910,7 +891,7 @@ function onTabChange(value: string | number) {
                     </TableCell>
                     <TableCell class="font-mono text-muted-foreground">
                       {{
-                        GuidUtils.isGuidFromUserId(item.ouid) ? GuidUtils.guidToLong(item.ouid) : item.ouid || item.uid
+                        GuidUtils.isGuidFromUserId(item.ouId) ? GuidUtils.guidToLong(item.ouId) : item.ouId || item.uid
                       }}
                     </TableCell>
                     <TableCell class="text-muted-foreground">

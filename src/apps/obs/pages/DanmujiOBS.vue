@@ -419,10 +419,7 @@ onMounted(async () => {
 
   // 加载通用静态表情包
   try {
-    const result = (await getApiVtsuruBlivechatEmoticon()) as unknown as {
-      code: number
-      data?: { keyword: string; url: string }[]
-    }
+    const result = await getApiVtsuruBlivechatEmoticon()
     if (result.code === 200 && Array.isArray(result.data)) {
       textEmoticons = result.data
     }

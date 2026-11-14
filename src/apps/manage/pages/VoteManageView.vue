@@ -347,10 +347,7 @@ const activePreviewCardData = computed<VoteOBSData | null>(() => {
 
 async function fetchVoteConfig() {
   try {
-    const res = (await getApiVoteGetConfig()) as unknown as {
-      code: number
-      data?: VoteConfig
-    }
+    const res = await getApiVoteGetConfig()
     if (res.code === 200 && res.data) {
       voteConfig.value = { ...voteConfig.value, ...res.data }
       previewTheme.value = (res.data.theme as any) || 'glass'
@@ -380,10 +377,7 @@ async function saveVoteConfig() {
 
 async function fetchActiveVote() {
   try {
-    const res = (await getApiVoteGetActive()) as unknown as {
-      code: number
-      data?: ResponseVoteSession
-    }
+    const res = await getApiVoteGetActive()
     if (res.code === 200) {
       currentVote.value = res.data
     }
@@ -394,10 +388,7 @@ async function fetchActiveVote() {
 
 async function fetchHistory() {
   try {
-    const res = (await getApiVoteHistory({ limit: 15 })) as unknown as {
-      code: number
-      data?: ResponseVoteSession[]
-    }
+    const res = await getApiVoteHistory({ limit: 15 })
     if (res.code === 200 && res.data) {
       voteHistory.value = res.data
     }
@@ -427,11 +418,7 @@ async function createVote() {
 
   try {
     isLoading.value = true
-    const res = (await postApiVoteCreate(payload as any)) as unknown as {
-      code: number
-      data?: ResponseVoteSession
-      message?: string
-    }
+    const res = await postApiVoteCreate(payload as any)
     if (res.code === 200 && res.data) {
       message.success('投票已发起！')
       currentVote.value = res.data
@@ -450,11 +437,7 @@ async function extendDuration(seconds: number) {
   if (!currentVote.value) return
   try {
     isLoading.value = true
-    const res = (await postApiVoteExtend({ seconds })) as unknown as {
-      code: number
-      data?: ResponseVoteSession
-      message?: string
-    }
+    const res = await postApiVoteExtend({ seconds })
     if (res.code === 200 && res.data) {
       message.success(`已延长 ${seconds} 秒`)
       currentVote.value = res.data

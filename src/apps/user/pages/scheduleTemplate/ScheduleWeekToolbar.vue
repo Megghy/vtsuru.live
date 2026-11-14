@@ -91,7 +91,7 @@ async function saveScheduleImage() {
 
 <template>
   <nav
-    class="schedule-week-toolbar flex-between gap-3 w-full p-2.5 px-3 bg-card border border-border rounded-lg text-card-foreground"
+    class="schedule-week-toolbar flex-between flex-wrap gap-3 w-full p-2.5 px-3 bg-card border border-border rounded-lg text-card-foreground"
     aria-label="日程周次与导出"
   >
     <div class="flex items-center gap-2 flex-1 min-w-0">
@@ -162,20 +162,23 @@ async function saveScheduleImage() {
       </Button>
     </div>
 
-    <Button
-      v-if="captureTarget"
-      variant="default"
-      size="sm"
-      class="gap-1.5 whitespace-nowrap"
-      :disabled="saving"
-      :aria-busy="saving"
-      @click="saveScheduleImage"
-    >
-      <component
-        :is="ArrowDownload20Regular"
-        class="size-4"
-      />
-      <span>{{ saving ? '正在生成' : '保存图片' }}</span>
-    </Button>
+    <div class="flex items-center gap-2 shrink-0">
+      <slot name="actions-extra" />
+      <Button
+        v-if="captureTarget"
+        variant="default"
+        size="sm"
+        class="gap-1.5 whitespace-nowrap"
+        :disabled="saving"
+        :aria-busy="saving"
+        @click="saveScheduleImage"
+      >
+        <component
+          :is="ArrowDownload20Regular"
+          class="size-4"
+        />
+        <span>{{ saving ? '正在生成' : '保存图片' }}</span>
+      </Button>
+    </div>
   </nav>
 </template>

@@ -11,41 +11,118 @@ import {
   postApiAssistantConversationsIdDelete,
   postApiAssistantConversationsIdRename,
 } from '@/api/generated/assistant/assistant'
-import { BASE_API_URL, mapToCurrentAPI } from '@/shared/config'
+import type {
+  AssistantHistoryMessageDto,
+  AssistantPreviewItem as ApiAssistantPreviewItem,
+  AssistantProposalDto,
+  EditableField as ApiEditableField,
+} from '@/api/generated/model'
+import { getApiBaseUrl } from '@/shared/config'
 
-const ASSISTANT_API_URL = `${BASE_API_URL}assistant/`
+import { ACTION_STATUSES, type ActionRisk, type ActionStatus } from '../schemas/assistant'
 
-import type { ActionStatus, ActionRisk } from '../schemas/assistant'
+const EDITABLE_FIELD_TYPES = new Set<EditableField['type']>([
+  'text',
+  'textarea',
+  'time',
+  'number',
+  'tags',
+  'select',
+])
+
+function normalizeRole(role: string): 'user' | 'assistant' {
+  return role === 'user' ? 'user' : 'assistant'
+}
+
+function normalizeRisk(risk: string): ActionRisk {
+  return risk === 'high' || risk === 'medium' ? risk : 'low'
+}
+
+function normalizeStatus(status: string): ActionStatus {
+  return (ACTION_STATUSES as readonly string[]).includes(status) ? (status as ActionStatus) : 'draft'
+}
+
+function normalizeEditableField(field: ApiEditableField): EditableField {
+  return {
+    key: field.key,
+    label: field.label,
+    value: field.value,
+    before: field.before ?? undefined,
+    type: EDITABLE_FIELD_TYPES.has(field.type as EditableField['type'])
+      ? (field.type as EditableField['type'])
+      : 'text',
+    options: field.options ?? undefined,
+  }
+}
+
+function normalizePreviewItem(item: ApiAssistantPreviewItem): AssistantPreviewItem {
+  const op: AssistantPreviewItem['op'] = item.op === 'modify' || item.op === 'delete' ? item.op : 'add'
+  return {
+    op,
+    id: item.id ?? undefined,
+    title: item.title,
+    time: item.time ?? undefined,
+    before: item.before ?? undefined,
+    after: item.after ?? undefined,
+    note: item.note ?? undefined,
+    url: item.url ?? undefined,
+    fields: item.fields?.map(normalizeEditableField),
+  }
+}
+
+function toAssistantProposal(dto: AssistantProposalDto): AssistantProposal {
+  return {
+    ...dto,
+    risk: normalizeRisk(dto.risk),
+    status: normalizeStatus(dto.status),
+    preview: dto.preview.map(normalizePreviewItem),
+    error: dto.error ?? undefined,
+    scheduledTime: dto.scheduledTime ?? undefined,
+  }
+}
+
+function toAssistantHistoryMessage(dto: AssistantHistoryMessageDto): AssistantHistoryMessage {
+  return {
+    ...dto,
+    role: normalizeRole(dto.role),
+    images: dto.images ?? undefined,
+    proposals: dto.proposals?.map(toAssistantProposal),
+    process: dto.process?.map((step) => ({
+      kind: step.kind === 'tool' ? 'tool' : 'reasoning',
+      text: step.text ?? undefined,
+      tool: step.tool
+        ? {
+            ...step.tool,
+            status:
+              step.tool.status === 'completed' || step.tool.status === 'failed'
+                ? step.tool.status
+                : 'running',
+            summary: step.tool.summary ?? undefined,
+            error: step.tool.error ?? undefined,
+            durationMs: step.tool.durationMs ?? undefined,
+          }
+        : undefined,
+    })),
+  }
+}
 
 /** 会话列表 (按最后活动时间倒序, 分页) */
 export async function listConversations(pn = 0, ps = 20): Promise<AssistantConversation[]> {
-  const resp = (await getApiAssistantConversations({ pn, ps })) as unknown as {
-    code: number
-    message?: string
-    data?: AssistantConversation[]
-  }
+  const resp = await getApiAssistantConversations({ pn, ps })
   if (resp.code !== 200) throw new Error(resp.message || '获取会话列表失败')
   return resp.data ?? []
 }
 
 /** 某会话的全部历史消息 */
 export async function getConversationMessages(id: number): Promise<AssistantHistoryMessage[]> {
-  const resp = (await getApiAssistantConversationsIdMessages(id)) as unknown as {
-    code: number
-    message?: string
-    data?: AssistantHistoryMessage[]
-  }
+  const resp = await getApiAssistantConversationsIdMessages(id)
   if (resp.code !== 200) throw new Error(resp.message || '获取会话消息失败')
-  return resp.data ?? []
+  return (resp.data ?? []).map(toAssistantHistoryMessage)
 }
 
 /** 主动建议提示: 后台待办概览 */
 export async function getDigest(): Promise<AssistantDigestItem[]> {
-  const resp = (await getApiAssistantDigest()) as unknown as {
-    code: number
-    message?: string
-    data?: AssistantDigestItem[]
-  }
+  const resp = await getApiAssistantDigest()
   if (resp.code !== 200) throw new Error(resp.message || '获取建议失败')
   return resp.data ?? []
 }
@@ -64,59 +141,39 @@ export async function deleteConversation(id: number): Promise<void> {
 
 /** 审批并执行提案 */
 export async function approveAction(proposalId: string): Promise<AssistantProposal> {
-  const resp = (await postApiAssistantActionsIdApprove(Number(proposalId))) as unknown as {
-    code: number
-    message?: string
-    data: AssistantProposal
-  }
+  const resp = await postApiAssistantActionsIdApprove(Number(proposalId))
   if (resp.code !== 200) throw new Error(resp.message || '执行失败')
-  return resp.data
+  return toAssistantProposal(resp.data)
 }
 
 /** 拒绝提案 */
 export async function rejectAction(proposalId: string): Promise<AssistantProposal> {
-  const resp = (await postApiAssistantActionsIdReject(Number(proposalId))) as unknown as {
-    code: number
-    message?: string
-    data: AssistantProposal
-  }
+  const resp = await postApiAssistantActionsIdReject(Number(proposalId))
   if (resp.code !== 200) throw new Error(resp.message || '拒绝失败')
-  return resp.data
+  return toAssistantProposal(resp.data)
 }
 
 /** 设定提案定时执行 (scheduledTime: Unix 毫秒, UTC) */
 export async function scheduleAction(proposalId: string, scheduledTime: number): Promise<AssistantProposal> {
-  const resp = (await postApiAssistantActionsIdSchedule(Number(proposalId), {
+  const resp = await postApiAssistantActionsIdSchedule(Number(proposalId), {
     scheduledTime,
-  })) as unknown as {
-    code: number
-    message?: string
-    data: AssistantProposal
-  }
+  })
   if (resp.code !== 200) throw new Error(resp.message || '定时设定失败')
-  return resp.data
+  return toAssistantProposal(resp.data)
 }
 
 /** 取消提案定时执行 */
 export async function cancelScheduleAction(proposalId: string): Promise<AssistantProposal> {
-  const resp = (await postApiAssistantActionsIdCancelSchedule(Number(proposalId))) as unknown as {
-    code: number
-    message?: string
-    data: AssistantProposal
-  }
+  const resp = await postApiAssistantActionsIdCancelSchedule(Number(proposalId))
   if (resp.code !== 200) throw new Error(resp.message || '取消定时失败')
-  return resp.data
+  return toAssistantProposal(resp.data)
 }
 
 /** 编辑提案展示字段, 重新校验后回到待确认 */
 export async function updateAction(proposalId: string, items: ProposalEditItem[]): Promise<AssistantProposal> {
-  const resp = (await postApiAssistantActionsIdUpdate(Number(proposalId), { items: items as any })) as unknown as {
-    code: number
-    message?: string
-    data: AssistantProposal
-  }
+  const resp = await postApiAssistantActionsIdUpdate(Number(proposalId), { items: items as any })
   if (resp.code !== 200) throw new Error(resp.message || '保存失败')
-  return resp.data
+  return toAssistantProposal(resp.data)
 }
 export interface AssistantContext {
   routeName: string
@@ -269,7 +326,7 @@ export async function streamMessage(
   handlers: StreamHandlers,
   signal?: AbortSignal,
 ): Promise<void> {
-  const url = mapToCurrentAPI(`${ASSISTANT_API_URL}message`)
+  const url = `${getApiBaseUrl()}assistant/message`
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   if (cookie.value?.cookie) headers.Authorization = `Bearer ${cookie.value.cookie}`
 

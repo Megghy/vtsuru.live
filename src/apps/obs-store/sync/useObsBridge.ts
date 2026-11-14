@@ -149,6 +149,12 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
   }
   function sendAction(action: TAction) {
     if (!writable) throw new Error('展示页不能发送控制操作')
+    if (realtimeTopic.value) {
+      void publishRealtimeEvent('Action', action).catch(() => {
+        channel?.postMessage({ type: 'action', action })
+      })
+      return
+    }
     channel?.postMessage({ type: 'action', action })
   }
   function onAction(handler: (action: TAction) => void) {
@@ -160,11 +166,14 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
       ? `obs-store:state:${userId.value}:${options.componentId}:${channelId.value}`
       : '',
   )
-  const { on: onRealtimeEvent } = useRealtimeTopic(realtimeTopic)
+  const { on: onRealtimeEvent, publish: publishRealtimeEvent } = useRealtimeTopic(realtimeTopic)
   onRealtimeEvent<ResponseObsSyncState>('StateChanged', (snapshot) => {
-    if (snapshot) {
+    if (snapshot && !writeTask && !Object.keys(pending).length) {
       apply(snapshot)
     }
+  })
+  onRealtimeEvent<TAction>('Action', (action) => {
+    actionHandlers.forEach((handler) => handler(action))
   })
 
   function cleanup() {

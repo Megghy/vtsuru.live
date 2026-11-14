@@ -359,13 +359,9 @@ watch(selectedDay, (value) => {
 async function get() {
   isLoading.value = true
   try {
-    const data = (await getApiScheduleGet({
+    const data = await getApiScheduleGet({
       id: String(accountInfo.value?.id ?? -1),
-    })) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseScheduleModel[]
-    }
+    })
     if (data.code !== 200) throw new Error(data.message || '加载失败')
     schedules.value = sortSchedules((data.data ?? []).map((week) => normalizeWeek(week)))
   } catch (error) {
@@ -411,12 +407,9 @@ const liveRoomUrl = computed(() =>
 async function loadBiliReserve() {
   if (!accountInfo.value?.id) return
   try {
-    const response = (await getApiScheduleBiliReserve({
+    const response = await getApiScheduleBiliReserve({
       id: String(accountInfo.value.id),
-    })) as unknown as {
-      code: number
-      data?: ResponseBiliLiveReserveModel
-    }
+    })
     if (response.code === 200 && response.data) {
       biliReserve.value = response.data
       if (accountInfo.value.settings) {
@@ -431,11 +424,7 @@ async function loadBiliReserve() {
 async function refreshBiliReserve() {
   refreshingReserve.value = true
   try {
-    const response = (await postApiScheduleBiliReserveRefresh()) as unknown as {
-      code: number
-      data?: ResponseBiliLiveReserveModel
-      message?: string
-    }
+    const response = await postApiScheduleBiliReserveRefresh()
     if (response.code === 200 && response.data) {
       biliReserve.value = response.data
       message.success('已刷新 B 站预约')
@@ -452,13 +441,9 @@ async function refreshBiliReserve() {
 async function setBiliReserveAutoSync(enable: boolean) {
   syncingReserve.value = true
   try {
-    const response = (await postApiScheduleBiliReserveAutoSync({
+    const response = await postApiScheduleBiliReserveAutoSync({
       enable,
-    })) as unknown as {
-      code: number
-      data?: ResponseBiliLiveReserveModel
-      message?: string
-    }
+    })
     if (response.code === 200 && response.data) {
       biliReserve.value = response.data
       if (accountInfo.value?.settings) {
@@ -479,16 +464,12 @@ async function addSchedule() {
   isFetching.value = true
   const emptyWeek = createEmptyWeek(Number(selectedScheduleYear.value), Number(selectedScheduleWeek.value))
   try {
-    const data = (await postApiScheduleUpdate({
+    const data = await postApiScheduleUpdate({
       year: emptyWeek.year,
       week: emptyWeek.week,
       days: emptyWeek.days as any,
       expectedVersion: '',
-    })) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseScheduleModel
-    }
+    })
     if (data.code === 409) return await reloadAfterConflict()
     if (data.code !== 200 || !data.data) return message.error(`添加失败: ${data.message}`)
     message.success('添加成功')
@@ -505,7 +486,7 @@ async function onCopySchedule() {
   const targetWeek = Number(selectedScheduleWeek.value)
   const target = schedules.value.find((s) => s.year === targetYear && s.week === targetWeek)
   try {
-    const response = (await postApiScheduleCopy({
+    const response = await postApiScheduleCopy({
       sourceYear: updateScheduleModel.value.year,
       sourceWeek: updateScheduleModel.value.week,
       targetYear,
@@ -513,11 +494,7 @@ async function onCopySchedule() {
       sourceVersion: updateScheduleModel.value.version ?? '',
       targetVersion: target?.version ?? '',
       mode: copyMode.value as any,
-    })) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseScheduleModel
-    }
+    })
     if (response.code === 409) {
       await reloadAfterConflict()
       return
@@ -559,11 +536,7 @@ async function saveSchedule(day: number | null) {
   }
 
   try {
-    const data = (await postApiScheduleUpdate(payload as any)) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseScheduleModel
-    }
+    const data = await postApiScheduleUpdate(payload as any)
     if (data.code === 409) return await reloadAfterConflict()
     if (data.code === 200 && data.data) {
       message.success('成功')
@@ -644,16 +617,12 @@ async function onDeleteScheduleItem(schedule: ResponseScheduleModel, dayIndex: n
     return dayList
   })
 
-  const data = (await postApiScheduleUpdate({
+  const data = await postApiScheduleUpdate({
     year: schedule.year,
     week: schedule.week,
     days: sanitizeDays(updatedDays) as any,
     expectedVersion: targetSchedule.version ?? '',
-  })) as unknown as {
-    code: number
-    message?: string
-    data?: ResponseScheduleModel
-  }
+  })
   if (data.code === 409) await reloadAfterConflict()
   else if (data.code === 200 && data.data) {
     message.success('已删除')
@@ -705,16 +674,12 @@ async function onBatchAddSchedule() {
       targetWeek.days[dayIndex].push({ ...fixedItem, id: null })
 
       const sanitizedDays = sanitizeDays(targetWeek.days)
-      const resp = (await postApiScheduleUpdate({
+      const resp = await postApiScheduleUpdate({
         year,
         week,
         days: sanitizedDays as any,
         expectedVersion: targetWeek.version ?? '',
-      })) as unknown as {
-        code: number
-        message?: string
-        data?: ResponseScheduleModel
-      }
+      })
 
       if (resp.code === 409) {
         await reloadAfterConflict()

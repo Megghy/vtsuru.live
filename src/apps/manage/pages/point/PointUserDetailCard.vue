@@ -89,13 +89,9 @@ async function getOrders() {
 
   try {
     isLoading.value = true
-    const data = (await getApiPointGetUserOrders({
+    const data = await getApiPointGetUserOrders({
       authId: info.id,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponsePointOrder2OwnerModel[]
-    }
+    })
 
     if (data.code === 200) {
       return data.data
@@ -119,11 +115,7 @@ async function getPointHistory() {
     const target = pointTarget.value
     if (!target) return []
 
-    const data = (await getApiPointGetUserHistories(getHistoryParams(target) as any)) as unknown as {
-      code: number
-      message?: string
-      data: ResponsePointHisrotyModel[]
-    }
+    const data = await getApiPointGetUserHistories(getHistoryParams(target) as any)
 
     if (data.code === 200) {
       return data.data

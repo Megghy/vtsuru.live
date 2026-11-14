@@ -1,5 +1,5 @@
 import type { APIRoot } from '@/api/client-types'
-import { BASE_URL } from '@/shared/config/api'
+import { getCurrentAPIUrl } from '@/shared/config/api'
 
 import {
   QueryDeleteAPI,
@@ -15,7 +15,7 @@ export type VtsuruMutatorInit = RequestInit & Pick<QueryRequestOptions, 'timeout
 function toFullUrl(url: string) {
   if (/^https?:\/\//i.test(url)) return url
   const path = url.startsWith('/') ? url.slice(1) : url
-  return `${BASE_URL}${path}`
+  return new URL(path, getCurrentAPIUrl()).toString()
 }
 
 function headerTuples(headers?: HeadersInit): [string, string][] | undefined {

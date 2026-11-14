@@ -31,7 +31,7 @@ import { clientInited, clientInitStage, initAll, OnClientUnmounted } from '@/app
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
-import { BASE_URL, isTauri } from '@/shared/config'
+import { CN_HOST, CURRENT_HOST, isDev, isTauri } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Badge } from '@/shared/ui/badge'
@@ -115,7 +115,7 @@ const routeNameToMenuKey: Record<string, string> = {
 const activeMenuKey = computed(() => routeNameToMenuKey[route.name as string] ?? '')
 
 function openManagePage() {
-  const url = `https://${BASE_URL}/manage`
+  const url = new URL('manage', isDev ? CURRENT_HOST : CN_HOST).toString()
   if (isTauri()) {
     void openUrl(url)
   } else {

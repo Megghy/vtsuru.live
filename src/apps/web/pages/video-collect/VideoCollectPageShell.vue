@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { toRef } from 'vue'
+import { computed, toRef } from 'vue'
 
 import type { ResponseVideoCollectModel } from '@/api/generated/model'
+import { provideThemeScope } from '@/shared/config/theme/scope'
 
 import { useVideoCollectPageTheme } from './useVideoCollectPageTheme'
 
@@ -12,13 +13,19 @@ const props = defineProps<{
 const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars } = useVideoCollectPageTheme(
   toRef(props, 'table'),
 )
+
+const mergedThemeVars = computed(() => ({
+  ...pageThemeVars.value,
+  ...pageBackgroundVars.value,
+}))
+provideThemeScope(mergedThemeVars)
 </script>
 
 <template>
   <div
     class="video-collect-page page-root"
     :class="pageBackgroundClass"
-    :style="[pageThemeVars, pageBackgroundVars]"
+    :style="mergedThemeVars"
   >
     <slot :effective-is-dark="effectiveIsDark" />
   </div>

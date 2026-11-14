@@ -21,13 +21,9 @@ const videoTables = ref<ResponseVideoCollectModel[]>([])
 async function get() {
   try {
     isLoading.value = true
-    const data = (await getApiVideoCollectGetActive({
+    const data = await getApiVideoCollectGetActive({
       id: String(props.userInfo.id),
-    })) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseVideoCollectModel[]
-    }
+    })
     if (data.code === 200) {
       videoTables.value = data.data ?? []
     } else {

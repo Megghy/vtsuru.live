@@ -2,8 +2,7 @@
 import { computed, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
-import type { ResponsePointGoodModel } from '@/api/client-types'
-import type { ResponsePointUserModel } from '@/api/generated/model'
+import type { ResponseBasePointGoodsModel, ResponsePointUserModel } from '@/api/generated/model'
 import { EventDataTypes } from '@/api/generated/model'
 import {
   getApiPointCheckEligibility,
@@ -66,7 +65,7 @@ const eligibilityForm = ref<{ count: number }>({
 
 const isLoadingEligibilityOptions = ref(false)
 const allUsers = ref<ResponsePointUserModel[]>([])
-const allGoods = ref<ResponsePointGoodModel[]>([])
+const allGoods = ref<ResponseBasePointGoodsModel[]>([])
 
 const selectedUserKey = ref<EligibleUserKey | null>(null)
 const selectedGoodsId = ref<number | null>(null)
@@ -134,10 +133,7 @@ const showGuardFields = computed(() => testForm.value.type === EventDataTypes.Gu
 async function fetchTestAccountPoint() {
   isLoading.value = true
   try {
-    const res = (await getApiPointGetTestAccountPoint()) as unknown as {
-      code: number
-      data?: number
-    }
+    const res = await getApiPointGetTestAccountPoint()
     if (res.code === 200) {
       testAccountPoint.value = res.data ?? 0
     }
@@ -179,11 +175,7 @@ async function runTest() {
       payload.giftPrice = testForm.value.giftPrice
     }
 
-    const res = (await postApiPointTestPoint(payload as any)) as unknown as {
-      code: number
-      data?: { success: boolean; message: string; pointsAwarded?: number }
-      message?: string
-    }
+    const res = await postApiPointTestPoint(payload as any)
 
     if (res.code === 200 && res.data) {
       if (res.data.success) {
@@ -229,13 +221,10 @@ async function loadEligibilityOptions() {
 
   isLoadingEligibilityOptions.value = true
   try {
-    const [usersRes, goodsRes] = (await Promise.all([
+    const [usersRes, goodsRes] = await Promise.all([
       getApiPointGetAllUsers(),
       getApiPointGetGoods({ id: String(accountInfo.value.id) }),
-    ])) as unknown as [
-      { code: number; data?: ResponsePointUserModel[]; message?: string },
-      { code: number; data?: ResponsePointGoodModel[]; message?: string },
-    ]
+    ])
 
     if (usersRes.code === 200) {
       allUsers.value = usersRes.data ?? []
@@ -291,11 +280,7 @@ async function checkEligibility() {
       params.oId = key.slice('oid:'.length)
     }
 
-    const res = (await getApiPointCheckEligibility(params)) as unknown as {
-      code: number
-      data?: EligibilityResult
-      message?: string
-    }
+    const res = await getApiPointCheckEligibility(params)
     if (res.code === 200 && res.data) {
       eligibilityResult.value = res.data
     } else {

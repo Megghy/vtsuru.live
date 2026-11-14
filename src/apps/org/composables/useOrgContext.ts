@@ -30,10 +30,7 @@ export function provideOrgContext(orgId: Ref<number>): OrgContext {
     if (!isLoggedIn.value || !orgId.value) return
     loadingOrgInfo.value = true
     try {
-      const resp = (await getApiOrgOrgId(orgId.value)) as unknown as {
-        code: number
-        data: OrgInfoModel
-      }
+      const resp = await getApiOrgOrgId(orgId.value)
       if (resp.code === 200) {
         orgInfo.value = resp.data
         orgName.value = resp.data.name

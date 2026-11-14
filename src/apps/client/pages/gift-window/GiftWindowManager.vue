@@ -181,14 +181,10 @@ async function loadHistoryRanking() {
     return
   }
 
-  const response = (await getApiLiveRanking({
+  const response = await getApiLiveRanking({
     liveId: selectedHistoryLiveId.value,
     limit: 100,
-  })) as unknown as {
-    code: number
-    message?: string
-    data: ResponseLiveRankingEntryModel[]
-  }
+  })
   if (response.code !== 200) throw new Error(response.message)
   historyRanking.value = response.data
 }
@@ -197,11 +193,7 @@ async function loadHistory() {
   if (isHistoryLoading.value) return
   isHistoryLoading.value = true
   try {
-    const response = (await getApiLiveGetAll()) as unknown as {
-      code: number
-      message?: string
-      data: ResponseLiveInfoModel[]
-    }
+    const response = await getApiLiveGetAll()
     if (response.code !== 200) throw new Error(response.message)
 
     historyLives.value = response.data.filter((live) => live.isFinish)

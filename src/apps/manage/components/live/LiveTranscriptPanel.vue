@@ -7,9 +7,9 @@ import Search24Filled from '@vicons/fluent/es/Search24Filled'
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
+import type { ResponseLiveTranscriptSegmentModel, ResponseLiveTranscriptSessionModel } from '@/api/generated/model'
 import { getApiLiveGetTranscriptSegments, getApiLiveGetTranscriptSessions } from '@/api/generated/live/live'
 import { unwrapOk } from '@/api/query'
-import type { TranscriptSegment, TranscriptSegmentPage, TranscriptSession } from '@/shared/models/transcription'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
 import { Empty } from '@/shared/ui/empty'
@@ -27,8 +27,8 @@ const message = useMessage()
 const loading = ref(false)
 const loaded = ref(false)
 const error = ref<string>()
-const sessions = ref<TranscriptSession[]>([])
-const segments = ref<TranscriptSegment[]>([])
+const sessions = ref<ResponseLiveTranscriptSessionModel[]>([])
+const segments = ref<ResponseLiveTranscriptSegmentModel[]>([])
 const selectedSessionId = ref<string>()
 
 // 搜索与说话人过滤
@@ -77,7 +77,7 @@ const filteredSegments = computed(() => {
   return list
 })
 
-function copySegment(segment: TranscriptSegment) {
+function copySegment(segment: ResponseLiveTranscriptSegmentModel) {
   const line = `[${formatClock(segment.startMs)}] ${segment.speaker ? `${segment.speaker}: ` : ''}${segment.text}`
   navigator.clipboard.writeText(line).then(() => {
     message.success('已复制单句字幕与时间戳')
@@ -89,13 +89,9 @@ async function load() {
   loading.value = true
   error.value = undefined
   try {
-    const response = (await getApiLiveGetTranscriptSessions({
+    const response = await getApiLiveGetTranscriptSessions({
       liveId: props.liveId,
-    })) as unknown as {
-      code: number
-      message?: string
-      data: TranscriptSession[]
-    }
+    })
     sessions.value = unwrapOk(response, '无法获取直播转写会话').toReversed()
     selectedSessionId.value = sessions.value[0]?.id
     if (selectedSessionId.value) await loadSegments(selectedSessionId.value)
@@ -110,20 +106,16 @@ async function load() {
 async function loadSegments(id: string) {
   loading.value = true
   try {
-    const result: TranscriptSegment[] = []
+    const result: ResponseLiveTranscriptSegmentModel[] = []
     let page = 1
     let more = true
     while (more) {
-      const response = (await getApiLiveGetTranscriptSegments({
+      const response = await getApiLiveGetTranscriptSegments({
         liveId: props.liveId,
         sessionId: id,
         page,
         pageSize: 1000,
-      })) as unknown as {
-        code: number
-        message?: string
-        data: TranscriptSegmentPage
-      }
+      })
       const data = unwrapOk(response, '无法获取转写字幕')
       result.push(...data.segments)
       more = data.more
@@ -135,7 +127,7 @@ async function loadSegments(id: string) {
   }
 }
 
-function providerName(provider: TranscriptSession['provider']) {
+function providerName(provider: string) {
   return provider === 'tencent' ? '腾讯云' : 'OpenAI'
 }
 

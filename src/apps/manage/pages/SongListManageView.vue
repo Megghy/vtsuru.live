@@ -42,12 +42,9 @@ const songListUrl = computed(() =>
 async function getSongs() {
   isLoading.value = true
   try {
-    const data = (await getApiSongListGet({
+    const data = await getApiSongListGet({
       id: accountInfo.value?.id != null ? String(accountInfo.value.id) : undefined,
-    })) as unknown as {
-      code: number
-      data: any
-    }
+    })
     if (data.code === 200) songs.value = data.data
   } catch (err) {
     message.error(`获取歌曲失败: ${err}`)

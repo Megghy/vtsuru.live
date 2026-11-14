@@ -1,13 +1,14 @@
 import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, toValue, watch } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 
-import type { ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
+import type { ResponseQAInfo, SettingQuestionDisplay } from '@/api/generated/model'
 import { getApiQaGetCurrentAndSettings, getApiQaGetHash } from '@/api/generated/qa/qa'
 import { QueryRequestError } from '@/api/query'
 import { QUESTION_API_URL } from '@/shared/config'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
 import { createDefaultQuestionDisplaySetting } from '@/shared/questionDisplayPresets'
+import { getRealtimeBus } from '@/shared/realtime'
 
 export type QuestionDisplayOBSState = 'loading' | 'ready' | 'empty' | 'stale' | 'unauthorized' | 'error'
 
@@ -16,11 +17,12 @@ export const QUESTION_DISPLAY_OBS_ENDPOINTS = {
   version: `${QUESTION_API_URL}get-hash`,
 } as const
 
-const POLL_INTERVAL_MS = 3000
+const CONNECTED_SAFETY_POLL_INTERVAL_MS = 60000
+const DISCONNECTED_POLL_INTERVAL_MS = 5000
 const REQUEST_TIMEOUT_MS = 8000
 
 export interface QuestionDisplaySnapshot {
-  question?: ResponseQAInfoToTarget | null
+  question?: ResponseQAInfo | null
   setting: SettingQuestionDisplay
 }
 
@@ -33,14 +35,14 @@ export interface UseQuestionDisplayOBSOptions {
 }
 
 export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
-  const question = ref<ResponseQAInfoToTarget>()
+  const question = ref<ResponseQAInfo>()
   const setting = ref<SettingQuestionDisplay>(createDefaultQuestionDisplaySetting())
   const state = ref<QuestionDisplayOBSState>('loading')
   const lastUpdatedAt = ref<number>()
   const version = ref('')
   const componentActive = ref(false)
 
-  const pollInterval = options.pollIntervalMs ?? POLL_INTERVAL_MS
+  const realtimeStatus = getRealtimeBus().getStatus()
 
   let pollTimer: number | undefined
   let requestController: AbortController | undefined
@@ -87,14 +89,11 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
       return false
     }
 
-    const response = (await getApiQaGetCurrentAndSettings(identityParams(), {
+    const response = await getApiQaGetCurrentAndSettings(identityParams(), {
       signal,
       timeoutMs: REQUEST_TIMEOUT_MS,
       retryOnFailover: false,
-    } as any)) as unknown as {
-      code: number
-      data: QuestionDisplaySnapshot
-    }
+    } as any)
 
     if (response.code !== 200) {
       applyFailure(response.code)
@@ -108,14 +107,11 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   async function fetchVersion(signal: AbortSignal): Promise<void> {
     if (!hasIdentity.value) return
 
-    const response = (await getApiQaGetHash(identityParams(), {
+    const response = await getApiQaGetHash(identityParams(), {
       signal,
       timeoutMs: REQUEST_TIMEOUT_MS,
       retryOnFailover: false,
-    } as any)) as unknown as {
-      code: number
-      data?: string
-    }
+    } as any)
 
     if (response.code !== 200) {
       applyFailure(response.code)
@@ -141,7 +137,10 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   function schedulePoll() {
     window.clearTimeout(pollTimer)
     if (!shouldRun.value) return
-    pollTimer = window.setTimeout(() => void refresh(false), pollInterval)
+    const delay =
+      options.pollIntervalMs ??
+      (realtimeStatus.value.connected ? CONNECTED_SAFETY_POLL_INTERVAL_MS : DISCONNECTED_POLL_INTERVAL_MS)
+    pollTimer = window.setTimeout(() => void refresh(false), delay)
   }
 
   async function refresh(forceSnapshot = true) {

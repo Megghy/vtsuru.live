@@ -33,14 +33,6 @@ vi.mock('@/shared/realtime', () => ({
   }),
 }))
 
-vi.mock('../useVTsuruHub', () => ({
-  useVTsuruHub: () => ({
-    Init: vi.fn().mockResolvedValue(undefined),
-    on: vi.fn(),
-    invoke: vi.fn().mockResolvedValue(undefined),
-  }),
-}))
-
 describe('useOBSNotification (RealtimeBus Topic)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())

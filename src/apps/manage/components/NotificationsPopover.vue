@@ -85,13 +85,9 @@ async function acceptOrgInvite(item: any) {
   try {
     const type = getOrgInviteType(item)
     const token = getOrgInviteToken(item)
-    const resp = (await (type === 'member'
+    const resp = await (type === 'member'
       ? postApiOrgInviteMemberAccept({ token })
-      : postApiOrgInviteStreamerAccept({ token }))) as unknown as {
-      code: number
-      message?: string
-      data: { orgId: number; orgName: string }
-    }
+      : postApiOrgInviteStreamerAccept({ token }))
     if (resp.code !== 200) {
       message.error(resp.message)
       return
@@ -110,13 +106,9 @@ async function rejectOrgInvite(item: any) {
   try {
     const type = getOrgInviteType(item)
     const token = getOrgInviteToken(item)
-    const resp = (await (type === 'member'
+    const resp = await (type === 'member'
       ? postApiOrgInviteMemberReject({ token })
-      : postApiOrgInviteStreamerReject({ token }))) as unknown as {
-      code: number
-      message?: string
-      data: { orgId: number; orgName: string }
-    }
+      : postApiOrgInviteStreamerReject({ token }))
     if (resp.code !== 200) {
       message.error(resp.message)
       return

@@ -63,14 +63,10 @@ export async function fetchOfficialLiveStats(roomId: number, uid?: number): Prom
 
   try {
     // 1. 优先调用后端统一接口
-    const res = (await getApiBiliRoomStats({
+    const res = await getApiBiliRoomStats({
       roomId,
       uid: uid || 0,
-    })) as unknown as {
-      code: number
-      message?: string
-      data?: ResponseLiveRoomStats
-    }
+    })
 
     if (res.code === 200 && res.data) {
       updateOfficialStats({

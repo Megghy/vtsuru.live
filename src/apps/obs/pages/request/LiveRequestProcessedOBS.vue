@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core'
 import { List } from 'linqts'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { Vue3Marquee } from 'vue3-marquee'
 
+import { useAccount } from '@/api/account'
 import type { SongRequestInfo } from '@/api/client-types'
 import { getApiLiveRequestGetToday } from '@/api/generated/live-request/live-request'
 import type { SettingSongRequest } from '@/api/generated/model'
 import { QueueSortType, SongRequestFrom } from '@/api/generated/model'
+import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
+import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { Empty } from '@/shared/ui/empty'
 import { Separator } from '@/shared/ui/separator'
 
@@ -19,10 +22,12 @@ const props = defineProps<{
 }>()
 
 const route = useRoute()
+const account = useAccount()
 const currentId = computed<string>(() => {
   const v = props.id ?? (Array.isArray(route.query.id) ? route.query.id[0] : route.query.id)
   return v === undefined || v === null ? '' : String(v)
 })
+const targetUserId = computed(() => parsePositiveId(currentId.value) || (account.value.id > 0 ? String(account.value.id) : ''))
 
 const cardRef = ref()
 const listContainerRef = ref()
@@ -69,12 +74,9 @@ const settings = ref<SettingSongRequest>({} as SettingSongRequest)
 
 async function get() {
   try {
-    const data = (await getApiLiveRequestGetToday(
+    const data = await getApiLiveRequestGetToday(
       currentId.value ? { id: Number(currentId.value) } : {},
-    )) as unknown as {
-      code: number
-      data: { songs: SongRequestInfo[]; setting: SettingSongRequest }
-    }
+    )
     if (data.code === 200) {
       return data.data
     }
@@ -97,14 +99,14 @@ async function update() {
   }
 }
 
-onMounted(() => {
-  update()
-  window.$mitt.on('onOBSComponentUpdate', () => {
-    update()
-  })
+const { on } = useObsRealtimeSync({
+  topic: () => (targetUserId.value ? `obs:display:live-request:${targetUserId.value}` : ''),
+  active: () => props.active ?? true,
+  visible: () => props.visible ?? true,
+  onSync: update,
 })
-onUnmounted(() => {
-  window.$mitt.off('onOBSComponentUpdate')
+on('Changed', () => {
+  void update()
 })
 </script>
 

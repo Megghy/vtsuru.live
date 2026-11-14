@@ -205,13 +205,10 @@ async function fetchRanking() {
   if (!props.live.liveId) return
   isRankingLoading.value = true
   try {
-    const res = (await getApiLiveRanking({
+    const res = await getApiLiveRanking({
       liveId: props.live.liveId,
       limit: 10,
-    })) as unknown as {
-      code: number
-      data?: ResponseLiveRankingEntryModel[]
-    }
+    })
     if (res.code === 200 && res.data) {
       rankingList.value = res.data
     }

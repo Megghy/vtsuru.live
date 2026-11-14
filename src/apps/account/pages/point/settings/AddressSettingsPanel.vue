@@ -142,13 +142,9 @@ async function saveAddress() {
   saving.value = true
   try {
     const payload = { ...draft.value, phone: draft.value.phone as number }
-    const response = (await postApiPointUserUpdateAddress(payload as any, {
+    const response = await postApiPointUserUpdateAddress(payload as any, {
       headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ShippingAddressInfo
-    }
+    })
     if (response.code !== 200) throw new Error(response.message)
 
     const current = auth.biliAuth.address ?? []

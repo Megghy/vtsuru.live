@@ -204,11 +204,7 @@ function latestSubmitTime(info: VideoCollectInfo) {
 async function loadData() {
   isLoading.value = true
   try {
-    const response = (await getApiVideoCollectGet({ id: currentId() })) as unknown as {
-      code: number
-      message?: string
-      data: ResponseVideoCollectDetail
-    }
+    const response = await getApiVideoCollectGet({ id: currentId() })
     if (response.code !== 200) throw new Error(response.message)
     videoDetail.value = response.data
   } catch (error) {
@@ -311,14 +307,10 @@ async function batchSetStatus(status: VideoStatus) {
 async function updateTable(model: RequestVideoTable) {
   tableOperation.value = 'edit'
   try {
-    const response = (await postApiVideoCollectUpdate({
+    const response = await postApiVideoCollectUpdate({
       ...model,
       id: currentId(),
-    } as any)) as unknown as {
-      code: number
-      message?: string
-      data: ResponseVideoCollectModel
-    }
+    } as any)
     if (response.code !== 200) throw new Error(response.message)
     if (videoDetail.value) videoDetail.value.table = response.data
     editModalVisible.value = false

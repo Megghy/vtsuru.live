@@ -23,6 +23,7 @@ import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { getAdjacentQuestion, getNextUnreadQuestion, normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
 import { createDefaultQuestionDisplaySetting } from '@/shared/questionDisplayPresets'
+import { useRealtimeTopic } from '@/shared/realtime'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -35,12 +36,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { copyToClipboard, toast } from '@/shared/utils'
 import { useQuestionBox } from '@/store/useQuestionBox'
-import { useWebRTC } from '@/store/useRTC'
 
 const router = useRouter()
 const accountInfo = useAccount()
 const questionBox = useQuestionBox()
-const rtc = useWebRTC()
+const qaTopic = computed(() => (accountInfo.value.id > 0 ? `obs:display:qa:${accountInfo.value.id}` : ''))
+const { status: realtimeStatus, publish: publishQaEvent } = useRealtimeTopic(qaTopic)
 
 const stageViewportRef = ref<HTMLElement>()
 const { width: viewportWidth, height: viewportHeight } = useElementSize(stageViewportRef)
@@ -108,10 +109,10 @@ const filteredQuestions = computed(() => {
     })
 })
 
-const rtcStatusText = computed(() => {
-  if (rtc.status === 'ready') return '通道已就绪'
-  if (rtc.status === 'error') return rtc.lastError || '同步通道不可用'
-  if (rtc.status === 'connecting') return '正在连接同步通道'
+const syncStatusText = computed(() => {
+  if (realtimeStatus.value.connected) return '通道已就绪'
+  if (realtimeStatus.value.error) return realtimeStatus.value.error
+  if (realtimeStatus.value.connecting) return '正在连接同步通道'
   return '等待同步通道'
 })
 
@@ -142,8 +143,10 @@ watch(
 )
 
 const syncScroll = useDebounceFn((progress: number) => {
-  if (settingDraft.value?.syncScroll) {
-    rtc.send('function.question.sync-scroll', progress)
+  if (settingDraft.value?.syncScroll && qaTopic.value) {
+    void publishQaEvent('Scroll', progress).catch((error) => {
+      console.warn('[QuestionDisplay] 滚动同步发送失败', error)
+    })
   }
 }, 80)
 
@@ -323,9 +326,6 @@ watch(
 onMounted(() => {
   window.addEventListener('beforeunload', onBeforeUnload)
   window.addEventListener('keydown', handleKeydown)
-  void rtc.Init('master', { timeoutMs: 5000 }).catch((error) => {
-    console.warn('[QuestionDisplay] RTC 滚动同步不可用', error)
-  })
 })
 
 onBeforeUnmount(() => {
@@ -688,8 +688,8 @@ onBeforeUnmount(() => {
                 class="flex-between p-3 rounded-lg border border-border/80 bg-muted/30"
               >
                 <div class="flex flex-col">
-                  <strong class="text-xs">实时滚动同步 (WebRTC)</strong>
-                  <small class="text-[11px] text-muted-foreground">{{ rtcStatusText }}</small>
+                  <strong class="text-xs">实时滚动同步</strong>
+                  <small class="text-[11px] text-muted-foreground">{{ syncStatusText }}</small>
                 </div>
                 <Switch v-model:checked="settingDraft.syncScroll" />
               </div>

@@ -74,13 +74,9 @@ async function loadOrders(force = false) {
   loading.value = true
   const currentGeneration = generation
   const promise = (async () => {
-    const result = (await getApiPointUserGetOrders({
+    const result = await getApiPointUserGetOrders({
       headers: Object.fromEntries(await auth.getBiliAuthHeaders()),
-    })) as unknown as {
-      code: number
-      message?: string
-      data: ResponsePointOrder2UserModel[]
-    }
+    })
     if (result.code !== 200) throw new Error(result.message || '获取订单失败')
     if (currentGeneration !== generation) return
     orders.value = result.data

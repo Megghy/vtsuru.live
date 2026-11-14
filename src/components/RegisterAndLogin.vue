@@ -360,7 +360,7 @@ async function onLoginButtonClick() {
   const controller = beginRequest('login', '登录')
 
   try {
-    const data = (await postApiAccountLogin(
+    const data = await postApiAccountLogin(
       {
         nameOrEmail: loginModel.value.account,
         password: loginModel.value.password,
@@ -370,14 +370,7 @@ async function onLoginButtonClick() {
         timeoutMs: 8000,
         retryOnFailover: false,
       } as any,
-    )) as unknown as {
-      code: number
-      message?: string
-      data: {
-        account: ResponseAccountInfo
-        token: string
-      }
-    }
+    )
 
     if (data.code !== 200) {
       setFeedback('error', 'error', data.message || '登录失败')

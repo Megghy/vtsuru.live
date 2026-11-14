@@ -104,13 +104,9 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     message: string
   }> {
     try {
-      const data = (await postApiOpenLiveStart(this.authInfo?.Code ? (this.authInfo as any) : undefined, {
+      const data = await postApiOpenLiveStart(this.authInfo?.Code ? (this.authInfo as any) : undefined, {
         signal,
-      })) as unknown as {
-        code: number
-        data: AppStartData
-        message: string
-      }
+      })
       if (data.code == 200) {
         console.log(`[${this.type}] 已获取场次信息`)
         return {
@@ -168,16 +164,13 @@ export default class OpenLiveClient extends BaseDanmakuClient {
     this.heartbeatController = controller
 
     try {
-      const data = (await (this.authInfo
+      const data = await (this.authInfo
         ? postApiOpenLiveHeartbeat(this.authInfo as any, {
             signal: controller.signal,
           })
         : getApiOpenLiveHeartbeatInternal({
             signal: controller.signal,
-          }))) as unknown as {
-        code: number
-        message: string
-      }
+          }))
 
       if (this.isHeartbeatActive(generation) && data.code !== 200) {
         this.reportConnectionLoss(`心跳失败: ${data.message}`)

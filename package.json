@@ -92,7 +92,6 @@
     "obs-websocket-js": "^5.0.8",
     "onnxruntime-web": "^1.30.0",
     "openai": "^7.42.0",
-    "peerjs": "^1.5.5",
     "pinia": "^4.1.0",
     "protobufjs": "^8.8.1",
     "qrcode.vue": "^3.11.0",

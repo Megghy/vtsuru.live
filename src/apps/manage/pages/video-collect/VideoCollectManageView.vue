@@ -132,11 +132,7 @@ function capacityPercentage(table: ResponseVideoCollectModel) {
 async function loadTables() {
   isLoading.value = true
   try {
-    const response = (await getApiVideoCollectGetAll()) as unknown as {
-      code: number
-      message?: string
-      data: ResponseVideoCollectModel[]
-    }
+    const response = await getApiVideoCollectGetAll()
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value = response.data
   } catch (error) {
@@ -150,11 +146,7 @@ async function loadTables() {
 async function createTable(model: RequestVideoTable) {
   isCreating.value = true
   try {
-    const response = (await postApiVideoCollectCreate(model as any)) as unknown as {
-      code: number
-      message?: string
-      data: ResponseVideoCollectModel
-    }
+    const response = await postApiVideoCollectCreate(model as any)
     if (response.code !== 200) throw new Error(response.message)
     videoTables.value.unshift(response.data)
     createModalVisible.value = false
@@ -171,14 +163,10 @@ async function updateTable(model: RequestVideoTable) {
   if (!currentEditingTable.value) return
   isCreating.value = true
   try {
-    const response = (await postApiVideoCollectUpdate({
+    const response = await postApiVideoCollectUpdate({
       ...model,
       id: currentEditingTable.value.id,
-    } as any)) as unknown as {
-      code: number
-      message?: string
-      data: ResponseVideoCollectModel
-    }
+    } as any)
     if (response.code !== 200) throw new Error(response.message)
     const idx = videoTables.value.findIndex((t) => t.id === currentEditingTable.value?.id)
     if (idx !== -1) videoTables.value[idx] = response.data

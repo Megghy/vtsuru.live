@@ -32,6 +32,8 @@ export function useRealtimeTopic(
       } catch (err) {
         console.error(`[useRealtimeTopic] 订阅 ${nextTopic} 失败:`, err)
       }
+    } else {
+      activeTopic.value = ''
     }
   }
 

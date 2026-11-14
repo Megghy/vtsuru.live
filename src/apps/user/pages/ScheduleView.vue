@@ -70,13 +70,9 @@ async function loadSchedule() {
 
   loadingData.value = true
   try {
-    const response = (await getApiScheduleGet({
+    const response = await getApiScheduleGet({
       id: String(userId),
-    })) as unknown as {
-      code: number
-      data?: ResponseScheduleModel[]
-      message?: string
-    }
+    })
     if (response.code !== 200) throw new Error(response.message)
     currentData.value = response.data ?? []
   } catch (error) {
@@ -109,12 +105,9 @@ async function loadBiliReserve() {
     return
   }
   try {
-    const response = (await getApiScheduleBiliReserve({
+    const response = await getApiScheduleBiliReserve({
       id: String(props.userInfo.id),
-    })) as unknown as {
-      code: number
-      data?: ResponseBiliLiveReserveModel
-    }
+    })
     if (response.code === 200 && response.data) biliReserve.value = response.data
   } catch (error) {
     console.error('加载 B 站预约失败', error)
