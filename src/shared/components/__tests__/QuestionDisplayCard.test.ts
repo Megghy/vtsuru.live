@@ -1,5 +1,5 @@
 import { mount } from '@vue/test-utils'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { createMockQuestion, createMockQuestionDisplaySetting, createMockUploadFile } from '@/test/testUtils'
@@ -85,5 +85,44 @@ describe('QuestionDisplayCard.vue', () => {
 
     // 失败后仅保留第二张
     expect(wrapper.findAll('.question-display-image').length).toBe(1)
+  })
+
+  it('按需控制滚动条类名切换', async () => {
+    const question = createMockQuestion()
+    const setting = createMockQuestionDisplaySetting()
+
+    const wrapper = mount(QuestionDisplayCard, {
+      props: { question, setting },
+    })
+
+    const content = wrapper.find('.question-display-content')
+    expect(content.classes()).toContain('no-scrollbar')
+    expect(content.classes()).not.toContain('scrollbar-thin')
+
+    await wrapper.setProps({ showScrollbar: true })
+    expect(content.classes()).toContain('scrollbar-thin')
+    expect(content.classes()).not.toContain('no-scrollbar')
+  })
+
+  it('同步滚动进度时调用平滑滚动', () => {
+    const question = createMockQuestion()
+    const setting = createMockQuestionDisplaySetting()
+
+    const wrapper = mount(QuestionDisplayCard, {
+      props: { question, setting },
+    })
+
+    const contentEl = wrapper.find('.question-display-content').element as HTMLElement
+    Object.defineProperty(contentEl, 'scrollHeight', { value: 1000, configurable: true })
+    Object.defineProperty(contentEl, 'clientHeight', { value: 400, configurable: true })
+    const scrollToSpy = vi.fn()
+    contentEl.scrollTo = scrollToSpy
+
+    ;(wrapper.vm as unknown as { setScrollProgress: (p: number) => void }).setScrollProgress(0.5)
+
+    expect(scrollToSpy).toHaveBeenCalledWith({
+      top: 300,
+      behavior: 'smooth',
+    })
   })
 })

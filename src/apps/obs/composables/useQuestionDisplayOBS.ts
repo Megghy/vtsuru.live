@@ -47,6 +47,10 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   let pollTimer: number | undefined
   let requestController: AbortController | undefined
   let requestInFlight: Promise<void> | undefined
+  let inFlightMode: 'snapshot' | 'version' | undefined
+  let inFlightExpectedVersion: string | undefined
+  let pendingForceSnapshot = false
+  let pendingExpectedVersion: string | undefined
 
   const isActive = computed(() => (options.active === undefined ? true : toValue(options.active)))
   const isVisible = computed(() => (options.visible === undefined ? true : toValue(options.visible)))
@@ -143,15 +147,31 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
     pollTimer = window.setTimeout(() => void refresh(false), delay)
   }
 
-  async function refresh(forceSnapshot = true) {
+  async function refresh(forceSnapshot = true, expectedVersion?: string) {
     if (!shouldRun.value) return
-    if (requestInFlight) return requestInFlight
+    if (requestInFlight) {
+      const shouldQueueSnapshot =
+        forceSnapshot &&
+        (inFlightMode === 'version' ||
+          (expectedVersion !== undefined && expectedVersion !== inFlightExpectedVersion))
+      if (shouldQueueSnapshot) {
+        pendingForceSnapshot = true
+        pendingExpectedVersion = expectedVersion
+      }
+      return requestInFlight
+    }
 
+    const mode = forceSnapshot || !lastUpdatedAt.value ? 'snapshot' : 'version'
+    inFlightMode = mode
+    inFlightExpectedVersion = expectedVersion
     requestController = new AbortController()
     requestInFlight = (async () => {
       try {
-        if (forceSnapshot || !lastUpdatedAt.value) {
-          await fetchSnapshot(requestController!.signal)
+        if (mode === 'snapshot') {
+          const ok = await fetchSnapshot(requestController!.signal, expectedVersion)
+          if (ok && expectedVersion === undefined) {
+            version.value = ''
+          }
         } else {
           await fetchVersion(requestController!.signal)
         }
@@ -162,7 +182,16 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
       } finally {
         requestController = undefined
         requestInFlight = undefined
-        schedulePoll()
+        inFlightMode = undefined
+        inFlightExpectedVersion = undefined
+        if (pendingForceSnapshot && shouldRun.value) {
+          const nextExpectedVersion = pendingExpectedVersion
+          pendingForceSnapshot = false
+          pendingExpectedVersion = undefined
+          void refresh(true, nextExpectedVersion)
+        } else {
+          schedulePoll()
+        }
       }
     })()
 
@@ -171,13 +200,14 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
 
   function pause() {
     componentActive.value = false
+    pendingForceSnapshot = false
+    pendingExpectedVersion = undefined
     window.clearTimeout(pollTimer)
     requestController?.abort()
   }
 
   function resume() {
     componentActive.value = true
-    void refresh(true)
   }
 
   onMounted(resume)
@@ -185,17 +215,25 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   onDeactivated(pause)
   onUnmounted(pause)
 
-  watch(shouldRun, (running) => {
-    if (running) void refresh(true)
-    else {
-      window.clearTimeout(pollTimer)
-      requestController?.abort()
-    }
-  })
+  watch(
+    shouldRun,
+    (running) => {
+      if (running) void refresh(true)
+      else {
+        pendingForceSnapshot = false
+        pendingExpectedVersion = undefined
+        window.clearTimeout(pollTimer)
+        requestController?.abort()
+      }
+    },
+    { flush: 'sync' },
+  )
 
   watch(
     [userIdValue, tokenValue],
     () => {
+      pendingForceSnapshot = false
+      pendingExpectedVersion = undefined
       version.value = ''
       question.value = undefined
       setting.value = createDefaultQuestionDisplaySetting()

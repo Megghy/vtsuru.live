@@ -80,6 +80,15 @@ export function isLegacyQuestionDisplaySetting(setting?: Partial<SettingQuestion
   if (!Number.isFinite(fontSize) || fontSize < 12) return true
   if (!Number.isFinite(lineHeight) || lineHeight < 1) return true
   if (!Number.isFinite(imageMaxHeight) || imageMaxHeight < 80) return true
+  // 旧版 struct 序列化缺失新增字段时，透明/边距/圆角/边框全为 0 且字重为空，兜底回退默认卡片避免 OBS 透明
+  const isStructZeroedLegacy =
+    Number(setting.backgroundOpacity ?? 0) === 0 &&
+    Number(setting.contentPadding ?? 0) === 0 &&
+    Number(setting.borderRadius ?? 0) === 0 &&
+    Number(setting.borderWidth ?? 0) === 0 &&
+    setting.fontWeight == null &&
+    setting.nameFontWeight == null
+  if (isStructZeroedLegacy) return true
   return false
 }
 

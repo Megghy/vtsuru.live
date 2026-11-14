@@ -9,7 +9,7 @@ import PanelRightContract24Regular from '@vicons/fluent/es/PanelRightContract24R
 import Save24Regular from '@vicons/fluent/es/Save24Regular'
 import Heart from '@vicons/ionicons5/es/Heart'
 import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
-import { useDebounceFn, useElementSize } from '@vueuse/core'
+import { useElementSize, useThrottleFn } from '@vueuse/core'
 import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
 import { onBeforeRouteLeave, useRouter } from 'vue-router'
 
@@ -21,7 +21,12 @@ import QuestionDisplayStylePanel from '@/apps/web/components/question-display/Qu
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
-import { getAdjacentQuestion, getNextUnreadQuestion, normalizeQuestionDisplaySetting } from '@/shared/questionDisplay'
+import {
+  getAdjacentQuestion,
+  getNextUnreadQuestion,
+  isLegacyQuestionDisplaySetting,
+  normalizeQuestionDisplaySetting,
+} from '@/shared/questionDisplay'
 import { createDefaultQuestionDisplaySetting } from '@/shared/questionDisplayPresets'
 import { useRealtimeTopic } from '@/shared/realtime'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -53,6 +58,7 @@ const saving = ref(false)
 const settingsReady = computed(() => Boolean(accountInfo.value?.settings))
 const savedCardSize = usePersistedStorage('Settings.QuestionDisplay.CardSize', { width: 720, height: 480 })
 const autoMarkRead = usePersistedStorage('Settings.QuestionDisplay.AutoMarkRead', false)
+const showPreviewScrollbar = usePersistedStorage('vtsuru:settings:question-display:show-scrollbar', true)
 const isSettingsCollapsed = usePersistedStorage('Settings.QuestionDisplay.SettingsCollapsed', false)
 
 const obsUrl = computed(() =>
@@ -124,31 +130,83 @@ let resizeStart:
     }
   | undefined
 
+const initializedFromAccount = ref(false)
+const lastSyncedSettingJson = ref('')
+const needsLegacySync = ref(false)
+const saveError = ref(false)
+let autoSaveTimer: number | undefined
+let suppressNextAutoSave = false
+let pendingSaveAfterCurrent = false
+let pendingManualToast = false
+
+const draftSettingJson = computed(() => JSON.stringify(previewSetting.value))
+
 const hasUnsavedChanges = computed(() => {
-  const saved = accountInfo.value?.settings?.questionDisplay
-  if (!saved || !settingDraft.value) return false
-  return (
-    JSON.stringify(normalizeQuestionDisplaySetting(saved)) !==
-    JSON.stringify(normalizeQuestionDisplaySetting(settingDraft.value))
-  )
+  if (!initializedFromAccount.value || !settingDraft.value) return false
+  return draftSettingJson.value !== lastSyncedSettingJson.value
 })
+
+const canManualSync = computed(() => hasUnsavedChanges.value || needsLegacySync.value || saveError.value)
+
+function clearAutoSaveTimer() {
+  window.clearTimeout(autoSaveTimer)
+  autoSaveTimer = undefined
+}
+
+function scheduleAutoSave() {
+  if (!initializedFromAccount.value || !accountInfo.value) return
+  saveError.value = false
+  clearAutoSaveTimer()
+  autoSaveTimer = window.setTimeout(() => {
+    autoSaveTimer = undefined
+    void saveSettings({ silent: true })
+  }, 450)
+}
 
 watch(
   () => accountInfo.value?.settings?.questionDisplay,
   (value) => {
-    if (!value || hasUnsavedChanges.value) return
-    settingDraft.value = normalizeQuestionDisplaySetting(value)
+    if (!value) return
+    const normalized = normalizeQuestionDisplaySetting(value)
+    const normalizedJson = JSON.stringify(normalized)
+    // 旧版全零设置首次仅在前端兜底展示，不自动静默改库，也不触发离开页弹窗，但保留「立即同步」按钮可点
+    const isLegacy = isLegacyQuestionDisplaySetting(value)
+    if (!initializedFromAccount.value || !hasUnsavedChanges.value) {
+      suppressNextAutoSave = true
+      try {
+        settingDraft.value = normalized
+        lastSyncedSettingJson.value = normalizedJson
+        needsLegacySync.value = isLegacy
+        initializedFromAccount.value = true
+      } finally {
+        suppressNextAutoSave = false
+      }
+    }
   },
   { immediate: true, deep: true },
 )
 
-const syncScroll = useDebounceFn((progress: number) => {
-  if (settingDraft.value?.syncScroll && qaTopic.value) {
-    void publishQaEvent('Scroll', progress).catch((error) => {
-      console.warn('[QuestionDisplay] 滚动同步发送失败', error)
-    })
-  }
-}, 80)
+watch(
+  draftSettingJson,
+  () => {
+    if (!initializedFromAccount.value || suppressNextAutoSave) return
+    scheduleAutoSave()
+  },
+  { flush: 'sync' },
+)
+
+const syncScroll = useThrottleFn(
+  (progress: number) => {
+    if (settingDraft.value?.syncScroll && qaTopic.value) {
+      void publishQaEvent('Scroll', progress).catch((error) => {
+        console.warn('[QuestionDisplay] 滚动同步发送失败', error)
+      })
+    }
+  },
+  80,
+  true,
+  true,
+)
 
 function resizePreview(event: PointerEvent) {
   if (!resizeStart) return
@@ -199,20 +257,50 @@ function onBeforeUnload(event: BeforeUnloadEvent) {
   event.returnValue = ''
 }
 
-async function saveSettings() {
+async function saveSettings(options: { silent?: boolean } = {}) {
   if (!settingDraft.value || !accountInfo.value) return
+  if (!options.silent) {
+    clearAutoSaveTimer()
+  }
+  if (saving.value) {
+    pendingSaveAfterCurrent = true
+    if (!options.silent) pendingManualToast = true
+    return
+  }
+
   const payload = normalizeQuestionDisplaySetting(settingDraft.value)
+  const payloadJson = JSON.stringify(payload)
+  if (payloadJson === lastSyncedSettingJson.value && !needsLegacySync.value) {
+    saveError.value = false
+    if (!options.silent) {
+      toast.success('展示设置已保存并同步')
+    }
+    return
+  }
+
   saving.value = true
+  saveError.value = false
   try {
     const response = await postApiQaUpdateSetting(payload as any)
     if (response.code !== 200) throw new Error(response.message)
-    settingDraft.value = payload
+    lastSyncedSettingJson.value = payloadJson
+    needsLegacySync.value = false
+    initializedFromAccount.value = true
     accountInfo.value.settings.questionDisplay = structuredClone(toRaw(payload))
-    toast.success('展示设置已保存并同步')
+    if (!options.silent) {
+      toast.success('展示设置已保存并同步')
+    }
   } catch (error) {
+    saveError.value = true
     toast.error(error instanceof Error ? error.message : '保存失败')
   } finally {
     saving.value = false
+    if (pendingSaveAfterCurrent) {
+      const shouldToast = pendingManualToast
+      pendingSaveAfterCurrent = false
+      pendingManualToast = false
+      void saveSettings({ silent: !shouldToast })
+    }
   }
 }
 
@@ -273,7 +361,7 @@ function handleKeydown(event: KeyboardEvent) {
   // Ctrl + S / Cmd + S 保存
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 's') {
     event.preventDefault()
-    if (hasUnsavedChanges.value && !saving.value) {
+    if (canManualSync.value && !saving.value) {
       void saveSettings()
     }
     return
@@ -329,6 +417,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  clearAutoSaveTimer()
   window.removeEventListener('beforeunload', onBeforeUnload)
   window.removeEventListener('keydown', handleKeydown)
   stopPreviewResize()
@@ -439,6 +528,7 @@ onBeforeUnmount(() => {
                 :question="questionBox.displayQuestion"
                 :setting="previewSetting"
                 :status="questionBox.displayQuestion ? 'ready' : 'empty'"
+                :show-scrollbar="showPreviewScrollbar"
                 @scroll="syncScroll"
               />
             </div>
@@ -548,7 +638,11 @@ onBeforeUnmount(() => {
             </Button>
           </div>
 
-          <div class="actions-right flex items-center gap-2">
+          <div class="actions-right flex items-center gap-4">
+            <label class="flex items-center gap-1.5 cursor-pointer text-xs">
+              <Checkbox v-model:checked="showPreviewScrollbar" />
+              <span>长内容显示滚动条</span>
+            </label>
             <label class="flex items-center gap-1.5 cursor-pointer text-xs">
               <Checkbox v-model:checked="autoMarkRead" />
               <span>展示时自动标已读</span>
@@ -566,21 +660,27 @@ onBeforeUnmount(() => {
             <strong class="text-sm font-semibold">展示设置</strong>
             <span
               class="text-[11px] font-mono px-1.5 py-0.5 rounded"
-              :class="hasUnsavedChanges ? 'text-amber-500 bg-amber-500/10' : 'text-muted-foreground'"
+              :class="
+                saveError
+                  ? 'text-destructive bg-destructive/10'
+                  : saving || hasUnsavedChanges || needsLegacySync
+                    ? 'text-amber-500 bg-amber-500/10'
+                    : 'text-muted-foreground'
+              "
             >
-              {{ hasUnsavedChanges ? '未保存' : '已同步' }}
+              {{ saving ? '同步中...' : saveError ? '同步失败' : hasUnsavedChanges || needsLegacySync ? '待同步' : '已同步' }}
             </span>
           </div>
           <Button
             class="flex items-center gap-1"
-            :disabled="!hasUnsavedChanges || saving"
-            @click="saveSettings"
+            :disabled="!canManualSync || saving"
+            @click="saveSettings()"
           >
             <component
               :is="Save24Regular"
               class="size-3.5"
             />
-            保存 (Ctrl+S)
+            {{ saving ? '同步中...' : saveError ? '重试同步' : '立即同步' }}
           </Button>
         </header>
 

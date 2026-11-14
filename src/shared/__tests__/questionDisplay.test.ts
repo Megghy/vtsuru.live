@@ -89,6 +89,39 @@ describe('questionDisplay utils', () => {
       expect(normalized.backgroundColor).toBe(def.backgroundColor)
       expect(normalized.backgroundOpacity).toBe(def.backgroundOpacity)
     })
+
+    it('对旧版 struct 零值透明设置自动兜底为默认不透明卡片', () => {
+      const normalized = normalizeQuestionDisplaySetting({
+        fontSize: 20,
+        lineHeight: 1.58,
+        imageMaxHeight: 360,
+        fontColor: '302D2D',
+        backgroundColor: 'EEB1B1',
+        backgroundOpacity: 0,
+        contentPadding: 0,
+        borderRadius: 0,
+        borderWidth: 0,
+        fontWeight: null,
+        nameFontWeight: null,
+        syncScroll: false,
+      })
+
+      const def = createDefaultQuestionDisplaySetting()
+      expect(normalized.backgroundOpacity).toBe(def.backgroundOpacity)
+      expect(normalized.backgroundColor).toBe(def.backgroundColor)
+      expect(normalized.syncScroll).toBe(false)
+    })
+
+    it('保留“透明字幕”预设的零透明度配置', () => {
+      const transparentPreset = QUESTION_DISPLAY_PRESETS.find((preset) => preset.name === '透明字幕')!
+      const normalized = normalizeQuestionDisplaySetting({
+        ...transparentPreset.value,
+        syncScroll: true,
+      })
+
+      expect(normalized.backgroundOpacity).toBe(0)
+      expect(normalized.fontColor).toBe('FFFFFF')
+    })
   })
 
   describe('getAdjacentQuestion', () => {

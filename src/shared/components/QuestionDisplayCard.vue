@@ -47,9 +47,11 @@ const props = withDefaults(
     question?: ResponseQAInfo
     setting: SettingQuestionDisplay
     status?: DisplayStatus
+    showScrollbar?: boolean
   }>(),
   {
     status: undefined,
+    showScrollbar: false,
   },
 )
 
@@ -174,9 +176,16 @@ function setScrollProgress(progress: number) {
   const element = contentRef.value
   if (!element) return
   const range = element.scrollHeight - element.clientHeight
+  if (range <= 0) {
+    updateOverflowState()
+    return
+  }
+  const targetTop = Math.max(0, Math.min(1, progress)) * range
+  const prefersReducedMotion =
+    typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
   element.scrollTo({
-    top: Math.max(0, Math.min(1, progress)) * range,
-    behavior: 'auto',
+    top: targetTop,
+    behavior: prefersReducedMotion ? 'auto' : 'smooth',
   })
   updateOverflowState()
 }
@@ -239,11 +248,14 @@ defineExpose({ setScrollProgress })
             <div class="question-display-content-wrapper">
               <div
                 ref="contentRef"
-                class="question-display-content no-scrollbar"
-                :class="{
-                  'has-images': displayedImages.length > 0,
-                  'has-single-image': displayedImages.length === 1,
-                }"
+                class="question-display-content"
+                :class="[
+                  props.showScrollbar ? 'scrollbar-thin' : 'no-scrollbar',
+                  {
+                    'has-images': displayedImages.length > 0,
+                    'has-single-image': displayedImages.length === 1,
+                  },
+                ]"
                 :style="contentStyle"
                 @scroll="emitScroll"
               >

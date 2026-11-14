@@ -238,4 +238,45 @@ describe('RealtimeBus and useRealtimeTopic', () => {
     expect(activeTopicValue).toBe('obs:display:qa:100')
     scope.stop()
   })
+
+  it('recovers without error when connection is stopped for rebuild during Subscribe invoke', async () => {
+    const scope = effectScope()
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    let rejectPendingSubscribe: ((err: Error) => void) | null = null
+
+    let invokeCount = 0
+    scope.run(() => {
+      useRealtimeTopic('obs:display:qa:1')
+    })
+
+    // 首次建连创建连接后，让 resubscribeAll 的第1次调用立即成功，第2次(subscribe)挂起直到 stop()
+    const firstConn = mockConnection!
+    firstConn.invoke.mockImplementation(async () => {
+      invokeCount++
+      if (invokeCount === 2) {
+        return await new Promise((_resolve, reject) => {
+          rejectPendingSubscribe = reject
+        })
+      }
+      return null
+    })
+    firstConn.stop.mockImplementationOnce(async () => {
+      firstConn.state = 'Disconnected'
+      rejectPendingSubscribe?.(new Error('Invocation canceled due to the underlying connection being closed.'))
+    })
+
+    await flushPromises()
+
+    // 模拟在 Subscribe 尚未返回时 token 变化触发 rebuild
+    mockAccount.value = { id: 1, token: 'refreshed-token' }
+    await nextTick()
+    await flushPromises()
+
+    expect(errorSpy).not.toHaveBeenCalled()
+    expect(mockConnection).not.toBe(firstConn)
+    expect(mockConnection?.invoke).toHaveBeenCalledWith('Subscribe', 'obs:display:qa:1', null)
+
+    errorSpy.mockRestore()
+    scope.stop()
+  })
 })

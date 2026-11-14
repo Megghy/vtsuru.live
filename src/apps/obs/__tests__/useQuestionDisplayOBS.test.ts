@@ -170,4 +170,59 @@ describe('useQuestionDisplayOBS', () => {
     await obs.refresh(true)
     expect(obs.state.value).toBe('unauthorized')
   })
+
+  it('请求飞行中收到带新版本的强制刷新通知时不会丢弃，结束后立即补拉快照', async () => {
+    const mockQuestion1 = createMockQuestion({ id: 101 })
+    const mockQuestion2 = createMockQuestion({ id: 102, question: { message: '实时推送更新' } })
+    const mockSetting = createMockQuestionDisplaySetting()
+
+    let resolveVersionRequest: ((value: any) => void) | undefined
+    let snapshotCallCount = 0
+
+    vi.spyOn(queryApi, 'QueryGetAPI').mockImplementation(async (url: string) => {
+      if (url === QUESTION_DISPLAY_OBS_ENDPOINTS.snapshot) {
+        snapshotCallCount += 1
+        return {
+          code: 200,
+          message: 'OK',
+          data: {
+            question: snapshotCallCount === 1 ? mockQuestion1 : mockQuestion2,
+            setting: mockSetting,
+          },
+        } as any
+      }
+      if (url === QUESTION_DISPLAY_OBS_ENDPOINTS.version) {
+        return await new Promise((resolve) => {
+          resolveVersionRequest = resolve
+        })
+      }
+      return { code: 200, message: 'OK', data: null } as any
+    })
+
+    const obs = useQuestionDisplayOBS({
+      userId: 42,
+      active: true,
+      visible: true,
+      pollIntervalMs: 60000,
+    })
+
+    obs.resume()
+    await obs.refresh(true)
+    expect(obs.question.value?.id).toBe(101)
+
+    // 发起一次未决的 get-hash 轮询
+    const inflightPoll = obs.refresh(false)
+    // 请求尚未结束时收到实时 Changed 事件，触发强制刷新并传入新 hash
+    void obs.refresh(true, 'hash_v2')
+
+    // 完成飞行中的 get-hash（返回旧 hash_v1）
+    resolveVersionRequest?.({ code: 200, message: 'OK', data: 'hash_v1' })
+    await inflightPoll
+    await Promise.resolve()
+    await Promise.resolve()
+
+    expect(snapshotCallCount).toBe(2)
+    expect(obs.question.value?.id).toBe(102)
+    expect(obs.version.value).toBe('hash_v2')
+  })
 })

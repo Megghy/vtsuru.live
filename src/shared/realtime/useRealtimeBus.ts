@@ -20,6 +20,7 @@ class RealtimeBusService {
   private connectedToken = ''
   private connectedUrl = ''
   private hasConnectedOnce = false
+  private intentionallyStoppedConns = new WeakSet<HubConnection>()
   private topics = new Map<string, TopicRegistration>()
   private status = ref<RealtimeBusStatus>({
     connected: false,
@@ -130,6 +131,7 @@ class RealtimeBusService {
         this.connection = null
         this.status.value.connected = false
         if (staleConn) {
+          this.intentionallyStoppedConns.add(staleConn)
           await staleConn.stop().catch(() => {})
         }
         if (this.hasActiveTopics()) {
@@ -144,19 +146,33 @@ class RealtimeBusService {
   }
 
   public async ensureConnected(): Promise<HubConnection> {
-    if (this.rebuildingPromise) {
-      await this.rebuildingPromise
-    }
+    while (true) {
+      if (this.rebuildingPromise) {
+        await this.rebuildingPromise
+      }
 
-    if (this.connection && this.connection.state === HubConnectionState.Connected) {
+      const conn = await this.connectInternal()
       const nextToken = useAccount().value.token || ''
       const nextUrl = getCurrentAPIUrl()
       if (nextToken !== this.connectedToken || nextUrl !== this.connectedUrl) {
         await this.reconnectIfNeeded()
+        continue
       }
-    }
 
-    return this.connectInternal()
+      if (this.rebuildingPromise || this.intentionallyStoppedConns.has(conn) || this.connection !== conn) {
+        continue
+      }
+
+      return conn
+    }
+  }
+
+  private isCanceledByRebuild(conn: HubConnection): boolean {
+    return (
+      this.intentionallyStoppedConns.has(conn) ||
+      this.rebuildingPromise !== null ||
+      (this.connection !== null && this.connection !== conn)
+    )
   }
 
   private async connectInternal(): Promise<HubConnection> {
@@ -190,6 +206,7 @@ class RealtimeBusService {
             const failedConn = this.connection
             this.connection = null
             if (failedConn) {
+              this.intentionallyStoppedConns.add(failedConn)
               await failedConn.stop().catch(() => {})
             }
             await startOnce()
@@ -223,11 +240,12 @@ class RealtimeBusService {
   }
 
   private async resubscribeAll() {
-    if (!this.connection || this.connection.state !== HubConnectionState.Connected) return
+    const conn = this.connection
+    if (!conn || conn.state !== HubConnectionState.Connected) return
     const promises: Promise<unknown>[] = []
     for (const [topic, reg] of this.topics.entries()) {
       if (reg.refCount > 0) {
-        promises.push(this.connection.invoke('Subscribe', topic, reg.key ?? null).catch(() => {}))
+        promises.push(conn.invoke('Subscribe', topic, reg.key ?? null).catch(() => {}))
       }
     }
     await Promise.allSettled(promises)
@@ -257,8 +275,19 @@ class RealtimeBusService {
     if (key !== undefined) reg.key = key
 
     if (reg.refCount === 1) {
-      const conn = await this.ensureConnected()
-      await conn.invoke('Subscribe', topic, key ?? null)
+      while (reg.refCount > 0) {
+        const conn = await this.ensureConnected()
+        if (reg.refCount <= 0) return
+        try {
+          await conn.invoke('Subscribe', topic, reg.key ?? null)
+          return
+        } catch (err) {
+          if (this.isCanceledByRebuild(conn)) {
+            continue
+          }
+          throw err
+        }
+      }
     }
   }
 
@@ -301,8 +330,18 @@ class RealtimeBusService {
   }
 
   public async publish(topic: string, eventName: string, payload: unknown): Promise<void> {
-    const conn = await this.ensureConnected()
-    await conn.invoke('Publish', topic, eventName, payload)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const conn = await this.ensureConnected()
+      try {
+        await conn.invoke('Publish', topic, eventName, payload)
+        return
+      } catch (err) {
+        if (attempt === 0 && this.isCanceledByRebuild(conn)) {
+          continue
+        }
+        throw err
+      }
+    }
   }
 }
 

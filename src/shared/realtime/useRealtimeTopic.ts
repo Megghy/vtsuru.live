@@ -14,27 +14,57 @@ export function useRealtimeTopic(
   const unbindList: Array<() => void> = []
 
   let currentSubscribed = ''
+  let disposed = false
+  let pendingSync: Promise<void> | null = null
+  let syncQueued = false
 
-  async function syncSubscription() {
-    const nextTopic = toValue(topicRef).trim()
-    if (nextTopic === currentSubscribed) return
-
-    if (currentSubscribed) {
-      await bus.unsubscribe(currentSubscribed)
-      currentSubscribed = ''
+  function runSync(): Promise<void> {
+    if (pendingSync) {
+      syncQueued = true
+      return pendingSync
     }
 
-    if (nextTopic) {
-      currentSubscribed = nextTopic
-      activeTopic.value = nextTopic
-      try {
-        await bus.subscribe(nextTopic, options.key)
-      } catch (err) {
-        console.error(`[useRealtimeTopic] 订阅 ${nextTopic} 失败:`, err)
-      }
-    } else {
-      activeTopic.value = ''
-    }
+    const promise = (async () => {
+      do {
+        syncQueued = false
+        const nextTopic = disposed ? '' : toValue(topicRef).trim()
+        if (nextTopic === currentSubscribed) continue
+
+        if (currentSubscribed) {
+          const prevTopic = currentSubscribed
+          currentSubscribed = ''
+          await bus.unsubscribe(prevTopic)
+        }
+
+        if (disposed) {
+          activeTopic.value = ''
+          continue
+        }
+
+        if (nextTopic) {
+          currentSubscribed = nextTopic
+          activeTopic.value = nextTopic
+          try {
+            await bus.subscribe(nextTopic, options.key)
+          } catch (err) {
+            if (!disposed) {
+              console.error(`[useRealtimeTopic] 订阅 ${nextTopic} 失败:`, err)
+            }
+          }
+        } else {
+          activeTopic.value = ''
+        }
+      } while (syncQueued)
+    })().finally(() => {
+      pendingSync = null
+    })
+
+    pendingSync = promise
+    return promise
+  }
+
+  function syncSubscription() {
+    return runSync()
   }
 
   if (options.immediate !== false) {
@@ -48,14 +78,12 @@ export function useRealtimeTopic(
   }
 
   onScopeDispose(() => {
+    disposed = true
     for (const unbind of unbindList) {
       unbind()
     }
     unbindList.length = 0
-    if (currentSubscribed) {
-      void bus.unsubscribe(currentSubscribed)
-      currentSubscribed = ''
-    }
+    void syncSubscription()
   })
 
   function on<T = any>(eventName: string, handler: RealtimeEventHandler<T>): () => void {

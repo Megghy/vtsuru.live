@@ -44,7 +44,7 @@ onQaEvent<number>('Scroll', (progress) => {
 })
 onQaEvent<{ hash?: string }>('Changed', (payload) => {
   if (payload?.hash && payload.hash === version.value) return
-  void refresh(true)
+  void refresh(true, payload?.hash)
 })
 watch(getRealtimeBus().getReconnectedCount(), () => {
   if (mounted.value && props.active && props.visible) {
