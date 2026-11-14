@@ -9,10 +9,13 @@ import { useObsRealtimeSync } from '@/apps/obs/composables/useObsRealtimeSync'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
-const props = defineProps<{
-  active?: boolean
-  visible?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    active?: boolean
+    visible?: boolean
+  }>(),
+  { active: true, visible: true },
+)
 
 const route = useRoute()
 const account = useAccount()
@@ -92,8 +95,8 @@ async function fetchFullData() {
 
 const { on } = useObsRealtimeSync({
   topic: voteTopic,
-  active: () => props.active ?? true,
-  visible: () => props.visible ?? true,
+  active: () => props.active,
+  visible: () => props.visible,
   onSync: pollHash,
   disconnectedFallbackMs: 2000,
 })

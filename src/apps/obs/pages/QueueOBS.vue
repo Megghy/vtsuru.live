@@ -13,13 +13,16 @@ import ObsTransparentPanel from '@/apps/obs/components/shared/ObsTransparentPane
 import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { useOBSNotification } from '@/store/useOBSNotification'
 
-const props = defineProps<{
-  id?: number
-  active?: boolean
-  visible?: boolean
-  speedMultiplier?: number
-  style?: 'classic' | 'fresh' | 'minimal' | 'glass' | 'transparent'
-}>()
+const props = withDefaults(
+  defineProps<{
+    id?: number
+    active?: boolean
+    visible?: boolean
+    speedMultiplier?: number
+    style?: 'classic' | 'fresh' | 'minimal' | 'glass' | 'transparent'
+  }>(),
+  { active: true, visible: true },
+)
 
 const route = useRoute()
 const account = useAccount()
@@ -63,8 +66,8 @@ const { title, countText, current, items, footerTags, update } = useQueueObsView
 const obsNotification = useOBSNotification()
 const { on } = useObsRealtimeSync({
   topic: () => (targetUserId.value ? `obs:display:queue:${targetUserId.value}` : ''),
-  active: () => props.active ?? true,
-  visible: () => props.visible ?? true,
+  active: () => props.active,
+  visible: () => props.visible,
   onSync: update,
 })
 on('Changed', () => {

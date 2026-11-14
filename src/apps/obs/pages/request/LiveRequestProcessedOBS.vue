@@ -15,11 +15,14 @@ import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { Empty } from '@/shared/ui/empty'
 import { Separator } from '@/shared/ui/separator'
 
-const props = defineProps<{
-  id?: number
-  active?: boolean
-  visible?: boolean
-}>()
+const props = withDefaults(
+  defineProps<{
+    id?: number
+    active?: boolean
+    visible?: boolean
+  }>(),
+  { active: true, visible: true },
+)
 
 const route = useRoute()
 const account = useAccount()
@@ -101,8 +104,8 @@ async function update() {
 
 const { on } = useObsRealtimeSync({
   topic: () => (targetUserId.value ? `obs:display:live-request:${targetUserId.value}` : ''),
-  active: () => props.active ?? true,
-  visible: () => props.visible ?? true,
+  active: () => props.active,
+  visible: () => props.visible,
   onSync: update,
 })
 on('Changed', () => {

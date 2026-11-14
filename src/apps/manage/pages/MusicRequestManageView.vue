@@ -966,7 +966,12 @@ onUnmounted(() => {
             }"
           >
             <div class="w-[380px] max-w-full">
-              <MusicRequestOBS />
+              <MusicRequestOBS
+                :id="accountInfo?.id"
+                :key="`${accountInfo?.id}-${obsStyleType}-${obsScrollSpeed}`"
+                :style="obsStyleType"
+                :speed-multiplier="obsScrollSpeed"
+              />
             </div>
           </div>
         </Card>

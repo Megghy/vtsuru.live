@@ -17,14 +17,17 @@ import {
 } from '@/apps/open-live/components/lottery/lotteryUtils'
 import { firstQueryValue, parsePositiveId } from '@/shared/obs/obsUrl'
 
-const props = defineProps<{
-  code?: string
-  id?: number | string | null
-  active?: boolean
-  visible?: boolean
-  style?: LotteryObsStyle | string
-  mode?: LotteryObsMode | string
-}>()
+const props = withDefaults(
+  defineProps<{
+    code?: string
+    id?: number | string | null
+    active?: boolean
+    visible?: boolean
+    style?: LotteryObsStyle | string
+    mode?: LotteryObsMode | string
+  }>(),
+  { active: true, visible: true },
+)
 
 const route = useRoute()
 const account = useAccount()
@@ -96,8 +99,8 @@ function handleImageError(e: Event) {
 
 const { on } = useObsRealtimeSync({
   topic: lotteryTopic,
-  active: () => props.active ?? true,
-  visible: () => props.visible ?? true,
+  active: () => props.active,
+  visible: () => props.visible,
   onSync: refreshUsers,
 })
 on<UpdateLiveLotteryUsersModel>('Updated', (payload) => {

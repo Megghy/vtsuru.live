@@ -166,7 +166,7 @@ function requestSong(song: ResponseSongModel) {
               class="sidebar-section p-3 rounded-lg border border-border/80 bg-muted/20 space-y-2"
             >
               <small class="text-[11px] text-muted-foreground block">点歌队列</small>
-              <div class="queue-frame"><LiveRequestOBS /></div>
+              <div class="queue-frame"><LiveRequestOBS :id="props.userInfo?.id" /></div>
             </section>
           </div>
         </div>

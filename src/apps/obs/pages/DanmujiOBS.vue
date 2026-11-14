@@ -34,6 +34,8 @@ const props = withDefaults(
     openLiveAuth?: AuthInfo
   }>(),
   {
+    active: true,
+    visible: true,
     preview: false,
   },
 )
