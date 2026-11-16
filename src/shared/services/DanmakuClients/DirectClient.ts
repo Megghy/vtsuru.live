@@ -109,16 +109,24 @@ export default class DirectClient extends BaseDanmakuClient {
 
   public onGift(command: DirectCommand<'SEND_GIFT'>): void {
     const data = command.data
-    const medal = data.medal_info || undefined
+    const uinfoMedal = data.sender_uinfo?.medal
+    const medalInfo = data.medal_info || undefined
+    const isCurrentRoomMedal =
+      !data.receive_user_info?.uid || !medalInfo?.target_id || medalInfo.target_id === data.receive_user_info.uid
+    const medalLevel = uinfoMedal?.level ?? (isCurrentRoomMedal ? medalInfo?.medal_level : 0) ?? 0
+    const medalName = uinfoMedal?.name ?? (isCurrentRoomMedal ? medalInfo?.medal_name : '') ?? ''
+    const medalWearing = uinfoMedal
+      ? uinfoMedal.is_light === 1
+      : isCurrentRoomMedal && medalInfo !== undefined && (medalInfo.medal_level > 0 || medalInfo.medal_name !== '')
     this.emitGift(
       {
         uid: data.uid,
         uname: data.uname,
         face: data.face,
         guardLevel: data.guard_level,
-        medalLevel: medal?.medal_level ?? 0,
-        medalName: medal?.medal_name ?? '',
-        medalWearing: medal !== undefined,
+        medalLevel,
+        medalName,
+        medalWearing,
         giftName: data.giftName,
         giftNum: data.num,
         price: data.total_coin / 1000,
@@ -140,7 +148,7 @@ export default class DirectClient extends BaseDanmakuClient {
           guardLevel: data.guardLevel,
           medalLevel: data.medal?.level ?? 0,
           medalName: data.medal?.name ?? '',
-          medalWearing: data.medal !== undefined && data.medal.name !== '',
+          medalWearing: data.medal ? (data.medal.isLight ?? data.medal.name !== '') : false,
           giftName: gift.name,
           giftNum: gift.num,
           price: (gift.price * gift.num) / 1000,

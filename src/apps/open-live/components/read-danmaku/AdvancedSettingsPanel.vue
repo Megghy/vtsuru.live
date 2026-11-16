@@ -18,9 +18,11 @@ const { settings } = useSpeechService()
 const eventOptions = [
   { label: '醒目留言 (SC)', value: 'sc' },
   { label: '上舰', value: 'guard' },
+  { label: '加入粉丝团', value: 'joinFansClub' },
   { label: '礼物', value: 'gift' },
   { label: '弹幕', value: 'message' },
   { label: '进入', value: 'enter' },
+  { label: '关注', value: 'follow' },
 ]
 
 const queueFullStrategyOptions = [

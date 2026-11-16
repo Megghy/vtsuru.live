@@ -37,6 +37,7 @@ export interface SpeechState {
 export interface QueueItem {
   updateAt: number
   combineCount?: number
+  eventKey?: SpeechEventKey
   data: EventModel
 }
 
@@ -76,6 +77,7 @@ export interface SpeechSettings {
   enabledEvents: {
     message: boolean
     gift: boolean
+    joinFansClub: boolean
     sc: boolean
     guard: boolean
     enter: boolean
@@ -106,6 +108,8 @@ export interface SpeechSettings {
   maxQueueSize: number
 }
 
+export type SpeechEventKey = keyof SpeechSettings['enabledEvents']
+
 export function makeDefaultTemplate(template: string): EventTemplateConfig {
   return { rules: [{ template, conditions: [] }] }
 }
@@ -113,6 +117,7 @@ export function makeDefaultTemplate(template: string): EventTemplateConfig {
 export const DEFAULT_TEMPLATES: Record<string, EventTemplateConfig> = {
   message: makeDefaultTemplate('{name} 说: {message}'),
   gift: makeDefaultTemplate('感谢 {name} 赠送的 {count} 个 {gift_name}'),
+  joinFansClub: makeDefaultTemplate('欢迎 {name} 加入粉丝团'),
   sc: makeDefaultTemplate('{name} 发送了醒目留言: {message}'),
   guard: makeDefaultTemplate('感谢 {name} 的 {count} 个月 {guard_level}'),
   enter: makeDefaultTemplate('欢迎 {name} 进入直播间'),
@@ -125,7 +130,7 @@ const DEFAULT_SETTINGS: SpeechSettings = {
   outputDeviceId: 'default',
   combineGiftDelay: 2,
   templates: structuredClone(DEFAULT_TEMPLATES),
-  enabledEvents: { message: true, gift: true, sc: true, guard: true, enter: true, follow: true },
+  enabledEvents: { message: true, gift: true, joinFansClub: true, sc: true, guard: true, enter: true, follow: true },
   timedBroadcast: { enabled: false, intervalMinutes: 10, texts: [] },
   blacklistUsers: [],
   blacklistKeywords: [],
@@ -368,7 +373,7 @@ function createSpeechService() {
       const result = await DownloadConfig<SpeechSettings>('Speech')
       if (result.status === 'success' && result.data) {
         _cloudSyncSuppressed = true
-        settings.value = migrateLegacySettings(result.data)
+        settings.value = normalizeSettings(result.data)
         await nextTick()
         _cloudSyncSuppressed = false
       }
@@ -404,6 +409,7 @@ function createSpeechService() {
   const isPaused = ref(false)
   const lastSpeakTimeByUser = new Map<string, number>()
   const recentMessages = new Set<string>()
+  const joinedFansClubUsers = new Set<string>()
 
   const apiAudio = ref<HTMLAudioElement>()
   let checkTimer: number | undefined
@@ -546,6 +552,29 @@ function createSpeechService() {
     },
   )
 
+  const FANS_CLUB_GIFT_NAME = '粉丝团灯牌'
+
+  function isJoinFansClubGift(data: EventModel): boolean {
+    if (data.type !== EventDataTypes.Gift || data.msg !== FANS_CLUB_GIFT_NAME) return false
+    const medalLevel = data.fans_medal_level ?? 0
+    if (medalLevel === 0) return true
+    if (danmakuClient.sourceType === 'openlive' && medalLevel === 1 && (data.num ?? 1) === 1) {
+      return true
+    }
+    return false
+  }
+
+  function resolveEventKey(data: EventModel, recordJoin = true): SpeechEventKey | null {
+    if (settings.value.enabledEvents.joinFansClub && isJoinFansClubGift(data)) {
+      const userKey = String(data.uid || data.ouid || data.uname || '')
+      if (!recordJoin || !userKey || !joinedFansClubUsers.has(userKey)) {
+        if (recordJoin && userKey) joinedFansClubUsers.add(userKey)
+        return 'joinFansClub'
+      }
+    }
+    return getEventKey(data.type)
+  }
+
   function destroy() {
     if (speechQueueTimer) {
       clearInterval(speechQueueTimer)
@@ -562,6 +591,7 @@ function createSpeechService() {
     stopTimedBroadcast()
     cancelSpeech()
     pendingGifts.clear()
+    joinedFansClubUsers.clear()
     speakQueue.value = []
     speechState.isInitialized = false
     console.log('[TTS] 语音服务已销毁')
@@ -647,10 +677,13 @@ function createSpeechService() {
     return undefined
   }
 
-  function getTextFromDanmaku(data: EventModel | undefined): string | undefined {
+  function getTextFromDanmaku(
+    data: EventModel | undefined,
+    eventKeyOverride?: SpeechEventKey | null,
+  ): string | undefined {
     if (!data) return
 
-    const eventKey = getEventKey(data.type)
+    const eventKey = eventKeyOverride ?? resolveEventKey(data, false)
     if (!eventKey) return
     const config = settings.value.templates[eventKey]
     const template = selectTemplate(config, data)
@@ -818,7 +851,8 @@ function createSpeechService() {
       let targetIndex = -1
       for (let i = 0; i < speakQueue.value.length; i++) {
         const item = speakQueue.value[i]
-        if (item.data.type === EventDataTypes.Gift && combineDelay > 0 && item.updateAt > now - combineDelay) {
+        const itemEventKey = item.eventKey ?? getEventKey(item.data.type)
+        if (itemEventKey === 'gift' && combineDelay > 0 && item.updateAt > now - combineDelay) {
           continue
         }
         targetIndex = i
@@ -828,13 +862,14 @@ function createSpeechService() {
       if (targetIndex === -1) return
 
       const targetItem = speakQueue.value.splice(targetIndex, 1)[0]
+      const eventKey = targetItem.eventKey ?? getEventKey(targetItem.data.type)
 
-      if (targetItem.data.type === EventDataTypes.Gift) {
+      if (eventKey === 'gift') {
         const giftKey = `${targetItem.data.uid}-${targetItem.data.msg}`
         if (pendingGifts.get(giftKey) === targetItem) pendingGifts.delete(giftKey)
       }
 
-      let text = getTextFromDanmaku(targetItem.data)
+      let text = getTextFromDanmaku(targetItem.data, eventKey)
       if (!text) return
       readedDanmaku.value++
 
@@ -848,7 +883,6 @@ function createSpeechService() {
       if (spokenHistory.value.length > 50) spokenHistory.value.length = 50
 
       // 提示音
-      const eventKey = getEventKey(targetItem.data.type)
       if (
         settings.value.notificationSound.enabled &&
         eventKey &&
@@ -937,8 +971,8 @@ function createSpeechService() {
     enqueueEvent(data)
   }
 
-  function enqueueEvent(data: EventModel) {
-    const eventKey = getEventKey(data.type)
+  function enqueueEvent(data: EventModel, eventKeyOverride?: SpeechEventKey | null) {
+    const eventKey = eventKeyOverride ?? resolveEventKey(data, true)
     if (eventKey && !settings.value.enabledEvents[eventKey]) {
       reject(data, '事件类型已关闭')
       return
@@ -1008,7 +1042,7 @@ function createSpeechService() {
     }
 
     let giftKey: string | undefined
-    if (data.type === EventDataTypes.Gift && settings.value.combineGiftDelay) {
+    if (data.type === EventDataTypes.Gift && eventKey === 'gift' && settings.value.combineGiftDelay) {
       giftKey = `${data.uid}-${data.msg}`
       const pending = pendingGifts.get(giftKey)
       if (
@@ -1026,7 +1060,8 @@ function createSpeechService() {
 
     const item: QueueItem = {
       data,
-      updateAt: data.type === EventDataTypes.Gift ? Date.now() : 0,
+      eventKey: eventKey ?? undefined,
+      updateAt: eventKey === 'gift' ? Date.now() : 0,
     }
     if (giftKey) pendingGifts.set(giftKey, item)
 
@@ -1039,21 +1074,24 @@ function createSpeechService() {
     }
   }
 
-  function testEvent(data: EventModel): { success: boolean; text?: string; reason?: string } {
-    const text = getTextFromDanmaku(data)
+  function testEvent(
+    data: EventModel,
+    eventKeyOverride?: SpeechEventKey,
+  ): { success: boolean; text?: string; reason?: string } {
+    const eventKey = eventKeyOverride ?? resolveEventKey(data, false)
+    const text = getTextFromDanmaku(data, eventKey)
     if (!text) {
-      const eventKey = getEventKey(data.type)
       const config = eventKey ? settings.value.templates[eventKey] : undefined
       if (!config || config.rules.length === 0) {
         return { success: false, reason: '未配置任何模板规则' }
       }
       return { success: false, reason: '测试事件不满足模板中的条件规则' }
     }
-    enqueueEvent(data)
+    enqueueEvent(data, eventKey)
     return { success: true, text }
   }
 
-  function getEventKey(type: EventDataTypes): keyof SpeechSettings['enabledEvents'] | null {
+  function getEventKey(type: EventDataTypes): SpeechEventKey | null {
     switch (type) {
       case EventDataTypes.Message:
         return 'message'
@@ -1076,14 +1114,13 @@ function createSpeechService() {
     danmakuClient.onEvent(eventName, addToQueue)
   }
 
-  function forceSpeak(data: EventModel) {
+  function forceSpeak(data: EventModel, eventKeyOverride?: SpeechEventKey) {
     cancelSpeech()
     const index = speakQueue.value.findIndex((v) => v.data === data)
-    if (index !== -1) {
-      speakQueue.value.splice(index, 1)
-    }
+    const existing = index !== -1 ? speakQueue.value.splice(index, 1)[0] : undefined
     speakQueue.value.unshift({
       updateAt: 0,
+      eventKey: existing?.eventKey ?? eventKeyOverride ?? resolveEventKey(data, false) ?? undefined,
       data,
     })
   }
@@ -1158,7 +1195,7 @@ function createSpeechService() {
       const result = await DownloadConfig<SpeechSettings>('Speech')
       if (result.status === 'success' && result.data) {
         _cloudSyncSuppressed = true
-        settings.value = migrateLegacySettings(result.data)
+        settings.value = normalizeSettings(result.data)
         await nextTick()
         _cloudSyncSuppressed = false
         message.success('已获取配置文件')

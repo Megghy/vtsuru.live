@@ -17,6 +17,7 @@ import { copyToClipboard, useMessage } from '@/shared/utils'
 import {
   type ConditionField,
   type ConditionOp,
+  type SpeechEventKey,
   type TemplateCondition,
   type TemplateRule,
   templateConstants,
@@ -34,6 +35,7 @@ const { settings, speechState } = speechService
 const templateRows = [
   { eventKey: 'message', label: '弹幕', type: EventDataTypes.Message },
   { eventKey: 'gift', label: '礼物', type: EventDataTypes.Gift },
+  { eventKey: 'joinFansClub', label: '加入粉丝团', type: EventDataTypes.Gift },
   { eventKey: 'sc', label: 'SC', type: EventDataTypes.SC },
   { eventKey: 'guard', label: '上舰', type: EventDataTypes.Guard },
   { eventKey: 'enter', label: '进入', type: EventDataTypes.Enter },
@@ -70,6 +72,11 @@ const fieldOptionsByEvent: Record<string, Array<{ label: string; value: Conditio
     { label: '粉丝勋章等级', value: 'fans_medal_level' },
   ],
   follow: [{ label: '粉丝勋章等级', value: 'fans_medal_level' }],
+  joinFansClub: [
+    { label: '舰长等级', value: 'guard_level' },
+    { label: '数量', value: 'count' },
+    { label: '价格 (元)', value: 'price' },
+  ],
 }
 
 function getNumericOps(): Array<{ label: string; value: ConditionOp }> {
@@ -152,9 +159,18 @@ function generateMockDataForEvent(eventKey: string, type: EventDataTypes, specif
       mock.msg = '测试弹幕消息'
       break
     case EventDataTypes.Gift:
-      mock.msg = '测试礼物'
-      mock.price = 5
-      mock.num = 5
+      if (eventKey === 'joinFansClub') {
+        mock.msg = '粉丝团灯牌'
+        mock.price = 0.1
+        mock.num = 1
+        mock.fans_medal_level = 0
+        mock.fans_medal_name = ''
+        mock.fans_medal_wearing_status = false
+      } else {
+        mock.msg = '测试礼物'
+        mock.price = 5
+        mock.num = 5
+      }
       break
     case EventDataTypes.SC:
       mock.msg = '测试醒目留言'
@@ -215,7 +231,7 @@ function generateMockDataForEvent(eventKey: string, type: EventDataTypes, specif
 function test(type: EventDataTypes, eventKey?: string, specificRule?: TemplateRule) {
   const actualKey = eventKey || templateRows.find((r) => r.type === type)?.eventKey || 'message'
   const mock = generateMockDataForEvent(actualKey, type, specificRule)
-  const res = speechService.testEvent(mock)
+  const res = speechService.testEvent(mock, actualKey as SpeechEventKey)
   if (res.success) {
     message.success(`已触发测试播报: ${res.text}`)
   } else {

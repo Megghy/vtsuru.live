@@ -32,6 +32,9 @@ const speechService = useSpeechService()
 const { settings } = speechService
 
 const tag = computed(() => {
+  if (props.item.eventKey === 'joinFansClub') {
+    return { text: '入团', type: 'warning' as const }
+  }
   switch (props.item.data.type) {
     case EventDataTypes.Message:
       return { text: '弹幕', type: 'info' as const }
@@ -43,6 +46,8 @@ const tag = computed(() => {
       return { text: 'SC', type: 'error' as const }
     case EventDataTypes.Enter:
       return { text: '进入', type: 'default' as const }
+    case EventDataTypes.Follow:
+      return { text: '关注', type: 'info' as const }
     default:
       return { text: '未知', type: 'default' as const }
   }
@@ -70,7 +75,7 @@ const absoluteTime = computed(() => {
   return d.toLocaleTimeString('zh-CN', { hour12: false })
 })
 
-const speechText = computed(() => speechService.getTextFromDanmaku(props.item.data) ?? '')
+const speechText = computed(() => speechService.getTextFromDanmaku(props.item.data, props.item.eventKey) ?? '')
 
 function handleSelect(action: string) {
   switch (action) {
@@ -121,14 +126,16 @@ function handleSelect(action: string) {
         </span>
 
         <Tag
-          v-if="item.data.type === EventDataTypes.Gift && item.combineCount"
+          v-if="item.data.type === EventDataTypes.Gift && item.eventKey !== 'joinFansClub' && item.combineCount"
           type="info"
           class="text-[10px] px-1 py-0 h-4"
         >
           ×{{ item.combineCount }}
         </Tag>
         <Tag
-          v-else-if="item.data.type === EventDataTypes.Gift && settings.combineGiftDelay"
+          v-else-if="
+            item.data.type === EventDataTypes.Gift && item.eventKey !== 'joinFansClub' && settings.combineGiftDelay
+          "
           type="success"
           class="text-[10px] px-1 py-0 h-4"
         >

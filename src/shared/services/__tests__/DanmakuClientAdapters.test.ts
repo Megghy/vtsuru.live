@@ -65,6 +65,13 @@ const giftMedalType = new Type('GiftMedal')
   .add(new Field('uid', 1, 'int64'))
   .add(new Field('level', 5, 'int32'))
   .add(new Field('medalName', 6, 'string'))
+const giftUinfoMedalType = new Type('GiftUinfoMedal')
+  .add(new Field('name', 1, 'string'))
+  .add(new Field('level', 2, 'int32'))
+  .add(new Field('isLight', 9, 'int32'))
+const giftSenderUinfoType = new Type('GiftSenderUinfo')
+  .add(new Field('uid', 1, 'int64'))
+  .add(new Field('medal', 3, 'GiftUinfoMedal'))
 const giftInfoType = new Type('GiftInfo')
   .add(new Field('giftId', 1, 'int32'))
   .add(new Field('giftName', 2, 'string'))
@@ -79,11 +86,19 @@ const giftMessageType = new Type('GiftMessage')
   .add(new Field('medal', 8, 'GiftMedal'))
   .add(new Field('mysteryBox', 9, 'GiftMysteryBox'))
   .add(new Field('giftInfo', 10, 'GiftInfo', 'repeated'))
+  .add(new Field('senderUinfo', 15, 'GiftSenderUinfo'))
 const giftMysteryBoxType = new Type('GiftMysteryBox')
   .add(new Field('boxName', 3, 'string'))
   .add(new Field('boxPrice', 6, 'int32'))
 
-new Root().add(giftMedalType).add(giftInfoType).add(giftMysteryBoxType).add(giftMessageType).resolveAll()
+new Root()
+  .add(giftMedalType)
+  .add(giftUinfoMedalType)
+  .add(giftSenderUinfoType)
+  .add(giftInfoType)
+  .add(giftMysteryBoxType)
+  .add(giftMessageType)
+  .resolveAll()
 
 const interactionType = new Type('Interaction')
   .add(new Field('uid', 1, 'int64'))
@@ -92,7 +107,7 @@ const interactionType = new Type('Interaction')
   .add(new Field('timestamp', 7, 'int64'))
 new Root().add(interactionType).resolveAll()
 
-function encodeGiftV2() {
+function encodeGiftV2(overrides: Record<string, unknown> = {}) {
   const bytes = giftMessageType
     .encode({
       uid: 42,
@@ -105,6 +120,7 @@ function encodeGiftV2() {
         { giftId: 1, giftName: '小花', num: 2, price: 1000, timestamp: 1_700_000_000 },
         { giftId: 2, giftName: '星星', num: 3, price: 2000, timestamp: 1_700_000_001 },
       ],
+      ...overrides,
     })
     .finish()
   return Buffer.from(bytes).toString('base64')
@@ -255,6 +271,53 @@ describe('direct danmaku event adapter', () => {
         uface: 'https://example.com/avatar.jpg',
         mystery_box_name: '星光盲盒',
         mystery_box_price: 5,
+      }),
+    )
+    client.Stop()
+  })
+
+  it('uses sender_uinfo medal for SEND_GIFT_V2 instead of cross-room worn medal', async () => {
+    const client = new DirectClient({ token: 'token', roomId: 1, tokenUserId: 2, buvid: 'buvid' })
+    const gifts = vi.fn()
+    client.onEvent('gift', gifts)
+
+    const socket = await startClient(client)
+    socket.emit('SEND_GIFT_V2', {
+      cmd: 'SEND_GIFT_V2',
+      data: {
+        pb: encodeGiftV2({
+          medal: { uid: 999, level: 25, medalName: '别家牌子' },
+          senderUinfo: { uid: 42 },
+          giftInfo: [{ giftId: 31164, giftName: '粉丝团灯牌', num: 1, price: 100, timestamp: 1_700_000_002 }],
+        }),
+      },
+    })
+    socket.emit('SEND_GIFT_V2', {
+      cmd: 'SEND_GIFT_V2',
+      data: {
+        pb: encodeGiftV2({
+          medal: { uid: 999, level: 25, medalName: '别家牌子' },
+          senderUinfo: { uid: 43, medal: { name: '本房牌', level: 11, isLight: 1 } },
+          giftInfo: [{ giftId: 31164, giftName: '粉丝团灯牌', num: 1, price: 100, timestamp: 1_700_000_003 }],
+        }),
+      },
+    })
+
+    expect(gifts).toHaveBeenCalledTimes(2)
+    expect(gifts.mock.calls[0][0]).toEqual(
+      expect.objectContaining({
+        msg: '粉丝团灯牌',
+        fans_medal_level: 0,
+        fans_medal_name: '',
+        fans_medal_wearing_status: false,
+      }),
+    )
+    expect(gifts.mock.calls[1][0]).toEqual(
+      expect.objectContaining({
+        msg: '粉丝团灯牌',
+        fans_medal_level: 11,
+        fans_medal_name: '本房牌',
+        fans_medal_wearing_status: true,
       }),
     )
     client.Stop()
