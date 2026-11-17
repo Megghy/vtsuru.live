@@ -151,8 +151,8 @@ async function devAutoLogin() {
 }
 
 async function InitOther() {
-  await initHyperDX()
-  // 加载其他数据
+  // 并发初始化 HyperDX 与本地 TTS，不阻塞账号鉴权请求
+  const hyperdxPromise = initHyperDX()
   void InitTTS()
   await devAutoLogin()
   const routeToken = new URLSearchParams(window.location.search).get('token')?.trim() || undefined
@@ -161,10 +161,12 @@ async function InitOther() {
   const useAuth = useBiliAuth()
   if (account.value.id) {
     setSentryUser(account.value)
-    const HyperDX = (window as any).__HyperDX__
-    HyperDX?.setGlobalAttributes({
-      userId: account.value.id.toString(),
-      userName: account.value.name,
+    void hyperdxPromise.then(() => {
+      const HyperDX = (window as any).__HyperDX__
+      HyperDX?.setGlobalAttributes({
+        userId: account.value.id.toString(),
+        userName: account.value.name,
+      })
     })
   }
   void useAuth.getAuthInfo().catch((error) => console.error('[bili-auth] 初始化认证信息失败', error))
@@ -172,8 +174,19 @@ async function InitOther() {
 
   useNotificationStore().init()
 }
+let versionCheckTimer: ReturnType<typeof setInterval> | undefined
+
+export function stopVersionCheck() {
+  if (versionCheckTimer === undefined) return
+  clearInterval(versionCheckTimer)
+  versionCheckTimer = undefined
+}
+
+import.meta.hot?.dispose(stopVersionCheck)
+
 function InitVersionCheck() {
-  setInterval(() => {
+  if (versionCheckTimer !== undefined) return
+  versionCheckTimer = setInterval(() => {
     if (isHaveNewVersion) {
       return
     }
@@ -182,27 +195,31 @@ function InitVersionCheck() {
         code: number
         data: string
       }>
-    ).then((keepCheckData) => {
-      if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
-        isHaveNewVersion = true
-        currentVersion = keepCheckData.data
-        void persistedSetItemRaw('Version', currentVersion)
-        console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
+    )
+      .then((keepCheckData) => {
+        if (keepCheckData.code == 200 && keepCheckData.data != currentVersion) {
+          isHaveNewVersion = true
+          currentVersion = keepCheckData.data
+          void persistedSetItemRaw('Version', currentVersion)
+          console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
 
-        if (window.$route?.meta.forceReload || isTauri() || isObsOverlay()) {
-          location.reload()
-        } else {
-          toast.info('发现新的版本更新', {
-            description: `版本: ${currentVersion}，是否现在刷新?`,
-            duration: 15000,
-            action: {
-              label: '刷新',
-              onClick: () => location.reload(),
-            },
-          })
+          if (window.$route?.meta.forceReload || isTauri() || isObsOverlay()) {
+            location.reload()
+          } else {
+            toast.info('发现新的版本更新', {
+              description: `版本: ${currentVersion}，是否现在刷新?`,
+              duration: 15000,
+              action: {
+                label: '刷新',
+                onClick: () => location.reload(),
+              },
+            })
+          }
         }
-      }
-    })
+      })
+      .catch((err) => {
+        console.warn('[vtsuru] 版本检查失败', err)
+      })
   }, 60 * 1000)
 }
 async function InitTTS() {

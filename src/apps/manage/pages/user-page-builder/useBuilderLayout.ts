@@ -60,6 +60,7 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
     ...DEFAULT_WIDTHS,
   })
   const isPagesCollapsed = usePersistedStorage(USER_PAGE_BUILDER_PAGES_COLLAPSED_KEY, false)
+  const focusPreview = ref(false)
   const mediumPane = ref<'pages' | 'blocks'>('blocks')
   const compactPane = ref<BuilderColumnId>('preview')
 
@@ -75,8 +76,9 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
     return 'wide'
   })
 
-  // 处于非 block 模式时，自动剔除 blocks 列
+  // 处于专注预览时只保留预览列；处于非 block 模式时自动剔除 blocks 列
   const activeColumnsOrder = computed<BuilderColumnId[]>(() => {
+    if (focusPreview.value) return ['preview']
     if (isBlockMode.value) return columnsOrder.value
     return columnsOrder.value.filter((id) => id !== 'blocks')
   })
@@ -89,6 +91,7 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
   })
 
   const wideGridColumns = computed(() => {
+    if (focusPreview.value) return 'minmax(320px, 1fr)'
     const ids = activeColumnsOrder.value
     const fixedTracks = ids
       .filter((id) => id !== 'preview')
@@ -117,6 +120,7 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
   })
 
   const mediumGridColumns = computed(() => {
+    if (focusPreview.value) return 'minmax(280px, 1fr)'
     const primaryId = isBlockMode.value ? mediumPane.value : 'pages'
     const primaryMin =
       primaryId === 'pages' && isPagesCollapsed.value ? PAGES_COLLAPSED_WIDTH_PX : COLUMN_META[primaryId].minPx
@@ -139,7 +143,12 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
     isPagesCollapsed.value = !isPagesCollapsed.value
   }
 
+  function toggleFocusPreview() {
+    focusPreview.value = !focusPreview.value
+  }
+
   function applyPreset(preset: BuilderLayoutPreset) {
+    focusPreview.value = false
     if (preset === 'preview') {
       columnsOrder.value = ['pages', 'preview', 'blocks', 'props']
     } else if (preset === 'compact') {
@@ -151,6 +160,7 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
   }
 
   function resetLayout() {
+    focusPreview.value = false
     columnsOrder.value = [...DEFAULT_COLUMNS_ORDER]
     columnWidths.value = { ...DEFAULT_WIDTHS }
     isPagesCollapsed.value = false
@@ -186,6 +196,7 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
     columnsOrder,
     columnWidths,
     isPagesCollapsed,
+    focusPreview,
     activeColumnsOrder,
     layoutColumnsModel,
     wideGridColumns,
@@ -196,6 +207,7 @@ export function useBuilderLayout(isBlockModeRef?: Ref<boolean> | (() => boolean)
     paneStyle,
     setColumnWidth,
     togglePagesCollapse,
+    toggleFocusPreview,
     applyPreset,
     resetLayout,
     mount,

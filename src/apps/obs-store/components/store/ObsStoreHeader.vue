@@ -65,7 +65,6 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
     <div class="flex-between flex-wrap gap-3 pb-3 border-b border-border max-md:flex-col max-md:items-stretch">
       <ToggleGroup
         type="single"
-        size="sm"
         :model-value="props.category"
         class="flex-wrap h-auto gap-1 bg-transparent border-none p-0 justify-start"
         @update:model-value="(val) => val && emit('update:category', val as ObsCategory)"

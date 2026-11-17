@@ -30,8 +30,12 @@ import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { addVtsuruLiveWatermark } from '@/shared/utils/imageWatermark'
-import { Add24Filled, ArrowDown24Filled, ArrowUp24Filled, Delete24Filled, Info24Regular } from '@vicons/fluent'
+import Add24Filled from '@vicons/fluent/es/Add24Filled'
+import ArrowDown24Filled from '@vicons/fluent/es/ArrowDown24Filled'
+import ArrowUp24Filled from '@vicons/fluent/es/ArrowUp24Filled'
+import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import DocumentLock24Regular from '@vicons/fluent/es/DocumentLock24Regular'
+import Info24Regular from '@vicons/fluent/es/Info24Regular'
 import { computed, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 import ServiceGoodsConfig from './ServiceGoodsConfig.vue'
@@ -142,15 +146,7 @@ const privateFileInputRef = ref<HTMLInputElement>()
 
 const isEditMode = computed(() => Boolean(currentGoodsModel.value.goods.id))
 const isDirectCollect = computed(() => currentGoodsModel.value.goods.collectUrl === undefined)
-const currentSetting = computed(() => {
-  if (!currentGoodsModel.value.goods.setting) {
-    currentGoodsModel.value.goods.setting = {
-      allowGuardLevel: GuardLevel.None,
-      allowGuardFreeMinLevel: GuardLevel.None,
-    }
-  }
-  return currentGoodsModel.value.goods.setting
-})
+const currentSetting = computed(() => currentGoodsModel.value.goods.setting!)
 
 const subItemsForDisplay = computed(() => {
   const list = [...(currentGoodsModel.value.goods.subItems ?? [])]

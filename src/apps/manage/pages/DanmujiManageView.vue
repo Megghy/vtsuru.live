@@ -2,7 +2,7 @@
 import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
 import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
 import { useElementSize, useIntervalFn } from '@vueuse/core'
-import { computed, onActivated, onDeactivated, ref, shallowRef } from 'vue'
+import { computed, defineAsyncComponent, onActivated, onDeactivated, ref, shallowRef } from 'vue'
 
 import { DownloadConfig, UploadConfig, useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
@@ -10,8 +10,9 @@ import { EventDataTypes } from '@/api/generated/model'
 import DanmujiRulesEditor from '@/apps/manage/components/danmuji/DanmujiRulesEditor.vue'
 import DanmujiStyleEditor from '@/apps/manage/components/danmuji/DanmujiStyleEditor.vue'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
-import MonacoEditorComponent from '@/apps/manage/components/MonacoEditorComponent.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
+
+const MonacoEditorComponent = defineAsyncComponent(() => import('@/apps/manage/components/MonacoEditorComponent.vue'))
 import { CURRENT_HOST } from '@/shared/config'
 import { normalizeDanmujiConfig } from '@/shared/danmujiConfig'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'

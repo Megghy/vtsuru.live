@@ -28,13 +28,13 @@ export function filterTimelineEntries(
   liveStartAtMs: number,
   liveStopAtMs?: number | null,
 ): SongTimelineEntry[] {
-  return [...entries]
+  return entries
     .filter((entry) => {
       if (!Number.isFinite(entry.timeMs) || entry.timeMs < liveStartAtMs) return false
       if (liveStopAtMs && liveStopAtMs > liveStartAtMs && entry.timeMs > liveStopAtMs) return false
       return Boolean(entry.title.trim())
     })
-    .sort((a, b) => a.timeMs - b.timeMs)
+    .toSorted((a, b) => a.timeMs - b.timeMs)
 }
 
 export function buildSongTimelineLines(

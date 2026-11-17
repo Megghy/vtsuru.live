@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import PersonCircleOutline from '@vicons/ionicons5/es/PersonCircleOutline'
+import { defineAsyncComponent } from 'vue'
 
 import type { BlockNode } from '@/apps/user-page/block/schema'
-import RichTextEditor from '@/apps/user-page/editor/RichTextEditor.vue'
 import { Button } from '@/shared/ui/button'
+
+const RichTextEditor = defineAsyncComponent(() => import('@/apps/user-page/editor/RichTextEditor.vue'))
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'

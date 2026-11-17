@@ -109,8 +109,7 @@ async function handleCopy() {
       <div class="flex items-center gap-3 min-w-0">
         <Button
           variant="ghost"
-          size="sm"
-          class="gap-1.5 text-xs text-muted-foreground shrink-0"
+          class="gap-1.5 text-muted-foreground shrink-0"
           @click="emit('back')"
         >
           <ArrowLeft24Regular class="size-4" />
@@ -171,7 +170,6 @@ async function handleCopy() {
             <TooltipTrigger as-child>
               <Button
                 variant="secondary"
-                size="sm"
                 class="gap-1.5"
                 :disabled="!absoluteObsUrl"
                 @click="handleCopy"
@@ -197,7 +195,6 @@ async function handleCopy() {
             <TooltipTrigger as-child>
               <Button
                 variant="outline"
-                size="sm"
                 class="gap-1.5"
                 as-child
                 :disabled="!absoluteObsUrl"
@@ -221,7 +218,6 @@ async function handleCopy() {
             <TooltipTrigger as-child>
               <Button
                 variant="outline"
-                size="sm"
                 class="gap-1.5"
                 as-child
               >

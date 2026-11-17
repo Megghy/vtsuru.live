@@ -8,7 +8,6 @@ import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
 import { getApiLiveCurrent, getApiLiveRanking } from '@/api/generated/live/live'
 import type {
-  ResponseCurrentLiveModel,
   ResponseLiveInfoModel,
   ResponseLiveRankingEntryModel,
 } from '@/api/generated/model'

@@ -3,7 +3,11 @@ import { describe, expect, it } from 'vitest'
 import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import type { UserPagesSettings } from '@/apps/user-page/types'
 
-import { validateRenderableUserPagesSettings, validateUserPagesSettings } from '../validateUserPagesSettings'
+import {
+  parseServerValidationIssues,
+  validateRenderableUserPagesSettings,
+  validateUserPagesSettings,
+} from '../validateUserPagesSettings'
 
 describe('user page structured validation', () => {
   it('keeps page, block and field locations for every issue', () => {
@@ -124,5 +128,90 @@ describe('user page structured validation', () => {
     const paths = validateUserPagesSettings(settings).map((issue) => issue.fieldPath)
     expect(paths).toContain('custom.assets')
     expect(paths).toContain('custom.source')
+  })
+
+  it('parses structured backend validation errors into clickable page and block issues', () => {
+    const settings: UserPagesSettings = {
+      version: 2,
+      home: {
+        mode: 'block',
+        block: {
+          version: 1,
+          blocks: [{ id: 'hero-1', type: 'profile', props: {} }],
+        },
+      },
+      pages: {
+        works: {
+          mode: 'block',
+          block: {
+            version: 1,
+            blocks: [
+              {
+                id: 'layout-1',
+                type: 'layout',
+                props: {
+                  layout: 'column',
+                  children: [
+                    { id: 'text-1', type: 'richText', props: { html: '<p>a</p>' } },
+                    { id: 'links-1', type: 'links', props: { items: [] } },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      },
+    }
+
+    const errorText = [
+      'settings: customCss 存在禁止的语法',
+      'settings: background 颜色不合法',
+      'pages: 页面数量超限',
+      'home: block.blocks[0]: props 不合法',
+      'pages.works: block.blocks[0]: layout.children[1]: items[0].url 必须使用 HTTPS',
+      'pages.works: theme borderStrength 无效',
+    ].join('\n')
+
+    const parsed = parseServerValidationIssues(errorText, settings)
+
+    expect(parsed).toEqual([
+      expect.objectContaining({
+        scope: 'settings',
+        pageKey: null,
+        blockId: null,
+        fieldPath: 'customCss',
+      }),
+      expect.objectContaining({
+        scope: 'settings',
+        pageKey: null,
+        blockId: null,
+        fieldPath: 'background',
+      }),
+      expect.objectContaining({
+        scope: 'settings',
+        pageKey: null,
+        blockId: null,
+        fieldPath: 'pages',
+      }),
+      expect.objectContaining({
+        scope: 'block',
+        pageKey: 'home',
+        blockId: 'hero-1',
+        fieldPath: 'props',
+      }),
+      expect.objectContaining({
+        scope: 'block',
+        pageKey: 'works',
+        blockId: 'links-1',
+        fieldPath: 'items[0].url',
+      }),
+      expect.objectContaining({
+        scope: 'page',
+        pageKey: 'works',
+        blockId: null,
+        fieldPath: 'theme',
+      }),
+    ])
+    expect(parseServerValidationIssues('网络连接超时，请重试', settings)).toEqual([])
   })
 })

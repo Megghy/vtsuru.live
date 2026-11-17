@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useMutationObserver } from '@vueuse/core'
 import type { ComponentPublicInstance } from 'vue'
 import { computed, ref } from 'vue'
 
@@ -69,20 +70,32 @@ const viewBoxString = computed(
 const activeAspectRatio = computed(() => selectedBody.value?.aspectRatio || config.value?.aspectRatio || '16 / 10')
 
 // SVG 容器引用与直接 DOM 渲染驱动
+const stageBoxRef = ref<HTMLElement | null>(null)
 const bodySvgRef = ref<ComponentPublicInstance | null>(null)
 
-useSvgGamepadRenderer({
+const { analyzeAndBindSvg, renderFrame } = useSvgGamepadRenderer({
   svgContainerRef: bodySvgRef,
   gamepadType: effectiveType,
   pressedColor: effectivePressedColor,
   stickSensitivity: effectiveSensitivity,
 })
+
+// 底壳 SVG 改为异步组件后，实际 <svg> DOM 会在 chunk 加载完成后替换占位节点，需监听子节点变化重新绑定
+useMutationObserver(
+  stageBoxRef,
+  () => {
+    analyzeAndBindSvg()
+    renderFrame()
+  },
+  { childList: true },
+)
 </script>
 
 <template>
   <div :class="inlineMode ? 'gp-container-inline' : 'gp-container-obs'">
     <div
       v-if="config"
+      ref="stageBoxRef"
       class="gp-stage-box"
       :style="{ aspectRatio: activeAspectRatio }"
     >

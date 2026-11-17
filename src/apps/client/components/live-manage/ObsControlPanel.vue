@@ -285,7 +285,7 @@ const handleToggleConnect = () => {
           v-if="obsStore.obsScenes.length > 0"
           class="flex flex-wrap gap-2"
         >
-          <Button size="xs" v-for="scene in obsStore.obsScenes" :key="scene" type="button" :variant="scene === obsStore.currentObsScene ? 'default' : 'outline'" class="text-xs" :disabled="obsStore.isSwitchingScene" @click="scene !== obsStore.currentObsScene && obsStore.switchToScene(scene)">
+          <Button size="xs" v-for="scene in obsStore.obsScenes" :key="scene" type="button" :variant="scene === obsStore.currentObsScene ? 'default' : 'outline'" :disabled="obsStore.isSwitchingScene" @click="scene !== obsStore.currentObsScene && obsStore.switchToScene(scene)">
             {{ scene }}
           </Button>
         </div>

@@ -93,7 +93,7 @@ const radiusPresets = [
           <span>高级外观选项</span>
           <Tag
             :variant="hasAdvancedSettings ? 'default' : 'outline'"
-            class="text-[10px] h-4.5 px-1.5"
+            size="tiny"
           >
             {{ hasAdvancedSettings ? `已自定义 ${customCount} 项` : '默认' }}
           </Tag>
@@ -112,12 +112,12 @@ const radiusPresets = [
               :max="32"
               placeholder="默认 6px"
             />
-            <div class="flex items-center gap-1 mt-1">
+            <div class="flex flex-wrap items-center gap-1 mt-1">
               <Button
                 v-for="preset in radiusPresets"
                 :key="preset.value"
+                size="xs"
                 :variant="radius === preset.value ? 'default' : 'ghost'"
-                class="h-5 px-1.5 text-[10px]"
                 @click="radius = preset.value"
               >
                 {{ preset.label }}

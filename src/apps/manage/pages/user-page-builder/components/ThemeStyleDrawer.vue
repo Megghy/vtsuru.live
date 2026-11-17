@@ -9,7 +9,7 @@ import RefreshOutline from '@vicons/ionicons5/es/RefreshOutline'
 import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
 import TextOutline from '@vicons/ionicons5/es/TextOutline'
 import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, inject, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { BlockPageTheme, PageThemeMode } from '@/apps/user-page/block/schema'
@@ -23,13 +23,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/shared/ui/separator'
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
 import BackgroundSettingsEditor, { type BackgroundSettingsTarget } from './BackgroundSettingsEditor.vue'
-import GlobalCssEditorModal from './GlobalCssEditorModal.vue'
 import ThemeAdvancedOptions, { type ThemeAppearanceTarget } from './ThemeAdvancedOptions.vue'
 import ThemeTextColorEditor, { type ThemeTextColorTarget } from './ThemeTextColorEditor.vue'
+
+const GlobalCssEditorModal = defineAsyncComponent(() => import('./GlobalCssEditorModal.vue'))
 
 const show = defineModel<boolean>('show', { required: true })
 const initialScope = defineModel<'global' | 'page'>('scope', { default: 'global' })
@@ -40,6 +42,11 @@ if (!editor) throw new Error('UserPageEditor context is missing')
 const message = useMessage()
 const account = useAccount()
 const cssEditorVisible = ref(false)
+const hasOpenedCssEditor = ref(false)
+function openCssEditor() {
+  hasOpenedCssEditor.value = true
+  cssEditorVisible.value = true
+}
 const activeTab = ref<'background' | 'colors' | 'advanced'>('colors')
 
 // 作用域控制：在首页强制为 global，在子页可切换 global / page
@@ -58,55 +65,131 @@ watch(
 
 const isPageScope = computed(() => !isCurrentHome.value && currentScope.value === 'page')
 
-// --- 数据 Target 统一适配 ---
-function ensureCurrentTheme() {
-  if (isPageScope.value) {
-    const project = editor.currentProject.value
-    if (!project) throw new Error('当前页面无可用区块工程')
-    return (project.theme ??= {})
+const PAGE_BG_LEGACY_KEYS = [
+  'pageBackgroundType',
+  'pageBackgroundColor',
+  'pageBackgroundImageFile',
+  'pageBackgroundImageFit',
+  'pageBackgroundCoverSidebar',
+  'pageBackgroundBlurMode',
+  'pageBackgroundBlur',
+  'pageBackgroundScrimMode',
+  'pageBackgroundScrimStrength',
+] as const
+
+function cleanupLegacyProjectTheme() {
+  const project = editor.currentProject.value
+  if (project?.theme && Object.keys(project.theme).length === 0) {
+    delete project.theme
   }
-  return ((editor.settings.value as any).theme ??= {})
+}
+
+function stripLegacyProjectBackgroundKeys() {
+  const projectTheme = editor.currentProject.value?.theme as Record<string, any> | undefined
+  if (!projectTheme) return
+  PAGE_BG_LEGACY_KEYS.forEach((key) => {
+    delete projectTheme[key]
+  })
+  cleanupLegacyProjectTheme()
+}
+
+function readPageThemeObject() {
+  const pageTheme = editor.currentPage.value.theme as Record<string, any> | undefined
+  const projectTheme = editor.currentProject.value?.theme as Record<string, any> | undefined
+  if (!pageTheme && !projectTheme) return undefined
+  return { ...projectTheme, ...pageTheme }
+}
+
+// --- 数据 Target 统一适配（页级统一写入 page.theme / page.background，兼容所有页面模式） ---
+function ensureCurrentTheme(): Record<string, any> {
+  if (isPageScope.value) {
+    const pageTheme = (editor.currentPage.value.theme ??= {}) as Record<string, any>
+    const projectTheme = editor.currentProject.value?.theme as Record<string, any> | undefined
+    if (projectTheme) {
+      for (const key of Object.keys(projectTheme)) {
+        if ((PAGE_BG_LEGACY_KEYS as readonly string[]).includes(key)) continue
+        if (pageTheme[key] === undefined) pageTheme[key] = projectTheme[key]
+        delete projectTheme[key]
+      }
+      cleanupLegacyProjectTheme()
+    }
+    return pageTheme
+  }
+  return (editor.settings.value.theme ??= {}) as Record<string, any>
 }
 
 function cleanupCurrentTheme() {
   if (isPageScope.value) {
-    const project = editor.currentProject.value
-    if (project?.theme && Object.keys(project.theme).length === 0) {
-      delete project.theme
+    const pageTheme = editor.currentPage.value.theme as Record<string, any> | undefined
+    if (pageTheme && Object.keys(pageTheme).length === 0) {
+      delete editor.currentPage.value.theme
     }
+    cleanupLegacyProjectTheme()
     return
   }
-  const theme = (editor.settings.value as any).theme
+  const theme = editor.settings.value.theme
   if (theme && Object.keys(theme).length === 0) {
-    delete (editor.settings.value as any).theme
+    delete editor.settings.value.theme
   }
+}
+
+function deleteThemeKey(key: string) {
+  if (isPageScope.value) {
+    if (editor.currentPage.value.theme) delete (editor.currentPage.value.theme as Record<string, any>)[key]
+    if (editor.currentProject.value?.theme) delete (editor.currentProject.value.theme as Record<string, any>)[key]
+    cleanupCurrentTheme()
+    return
+  }
+  if (editor.settings.value.theme) delete (editor.settings.value.theme as Record<string, any>)[key]
+  cleanupCurrentTheme()
 }
 
 const backgroundTarget = computed<BackgroundSettingsTarget>(() => {
   if (isPageScope.value) {
     return {
-      get: () => editor.currentProject.value?.theme,
-      ensure: ensureCurrentTheme,
-      uploadImage: editor.triggerUploadPageBackground,
-      clearImage: editor.clearPageBackgroundImageFile,
+      get: () => {
+        const bg = editor.currentPage.value.background as Record<string, any> | undefined
+        if (bg && Object.keys(bg).length > 0) return bg
+        const legacyTheme = editor.currentProject.value?.theme as Record<string, any> | undefined
+        return legacyTheme?.pageBackgroundType ? legacyTheme : bg
+      },
+      ensure: () => {
+        const bg = (editor.currentPage.value.background ??= {}) as Record<string, any>
+        const legacyTheme = editor.currentProject.value?.theme as Record<string, any> | undefined
+        if (legacyTheme) {
+          PAGE_BG_LEGACY_KEYS.forEach((key) => {
+            if (bg[key] === undefined && legacyTheme[key] !== undefined) bg[key] = legacyTheme[key]
+          })
+          stripLegacyProjectBackgroundKeys()
+        }
+        return bg
+      },
+      uploadImage: () => {
+        stripLegacyProjectBackgroundKeys()
+        editor.triggerUploadPageBackgroundOverride()
+      },
+      clearImage: () => {
+        editor.clearPageBackgroundOverrideImageFile()
+        stripLegacyProjectBackgroundKeys()
+      },
     }
   }
   return {
-    get: () => (editor.settings.value as any).background,
-    ensure: () => ((editor.settings.value as any).background ??= {}),
+    get: () => editor.settings.value.background as Record<string, any> | undefined,
+    ensure: () => (editor.settings.value.background ??= {}) as Record<string, any>,
     uploadImage: editor.triggerUploadGlobalBackground,
     clearImage: editor.clearGlobalBackgroundImageFile,
   }
 })
 
 const textColorTarget = computed<ThemeTextColorTarget>(() => ({
-  get: () => (isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme),
+  get: () => (isPageScope.value ? readPageThemeObject() : editor.settings.value.theme),
   ensure: ensureCurrentTheme,
   cleanup: cleanupCurrentTheme,
 }))
 
 const appearanceTarget = computed<ThemeAppearanceTarget>(() => ({
-  get: () => (isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme),
+  get: () => (isPageScope.value ? readPageThemeObject() : editor.settings.value.theme),
   ensure: ensureCurrentTheme,
   cleanup: cleanupCurrentTheme,
 }))
@@ -114,16 +197,12 @@ const appearanceTarget = computed<ThemeAppearanceTarget>(() => ({
 function getThemeField(key: 'primaryColor' | 'backgroundColor') {
   return computed<string | undefined>({
     get: () => {
-      const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
+      const theme = isPageScope.value ? readPageThemeObject() : editor.settings.value.theme
       return typeof theme?.[key] === 'string' ? theme[key] : undefined
     },
     set: (value) => {
       if (value?.trim()) ensureCurrentTheme()[key] = value
-      else {
-        const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
-        if (theme) delete theme[key]
-        cleanupCurrentTheme()
-      }
+      else deleteThemeKey(key)
     },
   })
 }
@@ -133,18 +212,13 @@ const backgroundColor = getThemeField('backgroundColor')
 
 const themeMode = computed<'auto' | 'light' | 'dark'>({
   get: () => {
-    const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
+    const theme = isPageScope.value ? readPageThemeObject() : editor.settings.value.theme
     const mode = theme?.pageThemeMode
     return mode === 'light' || mode === 'dark' ? mode : 'auto'
   },
   set: (value) => {
-    if (value === 'auto') {
-      const theme = isPageScope.value ? editor.currentProject.value?.theme : (editor.settings.value as any).theme
-      if (theme) delete theme.pageThemeMode
-      cleanupCurrentTheme()
-    } else {
-      ensureCurrentTheme().pageThemeMode = value
-    }
+    if (value === 'auto') deleteThemeKey('pageThemeMode')
+    else ensureCurrentTheme().pageThemeMode = value
   },
 })
 
@@ -288,12 +362,14 @@ const currentBackgroundImageUrl = computed(() => {
 
 function clearCurrentTheme() {
   if (isPageScope.value) {
+    delete editor.currentPage.value.theme
+    delete editor.currentPage.value.background
     const project = editor.currentProject.value
     if (project) delete project.theme
     message.success('已清除本页专属样式，恢复继承全局默认')
     return
   }
-  delete (editor.settings.value as any).theme
+  delete editor.settings.value.theme
   message.success('已清空全局主题配置')
 }
 </script>
@@ -328,22 +404,19 @@ function clearCurrentTheme() {
           <template v-else>
             <div class="flex-between">
               <span class="text-[13px] font-medium">配置作用范围：</span>
-              <div class="grid grid-cols-2 gap-1 bg-muted p-0.5 rounded-lg">
-                <Button
-                  :variant="currentScope === 'global' ? 'default' : 'ghost'"
-                  class="px-2.5"
-                  @click="currentScope = 'global'"
-                >
-                  全局通用
-                </Button>
-                <Button
-                  :variant="currentScope === 'page' ? 'default' : 'ghost'"
-                  class="px-2.5"
-                  @click="currentScope = 'page'"
-                >
-                  本页专属
-                </Button>
-              </div>
+              <ToggleGroup
+                type="single"
+                size="xs"
+                :model-value="currentScope"
+                @update:model-value="
+                  (val) => {
+                    if (val === 'global' || val === 'page') currentScope = val
+                  }
+                "
+              >
+                <ToggleGroupItem value="global">全局通用</ToggleGroupItem>
+                <ToggleGroupItem value="page">本页专属</ToggleGroupItem>
+              </ToggleGroup>
             </div>
             <span class="block text-xs text-muted-foreground mt-1 leading-snug">
               {{
@@ -423,11 +496,12 @@ function clearCurrentTheme() {
               class="flex items-center gap-1.5 mt-1.5"
             >
               <span class="text-[11px] text-muted-foreground">候选色彩：</span>
-              <button
+              <Button
                 v-for="swatch in extractedResult.swatches"
                 :key="swatch"
-                type="button"
-                class="size-[18px] rounded border border-black/15 cursor-pointer p-0 transition-transform hover:scale-120"
+                size="icon-xs"
+                variant="outline"
+                class="size-5 rounded border-black/15 p-0 transition-transform hover:scale-110"
                 :style="{ backgroundColor: swatch }"
                 :aria-label="`设为主题色 ${swatch}`"
                 @click="applyCustomSwatch(swatch)"
@@ -532,14 +606,23 @@ function clearCurrentTheme() {
             <ThemeAdvancedOptions :target="appearanceTarget" />
 
             <div class="pt-2 border-t border-border flex flex-col gap-2">
-              <span class="text-xs font-semibold text-muted-foreground uppercase">自定义 CSS</span>
+              <div class="flex-between">
+                <span class="text-xs font-semibold text-muted-foreground uppercase">全局自定义 CSS</span>
+                <Badge
+                  v-if="isPageScope"
+                  variant="outline"
+                  size="xs"
+                >
+                  作用于全部页面
+                </Badge>
+              </div>
               <div class="flex-between p-2.5 rounded-lg border border-border bg-muted text-xs">
                 <span class="text-muted-foreground">
-                  {{ editor.settings.value.customCss ? '已配置全局 CSS' : '未配置全局 CSS' }}
+                  {{ editor.settings.value.customCss ? '已配置全局 CSS（实时同步到预览）' : '未配置全局 CSS' }}
                 </span>
                 <Button
                   variant="outline"
-                  @click="cssEditorVisible = true"
+                  @click="openCssEditor"
                 >
                   <component
                     :is="CodeSlashOutline"
@@ -578,7 +661,10 @@ function clearCurrentTheme() {
         </Button>
       </SheetFooter>
 
-      <GlobalCssEditorModal v-model:show="cssEditorVisible" />
+      <GlobalCssEditorModal
+        v-if="hasOpenedCssEditor"
+        v-model:show="cssEditorVisible"
+      />
     </SheetContent>
   </Sheet>
 </template>

@@ -7,36 +7,50 @@ import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import OptionsOutline from '@vicons/ionicons5/es/OptionsOutline'
 import PhonePortraitOutline from '@vicons/ionicons5/es/PhonePortraitOutline'
 import TabletPortraitOutline from '@vicons/ionicons5/es/TabletPortraitOutline'
-import { useNow } from '@vueuse/core'
+import { useIntervalFn, useNow } from '@vueuse/core'
+import { Maximize2, Minimize2, Scaling } from 'lucide-vue-next'
 import { computed, inject, nextTick, onMounted, ref, watch } from 'vue'
 
 import { fetchBiliProfile } from '@/apps/user-page/api'
-import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
 import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
-import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
 import CustomPageRenderer from '@/apps/user-page/components/CustomPageRenderer.vue'
-import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { useUserPageRuntimeQuery } from '@/apps/user-page/runtime/query'
-import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { IndexTemplateMap } from '@/shared/config/templates'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { isDarkMode } from '@/shared/utils'
 
 import { UserPageEditorKey } from '../context'
+import { usePreviewThemeContext, useScopedCustomCssPreview } from '../previewThemeContext'
 import PhonePreview from './PhonePreview.vue'
 import type { PreviewViewport } from './PhonePreview.vue'
 
 defineOptions({ name: 'BuilderPreviewPane' })
 
+const props = withDefaults(
+  defineProps<{
+    focusPreview?: boolean
+    canFocusPreview?: boolean
+  }>(),
+  {
+    focusPreview: false,
+    canFocusPreview: false,
+  },
+)
+
+const emit = defineEmits<{
+  (e: 'toggle-focus-preview'): void
+}>()
+
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const viewport = ref<PreviewViewport>('desktop')
+const fitDesktop = ref(true)
 const previewRoot = ref<HTMLElement | null>(null)
 const previewMode = ref<'select' | 'interact'>('select')
 const simulatedLiveState = ref<'actual' | 'live' | 'offline'>('actual')
@@ -87,48 +101,27 @@ watch(
   },
 )
 
-const previewMergedTheme = computed(() => {
-  const globalTheme = (editor.settings.value as any)?.theme ?? {}
-  const pageTheme = (editor.currentPage.value as any)?.theme ?? {}
-  const projectTheme = (editor.currentProject.value?.theme as any) ?? {}
-  return { ...globalTheme, ...pageTheme, ...projectTheme }
+const {
+  mergedTheme: previewMergedTheme,
+  effectiveIsDark: previewEffectiveIsDark,
+  resolvedBackground: previewBg,
+  canvasColor: previewCanvasColor,
+  bgVars: previewBgVars,
+  uiVars: previewUiVars,
+  customCss: previewCustomCss,
+} = usePreviewThemeContext({
+  settings: () => editor.settings.value,
+  currentPage: () => editor.currentPage.value,
+  currentProject: () => editor.currentProject.value,
 })
 
-useGoogleFont(
-  computed(() =>
-    typeof previewMergedTheme.value.fontFamily === 'string' ? previewMergedTheme.value.fontFamily : undefined,
-  ),
-)
+useScopedCustomCssPreview('.builder-preview-custom-css-scope', previewCustomCss)
 
 const previewMergedProject = computed(() => {
   const p = editor.currentProject.value
   if (!p) return null
   return { ...p, theme: previewMergedTheme.value }
 })
-
-const previewEffectiveIsDark = computed(() => {
-  const mode = (previewMergedTheme.value as any)?.pageThemeMode
-  return resolvePageThemeIsDark(mode, isDarkMode.value)
-})
-
-const previewBg = computed(() => {
-  const pageOverride = resolvePageBackground((editor.currentPage.value as any)?.background)
-  if (pageOverride) return pageOverride
-  const globalBg = resolvePageBackground((editor.settings.value as any)?.background)
-  if (globalBg) return globalBg
-  return resolvePageBackground(previewMergedProject.value?.theme)
-})
-
-const previewBgVars = computed(() => {
-  const bg = previewBg.value
-  if (!bg) return {}
-  return getPageBackgroundCssVars(bg, previewEffectiveIsDark.value)
-})
-
-const previewCanvasColor = usePageCanvasColor(previewBg, previewEffectiveIsDark)
-const previewUiVars = computed(() =>
-  getUserPageThemeCssVars(previewMergedTheme.value, previewEffectiveIsDark.value, previewCanvasColor.value),
-)
 
 const previewBgClass = computed(() => ({
   'preview-bg-host': true,
@@ -170,69 +163,114 @@ watch(
       <CardTitle class="truncate max-w-[200px]"> 预览 - {{ editor.currentLabel.value }} </CardTitle>
 
       <div class="flex items-center gap-1.5">
-        <div class="flex items-center bg-muted p-0.5 rounded-lg">
+        <ToggleGroup
+          type="single"
+          size="xs"
+          :model-value="previewMode"
+          @update:model-value="
+            (val) => {
+              if (val === 'select' || val === 'interact') previewMode = val
+            }
+          "
+        >
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="icon-xs"
-                  :variant="previewMode === 'select' ? 'default' : 'ghost'"
+                <ToggleGroupItem
+                  value="select"
                   aria-label="选择区块"
-                  @click="previewMode = 'select'"
                 >
-                  <component
-                    :is="NavigateOutline"
-                    class="size-3.5"
-                  />
-                </Button>
+                  <component :is="NavigateOutline" />
+                </ToggleGroupItem>
               </TooltipTrigger>
               <TooltipContent>选择区块</TooltipContent>
             </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="icon-xs"
-                  :variant="previewMode === 'interact' ? 'default' : 'ghost'"
+                <ToggleGroupItem
+                  value="interact"
                   aria-label="操作页面"
-                  @click="previewMode = 'interact'"
                 >
-                  <component
-                    :is="HandLeftOutline"
-                    class="size-3.5"
-                  />
-                </Button>
+                  <component :is="HandLeftOutline" />
+                </ToggleGroupItem>
               </TooltipTrigger>
               <TooltipContent>操作页面</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </div>
+        </ToggleGroup>
 
-        <div class="flex items-center bg-muted p-0.5 rounded-lg">
+        <ToggleGroup
+          type="single"
+          size="xs"
+          :model-value="viewport"
+          @update:model-value="
+            (val) => {
+              if (val === 'phone' || val === 'tablet' || val === 'desktop') viewport = val
+            }
+          "
+        >
           <TooltipProvider
             v-for="option in viewportOptions"
             :key="option.value"
           >
             <Tooltip>
               <TooltipTrigger as-child>
-                <Button
-                  size="icon-xs"
-                  :variant="viewport === option.value ? 'default' : 'ghost'"
+                <ToggleGroupItem
+                  :value="option.value"
                   :aria-label="`${option.label}预览`"
-                  @click="viewport = option.value"
                 >
-                  <component
-                    :is="option.icon"
-                    class="size-3.5"
-                  />
-                </Button>
+                  <component :is="option.icon" />
+                </ToggleGroupItem>
               </TooltipTrigger>
               <TooltipContent>{{ option.label }}预览</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </div>
+        </ToggleGroup>
+
+        <TooltipProvider v-if="viewport === 'desktop'">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="icon-xs"
+                :variant="fitDesktop ? 'secondary' : 'ghost'"
+                aria-label="切换桌面端缩放适配"
+                @click="fitDesktop = !fitDesktop"
+              >
+                <Scaling class="size-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {{
+                fitDesktop
+                  ? '当前：按 1180px 桌面视口等比缩放（点击切换 1:1 容器流式）'
+                  : '当前：1:1 容器流式宽度（点击切换 1180px 等比缩放）'
+              }}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider v-if="props.canFocusPreview">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="icon-xs"
+                :variant="props.focusPreview ? 'default' : 'ghost'"
+                :aria-label="props.focusPreview ? '退出专注预览' : '专注预览'"
+                @click="emit('toggle-focus-preview')"
+              >
+                <Minimize2
+                  v-if="props.focusPreview"
+                  class="size-3.5"
+                />
+                <Maximize2
+                  v-else
+                  class="size-3.5"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{{ props.focusPreview ? '退出专注预览' : '专注预览' }}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
 
         <Popover>
           <PopoverTrigger as-child>
@@ -291,101 +329,103 @@ watch(
         ref="previewRoot"
         class="contents"
       >
-      <PhonePreview
-        :style="[previewUiVars, previewBgVars]"
-        :is-dark="previewEffectiveIsDark"
-        :transparent="!!previewBg"
-        :viewport="viewport"
-      >
-        <template #background>
-          <div :class="previewBgClass" />
-        </template>
-
-        <Transition
-          name="fade-slide"
-          mode="out-in"
+        <PhonePreview
+          class="builder-preview-custom-css-scope"
+          :style="[previewUiVars, previewBgVars]"
+          :is-dark="previewEffectiveIsDark"
+          :transparent="!!previewBg"
+          :viewport="viewport"
+          :fit-desktop="fitDesktop"
         >
-          <div
-            :key="
-              editor.currentPage.value.mode === 'block' && editor.currentProject.value
-                ? 'block'
-                : editor.currentPage.value.mode
-            "
-            class="preview-content"
+          <template #background>
+            <div :class="previewBgClass" />
+          </template>
+
+          <Transition
+            name="fade-slide"
+            mode="out-in"
           >
-            <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
-              <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
-                <BlockPageRenderer
-                  :project="previewMergedProject"
-                  :user-info="editor.account.value"
-                  :bili-info="biliProfileQuery.data.value"
-                  :bili-status="biliProfileStatus"
-                  :is-dark="previewEffectiveIsDark"
-                  :canvas-color="previewCanvasColor"
-                  :highlight-block-id="previewHighlightBlockId"
-                  :selected-block-ids="editor.selectedBlockIds.value"
-                  :editor-mode="previewMode"
-                  :visibility-context="previewVisibilityContext"
-                  @select-block="selectPreviewBlock"
-                  @hover-block="editor.hoveredBlockId.value = $event"
-                />
-              </div>
-            </template>
-            <CustomPageRenderer
-              v-else-if="editor.currentPage.value.mode === 'custom' && editor.currentPage.value.custom"
-              :config="editor.currentPage.value.custom"
-              :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
-              :user-info="editor.account.value"
-              :bili-info="biliProfileQuery.data.value ?? undefined"
-            />
-            <template v-else-if="editor.currentPage.value.mode === 'legacy'">
-              <component
-                :is="legacyIndexTemplate"
-                :user-info="editor.account.value as any"
-                :bili-info="biliProfileQuery.data.value"
-              />
-            </template>
-            <template v-else-if="editor.currentPage.value.mode === 'contrib'">
-              <div class="contrib-preview-placeholder flex-center min-h-[320px] p-6">
-                <div
-                  class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
-                >
-                  <component
-                    :is="CodeSlashOutline"
-                    class="size-10 text-primary mb-2"
+            <div
+              :key="
+                editor.currentPage.value.mode === 'block' && editor.currentProject.value
+                  ? 'block'
+                  : editor.currentPage.value.mode
+              "
+              class="preview-content"
+            >
+              <template v-if="editor.currentPage.value.mode === 'block' && previewMergedProject">
+                <div :class="{ 'preview-glass-surface': previewBg?.blurMode === 'glass' }">
+                  <BlockPageRenderer
+                    :project="previewMergedProject"
+                    :user-info="editor.account.value"
+                    :bili-info="biliProfileQuery.data.value"
+                    :bili-status="biliProfileStatus"
+                    :is-dark="previewEffectiveIsDark"
+                    :canvas-color="previewCanvasColor"
+                    :highlight-block-id="previewHighlightBlockId"
+                    :selected-block-ids="editor.selectedBlockIds.value"
+                    :editor-mode="previewMode"
+                    :visibility-context="previewVisibilityContext"
+                    @select-block="selectPreviewBlock"
+                    @hover-block="editor.hoveredBlockId.value = $event"
                   />
-                  <div class="text-sm font-semibold mb-1">
-                    扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
-                  </div>
-                  <div class="text-xs text-muted-foreground leading-relaxed">
-                    扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId
-                    与相关属性，保存后可在外部预览中查看实际渲染效果。
-                  </div>
-                  <div class="flex justify-center mt-3.5">
-                    <Button @click="editor.openPreview">
-                      <component
-                        :is="OpenOutline"
-                        class="size-3.5 mr-1"
-                      />
-                      在对外页面中预览
-                    </Button>
+                </div>
+              </template>
+              <CustomPageRenderer
+                v-else-if="editor.currentPage.value.mode === 'custom' && editor.currentPage.value.custom"
+                :config="editor.currentPage.value.custom"
+                :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
+                :user-info="editor.account.value"
+                :bili-info="biliProfileQuery.data.value ?? undefined"
+              />
+              <template v-else-if="editor.currentPage.value.mode === 'legacy'">
+                <component
+                  :is="legacyIndexTemplate"
+                  :user-info="editor.account.value as any"
+                  :bili-info="biliProfileQuery.data.value"
+                />
+              </template>
+              <template v-else-if="editor.currentPage.value.mode === 'contrib'">
+                <div class="contrib-preview-placeholder flex-center min-h-[320px] p-6">
+                  <div
+                    class="contrib-placeholder-card flex flex-col items-center text-center max-w-sm p-6 rounded-xl border border-dashed border-border bg-muted"
+                  >
+                    <component
+                      :is="CodeSlashOutline"
+                      class="size-10 text-primary mb-2"
+                    />
+                    <div class="text-sm font-semibold mb-1">
+                      扩展组件页 · {{ editor.currentContrib.value?.pageId || '未配置 pageId' }}
+                    </div>
+                    <div class="text-xs text-muted-foreground leading-relaxed">
+                      扩展组件是由社区或专属代码渲染的独立页面。请在右侧面板配置 pageId
+                      与相关属性，保存后可在外部预览中查看实际渲染效果。
+                    </div>
+                    <div class="flex justify-center mt-3.5">
+                      <Button @click="editor.openPreview">
+                        <component
+                          :is="OpenOutline"
+                          class="size-3.5 mr-1"
+                        />
+                        在对外页面中预览
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </template>
-            <template v-else>
-              <Alert
-                size="sm"
-                class="m-4"
-              >
-                <AlertDescription>
-                  当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
-                </AlertDescription>
-              </Alert>
-            </template>
-          </div>
-        </Transition>
-      </PhonePreview>
+              </template>
+              <template v-else>
+                <Alert
+                  size="sm"
+                  class="m-4"
+                >
+                  <AlertDescription>
+                    当前页模式：{{ editor.getPageModeLabel(editor.currentPage.value.mode) }}
+                  </AlertDescription>
+                </Alert>
+              </template>
+            </div>
+          </Transition>
+        </PhonePreview>
       </div>
     </CardContent>
   </Card>

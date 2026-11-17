@@ -453,7 +453,7 @@ onBeforeUnmount(() => {
         size="xs"
         type="submit"
         :disabled="isUploading"
-        class="text-xs px-3"
+        class="px-3"
       >
         {{ isUploading ? '保存中...' : '提交' }}
       </Button>

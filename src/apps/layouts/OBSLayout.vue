@@ -21,13 +21,10 @@ onMounted(async () => {
     await webfetcher.Start()
   }
 
-  // @ts-expect-error 这里获取不了
   if (window.obsstudio) {
-    // @ts-expect-error 这里获取不了
     window.obsstudio.onVisibilityChange = function (visibility: boolean) {
       visible.value = visibility
     }
-    // @ts-expect-error 这里获取不了
     window.obsstudio.onActiveChange = function (a: boolean) {
       active.value = a
     }
@@ -68,12 +65,5 @@ onMounted(async () => {
   height: 100vh;
   overflow: hidden;
   position: relative;
-}
-
-/* 确保OBS中不出现滚动条 */
-body {
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
 }
 </style>

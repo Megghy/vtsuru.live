@@ -70,7 +70,6 @@ onMounted(async () => {
     await webFetcher.Start()
   }
   setTimeout(() => {
-    // @ts-expect-error obs的东西
     if (webFetcher.state !== 'connected' && window.obsstudio) {
       timer = setInterval(() => {
         if (webFetcher.state === 'connected') {

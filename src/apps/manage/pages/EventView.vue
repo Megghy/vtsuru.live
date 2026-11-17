@@ -494,13 +494,14 @@ function onTabChange(value: string | number) {
       </div>
 
       <div class="pt-4 border-t border-border flex justify-center">
-        <a
+        <Button
+          as="a"
           href="https://www.wolai.com/fje5wLtcrDoZcb9rk2zrFs"
           target="_blank"
-          class="inline-flex-center rounded-md text-xs font-medium h-8 px-4 bg-brand text-brand-foreground hover:bg-brand/90"
+          rel="noopener noreferrer"
         >
           查看部署指南 →
-        </a>
+        </Button>
       </div>
     </Card>
 

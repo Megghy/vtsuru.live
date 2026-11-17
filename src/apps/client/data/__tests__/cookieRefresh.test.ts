@@ -21,7 +21,7 @@ vi.mock('@tauri-apps/plugin-log', () => ({
 }))
 
 vi.mock('../utils', () => ({
-  QueryBiliAPI: vi.fn(async (url: string, method = 'GET', _cookie = '', _useCookie = true, body?: any) => {
+  QueryBiliAPI: vi.fn(async (url: string, _method = 'GET', _cookie = '', _useCookie = true, _body?: any) => {
     // 检查刷新状态
     if (url.includes('/web/cookie/info')) {
       return {

@@ -5,13 +5,10 @@ import { isInBiliBlackList } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
 import { EventDataTypes } from '@/api/generated/model'
 import { getApiVtsuruBlivechatEmoticon } from '@/api/generated/vtsuru/vtsuru'
-// @ts-ignore
 import * as constants from '@/apps/obs/components/blivechat/constants'
 import MessageRender from '@/apps/obs/components/blivechat/MessageRender.vue'
 import { getRichContent } from '@/apps/obs/components/blivechat/richContent'
-// @ts-ignore
 import * as pronunciation from '@/apps/obs/components/blivechat/utils/pronunciation'
-// @ts-ignore
 import * as trie from '@/apps/obs/components/blivechat/utils/trie'
 import { useDanmujiConfig } from '@/apps/obs/composables/useDanmujiConfig'
 import { type DanmujiConfig } from '@/shared/danmujiConfig'
@@ -45,7 +42,6 @@ const emit = defineEmits<{
 }>()
 
 const isOBS = computed(() => {
-  // @ts-ignore
   return typeof window !== 'undefined' && window.obsstudio !== undefined
 })
 
@@ -61,7 +57,7 @@ let textEmoticons: { keyword: string; url: string }[] = []
 
 // 表情词典树计算
 const emoticonsTrie = computed(() => {
-  const res = new trie.Trie()
+  const res = new trie.Trie<{ keyword: string; url: string }>()
   for (const emoticons of [effectiveConfig.value.emoticons, textEmoticons]) {
     for (const emoticon of emoticons) {
       if (emoticon.keyword !== '' && emoticon.url !== '') {
@@ -75,7 +71,7 @@ const emoticonsTrie = computed(() => {
 // 屏蔽关键词词典树计算
 const blockKeywordsTrie = computed(() => {
   const blockKeywords = (effectiveConfig.value.blockKeywords || '').split('\n')
-  const res = new trie.Trie()
+  const res = new trie.Trie<boolean>()
   for (const keyword of blockKeywords) {
     const trimmed = keyword.trim()
     if (trimmed !== '') {

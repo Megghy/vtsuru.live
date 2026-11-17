@@ -286,7 +286,7 @@ const mergedHighlights = computed<HighlightEntry[]>(() => {
     if (item.source === 'auto-guard' && !includeAutoGuard.value) continue
     list.push(item)
   }
-  return list.sort((a, b) => a.timeMs - b.timeMs)
+  return list.toSorted((a, b) => a.timeMs - b.timeMs)
 })
 
 async function copyHighlightComment() {

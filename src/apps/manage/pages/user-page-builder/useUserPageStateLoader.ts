@@ -126,6 +126,7 @@ export function useUserPageStateLoader(options: UseUserPageStateLoaderOptions) {
       options.localDraftStorage.value = {
         settings: deepCloneJson(selected.settings),
         baseSnapshot: selected.serverBaseSnapshot,
+        savedAt: Date.now(),
       }
     }
     options.isDirty.value = selected.dirty

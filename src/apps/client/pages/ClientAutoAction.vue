@@ -347,7 +347,7 @@ const triggerTypeOptions = [
                 v-for="item in group.children"
                 :key="item.key"
                 :variant="currentMenuKey === item.key ? 'default' : 'ghost'"
-                class="w-full justify-between text-xs px-2.5"
+                class="w-full justify-between px-2.5"
                 @click="handleMenuUpdate(item.key)"
               >
                 <div class="flex items-center gap-2 truncate">

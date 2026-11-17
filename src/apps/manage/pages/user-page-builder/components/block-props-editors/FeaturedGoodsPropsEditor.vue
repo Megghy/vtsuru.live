@@ -103,7 +103,7 @@ watch(
           <PopoverTrigger as-child>
             <Button
               variant="outline"
-              class="w-full justify-between font-normal text-xs"
+              class="w-full justify-between font-normal"
             >
               <span class="truncate">
                 {{

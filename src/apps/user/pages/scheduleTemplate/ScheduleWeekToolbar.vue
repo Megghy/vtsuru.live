@@ -167,7 +167,6 @@ async function saveScheduleImage() {
       <Button
         v-if="captureTarget"
         variant="default"
-        size="sm"
         class="gap-1.5 whitespace-nowrap"
         :disabled="saving"
         :aria-busy="saving"

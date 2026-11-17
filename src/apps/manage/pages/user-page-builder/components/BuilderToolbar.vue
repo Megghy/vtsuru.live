@@ -90,7 +90,7 @@ function handleMoreAction(key: string) {
         <TooltipTrigger as-child>
           <Button
             variant="ghost"
-            class="size-8 p-0"
+            size="icon-sm"
             :disabled="!editor.canUndo.value"
             aria-label="撤销"
             @click="editor.undo"
@@ -110,7 +110,7 @@ function handleMoreAction(key: string) {
         <TooltipTrigger as-child>
           <Button
             variant="ghost"
-            class="size-8 p-0"
+            size="icon-sm"
             :disabled="!editor.canRedo.value"
             aria-label="重做"
             @click="editor.redo"
@@ -140,7 +140,7 @@ function handleMoreAction(key: string) {
       <Tooltip>
         <TooltipTrigger as-child>
           <Button
-            class="max-[760px]:w-7 max-[760px]:p-0"
+            class="max-[760px]:px-2"
             variant="outline"
             :disabled="!editor.isDirty.value || editor.isSaving.value"
             aria-label="放弃本地修改"
@@ -148,7 +148,7 @@ function handleMoreAction(key: string) {
           >
             <component
               :is="RefreshOutline"
-              class="size-4 mr-1"
+              class="size-4 min-[761px]:mr-1"
             />
             <span class="max-[760px]:hidden">放弃本地修改</span>
           </Button>
@@ -192,7 +192,7 @@ function handleMoreAction(key: string) {
       <DropdownMenuTrigger as-child>
         <Button
           variant="ghost"
-          class="size-8 p-0"
+          size="icon-sm"
           aria-label="更多操作"
         >
           <component
@@ -268,7 +268,7 @@ function handleMoreAction(key: string) {
     </DropdownMenu>
 
     <span
-      class="inline-block w-[108px] overflow-hidden text-left text-ellipsis whitespace-nowrap text-xs text-muted-foreground max-[760px]:hidden"
+      class="inline-block min-w-0 max-w-[148px] overflow-hidden text-left text-ellipsis whitespace-nowrap text-xs text-muted-foreground max-[760px]:hidden"
       :class="{ 'text-destructive': editor.hasSyncError.value }"
       role="status"
       aria-live="polite"

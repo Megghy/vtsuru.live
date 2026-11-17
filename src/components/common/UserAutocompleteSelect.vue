@@ -127,7 +127,7 @@ watch(
     <Popover v-model:open="open">
       <PopoverTrigger as-child>
         <div
-          class="flex-between w-full h-8 px-2.5 text-xs rounded-md border border-input bg-background transition-colors hover:border-ring cursor-pointer"
+          class="flex-between w-full h-control-sm px-2.5 text-xs rounded-md border border-input bg-background transition-colors hover:border-ring cursor-pointer"
           :class="[disabled ? 'opacity-50 pointer-events-none' : '']"
         >
           <span

@@ -79,7 +79,7 @@ async function fetchLiveSessions() {
   try {
     const res = await getApiLiveGetAll()
     if (res.code === 200 && res.data) {
-      lives.value = [...res.data].sort((a, b) => b.startAt - a.startAt).slice(0, 30)
+      lives.value = res.data.toSorted((a, b) => b.startAt - a.startAt).slice(0, 30)
       if (lives.value.length > 0 && selectedLiveId.value === 'custom') {
         const ongoing = lives.value.find((item) => !item.isFinish)
         selectedLiveId.value = ongoing?.liveId ?? lives.value[0].liveId

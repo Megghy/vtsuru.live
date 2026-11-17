@@ -297,11 +297,14 @@ class RealtimeBusService {
     reg.refCount = Math.max(0, reg.refCount - 1)
 
     if (reg.refCount === 0) {
-      if (this.connection && this.connection.state === HubConnectionState.Connected) {
+      const conn = this.connection
+      if (conn && conn.state === HubConnectionState.Connected) {
         try {
-          await this.connection.invoke('Unsubscribe', topic)
-        } catch {
-          /* 忽略退订时的通信失败 */
+          await conn.invoke('Unsubscribe', topic)
+        } catch (err) {
+          if (!this.isCanceledByRebuild(conn)) {
+            console.warn(`[RealtimeBus] 退订主题 ${topic} 失败:`, err)
+          }
         }
       }
     }

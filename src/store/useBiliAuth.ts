@@ -3,7 +3,6 @@ import { computed, ref, watch } from 'vue'
 
 import { ACCOUNT } from '@/api/account'
 import { cookie } from '@/api/auth'
-import type { ResponsePointGoodModel } from '@/api/client-types'
 import {
   getApiBiliAuthInfo,
   postApiBiliAuthMigrate,
@@ -14,10 +13,6 @@ import { getApiPointGetGoods, getApiPointUserGetPoint } from '@/api/generated/po
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const useBiliAuth = defineStore('BiliAuth', () => {
-  type SessionResponse = {
-    token: string
-    expiresAt: number | null
-  }
   const sessionAuth = ref<ResponseBiliAuthModel>({} as ResponseBiliAuthModel)
   const usesAccountIdentity = computed(() => Boolean(cookie.value?.cookie))
   const biliAuth = computed(() =>

@@ -109,4 +109,23 @@ describe('user page publishing', () => {
     expect(saveMyUserPagesDraft.mock.calls[0][0].home.custom).toEqual(custom)
     expect(publishMyUserPagesSettings.mock.calls[0][0].home.custom).toEqual(custom)
   })
+
+  it('populates publishCheckIssues when server rejects with structured validation lines', async () => {
+    publishMyUserPagesSettings.mockRejectedValueOnce(new Error('pages.works: theme borderStrength 无效'))
+    const persistence = createPersistence()
+    persistence.settings.value.pages = { works: { mode: 'legacy', title: '作品' } }
+    persistence.openPublishModal()
+
+    await persistence.confirmPublish()
+
+    expect(persistence.publishModal.value).toBe(true)
+    expect(persistence.publishError.value).toBe('pages.works: theme borderStrength 无效')
+    expect(persistence.publishCheckIssues.value).toEqual([
+      expect.objectContaining({
+        scope: 'page',
+        pageKey: 'works',
+        fieldPath: 'theme',
+      }),
+    ])
+  })
 })

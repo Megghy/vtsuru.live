@@ -12,6 +12,7 @@ import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { VTSURU_API_URL } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { Button } from '@/shared/ui/button'
 import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
 
@@ -320,38 +321,41 @@ export function GetPlayButton(song: ResponseSongModel) {
   switch (song.from) {
     case SongPlatform.FiveSing: {
       return h(
-        'button',
+        Button,
         {
-          class:
-            'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-[#00BBB3] text-[#00BBB3] hover:bg-[#00BBB3]/10 transition-colors',
+          variant: 'outline',
+          size: 'xs',
+          class: 'gap-1 px-2 border-[#00BBB3] text-[#00BBB3] hover:bg-[#00BBB3]/10 hover:text-[#00BBB3]',
           title: '在5sing打开',
           onClick: () => window.open(`http://5sing.kugou.com/bz/${song.id}.html`),
         },
-        [h(FiveSingIcon, { class: 'svg-icon fivesing w-3.5 h-3.5 mr-1' }), '5sing'],
+        () => [h(FiveSingIcon, { class: 'svg-icon fivesing !size-3.5' }), '5sing'],
       )
     }
     case SongPlatform.Netease:
       return h(
-        'button',
+        Button,
         {
-          class:
-            'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-[#C20C0C] text-[#C20C0C] hover:bg-[#C20C0C]/10 transition-colors',
+          variant: 'outline',
+          size: 'xs',
+          class: 'gap-1 px-2 border-[#C20C0C] text-[#C20C0C] hover:bg-[#C20C0C]/10 hover:text-[#C20C0C]',
           title: '在网易云打开',
           onClick: () => window.open(`https://music.163.com/#/song?id=${song.id}`),
         },
-        [h(NeteaseIcon, { class: 'svg-icon netease w-3.5 h-3.5 mr-1' }), '网易云'],
+        () => [h(NeteaseIcon, { class: 'svg-icon netease !size-3.5' }), '网易云'],
       )
     case SongPlatform.Custom:
       return song.url
         ? h(
-            'button',
+            Button,
             {
-              class:
-                'inline-flex items-center justify-center h-7 px-2 text-xs font-medium rounded border border-muted-foreground/30 text-foreground hover:bg-muted transition-colors',
+              variant: 'outline',
+              size: 'xs',
+              class: 'gap-1 px-2 border-muted-foreground/30 text-foreground hover:bg-muted',
               title: '打开链接',
               onClick: () => window.open(song.url),
             },
-            [h(SquareArrowForward24Filled, { class: 'w-3.5 h-3.5 mr-1' }), '打开链接'],
+            () => [h(SquareArrowForward24Filled, { class: '!size-3.5' }), '打开链接'],
           )
         : null
   }

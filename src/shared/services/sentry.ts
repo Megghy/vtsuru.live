@@ -1,4 +1,3 @@
-import { load as loadFingerprint } from '@fingerprintjs/fingerprintjs'
 import * as Sentry from '@sentry/vue'
 import type { App } from 'vue'
 
@@ -52,11 +51,11 @@ export function shouldIgnoreSentryMessage(message: string) {
 const FINGERPRINT_CACHE_KEY = 'vtsuru:device:fingerprint'
 
 let cachedFingerprint = typeof window !== 'undefined' ? localStorage.getItem(FINGERPRINT_CACHE_KEY) || '' : ''
-let fpPromise: ReturnType<typeof loadFingerprint> | null = null
+let fpPromise: Promise<import('@fingerprintjs/fingerprintjs').Agent> | null = null
 
 function getFpAgent() {
   if (!fpPromise && typeof window !== 'undefined') {
-    fpPromise = loadFingerprint({ monitoring: false })
+    fpPromise = import('@fingerprintjs/fingerprintjs').then(({ load }) => load({ monitoring: false }))
   }
   return fpPromise
 }

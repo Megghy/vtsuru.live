@@ -9,5 +9,5 @@
     "moduleResolution": "Bundler",
     "types": ["node"]
   },
-  "include": ["vite.config.mts", "vitest.config.mts", "eslint.config.mjs"]
+  "include": ["vite.config.mts", "vitest.config.mts"]
 }

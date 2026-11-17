@@ -53,7 +53,7 @@ function openThemeDrawer(scope: 'global' | 'page' = 'global') {
 watch(editor.pageThemeModal, (val) => {
   if (val) {
     editor.pageThemeModal.value = false
-    openThemeDrawer('page')
+    openThemeDrawer(editor.currentKey.value === 'home' ? 'global' : 'page')
   }
 })
 
@@ -90,11 +90,13 @@ const {
   mediumGridColumns,
   legacyGridColumns,
   isPagesCollapsed,
+  focusPreview,
   mediumPane,
   compactPane,
   paneStyle,
   setColumnWidth,
   togglePagesCollapse,
+  toggleFocusPreview,
   applyPreset,
   resetLayout,
 } = builderLayout
@@ -103,17 +105,17 @@ type ColumnResizeState = ColumnResizeTarget & { startX: number; startWidth: numb
 
 const columnResizeState = ref<ColumnResizeState | null>(null)
 const mediumPaneIds: BuilderColumnId[] = ['pages', 'blocks']
-const compactPaneIds: BuilderColumnId[] = ['pages', 'blocks', 'preview']
+const compactPaneIds: BuilderColumnId[] = ['pages', 'blocks', 'preview', 'props']
 const responsivePaneIds = computed<BuilderColumnId[]>(() => {
   if (!isBlockMode.value) {
-    return workspaceMode.value === 'medium' ? ['pages'] : ['pages', 'preview']
+    return workspaceMode.value === 'medium' ? ['pages'] : ['pages', 'preview', 'props']
   }
   return workspaceMode.value === 'medium' ? mediumPaneIds : compactPaneIds
 })
 const selectedResponsivePane = computed<BuilderColumnId>(() => {
   if (!isBlockMode.value) {
     if (workspaceMode.value === 'compact') {
-      return ['pages', 'preview'].includes(compactPane.value) ? compactPane.value : 'preview'
+      return ['pages', 'preview', 'props'].includes(compactPane.value) ? compactPane.value : 'preview'
     }
     return 'pages'
   }
@@ -128,7 +130,7 @@ const workspaceGridStyle = computed(() => ({
   '--builder-legacy-columns': legacyGridColumns.value,
 }))
 const columnResizeTargets = computed<Partial<Record<BuilderColumnId, ColumnResizeTarget>>>(() => {
-  if (workspaceMode.value === 'compact') return {}
+  if (workspaceMode.value === 'compact' || focusPreview.value) return {}
   if (workspaceMode.value === 'medium') {
     const targets: Partial<Record<BuilderColumnId, ColumnResizeTarget>> = {
       preview: { id: 'props', direction: -1 },
@@ -231,6 +233,9 @@ function handleEditorShortcut(event: KeyboardEvent) {
     event.preventDefault()
     void editor.saveDraft()
     announceKeyboardAction('正在保存')
+  } else if (event.key === 'Escape' && focusPreview.value) {
+    event.preventDefault()
+    focusPreview.value = false
   } else if (
     editor.currentPage.value.mode === 'block' &&
     command &&
@@ -270,6 +275,31 @@ function handleEditorShortcut(event: KeyboardEvent) {
   }
 }
 
+function formatByteSize(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes} bytes`
+}
+
+const localDraftConflictDetail = computed(() => {
+  const conflict = editor.localDraftConflict.value
+  if (!conflict) return null
+  const localPagesCount = Object.keys(conflict.settings.pages ?? {}).length
+  const serverPagesCount = Object.keys(editor.settings.value.pages ?? {}).length
+  const localMode = editor.getPageModeLabel(conflict.settings.home?.mode ?? 'block')
+  const serverMode = editor.getPageModeLabel(editor.settings.value.home?.mode ?? 'block')
+  const savedTimeText =
+    typeof conflict.savedAt === 'number'
+      ? new Intl.DateTimeFormat('zh-CN', {
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit',
+        }).format(conflict.savedAt)
+      : '未知时间'
+  return `本地记录时间：${savedTimeText}；本地含 ${localPagesCount} 个子页（主页：${localMode}），服务端当前含 ${serverPagesCount} 个子页（主页：${serverMode}）。`
+})
+
 function focusPublishValidationIssue(issue: UserPageValidationIssue) {
   if (!editor.focusValidationIssue(issue)) {
     message.warning('该问题无法自动定位，请根据提示检查当前配置')
@@ -277,13 +307,15 @@ function focusPublishValidationIssue(issue: UserPageValidationIssue) {
   }
   editor.publishModal.value = false
   const request = editor.validationFocusRequest.value
+  if (workspaceMode.value === 'compact' && (request?.scope === 'block' || request?.scope === 'page')) {
+    compactPane.value = 'props'
+  }
   if (request?.scope === 'settings') openThemeDrawer('global')
   else if (
     request?.scope === 'page' &&
-    editor.currentPage.value.mode === 'block' &&
     (request.fieldPath?.startsWith('theme') || request.fieldPath?.startsWith('background'))
   )
-    editor.pageThemeModal.value = true
+    openThemeDrawer(request.pageKey === 'home' ? 'global' : 'page')
 }
 
 onMounted(async () => {
@@ -388,6 +420,12 @@ onBeforeRouteLeave(() => {
           <AlertTitle>版本冲突</AlertTitle>
           <AlertDescription>
             <div>检测到另一服务端版本上的本地修改，当前显示服务端内容。</div>
+            <div
+              v-if="localDraftConflictDetail"
+              class="mt-1 text-xs opacity-90"
+            >
+              {{ localDraftConflictDetail }}
+            </div>
             <div class="mt-2 flex gap-2">
               <Button
                 size="xs"
@@ -420,7 +458,7 @@ onBeforeRouteLeave(() => {
             >{{ keyboardStatus }}</span
           >
           <ToggleGroup
-            v-if="workspaceMode !== 'wide' && responsivePaneIds.length > 1"
+            v-if="workspaceMode !== 'wide' && !focusPreview && responsivePaneIds.length > 1"
             type="single"
             size="xs"
             :model-value="selectedResponsivePane"
@@ -451,8 +489,10 @@ onBeforeRouteLeave(() => {
               :key="id"
               class="builder-pane-slot"
               :class="{
-                'is-medium-active': id === 'preview' || id === 'props' || id === (isBlockMode ? mediumPane : 'pages'),
-                'is-compact-active': id === 'props' || id === selectedResponsivePane,
+                'is-medium-active': focusPreview
+                  ? id === 'preview'
+                  : id === 'preview' || id === 'props' || id === (isBlockMode ? mediumPane : 'pages'),
+                'is-compact-active': id === selectedResponsivePane,
                 'is-wide-active': activeColumnsOrder.includes(id),
               }"
               :data-pane-id="id"
@@ -462,7 +502,10 @@ onBeforeRouteLeave(() => {
                 :pane-id="id"
                 :pages-collapsed="isPagesCollapsed"
                 :pages-collapsible="workspaceMode !== 'compact' && id === 'pages'"
+                :focus-preview="focusPreview"
+                :can-focus-preview="workspaceMode !== 'compact'"
                 @toggle-pages-collapse="togglePagesCollapse"
+                @toggle-focus-preview="toggleFocusPreview"
               />
               <div
                 v-if="columnResizeTargets[id]"
@@ -569,7 +612,10 @@ onBeforeRouteLeave(() => {
             </DialogHeader>
             <div class="flex flex-col gap-3">
               <span class="text-xs text-muted-foreground">
-                配置大小：{{ editor.publishCheckBytes.value }} bytes（后端上限 131072 bytes / 128KB）
+                配置大小：{{ formatByteSize(editor.publishCheckBytes.value) }}（{{
+                  editor.publishCheckBytes.value
+                }}
+                bytes / 后端上限 {{ formatByteSize(editor.MAX_CONFIG_BYTES) }}）
               </span>
 
               <Alert
@@ -689,7 +735,7 @@ onBeforeRouteLeave(() => {
 
 .builder-body[data-workspace-mode='compact'] .builder-pane-grid {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: minmax(160px, 1fr) minmax(180px, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 
 .builder-body[data-workspace-mode='compact'] .builder-pane-slot.is-compact-active {
@@ -699,13 +745,9 @@ onBeforeRouteLeave(() => {
 
 .builder-body[data-workspace-mode='compact'] [data-pane-id='pages'],
 .builder-body[data-workspace-mode='compact'] [data-pane-id='blocks'],
-.builder-body[data-workspace-mode='compact'] [data-pane-id='preview'] {
-  grid-row: 1;
-}
-
+.builder-body[data-workspace-mode='compact'] [data-pane-id='preview'],
 .builder-body[data-workspace-mode='compact'] [data-pane-id='props'] {
-  grid-row: 2;
-  order: 1 !important;
+  grid-row: 1;
 }
 
 .user-page-builder :deep(.pane-card) {

@@ -74,20 +74,18 @@ export const Config = defineTemplateConfig([
           h(Input, {
             modelValue: pendingLink.value.name,
             placeholder: '链接名称',
-            class: 'h-8 text-xs w-28',
+            class: 'w-28',
             'onUpdate:modelValue': (value: string) => (pendingLink.value.name = value),
           }),
           h(Input, {
             modelValue: pendingLink.value.url,
             placeholder: 'https://...',
-            class: 'h-8 text-xs flex-1',
+            class: 'flex-1',
             'onUpdate:modelValue': (value: string) => (pendingLink.value.url = value),
           }),
           h(
             Button,
             {
-              size: 'sm',
-              class: 'h-8 text-xs',
               disabled: !pendingLink.value.name || !pendingLink.value.url,
               onClick: () => {
                 config.links ??= []

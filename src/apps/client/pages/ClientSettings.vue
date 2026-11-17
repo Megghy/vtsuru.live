@@ -247,7 +247,7 @@ function handleTitleClick() {
               v-for="item in navItems"
               :key="item.key"
               :variant="currentTab === item.key ? 'default' : 'ghost'"
-              class="w-full justify-start gap-2.5 text-xs"
+              class="w-full justify-start gap-2.5"
               @click="currentTab = item.key"
             >
               <component

@@ -1,5 +1,4 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { parsePositiveId } from '@/shared/obs/obsUrl'

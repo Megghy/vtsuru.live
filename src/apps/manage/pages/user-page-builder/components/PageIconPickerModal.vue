@@ -126,7 +126,6 @@ watch(show, (visible) => {
         <div class="overflow-x-auto pb-0.5">
           <ToggleGroup
             type="single"
-            size="sm"
             :model-value="styleFilter"
             @update:model-value="
               (v) => {

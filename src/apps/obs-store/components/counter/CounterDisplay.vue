@@ -117,7 +117,7 @@ const progressPercent = computed(() => {
       >
         <div
           class="counter-progress-fill"
-          :style="{ width: `${progressPercent}%` }"
+          :style="{ transform: `scaleX(${progressPercent / 100})` }"
         />
       </div>
     </div>
@@ -325,9 +325,11 @@ const progressPercent = computed(() => {
 }
 
 .counter-progress-fill {
+  width: 100%;
   height: 100%;
   background: var(--counter-accent);
   border-radius: 9999px;
-  transition: width 0.25s ease;
+  transform-origin: left;
+  transition: transform 0.25s ease;
 }
 </style>

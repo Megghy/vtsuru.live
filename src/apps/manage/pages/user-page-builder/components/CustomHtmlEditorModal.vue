@@ -1,41 +1,29 @@
 <script setup lang="ts">
-import CloudUploadOutline from '@vicons/ionicons5/es/CloudUploadOutline'
 import CodeWorkingOutline from '@vicons/ionicons5/es/CodeWorkingOutline'
-import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
-import DesktopOutline from '@vicons/ionicons5/es/DesktopOutline'
 import FolderOpenOutline from '@vicons/ionicons5/es/FolderOpenOutline'
-import MoonOutline from '@vicons/ionicons5/es/MoonOutline'
-import PhonePortraitOutline from '@vicons/ionicons5/es/PhonePortraitOutline'
-import SunnyOutline from '@vicons/ionicons5/es/SunnyOutline'
 import { watchDebounced } from '@vueuse/core'
 import { ClipboardPaste, FileUp, Trash2 } from 'lucide-vue-next'
 import { computed, inject, ref, watch } from 'vue'
 
 import { FileKind } from '@/api/generated/model'
 import type { APIFileModel } from '@/api/generated/model'
-import CustomHtmlBlock from '@/apps/user-page/block/blocks/CustomHtmlBlock.vue'
 import { compileCustomVueSfc } from '@/apps/user-page/block/customHtmlCompile'
 import { CUSTOM_HTML_MAX_ASSETS, CUSTOM_VUE_MAX_BYTES, utf8ByteLength } from '@/apps/user-page/block/customHtmlContract'
 import type { CustomHtmlProps } from '@/apps/user-page/block/customHtmlContract'
 import { collectCustomHtmlAssetKeys, inspectCustomSource } from '@/apps/user-page/block/customHtmlRuntime'
-import type { CustomCodeIssue, CustomHtmlTheme } from '@/apps/user-page/block/customHtmlRuntime'
+import type { CustomCodeIssue } from '@/apps/user-page/block/customHtmlRuntime'
 import { CUSTOM_CODE_TEMPLATES, applyCustomCodeTemplate } from '@/apps/user-page/block/customHtmlTemplates'
 import type { BlockNode, BlockPageProject } from '@/apps/user-page/block/schema'
 import { countImagesInBlocks, MAX_PAGE_IMAGES } from '@/apps/user-page/block/schema'
-import { resolveUserPageReadableAccent } from '@/apps/user-page/theme'
 import { useFilePicker } from '@/composables/useFilePicker'
-import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { FileStore, uploadFiles } from '@/shared/services/fileUpload'
 import { usePersistedStorage, whenPersistedReady } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
-import { Input } from '@/shared/ui/input'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/shared/ui/sheet'
-import { Switch } from '@/shared/ui/switch'
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/shared/ui/sheet'
 import { Tag } from '@/shared/ui/tag'
 import { Textarea } from '@/shared/ui/textarea'
-import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode, useDialog } from '@/shared/utils'
 
@@ -47,11 +35,14 @@ import {
 } from '../customHtmlWorkspaceDraft'
 import type { CustomHtmlWorkspaceDraft } from '../customHtmlWorkspaceDraft'
 import { deepCloneJson } from '../editorHelpers'
+import { usePreviewThemeContext } from '../previewThemeContext'
 import { useBuilderResources } from '../useBuilderResources'
 import { findBlockById } from '../userPageBlockTree'
 import { validateUserPageImageFiles } from '../userPageImageUpload'
 import CustomHtmlApiReference from './CustomHtmlApiReference.vue'
 import CustomHtmlCodeEditor from './CustomHtmlCodeEditor.vue'
+import CustomHtmlPreviewPane from './CustomHtmlPreviewPane.vue'
+import CustomHtmlResourceSidebar from './CustomHtmlResourceSidebar.vue'
 
 const props = defineProps<{ block?: BlockNode; page?: boolean }>()
 const show = defineModel<boolean>('show', { required: true })
@@ -59,7 +50,7 @@ const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
 
 const dialog = useDialog()
-const sourceConfig = computed(() => (props.page ? editor.currentPage.value.custom : props.block?.props))
+const sourceConfig = computed(() => (props.page ? editor.currentPage?.value?.custom : props.block?.props))
 const draft = ref<CustomHtmlProps>(deepCloneJson(appliedCustomHtmlDraft(sourceConfig.value)))
 const initialSnapshot = ref('')
 const resourcesVisible = ref(true)
@@ -119,31 +110,20 @@ function refreshPreview() {
 }
 const isDirty = computed(() => JSON.stringify(draft.value) !== initialSnapshot.value)
 const monacoTheme = computed(() => (previewDark.value ? ('vs-dark' as const) : ('vs' as const)))
-const previewTokens = computed(() => buildSiteTokens(previewDark.value))
-const previewTheme = computed<CustomHtmlTheme>(() => ({
-  fg: previewTokens.value.foreground,
-  fgMuted: previewTokens.value.mutedForeground,
-  bg: previewTokens.value.canvas,
-  bgElevated: previewTokens.value.elevated,
-  border: previewTokens.value.borderColor,
-  primary: previewTokens.value.brand,
-  primaryReadable: resolveUserPageReadableAccent(previewTokens.value.brand, undefined, previewDark.value),
-  radius: previewTokens.value.radiusSurface,
-  colorScheme: previewDark.value ? 'dark' : 'light',
-}))
-const previewStyle = computed(() => ({
-  width: previewDevice.value === 'mobile' ? '390px' : '100%',
-  maxWidth: '100%',
-  '--foreground': previewTokens.value.foreground,
-  '--muted-foreground': previewTokens.value.mutedForeground,
-  '--background': previewTokens.value.canvas,
-  '--card': previewTokens.value.surface,
-  '--muted': previewTokens.value.inset,
-  '--popover': previewTokens.value.elevated,
-  '--border': previewTokens.value.borderColor,
-  '--primary': previewTokens.value.brand,
-  '--brand': previewTokens.value.brand,
-  '--radius': previewTokens.value.radiusSurface,
+
+const previewThemeContext = usePreviewThemeContext({
+  settings: () => editor.settings?.value,
+  currentPage: () => editor.currentPage?.value,
+  currentProject: () => editor.currentProject?.value,
+  darkOverride: () => previewDark.value,
+  respectPageThemeMode: false,
+})
+
+const previewStageStyle = computed<Record<string, string | undefined>>(() => ({
+  ...previewThemeContext.bgVars.value,
+  ...previewThemeContext.uiVars.value,
+  backgroundColor: previewThemeContext.canvasColor.value,
+  color: previewThemeContext.uiVars.value['--foreground'],
   colorScheme: previewDark.value ? 'dark' : 'light',
 }))
 
@@ -169,7 +149,7 @@ function flushWorkspaceDraft() {
 }
 
 function projectWithDraft(): BlockPageProject | null {
-  const project = editor.currentProject.value
+  const project = editor.currentProject?.value
   if (!project || !props.block) return null
   const clone = deepCloneJson(project)
   const block = findBlockById(clone, props.block.id)
@@ -222,7 +202,7 @@ function applyChanges() {
   compiledIssues.value = collectIssues(draft.value)
   if (compiledIssues.value.length) return
   editor.batchHistory(() => {
-    if (props.page) editor.currentPage.value.custom = deepCloneJson(draft.value)
+    if (props.page && editor.currentPage?.value) editor.currentPage.value.custom = deepCloneJson(draft.value)
     else if (props.block) props.block.props = deepCloneJson(draft.value)
   })
   initialSnapshot.value = JSON.stringify(draft.value)
@@ -442,24 +422,26 @@ function confirmManualPaste() {
         <div class="flex items-center gap-2 pr-6">
           <DropdownMenu>
             <DropdownMenuTrigger as-child><Button variant="outline">插入模板 / 片段</Button></DropdownMenuTrigger>
-            <DropdownMenuContent
-              ><DropdownMenuItem
+            <DropdownMenuContent>
+              <DropdownMenuItem
                 v-for="template in CUSTOM_CODE_TEMPLATES"
                 :key="template.key"
                 @select="insertTemplate(template.key)"
-                >{{ template.label }}</DropdownMenuItem
-              ></DropdownMenuContent
-            >
+              >
+                {{ template.label }}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
           </DropdownMenu>
           <Button
             variant="ghost"
             @click="apiReferenceOpen = true"
-            >API 速查</Button
           >
+            API 速查
+          </Button>
           <Tag
             v-if="compiledIssues.length"
             variant="destructive"
-            class="text-xs"
+            size="small"
           >
             {{ compiledIssues.length }} 个问题
           </Tag>
@@ -477,104 +459,18 @@ function confirmManualPaste() {
         class="workspace flex-1 min-h-0"
         :class="{ 'resources-hidden': !resourcesVisible }"
       >
-        <aside
+        <CustomHtmlResourceSidebar
           v-if="resourcesVisible"
-          class="resources-pane flex min-h-0 flex-col overflow-hidden border-r bg-muted/20"
-        >
-          <div class="p-3 border-b flex flex-col gap-2 shrink-0">
-            <div class="flex justify-between items-center">
-              <span class="text-xs font-semibold text-foreground">图片资源</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Button
-                      size="xs"
-                      variant="ghost"
-                      class="size-7"
-                      :disabled="uploading"
-                      aria-label="上传图片"
-                      @click="openImageUpload()"
-                    >
-                      <CloudUploadOutline class="size-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent> 上传图片 </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <ToggleGroup
-              v-model="resourceSources"
-              type="multiple"
-              size="xs"
-              class="h-auto w-full flex-wrap justify-start"
-            >
-              <ToggleGroupItem :value="FileStore.Configs">编辑器</ToggleGroupItem>
-              <ToggleGroupItem :value="FileStore.Library">自己上传</ToggleGroupItem>
-              <ToggleGroupItem :value="FileStore.Questions">提问箱</ToggleGroupItem>
-            </ToggleGroup>
-            <Input
-              v-model="resourceSearch"
-              size="xs"
-              placeholder="搜索文件"
-            />
-          </div>
-          <div class="min-h-0 flex-1 overflow-y-auto scrollbar-thin p-2">
-            <div
-              v-if="filteredResources.length"
-              class="resource-list space-y-1"
-            >
-              <div
-                v-for="file in filteredResources"
-                :key="file.id"
-                class="resource-row flex items-center gap-0.5 rounded-md hover:bg-muted/50"
-              >
-                <Button
-                  variant="ghost"
-                  class="resource-row-main min-w-0 flex-1 h-auto justify-start gap-2 p-1.5"
-                  @click="attachResource(file)"
-                >
-                  <img
-                    :src="file.path"
-                    alt=""
-                    class="size-8 rounded object-cover shrink-0"
-                    loading="lazy"
-                    decoding="async"
-                    referrerpolicy="no-referrer"
-                  />
-                  <span class="min-w-0 flex-1 text-left">
-                    <strong class="block truncate text-foreground">{{ file.name || `资源 #${file.id}` }}</strong>
-                    <small class="text-muted-foreground"
-                      >#{{ file.id }}<template v-if="attachedIds.has(file.id)"> · 已绑定</template></small
-                    >
-                  </span>
-                </Button>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="size-7 shrink-0"
-                        :disabled="!file.path"
-                        aria-label="复制资源链接"
-                        @click.stop="copyResourcePath(file.path)"
-                      >
-                        <CopyOutline class="size-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>复制链接</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-            </div>
-            <div
-              v-else-if="!resources.isLoading.value"
-              class="py-8 text-center text-xs text-muted-foreground"
-            >
-              没有可用图片
-            </div>
-          </div>
-        </aside>
+          v-model:resource-search="resourceSearch"
+          v-model:resource-sources="resourceSources"
+          :resources="filteredResources"
+          :attached-ids="attachedIds"
+          :is-loading="resources.isLoading.value"
+          :uploading="uploading"
+          @upload="openImageUpload()"
+          @attach="attachResource"
+          @copy-path="copyResourcePath"
+        />
 
         <section class="code-pane flex flex-col min-h-0 border-r">
           <div class="pane-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0">
@@ -591,9 +487,8 @@ function confirmManualPaste() {
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <Button
-                      size="xs"
+                      size="icon-xs"
                       variant="ghost"
-                      class="size-7"
                       aria-label="从剪贴板粘贴"
                       @click="handlePasteFromClipboard"
                     >
@@ -605,9 +500,8 @@ function confirmManualPaste() {
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <Button
-                      size="xs"
+                      size="icon-xs"
                       variant="ghost"
-                      class="size-7"
                       aria-label="导入代码文件"
                       @click="triggerCodeFileInput"
                     >
@@ -619,9 +513,8 @@ function confirmManualPaste() {
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <Button
-                      size="xs"
+                      size="icon-xs"
                       variant="ghost"
-                      class="size-7"
                       aria-label="清空当前代码"
                       @click="handleClearCode"
                     >
@@ -633,9 +526,8 @@ function confirmManualPaste() {
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <Button
-                      size="xs"
+                      size="icon-xs"
                       variant="ghost"
-                      class="size-7"
                       aria-label="格式化代码"
                       @click="codeEditor?.formatDocument()"
                     >
@@ -647,9 +539,8 @@ function confirmManualPaste() {
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <Button
-                      size="xs"
+                      size="icon-xs"
                       variant="ghost"
-                      class="size-7"
                       aria-label="切换资源栏"
                       @click="resourcesVisible = !resourcesVisible"
                     >
@@ -662,7 +553,7 @@ function confirmManualPaste() {
             </div>
           </div>
           <div
-            class="px-3 py-1 bg-muted/30 border-b text-[11px] text-muted-foreground shrink-0 flex items-center justify-between"
+            class="px-3 py-1 bg-muted/30 border-b text-xs text-muted-foreground shrink-0 flex items-center justify-between"
           >
             <span>Vue SFC {{ sourceBytes }}/{{ CUSTOM_VUE_MAX_BYTES }} bytes</span>
             <span class="opacity-80">支持快捷键直接粘贴</span>
@@ -680,84 +571,20 @@ function confirmManualPaste() {
           </div>
         </section>
 
-        <section class="preview-pane flex flex-col min-h-0 bg-muted/10">
-          <div
-            class="pane-toolbar preview-toolbar flex justify-between items-center px-3 py-2 border-b bg-card shrink-0"
-          >
-            <div class="flex items-center gap-2 min-w-0">
-              <span class="text-xs font-semibold text-foreground">预览</span>
-              <label class="inline-flex-center gap-1.5 text-xs text-muted-foreground">
-                实时更新
-                <Switch v-model="livePreview" />
-              </label>
-              <Button
-                v-if="!livePreview"
-                size="xs"
-                :variant="previewStale ? 'default' : 'outline'"
-                @click="refreshPreview"
-              >
-                更新预览
-              </Button>
-            </div>
-            <div class="flex items-center gap-1.5">
-              <div class="inline-flex rounded-md border p-0.5 bg-muted">
-                <Button
-                  size="xs"
-                  :variant="previewDevice === 'desktop' ? 'default' : 'ghost'"
-                  class="size-6"
-                  aria-label="桌面预览"
-                  @click="previewDevice = 'desktop'"
-                >
-                  <DesktopOutline class="size-3.5" />
-                </Button>
-                <Button
-                  size="xs"
-                  :variant="previewDevice === 'mobile' ? 'default' : 'ghost'"
-                  class="size-6"
-                  aria-label="移动预览"
-                  @click="previewDevice = 'mobile'"
-                >
-                  <PhonePortraitOutline class="size-3.5" />
-                </Button>
-              </div>
-              <Button
-                size="xs"
-                variant="ghost"
-                class="size-7"
-                :aria-label="previewDark ? '切换亮色预览' : '切换暗色预览'"
-                @click="previewDark = !previewDark"
-              >
-                <SunnyOutline
-                  v-if="previewDark"
-                  class="size-4"
-                />
-                <MoonOutline
-                  v-else
-                  class="size-4"
-                />
-              </Button>
-            </div>
-          </div>
-          <div class="flex-1 min-h-0 overflow-y-auto">
-            <div
-              class="preview-stage min-h-full p-4 flex justify-center"
-              :class="{ dark: previewDark }"
-            >
-              <div
-                class="preview-content"
-                :style="previewStyle"
-              >
-                <CustomHtmlBlock
-                  :block-props="previewProps"
-                  :theme="previewTheme"
-                  :user-info="editor.account.value"
-                  :page-mode="props.page ? 'custom' : 'block'"
-                  :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
+        <CustomHtmlPreviewPane
+          v-model:live-preview="livePreview"
+          v-model:preview-device="previewDevice"
+          v-model:preview-dark="previewDark"
+          :preview-props="previewProps"
+          :preview-stale="previewStale"
+          :theme="previewThemeContext.customHtmlTheme.value"
+          :stage-style="previewStageStyle"
+          :user-info="editor.account.value"
+          :page-mode="props.page ? 'custom' : 'block'"
+          :page-slug="editor.currentKey.value === 'home' ? null : editor.currentKey.value"
+          :custom-css="show ? previewThemeContext.customCss.value : ''"
+          @refresh="refreshPreview"
+        />
       </div>
     </DialogContent>
   </Dialog>

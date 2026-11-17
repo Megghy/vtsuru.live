@@ -11,6 +11,7 @@ import { USER_PAGES_LOCAL_DRAFT_KEY } from './storageKeys'
 export interface UserPagesLocalDraftSnapshot {
   settings: UserPagesSettings
   baseSnapshot: string | null
+  savedAt?: number
 }
 
 const LEGACY_USER_PAGES_LOCAL_DRAFT_KEY = 'vtsuru:user-pages:local-draft:v1'
@@ -40,6 +41,9 @@ export function parseUserPagesLocalDraft(raw: string): UserPagesLocalDraftSnapsh
     return {
       settings: migrateUserPagesSettings(snapshot.settings),
       baseSnapshot,
+      ...(typeof snapshot.savedAt === 'number' && Number.isFinite(snapshot.savedAt)
+        ? { savedAt: snapshot.savedAt }
+        : {}),
     }
   } catch {
     return null

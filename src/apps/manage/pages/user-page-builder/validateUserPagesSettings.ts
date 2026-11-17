@@ -238,3 +238,112 @@ export function validateUserPagesSettings(settings: UserPagesSettings) {
 export function validateRenderableUserPagesSettings(settings: UserPagesSettings) {
   return validateSettings(settings, validateRenderableBlockPageProject)
 }
+
+function resolveBlockIdByIndexPath(settings: UserPagesSettings, pageKey: string, indices: number[]): string | null {
+  const page = pageKey === 'home' ? settings.home : settings.pages?.[pageKey]
+  if (!page || page.mode !== 'block' || !page.block?.blocks) return null
+  let list = page.block.blocks
+  let current: any = null
+  for (let i = 0; i < indices.length; i++) {
+    const idx = indices[i]
+    current = list[idx]
+    if (!current) return null
+    if (i < indices.length - 1) {
+      if (current.type !== 'layout' || !Array.isArray(current.props?.children)) return null
+      list = current.props.children
+    }
+  }
+  return typeof current?.id === 'string' && current.id ? current.id : null
+}
+
+function inferPageFieldPath(detail: string): string | null {
+  if (detail.startsWith('theme')) return 'theme'
+  if (detail.startsWith('background')) return 'background'
+  if (detail.startsWith('navIcon')) return 'navIcon'
+  if (detail.startsWith('contrib')) return detail.split(/\s+/)[0]
+  if (detail.startsWith('customHtml') || detail.includes('custom 配置')) return 'custom'
+  return null
+}
+
+export function parseServerValidationIssues(errorText: string, settings: UserPagesSettings): UserPageValidationIssue[] {
+  const lines = errorText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const issues: UserPageValidationIssue[] = []
+
+  for (const line of lines) {
+    if (line.startsWith('settings:')) {
+      const detail = line.slice('settings:'.length).trim()
+      issues.push({
+        message: line,
+        severity: 'error',
+        scope: 'settings',
+        pageKey: null,
+        blockId: null,
+        fieldPath: detail.startsWith('customCss')
+          ? 'customCss'
+          : detail.startsWith('background')
+            ? 'background'
+            : detail.startsWith('theme')
+              ? 'theme'
+              : null,
+      })
+      continue
+    }
+
+    if (line.startsWith('pages:')) {
+      issues.push({
+        message: line,
+        severity: 'error',
+        scope: 'settings',
+        pageKey: null,
+        blockId: null,
+        fieldPath: 'pages',
+      })
+      continue
+    }
+
+    const pageMatch = line.match(/^(home|pages\.([a-z0-9-]+)):\s*(.+)$/)
+    if (!pageMatch) continue
+    const pageKey = pageMatch[1] === 'home' ? 'home' : pageMatch[2]
+    const detail = pageMatch[3]
+
+    const rootBlockMatch = detail.match(/^block\.blocks\[(\d+)\](.*)$/)
+    if (rootBlockMatch) {
+      const indices = [Number(rootBlockMatch[1])]
+      let rest = rootBlockMatch[2]
+      const childRegex = /^\s*:\s*layout\.children\[(\d+)\](.*)$/
+      while (true) {
+        const childMatch = rest.match(childRegex)
+        if (!childMatch) break
+        indices.push(Number(childMatch[1]))
+        rest = childMatch[2]
+      }
+      const blockId = resolveBlockIdByIndexPath(settings, pageKey, indices)
+      const cleanedField = rest.replace(/^\s*:\s*/, '').trim()
+      if (blockId) {
+        issues.push({
+          message: line,
+          severity: 'error',
+          scope: 'block',
+          pageKey,
+          blockId,
+          fieldPath: cleanedField.split(/\s+/)[0] || null,
+        })
+        continue
+      }
+    }
+
+    issues.push({
+      message: line,
+      severity: 'error',
+      scope: 'page',
+      pageKey,
+      blockId: null,
+      fieldPath: detail.startsWith('block.theme') ? 'theme' : inferPageFieldPath(detail),
+    })
+  }
+
+  return issues
+}

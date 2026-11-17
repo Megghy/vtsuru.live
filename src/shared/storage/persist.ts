@@ -53,9 +53,15 @@ function isTauriRuntime(): boolean {
 
 function decodeStoredValue(value: unknown): unknown {
   if (typeof value !== 'string') return value
+  const trimmed = value.trim()
+  if (!trimmed) return value
   try {
     return JSON.parse(value)
-  } catch {
+  } catch (err) {
+    // 非 JSON 的原始字符串（如版本号、token）按原值返回；仅对疑似 JSON 对象/数组反序列化失败记录告警
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      console.warn('[persist] JSON 反序列化失败，已按原始字符串返回:', err)
+    }
     return value
   }
 }

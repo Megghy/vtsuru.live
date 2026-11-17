@@ -80,7 +80,7 @@ export function detectAutoHighlights(
     const avg = counts.reduce((a, b) => a + b, 0) / counts.length
     const threshold = Math.max(minPeakDanmaku, avg * peakMultiplier)
 
-    const sortedBuckets = [...bucketMap.entries()].sort((a, b) => a[0] - b[0])
+    const sortedBuckets = [...bucketMap.entries()].toSorted((a, b) => a[0] - b[0])
     let lastPeakBucket = -99
     for (const [bucketIdx, count] of sortedBuckets) {
       if (count >= threshold && bucketIdx - lastPeakBucket >= 2) {
@@ -95,7 +95,7 @@ export function detectAutoHighlights(
     }
   }
 
-  return results.sort((a, b) => a.timeMs - b.timeMs)
+  return results.toSorted((a, b) => a.timeMs - b.timeMs)
 }
 
 /** 生成 B 站录播评论区时间戳文本 */
@@ -105,9 +105,9 @@ export function buildHighlightCommentText(
   offsetAdjustSec = 0,
 ): string {
   const adjustMs = offsetAdjustSec * 1000
-  return [...entries]
+  return entries
     .filter((e) => Number.isFinite(e.timeMs) && e.timeMs >= liveStartAtMs)
-    .sort((a, b) => a.timeMs - b.timeMs)
+    .toSorted((a, b) => a.timeMs - b.timeMs)
     .map((e) => `${formatBiliOffset(e.timeMs - liveStartAtMs + adjustMs)} ${e.label.trim() || '高光时刻'}`)
     .join('\n')
 }
@@ -130,9 +130,9 @@ export function buildHighlightSrtText(
 ): string {
   const adjustMs = offsetAdjustSec * 1000
   const durationMs = Math.max(1000, clipDurationSec * 1000)
-  const sorted = [...entries]
+  const sorted = entries
     .filter((e) => Number.isFinite(e.timeMs) && e.timeMs >= liveStartAtMs)
-    .sort((a, b) => a.timeMs - b.timeMs)
+    .toSorted((a, b) => a.timeMs - b.timeMs)
 
   return sorted
     .map((entry, idx) => {

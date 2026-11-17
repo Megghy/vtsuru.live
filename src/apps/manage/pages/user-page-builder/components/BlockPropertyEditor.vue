@@ -9,6 +9,7 @@ import { computed, inject, ref, watch } from 'vue'
 
 import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
 import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
+import { listContribPageRefs } from '@/apps/user-page/contrib/registry'
 import { getUserPageNavIconLabel, resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import type { UserPageConfig } from '@/apps/user-page/types'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
@@ -57,6 +58,24 @@ const pageIconPickerShown = ref(false)
 const blocksCount = computed(() => editor.currentProject.value?.blocks?.length ?? 0)
 const isBlockMode = computed(() => editor.currentPage.value.mode === 'block')
 const isSelectingBlock = computed(() => Boolean(editor.selectedBlock.value || editor.selectedBlocks.value.length > 0))
+const contribPageOptions = computed(() => {
+  const contrib = editor.currentContrib.value
+  const scope = contrib?.scope ?? 'global'
+  const accountId = Number(editor.account.value.id ?? 0)
+  return listContribPageRefs()
+    .filter((item) => item.scope === scope && (scope === 'global' || item.streamerId === accountId))
+    .map((item) => item.pageId)
+})
+const capacityStatusClass = computed(() => {
+  if (editor.configBytesPercent.value >= 90) return 'text-destructive font-medium'
+  if (editor.configBytesPercent.value >= 75) return 'text-amber-600 dark:text-amber-400 font-medium'
+  return 'text-muted-foreground'
+})
+function formatBytesShort(bytes: number) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes} B`
+}
 
 function setCurrentPageNavIcon(value: string | undefined) {
   editor.currentPage.value.navIcon = value
@@ -122,13 +141,7 @@ function groupSelection() {
       </CardTitle>
 
       <div class="flex items-center gap-2">
-        <TooltipProvider
-          v-if="
-            editor.currentKey.value !== 'home' &&
-            editor.currentPage.value.mode === 'block' &&
-            editor.currentProject.value
-          "
-        >
+        <TooltipProvider v-if="editor.currentKey.value !== 'home'">
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
@@ -147,13 +160,28 @@ function groupSelection() {
           </Tooltip>
         </TooltipProvider>
 
-        <span class="text-xs text-muted-foreground whitespace-nowrap">
-          容量 {{ editor.configBytesPercent.value }}%
-        </span>
-        <Progress
-          :model-value="editor.configBytesPercent.value"
-          class="w-16 h-1.5"
-        />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <div class="flex items-center gap-1.5 cursor-help">
+                <span
+                  class="text-xs whitespace-nowrap"
+                  :class="capacityStatusClass"
+                >
+                  容量 {{ editor.configBytesPercent.value }}%
+                </span>
+                <Progress
+                  :model-value="editor.configBytesPercent.value"
+                  class="w-16 h-1.5"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              已用 {{ formatBytesShort(editor.configBytes.value) }} / 上限
+              {{ formatBytesShort(editor.MAX_CONFIG_BYTES) }}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </CardHeader>
 
@@ -195,23 +223,30 @@ function groupSelection() {
         <div>
           <span class="text-xs font-semibold text-foreground">页面搭建模式</span>
         </div>
-        <div class="flex flex-col gap-2">
-          <div
+        <div
+          role="radiogroup"
+          aria-label="页面搭建模式"
+          class="flex flex-col gap-2"
+        >
+          <button
             v-for="opt in PAGE_MODE_OPTIONS"
             :key="opt.value"
-            class="py-2.5 px-3 rounded-lg border border-border bg-muted cursor-pointer transition flex flex-col gap-1 hover:border-primary hover:bg-popover"
+            type="button"
+            role="radio"
+            :aria-checked="editor.currentPage.value.mode === opt.value"
+            class="w-full text-left py-2.5 px-3 rounded-lg border border-border bg-muted cursor-pointer transition-colors flex flex-col gap-1 hover:border-primary hover:bg-popover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             :class="{
               'border-primary bg-[var(--brand-tint,rgba(0,150,255,0.08))] shadow-[0_0_0_1px_var(--primary)]':
                 editor.currentPage.value.mode === opt.value,
             }"
             @click="handleModeChange(opt.value)"
           >
-            <div class="flex-between">
+            <div class="flex-between w-full">
               <span class="text-[13px] font-semibold text-foreground">{{ opt.label }}</span>
               <Tag
                 v-if="opt.tag"
                 variant="outline"
-                class="text-[10px] h-4.5 px-1.5"
+                size="tiny"
               >
                 {{ opt.tag }}
               </Tag>
@@ -219,7 +254,7 @@ function groupSelection() {
             <div class="text-xs leading-snug text-muted-foreground">
               {{ opt.description }}
             </div>
-          </div>
+          </button>
         </div>
       </div>
 
@@ -352,10 +387,38 @@ function groupSelection() {
 
               <div class="flex flex-col gap-1">
                 <label class="text-xs text-muted-foreground">页面组件 ID (pageId)</label>
-                <Input
-                  v-model="editor.currentContrib.value!.pageId"
-                  placeholder="选择或输入 pageId"
-                />
+                <div class="flex flex-col gap-1.5">
+                  <Select
+                    v-if="contribPageOptions.length"
+                    :model-value="
+                      contribPageOptions.includes(editor.currentContrib.value!.pageId)
+                        ? editor.currentContrib.value!.pageId
+                        : ''
+                    "
+                    @update:model-value="
+                      (val) => {
+                        if (typeof val === 'string' && val) editor.currentContrib.value!.pageId = val
+                      }
+                    "
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="从已注册组件中选择（或下方手动输入）" />
+                    </SelectTrigger>
+                    <SelectContent class="text-xs">
+                      <SelectItem
+                        v-for="pid in contribPageOptions"
+                        :key="pid"
+                        :value="pid"
+                      >
+                        {{ pid }}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    v-model="editor.currentContrib.value!.pageId"
+                    placeholder="选择或输入 pageId"
+                  />
+                </div>
               </div>
 
               <div

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import type { UserPagesSettings } from '@/apps/user-page/types'
 
-import { getUserPagesLocalDraftKey } from '../useUserPagesLocalDraftStorage'
+import { getUserPagesLocalDraftKey, parseUserPagesLocalDraft } from '../useUserPagesLocalDraftStorage'
 import { selectInitialSettings } from '../useUserPageStateLoader'
 
 const published: UserPagesSettings = {
@@ -99,5 +99,25 @@ describe('user page local draft recovery', () => {
     expect(selected.settings).toBe(local)
     expect(selected.dirty).toBe(true)
     expect(selected.conflict).toBeNull()
+  })
+
+  it('解析本地草稿时保留合法 savedAt 并兼容缺少 savedAt 的快照', () => {
+    const withTimestamp = parseUserPagesLocalDraft(
+      JSON.stringify({
+        settings: published,
+        baseSnapshot: JSON.stringify(published),
+        savedAt: 1700000000000,
+      }),
+    )
+    const withoutTimestamp = parseUserPagesLocalDraft(
+      JSON.stringify({
+        settings: published,
+        baseSnapshot: JSON.stringify(published),
+        savedAt: 'invalid',
+      }),
+    )
+
+    expect(withTimestamp?.savedAt).toBe(1700000000000)
+    expect(withoutTimestamp?.savedAt).toBeUndefined()
   })
 })

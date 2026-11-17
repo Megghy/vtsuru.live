@@ -9,6 +9,7 @@ import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
+import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 
 type PageBackgroundType = 'none' | 'color' | 'image'
 type PageBackgroundBlurMode = 'none' | 'background' | 'glass'
@@ -169,29 +170,24 @@ function clearAll() {
     <div class="flex flex-col gap-1.5">
       <label class="text-xs text-muted-foreground font-medium">背景类型</label>
       <div class="flex items-center gap-2">
-        <div class="grid grid-cols-3 gap-1 bg-muted p-0.5 rounded-lg flex-1">
-          <Button
-            :variant="type === 'none' ? 'default' : 'ghost'"
-            @click="type = 'none'"
-          >
-            无背景
-          </Button>
-          <Button
-            :variant="type === 'color' ? 'default' : 'ghost'"
-            @click="type = 'color'"
-          >
-            纯色底
-          </Button>
-          <Button
-            :variant="type === 'image' ? 'default' : 'ghost'"
-            @click="type = 'image'"
-          >
-            图片背景
-          </Button>
-        </div>
+        <ToggleGroup
+          type="single"
+          size="xs"
+          class="flex-1 grid grid-cols-3"
+          :model-value="type"
+          @update:model-value="
+            (v) => {
+              if (v === 'none' || v === 'color' || v === 'image') type = v
+            }
+          "
+        >
+          <ToggleGroupItem value="none">无背景</ToggleGroupItem>
+          <ToggleGroupItem value="color">纯色底</ToggleGroupItem>
+          <ToggleGroupItem value="image">图片背景</ToggleGroupItem>
+        </ToggleGroup>
         <Button
+          size="xs"
           variant="outline"
-          class="px-2"
           :disabled="type === 'none'"
           @click="clearAll"
         >

@@ -10,35 +10,40 @@ import type { EventModel } from '@/api/client-types'
 
 export type DanmakuClientType = 'openlive' | 'direct' | 'local' | 'broadcast'
 
-type ModelListener = (arg1: EventModel, arg2?: any) => void
-type AllListener = (arg1: any) => void
-
-export interface ModelEventListeners {
-  danmaku: ModelListener[]
-  gift: ModelListener[]
-  sc: ModelListener[]
-  guard: ModelListener[]
-  enter: ModelListener[]
-  scDel: ModelListener[]
-  all: AllListener[]
-  follow: ModelListener[]
-  like: ModelListener[]
+export type EventArgsMap = Record<string, unknown[]>
+export type EventListener<TArgs extends unknown[]> = (...args: TArgs) => void
+export type EventListenersMap<TEvents extends EventArgsMap> = {
+  [K in keyof TEvents]: Array<EventListener<TEvents[K]>>
 }
 
-type RawListener = (arg1: any, arg2?: any) => void
-export interface RawEventListeners {
-  danmaku: RawListener[]
-  gift: RawListener[]
-  sc: RawListener[]
-  guard: RawListener[]
-  enter: RawListener[]
-  scDel: RawListener[]
-  all: AllListener[]
-  follow: RawListener[]
-  like: RawListener[]
+export type ModelEventName = 'danmaku' | 'gift' | 'sc' | 'guard' | 'enter' | 'scDel' | 'follow' | 'like'
+
+export type ModelEventMap = {
+  danmaku: [arg1: EventModel, arg2?: unknown]
+  gift: [arg1: EventModel, arg2?: unknown]
+  sc: [arg1: EventModel, arg2?: unknown]
+  guard: [arg1: EventModel, arg2?: unknown]
+  enter: [arg1: EventModel, arg2?: unknown]
+  scDel: [arg1: EventModel, arg2?: unknown]
+  all: [arg1: unknown]
+  follow: [arg1: EventModel, arg2?: unknown]
+  like: [arg1: EventModel, arg2?: unknown]
 }
 
-type ModelEventName = Exclude<keyof ModelEventListeners, 'all'>
+export type RawEventMap = {
+  danmaku: [arg1: unknown, arg2?: unknown]
+  gift: [arg1: unknown, arg2?: unknown]
+  sc: [arg1: unknown, arg2?: unknown]
+  guard: [arg1: unknown, arg2?: unknown]
+  enter: [arg1: unknown, arg2?: unknown]
+  scDel: [arg1: unknown, arg2?: unknown]
+  all: [arg1: unknown]
+  follow: [arg1: unknown, arg2?: unknown]
+  like: [arg1: unknown, arg2?: unknown]
+}
+
+export type ModelEventListeners = EventListenersMap<ModelEventMap>
+export type RawEventListeners = EventListenersMap<RawEventMap>
 
 export default abstract class DanmakuEventEmitter {
   constructor() {
@@ -74,7 +79,7 @@ export default abstract class DanmakuEventEmitter {
   public abstract Stop(): void
 
   /** 触发 'all' 事件监听器 (两套系统都触发) */
-  public onRawMessage = (command: any) => {
+  public onRawMessage = (command: unknown) => {
     this.notifyListeners('model:all', this.eventsAsModel.all, command)
     this.notifyListeners('raw:all', this.eventsRaw.all, command)
   }
@@ -97,7 +102,11 @@ export default abstract class DanmakuEventEmitter {
     this.notifyListeners(`model:${eventName}`, this.eventsAsModel[eventName], data, command)
   }
 
-  protected notifyListeners(eventName: string, listeners: readonly ((...args: any[]) => void)[], ...args: any[]) {
+  protected notifyListeners<TArgs extends unknown[]>(
+    eventName: string,
+    listeners: readonly EventListener<TArgs>[],
+    ...args: TArgs
+  ) {
     for (const listener of listeners) {
       try {
         listener(...args)
@@ -108,44 +117,26 @@ export default abstract class DanmakuEventEmitter {
   }
 
   // --- 事件系统 1: onEvent/offEvent (EventModel) ---
-  public onEvent(eventName: 'danmaku', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'gift', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'sc', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'guard', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'enter', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'scDel', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'all', listener: (arg1: any) => void): this
-  public onEvent(eventName: 'follow', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: 'like', listener: (arg1: EventModel, arg2?: any) => void): this
-  public onEvent(eventName: keyof ModelEventListeners, listener: (...args: any[]) => void): this {
-    ;(this.eventsAsModel[eventName] as ((...args: any[]) => void)[]).push(listener)
+  public onEvent<K extends keyof ModelEventMap>(eventName: K, listener: EventListener<ModelEventMap[K]>): this {
+    this.eventsAsModel[eventName].push(listener)
     return this
   }
 
-  public offEvent(eventName: keyof ModelEventListeners, listener: (...args: any[]) => void): this {
-    const listeners = this.eventsAsModel[eventName] as ((...args: any[]) => void)[]
+  public offEvent<K extends keyof ModelEventMap>(eventName: K, listener: EventListener<ModelEventMap[K]>): this {
+    const listeners = this.eventsAsModel[eventName]
     const index = listeners.indexOf(listener)
     if (index > -1) listeners.splice(index, 1)
     return this
   }
 
   // --- 事件系统 2: on/off (原始数据) ---
-  public on(eventName: 'danmaku', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'gift', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'sc', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'guard', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'enter', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'scDel', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'all', listener: (arg1: any) => void): this
-  public on(eventName: 'follow', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: 'like', listener: (arg1: any, arg2?: any) => void): this
-  public on(eventName: keyof RawEventListeners, listener: (...args: any[]) => void): this {
-    ;(this.eventsRaw[eventName] as ((...args: any[]) => void)[]).push(listener)
+  public on<K extends keyof RawEventMap>(eventName: K, listener: EventListener<RawEventMap[K]>): this {
+    this.eventsRaw[eventName].push(listener)
     return this
   }
 
-  public off(eventName: keyof RawEventListeners, listener: (...args: any[]) => void): this {
-    const listeners = this.eventsRaw[eventName] as ((...args: any[]) => void)[]
+  public off<K extends keyof RawEventMap>(eventName: K, listener: EventListener<RawEventMap[K]>): this {
+    const listeners = this.eventsRaw[eventName]
     const index = listeners.indexOf(listener)
     if (index > -1) listeners.splice(index, 1)
     return this

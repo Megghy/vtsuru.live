@@ -13,7 +13,7 @@ import type { UserPagesSettings } from '@/apps/user-page/types'
 
 import { deepCloneJson, estimateUtf8Bytes, pruneHiddenEmptyBlocks } from './editorHelpers'
 import type { UserPagesLocalDraftSnapshot } from './useUserPagesLocalDraftStorage'
-import type { UserPageValidationIssue } from './validateUserPagesSettings'
+import { parseServerValidationIssues, type UserPageValidationIssue } from './validateUserPagesSettings'
 
 export interface UseUserPagePersistenceOptions {
   settings: Ref<UserPagesSettings>
@@ -60,6 +60,7 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
     opts.localDraftStorage.value = {
       settings: deepCloneJson(opts.settings.value),
       baseSnapshot: persistedSnapshot,
+      savedAt: Date.now(),
     }
     opts.isDirty.value = hasNewerChanges
     opts.lastSavedAt.value = Date.now()
@@ -198,8 +199,11 @@ export function useUserPagePersistence(opts: UseUserPagePersistenceOptions) {
       opts.notify.success(hasNewerChanges ? '已发布请求时的版本，当前仍有新的修改' : '已发布')
     } catch (e) {
       reportUserPageError(e, 'publish')
-      publishError.value = (e as Error).message || String(e)
-      opts.notify.error(publishError.value)
+      const messageText = (e as Error).message || String(e)
+      const parsedIssues = parseServerValidationIssues(messageText, opts.settings.value)
+      if (parsedIssues.length) publishCheckIssues.value = parsedIssues
+      publishError.value = messageText
+      opts.notify.error(messageText)
     } finally {
       opts.isSaving.value = false
     }

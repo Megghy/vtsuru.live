@@ -9,10 +9,13 @@ defineProps<{
   paneId: BuilderColumnId
   pagesCollapsed: boolean
   pagesCollapsible: boolean
+  focusPreview?: boolean
+  canFocusPreview?: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'toggle-pages-collapse'): void
+  (e: 'toggle-focus-preview'): void
 }>()
 </script>
 
@@ -24,6 +27,11 @@ const emit = defineEmits<{
     @toggle-collapse="emit('toggle-pages-collapse')"
   />
   <BuilderBlocksPane v-else-if="paneId === 'blocks'" />
-  <BuilderPreviewPane v-else-if="paneId === 'preview'" />
+  <BuilderPreviewPane
+    v-else-if="paneId === 'preview'"
+    :focus-preview="focusPreview"
+    :can-focus-preview="canFocusPreview"
+    @toggle-focus-preview="emit('toggle-focus-preview')"
+  />
   <BuilderPropsPane v-else />
 </template>

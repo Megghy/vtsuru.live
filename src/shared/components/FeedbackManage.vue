@@ -204,7 +204,6 @@ watch(
       <div v-if="isLoggedIn">
         <ToggleGroup
           type="single"
-          size="sm"
           :model-value="view"
           @update:model-value="
             (v) => {

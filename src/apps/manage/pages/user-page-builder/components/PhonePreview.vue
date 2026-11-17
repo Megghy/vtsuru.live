@@ -1,49 +1,99 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
+import { computed, ref } from 'vue'
 
-import { getThemeCssVars, buildSiteTokens } from '@/shared/config/theme'
+import { buildSiteTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 
 export type PreviewViewport = 'phone' | 'tablet' | 'desktop'
+
+const DESKTOP_VIRTUAL_WIDTH = 1180
+const PREVIEW_PADDING_PX = 24
 
 const props = withDefaults(
   defineProps<{
     isDark: boolean
     transparent?: boolean
     viewport?: PreviewViewport
+    fitDesktop?: boolean
   }>(),
   {
     viewport: 'desktop',
+    fitDesktop: true,
   },
 )
 
 const previewStyle = computed(() => getThemeCssVars(buildSiteTokens(props.isDark)))
 provideThemeScope(previewStyle)
+
+const containerEl = ref<HTMLElement | null>(null)
+const containerWidth = ref(0)
+const containerHeight = ref(0)
+
+useResizeObserver(containerEl, ([entry]) => {
+  containerWidth.value = Math.max(0, Math.floor(entry.contentRect.width) - PREVIEW_PADDING_PX)
+  containerHeight.value = Math.max(0, Math.floor(entry.contentRect.height) - PREVIEW_PADDING_PX)
+})
+
+const desktopScale = computed(() => {
+  if (props.viewport !== 'desktop' || !props.fitDesktop) return 1
+  if (containerWidth.value <= 0 || containerWidth.value >= DESKTOP_VIRTUAL_WIDTH) return 1
+  return Math.max(0.28, Number((containerWidth.value / DESKTOP_VIRTUAL_WIDTH).toFixed(3)))
+})
+
+const scaleFrameStyle = computed(() => {
+  if (desktopScale.value >= 1) return undefined
+  const scale = desktopScale.value
+  return {
+    width: `${Math.round(DESKTOP_VIRTUAL_WIDTH * scale)}px`,
+    height: containerHeight.value > 0 ? `${containerHeight.value}px` : '100%',
+  }
+})
+
+const desktopDeviceStyle = computed(() => {
+  if (desktopScale.value >= 1) return undefined
+  const scale = desktopScale.value
+  return {
+    width: `${DESKTOP_VIRTUAL_WIDTH}px`,
+    height:
+      containerHeight.value > 0 ? `${Math.round(containerHeight.value / scale)}px` : `${Math.round(100 / scale)}%`,
+    transform: `scale(${scale})`,
+    transformOrigin: 'top left',
+  }
+})
 </script>
 
 <template>
   <div
+    ref="containerEl"
     :style="previewStyle"
     class="responsive-preview"
     :class="`responsive-preview--${props.viewport}`"
   >
     <div
-      class="device"
-      :class="`device--${props.viewport}`"
+      class="device-scale-frame"
+      :class="{ 'is-scaled': desktopScale < 1 }"
+      :style="scaleFrameStyle"
     >
       <div
-        v-if="props.viewport !== 'desktop'"
-        class="device-bar"
-      />
-      <div
-        class="screen"
-        :class="{ transparent: !!props.transparent }"
+        class="device"
+        :class="`device--${props.viewport}`"
+        :style="desktopDeviceStyle"
       >
-        <div class="screen-bg">
-          <slot name="background" />
-        </div>
-        <div class="screen-scroll">
-          <slot />
+        <div
+          v-if="props.viewport !== 'desktop'"
+          class="device-bar"
+        />
+        <div
+          class="screen"
+          :class="{ transparent: !!props.transparent }"
+        >
+          <div class="screen-bg">
+            <slot name="background" />
+          </div>
+          <div class="screen-scroll">
+            <slot />
+          </div>
         </div>
       </div>
     </div>
@@ -65,6 +115,21 @@ provideThemeScope(previewStyle)
   overflow: hidden;
 }
 
+.device-scale-frame {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.device-scale-frame.is-scaled {
+  position: relative;
+  display: block;
+}
+
 .device {
   width: min(100%, 390px);
   height: min(100%, 844px);
@@ -78,11 +143,8 @@ provideThemeScope(previewStyle)
   flex-direction: column;
   flex: 0 0 auto;
   transition:
-    width 220ms ease,
-    height 220ms ease,
-    padding 220ms ease,
-    border-radius 220ms ease,
-    box-shadow 220ms ease;
+    transform 180ms ease,
+    opacity 180ms ease;
 }
 
 .device--tablet {
@@ -115,9 +177,6 @@ provideThemeScope(previewStyle)
   padding: 0;
   flex: 1;
   min-height: 0;
-  transition:
-    border-radius 220ms ease,
-    background-color 180ms ease;
 }
 
 .device--desktop .screen {

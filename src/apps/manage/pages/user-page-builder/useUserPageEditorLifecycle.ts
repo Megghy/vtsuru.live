@@ -67,6 +67,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
       localDraftStorage.value = {
         settings: deepCloneJson(settings),
         baseSnapshot: localDraftBaseSnapshot.value,
+        savedAt: Date.now(),
       }
     },
     { deep: true },
@@ -109,6 +110,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
       localDraftStorage.value = {
         settings: deepCloneJson(restored),
         baseSnapshot: localDraftBaseSnapshot.value,
+        savedAt: Date.now(),
       }
       core.isDirty.value = snapshot !== core.lastSavedSnapshot.value
       core.lastSavedAt.value = Date.now()
@@ -153,6 +155,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     localDraftStorage.value = {
       settings: deepCloneJson(core.settings.value),
       baseSnapshot: localDraftBaseSnapshot.value,
+      savedAt: Date.now(),
     }
     core.lastSavedAt.value = Date.now()
     message.success('已恢复本地修改')
@@ -164,6 +167,7 @@ export function useUserPageEditorLifecycle(options: UseUserPageEditorLifecycleOp
     localDraftStorage.value = {
       settings: deepCloneJson(core.settings.value),
       baseSnapshot: localDraftBaseSnapshot.value,
+      savedAt: Date.now(),
     }
     message.success('已放弃本地修改')
   }

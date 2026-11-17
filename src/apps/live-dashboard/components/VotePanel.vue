@@ -113,7 +113,7 @@ function openManage() {
         >
           <div
             class="vote__bar"
-            :style="{ width: `${option.percentage}%` }"
+            :style="{ transform: `scaleX(${Math.max(0, Math.min(100, option.percentage)) / 100})` }"
           />
           <span class="vote__index">{{ option.index }}</span>
           <span class="vote__text">{{ option.text }}</span>
@@ -233,9 +233,10 @@ function openManage() {
 
 .vote__bar {
   position: absolute;
-  inset: 0 auto 0 0;
+  inset: 0;
   background: var(--muted);
-  transition: width 0.4s ease;
+  transform-origin: left;
+  transition: transform 0.4s ease;
 }
 
 .vote__option--lead .vote__bar {

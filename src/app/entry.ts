@@ -1,5 +1,11 @@
-import { startHeartbeat } from '@/apps/client/services/heartbeat'
+const tauriWindow = typeof window !== 'undefined' ? (window as unknown as Record<string, unknown>) : undefined
+const isTauriEnv =
+  tauriWindow !== undefined &&
+  (tauriWindow.__TAURI__ !== undefined || tauriWindow.__TAURI_INTERNAL__ !== undefined || '__TAURI__' in window)
 
-// 先启动本地保活，再加载业务模块；业务加载失败时主窗口仍能保持响应。
-startHeartbeat()
+// 仅在 Tauri 桌面环境中按需加载本地保活，避免将 @tauri-apps/api 打入 Web 首屏入口。
+if (isTauriEnv) {
+  void import('@/apps/client/services/heartbeat').then((m) => m.startHeartbeat())
+}
+
 void import('./main')

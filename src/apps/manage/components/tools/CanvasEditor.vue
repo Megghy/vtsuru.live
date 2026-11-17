@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { get as idbGet, set as idbSet } from 'idb-keyval'
 import type Konva from 'konva'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, getCurrentInstance, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+// @ts-expect-error vue3-konva types
+import VueKonva from 'vue3-konva'
+
+const registeredKonvaApps = new WeakSet<object>()
+const currentApp = getCurrentInstance()?.appContext.app
+if (currentApp && !registeredKonvaApps.has(currentApp)) {
+  registeredKonvaApps.add(currentApp)
+  currentApp.use(VueKonva)
+}
 
 export type LayerType = 'image' | 'text'
 

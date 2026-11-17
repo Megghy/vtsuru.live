@@ -1,28 +1,58 @@
 <!-- eslint-disable vue/multi-word-component-names -->
-<script setup>
-// @ts-nocheck
+<script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref } from 'vue'
 
-import * as constants from './constants'
+import * as constants from '@/apps/obs/components/blivechat/constants'
+import { formatCurrency } from '@/apps/obs/components/blivechat/utils'
+
 import ImgShadow from './ImgShadow.vue'
 import MembershipItem from './MembershipItem.vue'
 import PaidMessage from './PaidMessage.vue'
-import { formatCurrency } from './utils'
 
-const props = defineProps({
-  messages: Array,
-  minGiftPrice: { type: Number, default: 0 },
-  showGiftName: {
-    type: Boolean,
-    default: false,
+export interface TickerMessage {
+  id: string
+  type: number
+  addTime: Date
+  time: Date
+  avatarUrl?: string
+  authorName: string
+  authorNamePronunciation?: string
+  price: number
+  giftName?: string
+  num?: number
+  privilegeType?: number
+  title?: string
+  content?: string
+  translation?: string
+}
+
+interface ShowTickerMessage {
+  raw: TickerMessage
+  bgColor: string
+  color: string
+  text: string
+}
+
+const props = withDefaults(
+  defineProps<{
+    messages?: TickerMessage[]
+    minGiftPrice?: number
+    showGiftName?: boolean
+  }>(),
+  {
+    messages: () => [],
+    minGiftPrice: 0,
+    showGiftName: false,
   },
-})
+)
 
-const emit = defineEmits(['update:messages'])
+const emit = defineEmits<{
+  'update:messages': [messages: TickerMessage[]]
+}>()
 
 const MESSAGE_TYPE_MEMBER = constants.MESSAGE_TYPE_MEMBER
 const curTime = ref(new Date())
-const pinnedMessageId = ref(null)
+const pinnedMessageId = ref<string | null>(null)
 const pinnedMessage = computed(
   () => props.messages.find((message) => message.id === pinnedMessageId.value && needToShow(message)) ?? null,
 )
@@ -33,8 +63,8 @@ onBeforeUnmount(() => {
   window.clearInterval(updateTimerId)
 })
 
-const showMessages = computed(() => {
-  const res = []
+const showMessages = computed<ShowTickerMessage[]>(() => {
+  const res: ShowTickerMessage[] = []
   for (const message of props.messages) {
     if (!needToShow(message)) {
       continue
@@ -60,28 +90,30 @@ const pinnedMessageShowContent = computed(() => {
   }
 })
 
-async function onTickerItemEnter(el, done) {
-  const width = el.clientWidth
+async function onTickerItemEnter(el: Element, done: () => void) {
+  const htmlEl = el as HTMLElement
+  const width = htmlEl.clientWidth
   if (width === 0) {
     // CSS指定了不显示固定栏
     done()
     return
   }
-  el.style.width = 0
+  htmlEl.style.width = '0'
   await nextTick()
-  el.style.width = `${width}px`
+  htmlEl.style.width = `${width}px`
   window.setTimeout(done, 200)
 }
 
-function onTickerItemLeave(el, done) {
-  el.classList.add('sliding-down')
+function onTickerItemLeave(el: Element, done: () => void) {
+  const htmlEl = el as HTMLElement
+  htmlEl.classList.add('sliding-down')
   window.setTimeout(() => {
-    el.classList.add('collapsing')
-    el.style.width = 0
+    htmlEl.classList.add('collapsing')
+    htmlEl.style.width = '0'
     window.setTimeout(() => {
-      el.classList.remove('sliding-down')
-      el.classList.remove('collapsing')
-      el.style.width = 'auto'
+      htmlEl.classList.remove('sliding-down')
+      htmlEl.classList.remove('collapsing')
+      htmlEl.style.width = 'auto'
       done()
     }, 200)
   }, 200)
@@ -89,14 +121,14 @@ function onTickerItemLeave(el, done) {
 
 const getShowAuthorName = constants.getShowAuthorName
 
-function needToShow(message) {
+function needToShow(message: TickerMessage) {
   if (message.type === constants.MESSAGE_TYPE_GIFT && message.price < props.minGiftPrice) return false
   const pinTime = getPinTime(message)
-  return (new Date() - message.addTime) / (60 * 1000) < pinTime
+  return (Date.now() - message.addTime.getTime()) / (60 * 1000) < pinTime
 }
 
-function getBgColor(message) {
-  let color1, color2
+function getBgColor(message: TickerMessage) {
+  let color1: string, color2: string
   if (message.type === constants.MESSAGE_TYPE_MEMBER) {
     color1 = 'rgba(15,157,88,1)'
     color2 = 'rgba(11,128,67,1)'
@@ -106,7 +138,7 @@ function getBgColor(message) {
     color2 = config.colors.headerBg
   }
   const pinTime = getPinTime(message)
-  let progress = (1 - (curTime.value - message.addTime) / (60 * 1000) / pinTime) * 100
+  let progress = (1 - (curTime.value.getTime() - message.addTime.getTime()) / (60 * 1000) / pinTime) * 100
   if (progress < 0) {
     progress = 0
   } else if (progress > 100) {
@@ -115,21 +147,21 @@ function getBgColor(message) {
   return `linear-gradient(90deg, ${color1}, ${color1} ${progress}%, ${color2} ${progress}%, ${color2})`
 }
 
-function getColor(message) {
+function getColor(message: TickerMessage) {
   if (message.type === constants.MESSAGE_TYPE_MEMBER) {
     return 'rgb(255,255,255)'
   }
   return constants.getPriceConfig(message.price).colors.header
 }
 
-function getText(message) {
+function getText(message: TickerMessage) {
   if (message.type === constants.MESSAGE_TYPE_MEMBER) {
     return '舰长'
   }
   return `CN¥${formatCurrency(message.price)}`
 }
 
-function getPinTime(message) {
+function getPinTime(message: TickerMessage) {
   if (message.type === constants.MESSAGE_TYPE_MEMBER) {
     return 2
   }
@@ -141,11 +173,11 @@ function updateProgress() {
   curTime.value = new Date()
 
   // 删除过期的消息
-  const filteredMessages = []
+  const filteredMessages: TickerMessage[] = []
   let messagesChanged = false
   for (const message of props.messages) {
     const pinTime = getPinTime(message)
-    if ((curTime.value - message.addTime) / (60 * 1000) >= pinTime) {
+    if ((curTime.value.getTime() - message.addTime.getTime()) / (60 * 1000) >= pinTime) {
       messagesChanged = true
       continue
     }
@@ -156,7 +188,7 @@ function updateProgress() {
   }
 }
 
-function onItemClick(message) {
+function onItemClick(message: TickerMessage) {
   pinnedMessageId.value = pinnedMessageId.value === message.id ? null : message.id
 }
 </script>

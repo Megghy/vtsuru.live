@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useClipboard, useDropZone, useEventListener, useFileDialog } from '@vueuse/core'
-import * as ort from 'onnxruntime-web'
 import { nextTick, ref } from 'vue'
 
 import { LANG_OPTIONS, useTranslate } from '@/composables/useTranslate'
@@ -12,9 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Spin } from '@/shared/ui/spin'
 import { Textarea } from '@/shared/ui/textarea'
 import { useMessage } from '@/shared/utils'
-
-ort.env.wasm.numThreads = 1
-ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
 
 const message = useMessage()
 const { copy } = useClipboard()
@@ -113,7 +109,9 @@ async function getOcr() {
   if (ocrInstance) return ocrInstance
   modelLoading.value = true
   try {
-    const ocr = await import('esearch-ocr')
+    const [ocr, ort] = await Promise.all([import('esearch-ocr'), import('onnxruntime-web')])
+    ort.env.wasm.numThreads = 1
+    ort.env.wasm.wasmPaths = 'https://cdn.jsdelivr.net/npm/onnxruntime-web@1.26.0/dist/'
     const dict = await loadDictionary()
     ocrInstance = await ocr.init({
       det: { input: `${MODEL_BASE}/ppocr_v5_mobile_det.onnx` },

@@ -22,23 +22,35 @@ const route = useRoute()
 
 const layout = computed(() => {
   if (route.path.startsWith('/user') || route.name === 'user' || route.path.startsWith('/@')) {
-    document.title = `${route.meta.title} · ${route.params.id} · VTsuru`
     return 'user'
   } else if (route.path.startsWith('/manage')) {
-    document.title = `${route.meta.title} · 管理 · VTsuru`
     return 'manage'
   } else if (route.path.startsWith('/open-live')) {
-    document.title = `${route.meta.title} · 开放平台 · VTsuru`
     return 'open-live'
   } else if (route.path.startsWith('/obs') && !route.path.endsWith('-manage')) {
-    document.title = `${route.meta.title} · OBS · VTsuru`
     return 'obs'
   } else if (route.path.startsWith('/client')) {
-    document.title = `${route.meta.title} · 客户端 · VTsuru`
     return 'client'
   } else {
-    document.title = `${route.meta.title} · VTsuru`
     return ''
+  }
+})
+
+const pageTitle = computed(() => {
+  const title = route.meta.title ? String(route.meta.title) : ''
+  switch (layout.value) {
+    case 'user':
+      return `${title} · ${route.params.id} · VTsuru`
+    case 'manage':
+      return `${title} · 管理 · VTsuru`
+    case 'open-live':
+      return `${title} · 开放平台 · VTsuru`
+    case 'obs':
+      return `${title} · OBS · VTsuru`
+    case 'client':
+      return `${title} · 客户端 · VTsuru`
+    default:
+      return `${title} · VTsuru`
   }
 })
 
@@ -52,6 +64,7 @@ const shellStyle = computed(() => {
 })
 
 watchEffect(() => {
+  document.title = pageTitle.value
   const root = document.documentElement
   root.classList.toggle('dark', isDarkMode.value)
   root.classList.toggle('transparent-shell', isTransparentShell.value)

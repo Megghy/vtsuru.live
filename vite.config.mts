@@ -148,13 +148,19 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             {
+              // 基础运行时 helper 单独归组，避免被 echarts 等重型依赖吸纳导致非图表页反向引入
+              name: 'runtime-vendor',
+              test: /[\\/]node_modules[\\/](@babel[\\/]runtime|tslib|@swc[\\/]helpers)[\\/]/,
+              priority: -5,
+            },
+            {
               name: 'vue-vendor',
               test: /[\\/]node_modules[\\/](vue|vue-router|pinia)[\\/]/,
               priority: -10,
             },
             {
               name: 'ui-vendor',
-              test: /[\\/]node_modules[\\/]@vueuse[\\/]core[\\/]/,
+              test: /[\\/]node_modules[\\/](@vueuse[\\/](core|integrations)|reka-ui|radix-vue|lucide-vue-next|@lucide[\\/]vue|vue-sonner|class-variance-authority|clsx|tailwind-merge|date-fns)[\\/]/,
               priority: -10,
             },
             // 精细化切分大体积依赖，提升缓存与首屏体积可控性

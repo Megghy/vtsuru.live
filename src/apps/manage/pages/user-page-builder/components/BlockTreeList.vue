@@ -73,84 +73,6 @@ function getDisplayTitle(b: BlockNode) {
   return name.length ? name : getBlockLabel(b.type)
 }
 
-function onExpandBeforeEnter(el: Element) {
-  const e = el as HTMLElement
-  e.style.height = '0px'
-  e.style.opacity = '0'
-  e.style.overflow = 'hidden'
-}
-
-function onExpandEnter(el: Element, done: () => void) {
-  const e = el as HTMLElement
-  e.style.overflow = 'hidden'
-  e.style.transition = 'height 180ms ease, opacity 180ms ease'
-  requestAnimationFrame(() => {
-    e.style.height = `${e.scrollHeight}px`
-    e.style.opacity = '1'
-  })
-
-  const timeout = window.setTimeout(() => {
-    e.removeEventListener('transitionend', onEnd)
-    done()
-  }, 240)
-
-  const onEnd = (ev: TransitionEvent) => {
-    if (ev.target !== e) return
-    if (ev.propertyName !== 'height') return
-    window.clearTimeout(timeout)
-    e.removeEventListener('transitionend', onEnd)
-    done()
-  }
-  e.addEventListener('transitionend', onEnd)
-}
-
-function onExpandAfterEnter(el: Element) {
-  const e = el as HTMLElement
-  e.style.height = ''
-  e.style.opacity = ''
-  e.style.overflow = ''
-  e.style.transition = ''
-}
-
-function onExpandBeforeLeave(el: Element) {
-  const e = el as HTMLElement
-  e.style.height = `${e.scrollHeight}px`
-  e.style.opacity = '1'
-  e.style.overflow = 'hidden'
-}
-
-function onExpandLeave(el: Element, done: () => void) {
-  const e = el as HTMLElement
-  e.style.overflow = 'hidden'
-  e.style.transition = 'height 160ms ease, opacity 160ms ease'
-  requestAnimationFrame(() => {
-    e.style.height = '0px'
-    e.style.opacity = '0'
-  })
-
-  const timeout = window.setTimeout(() => {
-    e.removeEventListener('transitionend', onEnd)
-    done()
-  }, 220)
-
-  const onEnd = (ev: TransitionEvent) => {
-    if (ev.target !== e) return
-    if (ev.propertyName !== 'height') return
-    window.clearTimeout(timeout)
-    e.removeEventListener('transitionend', onEnd)
-    done()
-  }
-  e.addEventListener('transitionend', onEnd)
-}
-
-function onExpandAfterLeave(el: Element) {
-  const e = el as HTMLElement
-  e.style.height = ''
-  e.style.opacity = ''
-  e.style.overflow = ''
-  e.style.transition = ''
-}
-
 function scrollToPreviewBlock(blockId: string) {
   const previewRoot = document.querySelector('.user-page-builder .preview-content') as HTMLElement | null
   if (!previewRoot) {
@@ -397,14 +319,7 @@ function handleTreeKeydown(event: KeyboardEvent, block: BlockNode) {
         </DropdownMenu>
       </div>
 
-      <Transition
-        @before-enter="onExpandBeforeEnter"
-        @enter="onExpandEnter"
-        @after-enter="onExpandAfterEnter"
-        @before-leave="onExpandBeforeLeave"
-        @leave="onExpandLeave"
-        @after-leave="onExpandAfterLeave"
-      >
+      <Transition name="fade">
         <div
           v-if="b.type === 'layout' && props.expandedLayoutIdSet.has(b.id)"
           class="children"

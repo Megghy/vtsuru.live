@@ -32,7 +32,9 @@ function loadOptions(): RemoveBgOptions {
   try {
     const saved = localStorage.getItem(STORAGE_KEY)
     if (saved) return { ...defaultOptions(), ...JSON.parse(saved) }
-  } catch {}
+  } catch (err) {
+    console.warn('[useRemoveBg] 读取本地配置失败，已恢复默认配置:', err)
+  }
   return defaultOptions()
 }
 
@@ -52,7 +54,8 @@ export async function checkSupport(): Promise<boolean> {
     try {
       const adapter = await (navigator as any).gpu.requestAdapter()
       webgpuSupported.value = adapter !== null
-    } catch {
+    } catch (err) {
+      console.warn('[useRemoveBg] WebGPU 探测失败，降级为 CPU:', err)
       webgpuSupported.value = false
     }
   } else {

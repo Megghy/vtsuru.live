@@ -87,15 +87,28 @@ export async function GetSelfAccount(token?: string) {
   isLoadingAccount.value = false
 }
 
+let accountLoopTimer: ReturnType<typeof setInterval> | undefined
+
+export function stopUpdateAccountLoop() {
+  if (accountLoopTimer === undefined) return
+  clearInterval(accountLoopTimer)
+  accountLoopTimer = undefined
+}
+
+import.meta.hot?.dispose(stopUpdateAccountLoop)
+
 export function UpdateAccountLoop() {
-  setInterval(() => {
+  if (accountLoopTimer !== undefined) return
+  accountLoopTimer = setInterval(() => {
     const urlParams = new URLSearchParams(window.location.search)
     if (urlParams.get('as')) {
       return
     }
     if (ACCOUNT.value && window.$route?.name != 'question-display') {
       // 防止在问题详情页刷新
-      GetSelfAccount()
+      void GetSelfAccount().catch((err) => {
+        console.warn('[vtsuru] 定时刷新账户信息失败:', err)
+      })
     }
   }, 60 * 1000)
 }
@@ -317,18 +330,19 @@ export async function DisableFunction(func: FunctionTypes) {
   }
   return false
 }
-async function updateFunctionEnable() {
-  if (ACCOUNT.value) {
-    try {
-      const data = await SaveEnableFunctions(ACCOUNT.value.settings.enableFunctions)
-      if (data.code == 200) {
-        return true
-      } else {
-        return false
-      }
-    } catch (err) {
-      console.log(err)
-      return false
+async function updateFunctionEnable(): Promise<boolean> {
+  if (!ACCOUNT.value?.settings?.enableFunctions) {
+    return false
+  }
+  try {
+    const data = await SaveEnableFunctions(ACCOUNT.value.settings.enableFunctions)
+    if (data.code == 200) {
+      return true
     }
+    console.error(`[vtsuru] 更新启用功能列表失败: ${data.message}`)
+    return false
+  } catch (err) {
+    console.error('[vtsuru] 更新启用功能列表异常:', err)
+    return false
   }
 }

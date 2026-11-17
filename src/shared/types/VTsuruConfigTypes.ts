@@ -2,7 +2,7 @@ export interface SelectOption {
   label: string
   value: string | number
   disabled?: boolean
-  [key: string]: any
+  [key: string]: unknown
 }
 import type { VNode } from 'vue'
 
@@ -11,7 +11,11 @@ import type { APIFileModel } from '@/api/generated/model'
 
 // --- 基础和通用类型 ---
 
-interface TemplateConfigBase {
+type BivariantCallback<TArgs extends unknown[], TReturn = void> = {
+  bivarianceHack(...args: TArgs): TReturn
+}['bivarianceHack']
+
+interface TemplateConfigBase<T = unknown, D = unknown> {
   name: string | VNode // 名称，可以是字符串或 VNode
   key: string // 唯一标识符，用于数据对象的键
   /**
@@ -19,23 +23,23 @@ interface TemplateConfigBase {
    * 其具体类型在更具体的项类型中被细化。
    * TemplateConfigRenderItem 会使用其是否存在来进行类型推断。
    */
-  default?: any
+  default?: D
   /**
    * 可选的条件显示属性
    * 根据一个函数决定当前配置项是否可见
    * @param config 整个配置对象
    * @returns 是否显示此配置项
    */
-  visibleWhen?: (config: any) => boolean
+  visibleWhen?: BivariantCallback<[config: T], boolean>
 }
 
 // 大多数项类型共享的通用属性 (暂时排除 RenderItem)
-type CommonProps = TemplateConfigBase
+type CommonProps<T = unknown, D = unknown> = TemplateConfigBase<T, D>
 
 // 数据访问器类型
 interface DataAccessor<T, V> {
-  get: (config: T) => V
-  set: (config: T, value: V) => void
+  get: BivariantCallback<[config: T], V>
+  set: BivariantCallback<[config: T, value: V]>
 }
 
 // 添加辅助函数，用于从配置对象中安全获取数据
@@ -58,7 +62,7 @@ export function createDefaultRGBA(r = 0, g = 0, b = 0, a = 1): RGBAColor {
  * @template T - 完整配置对象的类型 (默认为 unknown)。
  * @template V - 此特定配置项的值的类型。
  */
-export type TemplateConfigItemWithType<T = unknown, V = unknown> = CommonProps & {
+export type TemplateConfigItemWithType<T = unknown, V = unknown> = CommonProps<T, V> & {
   type: string // 类型判别属性
   data?: DataAccessor<T, V> // 可选的数据访问器
   /**
@@ -66,10 +70,10 @@ export type TemplateConfigItemWithType<T = unknown, V = unknown> = CommonProps &
    * @param data - 当前项更新的数据，类型为 V。
    * @param config - 整个配置数据对象，类型为 T (通常是 unknown)。
    */
-  onUploaded?: (data: V, config: T) => void
+  onUploaded?: BivariantCallback<[data: V, config: T]>
   /**
    * 可选的默认值，约束为类型 V。
-   * 覆盖了 TemplateConfigBase 中的 'any' 类型。
+   * 覆盖了 TemplateConfigBase 中的默认占位类型。
    */
   default?: V
 }
@@ -90,7 +94,7 @@ type Widen<T> = T extends string
             ? undefined
             : T extends null
               ? null
-              : T extends (...args: any[]) => any
+              : T extends (...args: never[]) => unknown
                 ? T
                 : T extends Date
                   ? Date
@@ -105,7 +109,7 @@ type Widen<T> = T extends string
 
 export type TemplateConfigSelectItem<T = unknown> = TemplateConfigItemWithType<T, string> & {
   type: 'select'
-  options: SelectOption[] | ((config: T) => SelectOption[]) // 选项列表或者返回选项列表的函数
+  options: SelectOption[] | BivariantCallback<[config: T], SelectOption[]> // 选项列表或者返回选项列表的函数
   placeholder?: string // 可选的占位符
   clearable?: boolean // 是否可清空
 }
@@ -160,7 +164,6 @@ export type TemplateConfigFileItem<T = unknown> = TemplateConfigItemWithType<T, 
   type: 'file'
   fileLimit?: number // 变为可选参数，仅用于UI限制，不影响类型
   fileType?: string[]
-  onUploaded?: (data: APIFileModel[], config: T) => void
 }
 
 // --- 新增：装饰性图片配置 ---
@@ -183,7 +186,8 @@ export interface DecorativeImageProperties extends APIFileModel {
  * 由于 UI 复杂性，使用 TemplateConfigRenderItem。
  * @template T - 完整配置对象的类型 (默认为 unknown)。
  */
-export interface TemplateConfigDecorativeImagesItem<T = unknown> extends TemplateConfigBase {
+export interface TemplateConfigDecorativeImagesItem<T = unknown>
+  extends TemplateConfigBase<T, DecorativeImageProperties[]> {
   type: 'decorativeImages' // 新类型标识符
   default?: DecorativeImageProperties[] // 默认值是图片属性数组
 
@@ -192,23 +196,21 @@ export interface TemplateConfigDecorativeImagesItem<T = unknown> extends Templat
    * @param config 整个配置对象 (类型为 T, 默认为 unknown)。
    * @returns 表示配置 UI 的 VNode。
    */
-  render?: (config: T) => VNode
+  render?(config: T): VNode
 
   /**
    * @description 当装饰图片数组更新时调用的回调。
    * @param data 更新后的 DecorativeImageProperties 数组。
    * @param config 整个配置对象。
    */
-  onUploaded?: (data: DecorativeImageProperties[], config: T) => void // data 类型是数组
-
-  // 继承 TemplateConfigBase 的 default?: any
+  onUploaded?(data: DecorativeImageProperties[], config: T): void // data 类型是数组
 }
 
 /**
  * @description 自定义渲染项的配置。使用 'this' 类型实现动态参数类型。
  * @template T - 完整配置对象的类型 (默认为 unknown)。
  */
-export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBase {
+export interface TemplateConfigRenderItem<T = unknown, D = unknown> extends TemplateConfigBase<T, D> {
   // 继承基础接口以获取 key, name, default 检查
   type: 'render'
 
@@ -219,7 +221,7 @@ export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBas
    *               在实现内部可能需要类型断言 (例如 `config as MyConfig`)。
    * @returns 表示渲染输出的 VNode。
    */
-  render: (this: this, config: T) => VNode
+  render(this: this, config: T): VNode
 
   /**
    * @description 可选的回调函数，当自定义渲染的组件发出更新信号时调用。
@@ -228,36 +230,37 @@ export interface TemplateConfigRenderItem<T = unknown> extends TemplateConfigBas
    * @param config 整个配置对象 (类型为 T, 默认为 unknown)。
    *               在实现内部可能需要类型断言 (例如 `config as MyConfig`)。
    */
-  onUploaded?: (this: this, data: this extends { default: infer D } ? Widen<D> : unknown, config: T) => void
-
-  // 继承自 TemplateConfigBase 的 'default?: any'，这对于
-  // 'this extends { default: infer D }' 类型检查能正确工作至关重要。
+  onUploaded?(
+    this: this,
+    data: this extends { default: infer DefaultType } ? Widen<DefaultType> : unknown,
+    config: T,
+  ): void
 }
 
 // --- 联合类型和核心提取逻辑 ---
 
 /**
  * @description 所有可能的配置项定义类型的联合类型。
- * 使用 `<any>` 作为完整配置类型 T 的占位符。
+ * @template T - 完整配置对象的类型 (默认为 Record<string, unknown>)。
  */
-export type ConfigItemDefinition =
-  | TemplateConfigStringItem<any>
-  | TemplateConfigNumberItem<any>
-  | TemplateConfigStringArrayItem<any>
-  | TemplateConfigNumberArrayItem<any>
-  | TemplateConfigFileItem<any>
-  | TemplateConfigRenderItem<any>
-  | TemplateConfigDecorativeImagesItem<any>
-  | TemplateConfigSliderNumberItem<any>
-  | TemplateConfigBooleanItem<any>
-  | TemplateConfigColorItem<any>
-  | TemplateConfigSelectItem<any>
+export type ConfigItemDefinition<T = Record<string, unknown>> =
+  | TemplateConfigStringItem<T>
+  | TemplateConfigNumberItem<T>
+  | TemplateConfigStringArrayItem<T>
+  | TemplateConfigNumberArrayItem<T>
+  | TemplateConfigFileItem<T>
+  | TemplateConfigRenderItem<T>
+  | TemplateConfigDecorativeImagesItem<T>
+  | TemplateConfigSliderNumberItem<T>
+  | TemplateConfigBooleanItem<T>
+  | TemplateConfigColorItem<T>
+  | TemplateConfigSelectItem<T>
 
 /**
  * @description 从只读的配置项数组中提取最终的数据结构类型。
  * @template Items - 通过 `defineItems([...])` 推断出的只读元组类型。
  */
-export type ExtractConfigData<Items extends readonly ConfigItemDefinition[]> = {
+export type ExtractConfigData<Items extends readonly ConfigItemDefinition<never>[]> = {
   // 遍历联合类型 Items[number] 中所有项的 'key' 属性
   [K in Extract<Items[number], { key: string }>['key']]: Extract<Items[number], { key: K }> extends infer ItemWithKeyK // 找到与当前键 K 匹配的具体项定义
     ? // 检查匹配到的项是否有 'default' 属性
@@ -297,7 +300,7 @@ export type ExtractConfigData<Items extends readonly ConfigItemDefinition[]> = {
  * - 其他type的key禁止以'File'结尾。
  * @template Item - 待检查的配置项定义类型。
  */
-type ConstrainedKeyItem<Item extends ConfigItemDefinition> =
+type ConstrainedKeyItem<Item extends ConfigItemDefinition<never>> =
   // 所有包含APIFileModel的类型必须以'File'结尾
   Item extends { type: 'file' } | { type: 'decorativeImages' }
     ? // 强制key以'File'结尾
@@ -320,9 +323,18 @@ type ConstrainedKeyItem<Item extends ConfigItemDefinition> =
  * @param items 一个只读的配置项定义数组。
  * @returns 类型被保留且经过验证的同一个只读数组。
  */
+type InferTemplateConfig<Item, TConfig> = Item extends { type: 'render'; key: infer K extends string; default: infer D }
+  ? Omit<TemplateConfigRenderItem<TConfig & Record<K, Widen<D>>, D>, 'key'> & { key: K }
+  : ConfigItemDefinition<TConfig>
+
 export function defineTemplateConfig<
-  // 应用 ConstrainedKeyItem 约束到数组的每个元素
-  const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition>[],
+  const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition<never>>[],
+>(items: Items & { readonly [I in keyof Items]: InferTemplateConfig<Items[I], Record<string, unknown>> }): Items
+export function defineTemplateConfig<
+  const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition<never>>[],
+>(items: Items & readonly ConfigItemDefinition<unknown>[]): Items
+export function defineTemplateConfig<
+  const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition<never>>[],
 >(items: Items): Items {
   // 可选的运行时验证，用于在浏览器控制台提供更友好的错误提示
   items.forEach((item) => {
@@ -379,24 +391,21 @@ export function rgbaToString(color: RGBAColor | undefined | null): string {
  * @param items 配置项定义数组
  * @returns 创建配置对象的工厂函数
  */
-export function createTemplateConfigFactory<const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition>[]>(
+export function createTemplateConfigFactory<const Items extends readonly ConstrainedKeyItem<ConfigItemDefinition<never>>[]>(
   items: Items,
 ) {
   // 返回一个工厂函数，用于创建初始化的配置对象
   return (): ExtractConfigData<Items> => {
-    const config = {} as ExtractConfigData<Items>
+    const config: Record<string, unknown> = {}
 
     // 使用项定义中的默认值初始化配置对象
     for (const item of items) {
-      if ('default' in item && item.default !== undefined) {
-        if (typeof config === 'object' && item.key) {
-          // @ts-ignore - 动态赋值
-          config[item.key] = item.default
-        }
+      if ('default' in item && item.default !== undefined && 'key' in item && typeof item.key === 'string' && item.key) {
+        config[item.key] = item.default
       }
     }
 
-    return config
+    return config as ExtractConfigData<Items>
   }
 }
 
@@ -417,10 +426,10 @@ export function createConfigValidator<T>(validator: TemplateConfigValidator<T>) 
 /**
  * 类型守卫：检查对象是否为有效的RGBA颜色
  */
-export function isValidRGBAColor(obj: any): obj is RGBAColor {
+export function isValidRGBAColor(obj: unknown): obj is RGBAColor {
   return (
-    obj &&
     typeof obj === 'object' &&
+    obj !== null &&
     'r' in obj &&
     typeof obj.r === 'number' &&
     'g' in obj &&

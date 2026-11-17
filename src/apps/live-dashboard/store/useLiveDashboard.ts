@@ -158,7 +158,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     interactions.value = buckets.interaction.slice(-MAX_INTERACTIONS)
     paid.value = buckets.paid
     for (const event of messages.value) cardGrid.ingest(event, settings.value.card)
-    markers.value = await dashboardDB.markers.where('time').aboveOrEqual(since).reverse().toArray()
+    markers.value = (await dashboardDB.markers.where('time').aboveOrEqual(since).sortBy('time')).toReversed()
   }
 
   async function addMarker(

@@ -18,11 +18,10 @@ export interface RpcHealth {
 
 /** 探测本地是否安装并运行了 eventfetcher。超时或失败返回 null */
 export async function probeLocalFetcher(timeoutMs = 800): Promise<RpcHealth | null> {
+  const ctrl = new AbortController()
+  const timer = setTimeout(() => ctrl.abort(), timeoutMs)
   try {
-    const ctrl = new AbortController()
-    const timer = setTimeout(() => ctrl.abort(), timeoutMs)
     const resp = await fetch(RPC_HEALTH_URL, { signal: ctrl.signal })
-    clearTimeout(timer)
     if (!resp.ok) return null
     const health = (await resp.json()) as RpcHealth
     if (!health.rpc) return null
@@ -32,8 +31,12 @@ export async function probeLocalFetcher(timeoutMs = 800): Promise<RpcHealth | nu
       return null
     }
     return health
-  } catch {
+  } catch (err) {
+    // 未运行本地 eventfetcher 时连接拒绝或超时属正常探测失败，仅记录调试日志
+    console.debug('[RPC] 探测本地 eventfetcher 未就绪:', err)
     return null
+  } finally {
+    clearTimeout(timer)
   }
 }
 

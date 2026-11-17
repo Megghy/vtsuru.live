@@ -1,9 +1,8 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { isLoggedIn, useAccount } from '@/api/account'
-import type { PaginationResponse } from '@/api/client-types'
 import type { LevelTypes } from '@/api/generated/model'
 import {
   getApiNotificationGet,
@@ -105,6 +104,29 @@ export const useNotificationStore = defineStore('notification', () => {
     await refreshUnread()
   }
 
+  let pollTimer: ReturnType<typeof setInterval> | undefined
+
+  function startPolling() {
+    if (pollTimer !== undefined) return
+    // 仅在实时通道未连接时做低频兜底轮询 (120s)
+    pollTimer = setInterval(() => {
+      if (busStatus.value.connected) return
+      if (route?.name?.toString().startsWith('obs-')) {
+        return
+      }
+      void updateUnread()
+    }, 120 * 1000)
+  }
+
+  function stopPolling() {
+    if (pollTimer === undefined) return
+    clearInterval(pollTimer)
+    pollTimer = undefined
+  }
+
+  onScopeDispose(stopPolling)
+  import.meta.hot?.dispose(stopPolling)
+
   function init() {
     if (isInited.value) {
       return
@@ -124,17 +146,11 @@ export const useNotificationStore = defineStore('notification', () => {
       }
     })
 
-    // 仅在实时通道未连接时做低频兜底轮询 (120s)
-    setInterval(() => {
-      if (busStatus.value.connected) return
-      if (route?.name?.toString().startsWith('obs-')) {
-        return
-      }
-      void updateUnread()
-    }, 120 * 1000)
+    startPolling()
   }
   return {
     init,
+    stopPolling,
     unread,
     latest,
     unreadCount,

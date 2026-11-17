@@ -1,33 +1,55 @@
 import type { Component } from 'vue'
-import { markRaw } from 'vue'
+import { defineAsyncComponent, markRaw } from 'vue'
 
-// --- PS5 DualSense 底壳 ---
-import PS5BodyWhiteComp from '@/assets/controller/Body/DS/DualSense VSCView SVG.svg?component'
-import PS5BodyRedComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Cosmic Red.svg?component'
-import PS5BodyPurpleComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Galactic Purple.svg?component'
-import PS5BodyBlackComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Midnight Black.svg?component'
-import PS5BodyPinkComp from '@/assets/controller/Body/DS/DualSense VSCView SVG Nova Pink.svg?component'
-import PS4V2BodyWhiteComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Glacier White.svg?component'
-import PS4V2BodyGoldComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Gold.svg?component'
-import PS4V2BodyRedComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Magma Red.svg?component'
-import PS4V2BodyBlueComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Midnight Blue.svg?component'
-import PS4V2BodyBlackComp from '@/assets/controller/Body/DS4/DS4 V2 VSC SVG.svg?component'
-import PS4BodyFrontComp from '@/assets/controller/Body/DS4/DS4 VSC Front SVG.svg?component'
-// --- PS4 底壳 ---
-import PS4BodyBlackComp from '@/assets/controller/Body/DS4/DS4 VSC SVG.svg?component'
-// --- Switch Pro 底壳 ---
-import SwitchProBodyComp from '@/assets/controller/Body/SwitchPro/Switch Pro Controller VSCView.svg?component'
-// --- Xbox One 底壳 ---
-import XboxBodyBlackComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView Black.svg?component'
-import XboxBodyWhiteComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView White.svg?component'
-import XboxBodyBlueComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Blue.svg?component'
-import XboxBodyRedComp from '@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Red.svg?component'
-// --- Xbox Series X 底壳 ---
-import XboxSXBlackComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Black.svg?component'
-import XboxSXBlueComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Blue.svg?component'
-import XboxSXRedComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Red.svg?component'
-import XboxSXWhiteComp from '@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView White.svg?component'
 import type { AllGamepadConfigs, GamepadType } from '@/types/gamepad'
+
+const asyncSvg = (loader: () => Promise<{ default: Component }> | Promise<Component>) =>
+  markRaw(defineAsyncComponent(loader as () => Promise<Component>))
+
+// 按需懒加载手柄底壳 SVG，避免将 1.9MB 全部底壳静态打入初始 store chunk
+const PS5BodyWhiteComp = asyncSvg(() => import('@/assets/controller/Body/DS/DualSense VSCView SVG.svg?component'))
+const PS5BodyRedComp = asyncSvg(() => import('@/assets/controller/Body/DS/DualSense VSCView SVG Cosmic Red.svg?component'))
+const PS5BodyPurpleComp = asyncSvg(
+  () => import('@/assets/controller/Body/DS/DualSense VSCView SVG Galactic Purple.svg?component'),
+)
+const PS5BodyBlackComp = asyncSvg(
+  () => import('@/assets/controller/Body/DS/DualSense VSCView SVG Midnight Black.svg?component'),
+)
+const PS5BodyPinkComp = asyncSvg(() => import('@/assets/controller/Body/DS/DualSense VSCView SVG Nova Pink.svg?component'))
+const PS4V2BodyWhiteComp = asyncSvg(() => import('@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Glacier White.svg?component'))
+const PS4V2BodyGoldComp = asyncSvg(() => import('@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Gold.svg?component'))
+const PS4V2BodyRedComp = asyncSvg(() => import('@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Magma Red.svg?component'))
+const PS4V2BodyBlueComp = asyncSvg(() => import('@/assets/controller/Body/DS4/DS4 V2 VSC SVG - Midnight Blue.svg?component'))
+const PS4V2BodyBlackComp = asyncSvg(() => import('@/assets/controller/Body/DS4/DS4 V2 VSC SVG.svg?component'))
+const PS4BodyFrontComp = asyncSvg(() => import('@/assets/controller/Body/DS4/DS4 VSC Front SVG.svg?component'))
+const PS4BodyBlackComp = asyncSvg(() => import('@/assets/controller/Body/DS4/DS4 VSC SVG.svg?component'))
+const SwitchProBodyComp = asyncSvg(
+  () => import('@/assets/controller/Body/SwitchPro/Switch Pro Controller VSCView.svg?component'),
+)
+const XboxBodyBlackComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView Black.svg?component'),
+)
+const XboxBodyWhiteComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxOneColor/Xbox One Controller VSCView White.svg?component'),
+)
+const XboxBodyBlueComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Blue.svg?component'),
+)
+const XboxBodyRedComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxOneColor/Xbox One S Controller VSCView Red.svg?component'),
+)
+const XboxSXBlackComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Black.svg?component'),
+)
+const XboxSXBlueComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Blue.svg?component'),
+)
+const XboxSXRedComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView Red.svg?component'),
+)
+const XboxSXWhiteComp = asyncSvg(
+  () => import('@/assets/controller/Body/Xbox/XboxSeriesXColor/Xbox Series X Controller VSCView White.svg?component'),
+)
 
 export interface BodyOptionConfig {
   id: string
@@ -44,56 +66,56 @@ export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
     {
       id: 'xsx-black',
       name: 'Xbox Series X 经典黑',
-      body: markRaw(XboxSXBlackComp),
+      body: XboxSXBlackComp,
       defaultViewBox: '0 0 1534.73 954.01',
       aspectRatio: '1534.73 / 954.01',
     },
     {
       id: 'xsx-white',
       name: 'Xbox Series X 冰雪白',
-      body: markRaw(XboxSXWhiteComp),
+      body: XboxSXWhiteComp,
       defaultViewBox: '0 0 1534.73 954.01',
       aspectRatio: '1534.73 / 954.01',
     },
     {
       id: 'xsx-blue',
       name: 'Xbox Series X 极光蓝',
-      body: markRaw(XboxSXBlueComp),
+      body: XboxSXBlueComp,
       defaultViewBox: '0 0 1534.73 954.01',
       aspectRatio: '1534.73 / 954.01',
     },
     {
       id: 'xsx-red',
       name: 'Xbox Series X 脉冲红',
-      body: markRaw(XboxSXRedComp),
+      body: XboxSXRedComp,
       defaultViewBox: '0 0 1534.73 954.01',
       aspectRatio: '1534.73 / 954.01',
     },
     {
       id: 'xb1-black',
       name: 'Xbox One 黑色',
-      body: markRaw(XboxBodyBlackComp),
+      body: XboxBodyBlackComp,
       defaultViewBox: '0 0 1543.24 956.31',
       aspectRatio: '1543.24 / 956.31',
     },
     {
       id: 'xb1-white',
       name: 'Xbox One 白色',
-      body: markRaw(XboxBodyWhiteComp),
+      body: XboxBodyWhiteComp,
       defaultViewBox: '0 0 1543.24 956.31',
       aspectRatio: '1543.24 / 956.31',
     },
     {
       id: 'xb1s-blue',
       name: 'Xbox One S 蓝色',
-      body: markRaw(XboxBodyBlueComp),
+      body: XboxBodyBlueComp,
       defaultViewBox: '0 0 1543.24 956.31',
       aspectRatio: '1543.24 / 956.31',
     },
     {
       id: 'xb1s-red',
       name: 'Xbox One S 红色',
-      body: markRaw(XboxBodyRedComp),
+      body: XboxBodyRedComp,
       defaultViewBox: '0 0 1543.24 956.31',
       aspectRatio: '1543.24 / 956.31',
     },
@@ -102,84 +124,84 @@ export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
     {
       id: 'ps5-white',
       name: 'PS5 DualSense 经典白',
-      body: markRaw(PS5BodyWhiteComp),
+      body: PS5BodyWhiteComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps5-black',
       name: 'PS5 DualSense 午夜黑',
-      body: markRaw(PS5BodyBlackComp),
+      body: PS5BodyBlackComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps5-red',
       name: 'PS5 DualSense 星云红',
-      body: markRaw(PS5BodyRedComp),
+      body: PS5BodyRedComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps5-purple',
       name: 'PS5 DualSense 星河紫',
-      body: markRaw(PS5BodyPurpleComp),
+      body: PS5BodyPurpleComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps5-pink',
       name: 'PS5 DualSense 新星粉',
-      body: markRaw(PS5BodyPinkComp),
+      body: PS5BodyPinkComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps4-black',
       name: 'PS4 黑色',
-      body: markRaw(PS4BodyBlackComp),
+      body: PS4BodyBlackComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps4-front',
       name: 'PS4 正面视图',
-      body: markRaw(PS4BodyFrontComp),
+      body: PS4BodyFrontComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps4-v2-black',
       name: 'PS4 V2 黑色',
-      body: markRaw(PS4V2BodyBlackComp),
+      body: PS4V2BodyBlackComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps4-v2-white',
       name: 'PS4 V2 冰川白',
-      body: markRaw(PS4V2BodyWhiteComp),
+      body: PS4V2BodyWhiteComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps4-v2-red',
       name: 'PS4 V2 熔岩红',
-      body: markRaw(PS4V2BodyRedComp),
+      body: PS4V2BodyRedComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps4-v2-blue',
       name: 'PS4 V2 午夜蓝',
-      body: markRaw(PS4V2BodyBlueComp),
+      body: PS4V2BodyBlueComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
     {
       id: 'ps4-v2-gold',
       name: 'PS4 V2 金色',
-      body: markRaw(PS4V2BodyGoldComp),
+      body: PS4V2BodyGoldComp,
       defaultViewBox: '0 0 544.707 302.911',
       aspectRatio: '544.707 / 302.911',
     },
@@ -188,7 +210,7 @@ export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
     {
       id: 'switch-pro',
       name: 'Switch Pro 经典黑',
-      body: markRaw(SwitchProBodyComp),
+      body: SwitchProBodyComp,
       defaultViewBox: '0 0 1200 780',
       aspectRatio: '1200 / 780',
     },
@@ -200,19 +222,19 @@ export const controllerBodies: Record<GamepadType, BodyOptionConfig[]> = {
 export const gamepadConfigs: AllGamepadConfigs = {
   xbox: {
     name: 'Xbox Wireless Controller',
-    bodySvg: markRaw(XboxSXBlackComp),
+    bodySvg: XboxSXBlackComp,
     aspectRatio: '1534.73 / 954.01',
     defaultViewBox: '0 0 1534.73 954.01',
   },
   ps: {
     name: 'PlayStation DualSense / DualShock',
-    bodySvg: markRaw(PS5BodyWhiteComp),
+    bodySvg: PS5BodyWhiteComp,
     aspectRatio: '544.707 / 302.911',
     defaultViewBox: '0 0 544.707 302.911',
   },
   nintendo: {
     name: 'Nintendo Switch Pro Controller',
-    bodySvg: markRaw(SwitchProBodyComp),
+    bodySvg: SwitchProBodyComp,
     aspectRatio: '1200 / 780',
     defaultViewBox: '0 0 1200 780',
   },
