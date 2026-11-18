@@ -2,9 +2,9 @@ import BookCoins20Filled from '@vicons/fluent/es/BookCoins20Filled'
 import CalendarClock24Filled from '@vicons/fluent/es/CalendarClock24Filled'
 import CheckmarkCircle24Filled from '@vicons/fluent/es/CheckmarkCircle24Filled'
 import VideoAdd20Filled from '@vicons/fluent/es/VideoAdd20Filled'
-import ChatboxOutline from '@vicons/ionicons5/es/ChatboxOutline'
-import ChatbubblesOutline from '@vicons/ionicons5/es/ChatbubblesOutline'
-import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
+import Chatbox from '@vicons/ionicons5/es/Chatbox'
+import Chatbubbles from '@vicons/ionicons5/es/Chatbubbles'
+import MusicalNotes from '@vicons/ionicons5/es/MusicalNotes'
 import type { Component } from 'vue'
 
 import { FunctionTypes } from '@/api/generated/model'
@@ -28,14 +28,14 @@ export const USER_FEATURE_DEFINITIONS: readonly UserFeatureDefinition[] = [
     key: 'songList',
     label: '歌单 / 点歌',
     routeName: 'user-songList',
-    icon: MusicalNotesOutline,
+    icon: MusicalNotes,
     functionType: FunctionTypes.SongList,
   },
   {
     key: 'questionBox',
     label: '提问箱',
     routeName: 'user-questionBox',
-    icon: ChatboxOutline,
+    icon: Chatbox,
     functionType: FunctionTypes.QuestionBox,
   },
   {
@@ -59,7 +59,7 @@ export const USER_FEATURE_DEFINITIONS: readonly UserFeatureDefinition[] = [
     icon: VideoAdd20Filled,
     functionType: FunctionTypes.VideoCollect,
   },
-  { key: 'forum', label: '讨论区', routeName: 'user-forum', icon: ChatbubblesOutline, functionType: null },
+  { key: 'forum', label: '讨论区', routeName: 'user-forum', icon: Chatbubbles, functionType: null },
   {
     key: 'schedule',
     label: '直播日程',
