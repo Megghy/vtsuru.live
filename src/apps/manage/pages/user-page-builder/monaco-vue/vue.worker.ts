@@ -1,4 +1,3 @@
-import { createNpmFileSystem } from '@volar/jsdelivr'
 import {
   createTypeScriptWorkerLanguageService,
   type LanguageServiceEnvironment,
@@ -10,6 +9,9 @@ import {
   VueVirtualCode,
   type VueCompilerOptions,
 } from '@vue/language-core'
+import propsFallbackDts from '@vue/language-core/types/props-fallback.d.ts?raw'
+import templateHelpersDts from '@vue/language-core/types/template-helpers.d.ts?raw'
+import vue34ShimsDts from '@vue/language-core/types/vue-3.4-shims.d.ts?raw'
 import { createVueLanguageServicePlugins, type LanguageService } from '@vue/language-service'
 import { postprocessLanguageService, preprocessLanguageService } from '@vue/typescript-plugin/lib/common'
 import { getComponentDirectives } from '@vue/typescript-plugin/lib/requests/getComponentDirectives'
@@ -24,10 +26,6 @@ import ts from 'typescript'
 import { create as createTypeScriptSemanticPlugin } from 'volar-service-typescript/lib/plugins/semantic'
 import { URI } from 'vscode-uri'
 
-import propsFallbackDts from '@vue/language-core/types/props-fallback.d.ts?raw'
-import templateHelpersDts from '@vue/language-core/types/template-helpers.d.ts?raw'
-import vue34ShimsDts from '@vue/language-core/types/vue-3.4-shims.d.ts?raw'
-
 export interface CreateData {
   tsconfig: {
     compilerOptions?: ts.CompilerOptions
@@ -35,10 +33,6 @@ export interface CreateData {
   }
   envDts: string
   dependencies: Record<string, string>
-}
-
-interface WorkerHost {
-  onFetchCdnFile(uri: string, text: string): void
 }
 
 const VUE_TYPES_ROOT = '/node_modules/@vue/language-core/types'
@@ -52,17 +46,91 @@ const TS_LIBS = Object.fromEntries(
     }) as Record<string, string>,
   ).map(([path, text]) => [path.slice(path.lastIndexOf('/') + 1), text]),
 )
-const LOCAL_FILES: Record<string, string> = {
+const LOCAL_PACKAGE_FILES = import.meta.glob(
+  [
+    '/node_modules/typescript/package.json',
+    '/node_modules/@vue/language-core/package.json',
+    '/node_modules/vue/package.json',
+    '/node_modules/vue/jsx.d.ts',
+    '/node_modules/vue/dist/*.d.ts',
+    '/node_modules/vue/dist/*.d.mts',
+    '/node_modules/vue/jsx-runtime/package.json',
+    '/node_modules/vue/jsx-runtime/index.d.ts',
+    '/node_modules/@vue/runtime-dom/package.json',
+    '/node_modules/@vue/runtime-dom/dist/*.d.ts',
+    '/node_modules/@vue/runtime-dom/dist/*.d.mts',
+    '/node_modules/@vue/runtime-core/package.json',
+    '/node_modules/@vue/runtime-core/dist/*.d.ts',
+    '/node_modules/@vue/runtime-core/dist/*.d.mts',
+    '/node_modules/@vue/reactivity/package.json',
+    '/node_modules/@vue/reactivity/dist/*.d.ts',
+    '/node_modules/@vue/reactivity/dist/*.d.mts',
+    '/node_modules/@vue/shared/package.json',
+    '/node_modules/@vue/shared/dist/*.d.ts',
+    '/node_modules/@vue/shared/dist/*.d.mts',
+    '/node_modules/@vue/compiler-dom/package.json',
+    '/node_modules/@vue/compiler-dom/dist/*.d.ts',
+    '/node_modules/@vue/compiler-dom/dist/*.d.mts',
+    '/node_modules/@vue/compiler-core/package.json',
+    '/node_modules/@vue/compiler-core/dist/*.d.ts',
+    '/node_modules/@vue/compiler-core/dist/*.d.mts',
+    '/node_modules/csstype/package.json',
+    '/node_modules/csstype/index.d.ts',
+    '/node_modules/@babel/types/package.json',
+    '/node_modules/@babel/types/lib/*.d.ts',
+    '/node_modules/@babel/parser/package.json',
+    '/node_modules/@babel/parser/typings/*.d.ts',
+    '/node_modules/dayjs/package.json',
+    '/node_modules/dayjs/index.d.ts',
+    '/node_modules/dayjs/plugin/*.d.ts',
+    '/node_modules/@vueuse/core/package.json',
+    '/node_modules/@vueuse/core/dist/index.d.ts',
+    '/node_modules/@vueuse/shared/package.json',
+    '/node_modules/@vueuse/shared/dist/index.d.ts',
+  ],
+  { query: '?raw', eager: true, import: 'default' },
+) as Record<string, string>
+const VUE_TYPE_FILES: Record<string, string> = {
   [`${VUE_TYPES_ROOT}/template-helpers.d.ts`]: templateHelpersDts,
   [`${VUE_TYPES_ROOT}/props-fallback.d.ts`]: propsFallbackDts,
   [`${VUE_TYPES_ROOT}/vue-3.4-shims.d.ts`]: vue34ShimsDts,
-  ...Object.fromEntries(Object.entries(TS_LIBS).map(([name, text]) => [`${TS_LIB_ROOT}/${name}`, text])),
 }
-const LOCAL_BY_BASENAME = new Map(Object.entries(LOCAL_FILES).map(([path, text]) => [path.slice(path.lastIndexOf('/') + 1), text]))
+const LOCAL_FILES: Record<string, string> = {
+  ...VUE_TYPE_FILES,
+  ...Object.fromEntries(Object.entries(TS_LIBS).map(([name, text]) => [`${TS_LIB_ROOT}/${name}`, text])),
+  ...LOCAL_PACKAGE_FILES,
+}
+// Only fall back by basename for TypeScript lib.* and Vue helper declarations; never collide on package.json / index.d.ts.
+const LOCAL_BY_BASENAME = new Map([
+  ...Object.entries(VUE_TYPE_FILES).map(([path, text]) => [path.slice(path.lastIndexOf('/') + 1), text] as const),
+  ...Object.entries(TS_LIBS),
+])
+const LOCAL_DIR_MAP = new Map<string, [string, 1 | 2][]>()
+
+function registerDirEntry(dirPath: string, name: string, type: 1 | 2) {
+  let entries = LOCAL_DIR_MAP.get(dirPath)
+  if (!entries) {
+    entries = []
+    LOCAL_DIR_MAP.set(dirPath, entries)
+  }
+  if (!entries.some(([existing]) => existing === name)) entries.push([name, type])
+}
+
+for (const filePath of Object.keys(LOCAL_FILES)) {
+  const parts = filePath.split('/').filter(Boolean)
+  for (let i = 0; i < parts.length; i++) {
+    const parent = i === 0 ? '/' : `/${parts.slice(0, i).join('/')}`
+    registerDirEntry(parent, parts[i], i === parts.length - 1 ? 1 : 2)
+  }
+}
+
+function normalizePath(fileName: string) {
+  const normalized = fileName.replace(/\\/g, '/')
+  return normalized.startsWith('/') ? normalized : `/${normalized}`
+}
 
 function localText(fileName: string) {
-  const normalized = fileName.replace(/\\/g, '/')
-  const path = normalized.startsWith('/') ? normalized : `/${normalized}`
+  const path = normalizePath(fileName)
   return LOCAL_FILES[path] ?? LOCAL_BY_BASENAME.get(path.slice(path.lastIndexOf('/') + 1))
 }
 
@@ -102,14 +170,6 @@ const tsLibHostPlugin = {
     },
   },
 }
-const LOCAL_DIRS = new Set([
-  '/node_modules',
-  '/node_modules/typescript',
-  TS_LIB_ROOT,
-  '/node_modules/@vue',
-  '/node_modules/@vue/language-core',
-  VUE_TYPES_ROOT,
-])
 const IGNORE_PLUGINS = new Set([
   'emmet',
   'vue-template (jade)',
@@ -129,12 +189,13 @@ const asUri = (fileName: string) =>
     fragment: '',
   })
 
-function createService(
-  ctx: { host: unknown; getMirrorModels: () => unknown[] },
-  createData: CreateData,
-) {
-  if (createData.envDts) LOCAL_FILES['/env.d.ts'] = createData.envDts
+function createService(ctx: { host: unknown; getMirrorModels: () => unknown[] }, createData: CreateData) {
+  if (createData.envDts) {
+    LOCAL_FILES['/env.d.ts'] = createData.envDts
+    registerDirEntry('/', 'env.d.ts', 1)
+  }
   LOCAL_FILES['/package.json'] = JSON.stringify({ private: true, dependencies: createData.dependencies })
+  registerDirEntry('/', 'package.json', 1)
   const compilerOptions: ts.CompilerOptions = {
     allowJs: true,
     checkJs: false,
@@ -152,45 +213,20 @@ function createService(
     ...getDefaultCompilerOptions(99, 'vue', false, VUE_TYPES_ROOT),
     ...createData.tsconfig.vueCompilerOptions,
   }
-  const npmFs = createNpmFileSystem(
-    (uri) => {
-      if (uri.path === '/node_modules') return ''
-      if (uri.path.startsWith('/node_modules/')) return uri.path.slice('/node_modules/'.length)
-    },
-    (pkgName) => createData.dependencies[pkgName],
-    (path, content) => (ctx.host as WorkerHost).onFetchCdnFile(`file:///node_modules/${path}`, content),
-  )
   const env: LanguageServiceEnvironment = {
     workspaceFolders: [URI.parse('file:///')],
     fs: {
       stat(uri) {
         const local = localText(uri.path)
         if (local) return { type: 1, ctime: 0, mtime: 0, size: local.length }
-        if (LOCAL_DIRS.has(uri.path)) return { type: 2, ctime: 0, mtime: 0, size: -1 }
-        return npmFs.stat(uri)
+        if (LOCAL_DIR_MAP.has(normalizePath(uri.path))) return { type: 2, ctime: 0, mtime: 0, size: -1 }
+        return undefined
       },
       readDirectory(uri) {
-        if (uri.path === TS_LIB_ROOT || uri.path.endsWith('/typescript/lib')) {
-          return Object.keys(TS_LIBS).map((name) => [name, 1] as [string, 1])
-        }
-        if (uri.path === '/node_modules') {
-          return [...new Set(Object.keys(createData.dependencies).map((name) => name.split('/')[0]))].map(
-            (name) => [name, 2] as [string, 2],
-          )
-        }
-        const scoped = uri.path.match(/^\/node_modules\/(@[^/]+)$/)
-        if (scoped) {
-          const kids = Object.keys(createData.dependencies)
-            .filter((name) => name.startsWith(`${scoped[1]}/`))
-            .map((name) => name.slice(scoped[1].length + 1).split('/')[0])
-          return [...new Set(kids)].map((name) => [name, 2] as [string, 2])
-        }
-        return npmFs.readDirectory(uri)
+        return LOCAL_DIR_MAP.get(normalizePath(uri.path)) ?? []
       },
-      readFile(uri, encoding) {
-        const local = localText(uri.path)
-        if (local) return local
-        return npmFs.readFile(uri, encoding)
+      readFile(uri) {
+        return localText(uri.path)
       },
     },
   }
@@ -235,7 +271,15 @@ function createService(
       },
       getComponentProps(fileName, position) {
         const { sourceScript, virtualCode } = getVirtualCode(fileName)
-        return getComponentProps(ts, getTs(), getProgram(), getLanguage().context.language as never, sourceScript as never, virtualCode, position)
+        return getComponentProps(
+          ts,
+          getTs(),
+          getProgram(),
+          getLanguage().context.language as never,
+          sourceScript as never,
+          virtualCode,
+          position,
+        )
       },
       getComponentSlots(fileName) {
         return getComponentSlots(ts, getProgram(), getVirtualCode(fileName).virtualCode)
@@ -248,7 +292,14 @@ function createService(
       },
       isRefAtPosition(fileName, position) {
         const { sourceScript, virtualCode } = getVirtualCode(fileName)
-        return isRefAtPosition(ts, getLanguage().context.language as never, getProgram(), sourceScript as never, virtualCode, position)
+        return isRefAtPosition(
+          ts,
+          getLanguage().context.language as never,
+          getProgram(),
+          sourceScript as never,
+          virtualCode,
+          position,
+        )
       },
       getQuickInfoAtPosition() {
         return null
@@ -277,21 +328,23 @@ function createService(
       resolveAutoImportCompletionEntry() {
         return null
       },
-    }).filter((plugin) => !IGNORE_PLUGINS.has(plugin.name ?? '')).map((plugin) => {
-      if (!plugin.name?.startsWith('vue-template')) return plugin
-      const create = plugin.create.bind(plugin)
-      return {
-        ...plugin,
-        create(context) {
-          try {
-            const instance = create(context)
-            return instance?.provide ? instance : { dispose() {} }
-          } catch {
-            return { dispose() {} }
-          }
-        },
-      }
     })
+      .filter((plugin) => !IGNORE_PLUGINS.has(plugin.name ?? ''))
+      .map((plugin) => {
+        if (!plugin.name?.startsWith('vue-template')) return plugin
+        const create = plugin.create.bind(plugin)
+        return {
+          ...plugin,
+          create(context) {
+            try {
+              const instance = create(context)
+              return instance?.provide ? instance : { dispose() {} }
+            } catch {
+              return { dispose() {} }
+            }
+          },
+        }
+      })
   }
 
   function getVirtualCode(fileName: string) {

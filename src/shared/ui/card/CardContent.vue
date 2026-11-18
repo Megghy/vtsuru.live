@@ -9,7 +9,20 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div :class="cn('p-3.5 pt-0', props.class)">
+  <div
+    data-card-content
+    :class="cn(props.class)"
+  >
     <slot />
   </div>
 </template>
+
+<style>
+:where([data-card-content]) {
+  padding: 0.625rem 0.75rem;
+}
+
+:where([data-card-header] ~ [data-card-content]) {
+  padding-top: 0;
+}
+</style>

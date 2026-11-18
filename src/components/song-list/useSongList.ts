@@ -14,7 +14,7 @@ import {
   postApiSongListUpdateBatchTag,
 } from '@/api/generated/song-list/song-list'
 import { applySongOrder, moveSongInOrder } from '@/apps/manage/composables/songListCsv'
-import { usePersistedStorage } from '@/shared/storage/persist'
+import { persistLoaded, usePersistedStorage } from '@/shared/storage/persist'
 import { toast } from '@/shared/utils'
 
 export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean }) {
@@ -24,6 +24,7 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
   const isLrcLoading = ref<string>()
   // 后端暂无排序字段：用本机持久化 key 顺序；CRUD 后仍写回服务端歌曲本体
   const songOrderKeys = usePersistedStorage<string[]>('vtsuru:settings:song-list:order-keys', [])
+  const orderReady = persistLoaded(songOrderKeys)
 
   // 筛选状态
   const searchKeyword = ref('')
@@ -106,19 +107,35 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
       list,
       prev.filter((k) => keys.includes(k)).concat(keys.filter((k) => !prev.includes(k))),
     ).map((s) => s.key)
-    songOrderKeys.value = merged
+    if (merged.length !== prev.length || merged.some((k, idx) => k !== prev[idx])) {
+      songOrderKeys.value = merged
+    }
     return merged
   }
 
-  // 同步 props + 应用本地排序
+  // 1. 外部 props.songs 变更时，按当前已知顺序同步到 songsInternal
   watch(
     () => props.songs,
-    (v) => {
-      const ordered = applySongOrder([...v], songOrderKeys.value ?? [])
+    (songs) => {
+      const ordered = applySongOrder([...songs], songOrderKeys.value ?? [])
+      songsInternal.value = ordered
+      if (orderReady.value && songs.length > 0) {
+        syncOrderKeys(ordered)
+      }
+    },
+    { deep: true, immediate: true },
+  )
+
+  // 2. 持久化顺序从存储就绪或变更时，基于当前 songsInternal 重新应用排序（避免用可能陈旧的 props.songs 覆盖本地删改）
+  watch(
+    [() => songOrderKeys.value, orderReady],
+    ([keys, ready]) => {
+      if (!ready || songsInternal.value.length === 0) return
+      const ordered = applySongOrder([...songsInternal.value], keys ?? [])
       songsInternal.value = ordered
       syncOrderKeys(ordered)
     },
-    { deep: true, immediate: true },
+    { deep: true },
   )
 
   function moveSong(key: string, direction: -1 | 1) {

@@ -359,14 +359,20 @@ async function handleBatchDelete() {
           v-model="draggablePagedSongs"
           tag="tbody"
           handle=".song-drag-handle"
+          draggable=".song-drag-row"
           :animation="150"
+          :force-fallback="true"
+          :fallback-on-body="true"
+          :fallback-tolerance="4"
+          ghost-class="opacity-40"
+          fallback-class="opacity-95"
           :disabled="!isSelf"
           class="[&_tr:last-child]:border-0"
         >
           <TableRow
-            v-for="row in pagedSongs"
+            v-for="row in draggablePagedSongs"
             :key="row.key"
-            class="border-b border-border/60 hover:bg-muted/40 transition-colors even:bg-muted/[0.14]"
+            class="song-drag-row border-b border-border/60 hover:bg-muted/40 transition-colors even:bg-muted/[0.14]"
           >
             <TableCell
               v-if="isSelf"
@@ -374,10 +380,10 @@ async function handleBatchDelete() {
             >
               <div class="flex items-center gap-1.5">
                 <span
-                  class="song-drag-handle cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground inline-flex items-center"
-                  title="拖拽排序（本机保存）"
+                  class="song-drag-handle cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground hover:bg-muted inline-flex-center w-6 h-7 -ml-1 rounded select-none touch-none transition-colors"
+                  title="按住拖拽排序（本机保存）"
                 >
-                  <ReOrderDotsVertical16Regular class="size-4" />
+                  <ReOrderDotsVertical16Regular class="size-4 pointer-events-none" />
                 </span>
                 <Checkbox
                   :checked="selectedKeys.includes(row.key)"
@@ -607,13 +613,14 @@ async function handleBatchDelete() {
               </div>
             </TableCell>
           </TableRow>
+        </VueDraggable>
 
+        <tbody v-if="!pagedSongs.length">
           <TableEmpty
-            v-if="!pagedSongs.length"
             :colspan="isSelf ? 7 : 6"
             description="暂无歌曲"
           />
-        </VueDraggable>
+        </tbody>
       </Table>
     </div>
 
