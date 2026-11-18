@@ -15,7 +15,7 @@ import { getApiUserInfo } from '@/api/generated/user/user'
 import { getApiVideoCollectGetActive } from '@/api/generated/video-collect/video-collect'
 import type { QueryRequestOptions } from '@/api/query'
 import { unwrapOk } from '@/api/query'
-import { resolveFileUrl, VTSURU_API_URL } from '@/shared/config'
+import { getVtsuruApiUrl, resolveFileUrl } from '@/shared/config'
 
 import { migrateUserPagesSettings } from './normalize'
 import type { BiliProfile, UserPagesSettings } from './types'
@@ -38,7 +38,7 @@ export async function fetchPublicUserInfo(routeId: string, options?: QueryReques
 }
 
 export async function fetchBiliProfile(biliId: number, signal?: AbortSignal): Promise<BiliProfile | null> {
-  const response = await fetch(`${VTSURU_API_URL}bili-user-info/${biliId}`, { signal })
+  const response = await fetch(`${getVtsuruApiUrl()}bili-user-info/${biliId}`, { signal })
   if (!response.ok) throw new Error(`B站资料请求失败：HTTP ${response.status}`)
   const payload = (await response.json()) as {
     code?: number

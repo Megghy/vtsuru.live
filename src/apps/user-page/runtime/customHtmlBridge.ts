@@ -115,7 +115,7 @@ export function attachCustomHtmlBridge(options: {
       '*',
     )
   const listener = (event: MessageEvent) => {
-    if (event.source !== options.frame.contentWindow) return
+    if (event.origin !== 'null' || event.source !== options.frame.contentWindow) return
     const request = event.data as BridgeRequest
     if (!request || request.__vtsuruBridge !== true || request.channelId !== options.channelId) return
     if (request.direction === 'height') {

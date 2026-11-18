@@ -101,6 +101,7 @@ function createSpeechService() {
   const joinedFansClubUsers = new Set<string>()
 
   const apiAudio = ref<HTMLAudioElement>()
+  let notificationAudioCtx: AudioContext | null = null
   let checkTimer: number | undefined
   let loadingTimeoutTimer: number | undefined
   let speechQueueTimer: number | undefined
@@ -109,6 +110,7 @@ function createSpeechService() {
   let pendingObjectUrl: string | undefined
   let speechRunId = 0
   let isProcessingQueue = false
+  let danmakuListenersAttached = false
 
   function revokePendingObjectUrl() {
     if (pendingObjectUrl) {
@@ -215,6 +217,7 @@ function createSpeechService() {
       const provider = getCurrentProvider()
       if (provider) await provider.initialize()
       ensureAudioElement()
+      attachDanmakuListeners()
 
       speechQueueTimer = setInterval(() => {
         void processQueue()
@@ -265,8 +268,18 @@ function createSpeechService() {
       clearTimeout(loadingTimeoutTimer)
       loadingTimeoutTimer = undefined
     }
+    if (_cloudSaveTimer) {
+      globalThis.clearTimeout(_cloudSaveTimer)
+      _cloudSaveTimer = undefined
+    }
+    detachDanmakuListeners()
+    if (notificationAudioCtx && notificationAudioCtx.state !== 'closed') {
+      void notificationAudioCtx.close().catch(() => {})
+      notificationAudioCtx = null
+    }
     stopTimedBroadcast()
     cancelSpeech()
+    isProcessingQueue = false
     pendingGifts.clear()
     joinedFansClubUsers.clear()
     speakQueue.value = []
@@ -448,28 +461,58 @@ function createSpeechService() {
     }
   }
 
+  function getNotificationAudioContext(): AudioContext | null {
+    if (typeof AudioContext === 'undefined') return null
+    if (!notificationAudioCtx || notificationAudioCtx.state === 'closed') {
+      notificationAudioCtx = new AudioContext()
+    }
+    return notificationAudioCtx
+  }
+
   async function playNotificationSound(): Promise<void> {
+    const ctx = getNotificationAudioContext()
+    if (!ctx) return
+
     return new Promise((resolve) => {
-      try {
-        const ctx = new AudioContext()
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.frequency.value = 880
-        osc.type = 'sine'
-        gain.gain.value = settings.value.notificationSound.volume ?? 0.3
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
-        osc.start()
-        osc.stop(ctx.currentTime + 0.3)
-        osc.onended = () => {
-          void ctx.close()
-          resolve()
-        }
-      } catch (err) {
-        console.warn('[TTS] 播放提示音失败:', err)
+      let settled = false
+      const finish = () => {
+        if (settled) return
+        settled = true
+        globalThis.clearTimeout(fallbackTimer)
         resolve()
       }
+      // 浏览器策略挂起 AudioContext 时兜底放行，防止阻塞后续队列
+      const fallbackTimer = globalThis.setTimeout(finish, 800)
+
+      void (async () => {
+        try {
+          if (ctx.state === 'suspended') {
+            await Promise.race([
+              ctx.resume(),
+              new Promise<void>((r) => globalThis.setTimeout(r, 250)),
+            ])
+          }
+          if (ctx.state !== 'running') {
+            finish()
+            return
+          }
+          const osc = ctx.createOscillator()
+          const gain = ctx.createGain()
+          osc.connect(gain)
+          gain.connect(ctx.destination)
+          osc.frequency.value = 880
+          osc.type = 'sine'
+          const volume = Math.min(1, Math.max(0.001, settings.value.notificationSound.volume ?? 0.3))
+          gain.gain.setValueAtTime(volume, ctx.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3)
+          osc.onended = finish
+          osc.start()
+          osc.stop(ctx.currentTime + 0.3)
+        } catch (err) {
+          console.warn('[TTS] 播放提示音失败:', err)
+          finish()
+        }
+      })()
     })
   }
 
@@ -635,9 +678,23 @@ function createSpeechService() {
     return { success: true, text }
   }
 
-  for (const eventName of SPEECH_EVENT_NAMES) {
-    danmakuClient.onEvent(eventName, addToQueue)
+  function attachDanmakuListeners() {
+    if (danmakuListenersAttached) return
+    danmakuListenersAttached = true
+    for (const eventName of SPEECH_EVENT_NAMES) {
+      danmakuClient.onEvent(eventName, addToQueue)
+    }
   }
+
+  function detachDanmakuListeners() {
+    if (!danmakuListenersAttached) return
+    danmakuListenersAttached = false
+    for (const eventName of SPEECH_EVENT_NAMES) {
+      danmakuClient.offEvent(eventName, addToQueue)
+    }
+  }
+
+  attachDanmakuListeners()
 
   function forceSpeak(data: EventModel, eventKeyOverride?: SpeechEventKey) {
     cancelSpeech()

@@ -1,4 +1,4 @@
-import { formatRgb } from 'culori'
+import { formatRgb } from '@/shared/config/theme/culori'
 
 import { resolveFileUrl } from '@/shared/config/api'
 import { resolveReadableForeground } from '@/shared/config/theme/contrast'

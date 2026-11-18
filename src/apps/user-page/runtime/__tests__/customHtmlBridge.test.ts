@@ -29,9 +29,14 @@ describe('custom HTML bridge', () => {
       params: 7,
     }
 
-    window.dispatchEvent(new MessageEvent('message', { source: window, data: request }))
+    window.dispatchEvent(new MessageEvent('message', { origin: 'null', source: window, data: request }))
+    window.dispatchEvent(
+      new MessageEvent('message', { origin: 'https://evil.example', source: frame.contentWindow, data: request }),
+    )
     expect(handler).not.toHaveBeenCalled()
-    window.dispatchEvent(new MessageEvent('message', { source: frame.contentWindow, data: request }))
+    window.dispatchEvent(
+      new MessageEvent('message', { origin: 'null', source: frame.contentWindow, data: request }),
+    )
     await vi.waitFor(() =>
       expect(postMessage).toHaveBeenCalledWith(
         expect.objectContaining({ channelId: 'bound', requestId: 1, ok: true, data: { params: 7 } }),
@@ -56,6 +61,7 @@ describe('custom HTML bridge', () => {
 
     window.dispatchEvent(
       new MessageEvent('message', {
+        origin: 'null',
         source: frame.contentWindow,
         data: {
           __vtsuruBridge: true,
@@ -131,6 +137,7 @@ describe('custom HTML bridge', () => {
 
     window.dispatchEvent(
       new MessageEvent('message', {
+        origin: 'null',
         source: frame.contentWindow,
         data: {
           __vtsuruBridge: true,
@@ -166,6 +173,7 @@ describe('custom HTML bridge', () => {
     const request = (requestId: number, channelId = 'limited') =>
       window.dispatchEvent(
         new MessageEvent('message', {
+          origin: 'null',
           source: frame.contentWindow,
           data: { __vtsuruBridge: true, channelId, direction: 'to-host', requestId, method: 'getContext' },
         }),

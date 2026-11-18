@@ -65,8 +65,12 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
     } as { songs: SongRequestInfo[]; setting: SettingSongRequest }
   }
 
+  let requestSeq = 0
+
   async function update() {
+    const seq = ++requestSeq
     const r = await get()
+    if (seq !== requestSeq) return
     if (r) {
       const isCountChange = originSongs.value.length != (r.songs?.length ?? 0)
       originSongs.value = (r.songs ?? []).toSorted((a, b) => {

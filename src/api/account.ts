@@ -28,7 +28,7 @@ import type { TempResponseAloginModel } from '@/api/generated/model/tempResponse
 import { persistedRemoveItem } from '@/shared/storage/persist'
 import { message } from '@/shared/utils'
 
-import { cookie } from './auth'
+import { broadcastAuthSync, cookie, onAuthSync } from './auth'
 
 // 手动登出后本次标签页会话内不再 dev 自动登录；关闭标签页后恢复。生产构建不会读写该键。
 const DEV_AUTO_LOGIN_SUPPRESSED_KEY = 'vtsuru.devAutoLoginSuppressed'
@@ -43,7 +43,10 @@ function suppressDevAutoLogin() {
 
 export function logoutAccount() {
   suppressDevAutoLogin()
+  stopUpdateAccountLoop()
   cookie.value = undefined
+  ACCOUNT.value = {} as ResponseAccountInfo
+  broadcastAuthSync({ type: 'logout' })
   window.location.reload()
 }
 
@@ -53,38 +56,58 @@ export const isLoggedIn = computed<boolean>(() => {
   return ACCOUNT.value.id > 0
 })
 
-export async function GetSelfAccount(token?: string) {
-  if (cookie.value?.cookie || token) {
-    const result = await Self(token)
-    if (result.code == 200) {
-      if (ACCOUNT.value.id !== result.data.id) {
+const inFlightGetSelf = new Map<string, Promise<ResponseAccountInfo | undefined>>()
+let inFlightRefreshCookie: Promise<void> | undefined
+let isHandlingUnauthorized = false
+
+export async function GetSelfAccount(
+  token?: string,
+  options?: { preserveLocalSettings?: boolean },
+): Promise<ResponseAccountInfo | undefined> {
+  const flightKey = token ?? '__cookie__'
+  const existing = inFlightGetSelf.get(flightKey)
+  if (existing) return existing
+
+  const task = (async () => {
+    if (cookie.value?.cookie || token) {
+      const result = await Self(token)
+      if (result.code == 200) {
+        if (options?.preserveLocalSettings && ACCOUNT.value.id === result.data.id && ACCOUNT.value.settings) {
+          result.data.settings = ACCOUNT.value.settings
+        }
         ACCOUNT.value = result.data
+        isLoadingAccount.value = false
+        if (!cookie.value?.cookie || !isSameDay(new Date(), cookie.value?.refreshDate ?? 0)) {
+          void refreshCookie(token)
+        }
+        return result.data
+      } else if (result.code == 401) {
+        await persistedRemoveItem('JWT_Token')
+        if (!token && !isHandlingUnauthorized) {
+          isHandlingUnauthorized = true
+          stopUpdateAccountLoop()
+          cookie.value = undefined
+          ACCOUNT.value = {} as ResponseAccountInfo
+          broadcastAuthSync({ type: 'logout' })
+          console.warn('[vtsuru] Cookie 已失效, 需要重新登陆')
+          message.error('Cookie 已失效, 需要重新登陆')
+          setTimeout(() => {
+            location.reload()
+          }, 1500)
+        }
       } else {
-        result.data.settings = ACCOUNT.value.settings
-        ACCOUNT.value = result.data
+        console.warn(`[vtsuru] ${result.message}`)
+        message.error(result.message)
       }
-      isLoadingAccount.value = false
-      // console.log('[vtsuru] 已获取账户信息')
-      if (!cookie.value?.cookie || !isSameDay(new Date(), cookie.value?.refreshDate ?? 0)) {
-        refreshCookie(token)
-      }
-      return result.data
-    } else if (result.code == 401) {
-      await persistedRemoveItem('JWT_Token')
-      if (!token) {
-        cookie.value = undefined
-        console.warn('[vtsuru] Cookie 已失效, 需要重新登陆')
-        message.error('Cookie 已失效, 需要重新登陆')
-        setTimeout(() => {
-          location.reload()
-        }, 1500)
-      }
-    } else {
-      console.warn(`[vtsuru] ${result.message}`)
-      message.error(result.message)
     }
-  }
-  isLoadingAccount.value = false
+    isLoadingAccount.value = false
+    return undefined
+  })().finally(() => {
+    inFlightGetSelf.delete(flightKey)
+  })
+
+  inFlightGetSelf.set(flightKey, task)
+  return task
 }
 
 let accountLoopTimer: ReturnType<typeof setInterval> | undefined
@@ -104,29 +127,56 @@ export function UpdateAccountLoop() {
     if (urlParams.get('as')) {
       return
     }
-    if (ACCOUNT.value && window.$route?.name != 'question-display') {
-      // 防止在问题详情页刷新
-      void GetSelfAccount().catch((err) => {
+    if (ACCOUNT.value && (typeof window === 'undefined' || window.location.pathname !== '/question-display')) {
+      // 防止在问题详情页及后台定时轮询时冲掉未保存的本地 settings 编辑态
+      void GetSelfAccount(undefined, { preserveLocalSettings: true }).catch((err) => {
         console.warn('[vtsuru] 定时刷新账户信息失败:', err)
       })
     }
   }, 60 * 1000)
 }
 function refreshCookie(token?: string) {
-  postApiAccountRefreshToken(token ? { headers: { Authorization: `Bearer ${token}` } } : undefined)
+  if (inFlightRefreshCookie) return inFlightRefreshCookie
+  inFlightRefreshCookie = postApiAccountRefreshToken(
+    token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+  )
     .then((data) => {
       if (data.code == 200) {
-        cookie.value = {
+        const nextCookie = {
           cookie: data.data,
-          refreshDate: new Date().getTime(),
+          refreshDate: Date.now(),
         }
+        cookie.value = nextCookie
+        broadcastAuthSync({ type: 'cookie-updated', cookie: nextCookie })
         console.log('[vtsuru] 已刷新Cookie')
       }
     })
     .catch((err) => {
       console.warn('[vtsuru] 刷新Cookie失败', err)
     })
+    .finally(() => {
+      inFlightRefreshCookie = undefined
+    })
+  return inFlightRefreshCookie
 }
+
+const stopAuthSync = onAuthSync((event) => {
+  if (event.type === 'logout') {
+    stopUpdateAccountLoop()
+    cookie.value = undefined
+    ACCOUNT.value = {} as ResponseAccountInfo
+    return
+  }
+  if (event.type === 'cookie-updated' && event.cookie?.cookie) {
+    isHandlingUnauthorized = false
+    const changed = cookie.value?.cookie !== event.cookie.cookie
+    cookie.value = { cookie: event.cookie.cookie, refreshDate: event.cookie.refreshDate }
+    if (changed || !ACCOUNT.value?.id) {
+      void GetSelfAccount()
+    }
+  }
+})
+import.meta.hot?.dispose(stopAuthSync)
 export async function SaveAccountSettings() {
   return postApiAccountUpdateSetting(ACCOUNT.value?.settings)
 }
@@ -177,8 +227,11 @@ export async function Register(name: string, email: string, password: string, to
 export type AccountSession = TempResponseAloginModel
 
 export function applyAccountSession(session: AccountSession) {
+  isHandlingUnauthorized = false
   ACCOUNT.value = session.account
-  cookie.value = { cookie: session.token, refreshDate: Date.now() }
+  const nextCookie = { cookie: session.token, refreshDate: Date.now() }
+  cookie.value = nextCookie
+  broadcastAuthSync({ type: 'cookie-updated', cookie: nextCookie })
 }
 
 export type BiliAccountProof = PrepareAccountBiliAuthResponse

@@ -9,17 +9,11 @@ import type { Component } from 'vue'
 
 import { FunctionTypes } from '@/api/generated/model'
 
-export const USER_FEATURE_KEYS = [
-  'songList',
-  'questionBox',
-  'checkInRanking',
-  'pointGoods',
-  'videoCollect',
-  'forum',
-  'schedule',
-] as const
+import { getEnabledUserFunctions, USER_FEATURE_KEYS } from './featureMeta'
+import type { UserFeatureKey } from './featureMeta'
 
-export type UserFeatureKey = (typeof USER_FEATURE_KEYS)[number]
+export { getEnabledUserFunctions, USER_FEATURE_KEYS }
+export type { UserFeatureKey }
 
 export interface UserFeatureDefinition {
   key: UserFeatureKey
@@ -78,15 +72,6 @@ export const USER_FEATURE_DEFINITIONS: readonly UserFeatureDefinition[] = [
 export const USER_FEATURE_DEFINITION_MAP = Object.fromEntries(
   USER_FEATURE_DEFINITIONS.map((feature) => [feature.key, feature]),
 ) as Record<UserFeatureKey, UserFeatureDefinition>
-
-export function getEnabledUserFunctions(userInfo: unknown) {
-  if (!userInfo || typeof userInfo !== 'object' || Array.isArray(userInfo)) return new Set<FunctionTypes>()
-  const user = userInfo as {
-    extra?: { enableFunctions?: FunctionTypes[] }
-    settings?: { enableFunctions?: FunctionTypes[] }
-  }
-  return new Set(user.extra?.enableFunctions ?? user.settings?.enableFunctions ?? [])
-}
 
 export function isUserFeatureEnabled(feature: UserFeatureDefinition, enabledFunctions: ReadonlySet<FunctionTypes>) {
   return feature.functionType !== null && enabledFunctions.has(feature.functionType)

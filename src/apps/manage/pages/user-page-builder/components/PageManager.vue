@@ -3,7 +3,7 @@ import AppsOutline from '@vicons/ionicons5/es/AppsOutline'
 import CopyOutline from '@vicons/ionicons5/es/CopyOutline'
 import EllipsisHorizontalOutline from '@vicons/ionicons5/es/EllipsisHorizontalOutline'
 import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
-import { computed, inject, nextTick, ref } from 'vue'
+import { computed, defineAsyncComponent, inject, nextTick, ref, watch } from 'vue'
 
 import { resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
 import type { UserPageConfig } from '@/apps/user-page/types'
@@ -20,7 +20,8 @@ import { Tag } from '@/shared/ui/tag'
 import { UserPageEditorKey } from '../context'
 import { PAGE_MODE_OPTIONS } from '../editorPageConfig'
 import { usePageEntries } from '../usePageEntries'
-import PageIconPickerModal from './PageIconPickerModal.vue'
+
+const PageIconPickerModal = defineAsyncComponent(() => import('./PageIconPickerModal.vue'))
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
@@ -37,6 +38,14 @@ const deletePageModal = ref(false)
 const deletePageSlug = ref('')
 
 const iconPickerShown = ref(false)
+const hasOpenedIconPicker = ref(false)
+watch(
+  iconPickerShown,
+  (val) => {
+    if (val) hasOpenedIconPicker.value = true
+  },
+  { immediate: true },
+)
 const iconPickerSlug = ref('')
 const iconPickerValue = computed(() =>
   iconPickerSlug.value ? editor.settings.value.pages?.[iconPickerSlug.value]?.navIcon : undefined,
@@ -341,6 +350,7 @@ function confirmDuplicatePage() {
     </Dialog>
 
     <PageIconPickerModal
+      v-if="hasOpenedIconPicker || iconPickerShown"
       v-model:show="iconPickerShown"
       :value="iconPickerValue"
       @select="setPageNavIcon"

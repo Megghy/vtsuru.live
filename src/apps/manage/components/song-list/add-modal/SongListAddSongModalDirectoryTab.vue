@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ArchiveOutline from '@vicons/ionicons5/es/ArchiveOutline'
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
@@ -214,6 +214,16 @@ async function addFolderSongs() {
   }
 }
 
+function revokeFolderSongUrls() {
+  for (const song of folderSongs.value) {
+    if (song.url?.startsWith('blob:')) {
+      URL.revokeObjectURL(song.url)
+    }
+  }
+}
+
+onUnmounted(revokeFolderSongUrls)
+
 async function selectFolder() {
   try {
     if (!('showDirectoryPicker' in window)) {
@@ -222,6 +232,7 @@ async function selectFolder() {
     }
 
     isScanningFolder.value = true
+    revokeFolderSongUrls()
     folderSongs.value = []
 
     // @ts-ignore

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
@@ -35,24 +35,70 @@ const { state } = useObsBridge<ClockState, ClockAction>({
   role: 'viewer',
 })
 
-// 本地高精度时间驱动
+// 本地高精度时间驱动：仅显示毫秒时启用 rAF，其余场景降为 250ms 定时器
 const now = ref(Date.now())
 let rafId: number | null = null
+let intervalId: ReturnType<typeof setInterval> | null = null
+let isPaused = true
 
-function tick() {
-  now.value = Date.now()
-  rafId = requestAnimationFrame(tick)
-}
-
-onMounted(() => {
-  rafId = requestAnimationFrame(tick)
-})
-
-onUnmounted(() => {
+function stopTicker() {
   if (rafId !== null) {
     cancelAnimationFrame(rafId)
     rafId = null
   }
+  if (intervalId !== null) {
+    clearInterval(intervalId)
+    intervalId = null
+  }
+}
+
+function tickRaf() {
+  if (isPaused || !state.value.showMilliseconds) {
+    rafId = null
+    return
+  }
+  now.value = Date.now()
+  rafId = requestAnimationFrame(tickRaf)
+}
+
+function startTicker() {
+  stopTicker()
+  if (isPaused) return
+  now.value = Date.now()
+  if (state.value.showMilliseconds) {
+    rafId = requestAnimationFrame(tickRaf)
+  } else {
+    intervalId = setInterval(() => {
+      now.value = Date.now()
+    }, 250)
+  }
+}
+
+watch(
+  () => state.value.showMilliseconds,
+  () => {
+    if (!isPaused) startTicker()
+  },
+)
+
+onMounted(() => {
+  isPaused = false
+  startTicker()
+})
+
+onActivated(() => {
+  isPaused = false
+  startTicker()
+})
+
+onDeactivated(() => {
+  isPaused = true
+  stopTicker()
+})
+
+onUnmounted(() => {
+  isPaused = true
+  stopTicker()
 })
 
 // 计算时钟数据

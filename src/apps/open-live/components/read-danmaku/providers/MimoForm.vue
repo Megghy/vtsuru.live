@@ -13,7 +13,7 @@ import { GetHeaders } from '@/api/query'
 import type { VoiceOption } from '@/apps/open-live/voice-providers'
 import { MimoVoiceProvider, type MimoCustomVoiceInfo } from '@/apps/open-live/voice-providers/mimo'
 import { deleteVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
-import { TTS_API_URL } from '@/shared/config'
+import { getTtsApiUrl } from '@/shared/config'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Empty } from '@/shared/ui/empty'
@@ -94,12 +94,12 @@ function editCustomVoice(voice: CustomVoice) {
 async function deleteCustomVoice(id: number) {
   try {
     const headers = Object.fromEntries(GetHeaders())
-    const resp = await fetch(`${TTS_API_URL}mimo/voices/custom/${id}`, {
+    const resp = await fetch(`${getTtsApiUrl()}mimo/voices/custom/${id}`, {
       method: 'DELETE',
       headers,
     })
     const data = await resp.json().catch(() => null)
-    if (data?.code === 200) {
+    if (resp.ok && data?.code === 200) {
       customVoices.value = customVoices.value.filter((v) => v.id !== id)
       if (settings.value.providers.mimo.mimoVoice === `custom:${id}`) {
         settings.value.providers.mimo.mimoVoice = '冰糖'

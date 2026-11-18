@@ -6,7 +6,7 @@ import TextOutline from '@vicons/ionicons5/es/TextOutline'
 import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
@@ -61,6 +61,13 @@ onBgChange((files) => {
   if (bg.imageUrl) URL.revokeObjectURL(bg.imageUrl)
   bg.imageUrl = URL.createObjectURL(files[0])
   bg.type = 'image'
+})
+
+onUnmounted(() => {
+  if (bg.imageUrl) {
+    URL.revokeObjectURL(bg.imageUrl)
+    bg.imageUrl = null
+  }
 })
 
 const { open: openImgPicker, onChange: onImgChange } = useFileDialog({ accept: 'image/*', multiple: false })

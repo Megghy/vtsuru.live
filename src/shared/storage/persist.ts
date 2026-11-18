@@ -1,7 +1,7 @@
 import type { RemovableRef, StorageLikeAsync, UseStorageAsyncOptions } from '@vueuse/core'
 import { useStorageAsync } from '@vueuse/core'
 import { createStore, del, entries as idbEntries, get, set } from 'idb-keyval'
-import { computed, ref, toValue, watch, type Ref } from 'vue'
+import { computed, effectScope, ref, toValue, watch, type Ref } from 'vue'
 
 import { PERSIST_LEGACY_KEY_MAP } from '@/shared/storage/persistKeys'
 
@@ -261,39 +261,23 @@ type PersistKey = string | Ref<string> | (() => string)
 
 const sharedRefCache = new Map<string, RemovableRef<any>>()
 const sharedReadyCache = new Map<string, Promise<any>>()
+// 静态持久化 key 缓存实例脱离调用方组件 scope，防止首个挂载组件卸载后停止写入底层存储
+const sharedPersistScope = effectScope(true)
 
-export function usePersistedStorage<T>(
+function createPersistedBinding<T>(
   key: PersistKey,
   initialValue: T,
   options?: UseStorageAsyncOptions<T>,
+  staticCanonicalKey?: string,
 ): RemovableRef<T> {
-  const keyValue = toValue(key)
-  const isStaticKey = typeof key === 'string'
-
-  if (isStaticKey) {
-    const canonicalKey = canonicalizePersistKey(keyValue)
-    const cached = sharedRefCache.get(canonicalKey)
-    if (cached) {
-      if (options?.onReady) {
-        const readyPromise = sharedReadyCache.get(canonicalKey)
-        if (readyPromise) {
-          void readyPromise.then((val) => options.onReady?.(val))
-        } else {
-          options.onReady(cached.value)
-        }
-      }
-      return cached as RemovableRef<T>
-    }
-  }
-
   const canonicalKey = computed(() => canonicalizePersistKey(toValue(key)))
 
   let resolveReady: (val: any) => void
   const readyPromise = new Promise<any>((resolve) => {
     resolveReady = resolve
   })
-  if (isStaticKey) {
-    sharedReadyCache.set(canonicalizePersistKey(keyValue), readyPromise)
+  if (staticCanonicalKey) {
+    sharedReadyCache.set(staticCanonicalKey, readyPromise)
   }
 
   const mergeDefaults =
@@ -361,11 +345,45 @@ export function usePersistedStorage<T>(
     return persistedAsyncStorage.removeItem(canonicalKey.value)
   }
 
-  if (isStaticKey) {
-    sharedRefCache.set(canonicalizePersistKey(keyValue), state)
+  if (staticCanonicalKey) {
+    sharedRefCache.set(staticCanonicalKey, state)
   }
 
   return state
+}
+
+export function usePersistedStorage<T>(
+  key: PersistKey,
+  initialValue: T,
+  options?: UseStorageAsyncOptions<T>,
+): RemovableRef<T> {
+  const isStaticKey = typeof key === 'string'
+
+  if (isStaticKey) {
+    const canonicalStaticKey = canonicalizePersistKey(key)
+    const cached = sharedRefCache.get(canonicalStaticKey)
+    if (cached) {
+      if (options?.onReady) {
+        const readyPromise = sharedReadyCache.get(canonicalStaticKey)
+        if (readyPromise) {
+          void readyPromise.then((val) => options.onReady?.(val))
+        } else {
+          options.onReady(cached.value)
+        }
+      }
+      return cached as RemovableRef<T>
+    }
+
+    const created = sharedPersistScope.run(() =>
+      createPersistedBinding(key, initialValue, options, canonicalStaticKey),
+    )
+    if (!created) {
+      throw new Error(`[persist] 无法在持久化作用域中创建 key: ${canonicalStaticKey}`)
+    }
+    return created
+  }
+
+  return createPersistedBinding(key, initialValue, options)
 }
 
 export function whenPersistedReady<T>(storage: RemovableRef<T>): Promise<T> {

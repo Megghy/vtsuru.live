@@ -6,7 +6,7 @@ import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
 import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import Subtract24Regular from '@vicons/fluent/es/Subtract24Regular'
 import { useClipboard } from '@vueuse/core'
-import { computed, onActivated, onDeactivated, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
@@ -147,6 +147,7 @@ function deactivateKeyboard() {
 
 onActivated(activateKeyboard)
 onDeactivated(deactivateKeyboard)
+onUnmounted(deactivateKeyboard)
 activateKeyboard()
 </script>
 

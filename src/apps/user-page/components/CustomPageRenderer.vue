@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, defineAsyncComponent, watch } from 'vue'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
 
-import CustomHtmlBlock from '../block/blocks/CustomHtmlBlock.vue'
 import type { CustomHtmlProps } from '../block/customHtmlContract'
 import { validateCustomHtmlConfig } from '../block/customHtmlValidation'
 import { reportPublicPageError } from '../runtime/observability'
 import type { BiliProfile } from '../types'
+
+const CustomHtmlBlock = defineAsyncComponent(() => import('../block/blocks/CustomHtmlBlock.vue'))
 
 const props = defineProps<{
   config?: CustomHtmlProps

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { sanitizeRichText } from '../richTextSanitizer'
+import { sanitizeForumHtml, sanitizeRichText } from '../richTextSanitizer'
 
 describe('sanitizeRichText', () => {
   it('保留允许的排版内容并规范链接', () => {
@@ -18,11 +18,11 @@ describe('sanitizeRichText', () => {
     expect(html).toBe('<p>ok</p><a>bad</a>')
   })
 
-  it('移除危险图片并规范合法图片属性', () => {
+  it('移除危险图片并规范合法图片属性（含 no-referrer）', () => {
     const html = sanitizeRichText(
       '<img src="data:text/html;base64,WA=="><img src="/api/file/1" alt="封面" onerror="alert(1)">',
     )
-    expect(html).toBe('<img src="/api/file/1" alt="封面" loading="lazy" decoding="async">')
+    expect(html).toBe('<img src="/api/file/1" alt="封面" loading="lazy" decoding="async" referrerpolicy="no-referrer">')
   })
 
   it('只保留严格允许的内联样式', () => {
@@ -32,10 +32,26 @@ describe('sanitizeRichText', () => {
     expect(html).toBe('<p style="color:#fff;line-height:1.5">ok</p>')
   })
 
-  it('不会通过编码或协议相对地址绕过 URL 规则', () => {
+  it('不会通过编码、反斜杠或协议相对地址绕过 URL 规则', () => {
     const html = sanitizeRichText(
-      '<a href="//evil.test">a</a><a href="java\nscript:alert(1)">b</a><img src="//evil.test/x.png">',
+      '<a href="//evil.test">a</a><a href="java\nscript:alert(1)">b</a><a href="\\\\evil.com">c</a><a href="/\\evil.com">d</a><img src="//evil.test/x.png"><img src="\\\\evil.com/x.png">',
     )
-    expect(html).toBe('<a>a</a><a>b</a>')
+    expect(html).toBe('<a>a</a><a>b</a><a>c</a><a>d</a>')
+  })
+})
+
+describe('sanitizeForumHtml', () => {
+  it('拦截论坛 XSS 载荷同时保留安全排版与表格', () => {
+    const html = sanitizeForumHtml(
+      '<script>alert(1)</script><img src="x" onerror="alert(1)"><iframe src="https://evil.test"></iframe><a href="javascript:alert(1)">x</a><a href="\\\\evil.com">y</a><table><tr><td colspan="2">ok</td></tr></table><img src="https://cdn.example.com/a.png" alt="图">',
+    )
+    expect(html).not.toContain('<script')
+    expect(html).not.toContain('onerror')
+    expect(html).not.toContain('<iframe')
+    expect(html).not.toContain('javascript:')
+    expect(html).not.toContain('evil.com')
+    expect(html).toContain('<table><tbody><tr><td colspan="2">ok</td></tr></tbody></table>')
+    expect(html).toContain('src="https://cdn.example.com/a.png"')
+    expect(html).toContain('referrerpolicy="no-referrer"')
   })
 })

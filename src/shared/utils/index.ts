@@ -10,7 +10,7 @@ export { toast } from 'vue-sonner'
 import { ThemeType } from '@/api/client-types'
 import type { ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
-import { VTSURU_API_URL } from '@/shared/config'
+import { getVtsuruApiUrl } from '@/shared/config'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
 import FiveSingIcon from '@/svgs/fivesing.svg'
@@ -248,11 +248,11 @@ export function downloadImage(imageSrc: string, filename: string) {
 
 export function getUserAvatarUrl(userId: number | undefined | null, size = 64) {
   if (!userId) return ''
-  return `${VTSURU_API_URL}user-face/${userId}?size=${size}`
+  return `${getVtsuruApiUrl()}user-face/${userId}?size=${size}`
 }
 
 export function getOUIdAvatarUrl(ouid: string) {
-  return `${VTSURU_API_URL}face/${ouid}`
+  return `${getVtsuruApiUrl()}face/${ouid}`
 }
 
 export class GuidUtils {

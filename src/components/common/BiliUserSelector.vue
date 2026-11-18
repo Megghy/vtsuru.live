@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import { VTSURU_API_URL } from '@/shared/config'
+import { getVtsuruApiUrl } from '@/shared/config'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Spin } from '@/shared/ui/spin'
@@ -58,7 +58,8 @@ watch(
 async function loadUserInfo(uid: number, signal: AbortSignal) {
   loading.value = true
   try {
-    const response = await fetch(`${VTSURU_API_URL}bili-user-info/${uid}`, { signal })
+    const response = await fetch(`${getVtsuruApiUrl()}bili-user-info/${uid}`, { signal })
+    if (!response.ok) throw new Error(`HTTP ${response.status}`)
     const data: BiliApiResponse = await response.json()
     if (signal.aborted) return
     if (data.code !== 0 || !data.data?.card) return

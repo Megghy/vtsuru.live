@@ -1,6 +1,7 @@
 import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
+import { onScopeDispose } from 'vue'
 
 import type { EventModel } from '@/api/client-types'
 import { EventDataTypes, GuardLevel } from '@/api/generated/model'
@@ -281,8 +282,14 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     { deep: true, immediate: true },
   )
 
+  let lastOnlineRefreshAt = 0
+
   function refreshOnlineCount() {
-    const cutoff = Date.now() - ONLINE_THRESHOLD_MS
+    const now = Date.now()
+    if (now - lastOnlineRefreshAt < 1000) return
+    lastOnlineRefreshAt = now
+
+    const cutoff = now - ONLINE_THRESHOLD_MS
     for (const [key, time] of activeUsers.entries()) {
       if (time < cutoff) activeUsers.delete(key)
     }
@@ -338,90 +345,118 @@ export const useDanmakuWindow = defineStore('danmakuWindow', () => {
     danmakuWindow.value?.setPosition(new PhysicalPosition(danmakuWindowSetting.value.x, danmakuWindowSetting.value.y))
   }
   let isInited = false
+  let initPromise: Promise<void> | null = null
+  let _moveDebounceTimer: ReturnType<typeof setTimeout> | null = null
+  const unlistenHandles: Array<() => void> = []
+
+  onScopeDispose(() => {
+    for (const fn of unlistenHandles) fn()
+    unlistenHandles.length = 0
+    if (_moveDebounceTimer) {
+      clearTimeout(_moveDebounceTimer)
+      _moveDebounceTimer = null
+    }
+    bc?.close()
+    bc = undefined
+    isInited = false
+    initPromise = null
+  })
 
   async function init() {
     if (isInited) return
-    danmakuWindow.value = (await getAllWebviewWindows()).find((win) => win.label === 'danmaku-window')
-    if (!danmakuWindow.value) {
-      window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。')
-      return
-    }
-    console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value)
-    // WebView2 默认底色不透明, CSS 全透明时会露出黑底, 需显式清空窗口与 webview 背景
-    await applyTransparentWindowBackground(danmakuWindow.value)
-
-    danmakuWindow.value.onCloseRequested((event) => {
-      event.preventDefault() // 阻止默认关闭行为
-      closeWindow()
-      console.log('弹幕窗口关闭')
-    })
-    danmakuWindow.value.onMoved(({ payload: position }) => {
-      danmakuWindowSetting.value.x = position.x
-      danmakuWindowSetting.value.y = position.y
-    })
-
-    bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL)
-    bc.onmessage = (event: MessageEvent<DanmakuWindowBCData>) => {
-      if (event.data.type === 'window-ready') {
-        console.log(`[danmaku-window] 窗口已就绪`)
-        postBroadcastMessage(bc, {
-          type: 'update-setting',
-          data: danmakuWindowSetting.value,
-        } satisfies DanmakuWindowBCData)
-        postBroadcastMessage(bc, {
-          type: 'live-stats',
-          data: { ...liveStats.value },
-        } satisfies DanmakuWindowBCData)
-      } else if (event.data.type === 'toggle-interactive') {
-        danmakuWindowSetting.value.interactive = !danmakuWindowSetting.value.interactive
-        console.log(`[danmaku-window] 鼠标穿透已切换为: ${danmakuWindowSetting.value.interactive}`)
+    if (initPromise) return initPromise
+    initPromise = (async () => {
+      danmakuWindow.value = (await getAllWebviewWindows()).find((win) => win.label === 'danmaku-window')
+      if (!danmakuWindow.value) {
+        window.$message.error('弹幕窗口不存在，请先打开弹幕窗口。')
+        return
       }
-    }
-    postBroadcastMessage(bc, { type: 'window-ready' } satisfies DanmakuWindowBCData)
-    postBroadcastMessage(bc, {
-      type: 'update-setting',
-      data: danmakuWindowSetting.value,
-    } satisfies DanmakuWindowBCData)
-    postBroadcastMessage(bc, {
-      type: 'live-stats',
-      data: { ...liveStats.value },
-    } satisfies DanmakuWindowBCData)
+      console.log('打开弹幕窗口', danmakuWindow.value.label, danmakuWindowSetting.value)
+      // WebView2 默认底色不透明, CSS 全透明时会露出黑底, 需显式清空窗口与 webview 背景
+      await applyTransparentWindowBackground(danmakuWindow.value)
 
-    postBroadcastMessage(bc, {
-      type: 'danmaku',
-      data: {
-        type: EventDataTypes.Message,
-        uname: '系统',
-        uid: 0,
-        msg: '弹幕窗口已打开',
-      } as EventModel,
-    } satisfies DanmakuWindowBCData)
+      unlistenHandles.push(
+        await danmakuWindow.value.onCloseRequested((event) => {
+          event.preventDefault() // 阻止默认关闭行为
+          closeWindow()
+          console.log('弹幕窗口关闭')
+        }),
+        await danmakuWindow.value.onMoved(({ payload: position }) => {
+          if (_moveDebounceTimer) clearTimeout(_moveDebounceTimer)
+          _moveDebounceTimer = setTimeout(() => {
+            _moveDebounceTimer = null
+            danmakuWindowSetting.value.x = position.x
+            danmakuWindowSetting.value.y = position.y
+          }, 300)
+        }),
+      )
 
-    danmakuClient.onEvent('danmaku', (event) => onGetDanmakus(event))
-    danmakuClient.onEvent('gift', (event) => onGetDanmakus(event))
-    danmakuClient.onEvent('sc', (event) => onGetDanmakus(event))
-    danmakuClient.onEvent('guard', (event) => onGetDanmakus(event))
-    danmakuClient.onEvent('enter', (event) => onGetDanmakus(event))
-    danmakuClient.onEvent('scDel', (event) => onGetDanmakus(event))
-    danmakuClient.onEvent('like', (event) => onGetDanmakus(event))
-
-    watch(
-      () => danmakuWindowSetting,
-      async (newValue) => {
-        if (danmakuWindow.value) {
+      bc = new BroadcastChannel(DANMAKU_WINDOW_BROADCAST_CHANNEL)
+      bc.onmessage = (event: MessageEvent<DanmakuWindowBCData>) => {
+        if (event.data.type === 'window-ready') {
+          console.log(`[danmaku-window] 窗口已就绪`)
           postBroadcastMessage(bc, {
             type: 'update-setting',
-            data: newValue.value,
+            data: danmakuWindowSetting.value,
           } satisfies DanmakuWindowBCData)
-          await checkAndUseSetting(newValue.value)
+          postBroadcastMessage(bc, {
+            type: 'live-stats',
+            data: { ...liveStats.value },
+          } satisfies DanmakuWindowBCData)
+        } else if (event.data.type === 'toggle-interactive') {
+          danmakuWindowSetting.value.interactive = !danmakuWindowSetting.value.interactive
+          console.log(`[danmaku-window] 鼠标穿透已切换为: ${danmakuWindowSetting.value.interactive}`)
         }
-      },
-      { deep: true },
-    )
+      }
+      postBroadcastMessage(bc, { type: 'window-ready' } satisfies DanmakuWindowBCData)
+      postBroadcastMessage(bc, {
+        type: 'update-setting',
+        data: danmakuWindowSetting.value,
+      } satisfies DanmakuWindowBCData)
+      postBroadcastMessage(bc, {
+        type: 'live-stats',
+        data: { ...liveStats.value },
+      } satisfies DanmakuWindowBCData)
 
-    console.log('[danmaku-window] 初始化完成')
+      postBroadcastMessage(bc, {
+        type: 'danmaku',
+        data: {
+          type: EventDataTypes.Message,
+          uname: '系统',
+          uid: 0,
+          msg: '弹幕窗口已打开',
+        } as EventModel,
+      } satisfies DanmakuWindowBCData)
 
-    isInited = true
+      const onEventHandler = (event: EventModel) => onGetDanmakus(event)
+      const listenedEvents = ['danmaku', 'gift', 'sc', 'guard', 'enter', 'scDel', 'like'] as const
+      for (const evt of listenedEvents) {
+        danmakuClient.onEvent(evt, onEventHandler)
+        unlistenHandles.push(() => danmakuClient.offEvent(evt, onEventHandler))
+      }
+
+      const stopSettingsWatch = watch(
+        () => danmakuWindowSetting,
+        async (newValue) => {
+          if (danmakuWindow.value) {
+            postBroadcastMessage(bc, {
+              type: 'update-setting',
+              data: newValue.value,
+            } satisfies DanmakuWindowBCData)
+            await checkAndUseSetting(newValue.value)
+          }
+        },
+        { deep: true },
+      )
+      unlistenHandles.push(stopSettingsWatch)
+
+      console.log('[danmaku-window] 初始化完成')
+
+      isInited = true
+    })().finally(() => {
+      initPromise = null
+    })
+    return initPromise
   }
   async function checkAndUseSetting(setting: DanmakuWindowSettings) {
     if (setting.alwaysOnTop) {

@@ -88,6 +88,10 @@ const shareModalVisible = ref(false)
 const editModalVisible = ref(false)
 const previewModalVisible = ref(false)
 const previewBvid = ref('')
+const safePreviewBvid = computed(() => {
+  const trimmed = previewBvid.value.trim()
+  return /^BV[0-9A-Za-z]{10}$/.test(trimmed) ? trimmed : ''
+})
 const previewTitle = ref('')
 
 const deleteModalVisible = ref(false)
@@ -951,13 +955,15 @@ function openVideoInBili(bvid: string) {
 
         <div class="w-full aspect-video bg-black rounded-lg overflow-hidden my-2">
           <iframe
-            v-if="previewModalVisible && previewBvid"
-            :src="`https://player.bilibili.com/player.html?bvid=${previewBvid}&page=1&as_wide=1&high_quality=1&danmaku=0&autoplay=1`"
+            v-if="previewModalVisible && safePreviewBvid"
+            :src="`https://player.bilibili.com/player.html?bvid=${encodeURIComponent(safePreviewBvid)}&page=1&as_wide=1&high_quality=1&danmaku=0&autoplay=1`"
             scrolling="no"
             border="0"
             frameborder="no"
             framespacing="0"
             allowfullscreen="true"
+            referrerpolicy="no-referrer"
+            sandbox="allow-scripts allow-same-origin allow-popups"
             class="w-full h-full"
           />
         </div>

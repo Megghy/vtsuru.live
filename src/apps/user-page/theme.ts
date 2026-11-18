@@ -1,5 +1,5 @@
-import type { Rgb } from 'culori'
-import { formatRgb, interpolate, wcagContrast, wcagLuminance } from 'culori'
+import type { Rgb } from '@/shared/config/theme/culori'
+import { formatRgb, interpolate, wcagContrast, wcagLuminance } from '@/shared/config/theme/culori'
 
 import { compositeOpaque, ensureTextContrast, parseRgb, resolveOpaqueColor } from '@/shared/config/theme/contrast'
 

@@ -89,4 +89,48 @@ describe('account Self and GetSelfAccount token flow', () => {
       expect(cookie.value?.cookie).toBe('new-jwt-cookie-token')
     })
   })
+
+  it('并发调用 GetSelfAccount 时按 token 去重为单次请求', async () => {
+    let resolveSelf!: (value: any) => void
+    mocks.postApiAccountSelf.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveSelf = resolve
+      }),
+    )
+    mocks.postApiAccountRefreshToken.mockResolvedValue({ code: 200, message: 'ok', data: 't' })
+
+    const p1 = GetSelfAccount('dedup-token')
+    const p2 = GetSelfAccount('dedup-token')
+    expect(mocks.postApiAccountSelf).toHaveBeenCalledTimes(1)
+
+    resolveSelf({ code: 200, message: 'ok', data: { id: 303, name: 'Carol', settings: {} } })
+    const [r1, r2] = await Promise.all([p1, p2])
+    expect(r1?.id).toBe(303)
+    expect(r2?.id).toBe(303)
+  })
+
+  it('显式拉取采用服务端最新 settings，轮询 preserveLocalSettings 保留本地编辑态', async () => {
+    cookie.value = { cookie: 'jwt', refreshDate: Date.now() }
+    ACCOUNT.value = {
+      id: 404,
+      name: 'Dave',
+      settings: { enableFunctions: ['Point'] },
+    } as unknown as typeof ACCOUNT.value
+
+    mocks.postApiAccountSelf.mockResolvedValueOnce({
+      code: 200,
+      message: 'ok',
+      data: { id: 404, name: 'Dave', settings: { enableFunctions: ['SongRequest'] } },
+    })
+    await GetSelfAccount(undefined, { preserveLocalSettings: true })
+    expect(ACCOUNT.value.settings.enableFunctions).toEqual(['Point'])
+
+    mocks.postApiAccountSelf.mockResolvedValueOnce({
+      code: 200,
+      message: 'ok',
+      data: { id: 404, name: 'Dave', settings: { enableFunctions: ['SongRequest'] } },
+    })
+    await GetSelfAccount()
+    expect(ACCOUNT.value.settings.enableFunctions).toEqual(['SongRequest'])
+  })
 })

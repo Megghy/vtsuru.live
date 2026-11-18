@@ -95,6 +95,18 @@ describe('evaluateTemplateExpressions', () => {
     const result = evaluateTemplateExpressions('Hi {{user.name}}, you said: {{js: message.toUpperCase()}}', ctx)
     expect(result).toBe('Hi Carol, you said: HELLO')
   })
+
+  it('does not re-evaluate js directives injected via user variables (anti-SSTI)', () => {
+    const target = globalThis as Record<string, unknown>
+    delete target.__pwned
+    const ctx = makeContext({
+      user: { name: '{{js-run: globalThis.__pwned = true}}', uid: 1, guardLevel: 0 },
+      message: '{{js: 1 + 1}}',
+    })
+    const result = evaluateTemplateExpressions('收到 {{user.name}}: {{message}} ({{js: 2 + 3}})', ctx)
+    expect(result).toBe('收到 {{js-run: globalThis.__pwned = true}}: {{js: 1 + 1}} (5)')
+    expect(target.__pwned).toBeUndefined()
+  })
 })
 
 describe('extractJsExpressions', () => {

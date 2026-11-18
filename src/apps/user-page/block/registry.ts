@@ -28,9 +28,9 @@ import StorefrontOutline from '@vicons/ionicons5/es/StorefrontOutline'
 import TextOutline from '@vicons/ionicons5/es/TextOutline'
 import TimerOutline from '@vicons/ionicons5/es/TimerOutline'
 import VideocamOutline from '@vicons/ionicons5/es/VideocamOutline'
-import type { AsyncComponentLoader, Component } from 'vue'
-import { defineAsyncComponent, h } from 'vue'
+import type { Component } from 'vue'
 
+import { BLOCK_COMPONENTS } from './blockComponents'
 import { SHARED_BLOCK_DEFINITIONS } from './definitions'
 import type { SharedBlockDefinition } from './definitions'
 import { BLOCK_TYPES } from './schemaTypes'
@@ -92,84 +92,11 @@ const ICONS: Record<BlockType, Component> = {
   supporter: HeartOutline,
 }
 
-const VIEWERS: Record<BlockType, AsyncComponentLoader> = {
-  profile: async () => import('./blocks/ProfileBlock.vue'),
-  layout: async () => import('./blocks/LayoutBlock.vue'),
-  heading: async () => import('./blocks/HeadingBlock.vue'),
-  text: async () => import('./blocks/TextBlock.vue'),
-  richText: async () => import('./blocks/RichTextBlock.vue'),
-  customHtml: async () => import('./blocks/CustomHtmlBlock.vue'),
-  alert: async () => import('./blocks/AlertBlock.vue'),
-  links: async () => import('./blocks/LinksBlock.vue'),
-  button: async () => import('./blocks/SingleButtonBlock.vue'),
-  buttons: async () => import('./blocks/ButtonsBlock.vue'),
-  image: async () => import('./blocks/ImageBlock.vue'),
-  imageGallery: async () => import('./blocks/ImageGalleryBlock.vue'),
-  qrcode: async () => import('./blocks/QrCodeBlock.vue'),
-  featureNav: async () => import('./blocks/FeatureNavBlock.vue'),
-  songList: async () => import('./blocks/SongListBlock.vue'),
-  cardList: async () => import('./blocks/CardListBlock.vue'),
-  checkInRanking: async () => import('./blocks/CheckInRankingBlock.vue'),
-  featuredGoods: async () => import('./blocks/FeaturedGoodsBlock.vue'),
-  videoCollect: async () => import('./blocks/VideoCollectBlock.vue'),
-  sectionNav: async () => import('./blocks/SectionNavBlock.vue'),
-  nowPlaying: async () => import('./blocks/NowPlayingBlock.vue'),
-  embed: async () => import('./blocks/EmbedBlock.vue'),
-  divider: async () => import('./blocks/DividerBlock.vue'),
-  spacer: async () => import('./blocks/SpacerBlock.vue'),
-  footer: async () => import('./blocks/FooterBlock.vue'),
-  liveStatus: async () => import('./blocks/LiveStatusBlock.vue'),
-  streamSchedule: async () => import('./blocks/StreamScheduleBlock.vue'),
-  biliInfo: async () => import('./blocks/BiliInfoBlock.vue'),
-  videoList: async () => import('./blocks/VideoListBlock.vue'),
-  socialLinks: async () => import('./blocks/SocialLinksBlock.vue'),
-  musicPlayer: async () => import('./blocks/MusicPlayerBlock.vue'),
-  tags: async () => import('./blocks/TagsBlock.vue'),
-  milestone: async () => import('./blocks/MilestoneBlock.vue'),
-  faq: async () => import('./blocks/FAQBlock.vue'),
-  quote: async () => import('./blocks/QuoteBlock.vue'),
-  marquee: async () => import('./blocks/MarqueeBlock.vue'),
-  countdown: async () => import('./blocks/CountdownBlock.vue'),
-  feedback: async () => import('./blocks/FeedbackBlock.vue'),
-  supporter: async () => import('./blocks/SupporterBlock.vue'),
-}
-
-const AsyncBlockLoading = () =>
-  h(
-    'div',
-    {
-      class: 'block-load-state',
-      style: 'min-height:48px;display:grid;place-items:center;color:var(--muted-foreground)',
-    },
-    '正在加载区块',
-  )
-
-const AsyncBlockError = () =>
-  h(
-    'div',
-    {
-      class: 'block-load-state block-load-state--error',
-      role: 'alert',
-      style: 'min-height:48px;display:grid;place-items:center;color:var(--vtsuru-error)',
-    },
-    '区块加载失败',
-  )
-
-function createViewer(loader: AsyncComponentLoader): Component {
-  return defineAsyncComponent({
-    loader,
-    loadingComponent: AsyncBlockLoading,
-    errorComponent: AsyncBlockError,
-    delay: 120,
-    timeout: 15000,
-  })
-}
-
 export const BLOCK_DEFINITIONS = SHARED_BLOCK_DEFINITIONS.map((definition): BlockDefinition => ({
   ...definition,
   icon: ICONS[definition.type],
   editor: { kind: 'shared-properties-form' },
-  viewer: createViewer(VIEWERS[definition.type]),
+  viewer: BLOCK_COMPONENTS[definition.type],
 }))
 
 export const BLOCK_DEFINITION_MAP = Object.fromEntries(
@@ -184,9 +111,7 @@ export const BLOCK_LIBRARY: BlockLibraryItem[] = BLOCK_DEFINITIONS.map(({ type, 
   keywords,
 }))
 
-export const BLOCK_COMPONENTS = Object.fromEntries(
-  BLOCK_DEFINITIONS.map((definition) => [definition.type, definition.viewer]),
-) as Record<BlockType, Component>
+export { BLOCK_COMPONENTS }
 
 export function getBlockLabel(type: string): string {
   return BLOCK_DEFINITION_MAP[type as BlockType]?.label ?? `不支持的区块 (${type})`

@@ -1,7 +1,16 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["src/app/main.ts"],
-  "project": ["src/**/*.{ts,tsx,js,jsx,vue}", "env.d.ts", "default.d.ts", "vite.config.mts", "eslint.config.mjs"],
+  "entry": ["scripts/*.mjs"],
+  "project": ["src/**/*.{ts,tsx,js,jsx,vue}", "scripts/*.mjs"],
+  "ignore": ["src/api/generated/**"],
+  "ignoreDependencies": [
+    "@playwright/test",
+    "@unocss/preset-wind3",
+    "dayjs",
+    "playwright",
+    "playwright-core",
+    "shadcn-vue"
+  ],
   "rules": {
     "exports": "off",
     "types": "off",

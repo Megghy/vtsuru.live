@@ -9,6 +9,17 @@ vi.mock('@/api/account', () => ({
   useAccount: () => mockAccount,
 }))
 
+const mockRoute = vi.hoisted(() => ({ query: {} as Record<string, string> }))
+vi.mock('@/app/router', () => ({
+  default: {
+    currentRoute: {
+      get value() {
+        return mockRoute
+      },
+    },
+  },
+}))
+
 const mockRealtimeState = {
   subscribed: [] as string[],
   published: [] as Array<{ topic: string; event: string; payload: unknown }>,
@@ -43,7 +54,7 @@ describe('useOBSNotification (RealtimeBus Topic)', () => {
       success: vi.fn(),
       error: vi.fn(),
     } as any
-    window.$route = { query: {} } as any
+    mockRoute.query = {}
   })
 
   afterEach(() => {
@@ -51,7 +62,7 @@ describe('useOBSNotification (RealtimeBus Topic)', () => {
   })
 
   it('subscribes to obs:notify topic using route id', async () => {
-    window.$route = { query: { id: '99' } } as any
+    mockRoute.query = { id: '99' }
     const store = useOBSNotification()
     await store.init(['live-request'])
 
@@ -59,7 +70,7 @@ describe('useOBSNotification (RealtimeBus Topic)', () => {
   })
 
   it('displays message on receiving ObsNotification event', async () => {
-    window.$route = { query: { id: '99' } } as any
+    mockRoute.query = { id: '99' }
     const store = useOBSNotification()
     await store.init(['live-request'])
 
@@ -81,7 +92,7 @@ describe('useOBSNotification (RealtimeBus Topic)', () => {
   })
 
   it('filters out notifications from non-matching sources', async () => {
-    window.$route = { query: { id: '99' } } as any
+    mockRoute.query = { id: '99' }
     const store = useOBSNotification()
     await store.init(['music-request'])
 

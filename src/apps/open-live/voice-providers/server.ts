@@ -1,4 +1,4 @@
-import { TTS_API_URL } from '@/shared/config'
+import { getTtsApiUrl } from '@/shared/config'
 
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
@@ -41,7 +41,7 @@ export class ServerVoiceProvider implements VoiceProvider {
   stop(): void {}
 
   private async request(path: string, options?: RequestInit): Promise<Response> {
-    const response = await fetch(`${TTS_API_URL}${path}`, { ...options, signal: AbortSignal.timeout(65_000) })
+    const response = await fetch(`${getTtsApiUrl()}${path}`, { ...options, signal: AbortSignal.timeout(65_000) })
     if (!response.ok) {
       const error = await response.json().catch(() => null)
       throw new Error(error?.details || error?.error || `${this.name} 请求失败: ${response.status}`)

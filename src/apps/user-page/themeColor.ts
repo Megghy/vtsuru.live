@@ -1,4 +1,4 @@
-import { formatHex, formatHex8 } from 'culori'
+import { formatHex, formatHex8 } from '@/shared/config/theme/culori'
 
 import { parseRgb } from '@/shared/config/theme/contrast'
 

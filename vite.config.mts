@@ -1,6 +1,5 @@
 // vite.config.ts
 
-import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import UnoCSS from 'unocss/vite'
@@ -38,6 +37,7 @@ export default defineConfig({
   plugins: [
     customHtmlSandboxLibsPlugin(),
     checker({
+      enableBuild: false,
       vueTsc: {
         tsconfigPath: 'tsconfig.json',
         // 并行模式减少检查时间
@@ -69,11 +69,6 @@ export default defineConfig({
       },
     }),
     vueJsx(),
-    legacy({
-      modernTargets: ['Chrome >= 90'],
-      modernPolyfills: true,
-      renderLegacyChunks: false,
-    }),
     svgLoader({
       svgoConfig: {
         plugins: [
@@ -92,7 +87,6 @@ export default defineConfig({
           'removeUnusedNS',
           'removeEmptyText',
           'removeEmptyContainers',
-          'removeViewBox',
           'cleanupIds',
         ],
       },
@@ -129,6 +123,7 @@ export default defineConfig({
     format: 'es',
   },
   build: {
+    target: ['chrome90', 'edge90', 'firefox90', 'safari15'],
     manifest: true,
     // 生产环境建议关闭以减少产物体积与网络请求
     sourcemap: false,
@@ -151,17 +146,36 @@ export default defineConfig({
               // 基础运行时 helper 单独归组，避免被 echarts 等重型依赖吸纳导致非图表页反向引入
               name: 'runtime-vendor',
               test: /[\\/]node_modules[\\/](@babel[\\/]runtime|tslib|@swc[\\/]helpers)[\\/]/,
+              priority: -3,
+            },
+            {
+              // 优先级高于 sfc-compiler-vendor，防止编译器组递归吸纳 @vue/shared 导致首屏反向依赖编译器
+              name: 'vue-vendor',
+              test: /[\\/]node_modules[\\/](vue[\\/](dist|index)|@vue[\\/](runtime-core|runtime-dom|reactivity|shared)|vue-router|pinia)[\\/]/,
+              priority: -4,
+            },
+            {
+              // 自定义 HTML CSS 校验/重写与源码编译共享依赖，优先级高于编译器组以避免拉取 compiler-sfc
+              name: 'css-tree-vendor',
+              test: /[\\/]node_modules[\\/](css-tree|mdn-data|source-map-js)[\\/]/,
               priority: -5,
             },
             {
-              name: 'vue-vendor',
-              test: /[\\/]node_modules[\\/](vue|vue-router|pinia)[\\/]/,
-              priority: -10,
+              // 自定义 HTML 编译专用依赖，严禁混入 vue-vendor 污染常规页面首屏
+              name: 'sfc-compiler-vendor',
+              test: /[\\/]node_modules[\\/](@vue[\\/]compiler-\w+|vue[\\/]compiler-sfc|sucrase|@babel[\\/]parser|estree-walker)[\\/]/,
+              priority: -6,
             },
             {
               name: 'ui-vendor',
-              test: /[\\/]node_modules[\\/](@vueuse[\\/](core|integrations)|reka-ui|radix-vue|lucide-vue-next|@lucide[\\/]vue|vue-sonner|class-variance-authority|clsx|tailwind-merge|date-fns)[\\/]/,
+              test: /(?:[\\/]node_modules[\\/](@vueuse[\\/](core|router)|reka-ui|lucide-vue-next|vue-sonner|class-variance-authority|clsx|tailwind-merge|date-fns)[\\/]|[\\/]src[\\/]shared[\\/](ui[\\/](accordion|alert|badge|button|card|checkbox|dialog|dropdown-menu|empty|form-field|input|label|number-field|popover|progress|radio-group|select|separator|sheet|spin|switch|tabs|tag|textarea|toggle-group|tooltip)[\\/]|utils[\\/]cn\.ts|config[\\/]theme[\\/]scope\.ts))/,
               priority: -10,
+            },
+            {
+              // 聚合零碎 @vicons 图标模块，大幅削减静态 HTTP 请求数
+              name: 'icons-vendor',
+              test: /[\\/]node_modules[\\/]@vicons[\\/]/,
+              priority: -15,
             },
             // 精细化切分大体积依赖，提升缓存与首屏体积可控性
             {

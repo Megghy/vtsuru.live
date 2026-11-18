@@ -11,6 +11,7 @@ import {
 } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { getApiVtsuruVersion } from '@/api/generated/vtsuru/vtsuru'
+import router from '@/app/router'
 import { isAutomaticAPIFailover, isTauri, markAPIFailover, setSelectedAPIKey } from '@/shared/config'
 import { setSentryUser } from '@/shared/services/sentry'
 import { persistedGetItemRaw, persistedSetItemRaw } from '@/shared/storage/persist'
@@ -97,7 +98,7 @@ function canInitHyperDX(): boolean {
     (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   )
     return false
-  if (window.$route?.path?.startsWith('/obs')) return false
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/obs')) return false
   // 夸克/UC 的 Observer 实现不完整, HyperDX 点击插桩会炸 takeRecords
   if (/Quark|UCBrowser/i.test(navigator.userAgent)) return false
   if (typeof MutationObserver === 'undefined' || typeof MutationObserver.prototype.takeRecords !== 'function') {
@@ -157,6 +158,16 @@ async function InitOther() {
   await devAutoLogin()
   const routeToken = new URLSearchParams(window.location.search).get('token')?.trim() || undefined
   await GetSelfAccount(routeToken)
+  if (
+    routeToken &&
+    typeof window !== 'undefined' &&
+    !window.location.pathname.startsWith('/obs') &&
+    window.location.pathname !== '/join'
+  ) {
+    const cleanUrl = new URL(window.location.href)
+    cleanUrl.searchParams.delete('token')
+    window.history.replaceState(window.history.state, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash)
+  }
   const account = useAccount()
   const useAuth = useBiliAuth()
   if (account.value.id) {
@@ -203,7 +214,7 @@ function InitVersionCheck() {
           void persistedSetItemRaw('Version', currentVersion)
           console.log(`[vtsuru] 发现新版本: ${currentVersion}`)
 
-          if (window.$route?.meta.forceReload || isTauri() || isObsOverlay()) {
+          if (router.currentRoute.value?.meta?.forceReload || isTauri() || isObsOverlay()) {
             location.reload()
           } else {
             toast.info('发现新的版本更新', {

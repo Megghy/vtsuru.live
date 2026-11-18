@@ -22,8 +22,19 @@ import { useUserNotes } from './userNotes'
 
 const MAX_MESSAGES = 3000
 const MAX_INTERACTIONS = 500
+const MAX_PAID = 2000
+const MAX_TRACKED_KEYS = 10_000
 const FLUSH_MS = 1000
 const RELOAD_COMMAND = '/vt reload'
+
+function addBoundedKey(set: Set<string>, key: string, max = MAX_TRACKED_KEYS) {
+  if (set.has(key)) return
+  if (set.size >= max) {
+    const oldest = set.values().next().value
+    if (oldest !== undefined) set.delete(oldest)
+  }
+  set.add(key)
+}
 
 export interface UserFilter {
   userKey: string
@@ -61,6 +72,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   const pageLoadedAt = Date.now()
   let pendingWrites = new Map<string, DashboardEvent>()
   let flushTimer: ReturnType<typeof setTimeout> | undefined
+  let historyQuerySeq = 0
   let started = false
 
   watch(
@@ -92,7 +104,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     const ids = getDeletedSuperChatIds(model)
     for (const event of paid.value) {
       if (event.type !== EventDataTypes.SC || event.scId === undefined || !ids.has(String(event.scId))) continue
-      deletedKeys.add(event.key)
+      addBoundedKey(deletedKeys, event.key)
       queueWrite({ ...event, deleted: true, read: readKeys.has(event.key) })
     }
   }
@@ -119,7 +131,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
       append(messages, event, MAX_MESSAGES)
       cardGrid.ingest(event, settings.value.card)
     } else if (panel === 'interaction') append(interactions, event, MAX_INTERACTIONS)
-    else append(paid, event)
+    else append(paid, event, MAX_PAID)
     stats.record(event)
     queueWrite(event)
 
@@ -151,12 +163,12 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
       const panel = panelOf(event.type)
       buckets[panel === 'danmaku' || panel === 'interaction' ? panel : 'paid'].push(event)
       known.add(event.key)
-      if (event.read) readKeys.add(event.key)
-      if (event.deleted) deletedKeys.add(event.key)
+      if (event.read) addBoundedKey(readKeys, event.key)
+      if (event.deleted) addBoundedKey(deletedKeys, event.key)
     }
     messages.value = buckets.danmaku.slice(-MAX_MESSAGES)
     interactions.value = buckets.interaction.slice(-MAX_INTERACTIONS)
-    paid.value = buckets.paid
+    paid.value = buckets.paid.slice(-MAX_PAID)
     for (const event of messages.value) cardGrid.ingest(event, settings.value.card)
     markers.value = (await dashboardDB.markers.where('time').aboveOrEqual(since).sortBy('time')).toReversed()
   }
@@ -219,7 +231,10 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
     client.offEvent('all', ingest)
     if (officialTimer) clearInterval(officialTimer)
     officialTimer = undefined
-    if (flushTimer) clearTimeout(flushTimer)
+    if (flushTimer) {
+      clearTimeout(flushTimer)
+      flushTimer = undefined
+    }
     await flushWrites()
   }
 
@@ -243,7 +258,7 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
 
   function setRead(events: DashboardEvent[], read: boolean) {
     for (const event of events) {
-      if (read) readKeys.add(event.key)
+      if (read) addBoundedKey(readKeys, event.key)
       else readKeys.delete(event.key)
       queueWrite({ ...event, read, deleted: deletedKeys.has(event.key) })
     }
@@ -254,14 +269,21 @@ export const useLiveDashboard = defineStore('LiveDashboard', () => {
   }
 
   async function setHistoryRange(range: [number, number] | null) {
+    const seq = ++historyQuerySeq
     historyRange.value = range
     if (!range) {
       historyEvents.value = null
       return
     }
     await flushWrites()
-    historyEvents.value = await dashboardDB.events.where('time').between(range[0], range[1], true, true).sortBy('time')
-    for (const event of historyEvents.value) if (event.read) readKeys.add(event.key)
+    if (seq !== historyQuerySeq) return
+    const loaded = await dashboardDB.events.where('time').between(range[0], range[1], true, true).sortBy('time')
+    if (seq !== historyQuerySeq) return
+    historyEvents.value = loaded
+    for (const event of loaded) {
+      if (event.read) addBoundedKey(readKeys, event.key)
+      if (event.deleted) addBoundedKey(deletedKeys, event.key)
+    }
   }
 
   function filterByUser(event: DashboardEvent, contextKey?: string) {

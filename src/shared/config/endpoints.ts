@@ -1,4 +1,12 @@
-import { BASE_API_URL } from './api'
+import { BASE_API_URL, getApiBaseUrl } from './api'
+
+export function getVtsuruApiUrl(): string {
+  return `${getApiBaseUrl()}vtsuru/`
+}
+
+export function getTtsApiUrl(): string {
+  return `${getApiBaseUrl()}tts/`
+}
 
 export const USER_API_URL = `${BASE_API_URL}user/`
 export const ACCOUNT_API_URL = `${BASE_API_URL}account/`

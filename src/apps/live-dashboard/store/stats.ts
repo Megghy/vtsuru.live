@@ -60,8 +60,9 @@ export function useDashboardStats(paid: ShallowRef<DashboardEvent[]>) {
 
     const key = userKeyOf(event)
     if (key) {
+      const hadKey = activeUsers.has(key)
       activeUsers.set(key, arrivedAt)
-      refreshOnlineUsers()
+      if (!hadKey) onlineCount.value = activeUsers.size
     }
     if (key && !users.has(key)) {
       users.add(key)

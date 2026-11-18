@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import type { DanmakuUserInfo, ResponseSongModel } from '@/api/generated/model'
 import { SongPlatform } from '@/api/generated/model'
 import { usePersistedStorage } from '@/shared/storage/persist'
+import { message } from '@/shared/utils'
 
 export interface WaitMusicInfo {
   from: DanmakuUserInfo
@@ -73,8 +74,6 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
 
     blacklist: [],
   })
-
-  const message = window.$message
 
   /** 记录一条点歌历史 (本地保留最多 200 条) */
   function pushHistory(info: WaitMusicInfo, status: MusicHistoryEntry['status']) {

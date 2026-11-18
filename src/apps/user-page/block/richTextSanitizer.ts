@@ -29,13 +29,39 @@ const ALLOWED_TAGS = [
   'hr',
 ]
 
-function isSafeUrl(value: string, allowFragment: boolean) {
+const FORUM_ALLOWED_TAGS = [
+  ...ALLOWED_TAGS,
+  'sub',
+  'sup',
+  'table',
+  'thead',
+  'tbody',
+  'tfoot',
+  'tr',
+  'th',
+  'td',
+  'caption',
+  'colgroup',
+  'col',
+]
+
+function hasControlOrBackslash(value: string) {
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i)
+    if (code <= 0x1f || code === 0x7f || code === 0x5c) return true
+  }
+  return false
+}
+
+function isSafeUrl(value: string, allowFragment: boolean, allowHttp = false) {
   const url = value.trim()
-  if (!url || url.startsWith('//')) return false
+  // 拒绝控制字符、反斜杠（如 \\evil.com、/\evil.com）和协议相对 URL（//evil.com）
+  if (!url || hasControlOrBackslash(url) || url.startsWith('//')) return false
   if (url.startsWith('/')) return true
   if (allowFragment && (url.startsWith('#') || url.startsWith('?'))) return true
   try {
-    return new URL(url).protocol === 'https:'
+    const parsed = new URL(url)
+    return parsed.protocol === 'https:' || (allowHttp && parsed.protocol === 'http:')
   } catch {
     return !url.includes(':')
   }
@@ -96,11 +122,17 @@ function sanitizeStyle(styleText: string, alignment = '') {
   return [...safe].map(([property, value]) => `${property}:${value}`).join(';')
 }
 
-export function sanitizeRichText(input: string): string {
+interface SanitizePolicy {
+  allowedTags: string[]
+  allowedAttrs: string[]
+  allowHttpUrl: boolean
+}
+
+function sanitizeHtmlWithPolicy(input: string, policy: SanitizePolicy): string {
   if (!input.trim()) return ''
   const fragment = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR: ['href', 'src', 'alt', 'style', 'class'],
+    ALLOWED_TAGS: policy.allowedTags,
+    ALLOWED_ATTR: policy.allowedAttrs,
     ALLOW_DATA_ATTR: false,
     RETURN_DOM_FRAGMENT: true,
   })
@@ -119,7 +151,7 @@ export function sanitizeRichText(input: string): string {
 
     if (element instanceof HTMLAnchorElement) {
       const href = element.getAttribute('href') ?? ''
-      if (!isSafeUrl(href, true)) element.removeAttribute('href')
+      if (!isSafeUrl(href, true, policy.allowHttpUrl)) element.removeAttribute('href')
       if (element.hasAttribute('href')) {
         element.target = '_blank'
         element.rel = 'noopener noreferrer'
@@ -128,16 +160,34 @@ export function sanitizeRichText(input: string): string {
 
     if (element instanceof HTMLImageElement) {
       const src = element.getAttribute('src') ?? ''
-      if (!isSafeUrl(src, false)) {
+      if (!isSafeUrl(src, false, policy.allowHttpUrl)) {
         element.remove()
         return
       }
       element.setAttribute('loading', 'lazy')
       element.setAttribute('decoding', 'async')
+      element.setAttribute('referrerpolicy', 'no-referrer')
     }
   })
 
   const container = document.createElement('div')
   container.append(fragment)
   return container.innerHTML
+}
+
+export function sanitizeRichText(input: string): string {
+  return sanitizeHtmlWithPolicy(input, {
+    allowedTags: ALLOWED_TAGS,
+    allowedAttrs: ['href', 'src', 'alt', 'style', 'class'],
+    allowHttpUrl: false,
+  })
+}
+
+export function sanitizeForumHtml(input?: string | null): string {
+  if (!input) return ''
+  return sanitizeHtmlWithPolicy(input, {
+    allowedTags: FORUM_ALLOWED_TAGS,
+    allowedAttrs: ['href', 'src', 'alt', 'title', 'style', 'class', 'colspan', 'rowspan'],
+    allowHttpUrl: true,
+  })
 }

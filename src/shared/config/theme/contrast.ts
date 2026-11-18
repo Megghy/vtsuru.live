@@ -1,5 +1,5 @@
-import type { Rgb } from 'culori'
-import { converter, formatRgb, interpolate, parse, wcagContrast } from 'culori'
+import type { Rgb } from '@/shared/config/theme/culori'
+import { converter, formatRgb, interpolate, parse, wcagContrast } from '@/shared/config/theme/culori'
 
 const MIN_TEXT_CONTRAST = 4.6
 const toRgb = converter('rgb')

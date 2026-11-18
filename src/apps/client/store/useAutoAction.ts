@@ -1,5 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, onScopeDispose, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account.js'
 import type { EventModel } from '@/api/client-types'
@@ -298,6 +298,17 @@ export const useAutoAction = defineStore('autoAction', () => {
 
   // 初始化与事件监听
   let isInited = false
+  const eventUnlistens: Array<() => void> = []
+
+  onScopeDispose(() => {
+    stopGlobalTimer()
+    stopAllIndividualScheduledActions()
+    for (const unlisten of eventUnlistens) unlisten()
+    eventUnlistens.length = 0
+    isInited = false
+    userEventsRegistered = false
+  })
+
   /**
    * 初始化自动操作系统
    */
@@ -407,12 +418,19 @@ export const useAutoAction = defineStore('autoAction', () => {
       console.warn('[AutoAction] 弹幕客户端未就绪, 延迟注册监听器.')
     }
     try {
-      danmakuClient.onEvent('danmaku', (event) => processEvent(event, TriggerType.DANMAKU))
-      danmakuClient.onEvent('gift', (event) => processEvent(event, TriggerType.GIFT))
-      danmakuClient.onEvent('guard', (event) => processEvent(event, TriggerType.GUARD))
-      danmakuClient.onEvent('sc', (event) => processEvent(event, TriggerType.SUPER_CHAT))
-      danmakuClient.onEvent('enter', (event) => processEvent(event, TriggerType.ENTER))
-      danmakuClient.onEvent('follow', (event) => processEvent(event, TriggerType.FOLLOW))
+      const bindings: Array<[Parameters<typeof danmakuClient.onEvent>[0], TriggerType]> = [
+        ['danmaku', TriggerType.DANMAKU],
+        ['gift', TriggerType.GIFT],
+        ['guard', TriggerType.GUARD],
+        ['sc', TriggerType.SUPER_CHAT],
+        ['enter', TriggerType.ENTER],
+        ['follow', TriggerType.FOLLOW],
+      ]
+      for (const [evt, trigger] of bindings) {
+        const handler = (event: EventModel) => processEvent(event, trigger)
+        danmakuClient.onEvent(evt, handler)
+        eventUnlistens.push(() => danmakuClient.offEvent(evt, handler))
+      }
       console.log('[AutoAction] 事件监听器已注册.')
     } catch (err) {
       console.error('[AutoAction] 注册事件监听器时出错:', err)

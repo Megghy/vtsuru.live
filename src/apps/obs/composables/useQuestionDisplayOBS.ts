@@ -51,6 +51,7 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   let inFlightExpectedVersion: string | undefined
   let pendingForceSnapshot = false
   let pendingExpectedVersion: string | undefined
+  let requestSeq = 0
 
   const isActive = computed(() => (options.active === undefined ? true : toValue(options.active)))
   const isVisible = computed(() => (options.visible === undefined ? true : toValue(options.visible)))
@@ -87,9 +88,9 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
     }
   }
 
-  async function fetchSnapshot(signal: AbortSignal, associatedVersion?: string): Promise<boolean> {
+  async function fetchSnapshot(signal: AbortSignal, associatedVersion: string | undefined, seq: number): Promise<boolean> {
     if (!hasIdentity.value) {
-      state.value = 'unauthorized'
+      if (seq === requestSeq) state.value = 'unauthorized'
       return false
     }
 
@@ -98,6 +99,8 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
       timeoutMs: REQUEST_TIMEOUT_MS,
       retryOnFailover: false,
     } as any)
+
+    if (seq !== requestSeq || signal.aborted) return false
 
     if (response.code !== 200) {
       applyFailure(response.code)
@@ -108,7 +111,7 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
     return true
   }
 
-  async function fetchVersion(signal: AbortSignal): Promise<void> {
+  async function fetchVersion(signal: AbortSignal, seq: number): Promise<void> {
     if (!hasIdentity.value) return
 
     const response = await getApiQaGetHash(identityParams(), {
@@ -116,6 +119,8 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
       timeoutMs: REQUEST_TIMEOUT_MS,
       retryOnFailover: false,
     } as any)
+
+    if (seq !== requestSeq || signal.aborted) return
 
     if (response.code !== 200) {
       applyFailure(response.code)
@@ -131,8 +136,8 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
 
     // 哈希确实发生变化时才拉取全量快照
     if (newHash !== version.value) {
-      const ok = await fetchSnapshot(signal, newHash)
-      if (ok) {
+      const ok = await fetchSnapshot(signal, newHash, seq)
+      if (ok && seq === requestSeq) {
         version.value = newHash
       }
     }
@@ -161,49 +166,65 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
       return requestInFlight
     }
 
+    const seq = ++requestSeq
     const mode = forceSnapshot || !lastUpdatedAt.value ? 'snapshot' : 'version'
+    const controller = new AbortController()
     inFlightMode = mode
     inFlightExpectedVersion = expectedVersion
-    requestController = new AbortController()
-    requestInFlight = (async () => {
+    requestController = controller
+    const currentFlight = (async () => {
       try {
         if (mode === 'snapshot') {
-          const ok = await fetchSnapshot(requestController!.signal, expectedVersion)
-          if (ok && expectedVersion === undefined) {
+          const ok = await fetchSnapshot(controller.signal, expectedVersion, seq)
+          if (ok && expectedVersion === undefined && seq === requestSeq) {
             version.value = ''
           }
         } else {
-          await fetchVersion(requestController!.signal)
+          await fetchVersion(controller.signal, seq)
         }
       } catch (error) {
-        if (!(error instanceof QueryRequestError && error.kind === 'aborted')) {
+        if (seq === requestSeq && !(error instanceof QueryRequestError && error.kind === 'aborted')) {
           applyFailure()
         }
       } finally {
-        requestController = undefined
-        requestInFlight = undefined
-        inFlightMode = undefined
-        inFlightExpectedVersion = undefined
-        if (pendingForceSnapshot && shouldRun.value) {
-          const nextExpectedVersion = pendingExpectedVersion
-          pendingForceSnapshot = false
-          pendingExpectedVersion = undefined
-          void refresh(true, nextExpectedVersion)
-        } else {
-          schedulePoll()
+        if (requestInFlight === currentFlight) {
+          requestController = undefined
+          requestInFlight = undefined
+          inFlightMode = undefined
+          inFlightExpectedVersion = undefined
+        }
+        if (seq === requestSeq) {
+          if (pendingForceSnapshot && shouldRun.value) {
+            const nextExpectedVersion = pendingExpectedVersion
+            pendingForceSnapshot = false
+            pendingExpectedVersion = undefined
+            void refresh(true, nextExpectedVersion)
+          } else {
+            schedulePoll()
+          }
         }
       }
     })()
+    requestInFlight = currentFlight
 
-    return requestInFlight
+    return currentFlight
   }
 
-  function pause() {
-    componentActive.value = false
+  function cancelPendingRequests() {
+    requestSeq++
     pendingForceSnapshot = false
     pendingExpectedVersion = undefined
     window.clearTimeout(pollTimer)
     requestController?.abort()
+    requestController = undefined
+    requestInFlight = undefined
+    inFlightMode = undefined
+    inFlightExpectedVersion = undefined
+  }
+
+  function pause() {
+    componentActive.value = false
+    cancelPendingRequests()
   }
 
   function resume() {
@@ -216,31 +237,24 @@ export function useQuestionDisplayOBS(options: UseQuestionDisplayOBSOptions) {
   onUnmounted(pause)
 
   watch(
-    shouldRun,
-    (running) => {
-      if (running) void refresh(true)
-      else {
-        pendingForceSnapshot = false
-        pendingExpectedVersion = undefined
-        window.clearTimeout(pollTimer)
-        requestController?.abort()
+    [shouldRun, userIdValue, tokenValue],
+    ([running], oldVal) => {
+      const identityChanged = !oldVal || oldVal[1] !== userIdValue.value || oldVal[2] !== tokenValue.value
+      if (identityChanged) {
+        cancelPendingRequests()
+        version.value = ''
+        question.value = undefined
+        setting.value = createDefaultQuestionDisplaySetting()
+        lastUpdatedAt.value = undefined
+        state.value = hasIdentity.value ? 'loading' : 'unauthorized'
+      }
+      if (!running) {
+        cancelPendingRequests()
+      } else {
+        void refresh(true)
       }
     },
-    { flush: 'sync' },
-  )
-
-  watch(
-    [userIdValue, tokenValue],
-    () => {
-      pendingForceSnapshot = false
-      pendingExpectedVersion = undefined
-      version.value = ''
-      question.value = undefined
-      setting.value = createDefaultQuestionDisplaySetting()
-      lastUpdatedAt.value = undefined
-      state.value = hasIdentity.value ? 'loading' : 'unauthorized'
-    },
-    { immediate: true },
+    { flush: 'sync', immediate: true },
   )
 
   return { question, setting, state, lastUpdatedAt, version, refresh, pause, resume }

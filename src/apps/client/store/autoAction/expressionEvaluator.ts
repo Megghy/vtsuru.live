@@ -11,26 +11,82 @@ import type { ExecutionContext } from './types'
 // {{js-run: code block}} - JavaScript代码块 (需要显式return)
 export const JS_EXPRESSION_REGEX = /\{\{\s*(js(?:\+|-run)?):([\s\S]*?)\}\}/g
 
+const SINGLE_PASS_TOKEN_REGEX = /\{\{\s*(?:(js(?:\+|-run)?):([\s\S]*?)|([^}]+))\}\}/g
+
+function resolvePlaceholderPath(
+  match: string,
+  path: string,
+  scopeVariables: Record<string, any>,
+  dataFunctions: Record<string, unknown>,
+): string {
+  try {
+    const parts = path.trim().split('.')
+    let value: any = scopeVariables
+
+    for (const part of parts) {
+      if (value === undefined || value === null) return match
+      if (part === '__proto__' || part === 'constructor' || part === 'prototype') return match
+      if (Object.prototype.hasOwnProperty.call(dataFunctions, part) && parts.length === 1) {
+        value = value[part] // 不要调用顶层函数
+      } else if (typeof value[part] === 'function') {
+        value = value[part]()
+      } else {
+        value = value[part]
+      }
+      if (typeof value === 'function' && !Object.prototype.hasOwnProperty.call(dataFunctions, part)) value = value()
+    }
+
+    return value !== undefined && value !== null ? String(value) : match
+  } catch (error) {
+    console.error('模板格式化错误:', error)
+    return match
+  }
+}
+
+function evaluateJsToken(
+  type: string,
+  code: string,
+  scopeKeys: string[],
+  scopeValues: unknown[],
+): string {
+  try {
+    const functionBody =
+      type === 'js'
+        ? `try { return (${code}); } catch (e) { console.error("表达式[js:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[表达式错误: " + e.message + "]"; }`
+        : `try { ${code} } catch (e) { console.error("代码块[js+/js-run:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[代码块错误: " + e.message + "]"; }`
+
+    // eslint-disable-next-line ts/no-implied-eval, no-new-func
+    const evalInContext = new Function(...scopeKeys, functionBody)
+    const evalResult = evalInContext(...scopeValues)
+
+    return typeof evalResult === 'string' &&
+      (evalResult.startsWith('[表达式错误:') || evalResult.startsWith('[代码块错误:'))
+      ? evalResult
+      : String(evalResult ?? '')
+  } catch (error) {
+    console.error('JS占位符处理错误:', error, '类型:', type, '代码:', code)
+    return `[处理错误: ${(error as Error).message}]`
+  }
+}
+
 /**
- * 处理模板中的表达式
+ * 处理模板中的表达式（单遍扫描，防止普通占位符内容被二次解析为 JS 表达式）
  * @param template 包含表达式的模板字符串
  * @param context 执行上下文对象
  * @returns 处理后的字符串
  */
 export function evaluateTemplateExpressions(template: string, context: ExecutionContext): string {
-  // 增加严格的类型检查
   if (typeof template !== 'string') {
     console.error(
       '[evaluateTemplateExpressions] Error: Expected template to be a string, but received:',
       typeof template,
       template,
     )
-    return '' // 或者抛出错误，或者返回一个默认值
+    return ''
   }
 
   if (!template) return ''
 
-  // 获取基础变量和数据管理函数
   const variables = context.variables
   const dataFunctions = {
     getData: context.getData,
@@ -44,71 +100,15 @@ export function evaluateTemplateExpressions(template: string, context: Execution
     clearStorageData: context.clearStorageData,
   }
 
-  // 合并基础变量和数据管理函数的作用域
   const scopeVariables = { ...variables, ...dataFunctions }
   const scopeKeys = Object.keys(scopeVariables)
   const scopeValues = Object.values(scopeVariables)
 
-  // 第一步：处理简单的文本替换 {{variable.path}}
-  const result = template.replace(/\{\{([^}]+)\}\}/g, (match, path) => {
-    if (path.trim().startsWith('js:') || path.trim().startsWith('js+:') || path.trim().startsWith('js-run:')) {
-      return match // 跳过所有JS变体，留给下一步
+  return template.replace(SINGLE_PASS_TOKEN_REGEX, (match, jsType: string | undefined, jsCode: string | undefined, varPath: string | undefined) => {
+    if (jsType !== undefined) {
+      return evaluateJsToken(jsType, jsCode ?? '', scopeKeys, scopeValues)
     }
-
-    try {
-      // 解析路径
-      const parts = path.trim().split('.')
-      let value: any = scopeVariables
-
-      // 递归获取嵌套属性
-      for (const part of parts) {
-        if (value === undefined || value === null) return match
-        if (Object.prototype.hasOwnProperty.call(dataFunctions, part) && parts.length === 1) {
-          value = value[part] // 不要调用顶层函数
-        } else if (typeof value[part] === 'function') {
-          value = value[part]()
-        } else {
-          value = value[part]
-        }
-        if (typeof value === 'function' && !Object.prototype.hasOwnProperty.call(dataFunctions, part)) value = value()
-      }
-
-      return value !== undefined && value !== null ? String(value) : match
-    } catch (error) {
-      console.error('模板格式化错误:', error)
-      return match // 出错时返回原始匹配项
-    }
-  })
-
-  // 第二步：处理 JS 表达式和代码块 {{js: ...}}, {{js+: ...}}, {{js-run: ...}}
-  return result.replace(JS_EXPRESSION_REGEX, (match, type, code) => {
-    try {
-      let functionBody: string
-
-      if (type === 'js') {
-        // 简单表达式: 隐式 return
-        functionBody = `try { return (${code}); } catch (e) { console.error("表达式[js:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[表达式错误: " + e.message + "]"; }`
-      } else {
-        // js+ 或 js-run
-        // 代码块: 需要显式 return
-        functionBody = `try { ${code} } catch (e) { console.error("代码块[js+/js-run:]执行错误:", e, "代码:", ${JSON.stringify(code)}); return "[代码块错误: " + e.message + "]"; }`
-      }
-
-      // eslint-disable-next-line ts/no-implied-eval, no-new-func
-      const evalInContext = new Function(...scopeKeys, functionBody)
-
-      const evalResult = evalInContext(...scopeValues)
-
-      // 对结果进行处理，将 undefined/null 转换为空字符串，除非是错误消息
-      return typeof evalResult === 'string' &&
-        (evalResult.startsWith('[表达式错误:') || evalResult.startsWith('[代码块错误:'))
-        ? evalResult
-        : String(evalResult ?? '')
-    } catch (error) {
-      // 捕获 Function 构造或顶层执行错误
-      console.error('JS占位符处理错误:', error, '类型:', type, '代码:', code)
-      return `[处理错误: ${(error as Error).message}]`
-    }
+    return resolvePlaceholderPath(match, varPath ?? '', scopeVariables, dataFunctions)
   })
 }
 

@@ -1,6 +1,8 @@
 import { acceptHMRUpdate, defineStore } from 'pinia'
+import { watch } from 'vue'
 
 import { useAccount } from '@/api/account'
+import router from '@/app/router'
 import { parsePositiveId } from '@/shared/obs/obsUrl'
 import { useRealtimeBus } from '@/shared/realtime'
 
@@ -24,6 +26,33 @@ export const useOBSNotification = defineStore('obs-notification', () => {
   const account = useAccount()
   const listeners = new Map<string, (payload: ObsNotificationPayload) => void>()
   let currentSubscribedTopic = ''
+  let explicitOwnerId: number | undefined
+  let watchInitialized = false
+
+  function dispatchNotification(payload: ObsNotificationPayload) {
+    for (const listener of listeners.values()) {
+      listener(payload)
+    }
+  }
+
+  function syncSubscription() {
+    const targetId = explicitOwnerId ?? parsePositiveId(router.currentRoute.value.query.id) ?? account.value.id
+    if (!targetId) return
+
+    const topic = `obs:notify:${targetId}`
+    if (currentSubscribedTopic === topic) return
+
+    if (currentSubscribedTopic) {
+      void realtimeBus.bus.unsubscribe(currentSubscribedTopic)
+    }
+    currentSubscribedTopic = topic
+    void realtimeBus.bus.subscribe(topic)
+    realtimeBus.on(topic, 'ObsNotification', (payload) => {
+      if (payload) {
+        dispatchNotification(payload as ObsNotificationPayload)
+      }
+    })
+  }
 
   function resolveMeta(payload: ObsNotificationPayload): string | undefined {
     const userName = payload.UserName?.trim()
@@ -75,44 +104,34 @@ export const useOBSNotification = defineStore('obs-notification', () => {
   async function init(sources?: string[], ownerId?: number) {
     const listenerId = sources ? [...sources].toSorted().join(',') : 'all'
 
-    // 如果已经为这个过滤器初始化过，直接返回
-    if (listeners.has(listenerId)) {
-      return
+    if (ownerId) {
+      explicitOwnerId = ownerId
     }
 
-    const listener = (payload: ObsNotificationPayload) => {
-      // 如果指定了sources过滤器，检查通知是否匹配
-      if (sources && sources.length > 0) {
-        if (!payload.Source || !sources.includes(payload.Source)) {
-          return // 不匹配，忽略此通知
-        }
-      }
-      showNotification(payload)
-    }
-
-    listeners.set(listenerId, listener)
-
-    // 解析目标用户 ID（支持公开 OBS 挂件免密接收）
-    const targetId = ownerId ?? parsePositiveId(window.$route?.query?.id) ?? account.value.id
-
-    if (targetId) {
-      const topic = `obs:notify:${targetId}`
-      if (currentSubscribedTopic !== topic) {
-        if (currentSubscribedTopic) {
-          void realtimeBus.bus.unsubscribe(currentSubscribedTopic)
-        }
-        currentSubscribedTopic = topic
-        void realtimeBus.bus.subscribe(topic)
-        realtimeBus.on(topic, 'ObsNotification', (payload) => {
-          if (payload) {
-            listener(payload as ObsNotificationPayload)
+    if (!listeners.has(listenerId)) {
+      const listener = (payload: ObsNotificationPayload) => {
+        if (sources && sources.length > 0) {
+          if (!payload.Source || !sources.includes(payload.Source)) {
+            return
           }
-        })
+        }
+        showNotification(payload)
       }
+      listeners.set(listenerId, listener)
+      const filterInfo = sources && sources.length > 0 ? `(过滤: ${sources.join(', ')})` : '(所有类型)'
+      console.log(`[OBS] OBS 通知模块已初始化 ${filterInfo}`)
     }
 
-    const filterInfo = sources && sources.length > 0 ? `(过滤: ${sources.join(', ')})` : '(所有类型)'
-    console.log(`[OBS] OBS 通知模块已初始化 ${filterInfo}`)
+    if (!watchInitialized) {
+      watchInitialized = true
+      watch(
+        () => [router.currentRoute.value.query.id, account.value.id] as const,
+        () => syncSubscription(),
+        { immediate: true },
+      )
+    } else {
+      syncSubscription()
+    }
   }
 
   async function publish(payload: ObsNotificationPayload, targetUserId?: number) {

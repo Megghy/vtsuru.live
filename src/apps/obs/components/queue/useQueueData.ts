@@ -107,8 +107,12 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
     }
   }
 
+  let requestSeq = 0
+
   async function update() {
+    const seq = ++requestSeq
     const result = await get()
+    if (seq !== requestSeq) return
     queue.value = (result.queue ?? []).toSorted((a, b) => b.createAt - a.createAt)
     settings.value = result.setting ?? ({} as SettingQueue)
   }

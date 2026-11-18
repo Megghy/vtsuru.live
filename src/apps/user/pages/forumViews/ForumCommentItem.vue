@@ -7,6 +7,7 @@ import { zhCN } from 'date-fns/locale'
 import { computed } from 'vue'
 
 import { useAccount } from '@/api/account'
+import { sanitizeForumHtml } from '@/apps/user-page/block/richTextSanitizer'
 import type { ForumCommentModel } from '@/api/client-types'
 import type { ResponseForumTopicModel } from '@/api/generated/model'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
@@ -34,6 +35,8 @@ const accountInfo = useAccount()
 const canOprate = computed(() => {
   return !props.topic.isLocked && accountInfo.value.id > 0
 })
+
+const safeCommentHtml = computed(() => sanitizeForumHtml(props.item.content))
 
 function delComment(id: number) {
   useForum.DelComment(id).then((success) => {
@@ -109,7 +112,7 @@ function formatFullTime(time: number) {
 
         <div
           class="editor-content-view text-xs leading-relaxed text-foreground break-words"
-          v-html="item.content"
+          v-html="safeCommentHtml"
         />
 
         <Card

@@ -2,7 +2,7 @@ import { PhysicalPosition, PhysicalSize } from '@tauri-apps/api/dpi'
 import type { WebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { getAllWebviewWindows } from '@tauri-apps/api/webviewWindow'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { onScopeDispose, ref, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
@@ -206,8 +206,33 @@ export const useGiftWindow = defineStore('giftWindow', () => {
   const currentLive = ref<ResponseLiveInfoModel | null>(null)
   let bc: BroadcastChannel | undefined
   let isInited = false
+  let initPromise: Promise<void> | null = null
   let isSyncingLive = false
   let _goldRankTimerId: ReturnType<typeof setInterval> | null = null
+  let _cleanupTimerId: ReturnType<typeof setInterval> | null = null
+  let _refreshOnlineTimerId: ReturnType<typeof setInterval> | null = null
+  let _syncLiveTimerId: ReturnType<typeof setInterval> | null = null
+  let _moveResizeSaveTimer: ReturnType<typeof setTimeout> | null = null
+  const unlistenHandles: Array<() => void> = []
+
+  onScopeDispose(() => {
+    for (const fn of unlistenHandles) fn()
+    unlistenHandles.length = 0
+    if (_goldRankTimerId) clearInterval(_goldRankTimerId)
+    if (_cleanupTimerId) clearInterval(_cleanupTimerId)
+    if (_refreshOnlineTimerId) clearInterval(_refreshOnlineTimerId)
+    if (_syncLiveTimerId) clearInterval(_syncLiveTimerId)
+    if (_moveResizeSaveTimer) clearTimeout(_moveResizeSaveTimer)
+    _goldRankTimerId = null
+    _cleanupTimerId = null
+    _refreshOnlineTimerId = null
+    _syncLiveTimerId = null
+    _moveResizeSaveTimer = null
+    bc?.close()
+    bc = undefined
+    isInited = false
+    initPromise = null
+  })
 
   function closeWindow() {
     giftWindow.value?.hide()
@@ -738,79 +763,113 @@ export const useGiftWindow = defineStore('giftWindow', () => {
 
   async function init() {
     if (isInited) return
-    giftWindow.value = (await getAllWebviewWindows()).find((w) => w.label === 'gift-window')
-    if (!giftWindow.value) return
+    if (initPromise) return initPromise
+    initPromise = (async () => {
+      giftWindow.value = (await getAllWebviewWindows()).find((w) => w.label === 'gift-window')
+      if (!giftWindow.value) return
 
-    giftWindow.value.onCloseRequested((event) => {
-      event.preventDefault()
-      closeWindow()
-    })
-    giftWindow.value.onMoved(({ payload: pos }) => {
-      settings.value.x = pos.x
-      settings.value.y = pos.y
-    })
-    giftWindow.value.onResized(({ payload: size }) => {
-      settings.value.width = size.width
-      settings.value.height = size.height
-    })
-
-    bc = new BroadcastChannel(GIFT_WINDOW_BROADCAST_CHANNEL)
-    bc.onmessage = (event: MessageEvent<GiftWindowBCData>) => {
-      if (event.data.type === 'window-ready') {
-        postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
-        sendGiftList()
-        sendRankList()
-        sendOnlineGuardList()
-        sendOnlineViewerList()
-        void fetchOnlineGoldRank()
+      const scheduleWindowSave = (patch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>>) => {
+        Object.assign(settings.value, patch)
       }
-    }
-    postBroadcastMessage(bc, { type: 'window-ready' } satisfies GiftWindowBCData)
-    postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
-    void fetchOnlineGoldRank()
+      const debouncedPatch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>> = {}
+      const queueWindowPatch = (patch: Partial<Pick<GiftWindowSettings, 'x' | 'y' | 'width' | 'height'>>) => {
+        Object.assign(debouncedPatch, patch)
+        if (_moveResizeSaveTimer) clearTimeout(_moveResizeSaveTimer)
+        _moveResizeSaveTimer = setTimeout(() => {
+          _moveResizeSaveTimer = null
+          scheduleWindowSave({ ...debouncedPatch })
+        }, 300)
+      }
 
-    if (_goldRankTimerId) clearInterval(_goldRankTimerId)
-    _goldRankTimerId = setInterval(fetchOnlineGoldRank, 30 * 1000)
+      unlistenHandles.push(
+        await giftWindow.value.onCloseRequested((event) => {
+          event.preventDefault()
+          closeWindow()
+        }),
+        await giftWindow.value.onMoved(({ payload: pos }) => {
+          queueWindowPatch({ x: pos.x, y: pos.y })
+        }),
+        await giftWindow.value.onResized(({ payload: size }) => {
+          queueWindowPatch({ width: size.width, height: size.height })
+        }),
+      )
 
-    // 全量事件监听以追踪用户在场活跃状态与大航海
-    danmakuClient.onEvent('danmaku', (e) => recordUserActivity(e, '发弹幕'))
-    danmakuClient.onEvent('enter', (e) => recordUserActivity(e, '进入直播间'))
-    danmakuClient.onEvent('like', (e) => recordUserActivity(e, '点赞'))
+      bc = new BroadcastChannel(GIFT_WINDOW_BROADCAST_CHANNEL)
+      bc.onmessage = (event: MessageEvent<GiftWindowBCData>) => {
+        if (event.data.type === 'window-ready') {
+          postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
+          sendGiftList()
+          sendRankList()
+          sendOnlineGuardList()
+          sendOnlineViewerList()
+          void fetchOnlineGoldRank()
+        }
+      }
+      postBroadcastMessage(bc, { type: 'window-ready' } satisfies GiftWindowBCData)
+      postBroadcastMessage(bc, { type: 'update-setting', data: settings.value } satisfies GiftWindowBCData)
+      void fetchOnlineGoldRank()
 
-    danmakuClient.onEvent('gift', (e) => {
-      recordUserActivity(e, '送出礼物')
-      onGiftEvent(e)
-      updateRank(e)
+      if (_goldRankTimerId) clearInterval(_goldRankTimerId)
+      _goldRankTimerId = setInterval(fetchOnlineGoldRank, 30 * 1000)
+
+      // 全量事件监听以追踪用户在场活跃状态与大航海
+      const onDanmaku = (e: EventModel) => recordUserActivity(e, '发弹幕')
+      const onEnter = (e: EventModel) => recordUserActivity(e, '进入直播间')
+      const onLike = (e: EventModel) => recordUserActivity(e, '点赞')
+      const onGift = (e: EventModel) => {
+        recordUserActivity(e, '送出礼物')
+        onGiftEvent(e)
+        updateRank(e)
+      }
+      const onSc = (e: EventModel) => {
+        recordUserActivity(e, '发送SC')
+        onGiftEvent(e)
+        updateRank(e)
+      }
+      const onGuard = (e: EventModel) => {
+        recordUserActivity(e, '开通大航海')
+        onGiftEvent(e)
+        updateRank(e)
+      }
+
+      danmakuClient.onEvent('danmaku', onDanmaku)
+      danmakuClient.onEvent('enter', onEnter)
+      danmakuClient.onEvent('like', onLike)
+      danmakuClient.onEvent('gift', onGift)
+      danmakuClient.onEvent('sc', onSc)
+      danmakuClient.onEvent('guard', onGuard)
+      unlistenHandles.push(
+        () => danmakuClient.offEvent('danmaku', onDanmaku),
+        () => danmakuClient.offEvent('enter', onEnter),
+        () => danmakuClient.offEvent('like', onLike),
+        () => danmakuClient.offEvent('gift', onGift),
+        () => danmakuClient.offEvent('sc', onSc),
+        () => danmakuClient.offEvent('guard', onGuard),
+      )
+
+      const stopSettingsWatch = watch(
+        () => settings,
+        (v) => {
+          postBroadcastMessage(bc, { type: 'update-setting', data: v.value } satisfies GiftWindowBCData)
+          applyWindowSettings()
+          sendGiftList()
+          sendRankList()
+          sendOnlineGuardList()
+          sendOnlineViewerList()
+        },
+        { deep: true },
+      )
+      unlistenHandles.push(stopSettingsWatch)
+
+      _cleanupTimerId = setInterval(cleanupExpired, 1000)
+      _refreshOnlineTimerId = setInterval(refreshOnlineStatus, 15_000)
+      void syncCurrentLive()
+      _syncLiveTimerId = setInterval(() => void syncCurrentLive(), 30_000)
+      isInited = true
+    })().finally(() => {
+      initPromise = null
     })
-    danmakuClient.onEvent('sc', (e) => {
-      recordUserActivity(e, '发送SC')
-      onGiftEvent(e)
-      updateRank(e)
-    })
-    danmakuClient.onEvent('guard', (e) => {
-      recordUserActivity(e, '开通大航海')
-      onGiftEvent(e)
-      updateRank(e)
-    })
-
-    watch(
-      () => settings,
-      (v) => {
-        postBroadcastMessage(bc, { type: 'update-setting', data: v.value } satisfies GiftWindowBCData)
-        applyWindowSettings()
-        sendGiftList()
-        sendRankList()
-        sendOnlineGuardList()
-        sendOnlineViewerList()
-      },
-      { deep: true },
-    )
-
-    setInterval(cleanupExpired, 1000)
-    setInterval(refreshOnlineStatus, 15_000)
-    void syncCurrentLive()
-    setInterval(() => void syncCurrentLive(), 30_000)
-    isInited = true
+    return initPromise
   }
 
   function sendTestGift() {

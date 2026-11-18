@@ -1,4 +1,4 @@
-import { TTS_API_URL } from '@/shared/config'
+import { getTtsApiUrl } from '@/shared/config'
 
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
@@ -26,7 +26,7 @@ export class AzureVoiceProvider implements VoiceProvider {
 
     this.voiceListLoading = true
     try {
-      const response = await fetch(`${TTS_API_URL}voices`)
+      const response = await fetch(`${getTtsApiUrl()}voices`)
       if (!response.ok) throw new Error('获取语音列表失败')
 
       const voices = await response.json()
@@ -79,7 +79,7 @@ export class AzureVoiceProvider implements VoiceProvider {
     const providerCfg = (config.providers as Record<string, unknown>)?.azure as AzureProviderConfig | undefined
     const speechInfo = config.speechInfo ?? {}
 
-    const url = new URL(`${TTS_API_URL}azure`)
+    const url = new URL(`${getTtsApiUrl()}azure`)
     url.searchParams.set('text', text)
     url.searchParams.set('voice', providerCfg?.azureVoice ?? 'zh-CN-XiaoxiaoNeural')
     url.searchParams.set('language', providerCfg?.azureLanguage ?? 'zh-CN')

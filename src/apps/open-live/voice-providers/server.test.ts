@@ -3,9 +3,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { GrokVoiceProvider } from './grok'
 import { QwenVoiceProvider } from './qwen'
 
-vi.mock('@/shared/config', () => ({ TTS_API_URL: 'https://backend.example/api/tts/' }))
+const configState = vi.hoisted(() => ({
+  ttsUrl: 'https://backend.example/api/tts/',
+}))
 
-afterEach(() => vi.unstubAllGlobals())
+vi.mock('@/shared/config', () => ({
+  getTtsApiUrl: () => configState.ttsUrl,
+}))
+
+afterEach(() => {
+  configState.ttsUrl = 'https://backend.example/api/tts/'
+  vi.unstubAllGlobals()
+})
 
 describe('server voice providers', () => {
   it.each([
@@ -39,5 +48,13 @@ describe('server voice providers', () => {
   it('surfaces backend errors to the caller', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, json: async () => ({ details: '渠道不可用' }) }))
     await expect(new QwenVoiceProvider(() => ({})).getVoices()).rejects.toThrow('渠道不可用')
+  })
+
+  it('dynamically uses updated TTS endpoint after API failover', async () => {
+    configState.ttsUrl = 'https://failover.example/api/tts/'
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => [] })
+    vi.stubGlobal('fetch', fetch)
+    await new GrokVoiceProvider(() => ({})).getVoices()
+    expect(fetch.mock.calls[0][0]).toBe('https://failover.example/api/tts/voices?provider=grok-tts')
   })
 })

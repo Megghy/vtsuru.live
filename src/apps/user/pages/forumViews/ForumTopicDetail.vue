@@ -18,6 +18,7 @@ import router from '@/app/router'
 import CaptchaWidget from '@/apps/user/components/CaptchaWidget.vue'
 import VEditor from '@/apps/user/components/VEditor.vue'
 import { refreshCaptcha } from '@/shared/captcha'
+import { sanitizeForumHtml } from '@/apps/user-page/block/richTextSanitizer'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
@@ -82,6 +83,8 @@ const commentTotal = computed(() => {
 const canOprate = computed(() => {
   return !topic.value.isLocked && accountInfo.value.id > 0
 })
+
+const safeTopicHtml = computed(() => sanitizeForumHtml(topic.value?.content))
 
 async function refreshComments() {
   if (topicId.value === -1) return
@@ -243,7 +246,7 @@ onMounted(async () => {
         <CardContent class="p-4 pt-3 space-y-4 text-xs">
           <div
             class="editor-content-view leading-relaxed text-foreground break-words min-h-24"
-            v-html="topic.content"
+            v-html="safeTopicHtml"
           />
 
           <div

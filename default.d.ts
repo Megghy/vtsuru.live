@@ -1,7 +1,6 @@
 import type { Emitter } from 'mitt'
-import type { useRoute } from 'vue-router'
 
-import type { MittType } from './src/types/mitt'
+import type { MittType } from './src/app/mitt'
 
 type ToastHandle = { destroy: () => void }
 
@@ -40,7 +39,6 @@ declare global {
   interface Window {
     $message: AppMessageApi
     $loadingBar: AppLoadingBarApi
-    $route: ReturnType<typeof useRoute>
     $notification: AppNotificationApi
     $dialog: AppDialogApi
     $mitt: Emitter<MittType>

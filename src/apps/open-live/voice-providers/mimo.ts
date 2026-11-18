@@ -1,5 +1,5 @@
 import { ACCOUNT } from '@/api/account'
-import { TTS_API_URL } from '@/shared/config'
+import { getTtsApiUrl } from '@/shared/config'
 
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from './ai-client'
 import { ensureVoiceAudio } from './mimo-voice-store'
@@ -49,7 +49,7 @@ export class MimoVoiceProvider implements VoiceProvider {
 
   private async fetchVoiceList(): Promise<VoiceOption[]> {
     try {
-      const response = await fetch(`${TTS_API_URL}voices?provider=mimo`)
+      const response = await fetch(`${getTtsApiUrl()}voices?provider=mimo`)
       if (!response.ok) throw new Error('获取 MiMo 音色列表失败')
 
       const voices = await response.json()
@@ -151,14 +151,14 @@ export class MimoVoiceProvider implements VoiceProvider {
 
     if (voice.startsWith('custom:')) {
       const voiceId = voice.replace('custom:', '')
-      const url = new URL(`${TTS_API_URL}mimo/custom`)
+      const url = new URL(`${getTtsApiUrl()}mimo/custom`)
       url.searchParams.set('text', text)
       url.searchParams.set('voiceId', voiceId)
       if (ACCOUNT.value?.token) url.searchParams.set('token', ACCOUNT.value.token)
       return url.toString()
     }
 
-    const url = new URL(`${TTS_API_URL}mimo`)
+    const url = new URL(`${getTtsApiUrl()}mimo`)
     url.searchParams.set('text', text)
     url.searchParams.set('voice', voice)
     if (cfg.mimoStyleTag) url.searchParams.set('styleTag', cfg.mimoStyleTag)

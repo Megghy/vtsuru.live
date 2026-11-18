@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, defineAsyncComponent, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
 import { getPageBackgroundCssVars, getUserPageThemeCssVars, resolvePageBackground } from '@/apps/user-page/background'
-import BlockPageRenderer from '@/apps/user-page/block/BlockPageRenderer.vue'
 import { validateRenderableBlockPageProject } from '@/apps/user-page/block/schema'
 import { usePageCanvasColor } from '@/apps/user-page/canvasColor'
-import CustomPageRenderer from '@/apps/user-page/components/CustomPageRenderer.vue'
-import ContribPageRenderer from '@/apps/user-page/contrib/ContribPageRenderer.vue'
 import { useGoogleFont } from '@/apps/user-page/googleFonts'
 import { usePublicUserPageRuntime } from '@/apps/user-page/runtime/context'
 import { reportPublicPageError } from '@/apps/user-page/runtime/observability'
@@ -18,6 +15,10 @@ import { IndexTemplateMap } from '@/shared/config/templates'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import { Button } from '@/shared/ui/button'
 import { isDarkMode } from '@/shared/utils'
+
+const BlockPageRenderer = defineAsyncComponent(() => import('@/apps/user-page/block/BlockPageRenderer.vue'))
+const CustomPageRenderer = defineAsyncComponent(() => import('@/apps/user-page/components/CustomPageRenderer.vue'))
+const ContribPageRenderer = defineAsyncComponent(() => import('@/apps/user-page/contrib/ContribPageRenderer.vue'))
 
 const props = defineProps<{
   biliInfo: BiliProfile | undefined

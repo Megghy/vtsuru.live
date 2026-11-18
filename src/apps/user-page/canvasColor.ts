@@ -1,4 +1,4 @@
-import { formatRgb } from 'culori'
+import { formatRgb } from '@/shared/config/theme/culori'
 import { computed, ref, watch } from 'vue'
 import type { Ref } from 'vue'
 

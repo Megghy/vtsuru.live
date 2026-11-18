@@ -1,4 +1,4 @@
-import { TTS_API_URL } from '@/shared/config'
+import { getTtsApiUrl } from '@/shared/config'
 
 import type { ConfigSource, VoiceOption, VoiceProvider } from './types'
 
@@ -158,7 +158,7 @@ export class CosyVoiceProvider implements VoiceProvider {
       streaming: true,
     }
 
-    const response = await fetch(`${TTS_API_URL}synthesize`, {
+    const response = await fetch(`${getTtsApiUrl()}synthesize`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

@@ -17,12 +17,19 @@ type Tab = 'all' | 'message' | 'sc' | 'gift' | 'interaction'
 const tab = ref<Tab>('all')
 const history = ref<DashboardEvent[]>()
 
+let requestSeq = 0
+
 watch(
   () => props.event.key,
-  async () => {
+  async (key) => {
+    const seq = ++requestSeq
+    const targetEvent = props.event
     history.value = undefined
     await dashboard.flushWrites()
-    history.value = await queryUserHistory(props.event)
+    if (seq !== requestSeq || props.event.key !== key) return
+    const rows = await queryUserHistory(targetEvent)
+    if (seq !== requestSeq) return
+    history.value = rows
   },
   { immediate: true },
 )

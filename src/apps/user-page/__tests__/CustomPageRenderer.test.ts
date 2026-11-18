@@ -1,15 +1,19 @@
-import { mount } from '@vue/test-utils'
+import { flushPromises, mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 
 import { createDefaultCustomPageProps } from '../block/customHtmlContract'
 import CustomPageRenderer from '../components/CustomPageRenderer.vue'
 
 vi.mock('../runtime/observability', () => ({ reportPublicPageError: vi.fn() }))
-vi.mock('../block/blocks/CustomHtmlBlock.vue', () => ({ default: { template: '<iframe title="sandbox" />' } }))
+vi.mock('../block/blocks/CustomHtmlBlock.vue', () => ({
+  __esModule: true,
+  default: { template: '<iframe title="sandbox" />' },
+}))
 
 describe('CustomPageRenderer', () => {
-  it('renders the runnable default template', () => {
+  it('renders the runnable default template', async () => {
     const wrapper = mount(CustomPageRenderer, { props: { config: createDefaultCustomPageProps() } })
+    await flushPromises()
     expect(wrapper.find('iframe').exists()).toBe(true)
     expect(wrapper.text()).not.toContain('页面配置错误')
   })

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 
 import { isBlockPropertyAvailable } from '@/apps/user-page/block/propertyCapabilities'
 import type { BlockNode, BlockType, BlockVisibility } from '@/apps/user-page/block/schema'
@@ -11,26 +11,35 @@ import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
 
-import BasicContentPropsEditor from './block-props-editors/BasicContentPropsEditor.vue'
-import ButtonsPropsEditor from './block-props-editors/ButtonsPropsEditor.vue'
-import CardListPropsEditor from './block-props-editors/CardListPropsEditor.vue'
-import CheckInRankingPropsEditor from './block-props-editors/CheckInRankingPropsEditor.vue'
-import CollectionPropsEditor from './block-props-editors/CollectionPropsEditor.vue'
-import CustomHtmlPropsEditor from './block-props-editors/CustomHtmlPropsEditor.vue'
-import FeaturedGoodsPropsEditor from './block-props-editors/FeaturedGoodsPropsEditor.vue'
-import FeatureNavPropsEditor from './block-props-editors/FeatureNavPropsEditor.vue'
-import LayoutPropsEditor from './block-props-editors/LayoutPropsEditor.vue'
-import MediaDecorationPropsEditor from './block-props-editors/MediaDecorationPropsEditor.vue'
-import NavigationPropsEditor from './block-props-editors/NavigationPropsEditor.vue'
-import NowPlayingPropsEditor from './block-props-editors/NowPlayingPropsEditor.vue'
-import QrCodePropsEditor from './block-props-editors/QrCodePropsEditor.vue'
-import RemoteContentPropsEditor from './block-props-editors/RemoteContentPropsEditor.vue'
-import SectionNavPropsEditor from './block-props-editors/SectionNavPropsEditor.vue'
-import SongListPropsEditor from './block-props-editors/SongListPropsEditor.vue'
 import { useBlockPropsEditor } from './block-props-editors/useBlockPropsEditor'
-import VideoCollectPropsEditor from './block-props-editors/VideoCollectPropsEditor.vue'
-import ImageGalleryPropsEditor from './ImageGalleryPropsEditor.vue'
 import PropsGrid from './PropsGrid.vue'
+
+const BasicContentPropsEditor = defineAsyncComponent(
+  () => import('./block-props-editors/BasicContentPropsEditor.vue'),
+)
+const ButtonsPropsEditor = defineAsyncComponent(() => import('./block-props-editors/ButtonsPropsEditor.vue'))
+const CardListPropsEditor = defineAsyncComponent(() => import('./block-props-editors/CardListPropsEditor.vue'))
+const CheckInRankingPropsEditor = defineAsyncComponent(
+  () => import('./block-props-editors/CheckInRankingPropsEditor.vue'),
+)
+const CollectionPropsEditor = defineAsyncComponent(() => import('./block-props-editors/CollectionPropsEditor.vue'))
+const CustomHtmlPropsEditor = defineAsyncComponent(() => import('./block-props-editors/CustomHtmlPropsEditor.vue'))
+const FeaturedGoodsPropsEditor = defineAsyncComponent(
+  () => import('./block-props-editors/FeaturedGoodsPropsEditor.vue'),
+)
+const FeatureNavPropsEditor = defineAsyncComponent(() => import('./block-props-editors/FeatureNavPropsEditor.vue'))
+const LayoutPropsEditor = defineAsyncComponent(() => import('./block-props-editors/LayoutPropsEditor.vue'))
+const MediaDecorationPropsEditor = defineAsyncComponent(
+  () => import('./block-props-editors/MediaDecorationPropsEditor.vue'),
+)
+const NavigationPropsEditor = defineAsyncComponent(() => import('./block-props-editors/NavigationPropsEditor.vue'))
+const NowPlayingPropsEditor = defineAsyncComponent(() => import('./block-props-editors/NowPlayingPropsEditor.vue'))
+const QrCodePropsEditor = defineAsyncComponent(() => import('./block-props-editors/QrCodePropsEditor.vue'))
+const RemoteContentPropsEditor = defineAsyncComponent(() => import('./block-props-editors/RemoteContentPropsEditor.vue'))
+const SectionNavPropsEditor = defineAsyncComponent(() => import('./block-props-editors/SectionNavPropsEditor.vue'))
+const SongListPropsEditor = defineAsyncComponent(() => import('./block-props-editors/SongListPropsEditor.vue'))
+const VideoCollectPropsEditor = defineAsyncComponent(() => import('./block-props-editors/VideoCollectPropsEditor.vue'))
+const ImageGalleryPropsEditor = defineAsyncComponent(() => import('./ImageGalleryPropsEditor.vue'))
 
 const props = defineProps<{ block: BlockNode }>()
 const { editor, blockProps } = useBlockPropsEditor(() => props.block)

@@ -210,10 +210,15 @@ onMounted(() => {
     }
   }
   updateCssVariables()
-  onUnmounted(() => {
-    bc?.close()
-    bc = undefined
-  })
+})
+
+onUnmounted(() => {
+  bc?.close()
+  bc = undefined
+  if (copyTimer) {
+    clearTimeout(copyTimer)
+    copyTimer = null
+  }
 })
 
 watch(

@@ -2,7 +2,7 @@
 import { useDropZone, useFileDialog, useObjectUrl } from '@vueuse/core'
 import { saveAs } from 'file-saver'
 import JSZip from 'jszip'
-import { computed, reactive, ref, watch, watchEffect } from 'vue'
+import { computed, onUnmounted, reactive, ref, watch, watchEffect } from 'vue'
 import ImgCutter from 'vue-img-cutter'
 
 import { useFilePicker } from '@/composables/useFilePicker'
@@ -32,7 +32,16 @@ const croppedBlob = ref<Blob | null>(null)
 const croppedUrl = useObjectUrl(croppedBlob)
 const cellImages = ref<AdditionalItem[][]>(Array.from({ length: 9 }, () => []))
 const finalBlobs = ref<Blob[]>([])
-const finalUrls = computed(() => finalBlobs.value.map((b) => URL.createObjectURL(b)))
+const finalUrls = ref<string[]>([])
+
+watch(
+  finalBlobs,
+  (blobs) => {
+    for (const u of finalUrls.value) URL.revokeObjectURL(u)
+    finalUrls.value = blobs.map((b) => URL.createObjectURL(b))
+  },
+  { immediate: true },
+)
 const isGenerating = ref(false)
 
 const exportSettings = reactive({
@@ -71,7 +80,7 @@ onChange((files) => files?.[0] && onFilePicked(files[0]))
 async function onFilePicked(file: File) {
   sourceFile.value = file
   finalBlobs.value = []
-  cellImages.value = Array.from({ length: 9 }, () => [])
+  clearAllCellImages()
   croppedBlob.value = await applyCenterCrop(file)
   message.success('图片已准备就绪')
 }
@@ -243,17 +252,29 @@ function backToEdit() {
 const cellPreviewUrl = ref<string | null>(null)
 const previewVersion = ref(0)
 
+function setCellPreviewUrl(next: string | null) {
+  if (cellPreviewUrl.value) URL.revokeObjectURL(cellPreviewUrl.value)
+  cellPreviewUrl.value = next
+}
+
+onUnmounted(() => {
+  for (const u of finalUrls.value) URL.revokeObjectURL(u)
+  finalUrls.value = []
+  clearAllCellImages()
+  setCellPreviewUrl(null)
+})
+
 watchEffect(async () => {
   const idx = expandedCell.value
   const _v = previewVersion.value
   void _v
   if (idx === null || !croppedBlob.value) {
-    cellPreviewUrl.value = null
+    setCellPreviewUrl(null)
     return
   }
   const items = cellImages.value[idx]
   if (items.length === 0) {
-    cellPreviewUrl.value = null
+    setCellPreviewUrl(null)
     return
   }
 
@@ -295,10 +316,9 @@ watchEffect(async () => {
       y += h + gap
     }
 
-    if (cellPreviewUrl.value) URL.revokeObjectURL(cellPreviewUrl.value)
-    cellPreviewUrl.value = URL.createObjectURL(await canvasToBlob(canvas))
+    setCellPreviewUrl(URL.createObjectURL(await canvasToBlob(canvas)))
   } catch {
-    cellPreviewUrl.value = null
+    setCellPreviewUrl(null)
   }
 })
 </script>

@@ -47,17 +47,7 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
 
   const footerTags = computed<ObsDisplayFooterTag[]>(() => [])
 
-  async function get() {
-    try {
-      const rawId = toValue(currentId)
-      const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
-      const data = await getApiMusicRequestGetWaiting(idStr ? { id: Number(idStr) } : {})
-      if (data.code === 200) return data.data
-    } catch (err) {
-      console.error('[MUSIC-REQUEST-OBS] 获取点歌队列失败', err)
-    }
-    return { playing: playing.value, waiting: waiting.value }
-  }
+  let requestSeq = 0
 
   function applySnapshot(snapshot: { playing?: WaitMusicInfo; waiting?: WaitMusicInfo[] }) {
     playing.value = snapshot.playing
@@ -65,8 +55,18 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
   }
 
   async function update() {
-    const result = await get()
-    applySnapshot(result)
+    const seq = ++requestSeq
+    const rawId = toValue(currentId)
+    const idStr = rawId === undefined || rawId === null ? '' : String(rawId)
+    try {
+      const data = await getApiMusicRequestGetWaiting(idStr ? { id: Number(idStr) } : {})
+      if (seq !== requestSeq) return
+      if (data.code === 200) applySnapshot(data.data)
+    } catch (err) {
+      if (seq === requestSeq) {
+        console.error('[MUSIC-REQUEST-OBS] 获取点歌队列失败', err)
+      }
+    }
   }
 
   watch(

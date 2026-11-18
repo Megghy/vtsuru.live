@@ -1,4 +1,5 @@
 import type { EventModel } from '@/api/client-types'
+import type { VoiceOption } from '@/apps/open-live/voice-providers/types'
 
 export interface SpeechInfo {
   volume: number
@@ -84,7 +85,7 @@ export type CosyVoiceProviderSettings = {
   apiKey: string
   model: string
   voice: string
-  customVoices: unknown[]
+  customVoices: VoiceOption[]
   languageHint: string
 }
 

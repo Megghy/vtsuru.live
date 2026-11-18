@@ -8,7 +8,7 @@ import { GetHeaders } from '@/api/query'
 import { createMimoClient, synthesizeMimoTts, type MimoTtsRequest } from '@/apps/open-live/voice-providers/ai-client'
 import { saveVoiceAudio } from '@/apps/open-live/voice-providers/mimo-voice-store'
 import { useFilePicker } from '@/composables/useFilePicker'
-import { TTS_API_URL } from '@/shared/config'
+import { getTtsApiUrl } from '@/shared/config'
 import { Alert, AlertDescription } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
@@ -125,7 +125,7 @@ async function preview() {
 async function previewViaBackend(): Promise<Blob> {
   const fd = buildFormData(true)
   const headers = Object.fromEntries(GetHeaders())
-  const resp = await fetch(`${TTS_API_URL}mimo/preview`, {
+  const resp = await fetch(`${getTtsApiUrl()}mimo/preview`, {
     method: 'POST',
     body: fd,
     headers,
@@ -183,13 +183,13 @@ async function save() {
         fd.append('audioFile', audioFile.value)
       }
       const headers = Object.fromEntries(GetHeaders())
-      const resp = await fetch(`${TTS_API_URL}mimo/voices/custom/${props.editVoice!.id}`, {
+      const resp = await fetch(`${getTtsApiUrl()}mimo/voices/custom/${props.editVoice!.id}`, {
         method: 'PUT',
         body: fd,
         headers,
       })
       const data = await resp.json().catch(() => null)
-      if (!data || data.code !== 200) throw new Error(data?.message || '更新失败')
+      if (!resp.ok || !data || data.code !== 200) throw new Error(data?.message || '更新失败')
       if (type.value === 'clone' && audioFile.value) {
         const file = audioFile.value
         await saveVoiceAudio(props.editVoice!.id, {

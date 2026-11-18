@@ -5,9 +5,8 @@ import GridOutline from '@vicons/ionicons5/es/GridOutline'
 import LayersOutline from '@vicons/ionicons5/es/LayersOutline'
 import OpenOutline from '@vicons/ionicons5/es/OpenOutline'
 import SparklesOutline from '@vicons/ionicons5/es/SparklesOutline'
-import { computed, inject, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, inject, ref, watch } from 'vue'
 
-import ContribConfigEditor from '@/apps/manage/components/ContribConfigEditor.vue'
 import { createDefaultCustomPageProps } from '@/apps/user-page/block/customHtmlContract'
 import { listContribPageRefs } from '@/apps/user-page/contrib/registry'
 import { getUserPageNavIconLabel, resolveUserPageNavIcon } from '@/apps/user-page/pageIcons'
@@ -38,14 +37,16 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shar
 import { UserPageEditorKey } from '../context'
 import { PAGE_MODE_OPTIONS, createDefaultProject } from '../editorPageConfig'
 import BlockTypeEditor from './BlockTypeEditor.vue'
-import CustomPageSettings from './CustomPageSettings.vue'
 import ErrorBoundary from './ErrorBoundary.vue'
-import LegacyIndexSettings from './LegacyIndexSettings.vue'
-import PageAppearanceOverrides from './PageAppearanceOverrides.vue'
-import PageIconPickerModal from './PageIconPickerModal.vue'
 import PropsGrid from './PropsGrid.vue'
 import { useBlockManagerLibrary } from './useBlockManagerLibrary'
 import { useBlockPropertyFocus } from './useBlockPropertyFocus'
+
+const ContribConfigEditor = defineAsyncComponent(() => import('@/apps/manage/components/ContribConfigEditor.vue'))
+const CustomPageSettings = defineAsyncComponent(() => import('./CustomPageSettings.vue'))
+const LegacyIndexSettings = defineAsyncComponent(() => import('./LegacyIndexSettings.vue'))
+const PageAppearanceOverrides = defineAsyncComponent(() => import('./PageAppearanceOverrides.vue'))
+const PageIconPickerModal = defineAsyncComponent(() => import('./PageIconPickerModal.vue'))
 
 const editor = inject(UserPageEditorKey)
 if (!editor) throw new Error('UserPageEditor context is missing')
@@ -54,6 +55,14 @@ const { expandedPageSections } = useBlockPropertyFocus()
 const { templateOptions, addBlockOptions, insertTemplate, handleAddBlockMenuSelect } = useBlockManagerLibrary()
 const pageSlug = ref(editor.currentKey.value)
 const pageIconPickerShown = ref(false)
+const hasOpenedPageIconPicker = ref(false)
+watch(
+  pageIconPickerShown,
+  (val) => {
+    if (val) hasOpenedPageIconPicker.value = true
+  },
+  { immediate: true },
+)
 
 const blocksCount = computed(() => editor.currentProject.value?.blocks?.length ?? 0)
 const isBlockMode = computed(() => editor.currentPage.value.mode === 'block')
@@ -294,6 +303,7 @@ function groupSelection() {
                   {{ getUserPageNavIconLabel(editor.currentPage.value.navIcon) }}
                 </Button>
                 <PageIconPickerModal
+                  v-if="hasOpenedPageIconPicker || pageIconPickerShown"
                   v-model:show="pageIconPickerShown"
                   :value="editor.currentPage.value.navIcon"
                   @select="setCurrentPageNavIcon"

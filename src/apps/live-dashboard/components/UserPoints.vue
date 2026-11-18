@@ -23,16 +23,24 @@ const count = ref(10)
 const reason = ref('')
 const submitting = ref(false)
 
+let requestSeq = 0
+
 async function load() {
+  const seq = ++requestSeq
+  const targetEvent = props.event
   loading.value = true
   error.value = undefined
   try {
-    const histories = await getUserPointHistories(props.event)
+    const histories = await getUserPointHistories(targetEvent)
+    if (seq !== requestSeq) return
     total.value = histories.reduce((sum, h) => sum + h.point, 0)
   } catch (err) {
+    if (seq !== requestSeq) return
     error.value = err instanceof Error ? err.message : String(err)
   } finally {
-    loading.value = false
+    if (seq === requestSeq) {
+      loading.value = false
+    }
   }
 }
 

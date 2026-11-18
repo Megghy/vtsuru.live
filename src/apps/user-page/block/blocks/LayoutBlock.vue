@@ -5,7 +5,7 @@ import type { ResponseUserInfo } from '@/api/generated/model'
 
 import type { BiliProfileStatus } from '../../types'
 import BlockCard from '../BlockCard.vue'
-import { BLOCK_COMPONENTS } from '../registry'
+import { BLOCK_COMPONENTS } from '../blockComponents'
 import type { BlockNode, BlockVisibilityContext } from '../schema'
 import { isBlockVisible } from '../visibility'
 

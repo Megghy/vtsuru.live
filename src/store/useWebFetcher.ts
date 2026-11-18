@@ -2,9 +2,6 @@ import * as signalR from '@microsoft/signalr'
 import * as msgpack from '@microsoft/signalr-protocol-msgpack'
 import { encode } from '@msgpack/msgpack'
 import type { ZstdCodec } from '@oneidentity/zstd-js/wasm'
-import { ZstdInit } from '@oneidentity/zstd-js/wasm'
-import { getVersion } from '@tauri-apps/api/app'
-import { platform, version } from '@tauri-apps/plugin-os'
 import { defineStore } from 'pinia'
 import { computed, ref, shallowRef } from 'vue' // shallowRef 用于非深度响应对象
 import { useRoute } from 'vue-router'
@@ -13,9 +10,9 @@ import { useAccount } from '@/api/account'
 import { cookie } from '@/api/auth'
 import { getEventType, recordEvent, streamingInfo } from '@/apps/client/data/info'
 import { onReceivedNotification } from '@/apps/client/data/notification'
-import { QueryBiliAPI } from '@/apps/client/data/utils'
 import { getHubBaseUrl, isDev, isTauri } from '@/shared/config'
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
+import { message as uiMessage } from '@/shared/utils'
 
 import { useDanmakuClient } from './useDanmakuClient'
 
@@ -74,7 +71,10 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
       return { success: true, message: '已启动' }
     }
     try {
-      zstd ??= await ZstdInit()
+      if (!zstd) {
+        const { ZstdInit } = await import('@oneidentity/zstd-js/wasm')
+        zstd = await ZstdInit()
+      }
     } catch {
       console.error(`${prefix.value}当前浏览器不支持zstd压缩, 回退到原始数据传输`)
     }
@@ -232,7 +232,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     console.log(`${prefix.value}被服务器断开连接: ${message}`)
     disconnectedByServer = true
     serverDisconnectReason.value = message
-    window.$message.error(`被服务器要求断开连接: ${message}`)
+    uiMessage.error(`被服务器要求断开连接: ${message}`)
     state.value = 'disconnected'
     signalRClient.value = undefined
     signalRConnectionId.value = undefined
@@ -347,11 +347,24 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
     }
   }
   async function sendSelfInfo(connection: signalR.HubConnection): Promise<void> {
+    if (isFromClient) {
+      const [{ getVersion }, { platform, version }] = await Promise.all([
+        import('@tauri-apps/api/app'),
+        import('@tauri-apps/plugin-os'),
+      ])
+      return connection.invoke<void>(
+        'SetSelfInfo',
+        `tauri ${platform()} ${version()}`,
+        'tauri',
+        await getVersion(),
+        webfetcherType.value === 'direct',
+      )
+    }
     return connection.invoke<void>(
       'SetSelfInfo',
-      isFromClient ? `tauri ${platform()} ${version()}` : navigator.userAgent,
-      isFromClient ? 'tauri' : 'web',
-      isFromClient ? await getVersion() : '1.0.0',
+      navigator.userAgent,
+      'web',
+      '1.0.0',
       webfetcherType.value === 'direct',
     )
   }
@@ -369,6 +382,7 @@ export const useWebFetcher = defineStore('WebFetcher', () => {
         Data: '',
       }
     }
+    const { QueryBiliAPI } = await import('@/apps/client/data/utils')
     const result = await QueryBiliAPI(url, method, body, useCookie)
     console.log(`${prefix.value}请求 (${method})${url}: `, result.statusText)
     if (result.ok) {

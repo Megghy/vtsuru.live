@@ -1,19 +1,30 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { defineAsyncComponent, ref, watch } from 'vue'
 
 import type { ResponseUserInfo } from '@/api/generated/model'
-import LocalQuestionDrawer from '@/apps/user/components/question-box/LocalQuestionDrawer.vue'
 import { useQuestionBoxHistory } from '@/apps/user/components/question-box/questionBoxHistory'
-import QuestionComposer from '@/apps/user/components/question-box/QuestionComposer.vue'
 import { Button } from '@/shared/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/shared/ui/dialog'
 import { useMessage } from '@/shared/utils'
 
 import type { CustomHtmlHostDialogState } from './useCustomHtmlBridge'
 
+const LocalQuestionDrawer = defineAsyncComponent(
+  () => import('@/apps/user/components/question-box/LocalQuestionDrawer.vue'),
+)
+const QuestionComposer = defineAsyncComponent(() => import('@/apps/user/components/question-box/QuestionComposer.vue'))
+
 defineProps<{ dialog: CustomHtmlHostDialogState; userInfo?: ResponseUserInfo }>()
 const history = useQuestionBoxHistory()
 const showHistory = ref(false)
+const hasOpenedHistory = ref(false)
+watch(
+  showHistory,
+  (val) => {
+    if (val) hasOpenedHistory.value = true
+  },
+  { immediate: true },
+)
 const message = useMessage()
 
 function removeHistory(id: string) {
@@ -58,6 +69,7 @@ function clearHistory() {
         ><DialogDescription class="sr-only">向主播提问</DialogDescription></DialogHeader
       >
       <QuestionComposer
+        v-if="dialog.questionOpen.value"
         :user-info="userInfo"
         :tags="dialog.questionTags.value"
         :default-tag="dialog.questionTag.value"
@@ -67,6 +79,7 @@ function clearHistory() {
     </DialogContent>
   </Dialog>
   <LocalQuestionDrawer
+    v-if="hasOpenedHistory || showHistory"
     v-model:show="showHistory"
     :questions="history.questions.value"
     @remove="removeHistory"

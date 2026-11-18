@@ -2,8 +2,7 @@
 import ReorderThreeOutline from '@vicons/ionicons5/es/ReorderThreeOutline'
 import { useEventListener } from '@vueuse/core'
 import { AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-vue-next'
-import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
-import { VueDraggable } from 'vue-draggable-plus'
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
@@ -17,10 +16,14 @@ import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useDialog, useMessage } from '@/shared/utils'
 
 import BuilderPaneHost from './user-page-builder/components/BuilderPaneHost.vue'
-import BuilderResourcesModal from './user-page-builder/components/BuilderResourcesModal.vue'
 import BuilderToolbar from './user-page-builder/components/BuilderToolbar.vue'
-import ThemeStyleDrawer from './user-page-builder/components/ThemeStyleDrawer.vue'
 import { UserPageEditorKey } from './user-page-builder/context'
+
+const VueDraggable = defineAsyncComponent(() => import('vue-draggable-plus').then((m) => m.VueDraggable))
+const BuilderResourcesModal = defineAsyncComponent(
+  () => import('./user-page-builder/components/BuilderResourcesModal.vue'),
+)
+const ThemeStyleDrawer = defineAsyncComponent(() => import('./user-page-builder/components/ThemeStyleDrawer.vue'))
 import { isEditorShortcutBlocked, shouldIgnoreDeleteKey } from './user-page-builder/editorShortcutGuard'
 import { COLUMN_META, DEFAULT_COLUMNS_ORDER, useBuilderLayout } from './user-page-builder/useBuilderLayout'
 import type { BuilderColumnId } from './user-page-builder/useBuilderLayout'
@@ -43,6 +46,24 @@ const keyboardStatus = ref('')
 const layoutModal = ref(false)
 const themeDrawerVisible = ref(false)
 const themeDrawerScope = ref<'global' | 'page'>('global')
+const hasOpenedResourcesModal = ref(false)
+const hasOpenedThemeDrawer = ref(false)
+
+watch(
+  editor.resourcesModal,
+  (val) => {
+    if (val) hasOpenedResourcesModal.value = true
+  },
+  { immediate: true },
+)
+
+watch(
+  themeDrawerVisible,
+  (val) => {
+    if (val) hasOpenedThemeDrawer.value = true
+  },
+  { immediate: true },
+)
 
 function openThemeDrawer(scope: 'global' | 'page' = 'global') {
   themeDrawerScope.value = scope
@@ -597,9 +618,13 @@ onBeforeRouteLeave(() => {
           </DialogContent>
         </Dialog>
 
-        <BuilderResourcesModal v-model:show="editor.resourcesModal.value" />
+        <BuilderResourcesModal
+          v-if="hasOpenedResourcesModal || editor.resourcesModal.value"
+          v-model:show="editor.resourcesModal.value"
+        />
 
         <ThemeStyleDrawer
+          v-if="hasOpenedThemeDrawer || themeDrawerVisible"
           :show="themeDrawerVisible"
           :scope="themeDrawerScope"
           @update:show="onThemeDrawerUpdate"

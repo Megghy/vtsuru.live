@@ -1,4 +1,4 @@
-import { wcagContrast } from 'culori'
+import { wcagContrast } from '@/shared/config/theme/culori'
 import { describe, expect, it } from 'vitest'
 
 import { parseRgb } from '@/shared/config/theme/contrast'

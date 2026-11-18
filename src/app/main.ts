@@ -25,6 +25,7 @@ async function bootstrapApp() {
   await initializeAPISelection()
 
   const app = createApp(App)
+  window.$mitt = emitter
   app.use(router).use(pinia).mount('#app')
 
   // 首屏挂载后异步加载错误监控与后台初始化逻辑，避免将重型依赖打入主入口
@@ -46,8 +47,6 @@ async function bootstrapApp() {
       })
     })
   }
-
-  window.$mitt = emitter
 }
 
 void bootstrapApp()

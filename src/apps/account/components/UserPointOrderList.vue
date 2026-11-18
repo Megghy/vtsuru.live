@@ -107,6 +107,24 @@ function formatAttachmentSize(bytes: number) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
 }
+
+function resolveSafeCollectUrl(raw?: string | null): { href: string; canEmbed: boolean } | null {
+  const trimmed = raw?.trim()
+  if (!trimmed) return null
+  try {
+    const parsed = new URL(trimmed)
+    if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+      return null
+    }
+    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+    const canEmbed = parsed.protocol === 'https:' && Boolean(currentOrigin) && parsed.origin !== currentOrigin
+    return { href: parsed.href, canEmbed }
+  } catch {
+    return null
+  }
+}
+
+const safeCollectUrl = computed(() => resolveSafeCollectUrl(detail.value?.goods?.collectUrl))
 </script>
 
 <template>
@@ -409,16 +427,17 @@ function formatAttachmentSize(bytes: number) {
               </div>
             </div>
 
-            <template v-if="detail.status === PointOrderStatus.Pending && detail.goods.collectUrl">
+            <template v-if="detail.status === PointOrderStatus.Pending && safeCollectUrl">
               <div class="space-y-2">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-semibold text-muted-foreground">填写收货信息</span>
                   <Separator class="flex-1" />
                 </div>
                 <a
-                  :href="detail.goods.collectUrl"
+                  :href="safeCollectUrl.href"
                   target="_blank"
                   rel="noopener noreferrer"
+                  referrerpolicy="no-referrer"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-xs hover:bg-primary/90 transition-colors"
                 >
                   <component
@@ -428,11 +447,12 @@ function formatAttachmentSize(bytes: number) {
                   打开地址填写页面
                 </a>
                 <iframe
-                  v-if="detail.goods.embedCollectUrl"
+                  v-if="detail.goods.embedCollectUrl && safeCollectUrl.canEmbed"
                   class="w-full h-80 rounded-lg border border-border mt-2"
-                  :src="detail.goods.collectUrl"
+                  :src="safeCollectUrl.href"
                   title="收货地址填写"
-                  sandbox="allow-same-origin allow-scripts allow-modals allow-downloads allow-forms allow-popups"
+                  referrerpolicy="no-referrer"
+                  sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
                 />
               </div>
             </template>

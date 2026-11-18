@@ -1,24 +1,25 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { useOBSNotification } from '@/store/useOBSNotification'
-import { useWebFetcher } from '@/store/useWebFetcher'
 import { Spin } from '@/shared/ui/spin'
 
+const route = useRoute()
 const visible = ref(true)
 const active = ref(true)
-const webfetcher = useWebFetcher()
 const accountInfo = useAccount()
 const _obsNotification = useOBSNotification()
 
-const code = accountInfo.value.id ? accountInfo.value.biliAuthCode : window.$route.query.code?.toString()
-const openLiveAuth = accountInfo.value.id ? undefined : (window.$route.query as unknown as AuthInfo)
+const code = computed(() => (accountInfo.value.id ? accountInfo.value.biliAuthCode : route.query.code?.toString()))
+const openLiveAuth = computed(() => (accountInfo.value.id ? undefined : (route.query as unknown as AuthInfo)))
 
 onMounted(async () => {
   if (accountInfo.value.id) {
-    await webfetcher.Start()
+    const { useWebFetcher } = await import('@/store/useWebFetcher')
+    await useWebFetcher().Start()
   }
 
   if (window.obsstudio) {

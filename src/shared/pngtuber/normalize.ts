@@ -130,4 +130,3 @@ export function normalizePngtuberState(value: unknown, options?: { allowInlineIm
   state.collab = normalizeCollabSettings(raw.collab)
   return state
 }
-export const sanitizePngtuberState = normalizePngtuberState

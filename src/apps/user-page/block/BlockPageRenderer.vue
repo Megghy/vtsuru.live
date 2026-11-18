@@ -7,7 +7,7 @@ import { getUserPageThemeCssVars } from '@/apps/user-page/background'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 
 import type { BiliProfileStatus } from '../types'
-import { BLOCK_COMPONENTS } from './registry'
+import { BLOCK_COMPONENTS } from './blockComponents'
 import type { BlockPageProject, BlockVisibilityContext } from './schema'
 import { collectPageSections, PageSectionsKey } from './sectionNavigation'
 import { isBlockVisible } from './visibility'

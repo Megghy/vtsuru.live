@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { isInBiliBlackList } from '@/api/account'
 import type { EventModel } from '@/api/client-types'
@@ -52,6 +52,16 @@ const danmakuClient = useDanmakuClient()
 let client: Awaited<ReturnType<typeof danmakuClient.initOpenlive>> | null = null
 let disposed = false
 const pronunciationConverter = new pronunciation.PronunciationConverter()
+
+watch(
+  () => effectiveConfig.value.giftUsernamePronunciation,
+  (dict) => {
+    if (dict === pronunciation.DICT_PINYIN || dict === pronunciation.DICT_KANA) {
+      void pronunciationConverter.loadDict(dict)
+    }
+  },
+  { immediate: true },
+)
 
 let textEmoticons: { keyword: string; url: string }[] = []
 
@@ -246,7 +256,8 @@ function getAuthorType(open_id: string, guard_level: number): number {
  * 获取名称发音
  */
 function getPronunciation(text: string): string {
-  if (!pronunciationConverter) {
+  const dict = effectiveConfig.value.giftUsernamePronunciation
+  if (!pronunciationConverter || (dict !== pronunciation.DICT_PINYIN && dict !== pronunciation.DICT_KANA)) {
     return ''
   }
   return pronunciationConverter.getPronunciation(text)

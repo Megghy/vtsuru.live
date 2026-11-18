@@ -1,4 +1,4 @@
-import { USER_FEATURE_KEYS } from '../featureNavigation'
+import { USER_FEATURE_KEYS } from '../featureMeta'
 import {
   CUSTOM_HTML_ASSET_KEY_PATTERN,
   CUSTOM_HTML_MAX_ASSETS,

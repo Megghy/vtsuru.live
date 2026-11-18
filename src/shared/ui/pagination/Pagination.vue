@@ -9,7 +9,7 @@ import {
   PaginationNext,
   PaginationPrev,
   PaginationRoot,
-} from 'radix-vue'
+} from 'reka-ui'
 import { computed } from 'vue'
 
 import { Button } from '@/shared/ui/button'
@@ -91,6 +91,7 @@ function onSizeChange(val: string | number) {
         :total="actualTotal"
         :sibling-count="1"
         :show-edges="true"
+        :disabled="disabled"
         @update:page="onPageChange"
       >
         <PaginationList
@@ -102,7 +103,7 @@ function onSizeChange(val: string | number) {
               variant="outline"
               size="icon"
               class="size-7"
-              :disabled="page <= 1"
+              :disabled="disabled || page <= 1"
             >
               <ChevronsLeft class="size-3.5" />
             </Button>
@@ -112,7 +113,7 @@ function onSizeChange(val: string | number) {
               variant="outline"
               size="icon"
               class="size-7"
-              :disabled="page <= 1"
+              :disabled="disabled || page <= 1"
             >
               <ChevronLeft class="size-3.5" />
             </Button>
@@ -121,7 +122,7 @@ function onSizeChange(val: string | number) {
           <template v-for="(item, index) in items">
             <PaginationListItem
               v-if="item.type === 'page'"
-              :key="index"
+              :key="`page-${item.value}`"
               :value="item.value"
               as-child
             >
@@ -129,14 +130,14 @@ function onSizeChange(val: string | number) {
                 size="icon"
                 :variant="item.value === page ? 'default' : 'outline'"
                 class="size-7"
+                :disabled="disabled"
               >
                 {{ item.value }}
               </Button>
             </PaginationListItem>
             <PaginationEllipsis
               v-else
-              :key="item.type"
-              :index="index"
+              :key="`ellipsis-${index}`"
               class="flex size-7 items-center justify-center text-muted-foreground"
             >
               &#8230;
@@ -148,7 +149,7 @@ function onSizeChange(val: string | number) {
               variant="outline"
               size="icon"
               class="size-7"
-              :disabled="page >= totalPages"
+              :disabled="disabled || page >= totalPages"
             >
               <ChevronRight class="size-3.5" />
             </Button>
@@ -158,7 +159,7 @@ function onSizeChange(val: string | number) {
               variant="outline"
               size="icon"
               class="size-7"
-              :disabled="page >= totalPages"
+              :disabled="disabled || page >= totalPages"
             >
               <ChevronsRight class="size-3.5" />
             </Button>

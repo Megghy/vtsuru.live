@@ -10,7 +10,7 @@ import { useSpeechService } from '@/store/useSpeechService'
 import SectionField from '../SectionField.vue'
 import VoiceSelectWithPreview from '../VoiceSelectWithPreview.vue'
 
-const props = defineProps<{ providerId: string }>()
+const props = defineProps<{ providerId: 'grok-tts' | 'qwen-tts' }>()
 const speechService = useSpeechService()
 const { settings } = speechService
 const voices = ref<VoiceOption[]>([])

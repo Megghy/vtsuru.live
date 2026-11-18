@@ -2,7 +2,7 @@
 import './tool-page.css'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import { useRemoveBg } from '@/composables/useRemoveBg'
 import { trackManageToolSuccess } from '@/shared/services/umami'
@@ -67,9 +67,22 @@ useDropZone(dropZoneRef, {
 
 onMounted(checkSupport)
 
+function revokeUrl(urlRef: { value: string | undefined }) {
+  if (urlRef.value) {
+    URL.revokeObjectURL(urlRef.value)
+    urlRef.value = undefined
+  }
+}
+
+onUnmounted(() => {
+  revokeUrl(originalUrl)
+  revokeUrl(resultUrl)
+})
+
 function handleFile(file: File) {
+  revokeUrl(originalUrl)
+  revokeUrl(resultUrl)
   originalUrl.value = URL.createObjectURL(file)
-  resultUrl.value = undefined
 }
 
 const fileExt = computed(() => {
@@ -85,6 +98,7 @@ async function process() {
     const resp = await fetch(originalUrl.value)
     const blob = await resp.blob()
     const result = await processRemoveBg(blob)
+    revokeUrl(resultUrl)
     resultUrl.value = URL.createObjectURL(result)
     trackManageToolSuccess('RemoveBg', 'process', {
       mode: options.mode,

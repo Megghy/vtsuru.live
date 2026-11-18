@@ -1,7 +1,7 @@
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http' // 引入 Body
 import md5 from 'md5'
 import { acceptHMRUpdate, defineStore } from 'pinia'
-import { computed, h, onUnmounted, ref } from 'vue'
+import { computed, h, onScopeDispose, ref } from 'vue'
 
 import { useAccount } from '@/api/account'
 import { isDev } from '@/shared/config'
@@ -170,20 +170,33 @@ export const useBiliFunction = defineStore('biliFunction', () => {
     }
   }
 
+  let isInited = false
+  let initPromise: Promise<void> | null = null
+
+  onScopeDispose(() => {
+    clearTimers()
+    isInited = false
+    initPromise = null
+  })
+
   // 初始化函数
   async function init() {
-    // 确保设置已经初始化
-    if (!settingsStore.settings.danmakuInterval) {
-      await settingsStore.init()
-    }
-    // 启动队列处理
-    processDanmakuQueue()
-    processPmQueue()
-    console.log('[BiliFunction] 队列初始化完成')
-    // 清理定时器
-    onUnmounted(() => {
-      clearTimers()
+    if (isInited) return
+    if (initPromise) return initPromise
+    initPromise = (async () => {
+      // 确保设置已经初始化
+      if (!settingsStore.settings.danmakuInterval) {
+        await settingsStore.init()
+      }
+      // 启动队列处理
+      processDanmakuQueue()
+      processPmQueue()
+      isInited = true
+      console.log('[BiliFunction] 队列初始化完成')
+    })().finally(() => {
+      initPromise = null
     })
+    return initPromise
   }
 
   // 原始发送弹幕方法（重命名为_sendLiveDanmaku）

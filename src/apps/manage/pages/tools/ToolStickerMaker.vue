@@ -4,7 +4,7 @@ import TextOutline from '@vicons/ionicons5/es/TextOutline'
 import TrashOutline from '@vicons/ionicons5/es/TrashOutline'
 import { useDropZone, useFileDialog } from '@vueuse/core'
 import { saveAs } from 'file-saver'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 
 import CanvasEditor from '@/apps/manage/components/tools/CanvasEditor.vue'
 import type { EditorLayer, ImageLayer, TextLayer } from '@/apps/manage/components/tools/CanvasEditor.vue'
@@ -61,6 +61,13 @@ function loadBg(file: File) {
   if (opts.bgImageUrl) URL.revokeObjectURL(opts.bgImageUrl)
   opts.bgImageUrl = URL.createObjectURL(file)
 }
+
+onUnmounted(() => {
+  if (opts.bgImageUrl) {
+    URL.revokeObjectURL(opts.bgImageUrl)
+    opts.bgImageUrl = null
+  }
+})
 
 const selectedLayer = computed<EditorLayer | null>(() => {
   if (!editorRef.value?.selectedId) return null

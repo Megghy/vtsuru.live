@@ -1,4 +1,4 @@
-import { converter, formatHex, parse } from 'culori'
+import { converter, formatHex, parse } from '@/shared/config/theme/culori'
 
 const toHsl = converter('hsl')
 const toRgb = converter('rgb')

@@ -239,6 +239,9 @@ const timelineData: TimelineRecord[] = [
               scrolling="no"
               height="200"
               frameborder="0"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+              sandbox="allow-scripts allow-same-origin allow-popups"
               class="rounded-lg border border-border"
             />
           </div>
