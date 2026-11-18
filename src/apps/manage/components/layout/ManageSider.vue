@@ -29,11 +29,13 @@ import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
 import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
 import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
 import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
+import { createReusableTemplate } from '@vueuse/core'
 import { computed, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import type { ResponseAccountInfo } from '@/api/generated/model'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
+import { useManageShell } from '@/apps/manage/composables/useManageShell'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
 import { Button } from '@/shared/ui/button'
@@ -44,7 +46,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/shared/ui/dropdown-menu'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { Sheet, SheetContent } from '@/shared/ui/sheet'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { useMessage } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -65,14 +68,16 @@ type ManageNavItem = {
   group: Exclude<ManageNavGroupId, 'favorites'>
 }
 
+const [DefineSiderBody, ReuseSiderBody] = createReusableTemplate()
+
 const message = useMessage()
 const route = useRoute()
 const router = useRouter()
 const biliAuth = useBiliAuth()
 const { workspace } = useManageWorkspace()
+const { isMobileSider, siderCollapsed, mobileSiderOpen } = useManageShell()
 
-const defaultCollapsed = window.innerWidth < 750
-const collapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
+const collapsed = computed(() => !isMobileSider.value && siderCollapsed.value)
 const siderWidth = 180
 const siderCollapsedWidth = 56
 
@@ -421,28 +426,28 @@ function onClickNavItem(ev: MouseEvent, item: ManageNavItem) {
   if (item.disabled) {
     ev.preventDefault()
     ev.stopPropagation()
+    return
   }
+  mobileSiderOpen.value = false
 }
 
 function onClickDisabledItem(item: ManageNavItem) {
   const reason = item.disabledReason || '当前无法使用此功能'
   message.warning(reason)
+  mobileSiderOpen.value = false
   if (!isBiliVerified.value) {
     void router.push({ name: 'manage-index', query: { tab: 'info' } })
   }
 }
 
 async function go(name: string, query?: Record<string, string>) {
+  mobileSiderOpen.value = false
   await router.push({ name, query })
 }
 </script>
 
 <template>
-  <aside
-    class="h-full border-r border-border bg-card box-border flex flex-col overflow-hidden transition-[width] duration-200"
-    :class="{ collapsed }"
-    :style="{ width: collapsed ? `${siderCollapsedWidth}px` : `${siderWidth}px` }"
-  >
+  <DefineSiderBody>
     <div class="py-[9px] px-3 pb-1.5 flex flex-col gap-1.5">
       <WorkspaceSwitch
         block
@@ -621,34 +626,32 @@ async function go(name: string, query?: Record<string, string>) {
                 >
               </Button>
 
-              <TooltipProvider v-if="g.key === 'group-danmaku'">
-                <Tooltip>
-                  <TooltipTrigger as-child>
-                    <Button
-                      variant="ghost"
-                      size="icon-xs"
-                      aria-label="可用性警告"
-                    >
-                      <component
-                        :is="Info24Filled"
-                        class="size-3.5"
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="right"
-                    class="max-w-xs p-3"
+              <Tooltip v-if="g.key === 'group-danmaku'">
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    aria-label="可用性警告"
                   >
-                    <div class="font-medium text-destructive mb-1">可用性警告</div>
-                    <div class="text-[11px] text-muted-foreground space-y-1">
-                      <div>
-                        当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作。
-                      </div>
-                      <div>建议尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。</div>
+                    <component
+                      :is="Info24Filled"
+                      class="size-3.5"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="right"
+                  class="max-w-xs p-3"
+                >
+                  <div class="font-medium text-destructive mb-1">可用性警告</div>
+                  <div class="text-[11px] text-muted-foreground space-y-1">
+                    <div>
+                      当浏览器在后台运行时，定时器和 WebSocket 连接将受到严格限制，可能导致弹幕接收功能无法正常工作。
                     </div>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                    <div>建议尽量保持网页在前台运行，并关闭浏览器的“页面休眠/内存节省”功能。</div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             <div
@@ -660,90 +663,95 @@ async function go(name: string, query?: Record<string, string>) {
                 :key="item.key"
                 class="group/row"
               >
-                <RouterLink
-                  v-if="!item.disabled && item.to"
-                  :to="item.to"
-                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 no-underline text-foreground border transition-colors box-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
-                  :class="[
-                    activeKey === item.key
-                      ? 'bg-[rgba(127,127,127,0.12)] border-[rgba(127,127,127,0.18)]'
-                      : 'bg-transparent border-transparent hover:bg-[rgba(127,127,127,0.08)]',
-                    { 'p-0 justify-center': collapsed },
-                  ]"
-                  :aria-current="activeKey === item.key ? 'page' : undefined"
-                  :title="collapsed ? item.label : undefined"
-                  @click="(ev: any) => onClickNavItem(ev, item)"
-                >
-                  <component
-                    :is="item.icon"
-                    class="size-[18px] shrink-0"
-                  />
-                  <span
-                    v-if="!collapsed"
-                    class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
-                    >{{ item.label }}</span
-                  >
+                <Tooltip :disabled="!collapsed">
+                  <TooltipTrigger as-child>
+                    <RouterLink
+                      v-if="!item.disabled && item.to"
+                      :to="item.to"
+                      class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 no-underline text-foreground border transition-colors box-border focus-visible:outline focus-visible:outline-2 focus-visible:outline-[rgba(127,127,127,0.28)] focus-visible:outline-offset-2"
+                      :class="[
+                        activeKey === item.key
+                          ? 'bg-[rgba(127,127,127,0.12)] border-[rgba(127,127,127,0.18)]'
+                          : 'bg-transparent border-transparent hover:bg-[rgba(127,127,127,0.08)]',
+                        { 'p-0 justify-center': collapsed },
+                      ]"
+                      :aria-current="activeKey === item.key ? 'page' : undefined"
+                      @click="(ev: any) => onClickNavItem(ev, item)"
+                    >
+                      <component
+                        :is="item.icon"
+                        class="size-[18px] shrink-0"
+                      />
+                      <span
+                        v-if="!collapsed"
+                        class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
+                        >{{ item.label }}</span
+                      >
 
-                  <Button
-                    v-if="!collapsed"
-                    variant="ghost"
-                    size="icon-xs"
-                    class="opacity-50 group-hover/row:opacity-100"
-                    :class="{
-                      'opacity-100 bg-amber-500/25 border border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
-                        isFavorite(item.key),
-                    }"
-                    :aria-label="isFavorite(item.key) ? '取消收藏' : '收藏'"
-                    @click.stop.prevent="toggleFavorite(item.key)"
-                  >
-                    <component
-                      :is="Bookmark"
-                      class="nav-item__fav-icon size-3 transition-colors"
-                      :class="
-                        isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
-                      "
-                    />
-                  </Button>
-                </RouterLink>
+                      <Button
+                        v-if="!collapsed"
+                        variant="ghost"
+                        size="icon-xs"
+                        class="opacity-50 group-hover/row:opacity-100"
+                        :class="{
+                          'opacity-100 bg-amber-500/25 border border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                            isFavorite(item.key),
+                        }"
+                        :aria-label="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                        @click.stop.prevent="toggleFavorite(item.key)"
+                      >
+                        <component
+                          :is="Bookmark"
+                          class="nav-item__fav-icon size-3 transition-colors"
+                          :class="
+                            isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
+                          "
+                        />
+                      </Button>
+                    </RouterLink>
 
-                <div
-                  v-else
-                  class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 text-foreground border border-transparent bg-transparent box-border opacity-50 cursor-pointer hover:bg-[rgba(127,127,127,0.08)] hover:opacity-70"
-                  :class="{ 'p-0 justify-center': collapsed }"
-                  :title="item.disabledReason || item.label"
-                  role="button"
-                  @click="onClickDisabledItem(item)"
-                >
-                  <component
-                    :is="item.icon"
-                    class="size-[18px] shrink-0"
-                  />
-                  <span
-                    v-if="!collapsed"
-                    class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
-                    >{{ item.label }}</span
-                  >
-                  <Button
-                    v-if="!collapsed"
-                    variant="ghost"
-                    size="icon-xs"
-                    class="opacity-50 group-hover/row:opacity-100"
-                    :class="{
-                      'opacity-100 bg-amber-500/25 border border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
-                        isFavorite(item.key),
-                    }"
-                    :aria-label="isFavorite(item.key) ? '取消收藏' : '收藏'"
-                    @click.stop.prevent="toggleFavorite(item.key)"
-                  >
-                    <component
-                      :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
-                      class="nav-item__fav-icon size-3 transition-colors"
-                      :class="
-                        isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
-                      "
-                    />
-                  </Button>
-                </div>
+                    <div
+                      v-else
+                      class="h-[34px] rounded-[10px] px-2.5 flex items-center gap-2.5 text-foreground border border-transparent bg-transparent box-border opacity-50 cursor-pointer hover:bg-[rgba(127,127,127,0.08)] hover:opacity-70"
+                      :class="{ 'p-0 justify-center': collapsed }"
+                      role="button"
+                      @click="onClickDisabledItem(item)"
+                    >
+                      <component
+                        :is="item.icon"
+                        class="size-[18px] shrink-0"
+                      />
+                      <span
+                        v-if="!collapsed"
+                        class="text-xs font-normal whitespace-nowrap overflow-hidden text-ellipsis flex-1 min-w-0"
+                        >{{ item.label }}</span
+                      >
+                      <Button
+                        v-if="!collapsed"
+                        variant="ghost"
+                        size="icon-xs"
+                        class="opacity-50 group-hover/row:opacity-100"
+                        :class="{
+                          'opacity-100 bg-amber-500/25 border border-amber-500/60 shadow-[0_0_0_1px_rgba(245,158,11,0.26)]':
+                            isFavorite(item.key),
+                        }"
+                        :aria-label="isFavorite(item.key) ? '取消收藏' : '收藏'"
+                        @click.stop.prevent="toggleFavorite(item.key)"
+                      >
+                        <component
+                          :is="isFavorite(item.key) ? Bookmark : BookmarkOutline"
+                          class="nav-item__fav-icon size-3 transition-colors"
+                          :class="
+                            isFavorite(item.key) ? 'text-amber-500' : 'text-muted-foreground/60 hover:text-foreground'
+                          "
+                        />
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
+                    {{ item.disabled ? item.disabledReason || item.label : item.label }}
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
           </div>
@@ -775,5 +783,26 @@ async function go(name: string, query?: Record<string, string>) {
         </Button>
       </div>
     </div>
+  </DefineSiderBody>
+
+  <Sheet
+    v-if="isMobileSider"
+    v-model:open="mobileSiderOpen"
+  >
+    <SheetContent
+      side="left"
+      class="w-[240px] p-0 flex flex-col gap-0 overflow-hidden bg-card"
+    >
+      <ReuseSiderBody />
+    </SheetContent>
+  </Sheet>
+
+  <aside
+    v-else
+    class="h-full border-r border-border bg-card box-border flex flex-col overflow-hidden transition-[width] duration-200"
+    :class="{ collapsed }"
+    :style="{ width: collapsed ? `${siderCollapsedWidth}px` : `${siderWidth}px` }"
+  >
+    <ReuseSiderBody />
   </aside>
 </template>

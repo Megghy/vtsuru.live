@@ -422,7 +422,7 @@ function runMacro(macroId: string) {
               class="flex flex-wrap items-center gap-2"
             >
               <Input
-                :value="element.step.parameterId"
+                :model-value="element.step.parameterId"
                 placeholder="参数 ID"
                 class="w-40"
                 @input="patchStep(element.id, { parameterId: ($event.target as HTMLInputElement).value })"
@@ -506,7 +506,7 @@ function runMacro(macroId: string) {
               class="flex flex-wrap items-center gap-2"
             >
               <Input
-                :value="element.step.url"
+                :model-value="element.step.url"
                 placeholder="音效 URL"
                 class="flex-1 min-w-[200px]"
                 @input="patchStep(element.id, { url: ($event.target as HTMLInputElement).value })"

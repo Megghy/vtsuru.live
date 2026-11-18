@@ -61,13 +61,12 @@ async function updateSettings() {
   if (accountInfo.value.id) {
     liveRequest.isLoading = true
     try {
-      const msg = await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
-      if (msg) {
-        toast.success('已保存')
-        return true
-      } else {
-        toast.error(`保存失败: ${msg}`)
-      }
+      await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
+      toast.success('已保存')
+      return true
+    } catch (err) {
+      toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
+      return false
     } finally {
       liveRequest.isLoading = false
     }
@@ -108,7 +107,11 @@ async function updateSettings() {
             />
           </div>
 
-          <Alert variant="info" v-if="settings.orderPrefix && settings.orderPrefix.includes(' ')" class="py-1 px-2.5 w-fit">
+          <Alert
+            variant="info"
+            v-if="settings.orderPrefix && settings.orderPrefix.includes(' ')"
+            class="py-1 px-2.5 w-fit"
+          >
             <AlertDescription class="m-0"> 前缀包含空格，可能导致用户输入困难。 </AlertDescription>
           </Alert>
         </div>

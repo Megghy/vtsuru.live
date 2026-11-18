@@ -2,7 +2,7 @@
 import Info24Filled from '@vicons/fluent/es/Info24Filled'
 import Mail24Filled from '@vicons/fluent/es/Mail24Filled'
 import PersonFeedback24Filled from '@vicons/fluent/es/PersonFeedback24Filled'
-import { computed, onUnmounted, ref, watchEffect } from 'vue'
+import { computed, onErrorCaptured, onUnmounted, ref, watch, watchEffect } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 
 import { logoutAccount } from '@/api/account'
@@ -16,6 +16,7 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Separator } from '@/shared/ui/separator'
+import { Spin } from '@/shared/ui/spin'
 import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
@@ -27,7 +28,26 @@ const message = useMessage()
 const route = useRoute()
 const canResendEmail = ref(false)
 const countdownSeconds = ref(0)
+const routeError = ref<string | null>(null)
+const renderEpoch = ref(0)
 let timer: ReturnType<typeof setInterval> | null = null
+
+watch(
+  () => route.fullPath,
+  () => {
+    routeError.value = null
+  },
+)
+
+onErrorCaptured((err) => {
+  routeError.value = err instanceof Error ? err.message : String(err)
+  return false
+})
+
+function retryRouteRender() {
+  routeError.value = null
+  renderEpoch.value += 1
+}
 
 const { workspace } = useManageWorkspace()
 const isEmailWaitPreview = computed(() => {
@@ -103,21 +123,48 @@ async function resendEmail() {
         :class="viewRoute.meta.pageWidth ? `manage-page--${viewRoute.meta.pageWidth}` : undefined"
       >
         <ManageDanmakuStatusBanner v-if="viewRoute.meta.danmaku" />
+        <Alert
+          v-if="routeError"
+          variant="destructive"
+          class="my-4"
+        >
+          <AlertTitle>页面加载或渲染失败</AlertTitle>
+          <AlertDescription class="mt-2 flex flex-col gap-3">
+            <span class="text-xs break-all">{{ routeError }}</span>
+            <div>
+              <Button
+                variant="outline"
+                size="xs"
+                @click="retryRouteRender"
+              >
+                重试渲染
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
         <Transition
+          v-else
           name="page-fade"
           mode="out-in"
         >
-          <KeepAlive v-if="viewRoute.meta.keepAlive">
+          <Suspense>
+            <KeepAlive v-if="viewRoute.meta.keepAlive">
+              <component
+                :is="Component"
+                :key="`${String(viewRoute.name ?? viewRoute.path)}:${renderEpoch}`"
+              />
+            </KeepAlive>
             <component
               :is="Component"
-              :key="String(viewRoute.name ?? viewRoute.path)"
+              v-else
+              :key="`${viewRoute.fullPath.split('#')[0]}:${renderEpoch}`"
             />
-          </KeepAlive>
-          <component
-            :is="Component"
-            v-else
-            :key="viewRoute.fullPath.split('#')[0]"
-          />
+            <template #fallback>
+              <div class="flex-center min-h-[40vh] w-full">
+                <Spin size="large" />
+              </div>
+            </template>
+          </Suspense>
         </Transition>
       </div>
     </RouterView>

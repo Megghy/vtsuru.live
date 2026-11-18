@@ -107,14 +107,10 @@ async function updateServerSettings() {
   isLoading.value = true
 
   try {
-    const msg = await SaveSetting('Point', accountInfo.value.settings.point)
-    if (msg) {
-      return true
-    } else {
-      toast.error(`保存失败: ${msg}`)
-    }
+    await SaveSetting('Point', accountInfo.value.settings.point)
+    return true
   } catch (err) {
-    toast.error(`保存失败: ${String(err)}`)
+    toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
     console.error('保存签到设置失败:', err)
   } finally {
     isLoading.value = false
@@ -384,7 +380,7 @@ onMounted(() => {
                 >
                   <div class="flex items-center gap-2">
                     <Input
-                      :value="serverSetting.checkInKeyword"
+                      :model-value="serverSetting.checkInKeyword"
                       placeholder="例如：签到"
                       class="flex-1"
                       @input="serverSetting.checkInKeyword = ($event.target as HTMLInputElement).value"

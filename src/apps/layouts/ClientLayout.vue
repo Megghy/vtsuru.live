@@ -19,6 +19,7 @@ import VideoPerson24Filled from '@vicons/fluent/es/VideoPerson24Filled'
 import CheckmarkCircle from '@vicons/ionicons5/es/CheckmarkCircle'
 import CloseCircle from '@vicons/ionicons5/es/CloseCircle'
 import Home from '@vicons/ionicons5/es/Home'
+import { Search } from 'lucide-vue-next'
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
@@ -31,6 +32,8 @@ import { clientInited, clientInitStage, initAll, OnClientUnmounted } from '@/app
 import { useBiliCookie } from '@/apps/client/store/useBiliCookie'
 import { useDanmakuWindow } from '@/apps/client/store/useDanmakuWindow'
 import { useGiftWindow } from '@/apps/client/store/useGiftWindow'
+import ThemeToggleButton from '@/shared/components/ThemeToggleButton.vue'
+import { useCommandPalette } from '@/shared/composables/useCommandPalette'
 import { CN_HOST, CURRENT_HOST, isDev, isTauri } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
@@ -41,7 +44,7 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Spin } from '@/shared/ui/spin'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { isDarkMode } from '@/shared/utils'
 import { useFetcherRpcServer } from '@/store/useFetcherRpcServer'
 import { useWebFetcher } from '@/store/useWebFetcher'
@@ -52,6 +55,7 @@ const router = useRouter()
 const route = useRoute()
 const webfetcher = useWebFetcher()
 const rpcServer = useFetcherRpcServer()
+const { openPalette } = useCommandPalette()
 
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
 const manageCssVars = computed(() => getThemeCssVars(manageTokens.value))
@@ -290,34 +294,50 @@ onMounted(() => {
             </div>
 
             <div class="flex items-center gap-1">
-              <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="icon-xs"
+                    class="rounded-full"
+                    aria-label="EventFetcher 状态"
+                  >
+                    <CheckmarkCircle
+                      v-if="webfetcher.state === 'connected'"
+                      class="size-4 text-emerald-500"
+                    />
+                    <CloseCircle
+                      v-else
+                      class="size-4 text-destructive"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div>EventFetcher 状态</div>
+                  <div class="text-[11px] text-muted-foreground">
+                    {{ webfetcher.state === 'connected' ? '运行中' : '未运行 / 连接断开' }}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+
+              <template v-if="!siderCollapsed">
                 <Tooltip>
                   <TooltipTrigger as-child>
                     <Button
                       variant="ghost"
                       size="icon-xs"
-                      class="rounded-full"
-                      aria-label="EventFetcher 状态"
+                      aria-label="命令面板 (Ctrl+K)"
+                      @click="openPalette"
                     >
-                      <CheckmarkCircle
-                        v-if="webfetcher.state === 'connected'"
-                        class="size-4 text-emerald-500"
-                      />
-                      <CloseCircle
-                        v-else
-                        class="size-4 text-destructive"
-                      />
+                      <Search class="size-3.5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    <div>EventFetcher 状态</div>
-                    <div class="text-[11px] text-muted-foreground">
-                      {{ webfetcher.state === 'connected' ? '运行中' : '未运行 / 连接断开' }}
-                    </div>
-                  </TooltipContent>
+                  <TooltipContent>快捷跳转与命令面板 (Ctrl+K)</TooltipContent>
                 </Tooltip>
 
-                <Tooltip v-if="!siderCollapsed">
+                <ThemeToggleButton variant="ghost" />
+
+                <Tooltip>
                   <TooltipTrigger as-child>
                     <Button
                       variant="ghost"
@@ -330,24 +350,22 @@ onMounted(() => {
                   </TooltipTrigger>
                   <TooltipContent>折叠边栏</TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              </template>
             </div>
 
-            <TooltipProvider v-if="siderCollapsed">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label="展开边栏"
-                    @click="siderCollapsed = false"
-                  >
-                    <ChevronRight16Regular class="size-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>展开边栏</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            <Tooltip v-if="siderCollapsed">
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label="展开边栏"
+                  @click="siderCollapsed = false"
+                >
+                  <ChevronRight16Regular class="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>展开边栏</TooltipContent>
+            </Tooltip>
           </div>
 
           <!-- 导航菜单 -->

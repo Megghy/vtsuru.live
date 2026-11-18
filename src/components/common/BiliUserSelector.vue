@@ -88,7 +88,7 @@ function handleInput(e: Event) {
     <PopoverTrigger as-child>
       <div class="relative w-full">
         <Input
-          :value="inputValue"
+          :model-value="inputValue"
           :placeholder="placeholder || '请输入B站用户UID'"
           :disabled="disabled"
           class="pr-7 font-mono"
@@ -104,7 +104,11 @@ function handleInput(e: Event) {
       </div>
     </PopoverTrigger>
 
-    <PopoverContent v-if="currentUserInfo" class="w-64 p-2.5" align="start">
+    <PopoverContent
+      v-if="currentUserInfo"
+      class="w-64 p-2.5"
+      align="start"
+    >
       <div class="flex items-center gap-2.5">
         <img
           :src="currentUserInfo.face"

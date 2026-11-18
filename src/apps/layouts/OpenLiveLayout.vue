@@ -13,16 +13,14 @@ import { computed, ref, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
-import { ThemeType } from '@/api/client-types'
+import ThemeToggleButton from '@/shared/components/ThemeToggleButton.vue'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 import type { AuthInfo } from '@/shared/services/DanmakuClients/OpenLiveClient'
-import { usePersistedStorage } from '@/shared/storage/persist'
 import { Avatar, AvatarFallback, AvatarImage } from '@/shared/ui/avatar'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Spin } from '@/shared/ui/spin'
-import { Switch } from '@/shared/ui/switch'
 import { isDarkMode } from '@/shared/utils'
 import { useDanmakuClient } from '@/store/useDanmakuClient'
 
@@ -31,7 +29,6 @@ import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 const route = useRoute()
 const router = useRouter()
-const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
 const danmakuClient = useDanmakuClient()
 
 const manageTokens = computed(() => buildManageTokens(isDarkMode.value))
@@ -66,13 +63,6 @@ const navItems = computed(() => {
 })
 
 const activeMenuKey = computed(() => (route.meta.parent ?? route.name)?.toString())
-
-const isDarkValue = computed({
-  get: () => themeType.value === ThemeType.Dark || (themeType.value === ThemeType.Auto && isDarkMode.value),
-  set: (value) => {
-    themeType.value = value ? ThemeType.Dark : ThemeType.Light
-  },
-})
 
 watch(
   [needsOpenLiveAuth, () => route.query.Code, () => route.query.Mid, () => route.query.Caller],
@@ -172,16 +162,7 @@ watch(
           {{ danmakuClient.connectionStatus }}
         </Badge>
 
-        <div class="flex items-center gap-2">
-          <Switch
-            :checked="isDarkValue"
-            @update:checked="isDarkValue = $event"
-          />
-          <component
-            :is="isDarkValue ? Moon : Sunny"
-            class="size-4 text-muted-foreground"
-          />
-        </div>
+        <ThemeToggleButton />
       </div>
     </header>
 

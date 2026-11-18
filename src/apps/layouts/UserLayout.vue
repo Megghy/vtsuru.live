@@ -49,7 +49,7 @@ import { Empty } from '@/shared/ui/empty'
 import { Separator } from '@/shared/ui/separator'
 import { Spin } from '@/shared/ui/spin'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { isDarkMode, NavigateToNewTab } from '@/shared/utils'
+import { cycleThemeType, getThemeTypeLabel, isDarkMode, NavigateToNewTab, setForcedThemeMode } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
@@ -265,20 +265,10 @@ useGoogleFont(
 
 const effectiveIsDark = computed(() => resolvePageThemeIsDark(pageThemeMode.value, isDarkMode.value))
 
-let themeTypeBeforeForce: ThemeType | null = null
 watch(
-  () => [pageThemeMode.value, themeType.value] as const,
-  ([mode]) => {
-    if (mode === 'dark' || mode === 'light') {
-      if (themeTypeBeforeForce == null) themeTypeBeforeForce = themeType.value
-      const forced = mode === 'dark' ? ThemeType.Dark : ThemeType.Light
-      if (themeType.value !== forced) themeType.value = forced
-      return
-    }
-    if (themeTypeBeforeForce != null) {
-      if (themeType.value !== themeTypeBeforeForce) themeType.value = themeTypeBeforeForce
-      themeTypeBeforeForce = null
-    }
+  () => pageThemeMode.value,
+  (mode) => {
+    setForcedThemeMode(mode === 'dark' || mode === 'light' ? mode : null)
   },
   { immediate: true },
 )
@@ -294,7 +284,7 @@ onBeforeUnmount(() => {
   clearUserPageRuntimeCache()
   customCssElement?.remove()
   customCssElement = null
-  if (themeTypeBeforeForce != null) themeType.value = themeTypeBeforeForce
+  setForcedThemeMode(null)
 })
 
 const pageBgOverride = computed(() => {
@@ -365,8 +355,13 @@ const themeSwitchTitle = computed(() => {
   if (isLoading.value) return '页面加载中'
   if (pageThemeMode.value === 'dark') return '该用户页面强制为深色主题'
   if (pageThemeMode.value === 'light') return '该用户页面强制为浅色主题'
-  return effectiveIsDark.value ? '切换为浅色主题' : '切换为深色主题'
+  const nextType = cycleThemeType(themeType.value)
+  return `当前：${getThemeTypeLabel(themeType.value)}，点击切换为${getThemeTypeLabel(nextType)}`
 })
+
+function toggleUserTheme() {
+  themeType.value = cycleThemeType(themeType.value)
+}
 
 function updateMenuOptions() {
   if (!userInfo.value) {
@@ -568,7 +563,7 @@ function scrollToTop() {
             variant="ghost"
             :disabled="isLoading || pageThemeMode !== 'auto'"
             :aria-label="themeSwitchTitle"
-            @click="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
+            @click="toggleUserTheme"
           >
             <component
               :is="effectiveIsDark ? Moon : Sunny"
@@ -944,7 +939,7 @@ function scrollToTop() {
       :is-dark="effectiveIsDark"
       :theme-locked="pageThemeMode !== 'auto'"
       :theme-switch-title="themeSwitchTitle"
-      @toggle-theme="themeType = effectiveIsDark ? ThemeType.Light : ThemeType.Dark"
+      @toggle-theme="toggleUserTheme"
     />
   </div>
 

@@ -8,6 +8,10 @@ import type { HTMLAttributes } from 'vue'
 import { useThemeScope } from '@/shared/config/theme/scope'
 import { cn } from '@/shared/utils/cn'
 
+defineOptions({
+  inheritAttrs: false,
+})
+
 const props = defineProps<DialogContentProps & { class?: HTMLAttributes['class'] }>()
 const emits = defineEmits<DialogContentEmits>()
 
@@ -30,7 +34,7 @@ const themeStyle = useThemeScope()
             props.class,
           )
         "
-        v-bind="forwarded"
+        v-bind="{ ...forwarded, ...$attrs }"
         @pointer-down-outside="
           (event) => {
             const originalEvent = event.detail.originalEvent

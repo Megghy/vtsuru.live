@@ -11,6 +11,7 @@ import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
+import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { loadObsStoreFonts, OBS_CLOCK_FONTS } from '@/apps/obs-store/utils/fontLoader'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
@@ -169,21 +170,10 @@ const modeOptions: { label: string; value: ClockMode }[] = [
             </div>
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <Input
-              v-model="channelDraft"
-              class="w-[120px]"
-              placeholder="频道"
-              maxlength="64"
-              @keyup.enter="changeChannel"
-            />
-            <Button
-              variant="secondary"
-              @click="changeChannel"
-            >
-              切换频道
-            </Button>
-          </div>
+          <ObsChannelSwitcher
+            v-model="channelDraft"
+            @submit="changeChannel"
+          />
 
           <!-- 模式切换控制器 -->
           <ToggleGroup
@@ -396,7 +386,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                 <div class="color-item">
                   <span class="color-label">文字颜色</span>
                   <Input
-                    :value="state.textColor"
+                    :model-value="state.textColor"
                     placeholder="默认或 #ffffff"
                     @input="updateState({ textColor: ($event.target as HTMLInputElement).value })"
                   />
@@ -405,7 +395,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
                 <div class="color-item">
                   <span class="color-label">外壳背景底色</span>
                   <Input
-                    :value="state.bgColor"
+                    :model-value="state.bgColor"
                     placeholder="默认或 #1e2024"
                     @input="updateState({ bgColor: ($event.target as HTMLInputElement).value })"
                   />
@@ -433,7 +423,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
               <!-- 标题文本输入行 -->
               <div class="text-inputs-row">
                 <Input
-                  :value="state.title"
+                  :model-value="state.title"
                   placeholder="自定义副标 / 标题文本 (如 LIVE NOW)"
                   class="flex-1"
                   @input="updateState({ title: ($event.target as HTMLInputElement).value })"
@@ -441,7 +431,7 @@ const modeOptions: { label: string; value: ClockMode }[] = [
 
                 <Input
                   v-if="state.mode === 'countdown'"
-                  :value="state.timerEndText"
+                  :model-value="state.timerEndText"
                   placeholder="倒计时结束提示 (如 LIVE STARTED)"
                   class="flex-1"
                   @input="updateState({ timerEndText: ($event.target as HTMLInputElement).value })"

@@ -197,7 +197,7 @@ function submit() {
             <div class="flex items-center gap-2">
               <Input
                 size="xs"
-                :value="inv.joinUrl"
+                :model-value="inv.joinUrl"
                 readonly
                 class="font-mono flex-1 bg-muted/30"
               />

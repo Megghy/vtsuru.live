@@ -75,8 +75,7 @@ async function copyObsLink() {
     message.warning('尚未登录或未生成有效链接')
     return
   }
-  await copyToClipboard(obsUrl.value)
-  message.success('点播 OBS 源链接已复制 (已携带当前样式参数)')
+  await copyToClipboard(obsUrl.value, '点播 OBS 源链接已复制 (已携带当前样式参数)')
 }
 
 onMounted(() => {

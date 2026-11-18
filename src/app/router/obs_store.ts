@@ -138,5 +138,23 @@ export default {
         forceReload: true,
       },
     },
+    {
+      path: 'keycast-manage',
+      name: 'obs-store-keycast-manage',
+      component: async () => import('@/apps/obs-store/components/keycast/KeycastViewer.vue'),
+      meta: {
+        title: '键盘按键投屏控制台',
+        forceReload: true,
+      },
+    },
+    {
+      path: 'keycast',
+      name: 'obs-store-keycast-display',
+      component: async () => import('@/apps/obs-store/components/keycast/KeycastDisplay.vue'),
+      meta: {
+        title: '键盘按键投屏',
+        forceReload: true,
+      },
+    },
   ],
 }

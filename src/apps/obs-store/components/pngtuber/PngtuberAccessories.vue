@@ -74,7 +74,7 @@ const fields = [
 
         <AccordionContent class="pt-2 pb-3 space-y-3">
           <Input
-            :value="a.name"
+            :model-value="a.name"
             placeholder="配件名称"
             :disabled="disabled"
             @input="patch(a.id, { name: ($event.target as HTMLInputElement).value })"
@@ -115,12 +115,9 @@ const fields = [
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="always">始终显示</SelectItem
-              >
-              <SelectItem value="speaking">说话时显示</SelectItem
-              >
-              <SelectItem value="idle">静止时显示</SelectItem
-              >
+              <SelectItem value="always">始终显示</SelectItem>
+              <SelectItem value="speaking">说话时显示</SelectItem>
+              <SelectItem value="idle">静止时显示</SelectItem>
             </SelectContent>
           </Select>
 
@@ -145,7 +142,12 @@ const fields = [
               "
             >
               <template #trigger>
-                <Button size="xs" variant="outline" class="border-destructive/40 text-destructive hover:bg-destructive/10" :disabled="disabled">
+                <Button
+                  size="xs"
+                  variant="outline"
+                  class="border-destructive/40 text-destructive hover:bg-destructive/10"
+                  :disabled="disabled"
+                >
                   删除配件
                 </Button>
               </template>

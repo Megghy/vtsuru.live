@@ -100,7 +100,7 @@ onUnmounted(() => void dashboard.stop())
 
 <template>
   <div
-    class="flex flex-col h-dvh overflow-hidden bg-background text-foreground"
+    class="flex flex-col h-full min-h-0 overflow-hidden bg-background text-foreground"
     :style="{ fontSize: `${dashboard.settings.fontSize}px` }"
   >
     <Spin

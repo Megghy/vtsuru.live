@@ -1,14 +1,39 @@
 <script setup lang="ts">
 import { RPC } from '@mixer/postmessage-rpc'
-import { onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 import type { DirectClientAuthInfo } from '@/shared/services/DanmakuClients/DirectClient'
 import DirectClient from '@/shared/services/DanmakuClients/DirectClient'
 import OpenLiveClient from '@/shared/services/DanmakuClients/OpenLiveClient'
 import { useWebFetcher } from '@/store/useWebFetcher'
 
+const route = useRoute()
 const webFetcher = useWebFetcher()
+const reconnectCount = ref(0)
 let rpc: RPC | undefined
+
+const showHud = computed(() => {
+  const raw = route.query.hud ?? route.query.debug
+  return raw === '1' || raw === 'true'
+})
+
+const roomId = computed(() => {
+  if (webFetcher.client instanceof OpenLiveClient) return webFetcher.client.roomAuthInfo?.anchor_info.room_id
+  if (webFetcher.client instanceof DirectClient) return webFetcher.client.authInfo.roomId
+  return undefined
+})
+
+const statusLabel = computed(() => {
+  switch (webFetcher.state) {
+    case 'connected':
+      return '已连接'
+    case 'connecting':
+      return '连接中'
+    default:
+      return '未连接'
+  }
+})
 
 function onGetDanmaku(data: any) {
   rpc?.call('on-get-danmaku', data, false)
@@ -76,6 +101,7 @@ onMounted(async () => {
           return
         }
 
+        reconnectCount.value += 1
         webFetcher.Stop()
         webFetcher.Start()
       }, 20000)
@@ -94,7 +120,33 @@ onUnmounted(() => {
 
 <template>
   <div
+    v-if="showHud"
+    class="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/75 px-3 py-1.5 text-xs text-white backdrop-blur-sm shadow"
+  >
+    <span
+      class="size-2.5 rounded-full shrink-0"
+      :style="{
+        backgroundColor: webFetcher.state === 'connected' ? '#6dc56d' : '#e34a4a',
+      }"
+    />
+    <span class="font-medium">{{ statusLabel }}</span>
+    <span
+      v-if="roomId"
+      class="text-white/70 font-mono"
+    >
+      #{{ roomId }}
+    </span>
+    <span
+      v-if="reconnectCount > 0"
+      class="text-amber-300 font-mono"
+    >
+      重连 {{ reconnectCount }}
+    </span>
+  </div>
+  <div
+    v-else
     class="web-fetcher-status"
+    :title="`WebFetcher: ${statusLabel}${roomId ? ` (#${roomId})` : ''}`"
     :style="{
       backgroundColor: webFetcher.state === 'connected' ? '#6dc56d' : '#e34a4a',
     }"

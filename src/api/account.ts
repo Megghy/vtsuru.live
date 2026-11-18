@@ -186,34 +186,38 @@ export async function SaveEnableFunctions(functions: FunctionTypes[]) {
 export async function SaveSetting(
   name: 'Queue' | 'Point' | 'Index' | 'General' | 'QuestionDisplay' | 'SongRequest' | 'QuestionBox' | 'SendEmail',
   setting: unknown,
-) {
+): Promise<boolean> {
   const result = await postApiAccountUpdateSingleSetting(setting, { name })
-  return result.message
+  if (result.code !== 200) {
+    throw new Error(result.message || `保存失败 (${result.code})`)
+  }
+  return true
 }
 export async function UpdateFunctionEnable(func: FunctionTypes) {
   if (ACCOUNT.value) {
     const oldValue = JSON.parse(JSON.stringify(ACCOUNT.value.settings.enableFunctions))
-    if (ACCOUNT.value?.settings.enableFunctions.includes(func)) {
-      ACCOUNT.value.settings.enableFunctions = ACCOUNT.value.settings.enableFunctions.filter((f) => f != func)
-    } else {
+    const nextEnabled = !ACCOUNT.value.settings.enableFunctions.includes(func)
+    if (nextEnabled) {
       ACCOUNT.value.settings.enableFunctions.push(func)
+    } else {
+      ACCOUNT.value.settings.enableFunctions = ACCOUNT.value.settings.enableFunctions.filter((f) => f != func)
     }
-    await SaveEnableFunctions(ACCOUNT.value?.settings.enableFunctions)
-      .then((data) => {
-        if (data.code == 200) {
-          message.success(`已${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}`)
-        } else {
-          if (ACCOUNT.value) {
-            ACCOUNT.value.settings.enableFunctions = oldValue
-          }
-          message.error(
-            `${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${data.message}`,
-          )
+    try {
+      const data = await SaveEnableFunctions(ACCOUNT.value.settings.enableFunctions)
+      if (data.code == 200) {
+        message.success(`已${nextEnabled ? '启用' : '禁用'}`)
+      } else {
+        if (ACCOUNT.value) {
+          ACCOUNT.value.settings.enableFunctions = oldValue
         }
-      })
-      .catch((err) => {
-        message.error(`${ACCOUNT.value?.settings.enableFunctions.includes(func) ? '启用' : '禁用'}失败: ${err}`)
-      })
+        message.error(`${nextEnabled ? '启用' : '禁用'}失败: ${data.message}`)
+      }
+    } catch (err) {
+      if (ACCOUNT.value) {
+        ACCOUNT.value.settings.enableFunctions = oldValue
+      }
+      message.error(`${nextEnabled ? '启用' : '禁用'}失败: ${err instanceof Error ? err.message : String(err)}`)
+    }
   }
 }
 export function useAccount() {

@@ -11,7 +11,7 @@ import Heart from '@vicons/ionicons5/es/Heart'
 import HeartOutline from '@vicons/ionicons5/es/HeartOutline'
 import { useElementSize, useThrottleFn } from '@vueuse/core'
 import { computed, onBeforeUnmount, onMounted, ref, toRaw, watch } from 'vue'
-import { onBeforeRouteLeave, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 import { useAccount } from '@/api/account'
 import type { ResponseQAInfoToTarget, SettingQuestionDisplay } from '@/api/generated/model'
@@ -19,6 +19,7 @@ import { postApiQaUpdateSetting } from '@/api/generated/qa/qa'
 import QuestionDisplayQueue from '@/apps/web/components/question-display/QuestionDisplayQueue.vue'
 import QuestionDisplayStylePanel from '@/apps/web/components/question-display/QuestionDisplayStylePanel.vue'
 import QuestionDisplayCard from '@/shared/components/QuestionDisplayCard.vue'
+import { useUnsavedChangesGuard } from '@/shared/composables/useUnsavedChangesGuard'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import {
@@ -243,19 +244,11 @@ function startPreviewResize(event: PointerEvent) {
   window.addEventListener('pointerup', stopPreviewResize, { once: true })
 }
 
-function confirmLeave(): boolean {
-  return window.confirm('有未保存的展示设置，离开后会丢失，确定要离开吗？')
-}
-
 function goBack() {
   void router.push({ name: 'manage-questionBox' })
 }
 
-function onBeforeUnload(event: BeforeUnloadEvent) {
-  if (!hasUnsavedChanges.value) return
-  event.preventDefault()
-  event.returnValue = ''
-}
+useUnsavedChangesGuard(hasUnsavedChanges, '有未保存的展示设置，离开后会丢失，确定要离开吗？')
 
 async function saveSettings(options: { silent?: boolean } = {}) {
   if (!settingDraft.value || !accountInfo.value) return
@@ -396,11 +389,6 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-onBeforeRouteLeave(async () => {
-  if (!hasUnsavedChanges.value) return true
-  return confirmLeave()
-})
-
 watch(
   () => accountInfo.value?.id,
   (id) => {
@@ -412,13 +400,11 @@ watch(
 )
 
 onMounted(() => {
-  window.addEventListener('beforeunload', onBeforeUnload)
   window.addEventListener('keydown', handleKeydown)
 })
 
 onBeforeUnmount(() => {
   clearAutoSaveTimer()
-  window.removeEventListener('beforeunload', onBeforeUnload)
   window.removeEventListener('keydown', handleKeydown)
   stopPreviewResize()
 })
@@ -668,7 +654,15 @@ onBeforeUnmount(() => {
                     : 'text-muted-foreground'
               "
             >
-              {{ saving ? '同步中...' : saveError ? '同步失败' : hasUnsavedChanges || needsLegacySync ? '待同步' : '已同步' }}
+              {{
+                saving
+                  ? '同步中...'
+                  : saveError
+                    ? '同步失败'
+                    : hasUnsavedChanges || needsLegacySync
+                      ? '待同步'
+                      : '已同步'
+              }}
             </span>
           </div>
           <Button

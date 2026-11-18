@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import ArrowDown24Filled from '@vicons/fluent/es/ArrowDown24Filled'
-import ArrowUp24Filled from '@vicons/fluent/es/ArrowUp24Filled'
 import Delete24Filled from '@vicons/fluent/es/Delete24Filled'
 import NotepadEdit20Filled from '@vicons/fluent/es/NotepadEdit20Filled'
 import Play24Filled from '@vicons/fluent/es/Play24Filled'
+import ReOrderDotsVertical16Regular from '@vicons/fluent/es/ReOrderDotsVertical16Regular'
 import type { VNodeChild } from 'vue'
 import { computed, ref } from 'vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 import type { SongRequestInfo } from '@/api/client-types'
 import type { ResponseSongModel } from '@/api/generated/model'
@@ -20,11 +20,12 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent } from '@/shared/ui/card'
 import { Checkbox } from '@/shared/ui/checkbox'
 import { Input } from '@/shared/ui/input'
+import { Pagination } from '@/shared/ui/pagination'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Switch } from '@/shared/ui/switch'
-import { Table, TableBody, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
+import { Table, TableCell, TableEmpty, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import { GetPlayButton } from '@/shared/utils'
 
 const props = defineProps<{
@@ -57,7 +58,7 @@ const {
   deleteSong,
   deleteBatch,
   batchUpdate,
-  moveSong,
+  applyPageReorder,
   nextPage,
   prevPage,
 } = state
@@ -117,11 +118,32 @@ function hasSongOptions(options?: ResponseSongModel['options']): boolean {
   )
 }
 
-const totalPages = computed(() => Math.max(1, Math.ceil(filteredSongs.value.length / pageSize.value)))
 const pagedSongs = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   return filteredSongs.value.slice(start, start + pageSize.value)
 })
+
+const draggablePagedSongs = computed({
+  get: () => pagedSongs.value,
+  set: (reordered: ResponseSongModel[]) => {
+    applyPageReorder(reordered.map((s) => s.key))
+  },
+})
+
+const hasActiveFilter = computed(
+  () =>
+    Boolean(searchKeyword.value.trim()) ||
+    Boolean(selectedAuthorFilter.value) ||
+    selectedLanguageFilter.value.length > 0 ||
+    selectedTagFilter.value.length > 0,
+)
+
+function resetFilters() {
+  searchKeyword.value = ''
+  selectedAuthorFilter.value = null
+  selectedLanguageFilter.value = []
+  selectedTagFilter.value = []
+}
 
 const allCurrentPageSelected = computed(() => {
   if (!pagedSongs.value.length) return false
@@ -189,8 +211,8 @@ async function handleBatchDelete() {
 </script>
 
 <template>
-  <TooltipProvider>
-    <Card class="/80 mb-2.5">
+  <div>
+    <Card class="mb-2.5">
       <CardContent class="p-3 flex flex-wrap items-center gap-2 text-xs">
         <Input
           v-model="searchKeyword"
@@ -202,7 +224,7 @@ async function handleBatchDelete() {
           :model-value="selectedAuthorFilter || 'all'"
           @update:model-value="selectedAuthorFilter = $event === 'all' ? null : String($event)"
         >
-          <SelectTrigger class="min-w-[140px] flex-1">
+          <SelectTrigger class="min-w-[130px] w-[150px]">
             <SelectValue placeholder="筛选歌手" />
           </SelectTrigger>
           <SelectContent class="max-h-56">
@@ -216,6 +238,54 @@ async function handleBatchDelete() {
             </SelectItem>
           </SelectContent>
         </Select>
+
+        <Select
+          :model-value="selectedLanguageFilter[0] || 'all'"
+          @update:model-value="selectedLanguageFilter = $event === 'all' ? [] : [String($event)]"
+        >
+          <SelectTrigger class="min-w-[110px] w-[125px]">
+            <SelectValue placeholder="筛选语言" />
+          </SelectTrigger>
+          <SelectContent class="max-h-56">
+            <SelectItem value="all">全部语言</SelectItem>
+            <SelectItem
+              v-for="l in languageOptions"
+              :key="l.value"
+              :value="l.value"
+            >
+              {{ l.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          v-if="tagOptions.length > 0"
+          :model-value="selectedTagFilter[0] || 'all'"
+          @update:model-value="selectedTagFilter = $event === 'all' ? [] : [String($event)]"
+        >
+          <SelectTrigger class="min-w-[110px] w-[130px]">
+            <SelectValue placeholder="筛选标签" />
+          </SelectTrigger>
+          <SelectContent class="max-h-56">
+            <SelectItem value="all">全部标签</SelectItem>
+            <SelectItem
+              v-for="t in tagOptions"
+              :key="t.value"
+              :value="t.value"
+            >
+              {{ t.label }}
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button
+          v-if="hasActiveFilter"
+          variant="ghost"
+          size="xs"
+          @click="resetFilters"
+        >
+          重置
+        </Button>
 
         <div class="flex items-center gap-3 ml-auto">
           <template v-if="hasAudio">
@@ -261,18 +331,20 @@ async function handleBatchDelete() {
     </div>
 
     <!-- 歌曲表格 -->
-    <div class="border border-border/80 rounded-lg overflow-hidden bg-card">
-      <Table class="table-fixed">
+    <div class="border border-border/80 rounded-lg overflow-x-auto bg-card">
+      <Table class="min-w-[720px]">
         <TableHeader>
           <TableRow class="hover:bg-transparent border-b border-border/80 bg-muted/40">
             <TableHead
               v-if="isSelf"
-              class="w-10 px-3"
+              class="w-14 px-2"
             >
-              <Checkbox
-                :checked="allCurrentPageSelected"
-                @update:checked="toggleSelectAll"
-              />
+              <div class="flex items-center gap-1.5">
+                <Checkbox
+                  :checked="allCurrentPageSelected"
+                  @update:checked="toggleSelectAll"
+                />
+              </div>
             </TableHead>
             <TableHead class="min-w-[200px]">曲名</TableHead>
             <TableHead class="w-44">作者</TableHead>
@@ -283,7 +355,14 @@ async function handleBatchDelete() {
           </TableRow>
         </TableHeader>
 
-        <TableBody>
+        <VueDraggable
+          v-model="draggablePagedSongs"
+          tag="tbody"
+          handle=".song-drag-handle"
+          :animation="150"
+          :disabled="!isSelf"
+          class="[&_tr:last-child]:border-0"
+        >
           <TableRow
             v-for="row in pagedSongs"
             :key="row.key"
@@ -291,12 +370,20 @@ async function handleBatchDelete() {
           >
             <TableCell
               v-if="isSelf"
-              class="px-3"
+              class="px-2"
             >
-              <Checkbox
-                :checked="selectedKeys.includes(row.key)"
-                @update:checked="toggleSelectRow(row.key, $event)"
-              />
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="song-drag-handle cursor-grab active:cursor-grabbing text-muted-foreground/60 hover:text-foreground inline-flex items-center"
+                  title="拖拽排序（本机保存）"
+                >
+                  <ReOrderDotsVertical16Regular class="size-4" />
+                </span>
+                <Checkbox
+                  :checked="selectedKeys.includes(row.key)"
+                  @update:checked="toggleSelectRow(row.key, $event)"
+                />
+              </div>
             </TableCell>
 
             <!-- 曲名 -->
@@ -485,40 +572,6 @@ async function handleBatchDelete() {
                         size="xs"
                         variant="ghost"
                         class="size-7 rounded-full text-muted-foreground"
-                        @click="moveSong(row.key, -1)"
-                      >
-                        <component
-                          :is="ArrowUp24Filled"
-                          class="size-3.5"
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>上移</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="size-7 rounded-full text-muted-foreground"
-                        @click="moveSong(row.key, 1)"
-                      >
-                        <component
-                          :is="ArrowDown24Filled"
-                          class="size-3.5"
-                        />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>下移</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger as-child>
-                      <Button
-                        size="xs"
-                        variant="ghost"
-                        class="size-7 rounded-full text-muted-foreground"
                         @click="editModalRef?.open(row)"
                       >
                         <component
@@ -560,32 +613,21 @@ async function handleBatchDelete() {
             :colspan="isSelf ? 7 : 6"
             description="暂无歌曲"
           />
-        </TableBody>
+        </VueDraggable>
       </Table>
     </div>
 
-    <!-- 紧凑分页导航 -->
     <div
-      v-if="totalPages > 1"
-      class="flex-between gap-2 mt-3 text-xs"
+      v-if="filteredSongs.length > 0"
+      class="mt-3"
     >
-      <span class="text-muted-foreground text-[11px]"> 第 {{ currentPage }} / {{ totalPages }} 页 </span>
-      <div class="flex items-center gap-1.5">
-        <Button
-          variant="outline"
-          :disabled="currentPage <= 1"
-          @click="prevPage"
-        >
-          上一页
-        </Button>
-        <Button
-          variant="outline"
-          :disabled="currentPage >= totalPages"
-          @click="nextPage"
-        >
-          下一页
-        </Button>
-      </div>
+      <Pagination
+        v-model:page="currentPage"
+        v-model:page-size="pageSize"
+        :total="filteredSongs.length"
+        :page-sizes="[15, 25, 50, 100]"
+        show-size-picker
+      />
     </div>
 
     <SongEditModal
@@ -607,5 +649,5 @@ async function handleBatchDelete() {
       @update-language="handleBatchLanguage"
       @update-option="handleBatchOption"
     />
-  </TooltipProvider>
+  </div>
 </template>

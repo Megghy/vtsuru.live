@@ -24,9 +24,11 @@ import { Alert, AlertDescription, AlertTitle } from '@/shared/ui/alert'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { DateRangePicker } from '@/shared/ui/date-picker'
+import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Popover, PopoverContent, PopoverTrigger } from '@/shared/ui/popover'
 import { Separator } from '@/shared/ui/separator'
+import { Skeleton } from '@/shared/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
 import { isDarkMode } from '@/shared/utils'
@@ -432,12 +434,9 @@ onMounted(async () => {
   }
 })
 
-watch(
-  () => dateRange.value,
-  () => {
-    if (!isLoading.value) processAllChartOptions()
-  },
-)
+watch([() => dateRange.value, isDarkMode], () => {
+  if (!isLoading.value) processAllChartOptions()
+})
 </script>
 
 <template>
@@ -576,18 +575,22 @@ watch(
             </span>
           </div>
 
+          <Skeleton
+            v-if="isLoading"
+            class="w-full rounded-md"
+            :style="{ height: chartHeight }"
+          />
           <VChart
-            v-if="hasFansData && fansOption"
+            v-else-if="hasFansData && fansOption"
             :option="fansOption"
             :style="{ height: chartHeight }"
             class="w-full"
           />
-          <div
+          <Empty
             v-else
-            class="py-12 text-center text-xs text-muted-foreground"
-          >
-            暂无粉丝历史数据
-          </div>
+            description="暂无粉丝历史数据"
+            class="py-8"
+          />
         </div>
 
         <!-- 舰长历史图表 -->
@@ -605,18 +608,22 @@ watch(
             </span>
           </div>
 
+          <Skeleton
+            v-if="isLoading"
+            class="w-full rounded-md"
+            :style="{ height: chartHeight }"
+          />
           <VChart
-            v-if="hasGuardData && guardsOption"
+            v-else-if="hasGuardData && guardsOption"
             :option="guardsOption"
             :style="{ height: chartHeight }"
             class="w-full"
           />
-          <div
+          <Empty
             v-else
-            class="py-12 text-center text-xs text-muted-foreground"
-          >
-            暂无舰长历史数据
-          </div>
+            description="暂无舰长历史数据"
+            class="py-8"
+          />
         </div>
       </Card>
     </div>

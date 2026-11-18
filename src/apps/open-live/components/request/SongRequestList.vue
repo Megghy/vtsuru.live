@@ -2,7 +2,7 @@
 import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
 import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
 import { isSameDay } from 'date-fns'
-import { computed, provide } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { toast } from 'vue-sonner'
 
 import { SaveSetting, useAccount } from '@/api/account'
@@ -21,6 +21,17 @@ import SongRequestItem from './SongRequestItem.vue'
 
 const songRequest = useLiveRequest()
 const accountInfo = useAccount()
+const isAddingManual = ref(false)
+
+async function handleAddSongManual() {
+  if (isAddingManual.value || !songRequest.newSongName.trim()) return
+  isAddingManual.value = true
+  try {
+    await songRequest.addSongManual()
+  } finally {
+    isAddingManual.value = false
+  }
+}
 
 provide('activeSongs', songRequest.activeSongs)
 
@@ -56,12 +67,10 @@ async function updateSettings() {
   if (accountInfo.value?.id) {
     songRequest.isLoading = true
     try {
-      const msg = await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
-      if (msg) {
-        toast.success('已保存')
-      } else {
-        toast.error(`保存失败: ${msg}`)
-      }
+      await SaveSetting('SongRequest', accountInfo.value.settings.songRequest)
+      toast.success('已保存')
+    } catch (err) {
+      toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
     } finally {
       songRequest.isLoading = false
     }
@@ -99,15 +108,17 @@ async function updateSettings() {
           <div class="flex items-center gap-2 flex-wrap">
             <div class="flex items-center gap-1.5 w-[220px]">
               <Input
-                :value="songRequest.newSongName"
+                :model-value="songRequest.newSongName"
                 placeholder="手动输入歌曲名"
                 class="flex-1"
                 @input="songRequest.newSongName = ($event.target as HTMLInputElement).value"
-                @keyup.enter="songRequest.addSongManual()"
+                @keyup.enter="handleAddSongManual()"
               />
               <Button
                 class="shrink-0"
-                @click="songRequest.addSongManual()"
+                :loading="isAddingManual"
+                :disabled="isAddingManual || !songRequest.newSongName.trim()"
+                @click="handleAddSongManual()"
               >
                 添加
               </Button>
@@ -164,6 +175,7 @@ async function updateSettings() {
                 <Button
                   variant="outline"
                   class="border-destructive/40 text-destructive hover:bg-destructive/10"
+                  :disabled="songRequest.activeSongs.length === 0"
                 >
                   全部取消
                 </Button>

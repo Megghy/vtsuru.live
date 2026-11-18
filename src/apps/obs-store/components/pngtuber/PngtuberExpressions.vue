@@ -93,7 +93,11 @@ function recordKey(event: KeyboardEvent) {
           <SelectValue placeholder="选择表情" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
+          <SelectItem
+            v-for="opt in options"
+            :key="opt.value"
+            :value="opt.value"
+          >
             {{ opt.label }}
           </SelectItem>
         </SelectContent>
@@ -139,7 +143,7 @@ function recordKey(event: KeyboardEvent) {
       </div>
 
       <Input
-        :value="expression.name"
+        :model-value="expression.name"
         :disabled="disabled"
         placeholder="表情名称"
         @input="patch({ name: ($event.target as HTMLInputElement).value })"
@@ -157,7 +161,11 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in options"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -177,10 +185,12 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__default__">
-                使用默认表情
-              </SelectItem>
-              <SelectItem v-for="opt in options" :key="opt.value" :value="opt.value">
+              <SelectItem value="__default__"> 使用默认表情 </SelectItem>
+              <SelectItem
+                v-for="opt in options"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>
@@ -211,7 +221,7 @@ function recordKey(event: KeyboardEvent) {
         <div class="space-y-1">
           <label class="text-xs text-muted-foreground font-medium">快捷键（按键录入，退格清除）</label>
           <Input
-            :value="expression.hotkey"
+            :model-value="expression.hotkey"
             readonly
             :disabled="disabled"
             placeholder="点击后按快捷键"
@@ -230,12 +240,9 @@ function recordKey(event: KeyboardEvent) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="toggle">切换</SelectItem
-              >
-              <SelectItem value="hold">按住</SelectItem
-              >
-              <SelectItem value="timed">定时</SelectItem
-              >
+              <SelectItem value="toggle">切换</SelectItem>
+              <SelectItem value="hold">按住</SelectItem>
+              <SelectItem value="timed">定时</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -272,12 +279,9 @@ function recordKey(event: KeyboardEvent) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="continue">继续播放</SelectItem
-            >
-            <SelectItem value="restart">激活时重播</SelectItem
-            >
-            <SelectItem value="once">播放一次</SelectItem
-            >
+            <SelectItem value="continue">继续播放</SelectItem>
+            <SelectItem value="restart">激活时重播</SelectItem>
+            <SelectItem value="once">播放一次</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -123,7 +123,7 @@ onBeforeUnmount(() => {
     >
       <Input
         v-if="!docked"
-        :value="url"
+        :model-value="url"
         readonly
         aria-label="日历订阅链接"
         class="font-mono flex-1 min-w-[200px]"

@@ -137,7 +137,10 @@ onUnmounted(() => {
         <AlertDescription> 你需要成为成员才能访问 {{ forumInfo.name }} </AlertDescription>
       </Alert>
 
-      <Alert variant="success" v-if="forumInfo.isApplied">
+      <Alert
+        variant="success"
+        v-if="forumInfo.isApplied"
+      >
         <AlertDescription> 已申请, 正在等待管理员审核 </AlertDescription>
       </Alert>
 
@@ -158,7 +161,10 @@ onUnmounted(() => {
           <Alert v-else-if="forumInfo.settings.requireApply">
             <AlertDescription> 申请需要审核 </AlertDescription>
           </Alert>
-          <Alert variant="success" v-else>
+          <Alert
+            variant="success"
+            v-else
+          >
             <AlertDescription> 该讨论区可直接加入 </AlertDescription>
           </Alert>
           <Separator />
@@ -190,7 +196,12 @@ onUnmounted(() => {
             >
               发布话题
             </Button>
-            <Badge v-if="forumInfo.isAdmin" variant="secondary" size="sm" class="w-full justify-center py-1">
+            <Badge
+              v-if="forumInfo.isAdmin"
+              variant="secondary"
+              size="sm"
+              class="w-full justify-center py-1"
+            >
               你是管理员
             </Badge>
           </CardContent>
@@ -220,6 +231,7 @@ onUnmounted(() => {
                   <ForumPreviewItem
                     :item="item"
                     :forum="forumInfo"
+                    @deleted="(id) => topics && (topics.data = topics.data.filter((t) => t.id !== id))"
                   />
                 </a>
               </div>

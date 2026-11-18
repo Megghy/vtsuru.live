@@ -150,11 +150,19 @@ describe('OBS Store Registry', () => {
       expect(result.length).toBe(1)
       expect(result[0].id).toBe('gamepad')
 
+      const keycastResult = filterObsComponents({
+        category: 'input',
+        status: 'ready',
+        search: 'keycast',
+      })
+      expect(keycastResult.length).toBe(1)
+      expect(keycastResult[0].id).toBe('keycast')
+
       const noMatch = filterObsComponents({
         category: 'input',
         status: 'planned',
       })
-      expect(noMatch.length).toBe(1) // keycast is planned input
+      expect(noMatch.length).toBe(0)
 
       const trulyEmpty = filterObsComponents({
         category: 'interactive',

@@ -148,15 +148,11 @@ async function updateSettings() {
   setting.value.giftPercentMap ??= {}
 
   try {
-    const msg = await SaveSetting('Point', setting.value)
-    if (msg) {
-      toast.success('已保存')
-      return true
-    } else {
-      toast.error(`保存失败: ${msg}`)
-    }
+    await SaveSetting('Point', setting.value)
+    toast.success('已保存')
+    return true
   } catch (err) {
-    toast.error(`保存失败: ${err}`)
+    toast.error(`保存失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
     isLoading.value = false
   }
@@ -223,15 +219,11 @@ async function SaveComboSetting() {
   if (props.orgId || !accountInfo.value) return false
   isLoading.value = true
   try {
-    const msg = await SaveSetting('SendEmail', accountInfo.value.settings.sendEmail)
-    if (msg) {
-      toast.success('已保存')
-      return true
-    } else {
-      toast.error(`保存失败: ${msg}`)
-    }
+    await SaveSetting('SendEmail', accountInfo.value.settings.sendEmail)
+    toast.success('已保存')
+    return true
   } catch (err) {
-    toast.error(`修改失败: ${err}`)
+    toast.error(`修改失败: ${err instanceof Error ? err.message : String(err)}`)
   } finally {
     isLoading.value = false
   }

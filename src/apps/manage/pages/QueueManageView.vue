@@ -100,8 +100,7 @@ function copyQueueList() {
     message.warning('当前队列为空')
     return
   }
-  copyToClipboard(text)
-  message.success('排队名单已复制到剪贴板')
+  void copyToClipboard(text, '排队名单已复制到剪贴板')
 }
 
 async function copyObsLink() {
@@ -109,8 +108,7 @@ async function copyObsLink() {
     message.warning('尚未登录或未生成有效链接')
     return
   }
-  await copyToClipboard(obsUrl.value)
-  message.success('OBS 源链接已复制 (已携带当前调试样式参数)')
+  await copyToClipboard(obsUrl.value, 'OBS 源链接已复制 (已携带当前调试样式参数)')
 }
 
 // 模拟加人与测试

@@ -7,8 +7,8 @@ import Search24Filled from '@vicons/fluent/es/Search24Filled'
 import { saveAs } from 'file-saver'
 import { computed, ref } from 'vue'
 
-import type { ResponseLiveTranscriptSegmentModel, ResponseLiveTranscriptSessionModel } from '@/api/generated/model'
 import { getApiLiveGetTranscriptSegments, getApiLiveGetTranscriptSessions } from '@/api/generated/live/live'
+import type { ResponseLiveTranscriptSegmentModel, ResponseLiveTranscriptSessionModel } from '@/api/generated/model'
 import { unwrapOk } from '@/api/query'
 import { Button } from '@/shared/ui/button'
 import { Card } from '@/shared/ui/card'
@@ -16,6 +16,7 @@ import { Empty } from '@/shared/ui/empty'
 import { Input } from '@/shared/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Spin } from '@/shared/ui/spin'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/shared/ui/table'
 import { Tag } from '@/shared/ui/tag'
 import { useMessage } from '@/shared/utils'
 
@@ -105,6 +106,7 @@ async function load() {
 
 async function loadSegments(id: string) {
   loading.value = true
+  error.value = undefined
   try {
     const result: ResponseLiveTranscriptSegmentModel[] = []
     let page = 1
@@ -122,6 +124,10 @@ async function loadSegments(id: string) {
       page++
     }
     segments.value = result
+  } catch (loadError) {
+    const errMsg = loadError instanceof Error ? loadError.message : String(loadError)
+    error.value = errMsg
+    message.error(`加载转写字幕失败: ${errMsg}`)
   } finally {
     loading.value = false
   }
@@ -361,24 +367,23 @@ defineExpose({ load })
           v-if="filteredSegments.length"
           class="max-h-[580px] overflow-y-auto"
         >
-          <table class="w-full text-xs text-left border-collapse">
-            <thead class="bg-muted text-muted-foreground uppercase text-[11px] sticky top-0 z-10">
-              <tr>
-                <th class="p-2.5 w-32 font-medium">时间轴</th>
-                <th class="p-2.5 w-28 font-medium">说话人</th>
-                <th class="p-2.5 font-medium">转写字幕内容</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-border">
-              <tr
+          <Table class="text-xs">
+            <TableHeader class="bg-muted uppercase text-[11px] sticky top-0 z-10">
+              <TableRow>
+                <TableHead class="w-32">时间轴</TableHead>
+                <TableHead class="w-28">说话人</TableHead>
+                <TableHead>转写字幕内容</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow
                 v-for="row in filteredSegments"
                 :key="row.sequence"
-                class="hover:bg-muted/50 transition-colors"
               >
-                <td class="p-2.5 font-mono text-muted-foreground whitespace-nowrap">
+                <TableCell class="font-mono text-muted-foreground whitespace-nowrap">
                   {{ formatClock(row.startMs) }}
-                </td>
-                <td class="p-2.5 whitespace-nowrap">
+                </TableCell>
+                <TableCell class="whitespace-nowrap">
                   <Tag
                     v-if="row.speaker"
                     variant="secondary"
@@ -391,8 +396,8 @@ defineExpose({ load })
                     class="text-muted-foreground"
                     >—</span
                   >
-                </td>
-                <td class="p-2.5">
+                </TableCell>
+                <TableCell>
                   <div class="flex-between gap-2">
                     <span class="leading-relaxed">{{ row.text }}</span>
                     <Button
@@ -408,10 +413,10 @@ defineExpose({ load })
                       />
                     </Button>
                   </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
         </div>
         <div
           v-else

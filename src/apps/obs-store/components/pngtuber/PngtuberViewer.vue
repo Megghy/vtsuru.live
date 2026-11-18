@@ -8,6 +8,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
+import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { exportPngtuberPackage, importPngtuberPackage } from '@/shared/pngtuber/modelPackage'
@@ -525,26 +526,15 @@ function changeChannel() {
               <CardTitle>OBS 浏览器源</CardTitle>
             </CardHeader>
             <CardContent class="p-0 space-y-3">
-              <div class="flex items-center gap-1.5">
-                <Input
-                  v-model="channelDraft"
-                  placeholder="频道"
-                  maxlength="64"
-                  :disabled="busy"
-                  class="flex-1"
-                  @keyup.enter="changeChannel"
-                />
-                <Button
-                  variant="secondary"
-                  :disabled="busy"
-                  @click="changeChannel"
-                >
-                  切换频道
-                </Button>
-              </div>
+              <ObsChannelSwitcher
+                v-model="channelDraft"
+                :disabled="busy"
+                input-class="flex-1"
+                @submit="changeChannel"
+              />
 
               <Input
-                :value="obsUrl"
+                :model-value="obsUrl"
                 readonly
                 placeholder="登录后生成链接"
               />

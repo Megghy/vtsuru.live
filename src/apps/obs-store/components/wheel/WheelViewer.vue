@@ -12,6 +12,7 @@ import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
+import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Badge } from '@/shared/ui/badge'
@@ -201,19 +202,10 @@ function changeChannel() {
           </div>
 
           <div class="flex flex-wrap items-center gap-1.5">
-            <Input
+            <ObsChannelSwitcher
               v-model="channelDraft"
-              class="w-[120px]"
-              placeholder="频道"
-              maxlength="64"
-              @keyup.enter="changeChannel"
+              @submit="changeChannel"
             />
-            <Button
-              variant="secondary"
-              @click="changeChannel"
-            >
-              切换频道
-            </Button>
             <Button
               v-if="lastSyncError"
               variant="secondary"
@@ -481,10 +473,8 @@ function changeChannel() {
 .checker-bg {
   background-color: #202026;
   background-image:
-    linear-gradient(45deg, #2b2b33 25%, transparent 25%),
-    linear-gradient(-45deg, #2b2b33 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #2b2b33 75%),
-    linear-gradient(-45deg, transparent 75%, #2b2b33 75%);
+    linear-gradient(45deg, #2b2b33 25%, transparent 25%), linear-gradient(-45deg, #2b2b33 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #2b2b33 75%), linear-gradient(-45deg, transparent 75%, #2b2b33 75%);
   background-size: 16px 16px;
   background-position:
     0 0,

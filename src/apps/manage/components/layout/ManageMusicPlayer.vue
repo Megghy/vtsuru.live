@@ -17,15 +17,13 @@ import { usePersistedStorage } from '@/shared/storage/persist'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { Slider } from '@/shared/ui/slider'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { useMessage } from '@/shared/utils'
+import { showUndoToast } from '@/shared/utils'
 import { useMusicRequestProvider } from '@/store/useMusicRequest'
 
 const emit = defineEmits<{
   (e: 'heightChange', height: number): void
 }>()
 
-const message = useMessage()
 const musicRquestStore = useMusicRequestProvider()
 
 const musicPlayerCardRef = ref<HTMLElement | null>(null)
@@ -103,8 +101,12 @@ function onPreviousMusic() {
 }
 
 function clearWaitingQueue() {
+  if (musicRquestStore.waitingMusics.length === 0) return
+  const snapshot = [...musicRquestStore.waitingMusics]
   musicRquestStore.waitingMusics.splice(0)
-  message.success('已清空等待队列')
+  showUndoToast(`已清空 ${snapshot.length} 首待播点歌`, () => {
+    musicRquestStore.waitingMusics.unshift(...snapshot)
+  })
 }
 
 function togglePlayerMinimize() {
@@ -115,8 +117,7 @@ function togglePlayerMinimize() {
 <template>
   <footer
     v-if="isPlayerVisible"
-    class="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-md border-t border-border px-3 py-2 transition-all duration-300"
-    :style="`height: ${footerHeight}px`"
+    class="shrink-0 z-20 bg-background/90 backdrop-blur-md border-t border-border px-3 py-2 transition-all duration-200"
   >
     <div
       ref="musicPlayerCardRef"
@@ -156,7 +157,7 @@ function togglePlayerMinimize() {
           </template>
         </div>
 
-        <div class="flex items-center gap-2 shrink-0 pr-12">
+        <div class="flex items-center gap-2 shrink-0">
           <template v-if="isPlayerMinimized">
             <Badge
               v-if="musicRquestStore.waitingMusics.length > 0"
@@ -226,7 +227,7 @@ function togglePlayerMinimize() {
           />
         </div>
 
-        <div class="music-control-panel flex items-center gap-6 shrink-0 pr-14 flex-wrap">
+        <div class="music-control-panel flex items-center gap-6 shrink-0 flex-wrap">
           <!-- 播放控制 -->
           <div class="flex flex-col items-center gap-1.5">
             <span class="text-[11px] font-medium text-muted-foreground">播放控制</span>

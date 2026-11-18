@@ -167,7 +167,7 @@ function save() {
           <label class="w-16 font-medium text-[var(--muted-foreground)] pt-1.5">快捷键</label>
           <div class="flex flex-col gap-1 flex-1">
             <Input
-              :value="recording ? '请按下组合键…（Esc 清除）' : (form.shortcut ?? '')"
+              :model-value="recording ? '请按下组合键…（Esc 清除）' : (form.shortcut ?? '')"
               readonly
               class="cursor-pointer"
               :disabled="!vts.shortcutsSupported"

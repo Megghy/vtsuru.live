@@ -3,6 +3,8 @@ import { computed, defineAsyncComponent, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 
 import AppDialogHost from '@/app/components/AppDialogHost.vue'
+import GlobalCommandPalette from '@/app/components/GlobalCommandPalette.vue'
+import GlobalLoadingBar from '@/app/components/GlobalLoadingBar.vue'
 import TempComponent from '@/app/components/TempComponent.vue'
 import { applyThemeCssVars, buildSiteTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
@@ -78,6 +80,7 @@ watchEffect(() => {
     :class="['app-root text-foreground antialiased', { 'bg-background': !isTransparentShell }]"
   >
     <TooltipProvider :delay-duration="200">
+      <GlobalLoadingBar />
       <Suspense>
         <TempComponent>
           <div
@@ -101,6 +104,7 @@ watchEffect(() => {
         </template>
       </Suspense>
       <AppDialogHost />
+      <GlobalCommandPalette :disabled="layout === 'obs'" />
       <Toaster
         richColors
         position="top-right"

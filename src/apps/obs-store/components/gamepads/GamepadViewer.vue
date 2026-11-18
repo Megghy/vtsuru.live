@@ -15,8 +15,8 @@ import { ColorPicker } from '@/shared/ui/color-picker'
 import { Input } from '@/shared/ui/input'
 import { NumberField } from '@/shared/ui/number-field'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
-import { Slider } from '@/shared/ui/slider'
 import { Separator } from '@/shared/ui/separator'
+import { Slider } from '@/shared/ui/slider'
 import { useGamepadStore } from '@/store/useGamepadStore'
 import type { GamepadType } from '@/types/gamepad'
 
@@ -140,7 +140,11 @@ async function copyObsUrl() {
         <Separator class="my-2.5" />
 
         <!-- 手柄连接状态与仿真开关 -->
-        <Alert size="sm" variant="info" v-if="gamepadStore.isSimulating">
+        <Alert
+          size="sm"
+          variant="info"
+          v-if="gamepadStore.isSimulating"
+        >
           <div class="flex-between gap-2">
             <div class="flex items-center gap-2 text-xs">
               <span class="font-bold">SIM</span>
@@ -148,27 +152,49 @@ async function copyObsUrl() {
                 正在运行仿真测试演示动画（自动模拟摇杆画圆与按键交替触发）
               </AlertDescription>
             </div>
-            <Button size="xs" variant="outline" class="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10" @click="gamepadStore.stopSimulation">
+            <Button
+              size="xs"
+              variant="outline"
+              class="border-amber-500/40 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
+              @click="gamepadStore.stopSimulation"
+            >
               退出测试
             </Button>
           </div>
         </Alert>
-        <Alert size="sm" variant="warning" v-else-if="!gamepadStore.isGamepadConnected">
+        <Alert
+          size="sm"
+          variant="warning"
+          v-else-if="!gamepadStore.isGamepadConnected"
+        >
           <div class="flex-between gap-2">
             <AlertDescription class="text-current m-0">
               未检测到游戏手柄连接。按下手柄任意按键唤醒，或开启动态仿真测试：
             </AlertDescription>
-            <Button size="xs" variant="outline" class="border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10" @click="gamepadStore.startSimulation">
+            <Button
+              size="xs"
+              variant="outline"
+              class="border-blue-500/40 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10"
+              @click="gamepadStore.startSimulation"
+            >
               开启仿真测试
             </Button>
           </div>
         </Alert>
-        <Alert size="sm" variant="success" v-else>
+        <Alert
+          size="sm"
+          variant="success"
+          v-else
+        >
           <div class="flex-between gap-2">
             <AlertDescription class="text-current m-0">
               已连接设备: {{ gamepadStore.connectedGamepadInfo?.id || '标准 Gamepad' }}
             </AlertDescription>
-            <Badge variant="outline" size="xs" class="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 h-5">
+            <Badge
+              variant="outline"
+              size="xs"
+              class="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 h-5"
+            >
               活跃
             </Badge>
           </div>
@@ -193,13 +219,25 @@ async function copyObsUrl() {
 
           <div class="gp-stage-overlay-tools">
             <div class="flex items-center gap-1.5">
-              <Button size="xs" :variant="previewBg === 'checker' ? 'default' : 'outline'" @click="previewBg = 'checker'">
+              <Button
+                size="xs"
+                :variant="previewBg === 'checker' ? 'default' : 'outline'"
+                @click="previewBg = 'checker'"
+              >
                 网格底
               </Button>
-              <Button size="xs" :variant="previewBg === 'dark' ? 'default' : 'outline'" @click="previewBg = 'dark'">
+              <Button
+                size="xs"
+                :variant="previewBg === 'dark' ? 'default' : 'outline'"
+                @click="previewBg = 'dark'"
+              >
                 暗黑底
               </Button>
-              <Button size="xs" :variant="previewBg === 'transparent' ? 'default' : 'outline'" @click="previewBg = 'transparent'">
+              <Button
+                size="xs"
+                :variant="previewBg === 'transparent' ? 'default' : 'outline'"
+                @click="previewBg = 'transparent'"
+              >
                 透明底
               </Button>
             </div>
@@ -219,7 +257,11 @@ async function copyObsUrl() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in gamepadTypeOptions" :key="opt.value" :value="opt.value">
+                  <SelectItem
+                    v-for="opt in gamepadTypeOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -236,7 +278,11 @@ async function copyObsUrl() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in bodyOptions" :key="opt.value" :value="opt.value">
+                  <SelectItem
+                    v-for="opt in bodyOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -344,7 +390,7 @@ async function copyObsUrl() {
             </div>
             <div class="gp-url-box flex items-center gap-2 mt-2">
               <Input
-                :value="displayAbsoluteUrl"
+                :model-value="displayAbsoluteUrl"
                 readonly
                 class="flex-1"
               />

@@ -14,13 +14,17 @@ import type { ResponseForumBaseModel } from '@/api/generated/model/responseForum
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/shared/ui/dropdown-menu'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { toast } from '@/shared/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
+import { dialog, toast } from '@/shared/utils'
 import { useForumStore } from '@/store/useForumStore'
 
 const props = defineProps<{
   item: ResponseForumTopicSimpleModel
   forum: ResponseForumBaseModel
+}>()
+
+const emit = defineEmits<{
+  deleted: [id: number]
 }>()
 
 const useForum = useForumStore()
@@ -29,36 +33,48 @@ const accountInfo = useAccount()
 function handleDropdownAction(key: string) {
   switch (key) {
     case 'delete':
-      if (confirm('确定要删除这条话题吗？')) {
-        useForum.DelTopic(props.item.id).then((success) => {
+      dialog.warning({
+        title: '删除话题',
+        content: '确定要删除这条话题吗？',
+        positiveText: '确认删除',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+          const success = await useForum.DelTopic(props.item.id)
           if (success) {
-            toast.success('话题已删除')
-            setTimeout(() => {
-              window.location.reload()
-            }, 1000)
+            emit('deleted', props.item.id)
           }
-        })
-      }
+        },
+      })
       break
     case 'restore':
-      if (confirm('确定要恢复这条话题吗？')) {
-        useForum.RestoreTopic(props.item.id).then((success) => {
+      dialog.warning({
+        title: '恢复话题',
+        content: '确定要恢复这条话题吗？',
+        positiveText: '确认恢复',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+          const success = await useForum.RestoreTopic(props.item.id)
           if (success) {
             props.item.isDeleted = false
             toast.success('话题已恢复')
           }
-        })
-      }
+        },
+      })
       break
     case 'top':
-      if (confirm(`确定要${props.item.isPinned ? '取消' : ''}置顶这条话题吗？`)) {
-        useForum.SetTopicTop(props.item.id, !props.item.isPinned).then((success) => {
+      dialog.info({
+        title: props.item.isPinned ? '取消置顶' : '置顶话题',
+        content: `确定要${props.item.isPinned ? '取消' : ''}置顶这条话题吗？`,
+        positiveText: '确定',
+        negativeText: '取消',
+        onPositiveClick: async () => {
+          const success = await useForum.SetTopicTop(props.item.id, !props.item.isPinned)
           if (success) {
             props.item.isPinned = !props.item.isPinned
             toast.success(props.item.isPinned ? '已置顶' : '已取消置顶')
           }
-        })
-      }
+        },
+      })
       break
   }
 }

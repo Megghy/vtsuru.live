@@ -3,19 +3,19 @@ import ArrowLeft24Regular from '@vicons/fluent/es/ArrowLeft24Regular'
 import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
 import ChevronBackOutline from '@vicons/ionicons5/es/ChevronBackOutline'
 import ChevronForwardOutline from '@vicons/ionicons5/es/ChevronForwardOutline'
-import Moon from '@vicons/ionicons5/es/Moon'
-import Sunny from '@vicons/ionicons5/es/Sunny'
-import { computed, onMounted } from 'vue'
+import MenuOutline from '@vicons/ionicons5/es/MenuOutline'
+import { Search } from 'lucide-vue-next'
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ThemeType } from '@/api/client-types'
 import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import NotificationsPopover from '@/apps/manage/components/NotificationsPopover.vue'
+import { useManageShell } from '@/apps/manage/composables/useManageShell'
 import { WORKSPACE_LABELS, useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
-import { usePersistedStorage } from '@/shared/storage/persist'
+import ThemeToggleButton from '@/shared/components/ThemeToggleButton.vue'
+import { useCommandPalette } from '@/shared/composables/useCommandPalette'
 import { Button } from '@/shared/ui/button'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/shared/ui/tooltip'
-import { isDarkMode } from '@/shared/utils'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shared/ui/tooltip'
 import logoUrl from '@/svgs/ic_vtuber.svg?url'
 
 defineProps<{
@@ -25,25 +25,24 @@ defineProps<{
 const router = useRouter()
 const route = useRoute()
 const assistant = useAssistantStore()
-const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
-const defaultCollapsed = window.innerWidth < 750
-const siderCollapsed = usePersistedStorage<boolean>('Settings.ManageSiderCollapsed', defaultCollapsed)
+const { isMobileSider, siderCollapsed, mobileSiderOpen, toggleSider } = useManageShell()
+const { openPalette } = useCommandPalette()
 const { workspace } = useManageWorkspace()
 
-onMounted(() => {
-  if (window.innerWidth < 750) siderCollapsed.value = true
+const toggleButtonIcon = computed(() => {
+  if (isMobileSider.value) return MenuOutline
+  return siderCollapsed.value ? ChevronForwardOutline : ChevronBackOutline
 })
 
-const themeToggleIcon = computed(() => (isDarkMode.value ? Sunny : Moon))
-const themeToggleTitle = computed(() => (isDarkMode.value ? '切换到亮色主题' : '切换到暗色主题'))
+const toggleButtonLabel = computed(() => {
+  if (isMobileSider.value) return mobileSiderOpen.value ? '关闭导航菜单' : '打开导航菜单'
+  return siderCollapsed.value ? '展开侧栏' : '收起侧栏'
+})
+
 const pageTitle = computed(() => {
   const title = route.meta?.title
   return typeof title === 'string' && title.trim() ? title : ''
 })
-
-function toggleTheme() {
-  themeType.value = isDarkMode.value ? ThemeType.Light : ThemeType.Dark
-}
 
 function openAssistant() {
   assistant.open({
@@ -64,24 +63,22 @@ async function goToUserPage(accountName?: string) {
     class="h-[var(--vtsuru-header-height)] px-3 max-[600px]:px-2 flex-between gap-3 max-[600px]:gap-2 bg-card border-b border-border box-border"
   >
     <div class="min-w-0 flex items-center gap-2.5 max-[600px]:gap-1.5">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <Button
-              variant="outline"
-              size="icon-xs"
-              aria-label="展开或收起侧栏"
-              @click="siderCollapsed = !siderCollapsed"
-            >
-              <component
-                :is="siderCollapsed ? ChevronForwardOutline : ChevronBackOutline"
-                class="size-4 block"
-              />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{{ siderCollapsed ? '展开侧栏' : '收起侧栏' }}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="icon-xs"
+            :aria-label="toggleButtonLabel"
+            @click="toggleSider"
+          >
+            <component
+              :is="toggleButtonIcon"
+              class="size-4 block"
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>{{ toggleButtonLabel }}</TooltipContent>
+      </Tooltip>
       <img
         class="size-[22px] rounded-md shrink-0"
         :src="logoUrl"
@@ -112,6 +109,27 @@ async function goToUserPage(accountName?: string) {
     </div>
 
     <div class="flex items-center gap-2.5 max-[600px]:gap-1.5 shrink-0">
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xs"
+            class="gap-1.5 text-muted-foreground"
+            aria-label="打开命令面板 (Ctrl+K)"
+            @click="openPalette"
+          >
+            <Search class="size-3.5" />
+            <span class="max-[750px]:hidden">搜索</span>
+            <kbd
+              class="max-[750px]:hidden pointer-events-none inline-flex h-4 select-none items-center rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground"
+            >
+              Ctrl+K
+            </kbd>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>快捷跳转与命令面板 (Ctrl+K)</TooltipContent>
+      </Tooltip>
+
       <Button
         variant="brand"
         size="xs"
@@ -127,24 +145,7 @@ async function goToUserPage(accountName?: string) {
 
       <NotificationsPopover v-if="workspace === 'streamer'" />
 
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger as-child>
-            <Button
-              variant="outline"
-              size="icon-xs"
-              :aria-label="themeToggleTitle"
-              @click="toggleTheme"
-            >
-              <component
-                :is="themeToggleIcon"
-                class="size-4 block"
-              />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{{ themeToggleTitle }}</TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <ThemeToggleButton />
 
       <Button
         v-if="workspace === 'streamer' && accountName"

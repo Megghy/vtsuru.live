@@ -33,6 +33,7 @@ import {
 } from '@/shared/ui/alert-dialog'
 import { Badge } from '@/shared/ui/badge'
 import { Button } from '@/shared/ui/button'
+import { Empty } from '@/shared/ui/empty'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/shared/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
@@ -223,12 +224,11 @@ onMounted(async () => {
           value="2"
           class="mt-3 space-y-3"
         >
-          <div
+          <Empty
             v-if="useQB.trashQuestions.length === 0"
-            class="text-center py-16 text-xs text-muted-foreground border border-dashed rounded-lg"
-          >
-            暂无被过滤的提问
-          </div>
+            description="暂无被过滤的提问"
+            class="py-12 border border-dashed rounded-lg"
+          />
 
           <div
             v-else

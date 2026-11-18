@@ -178,8 +178,7 @@ function copyWaitingList() {
     message.warning('当前待播点歌清单为空')
     return
   }
-  copyToClipboard(text)
-  message.success('待播点歌清单已复制到剪贴板')
+  void copyToClipboard(text, '待播点歌清单已复制到剪贴板')
 }
 
 function copySongList() {
@@ -188,8 +187,7 @@ function copySongList() {
     message.warning('当前曲库为空')
     return
   }
-  copyToClipboard(text)
-  message.success('曲库清单已复制到剪贴板')
+  void copyToClipboard(text, '曲库清单已复制到剪贴板')
 }
 
 async function copyObsLink() {
@@ -197,8 +195,7 @@ async function copyObsLink() {
     message.warning('尚未登录或未生成有效链接')
     return
   }
-  await copyToClipboard(obsUrl.value)
-  message.success('点歌机 OBS 源链接已复制 (已携带当前样式参数)')
+  await copyToClipboard(obsUrl.value, '点歌机 OBS 源链接已复制 (已携带当前样式参数)')
 }
 
 // 曲库数据加载与操作

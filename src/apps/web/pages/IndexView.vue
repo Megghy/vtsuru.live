@@ -55,7 +55,7 @@ const functions = [
   },
   {
     name: '弹幕机（OBS）',
-    desc: '在 OBS 上显示直播间弹幕、礼物和互动内容，兼容 blivechat 样式（开发中）',
+    desc: '在 OBS 上显示直播间弹幕、礼物和互动内容，兼容 blivechat 样式',
     icon: Chat24Filled,
     route: 'manage-danmuji',
   },

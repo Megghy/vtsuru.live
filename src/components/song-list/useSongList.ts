@@ -64,6 +64,22 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
     return result
   })
 
+  watch(
+    [debouncedSearch, selectedLanguageFilter, selectedTagFilter, selectedAuthorFilter],
+    () => {
+      currentPage.value = 1
+    },
+    { deep: true },
+  )
+
+  watch(
+    () => filteredSongs.value.length,
+    (len) => {
+      const maxPage = Math.max(1, Math.ceil(len / pageSize.value))
+      if (currentPage.value > maxPage) currentPage.value = maxPage
+    },
+  )
+
   // 下拉选项
   const languageOptions = computed(() => {
     const langs = new Set(['中文', '日语', '英语', '韩语', '法语', '西语', '其他'])
@@ -115,6 +131,26 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
     return true
   }
 
+  function applyPageReorder(reorderedPageKeys: string[]) {
+    if (reorderedPageKeys.length <= 1) return false
+    const fullOrder = songsInternal.value.map((s) => s.key)
+    const pageKeySet = new Set(reorderedPageKeys)
+    const slotIndices: number[] = []
+    fullOrder.forEach((k, idx) => {
+      if (pageKeySet.has(k)) slotIndices.push(idx)
+    })
+    if (slotIndices.length !== reorderedPageKeys.length) return false
+    const nextOrder = [...fullOrder]
+    slotIndices.forEach((slotIdx, i) => {
+      nextOrder[slotIdx] = reorderedPageKeys[i]
+    })
+    if (nextOrder.join('|') === fullOrder.join('|')) return false
+    songOrderKeys.value = nextOrder
+    songsInternal.value = applySongOrder(songsInternal.value, nextOrder)
+    toast.success('已调整顺序（本机保存；服务端暂无排序字段）')
+    return true
+  }
+
   // CRUD 操作
   async function updateSong(song: ResponseSongModel) {
     if (songsInternal.value.some((s) => s.name === song.name && s.key !== song.key)) {
@@ -152,11 +188,7 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
     isLoading.value = true
     try {
       const payload = songs.map((song) => ({ key: song.key, song }))
-      const {
-        code,
-        data,
-        message: err,
-      } = await postApiSongListUpdateBatch(payload as any)
+      const { code, data, message: err } = await postApiSongListUpdateBatch(payload as any)
       if (code === 200 && data) {
         const updated = new Map(data.map((song) => [song.key, song]))
         songsInternal.value = songsInternal.value.map((song) => updated.get(song.key) ?? song)
@@ -277,5 +309,6 @@ export function useSongList(props: { songs: ResponseSongModel[]; isSelf: boolean
     nextPage,
     prevPage,
     moveSong,
+    applyPageReorder,
   }
 }

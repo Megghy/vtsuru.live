@@ -10,6 +10,7 @@ import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
+import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Badge } from '@/shared/ui/badge'
@@ -117,20 +118,42 @@ function clearSubtitles() {
         <div class="flex-between gap-3 flex-wrap">
           <div class="flex items-center gap-2">
             <span class="text-sm font-semibold">OBS 实时字幕条</span>
-            <Badge variant="outline" :class="lastSyncError ? 'text-destructive border-destructive/40' : 'text-emerald-600 border-emerald-500/40'">
-              {{ isSyncing ? '同步中…' : lastSyncError ? '同步异常' : hasPendingChanges ? '待保存' : currentHash ? '已实时连接' : '就绪' }}
+            <Badge
+              variant="outline"
+              :class="
+                lastSyncError ? 'text-destructive border-destructive/40' : 'text-emerald-600 border-emerald-500/40'
+              "
+            >
+              {{
+                isSyncing
+                  ? '同步中…'
+                  : lastSyncError
+                    ? '同步异常'
+                    : hasPendingChanges
+                      ? '待保存'
+                      : currentHash
+                        ? '已实时连接'
+                        : '就绪'
+              }}
             </Badge>
           </div>
           <div class="flex items-center gap-2">
-            <Input
+            <ObsChannelSwitcher
               v-model="channelDraft"
+              button-variant="outline"
+              button-label="切换实例"
               placeholder="实例名 (default)"
-              class="w-36"
-              @keyup.enter="applyChannel"
+              input-class="w-36"
+              @submit="applyChannel"
             />
-            <Button variant="outline" @click="applyChannel">切换实例</Button>
-            <Button variant="outline" @click="copyObsUrl">
-              <component :is="copied ? Checkmark24Regular : Copy24Regular" class="size-3.5 mr-1" />
+            <Button
+              variant="outline"
+              @click="copyObsUrl"
+            >
+              <component
+                :is="copied ? Checkmark24Regular : Copy24Regular"
+                class="size-3.5 mr-1"
+              />
               {{ copied ? '已复制' : '复制 OBS 链接' }}
             </Button>
             <Button
@@ -139,14 +162,20 @@ function clearSubtitles() {
               target="_blank"
               variant="outline"
             >
-              <component :is="Open24Regular" class="size-3.5 mr-1" />
+              <component
+                :is="Open24Regular"
+                class="size-3.5 mr-1"
+              />
               新窗口预览
             </Button>
           </div>
         </div>
 
         <div class="rounded-lg border border-border bg-zinc-900/90 overflow-hidden">
-          <SubtitleDisplay :channel-id="channelId" inline-mode />
+          <SubtitleDisplay
+            :channel-id="channelId"
+            inline-mode
+          />
         </div>
 
         <div class="flex items-center gap-2">
@@ -156,12 +185,24 @@ function clearSubtitles() {
             class="flex-1"
             @keyup.enter="sendTestLine"
           />
-          <Button variant="brand" @click="sendTestLine">
-            <component :is="Send24Regular" class="size-3.5 mr-1" />
+          <Button
+            variant="brand"
+            @click="sendTestLine"
+          >
+            <component
+              :is="Send24Regular"
+              class="size-3.5 mr-1"
+            />
             发送测试
           </Button>
-          <Button variant="outline" @click="clearSubtitles">
-            <component :is="Delete24Regular" class="size-3.5 mr-1" />
+          <Button
+            variant="outline"
+            @click="clearSubtitles"
+          >
+            <component
+              :is="Delete24Regular"
+              class="size-3.5 mr-1"
+            />
             清屏
           </Button>
         </div>
@@ -178,7 +219,11 @@ function clearSubtitles() {
           >
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem v-for="opt in alignOptions" :key="opt.value" :value="opt.value">
+              <SelectItem
+                v-for="opt in alignOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
                 {{ opt.label }}
               </SelectItem>
             </SelectContent>

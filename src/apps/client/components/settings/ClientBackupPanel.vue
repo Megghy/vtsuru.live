@@ -126,13 +126,21 @@ function toggleModule(mod: ClientBackupModule) {
       <AlertDescription class="m-0"> 当前不是 Tauri 客户端环境，无法使用备份功能。 </AlertDescription>
     </Alert>
 
-    <Alert variant="warning" v-else-if="!backup.isSupported">
+    <Alert
+      variant="warning"
+      v-else-if="!backup.isSupported"
+    >
       <div class="flex-between gap-2">
         <AlertDescription class="m-0">
           当前客户端版本为 {{ backup.currentVersion || '未知' }}，备份功能要求版本 >=
           {{ CLIENT_BACKUP_MIN_VERSION }}，请先更新客户端。
         </AlertDescription>
-        <Button size="xs" variant="outline" class="shrink-0" @click="router.push({ name: 'client-settings', query: { tab: 'about' } })">
+        <Button
+          size="xs"
+          variant="outline"
+          class="shrink-0"
+          @click="router.push({ name: 'client-settings', query: { tab: 'about' } })"
+        >
           检查更新
         </Button>
       </div>
@@ -151,7 +159,7 @@ function toggleModule(mod: ClientBackupModule) {
         </CardHeader>
         <CardContent class="p-3 space-y-2">
           <Input
-            :value="backupSettings.directory"
+            :model-value="backupSettings.directory"
             readonly
             placeholder="尚未选择备份目录"
           />
@@ -192,7 +200,11 @@ function toggleModule(mod: ClientBackupModule) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in presetOptions" :key="opt.value" :value="opt.value">
+                  <SelectItem
+                    v-for="opt in presetOptions"
+                    :key="opt.value"
+                    :value="opt.value"
+                  >
                     {{ opt.label }}
                   </SelectItem>
                 </SelectContent>
@@ -263,10 +275,11 @@ function toggleModule(mod: ClientBackupModule) {
           v-if="importPreview"
           class="space-y-3 pt-2"
         >
-          <Alert size="sm" variant="warning">
-            <AlertDescription class="m-0">
-              导入会覆盖已勾选模块的当前数据，未勾选模块保持不变。
-            </AlertDescription>
+          <Alert
+            size="sm"
+            variant="warning"
+          >
+            <AlertDescription class="m-0"> 导入会覆盖已勾选模块的当前数据，未勾选模块保持不变。 </AlertDescription>
           </Alert>
 
           <div class="text-xs text-muted-foreground space-y-0.5">

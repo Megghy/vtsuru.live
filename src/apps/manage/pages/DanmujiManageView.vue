@@ -13,6 +13,7 @@ import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
 import DanmujiOBS from '@/apps/obs/pages/DanmujiOBS.vue'
 
 const MonacoEditorComponent = defineAsyncComponent(() => import('@/apps/manage/components/MonacoEditorComponent.vue'))
+import { useUnsavedChangesGuard } from '@/shared/composables/useUnsavedChangesGuard'
 import { CURRENT_HOST } from '@/shared/config'
 import { normalizeDanmujiConfig } from '@/shared/danmujiConfig'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
@@ -56,6 +57,10 @@ const serverSnapshot = ref<string | null>(null)
 const isSaving = ref(false)
 const isLoading = ref(true)
 const isDirty = computed(() => JSON.stringify(config.value) !== serverSnapshot.value)
+useUnsavedChangesGuard(
+  () => serverSnapshot.value != null && isDirty.value,
+  '弹幕机配置有未保存的修改，离开后将会丢失，确定要离开吗？',
+)
 const activeTab = ref('style')
 const preview = shallowRef<InstanceType<typeof DanmujiOBS>>()
 const previewReady = ref(false)
@@ -162,8 +167,7 @@ function resetCss() {
 }
 
 async function copy(value: string, label: string) {
-  await copyToClipboard(value)
-  message.success(`${label}已复制`)
+  await copyToClipboard(value, `${label}已复制`)
 }
 
 async function loadConfig() {

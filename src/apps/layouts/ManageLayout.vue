@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { isLoadingAccount, useAccount } from '@/api/account'
 import { BiliAuthCodeStatusType } from '@/api/generated/model'
 import AssistantModal from '@/apps/assistant/components/AssistantModal.vue'
-import { useAssistantStore } from '@/apps/assistant/store/useAssistantStore'
 import ManageAuthGate from '@/apps/manage/components/layout/ManageAuthGate.vue'
 import ManageContentGate from '@/apps/manage/components/layout/ManageContentGate.vue'
 
@@ -19,7 +17,6 @@ import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace
 import { currentAPIKey } from '@/shared/config'
 import { buildManageTokens, getThemeCssVars } from '@/shared/config/theme'
 import { provideThemeScope } from '@/shared/config/theme/scope'
-import { Button } from '@/shared/ui/button'
 import { isDarkMode, toast } from '@/shared/utils'
 import { useBiliAuth } from '@/store/useBiliAuth'
 
@@ -30,7 +27,6 @@ provideThemeScope(manageCssVars)
 const accountInfo = useAccount()
 const route = useRoute()
 const router = useRouter()
-const assistant = useAssistantStore()
 const biliAuth = useBiliAuth()
 const { workspace } = useManageWorkspace()
 
@@ -56,14 +52,6 @@ watch(
     }
   },
 )
-
-function openAssistant() {
-  assistant.open({
-    routeName: route.name?.toString() ?? '',
-    title: (route.meta?.title as string) ?? route.name?.toString() ?? '管理后台',
-    path: route.path,
-  })
-}
 
 onMounted(() => {
   if (currentAPIKey.value !== 'main') {
@@ -107,19 +95,6 @@ onMounted(() => {
           <ManageMusicPlayer />
         </div>
       </div>
-
-      <Button
-        variant="brand"
-        size="icon"
-        class="assistant-fab fixed right-5 max-[600px]:right-3 bottom-[84px] max-[600px]:bottom-[72px] z-[1500] h-11 w-11 rounded-full shadow-lg"
-        aria-label="VTsuru 助手"
-        @click="openAssistant"
-      >
-        <component
-          :is="Bot24Regular"
-          class="h-6 w-6"
-        />
-      </Button>
 
       <AssistantModal />
     </div>

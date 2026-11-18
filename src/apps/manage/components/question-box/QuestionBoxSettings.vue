@@ -117,11 +117,10 @@ function toggleBlockTag(tagType: ViolationTypes) {
 async function saveQuestionBoxSettings() {
   if (!accountInfo.value?.settings?.questionBox) return
   try {
-    const success = await SaveSetting('QuestionBox', accountInfo.value.settings.questionBox)
-    if (success) message.success('设置已保存')
-    else message.error('保存设置失败')
+    await SaveSetting('QuestionBox', accountInfo.value.settings.questionBox)
+    message.success('设置已保存')
   } catch (err) {
-    message.error(`保存设置时出错: ${err}`)
+    message.error(`保存设置时出错: ${err instanceof Error ? err.message : String(err)}`)
   }
 }
 

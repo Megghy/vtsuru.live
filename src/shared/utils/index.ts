@@ -1,7 +1,7 @@
 import SquareArrowForward24Filled from '@vicons/fluent/es/SquareArrowForward24Filled'
 import { usePreferredDark } from '@vueuse/core'
 import type { Component, VNode } from 'vue'
-import { computed, h, shallowRef } from 'vue'
+import { computed, h, reactive, ref } from 'vue'
 import { toast } from 'vue-sonner'
 import type { ExternalToast } from 'vue-sonner'
 
@@ -17,9 +17,39 @@ import FiveSingIcon from '@/svgs/fivesing.svg'
 import NeteaseIcon from '@/svgs/netease.svg'
 
 const isPreferredDark = usePreferredDark()
-const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
+export const themeType = usePersistedStorage('Settings.Theme', ThemeType.Auto)
+export const forcedThemeOverride = ref<'dark' | 'light' | null>(null)
+
+export function setForcedThemeMode(mode: 'dark' | 'light' | null) {
+  forcedThemeOverride.value = mode
+}
+
+export function cycleThemeType(current: ThemeType = themeType.value): ThemeType {
+  switch (current) {
+    case ThemeType.Auto:
+      return ThemeType.Light
+    case ThemeType.Light:
+      return ThemeType.Dark
+    case ThemeType.Dark:
+    default:
+      return ThemeType.Auto
+  }
+}
+
+export function getThemeTypeLabel(type: ThemeType = themeType.value): string {
+  switch (type) {
+    case ThemeType.Auto:
+      return '跟随系统'
+    case ThemeType.Light:
+      return '浅色主题'
+    case ThemeType.Dark:
+      return '深色主题'
+  }
+}
 
 export const isDarkMode = computed(() => {
+  if (forcedThemeOverride.value === 'dark') return true
+  if (forcedThemeOverride.value === 'light') return false
   if (themeType.value === ThemeType.Auto) return isPreferredDark.value
   return themeType.value === ThemeType.Dark
 })
@@ -85,16 +115,34 @@ export type AppDialogRequest = {
   content?: string | Component | (() => VNode)
   positiveText?: string
   negativeText?: string
-  onPositiveClick?: () => void | Promise<void>
+  onPositiveClick?: () => void | boolean | Promise<void | boolean>
   onNegativeClick?: () => void
   onClose?: () => void
   class?: string
 }
 
-export const appDialog = shallowRef<AppDialogRequest | null>(null)
+export const appDialogQueue = ref<AppDialogRequest[]>([])
+export const appDialog = computed<AppDialogRequest | null>({
+  get: () => appDialogQueue.value[0] ?? null,
+  set: (val) => {
+    if (val == null) {
+      if (appDialogQueue.value.length > 0) {
+        appDialogQueue.value = appDialogQueue.value.slice(1)
+      }
+      return
+    }
+    appDialogQueue.value = [...appDialogQueue.value, val]
+  },
+})
 
 function openDialog(opts: AppDialogRequest) {
-  appDialog.value = opts
+  appDialogQueue.value = [...appDialogQueue.value, opts]
+}
+
+export function shiftAppDialog() {
+  if (appDialogQueue.value.length > 0) {
+    appDialogQueue.value = appDialogQueue.value.slice(1)
+  }
 }
 
 export const dialog = {
@@ -109,10 +157,59 @@ export function useDialog() {
   return dialog
 }
 
+export const loadingBarState = reactive({
+  active: false,
+  status: 'idle' as 'idle' | 'loading' | 'error',
+  progress: 0,
+})
+
+let loadingBarTrickleTimer: ReturnType<typeof setInterval> | null = null
+let loadingBarHideTimer: ReturnType<typeof setTimeout> | null = null
+
+function clearLoadingBarTimers() {
+  if (loadingBarTrickleTimer) {
+    clearInterval(loadingBarTrickleTimer)
+    loadingBarTrickleTimer = null
+  }
+  if (loadingBarHideTimer) {
+    clearTimeout(loadingBarHideTimer)
+    loadingBarHideTimer = null
+  }
+}
+
 export const loadingBar = {
-  start: () => {},
-  finish: () => {},
-  error: () => {},
+  start: () => {
+    clearLoadingBarTimers()
+    loadingBarState.active = true
+    loadingBarState.status = 'loading'
+    loadingBarState.progress = 18
+    loadingBarTrickleTimer = setInterval(() => {
+      if (loadingBarState.progress < 88) {
+        loadingBarState.progress += Math.max(1.2, (90 - loadingBarState.progress) * 0.14)
+      }
+    }, 180)
+  },
+  finish: () => {
+    clearLoadingBarTimers()
+    if (!loadingBarState.active) return
+    loadingBarState.status = 'idle'
+    loadingBarState.progress = 100
+    loadingBarHideTimer = setTimeout(() => {
+      loadingBarState.active = false
+      loadingBarState.progress = 0
+    }, 220)
+  },
+  error: () => {
+    clearLoadingBarTimers()
+    loadingBarState.active = true
+    loadingBarState.status = 'error'
+    loadingBarState.progress = 100
+    loadingBarHideTimer = setTimeout(() => {
+      loadingBarState.active = false
+      loadingBarState.status = 'idle'
+      loadingBarState.progress = 0
+    }, 400)
+  },
 }
 
 export function useLoadingBar() {
@@ -147,22 +244,48 @@ function copyWithExecCommand(text: string) {
   }
 }
 
-export async function copyToClipboard(text: string) {
+export async function copyToClipboard(text: string, customSuccessMessage?: string | false) {
+  const notifySuccess = () => {
+    if (customSuccessMessage === false) return
+    message.success(customSuccessMessage ?? '已复制到剪切板')
+  }
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text)
-      message.success('已复制到剪切板')
+      notifySuccess()
       return true
     }
   } catch {
     // 插件 iframe 的 Permissions-Policy 会拒绝 clipboard-write，回退到选区复制。
   }
   if (copyWithExecCommand(text)) {
-    message.success('已复制到剪切板')
+    notifySuccess()
     return true
   }
   message.warning('当前环境不支持自动复制, 请手动选择并复制')
   return false
+}
+
+export function showUndoToast(
+  label: string,
+  onUndo: () => void | Promise<void>,
+  options?: { description?: string; duration?: number },
+) {
+  let undone = false
+  toast.success(label, {
+    description: options?.description,
+    duration: options?.duration ?? 5000,
+    action: {
+      label: '撤销',
+      onClick: () => {
+        if (undone) return
+        undone = true
+        void Promise.resolve(onUndo()).catch((err) => {
+          toast.error(`撤销失败: ${err instanceof Error ? err.message : String(err)}`)
+        })
+      },
+    },
+  })
 }
 
 export function hexToRgba(hex: string, alpha: number): string | null {

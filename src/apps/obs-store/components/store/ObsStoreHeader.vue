@@ -54,7 +54,7 @@ const statusOptions: { label: string; value: ObsComponentStatus | 'all' }[] = [
           class="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none"
         />
         <Input
-          :value="props.search"
+          :model-value="props.search"
           placeholder="搜索组件或标签..."
           class="pl-8 w-full"
           @input="emit('update:search', ($event.target as HTMLInputElement).value)"

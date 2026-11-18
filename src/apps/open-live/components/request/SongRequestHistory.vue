@@ -133,7 +133,7 @@ function getStatusBadge(status: SongRequestStatus) {
     <div class="flex items-center gap-2.5 flex-wrap">
       <div class="flex items-center gap-1.5 w-[250px]">
         <Input
-          :value="songRequest.filterSongName"
+          :model-value="songRequest.filterSongName"
           placeholder="搜索歌曲..."
           class="flex-1"
           @input="((songRequest.filterSongName = $event.target.value), (currentPage = 1))"
@@ -149,7 +149,7 @@ function getStatusBadge(status: SongRequestStatus) {
 
       <div class="flex items-center gap-1.5 w-[250px]">
         <Input
-          :value="songRequest.filterName"
+          :model-value="songRequest.filterName"
           placeholder="搜索用户..."
           class="flex-1"
           @input="((songRequest.filterName = $event.target.value), (currentPage = 1))"

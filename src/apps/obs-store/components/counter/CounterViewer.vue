@@ -11,6 +11,7 @@ import { useRoute } from 'vue-router'
 import { toast } from 'vue-sonner'
 
 import { useAccount } from '@/api/account'
+import ObsChannelSwitcher from '@/apps/obs-store/components/store/ObsChannelSwitcher.vue'
 import { OBS_SYNC_CHANNEL_HINT, parseObsSyncChannel, resolveObsSyncChannel, useObsBridge } from '@/apps/obs-store/sync'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
 import { Button } from '@/shared/ui/button'
@@ -175,21 +176,10 @@ activateKeyboard()
             </div>
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <Input
-              v-model="channelDraft"
-              class="w-[120px]"
-              placeholder="频道"
-              maxlength="64"
-              @keyup.enter="changeChannel"
-            />
-            <Button
-              variant="secondary"
-              @click="changeChannel"
-            >
-              切换频道
-            </Button>
-          </div>
+          <ObsChannelSwitcher
+            v-model="channelDraft"
+            @submit="changeChannel"
+          />
 
           <div class="flex items-center gap-2">
             <Button
@@ -358,7 +348,7 @@ activateKeyboard()
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">标题文本</label>
             <Input
-              :value="state.title"
+              :model-value="state.title"
               placeholder="例如：艾尔登法环 死亡挑战"
               @input="updateState({ title: ($event.target as HTMLInputElement).value })"
             />
@@ -367,7 +357,7 @@ activateKeyboard()
           <div class="space-y-1.5">
             <label class="text-xs font-medium text-foreground">前缀小标</label>
             <Input
-              :value="state.prefix"
+              :model-value="state.prefix"
               placeholder="例如：DEATHS / WINS"
               @input="updateState({ prefix: ($event.target as HTMLInputElement).value })"
             />
