@@ -7,6 +7,7 @@ import { vtsuruMutator } from '../../orval-mutator'
  * OpenAPI spec version: v1
  */
 import type {
+  DeleteApiObsStorePngtuberAssetsAssetIdParams,
   GetApiObsStorePngtuberAssetsUserIdAssetIdParams,
   GetApiObsStorePngtuberCollabRoomInfoParams,
   GetApiObsStoreSyncGetStateParams,
@@ -14,9 +15,25 @@ import type {
   PostApiObsStorePngtuberCollabCreateRoomParams,
   RequestObsSyncUpdate,
   ResponseResultOfAvatarAsset,
+  ResponseResultOfAvatarCleanupResult,
+  ResponseResultOfBoolean,
+  ResponseResultOfListOfAvatarAssetItem,
   ResponseResultOfObject,
   ResponseResultOfResponseObsSyncState,
 } from '../model'
+
+export const getGetApiObsStorePngtuberAssetsUrl = () => {
+  return `/api/obs-store/pngtuber/assets`
+}
+
+export const getApiObsStorePngtuberAssets = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfListOfAvatarAssetItem> => {
+  return vtsuruMutator<ResponseResultOfListOfAvatarAssetItem>(getGetApiObsStorePngtuberAssetsUrl(), {
+    ...options,
+    method: 'GET',
+  })
+}
 
 export const getPostApiObsStorePngtuberAssetsUrl = () => {
   return `/api/obs-store/pngtuber/assets`
@@ -35,6 +52,36 @@ export const postApiObsStorePngtuberAssets = async (
     ...options,
     method: 'POST',
     body: formData,
+  })
+}
+
+export const getDeleteApiObsStorePngtuberAssetsAssetIdUrl = (
+  assetId: string,
+  params?: DeleteApiObsStorePngtuberAssetsAssetIdParams,
+) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/obs-store/pngtuber/assets/${assetId}?${stringifiedParams}`
+    : `/api/obs-store/pngtuber/assets/${assetId}`
+}
+
+export const deleteApiObsStorePngtuberAssetsAssetId = async (
+  assetId: string,
+  params?: DeleteApiObsStorePngtuberAssetsAssetIdParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfBoolean> => {
+  return vtsuruMutator<ResponseResultOfBoolean>(getDeleteApiObsStorePngtuberAssetsAssetIdUrl(assetId, params), {
+    ...options,
+    method: 'DELETE',
   })
 }
 
@@ -67,6 +114,19 @@ export const getApiObsStorePngtuberAssetsUserIdAssetId = async (
   return vtsuruMutator<void>(getGetApiObsStorePngtuberAssetsUserIdAssetIdUrl(userId, assetId, params), {
     ...options,
     method: 'GET',
+  })
+}
+
+export const getPostApiObsStorePngtuberAssetsCleanupUrl = () => {
+  return `/api/obs-store/pngtuber/assets/cleanup`
+}
+
+export const postApiObsStorePngtuberAssetsCleanup = async (
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfAvatarCleanupResult> => {
+  return vtsuruMutator<ResponseResultOfAvatarCleanupResult>(getPostApiObsStorePngtuberAssetsCleanupUrl(), {
+    ...options,
+    method: 'POST',
   })
 }
 

@@ -8,4 +8,5 @@
 
 export type PostApiObsStorePngtuberCollabCreateRoomParams = {
   code?: string
+  passcode?: string
 }

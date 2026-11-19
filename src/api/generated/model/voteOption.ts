@@ -5,9 +5,11 @@
  * 本站 API
  * OpenAPI spec version: v1
  */
+import type { VoteVoterInfo } from './voteVoterInfo'
 
 export interface VoteOption {
   text: string
   count: number
   voters: string[]
+  voterDetails: VoteVoterInfo[]
 }
