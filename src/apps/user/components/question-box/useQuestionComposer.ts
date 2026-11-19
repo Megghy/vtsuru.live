@@ -1,4 +1,4 @@
-import { useIntervalFn, useNow } from '@vueuse/core'
+import { useIntervalFn } from '@vueuse/core'
 import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 
 import { useAccount } from '@/api/account'
@@ -31,8 +31,20 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024
 const SEND_COOLDOWN = 30_000
 const segmenter = new Intl.Segmenter(undefined, { granularity: 'grapheme' })
 
-function emptyDraft(): QuestionDraft {
-  return { message: '', tag: null, anonymousName: '', anonymousEmail: '', isAnonymous: true, allowPublic: true }
+function emptyDraft(isAnonymous = true): QuestionDraft {
+  return { message: '', tag: null, anonymousName: '', anonymousEmail: '', isAnonymous, allowPublic: true }
+}
+
+function normalizeQuestionDraft(raw: unknown): QuestionDraft {
+  const parsed = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {}
+  return {
+    message: typeof parsed.message === 'string' ? parsed.message : '',
+    tag: typeof parsed.tag === 'string' ? parsed.tag : null,
+    anonymousName: typeof parsed.anonymousName === 'string' ? parsed.anonymousName : '',
+    anonymousEmail: typeof parsed.anonymousEmail === 'string' ? parsed.anonymousEmail : '',
+    isAnonymous: parsed.isAnonymous !== false,
+    allowPublic: parsed.allowPublic !== false,
+  }
 }
 
 export function isQuestionSubmitAllowed(params: {
@@ -56,8 +68,12 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
     {
       serializer: {
         read: (value) => {
-          const parsed = value ? JSON.parse(value) : emptyDraft()
-          return { ...emptyDraft(), ...parsed, allowPublic: parsed.allowPublic !== false }
+          if (!value) return emptyDraft()
+          try {
+            return normalizeQuestionDraft(JSON.parse(value))
+          } catch {
+            return emptyDraft()
+          }
         },
         write: (value) => JSON.stringify(value),
       },
@@ -70,15 +86,23 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
   const isSending = ref(false)
   const isDragging = ref(false)
   const isSent = ref(false)
-  const nextSendAt = ref(Date.now())
-  const { now, pause, resume } = useNow({ controls: true, scheduler: (cb) => useIntervalFn(cb, 1000) })
-  pause()
+  const nextSendAt = ref(0)
+  const nowMs = ref(Date.now())
+  const { pause, resume } = useIntervalFn(
+    () => {
+      nowMs.value = Date.now()
+    },
+    1000,
+    { immediate: false },
+  )
 
   const isUserLoggedIn = computed(() => Boolean(accountInfo.value?.id))
   const isBiliAuthed = computed(() => biliAuth.isAuthed && Boolean(biliAuth.biliAuth?.userId))
   const isIdentified = computed(() => isUserLoggedIn.value || isBiliAuthed.value)
   const isSelf = computed(() => {
-    if (target.value?.id === accountInfo.value?.id) return true
+    if (target.value?.id != null && accountInfo.value?.id != null && target.value.id === accountInfo.value.id) {
+      return true
+    }
     if (!target.value?.biliId || !biliAuth.biliAuth?.userId) return false
     return String(target.value.biliId) === String(biliAuth.biliAuth.userId)
   })
@@ -90,25 +114,27 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
   const allowAnonymous = computed(() => target.value?.extra?.allowQuestionBoxAnonymous !== false)
   const allowUnregistedUser = computed(() => target.value?.extra?.allowQuestionBoxUnregistedUser !== false)
   const allowDefaultPublic = computed(() => target.value?.extra?.questionBoxDefaultPublic !== false)
+  const mustUseRealName = computed(() => !allowAnonymous.value && isIdentified.value)
   const canUploadImages = computed(() => !isSelf.value && (isIdentified.value || allowUploadImage.value))
   const maxImages = computed(() => (isIdentified.value ? 9 : 3))
   const characterCount = computed(() => [...segmenter.segment(draft.value.message)].length)
-  const cooldownSeconds = computed(() => Math.max(0, Math.ceil((nextSendAt.value - now.value.getTime()) / 1000)))
+  const hasValidMessageLength = computed(() => draft.value.message.trim().length > 0 && characterCount.value >= 3)
+  const cooldownSeconds = computed(() => Math.max(0, Math.ceil((nextSendAt.value - nowMs.value) / 1000)))
 
   watch(cooldownSeconds, (val) => {
     if (val > 0) resume()
     else pause()
   })
 
-  // 当主播关闭匿名提问且用户已登录/已认证时，强制实名
+  // 当主播关闭匿名提问且用户已登录/已认证时，强制实名（含异步草稿回写与状态切换）
   watch(
-    [allowAnonymous, isIdentified],
-    ([allowed, identified]) => {
-      if (!allowed && identified && draft.value.isAnonymous) {
+    [mustUseRealName, () => draft.value.isAnonymous],
+    ([forceRealName, isAnonymous]) => {
+      if (forceRealName && isAnonymous) {
         draft.value = { ...draft.value, isAnonymous: false }
       }
     },
-    { immediate: true },
+    { immediate: true, flush: 'sync' },
   )
 
   const canSubmit = computed(
@@ -116,9 +142,9 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
       !isSelf.value &&
       !isSending.value &&
       Boolean(token.value) &&
-      characterCount.value >= 3 &&
+      hasValidMessageLength.value &&
       cooldownSeconds.value === 0 &&
-      isValidEmail(draft.value.anonymousEmail) &&
+      (isIdentified.value || isValidEmail(draft.value.anonymousEmail)) &&
       isQuestionSubmitAllowed({
         allowUnregistedUser: allowUnregistedUser.value,
         allowAnonymous: allowAnonymous.value,
@@ -127,8 +153,19 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
       }),
   )
 
+  const submitDisabledReason = computed(() => {
+    if (isSelf.value || isSending.value || cooldownSeconds.value > 0) return ''
+    if (!allowUnregistedUser.value && !isIdentified.value) return '需先登录或完成 B 站认证'
+    if (mustUseRealName.value && draft.value.isAnonymous) return '需以当前身份实名提交'
+    if (!isIdentified.value && !isValidEmail(draft.value.anonymousEmail)) return '邮箱格式不正确'
+    if (!hasValidMessageLength.value) return characterCount.value === 0 ? '请先输入留言内容' : '内容最少需要 3 个字'
+    if (!token.value) return '请先完成人机验证'
+    return ''
+  })
+
   function isValidEmail(email: string) {
-    return !email || /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(email)
+    const trimmed = email.trim()
+    return !trimmed || /^[^\s@]+@[^\s@][^\s.@]*\.[^\s@]+$/.test(trimmed)
   }
 
   function validateFile(file: File) {
@@ -176,9 +213,11 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
 
   async function sendQuestion() {
     if (!target.value?.id) throw new Error('未加载到提问对象')
-    if (characterCount.value < 3) throw new Error('内容最少需要 3 个字')
+    if (!hasValidMessageLength.value) throw new Error('内容最少需要 3 个字')
     if (cooldownSeconds.value > 0) throw new Error(`请等待 ${cooldownSeconds.value} 秒后再提交`)
-    if (!isValidEmail(draft.value.anonymousEmail)) throw new Error('邮箱格式不正确')
+    const trimmedEmail = draft.value.anonymousEmail.trim()
+    const trimmedName = draft.value.anonymousName.trim()
+    if (!isIdentified.value && !isValidEmail(trimmedEmail)) throw new Error('邮箱格式不正确')
     if (!token.value) throw new Error('请先完成人机验证')
 
     isSending.value = true
@@ -197,10 +236,8 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
             IsAnonymous: !isIdentified.value || submittedDraft.isAnonymous,
             Message: submittedDraft.message,
             Tag: submittedDraft.tag,
-            AnonymousName:
-              !isIdentified.value && submittedDraft.anonymousName ? submittedDraft.anonymousName : undefined,
-            AnonymousEmail:
-              !isIdentified.value && submittedDraft.anonymousEmail ? submittedDraft.anonymousEmail : undefined,
+            AnonymousName: !isIdentified.value && trimmedName ? trimmedName : undefined,
+            AnonymousEmail: !isIdentified.value && trimmedEmail ? trimmedEmail : undefined,
             AllowPublic: allowDefaultPublic.value ? submittedDraft.allowPublic !== false : undefined,
           })
           const headers: Record<string, string> = { Turnstile: captchaToken }
@@ -222,18 +259,20 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
           targetUserName: targetName,
           message: submittedDraft.message,
           tag: submittedDraft.tag,
-          anonymousName: submittedDraft.anonymousName,
-          anonymousEmail: submittedDraft.anonymousEmail,
+          anonymousName: trimmedName,
+          anonymousEmail: trimmedEmail,
           hasImage,
           sendAt: Date.now(),
         })
       }
 
-      draft.value = emptyDraft()
+      draft.value = emptyDraft(!mustUseRealName.value)
       clearImages()
       token.value = ''
       isSent.value = true
-      nextSendAt.value = Date.now() + SEND_COOLDOWN
+      const currentNow = Date.now()
+      nowMs.value = currentNow
+      nextSendAt.value = currentNow + SEND_COOLDOWN
       onSubmitted()
     } finally {
       isSending.value = false
@@ -262,6 +301,7 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
     composeAgain,
     cooldownSeconds,
     draft,
+    hasValidMessageLength,
     identityName,
     imagePreviewUrls,
     isDragging,
@@ -275,6 +315,7 @@ export function useQuestionComposer(target: Ref<ResponseUserInfo | undefined>, o
     removeImage,
     selectedFiles,
     sendQuestion,
+    submitDisabledReason,
     token,
     turnstile,
   }

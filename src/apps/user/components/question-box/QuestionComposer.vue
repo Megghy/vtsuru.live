@@ -50,6 +50,7 @@ const {
   composeAgain,
   cooldownSeconds,
   draft,
+  hasValidMessageLength,
   identityName,
   imagePreviewUrls,
   isDragging,
@@ -63,6 +64,7 @@ const {
   removeImage,
   selectedFiles,
   sendQuestion,
+  submitDisabledReason,
   token,
   turnstile,
 } = composer
@@ -263,8 +265,8 @@ async function submit() {
               <LockClosed24Regular class="size-4 inline-block mr-1" />
               {{ identityName }}
             </span>
-            <span :class="{ 'is-invalid': characterCount > 0 && characterCount < 3 }">
-              {{ characterCount }} / 10000
+            <span :class="{ 'is-invalid': characterCount > 0 && !hasValidMessageLength }">
+              {{ characterCount > 0 && !hasValidMessageLength ? '至少 3 个字 · ' : '' }}{{ characterCount }} / 10000
             </span>
           </div>
         </div>
@@ -414,6 +416,12 @@ async function submit() {
               variant="secondary"
             >
               {{ cooldownSeconds }} 秒后可再次提交
+            </Tag>
+            <Tag
+              v-else-if="token && submitDisabledReason"
+              variant="secondary"
+            >
+              {{ submitDisabledReason }}
             </Tag>
             <Button
               size="lg"
