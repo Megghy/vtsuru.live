@@ -3,6 +3,7 @@ import { computed, onActivated, onDeactivated, ref, shallowRef } from 'vue'
 
 import type { RequestCreateBulletVote, ResponseVoteSession, VoteOptionDto } from '@/api/generated/model'
 import * as voteApi from '@/api/vote'
+import { useVoteDanmakuBridge } from '@/composables/useVoteDanmakuBridge'
 import { getVoteStandings } from '@/shared/utils/voteStandings'
 
 const POLL_MS = 2000
@@ -13,6 +14,7 @@ export function useDashboardVote() {
   const loaded = ref(false)
   const busy = ref(false)
   const pollError = ref<string>()
+  const isActivated = ref(true)
 
   async function refresh() {
     try {
@@ -32,10 +34,27 @@ export function useDashboardVote() {
     }
   }
 
+  useVoteDanmakuBridge(session, {
+    enabled: isActivated,
+    onUpdate: (status, updated) => {
+      if (status === 'ended') {
+        void refresh()
+      } else if (updated) {
+        session.value = updated
+      }
+    },
+  })
+
   const { pause, resume } = useIntervalFn(() => void refresh(), POLL_MS, { immediateCallback: true })
   // 客户端内页面被 KeepAlive 缓存，离开时停止轮询
-  onDeactivated(pause)
-  onActivated(resume)
+  onDeactivated(() => {
+    isActivated.value = false
+    pause()
+  })
+  onActivated(() => {
+    isActivated.value = true
+    resume()
+  })
 
   async function run(action: () => Promise<ResponseVoteSession>, success: string) {
     busy.value = true

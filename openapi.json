@@ -16564,6 +16564,58 @@
         ]
       }
     },
+    "/api/vote/try-vote": {
+      "post": {
+        "tags": [
+          "BulletVote"
+        ],
+        "operationId": "postApiVoteTryVote",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestProcessVoteEvent"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestProcessVoteEvent"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestProcessVoteEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseVoteSession"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseVoteSession"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfResponseVoteSession"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/vtsuru/bili-user-info/{uId}": {
       "get": {
         "tags": [
@@ -21684,6 +21736,50 @@
           },
           "type": {
             "$ref": "#/components/schemas/ForumTopicTypes"
+          }
+        },
+        "additionalProperties": false
+      },
+      "RequestProcessVoteEvent": {
+        "required": [
+          "type",
+          "time",
+          "price"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/EventDataTypes"
+          },
+          "uname": {
+            "type": "string",
+            "nullable": true
+          },
+          "uid": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "open_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "msg": {
+            "type": "string",
+            "nullable": true
+          },
+          "time": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "price": {
+            "type": "number",
+            "format": "double"
+          },
+          "eventId": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -31290,7 +31386,8 @@
         "required": [
           "text",
           "count",
-          "voters"
+          "voters",
+          "voterDetails"
         ],
         "type": "object",
         "properties": {
@@ -31305,6 +31402,12 @@
             "type": "array",
             "items": {
               "type": "string"
+            }
+          },
+          "voterDetails": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VoteVoterInfo"
             }
           }
         },
@@ -31348,6 +31451,37 @@
           "ByCount",
           "ByContribution"
         ]
+      },
+      "VoteVoterInfo": {
+        "required": [
+          "voterId",
+          "name",
+          "count",
+          "lastVoteTime"
+        ],
+        "type": "object",
+        "properties": {
+          "voterId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "ouId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "lastVoteTime": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
       },
       "WaitingMusicModel": {
         "required": [

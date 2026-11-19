@@ -14,7 +14,7 @@ import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
 import Sparkle24Regular from '@vicons/fluent/es/Sparkle24Regular'
 import Timer24Regular from '@vicons/fluent/es/Timer24Regular'
 import Trophy24Regular from '@vicons/fluent/es/Trophy24Regular'
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { clearInterval, setInterval } from 'worker-timers'
 
 import { useAccount } from '@/api/account'
@@ -29,7 +29,9 @@ import {
   postApiVoteSaveConfig,
 } from '@/api/generated/bullet-vote/bullet-vote'
 import type { RequestCreateBulletVote, ResponseVoteSession, VoteConfig, VoteOBSData } from '@/api/generated/model'
+import { getOptionVoters } from '@/api/vote'
 import ManagePageHeader from '@/apps/manage/components/ManagePageHeader.vue'
+import { useVoteDanmakuBridge } from '@/composables/useVoteDanmakuBridge'
 import DanmakuVoteCard from '@/shared/components/DanmakuVoteCard.vue'
 import { CURRENT_HOST } from '@/shared/config'
 import { buildObsSourceUrl } from '@/shared/obs/obsUrl'
@@ -58,6 +60,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/shared/ui/separator'
 import { SettingRow } from '@/shared/ui/setting-row'
 import { Switch } from '@/shared/ui/switch'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { Textarea } from '@/shared/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
 import { useMessage } from '@/shared/utils'
@@ -80,6 +83,47 @@ const isLoading = ref(false)
 const showSettingsModal = ref(false)
 const currentVote = ref<ResponseVoteSession | null>(null)
 const voteHistory = ref<ResponseVoteSession[]>([])
+const expandedVoterOptions = ref<Record<number, boolean>>({})
+const detailVoteSession = ref<ResponseVoteSession | null>(null)
+const showDetailModal = ref(false)
+
+function toggleVoterExpand(idx: number) {
+  expandedVoterOptions.value[idx] = !expandedVoterOptions.value[idx]
+}
+
+function visibleOptionVoters(opt: NonNullable<ResponseVoteSession['options']>[number], idx: number) {
+  const list = getOptionVoters(opt)
+  if (expandedVoterOptions.value[idx] || list.length <= 8) return list
+  return list.slice(0, 8)
+}
+
+function openVoteDetail(item: ResponseVoteSession) {
+  detailVoteSession.value = item
+  showDetailModal.value = true
+}
+
+// 弹幕投票直连桥接（未连接 EventFetcher 时由当前网页接收弹幕并上报服务端）
+const { client: danmakuClient } = useVoteDanmakuBridge(currentVote, {
+  config: () => voteConfig.value,
+  onUpdate: (status, updated) => {
+    if (status === 'ended') {
+      currentVote.value = null
+      void fetchHistory()
+    } else if (updated) {
+      currentVote.value = updated
+    }
+  },
+})
+
+const voteChannelStatus = computed(() => {
+  if (accountInfo.value?.eventFetcherState?.online) {
+    return { label: 'EventFetcher 后台计票中', variant: 'success' as const }
+  }
+  if (danmakuClient.connected) {
+    return { label: '网页端实时收票中', variant: 'success' as const }
+  }
+  return { label: '等待连接弹幕源', variant: 'warning' as const }
+})
 
 // 投票配置
 const voteConfig = ref<VoteConfig>({
@@ -265,6 +309,7 @@ function recalculateMockPercentages() {
 }
 
 function mockAddVote(optionIndex: number, delta = 1) {
+  previewMode.value = 'mock'
   const target = mockData.value.options.find((o) => o.index === optionIndex)
   if (target) {
     target.count += delta
@@ -274,6 +319,7 @@ function mockAddVote(optionIndex: number, delta = 1) {
 }
 
 function mockOvertake(targetIdx: number) {
+  previewMode.value = 'mock'
   const leader = [...mockData.value.options].toSorted((a, b) => b.count - a.count)[0]
   const target = mockData.value.options.find((o) => o.index === targetIdx)
   if (target && leader) {
@@ -303,6 +349,7 @@ function setMockBalance(mode: 'close' | 'tie' | 'empty') {
 }
 
 function toggleMockUrgent() {
+  previewMode.value = 'mock'
   mockData.value.isActive = true
   mockData.value.isEnding = false
   mockData.value.winnerOption = undefined
@@ -311,6 +358,7 @@ function toggleMockUrgent() {
 }
 
 function toggleMockWinner() {
+  previewMode.value = 'mock'
   const standings = getVoteStandings(mockData.value.options)
   mockData.value.isActive = false
   mockData.value.isEnding = true
@@ -319,9 +367,23 @@ function toggleMockWinner() {
   message.success(voteOutcomeLabel(standings, true))
 }
 
+watch(
+  () => Boolean(currentVote.value?.isActive),
+  (hasActive) => {
+    previewMode.value = hasActive ? 'live' : 'mock'
+  },
+  { immediate: true },
+)
+
+watch(activeTab, (tab) => {
+  if (tab === 'preview' && currentVote.value?.isActive) {
+    previewMode.value = 'live'
+  }
+})
+
 const activePreviewCardData = computed<VoteOBSData | null>(() => {
-  if (previewMode.value === 'live') {
-    if (!currentVote.value) return null
+  if (previewMode.value === 'live' && currentVote.value) {
+    const total = currentVote.value.totalVotes || 0
     return {
       sessionId: currentVote.value.id,
       title: currentVote.value.title,
@@ -331,15 +393,17 @@ const activePreviewCardData = computed<VoteOBSData | null>(() => {
       theme: voteConfig.value.theme,
       roundedCorners: voteConfig.value.roundedCorners,
       displayPosition: voteConfig.value.displayPosition,
-      totalVotes: currentVote.value.totalVotes,
-      startTime: Date.now(),
+      totalVotes: total,
+      startTime: currentVote.value.startTime,
       endTime: currentVote.value.endTime,
-      options: (currentVote.value.options ?? []).map((opt, idx) => ({
-        index: idx + 1,
-        text: opt.text,
-        count: opt.count,
-        percentage: calcPercentage(opt.count, currentVote.value?.totalVotes || 0),
-      })),
+      options: (currentVote.value.options ?? [])
+        .map((opt, idx) => ({
+          index: idx + 1,
+          text: opt.text,
+          count: opt.count,
+          percentage: total > 0 ? Math.round((opt.count / total) * 1000) / 10 : 0,
+        }))
+        .toSorted((a, b) => b.count - a.count),
     }
   }
   return mockData.value
@@ -377,9 +441,17 @@ async function saveVoteConfig() {
 
 async function fetchActiveVote() {
   try {
+    const wasActive = Boolean(currentVote.value?.isActive)
+    const prevId = currentVote.value?.id
     const res = await getApiVoteGetActive()
     if (res.code === 200) {
       currentVote.value = res.data
+      if (res.data?.id !== prevId) {
+        expandedVoterOptions.value = {}
+      }
+      if (wasActive && !res.data) {
+        void fetchHistory()
+      }
     }
   } catch (err) {
     // 静默
@@ -519,6 +591,7 @@ function calcPercentage(count: number, total: number) {
 }
 
 onMounted(async () => {
+  void danmakuClient.ensureOpenlive().catch(() => undefined)
   await fetchVoteConfig()
   await fetchActiveVote()
   await fetchHistory()
@@ -546,33 +619,13 @@ onUnmounted(() => {
     >
       <template #action>
         <div class="flex items-center gap-2">
-          <ToggleGroup
-            v-model="activeTab"
-            type="single"
-          >
-            <ToggleGroupItem value="console">
-              <component
-                :is="Clock24Regular"
-                class="size-3.5 mr-1"
-              />
-              工作台
-            </ToggleGroupItem>
-            <ToggleGroupItem value="preview">
-              <component
-                :is="Desktop24Regular"
-                class="size-3.5 mr-1"
-              />
-              OBS 预览与调试
-            </ToggleGroupItem>
-          </ToggleGroup>
-
           <Button
             variant="outline"
             @click="showSettingsModal = true"
           >
             <component
               :is="Settings24Regular"
-              class="size-3.5 mr-1"
+              class="size-4 mr-1.5"
             />
             全局设置
           </Button>
@@ -583,7 +636,7 @@ onUnmounted(() => {
           >
             <component
               :is="Copy24Regular"
-              class="size-3.5 mr-1"
+              class="size-4 mr-1.5"
             />
             复制 OBS 链接
           </Button>
@@ -591,11 +644,33 @@ onUnmounted(() => {
       </template>
     </ManagePageHeader>
 
-    <!-- 视图 1：工作台 (发起与监控) -->
-    <div
-      v-show="activeTab === 'console'"
-      class="grid grid-cols-1 lg:grid-cols-12 gap-4"
+    <Tabs
+      v-model="activeTab"
+      class="w-full space-y-4"
     >
+      <TabsList class="grid w-full grid-cols-2 max-w-xs">
+        <TabsTrigger value="console">
+          <component
+            :is="Clock24Regular"
+            class="size-4"
+          />
+          工作台
+        </TabsTrigger>
+        <TabsTrigger value="preview">
+          <component
+            :is="Desktop24Regular"
+            class="size-4"
+          />
+          OBS 预览与调试
+        </TabsTrigger>
+      </TabsList>
+
+      <!-- 视图 1：工作台 (发起与监控) -->
+      <TabsContent
+        value="console"
+        class="mt-0"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
       <!-- 左侧：实时控制看板 + 发起投票 (8 列) -->
       <div class="lg:col-span-8 space-y-4">
         <!-- 1. 进行中的投票监控卡片 -->
@@ -611,6 +686,7 @@ onUnmounted(() => {
                   {{ currentVote.title }}
                 </CardTitle>
                 <Badge variant="warning"> 剩余：{{ formatTime(timeLeftMs) }} </Badge>
+                <Badge :variant="voteChannelStatus.variant"> {{ voteChannelStatus.label }} </Badge>
               </div>
 
               <span class="text-xs text-muted-foreground">
@@ -655,6 +731,33 @@ onUnmounted(() => {
                     :class="idx === leadingOptionIndex ? 'bg-amber-500' : 'bg-primary'"
                     :style="{ width: `${calcPercentage(opt.count, currentVote.totalVotes)}%` }"
                   />
+                </div>
+
+                <!-- 投票人列表 -->
+                <div
+                  v-if="getOptionVoters(opt).length > 0"
+                  class="mt-2 flex flex-wrap items-center gap-1"
+                >
+                  <Badge
+                    v-for="voter in visibleOptionVoters(opt, idx)"
+                    :key="voter.voterId"
+                    variant="secondary"
+                    size="xs"
+                    class="font-normal"
+                  >
+                    {{ voter.name }}<span
+                      v-if="voter.count > 1"
+                      class="ml-0.5 font-mono text-muted-foreground"
+                    >×{{ voter.count }}</span>
+                  </Badge>
+                  <Button
+                    v-if="getOptionVoters(opt).length > 8"
+                    size="xs"
+                    variant="ghost"
+                    @click="toggleVoterExpand(idx)"
+                  >
+                    {{ expandedVoterOptions[idx] ? '收起' : `+${getOptionVoters(opt).length - 8} 人` }}
+                  </Button>
                 </div>
               </div>
             </div>
@@ -725,14 +828,19 @@ onUnmounted(() => {
 
         <!-- 2. 发起新投票卡片 -->
         <Card>
-          <CardHeader class="p-3.5">
-            <CardTitle class="text-xs uppercase tracking-wide"> 发起投票 </CardTitle>
+          <CardHeader class="p-3.5 pb-2">
+            <div class="flex-between gap-2 flex-wrap">
+              <CardTitle class="text-xs uppercase tracking-wide"> 发起投票 </CardTitle>
+              <span class="text-[11px] text-muted-foreground">
+                发送序号 <span class="font-mono text-foreground">1~{{ formOptions.length }}</span>、选项文字或「<span class="font-mono text-foreground">{{ voteConfig.voteCommand || '投票' }} 选项</span>」即可参与
+              </span>
+            </div>
           </CardHeader>
 
-          <CardContent class="space-y-3.5">
+          <CardContent class="space-y-4">
             <!-- 快捷预设芯片 -->
             <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="text-xs text-muted-foreground">快捷预设:</span>
+              <span class="text-xs text-muted-foreground mr-0.5">快捷预设:</span>
               <Button
                 v-for="p in VOTE_QUICK_PRESETS"
                 :key="p.name"
@@ -743,77 +851,84 @@ onUnmounted(() => {
               >
                 <component
                   :is="Sparkle24Regular"
-                  class="h-3 w-3 text-brand"
+                  class="size-3.5 text-brand"
                 />
                 {{ p.name }}
               </Button>
             </div>
 
             <!-- 投票主题 -->
-            <Input
-              v-model="formTitle"
-              placeholder="输入投票主题 (例如: 本局出装选择 / 下一把玩什么)"
-              maxlength="50"
-            />
+            <FormField label="投票主题">
+              <Input
+                v-model="formTitle"
+                placeholder="输入投票主题 (例如: 本局出装选择 / 下一把玩什么)"
+                maxlength="50"
+              />
+            </FormField>
 
             <!-- 选项编辑列表 -->
-            <div class="space-y-2">
-              <div
-                v-for="(opt, idx) in formOptions"
-                :key="opt.id"
-                class="flex items-center gap-2"
-              >
-                <span class="font-mono text-xs text-muted-foreground w-5 text-right shrink-0">{{ idx + 1 }}.</span>
-                <Input
-                  v-model="opt.text"
-                  placeholder="选项文字"
-                  class="flex-1"
-                  maxlength="30"
-                />
-                <Button
-                  v-if="formOptions.length > 2"
-                  size="icon-xs"
-                  variant="ghost"
-                  class="text-muted-foreground hover:text-destructive"
-                  @click="removeOption(idx)"
+            <FormField label="投票选项">
+              <div class="space-y-2">
+                <div
+                  v-for="(opt, idx) in formOptions"
+                  :key="opt.id"
+                  class="flex items-center gap-2"
                 >
-                  <component
-                    :is="Delete24Regular"
-                    class="h-3.5 w-3.5"
+                  <Badge
+                    variant="outline"
+                    size="xs"
+                    class="font-mono w-6 justify-center shrink-0"
+                  >
+                    {{ idx + 1 }}
+                  </Badge>
+                  <Input
+                    v-model="opt.text"
+                    placeholder="输入选项文字"
+                    class="flex-1"
+                    maxlength="30"
                   />
-                </Button>
-              </div>
-            </div>
+                  <Button
+                    v-if="formOptions.length > 2"
+                    size="icon-sm"
+                    variant="ghost"
+                    class="text-muted-foreground hover:text-destructive shrink-0"
+                    @click="removeOption(idx)"
+                  >
+                    <component
+                      :is="Delete24Regular"
+                      class="size-4"
+                    />
+                  </Button>
+                </div>
 
-            <div class="flex items-center gap-2">
-              <Button
-                size="xs"
-                variant="outline"
-                @click="addOption"
-              >
-                <component
-                  :is="Add24Filled"
-                  class="h-3.5 w-3.5 mr-1"
-                />
-                添加选项
-              </Button>
-              <Button
-                size="xs"
-                variant="outline"
-                @click="openBatchModal"
-              >
-                批量粘贴/导入
-              </Button>
-              <Button
-                v-if="formOptions.length > 2"
-                size="xs"
-                variant="ghost"
-                class="text-muted-foreground"
-                @click="formOptions = [createFormOption('选项1'), createFormOption('选项2')]"
-              >
-                重置为 2 项
-              </Button>
-            </div>
+                <div class="flex items-center gap-2 pt-1 flex-wrap">
+                  <Button
+                    variant="outline"
+                    @click="addOption"
+                  >
+                    <component
+                      :is="Add24Filled"
+                      class="size-4 mr-1"
+                    />
+                    添加选项
+                  </Button>
+                  <Button
+                    variant="outline"
+                    @click="openBatchModal"
+                  >
+                    批量粘贴/导入
+                  </Button>
+                  <Button
+                    v-if="formOptions.length > 2"
+                    variant="ghost"
+                    class="text-muted-foreground"
+                    @click="formOptions = [createFormOption('选项1'), createFormOption('选项2')]"
+                  >
+                    重置为 2 项
+                  </Button>
+                </div>
+              </div>
+            </FormField>
 
             <Separator />
 
@@ -846,7 +961,7 @@ onUnmounted(() => {
               >
                 <component
                   :is="Play24Regular"
-                  class="h-3.5 w-3.5 mr-1"
+                  class="size-4 mr-1.5"
                 />
                 {{ currentVote?.isActive ? '覆盖并重新发起' : '立即发起投票' }}
               </Button>
@@ -870,7 +985,6 @@ onUnmounted(() => {
                 class="flex-1"
               />
               <Button
-                size="xs"
                 variant="outline"
                 @click="saveCustomTemplate"
               >
@@ -952,6 +1066,13 @@ onUnmounted(() => {
                 <div class="flex items-center gap-1 shrink-0">
                   <Button
                     size="xs"
+                    variant="ghost"
+                    @click="openVoteDetail(item)"
+                  >
+                    明细
+                  </Button>
+                  <Button
+                    size="xs"
                     variant="outline"
                     @click="reuseHistory(item)"
                   >
@@ -992,62 +1113,77 @@ onUnmounted(() => {
           </CardContent>
         </Card>
       </div>
-    </div>
+      </div>
+      </TabsContent>
 
-    <!-- 视图 2：OBS 实时预览舞台与仿真调试控制台 -->
-    <div
-      v-show="activeTab === 'preview'"
-      class="grid grid-cols-1 lg:grid-cols-12 gap-4"
-    >
-      <!-- 左侧：OBS 预览舞台 (8 列) -->
-      <Card class="lg:col-span-8 flex flex-col">
-        <CardHeader class="p-3.5">
-          <div class="flex-between gap-3 flex-wrap">
-            <div class="flex items-center gap-2">
-              <component
-                :is="Eye24Regular"
-                class="h-4 w-4 text-muted-foreground"
-              />
-              <CardTitle class="text-xs"> OBS 画布实时预览 (1080P 比例视口) </CardTitle>
-              <Badge
-                :variant="previewMode === 'live' ? 'success' : 'outline'"
+      <!-- 视图 2：OBS 实时预览舞台与仿真调试控制台 -->
+      <TabsContent
+        value="preview"
+        class="mt-0"
+      >
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <!-- 左侧：OBS 预览舞台 (8 列) -->
+        <Card class="lg:col-span-8 flex flex-col">
+          <CardHeader class="p-3.5">
+            <div class="flex-between gap-3 flex-wrap">
+              <div class="flex items-center gap-2">
+                <component
+                  :is="Eye24Regular"
+                  class="size-4 text-muted-foreground"
+                />
+                <CardTitle class="text-xs"> OBS 画布实时预览 (16:9 舞台) </CardTitle>
+                <ToggleGroup
+                  v-if="currentVote?.isActive"
+                  :model-value="previewMode"
+                  type="single"
+                  size="xs"
+                  @update:model-value="(val) => { if (val === 'live' || val === 'mock') previewMode = val }"
+                >
+                  <ToggleGroupItem value="live"> 真实投票 </ToggleGroupItem>
+                  <ToggleGroupItem value="mock"> 模拟仿真 </ToggleGroupItem>
+                </ToggleGroup>
+                <Badge
+                  v-else
+                  variant="outline"
+                  size="xs"
+                >
+                  模拟仿真模式
+                </Badge>
+              </div>
+
+              <ToggleGroup
+                :model-value="previewBg"
+                type="single"
                 size="xs"
+                @update:model-value="(val) => { if (val) previewBg = val as any }"
               >
-                {{ previewMode === 'live' ? '真实数据源' : '模拟仿真模式' }}
-              </Badge>
+                <ToggleGroupItem
+                  v-for="bg in [
+                    { key: 'checker', label: '网格' },
+                    { key: 'dark', label: '纯黑' },
+                    { key: 'light', label: '浅色' },
+                    { key: 'game', label: '直播场景' },
+                  ]"
+                  :key="bg.key"
+                  :value="bg.key"
+                >
+                  {{ bg.label }}
+                </ToggleGroupItem>
+              </ToggleGroup>
             </div>
+          </CardHeader>
 
-            <div class="flex items-center gap-1 bg-muted p-0.5 rounded-md">
-              <Button
-                v-for="bg in [
-                  { key: 'checker', label: '网格' },
-                  { key: 'dark', label: '纯黑' },
-                  { key: 'light', label: '浅色' },
-                  { key: 'game', label: '直播场景' },
-                ]"
-                :key="bg.key"
-                size="xs"
-                :variant="previewBg === bg.key ? 'default' : 'ghost'"
-                @click="previewBg = bg.key as any"
-              >
-                {{ bg.label }}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-
-        <CardContent class="p-4 flex-1 flex flex-col justify-between space-y-4">
-          <div
-            class="rounded-lg border border-border p-6 flex-center min-h-[460px] transition-colors"
-            :class="{
-              'bg-[#121214]': previewBg === 'dark',
-              'bg-[#f4f4f5]': previewBg === 'light',
-              'bg-[#0b132b]': previewBg === 'game',
-              'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]':
-                previewBg === 'checker',
-            }"
-          >
-            <div class="w-[380px] max-w-full">
+          <CardContent class="p-4 flex-1 flex flex-col justify-between gap-4">
+            <div
+              class="aspect-video w-full rounded-lg border border-border p-5 overflow-hidden transition-colors"
+              :class="{
+                'bg-[#121214]': previewBg === 'dark',
+                'bg-[#f4f4f5]': previewBg === 'light',
+                'bg-[#0b132b]': previewBg === 'game',
+                'bg-[repeating-conic-gradient(#80808015_0%_25%,transparent_0%_50%)] bg-[length:16px_16px]':
+                  previewBg === 'checker',
+              }"
+            >
               <DanmakuVoteCard
                 :data="activePreviewCardData"
                 :theme="previewTheme"
@@ -1056,26 +1192,24 @@ onUnmounted(() => {
                 :current-time-ms="nowMs"
               />
             </div>
-          </div>
 
-          <div class="flex-between gap-3 flex-wrap pt-2 border-t border-border/60">
-            <span class="text-xs text-muted-foreground font-mono">
-              参数: ?theme={{ previewTheme }}&position={{ previewPosition }}&max={{ previewMaxDisplay }}
-            </span>
-            <Button
-              size="xs"
-              variant="brand"
-              @click="copyObsLink(previewTheme, previewPosition, previewMaxDisplay)"
-            >
-              <component
-                :is="Copy24Regular"
-                class="h-3.5 w-3.5 mr-1"
-              />
-              复制当前调试参数 OBS 链接
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+            <div class="flex-between gap-3 flex-wrap pt-2 border-t border-border/60">
+              <span class="text-xs text-muted-foreground font-mono">
+                参数: ?theme={{ previewTheme }}&position={{ previewPosition }}&max={{ previewMaxDisplay }}
+              </span>
+              <Button
+                variant="brand"
+                @click="copyObsLink(previewTheme, previewPosition, previewMaxDisplay)"
+              >
+                <component
+                  :is="Copy24Regular"
+                  class="size-4 mr-1.5"
+                />
+                复制当前调试参数 OBS 链接
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
       <!-- 右侧：仿真调试控制台 (4 列) -->
       <div class="lg:col-span-4 space-y-4">
@@ -1256,36 +1390,38 @@ onUnmounted(() => {
 
             <Separator />
 
-            <div class="flex gap-2">
+            <div class="grid grid-cols-2 gap-2">
               <Button
                 size="xs"
                 variant="outline"
-                class="flex-1 text-amber-500 border-amber-500/30"
+                class="min-w-0 text-amber-500 border-amber-500/30"
                 @click="toggleMockUrgent"
               >
                 <component
                   :is="Timer24Regular"
-                  class="h-3.5 w-3.5 mr-1"
+                  class="size-3.5 mr-1 shrink-0"
                 />
-                剩余 8s (呼吸警告)
+                <span class="truncate">剩余 8s 警告</span>
               </Button>
               <Button
                 size="xs"
                 variant="brand"
-                class="flex-1"
+                class="min-w-0"
                 @click="toggleMockWinner"
               >
                 <component
                   :is="Trophy24Regular"
-                  class="h-3.5 w-3.5 mr-1"
+                  class="size-3.5 mr-1 shrink-0"
                 />
-                胜出结算 (Reveal)
+                <span class="truncate">胜出结算</span>
               </Button>
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
-    </div>
+    </TabsContent>
+    </Tabs>
 
     <!-- 批量导入选项弹窗 -->
     <Dialog v-model:open="showBatchModal">
@@ -1416,6 +1552,73 @@ onUnmounted(() => {
             @click="saveVoteConfig"
           >
             保存设置
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+
+    <!-- 历史投票明细弹窗 -->
+    <Dialog v-model:open="showDetailModal">
+      <DialogContent class="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle class="text-base">
+            {{ detailVoteSession?.title || '投票明细' }}
+          </DialogTitle>
+          <DialogDescription class="text-xs">
+            总票数 {{ detailVoteSession?.totalVotes ?? 0 }} 票 · {{ detailVoteSession?.options.length ?? 0 }} 个选项
+          </DialogDescription>
+        </DialogHeader>
+
+        <ScrollArea class="max-h-[60vh] pr-2">
+          <div class="space-y-3 py-1">
+            <div
+              v-for="(opt, idx) in detailVoteSession?.options ?? []"
+              :key="idx"
+              class="p-2.5 rounded-md border border-border bg-muted/20 space-y-2"
+            >
+              <div class="flex-between text-xs">
+                <span class="font-medium">
+                  <span class="font-mono text-muted-foreground mr-1">#{{ idx + 1 }}</span>
+                  {{ opt.text }}
+                </span>
+                <span class="font-mono text-muted-foreground">
+                  {{ opt.count }} 票 ({{ calcPercentage(opt.count, detailVoteSession?.totalVotes ?? 0) }}%)
+                </span>
+              </div>
+
+              <div
+                v-if="getOptionVoters(opt).length > 0"
+                class="flex flex-wrap gap-1"
+              >
+                <Badge
+                  v-for="voter in getOptionVoters(opt)"
+                  :key="voter.voterId"
+                  variant="secondary"
+                  size="xs"
+                  class="font-normal"
+                >
+                  {{ voter.name }}<span
+                    v-if="voter.count > 1"
+                    class="ml-0.5 font-mono text-muted-foreground"
+                  >×{{ voter.count }}</span>
+                </Badge>
+              </div>
+              <div
+                v-else
+                class="text-[11px] text-muted-foreground"
+              >
+                暂无投票观众
+              </div>
+            </div>
+          </div>
+        </ScrollArea>
+
+        <DialogFooter>
+          <Button
+            variant="outline"
+            @click="showDetailModal = false"
+          >
+            关闭
           </Button>
         </DialogFooter>
       </DialogContent>

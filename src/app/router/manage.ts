@@ -213,6 +213,7 @@ const manageRoute: RouteRecordRaw = {
       meta: {
         title: '弹幕投票',
         keepAlive: true,
+        danmaku: true,
         pageWidth: 'xl',
       },
     },
