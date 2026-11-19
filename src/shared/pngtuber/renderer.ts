@@ -1,6 +1,6 @@
 import { OBS_STORE_API_URL } from '@/shared/config/endpoints'
 
-import type { PngtuberExpression, PngtuberState } from './types'
+import type { IdleAnimationType, PngtuberExpression, PngtuberState, SpeakingAnimationType } from './types'
 
 export function selectExpression(state: PngtuberState, id = '', away = false) {
   return (
@@ -9,12 +9,33 @@ export function selectExpression(state: PngtuberState, id = '', away = false) {
     state.expressions[0]
   )
 }
-export function selectImage(expression: PngtuberExpression, speaking: boolean, blink: boolean) {
+
+export function selectImage(
+  expression: PngtuberExpression,
+  speaking: boolean,
+  blink: boolean,
+  volume = 0,
+  shoutThreshold = 75,
+) {
+  if (speaking && expression.shoutImage && Number.isFinite(volume) && volume >= shoutThreshold) {
+    return expression.shoutImage
+  }
   const open = speaking
     ? expression.speakingImage || expression.idleImage
     : expression.idleImage || expression.speakingImage
   return (blink ? (speaking ? expression.speakingBlinkImage : expression.idleBlinkImage) : '') || open
 }
+
+export function resolveExpressionAnimations(
+  state: PngtuberState,
+  expression: PngtuberExpression,
+): { speaking: SpeakingAnimationType; idle: IdleAnimationType } {
+  return {
+    speaking: expression.speakingAnimation || state.speakingAnimation,
+    idle: expression.idleAnimation || state.idleAnimation,
+  }
+}
+
 export function isHostedAsset(src: string) {
   try {
     const url = new URL(src)
@@ -28,6 +49,7 @@ export function isHostedAsset(src: string) {
     return false
   }
 }
+
 export function playbackSource(src: string, playback: PngtuberExpression['playback'], activation: string) {
   if (!src || playback === 'continue') return src
   if (!isHostedAsset(src)) throw new Error('外链素材仅支持原生循环；重播或播放一次需要先上传素材')
@@ -37,6 +59,7 @@ export function playbackSource(src: string, playback: PngtuberExpression['playba
   url.searchParams.set('_play', activation)
   return url.href
 }
+
 export function motionIntensity(state: PngtuberState, speaking: boolean, volume = 0) {
   const base = { subtle: 0.6, normal: 1, energetic: 1.4 }[state.intensity]
   return (

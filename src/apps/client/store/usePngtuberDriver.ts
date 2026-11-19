@@ -2,17 +2,19 @@ import { defineStore } from 'pinia'
 import { computed, effectScope, onScopeDispose, ref, shallowRef, watch } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { getObsSyncState } from '@/api/obs-store'
+import type { ResponseObsSyncState } from '@/api/generated/model'
+import { getObsSyncState, updateObsSyncState } from '@/api/obs-store'
 import { isTauri } from '@/shared/config'
 import { createOwnedShortcuts } from '@/shared/helpers/ownedShortcuts'
 import { createExpressionHotkeys } from '@/shared/helpers/pngtuberHotkeys'
 import { createAudioGate } from '@/shared/pngtuber/audioGate'
 import { normalizePngtuberState } from '@/shared/pngtuber/normalize'
 import { DEFAULT_PNGTUBER_RUNTIME } from '@/shared/pngtuber/types'
+import type { PngtuberState } from '@/shared/pngtuber/types'
 import { useAudioReactive } from '@/shared/pngtuber/useAudioReactive'
 import { usePngtuberCollab } from '@/shared/pngtuber/usePngtuberCollab'
 import { usePngtuberRuntime } from '@/shared/pngtuber/usePngtuberRuntime'
-import { getRealtimeBus } from '@/shared/realtime'
+import { useRealtimeTopic } from '@/shared/realtime'
 
 import { useOBSStore } from './useOBSStore'
 
@@ -29,6 +31,7 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
     starting = ref(false),
     error = ref('')
   const config = ref(normalizePngtuberState({}))
+  const configHash = ref('')
   const live = shallowRef<ReturnType<typeof usePngtuberRuntime>>()
   const audio = shallowRef<ReturnType<typeof useAudioReactive>>()
   const connected = computed(() => live.value?.connected.value ?? false)
@@ -52,6 +55,32 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
     } catch (cause) {
       error.value = String(cause)
     }
+  }
+
+  async function loadConfig() {
+    const owner = account.value.id
+    const targetChannel = channel.value.trim() || 'default'
+    if (!owner) return
+    try {
+      const snapshot = await getObsSyncState('pngtuber', targetChannel, undefined, owner)
+      configHash.value = snapshot.hash
+      config.value = normalizePngtuberState(snapshot.data ? JSON.parse(snapshot.data) : {})
+    } catch {
+      // Initial preload failure is surfaced explicitly when user starts driver or saves settings.
+    }
+  }
+
+  async function patchConfig(patch: Partial<PngtuberState>) {
+    const owner = account.value.id
+    const targetChannel = channel.value.trim() || 'default'
+    if (!owner) throw new Error('请先登录')
+    const latest = await getObsSyncState('pngtuber', targetChannel, undefined, owner)
+    const base = normalizePngtuberState(latest.data ? JSON.parse(latest.data) : {})
+    const next = normalizePngtuberState({ ...base, ...patch })
+    const saved = await updateObsSyncState('pngtuber', targetChannel, JSON.stringify(next), latest.hash)
+    configHash.value = saved.hash
+    config.value = next
+    if (collab.inRoom.value) collab.broadcastConfig(next)
   }
 
   function stop() {
@@ -84,15 +113,7 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
   async function control(patch: Parameters<ReturnType<typeof usePngtuberRuntime>['control']>[0], durationMs = 0) {
     if (!running.value || !live.value) throw new Error('请先启动 PNGtuber 驱动')
     await live.value.control(patch, durationMs)
-    if (collab.currentRoomCode.value && account.value.id) {
-      getRealtimeBus()
-        .publish(`pngtuber:room:${collab.currentRoomCode.value}`, 'control', {
-          userId: account.value.id,
-          ...patch,
-          durationMs,
-        })
-        .catch(() => {})
-    }
+    if (collab.inRoom.value) collab.broadcastControl(patch, durationMs)
   }
 
   async function switchExpression(expressionId: string, durationMs = 0, targetChannel = 'default') {
@@ -123,8 +144,6 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
     }
     const scope = effectScope(true)
     session = scope
-    let hash: string | undefined
-    let refreshTimer: ReturnType<typeof setTimeout> | undefined
     const current = () => version === generation
     const validateInputMode = () => {
       const expected = audioMode.value === 'obs' ? 'obs' : 'client'
@@ -136,9 +155,30 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
       if (!current()) return
       config.value = normalizePngtuberState(snapshot.data ? JSON.parse(snapshot.data) : {})
       validateInputMode()
-      hash = snapshot.hash
+      configHash.value = snapshot.hash
+
+      let registerKeys: (() => Promise<void>) | null = null
+
       const active = scope.run(() => {
         const liveRuntime = usePngtuberRuntime(owner, targetChannel, true)
+        const stateTopic = useRealtimeTopic(`obs-store:state:${owner}:pngtuber:${targetChannel}`)
+        stateTopic.on<ResponseObsSyncState>('StateChanged', async (updated) => {
+          if (!current() || !updated || updated.hash === configHash.value || !updated.data) return
+          try {
+            const next = normalizePngtuberState(JSON.parse(updated.data))
+            config.value = next
+            configHash.value = updated.hash
+            validateInputMode()
+            if (collab.inRoom.value) collab.broadcastConfig(next)
+            await registerKeys?.()
+          } catch (cause) {
+            if (current()) {
+              await stop()
+              error.value = cause instanceof Error ? cause.message : String(cause)
+            }
+          }
+        })
+
         const audioReactive = useAudioReactive({
           autoStart: false,
           deviceId: () => deviceId.value,
@@ -151,6 +191,7 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
           muted: () => liveRuntime.runtime.value.muted || liveRuntime.runtime.value.away,
           onVolume: (vol, isActive) => publish(vol, isActive, 'client'),
         })
+
         function publish(vol: number, isActive: boolean, source: 'client' | 'obs') {
           if (!current()) return
           const muted =
@@ -160,19 +201,13 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
           void liveRuntime.publish(volume.value, speaking.value, source).catch((cause) => {
             if (current()) error.value = String(cause)
           })
-          if (collab.currentRoomCode.value) {
-            getRealtimeBus()
-              .publish(`pngtuber:room:${collab.currentRoomCode.value}`, 'audio', {
-                userId: owner,
-                volume: volume.value,
-                isSpeaking: speaking.value,
-              })
-              .catch(() => {})
-          }
+          if (collab.inRoom.value) collab.broadcastAudio(volume.value, speaking.value)
         }
+
         if (audioMode.value === 'obs') {
           const gate = createAudioGate()
           let lastMeter = 0
+          let wasActive = false
           const unsubscribe = obs.subscribeInputVolume((sample) => {
             if (!current() || (sample.inputName && sample.inputName !== obsInput.value)) return
             lastMeter = performance.now()
@@ -181,12 +216,16 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
             const value = Number.isFinite(sample.volume)
               ? Math.max(0, Math.min(100, sample.volume * config.value.gain))
               : 0
-            publish(value, !sample.muted && gate.sample(value, performance.now(), config.value), 'obs')
+            const activeSpeech = !sample.muted && gate.sample(value, performance.now(), config.value)
+            wasActive = value > 0 || activeSpeech
+            publish(value, activeSpeech, 'obs')
           })
-          // Removed/disconnected/inactive OBS inputs must not leave the mouth open.
+          // Removed/disconnected/inactive OBS inputs must not leave the mouth open,
+          // but avoid sending redundant zero packets every 100ms while already silent.
           const watchdog = setInterval(() => {
-            if (!obs.obsConnected || performance.now() - lastMeter > 500) {
+            if ((!obs.obsConnected || performance.now() - lastMeter > 500) && (wasActive || speaking.value || volume.value > 0)) {
               gate.reset()
+              wasActive = false
               publish(0, false, 'obs')
             }
           }, 100)
@@ -195,7 +234,6 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
             clearInterval(watchdog)
           })
         }
-        onScopeDispose(() => clearTimeout(refreshTimer))
         return { live: liveRuntime, audio: audioReactive }
       })!
       live.value = active.live
@@ -224,7 +262,7 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
           if (current()) error.value = String(cause)
         },
       })
-      const registerKeys = async () => {
+      registerKeys = async () => {
         await hotkeys.release()
         await shortcuts?.replace(
           config.value.expressions
@@ -239,31 +277,6 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
       if (!current()) return
       running.value = true
       starting.value = false
-      const refresh = async () => {
-        try {
-          const latestSnapshot = await getObsSyncState('pngtuber', targetChannel, hash, owner)
-          if (!current()) return
-          if (latestSnapshot.hash !== hash) {
-            config.value = normalizePngtuberState(latestSnapshot.data ? JSON.parse(latestSnapshot.data) : {})
-            try {
-              validateInputMode()
-            } catch (cause) {
-              await stop()
-              error.value = cause instanceof Error ? cause.message : String(cause)
-              return
-            }
-            await registerKeys()
-            if (!current()) return
-            hash = latestSnapshot.hash
-          }
-          error.value = ''
-        } catch (cause) {
-          if (current()) error.value = String(cause)
-        } finally {
-          if (current()) refreshTimer = setTimeout(refresh, 15000)
-        }
-      }
-      refreshTimer = setTimeout(refresh, 15000)
     } catch (cause) {
       if (current()) {
         await stop()
@@ -306,6 +319,8 @@ export const usePngtuberDriver = defineStore('pngtuber-driver', () => {
     inputMuted,
     devices,
     refreshDevices,
+    loadConfig,
+    patchConfig,
     start,
     stop,
     control,

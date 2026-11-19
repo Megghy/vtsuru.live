@@ -6627,6 +6627,37 @@
       }
     },
     "/api/obs-store/pngtuber/assets": {
+      "get": {
+        "tags": [
+          "ObsStore"
+        ],
+        "operationId": "getApiObsStorePngtuberAssets",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfListOfAvatarAssetItem"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfListOfAvatarAssetItem"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfListOfAvatarAssetItem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
       "post": {
         "tags": [
           "ObsStore"
@@ -6679,6 +6710,57 @@
         ]
       }
     },
+    "/api/obs-store/pngtuber/assets/{assetId}": {
+      "delete": {
+        "tags": [
+          "ObsStore"
+        ],
+        "operationId": "deleteApiObsStorePngtuberAssetsAssetId",
+        "parameters": [
+          {
+            "name": "assetId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/obs-store/pngtuber/assets/{userId}/{assetId}": {
       "get": {
         "tags": [
@@ -6719,6 +6801,39 @@
         }
       }
     },
+    "/api/obs-store/pngtuber/assets/cleanup": {
+      "post": {
+        "tags": [
+          "ObsStore"
+        ],
+        "operationId": "postApiObsStorePngtuberAssetsCleanup",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfAvatarCleanupResult"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfAvatarCleanupResult"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfAvatarCleanupResult"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/obs-store/pngtuber/collab/create-room": {
       "post": {
         "tags": [
@@ -6728,6 +6843,13 @@
         "parameters": [
           {
             "name": "code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "passcode",
             "in": "query",
             "schema": {
               "type": "string"
@@ -17993,6 +18115,74 @@
         },
         "additionalProperties": false
       },
+      "AvatarAssetItem": {
+        "required": [
+          "userId",
+          "assetId",
+          "width",
+          "height",
+          "frameCount",
+          "byteSize",
+          "createTime",
+          "url",
+          "inUse"
+        ],
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "height": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "frameCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "byteSize": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "createTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "url": {
+            "type": "string"
+          },
+          "inUse": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "AvatarCleanupResult": {
+        "required": [
+          "deletedCount",
+          "freedBytes"
+        ],
+        "type": "object",
+        "properties": {
+          "deletedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "freedBytes": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
       "AzureTTSRequest": {
         "required": [
           "text",
@@ -24499,6 +24689,50 @@
         "additionalProperties": false,
         "description": "统一响应信封：code / message / data"
       },
+      "ResponseResultOfAvatarCleanupResult": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "$ref": "#/components/schemas/AvatarCleanupResult"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfBoolean": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
       "ResponseResultOfCheckInResponse": {
         "required": [
           "code",
@@ -24911,6 +25145,32 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AssistantHistoryMessageDto"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "统一响应信封：code / message / data"
+      },
+      "ResponseResultOfListOfAvatarAssetItem": {
+        "required": [
+          "code",
+          "data",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "code": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AvatarAssetItem"
             },
             "nullable": true
           }

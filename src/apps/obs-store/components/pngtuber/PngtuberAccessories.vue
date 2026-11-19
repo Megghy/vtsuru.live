@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import CursorClick24Regular from '@vicons/fluent/es/CursorClick24Regular'
+import { useDebounceFn } from '@vueuse/core'
+
 import type { PngtuberAccessory } from '@/shared/pngtuber/types'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/shared/ui/accordion'
 import { Button } from '@/shared/ui/button'
@@ -10,8 +13,15 @@ import { Switch } from '@/shared/ui/switch'
 
 import PngtuberImageSlot from './PngtuberImageSlot.vue'
 
-const props = defineProps<{ accessories: PngtuberAccessory[]; disabled: boolean }>()
-const emit = defineEmits<{ change: [value: PngtuberAccessory[]] }>()
+const props = defineProps<{
+  accessories: PngtuberAccessory[]
+  disabled: boolean
+  selectedAccessoryId?: string
+}>()
+const emit = defineEmits<{
+  change: [value: PngtuberAccessory[]]
+  'locate-accessory': [id: string]
+}>()
 
 function patch(id: string, value: Partial<PngtuberAccessory>) {
   if (!props.disabled)
@@ -21,12 +31,17 @@ function patch(id: string, value: Partial<PngtuberAccessory>) {
     )
 }
 
+const patchNameDebounced = useDebounceFn((id: string, name: string) => {
+  patch(id, { name })
+}, 300)
+
 function add() {
   if (props.disabled || props.accessories.length >= 12) return
+  const id = crypto.randomUUID()
   emit('change', [
     ...props.accessories,
     {
-      id: crypto.randomUUID(),
+      id,
       name: '配件',
       image: '',
       x: 0,
@@ -37,6 +52,7 @@ function add() {
       front: true,
     },
   ])
+  emit('locate-accessory', id)
 }
 
 const fields = [
@@ -67,18 +83,32 @@ const fields = [
         :key="a.id"
         :value="a.id"
         class="border rounded-md px-3 bg-muted/20 text-xs"
+        :class="{ 'border-primary/60 bg-primary/5': selectedAccessoryId === a.id }"
       >
         <AccordionTrigger class="py-2.5 font-medium hover:no-underline">
           <span>{{ a.name || '配件' }}</span>
         </AccordionTrigger>
 
         <AccordionContent class="pt-2 pb-3 space-y-3">
-          <Input
-            :model-value="a.name"
-            placeholder="配件名称"
-            :disabled="disabled"
-            @input="patch(a.id, { name: ($event.target as HTMLInputElement).value })"
-          />
+          <div class="flex items-center gap-2">
+            <Input
+              :model-value="a.name"
+              placeholder="配件名称"
+              class="flex-1"
+              :disabled="disabled"
+              @input="patchNameDebounced(a.id, ($event.target as HTMLInputElement).value)"
+            />
+            <Button
+              size="xs"
+              :variant="selectedAccessoryId === a.id ? 'secondary' : 'outline'"
+              class="gap-1 shrink-0"
+              :disabled="disabled || !a.image"
+              @click="emit('locate-accessory', a.id)"
+            >
+              <CursorClick24Regular class="size-3.5" />
+              画布拖拽
+            </Button>
+          </div>
 
           <PngtuberImageSlot
             :value="a.image"
@@ -109,7 +139,7 @@ const fields = [
           <Select
             :model-value="a.visible"
             :disabled="disabled"
-            @update:model-value="patch(a.id, { visible: $event as any })"
+            @update:model-value="patch(a.id, { visible: $event as PngtuberAccessory['visible'] })"
           >
             <SelectTrigger class="w-full">
               <SelectValue />

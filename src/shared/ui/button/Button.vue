@@ -27,10 +27,11 @@ const props = withDefaults(defineProps<Props>(), {
 <template>
   <Primitive
     :as="as"
-    :type="as === 'button' ? type : undefined"
+    :type="!asChild && as === 'button' ? type : undefined"
     :as-child="asChild"
     :class="cn(buttonVariants({ variant, size }), props.class)"
-    :disabled="disabled || loading"
+    :disabled="!asChild && as === 'button' ? disabled || loading : undefined"
+    :aria-disabled="asChild || as !== 'button' ? (disabled || loading ? 'true' : undefined) : undefined"
   >
     <svg
       v-if="loading"

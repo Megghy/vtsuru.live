@@ -47,9 +47,7 @@ function patchDebugSetting(patch: Partial<PngtuberCollabSettings>) {
   debugOverride.value = { ...debugOverride.value, ...patch }
 }
 
-if (roomCode.value) {
-  watchCollabRoom(roomCode.value, realMembers)
-}
+watchCollabRoom(roomCode, realMembers)
 
 if (queryFlag('mock')) {
   startMockCollab()

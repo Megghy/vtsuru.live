@@ -1,8 +1,15 @@
 <script setup lang="ts">
+import { useDebounceFn } from '@vueuse/core'
 import { computed, ref, watch } from 'vue'
 
-import { createExpression, IMAGE_SLOTS } from '@/shared/pngtuber/types'
-import type { ImageSlot, PngtuberExpression, PngtuberState } from '@/shared/pngtuber/types'
+import { createExpression } from '@/shared/pngtuber/types'
+import type {
+  IdleAnimationType,
+  ImageSlot,
+  PngtuberExpression,
+  PngtuberState,
+  SpeakingAnimationType,
+} from '@/shared/pngtuber/types'
 import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
@@ -13,31 +20,77 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import PngtuberAccessories from './PngtuberAccessories.vue'
 import PngtuberImageSlot from './PngtuberImageSlot.vue'
 
-const props = defineProps<{ state: PngtuberState; disabled: boolean; controlDisabled: boolean }>()
-const emit = defineEmits<{ change: [patch: Partial<PngtuberState>]; activate: [expression: PngtuberExpression] }>()
+const props = defineProps<{
+  state: PngtuberState
+  disabled: boolean
+  controlDisabled: boolean
+  selectedAccessoryId?: string
+}>()
+
+const emit = defineEmits<{
+  change: [patch: Partial<PngtuberState>]
+  activate: [expression: PngtuberExpression]
+  'select-expression': [id: string]
+  'locate-accessory': [payload: { expressionId: string; accessoryId: string }]
+}>()
+
 const selected = ref(props.state.defaultExpressionId)
 const expression = computed(
   () => props.state.expressions.find((e) => e.id === selected.value) ?? props.state.expressions[0],
 )
 const options = computed(() => props.state.expressions.map((e) => ({ label: e.name || '未命名表情', value: e.id })))
+
 watch(
   () => props.state.expressions,
   () => {
     if (!props.state.expressions.some((e) => e.id === selected.value)) selected.value = props.state.defaultExpressionId
   },
 )
+
+watch(
+  () => expression.value.id,
+  (id) => emit('select-expression', id),
+  { immediate: true },
+)
+
+const baseSlots: ImageSlot[] = ['idleImage', 'speakingImage', 'idleBlinkImage', 'speakingBlinkImage']
 const labels: Record<ImageSlot, string> = {
   idleImage: '静止 / 睁眼',
   speakingImage: '说话 / 睁眼',
   idleBlinkImage: '静止 / 闭眼',
   speakingBlinkImage: '说话 / 闭眼',
+  shoutImage: '大声 / 尖叫（音量 ≥ 尖叫阈值时显示，可选）',
 }
+
+const speakingAnimOptions: Array<{ value: string; label: string }> = [
+  { value: '__inherit__', label: '跟随全局说话动效' },
+  { value: 'bounce', label: '弹跳' },
+  { value: 'jelly', label: '果冻' },
+  { value: 'shake', label: '晃动' },
+  { value: 'pulse', label: '脉冲' },
+  { value: 'float', label: '悬浮' },
+  { value: 'none', label: '无' },
+]
+
+const idleAnimOptions: Array<{ value: string; label: string }> = [
+  { value: '__inherit__', label: '跟随全局待机动效' },
+  { value: 'breathe', label: '呼吸' },
+  { value: 'sway', label: '微晃' },
+  { value: 'float', label: '漂浮' },
+  { value: 'none', label: '静止' },
+]
+
 function patch(value: Partial<PngtuberExpression>) {
   if (!props.disabled)
     emit('change', {
       expressions: props.state.expressions.map((e) => (e.id === expression.value.id ? { ...e, ...value } : e)),
     })
 }
+
+const patchNameDebounced = useDebounceFn((name: string) => {
+  patch({ name })
+}, 300)
+
 function add(copy = false) {
   if (props.disabled || props.state.expressions.length >= 32) return
   const next = copy
@@ -52,6 +105,7 @@ function add(copy = false) {
   emit('change', { expressions: [...props.state.expressions, next] })
   selected.value = next.id
 }
+
 function remove() {
   if (props.disabled || props.state.expressions.length <= 1) return
   const id = expression.value.id
@@ -62,6 +116,7 @@ function remove() {
     awayExpressionId: props.state.awayExpressionId === id ? '' : props.state.awayExpressionId,
   })
 }
+
 function recordKey(event: KeyboardEvent) {
   if (event.key === 'Tab') return
   event.preventDefault()
@@ -83,11 +138,11 @@ function recordKey(event: KeyboardEvent) {
 </script>
 
 <template>
-  <Card class="p-3">
-    <CardHeader class="p-0">
+  <Card>
+    <CardHeader class="pb-3">
       <CardTitle>表情与配件</CardTitle>
     </CardHeader>
-    <CardContent class="p-0 space-y-3">
+    <CardContent class="space-y-3">
       <Select v-model="selected">
         <SelectTrigger class="w-full">
           <SelectValue placeholder="选择表情" />
@@ -146,7 +201,7 @@ function recordKey(event: KeyboardEvent) {
         :model-value="expression.name"
         :disabled="disabled"
         placeholder="表情名称"
-        @input="patch({ name: ($event.target as HTMLInputElement).value })"
+        @input="patchNameDebounced(($event.target as HTMLInputElement).value)"
       />
 
       <div class="fields">
@@ -178,7 +233,7 @@ function recordKey(event: KeyboardEvent) {
             :model-value="state.awayExpressionId || '__default__'"
             :disabled="disabled"
             @update:model-value="
-              emit('change', { awayExpressionId: $event && $event !== '__default__' ? String($event) : undefined })
+              emit('change', { awayExpressionId: $event && $event !== '__default__' ? String($event) : '' })
             "
           >
             <SelectTrigger class="w-full">
@@ -200,7 +255,7 @@ function recordKey(event: KeyboardEvent) {
 
       <div class="fields">
         <PngtuberImageSlot
-          v-for="slot in IMAGE_SLOTS"
+          v-for="slot in baseSlots"
           :key="`${expression.id}:${slot}`"
           :value="expression[slot]"
           :label="labels[slot]"
@@ -209,6 +264,14 @@ function recordKey(event: KeyboardEvent) {
         />
       </div>
 
+      <PngtuberImageSlot
+        :key="`${expression.id}:shoutImage`"
+        :value="expression.shoutImage"
+        :label="labels.shoutImage"
+        :disabled="disabled"
+        @change="patch({ shoutImage: $event })"
+      />
+
       <Button
         variant="outline"
         :disabled="disabled || !expression.idleImage"
@@ -216,6 +279,60 @@ function recordKey(event: KeyboardEvent) {
       >
         将静止立绘用于说话
       </Button>
+
+      <div class="fields">
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground font-medium">表情专属说话动效</label>
+          <Select
+            :model-value="expression.speakingAnimation || '__inherit__'"
+            :disabled="disabled"
+            @update:model-value="
+              patch({
+                speakingAnimation: $event === '__inherit__' ? '' : ($event as SpeakingAnimationType),
+              })
+            "
+          >
+            <SelectTrigger class="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in speakingAnimOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs text-muted-foreground font-medium">表情专属待机动效</label>
+          <Select
+            :model-value="expression.idleAnimation || '__inherit__'"
+            :disabled="disabled"
+            @update:model-value="
+              patch({
+                idleAnimation: $event === '__inherit__' ? '' : ($event as IdleAnimationType),
+              })
+            "
+          >
+            <SelectTrigger class="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="opt in idleAnimOptions"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <div class="fields">
         <div class="space-y-1">
@@ -234,7 +351,7 @@ function recordKey(event: KeyboardEvent) {
           <Select
             :model-value="expression.hotkeyMode"
             :disabled="disabled"
-            @update:model-value="patch({ hotkeyMode: $event as any })"
+            @update:model-value="patch({ hotkeyMode: $event as PngtuberExpression['hotkeyMode'] })"
           >
             <SelectTrigger class="w-full">
               <SelectValue />
@@ -273,7 +390,7 @@ function recordKey(event: KeyboardEvent) {
         <Select
           :model-value="expression.playback"
           :disabled="disabled"
-          @update:model-value="patch({ playback: $event as any })"
+          @update:model-value="patch({ playback: $event as PngtuberExpression['playback'] })"
         >
           <SelectTrigger class="w-full">
             <SelectValue />
@@ -290,7 +407,9 @@ function recordKey(event: KeyboardEvent) {
         :key="expression.id"
         :accessories="expression.accessories"
         :disabled="disabled"
+        :selected-accessory-id="selectedAccessoryId"
         @change="patch({ accessories: $event })"
+        @locate-accessory="emit('locate-accessory', { expressionId: expression.id, accessoryId: $event })"
       />
     </CardContent>
   </Card>

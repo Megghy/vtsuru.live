@@ -11,6 +11,7 @@ const emit = defineEmits<{ change: [patch: Partial<PngtuberState>] }>()
 const fields = [
   { key: 'threshold', label: '开口阈值', min: 1, max: 100, step: 1 },
   { key: 'closeThreshold', label: '闭口阈值', min: 0, max: 100, step: 1 },
+  { key: 'shoutThreshold', label: '大声 / 尖叫阈值', min: 1, max: 100, step: 1 },
   { key: 'gain', label: '麦克风增益', min: 0.5, max: 3, step: 0.1 },
   { key: 'attackDelay', label: '开口延时（ms）', min: 0, max: 1000, step: 10 },
   { key: 'releaseDelay', label: '闭口延时（ms）', min: 0, max: 2000, step: 10 },

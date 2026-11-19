@@ -1,6 +1,9 @@
 import { normalizeCollabSettings } from './collabSettings'
 import { createExpression, DEFAULT_PNGTUBER_STATE, IMAGE_SLOTS } from './types'
-import type { PngtuberExpression, PngtuberState } from './types'
+import type { IdleAnimationType, PngtuberExpression, PngtuberState, SpeakingAnimationType } from './types'
+
+const SPEAKING_ANIMATIONS: readonly SpeakingAnimationType[] = ['bounce', 'jelly', 'shake', 'pulse', 'float', 'none']
+const IDLE_ANIMATIONS: readonly IdleAnimationType[] = ['none', 'breathe', 'sway', 'float']
 
 function record(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('立绘配置必须是对象')
@@ -39,6 +42,8 @@ function expression(value: unknown, allowInline = false): PngtuberExpression {
   const result = createExpression(text(raw.name, '表情'), text(raw.id, 'default'))
   if (!/^[a-zA-Z0-9_-]{1,64}$/.test(result.id)) throw new Error('无效的表情 ID')
   for (const slot of IMAGE_SLOTS) result[slot] = image(raw[slot], allowInline)
+  result.speakingAnimation = choice(raw.speakingAnimation, '', ['', ...SPEAKING_ANIMATIONS])
+  result.idleAnimation = choice(raw.idleAnimation, '', ['', ...IDLE_ANIMATIONS])
   result.hotkey = text(raw.hotkey)
   result.hotkeyMode = choice(raw.hotkeyMode, 'toggle', ['toggle', 'hold', 'timed'])
   result.durationMs = number(raw.durationMs, 5000, 100, 600000)
@@ -69,6 +74,7 @@ export function normalizePngtuberState(value: unknown, options?: { allowInlineIm
   const ranges = {
     threshold: [1, 100],
     closeThreshold: [0, 100],
+    shoutThreshold: [1, 100],
     attackDelay: [0, 1000],
     gain: [0.5, 3],
     releaseDelay: [0, 2000],
@@ -95,15 +101,8 @@ export function normalizePngtuberState(value: unknown, options?: { allowInlineIm
     if (raw[key] !== undefined && typeof raw[key] !== 'boolean') throw new Error(`无效的开关：${key}`)
     state[key] = (raw[key] ?? state[key]) as boolean
   }
-  state.speakingAnimation = choice(raw.speakingAnimation, state.speakingAnimation, [
-    'bounce',
-    'jelly',
-    'shake',
-    'pulse',
-    'float',
-    'none',
-  ])
-  state.idleAnimation = choice(raw.idleAnimation, state.idleAnimation, ['none', 'breathe', 'sway', 'float'])
+  state.speakingAnimation = choice(raw.speakingAnimation, state.speakingAnimation, SPEAKING_ANIMATIONS)
+  state.idleAnimation = choice(raw.idleAnimation, state.idleAnimation, IDLE_ANIMATIONS)
   state.intensity = choice(raw.intensity, state.intensity, ['subtle', 'normal', 'energetic'])
   state.motionMode = choice(raw.motionMode, state.motionMode, ['loop', 'onset', 'volume'])
   state.inputMode = choice(raw.inputMode, state.inputMode, ['microphone', 'controller', 'client', 'obs'])
@@ -127,6 +126,7 @@ export function normalizePngtuberState(value: unknown, options?: { allowInlineIm
     if (!state.expressions.some((e) => e.id === id)) throw new Error('所选表情不存在')
   if (state.blinkMax < state.blinkMin) throw new Error('眨眼最大间隔不能小于最小间隔')
   state.closeThreshold = Math.min(state.closeThreshold, state.threshold)
+  state.shoutThreshold = Math.max(state.shoutThreshold, state.threshold)
   state.collab = normalizeCollabSettings(raw.collab)
   return state
 }

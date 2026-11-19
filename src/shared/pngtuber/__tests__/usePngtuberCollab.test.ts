@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ref } from 'vue'
+import { ref, toValue, type MaybeRefOrGetter } from 'vue'
 
 const mockAccount = ref({ id: 101, name: '测试主播', token: 'token-101' })
 vi.mock('@/api/account', () => ({
@@ -15,14 +15,19 @@ const topicListeners = new Map<string, (payload: any) => void>()
 const publishedEvents: Array<{ topic: string; eventName: string; payload: any }> = []
 
 vi.mock('@/shared/realtime', () => ({
-  useRealtimeTopic: (topic: string) => {
+  getRealtimeBus: () => ({
+    publish: vi.fn(async (topic: string, eventName: string, payload: unknown) => {
+      publishedEvents.push({ topic, eventName, payload })
+    }),
+  }),
+  useRealtimeTopic: (topic: MaybeRefOrGetter<string>) => {
     return {
       on: (eventName: string, handler: (payload: any) => void) => {
         topicListeners.set(eventName, handler)
         return () => topicListeners.delete(eventName)
       },
       publish: vi.fn(async (eventName: string, payload: any) => {
-        publishedEvents.push({ topic, eventName, payload })
+        publishedEvents.push({ topic: toValue(topic), eventName, payload })
       }),
     }
   },

@@ -63,14 +63,11 @@ function retry() {
       @asset-error="assetError = $event"
     />
   <div :class="{ diagnostics: debug }">
-    <Card
-      v-if="debug"
-      class="p-3"
-    >
-      <CardHeader class="p-0">
+    <Card v-if="debug">
+      <CardHeader class="pb-3">
         <CardTitle>PNGTuber · OBS 诊断</CardTitle>
       </CardHeader>
-      <CardContent class="p-0 space-y-2 text-xs">
+      <CardContent class="space-y-2 text-xs">
         <div>用户 {{ userId || '未指定' }} · 频道 {{ channel }} · 输入 {{ state.inputMode }}</div>
         <div>
           配置 {{ isReady ? '就绪' : '加载中' }} · 运行时 {{ connected ? '已连接' : '未连接' }} · 来源

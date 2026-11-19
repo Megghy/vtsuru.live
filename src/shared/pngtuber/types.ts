@@ -4,7 +4,8 @@ import { DEFAULT_COLLAB_SETTINGS } from './collabSettings'
 export type SpeakingAnimationType = 'bounce' | 'jelly' | 'shake' | 'pulse' | 'float' | 'none'
 export type IdleAnimationType = 'none' | 'breathe' | 'sway' | 'float'
 export type AnimationIntensity = 'subtle' | 'normal' | 'energetic'
-export type ImageSlot = 'idleImage' | 'speakingImage' | 'idleBlinkImage' | 'speakingBlinkImage'
+export type ImageSlot = 'idleImage' | 'speakingImage' | 'idleBlinkImage' | 'speakingBlinkImage' | 'shoutImage'
+
 export interface PngtuberAccessory {
   id: string
   name: string
@@ -16,6 +17,7 @@ export interface PngtuberAccessory {
   visible: 'always' | 'speaking' | 'idle'
   front: boolean
 }
+
 export interface PngtuberExpression {
   id: string
   name: string
@@ -23,18 +25,23 @@ export interface PngtuberExpression {
   speakingImage: string
   idleBlinkImage: string
   speakingBlinkImage: string
+  shoutImage: string
+  speakingAnimation: SpeakingAnimationType | ''
+  idleAnimation: IdleAnimationType | ''
   hotkey: string
   hotkeyMode: 'toggle' | 'hold' | 'timed'
   durationMs: number
   playback: 'continue' | 'restart' | 'once'
   accessories: PngtuberAccessory[]
 }
+
 export interface PngtuberState {
   expressions: PngtuberExpression[]
   defaultExpressionId: string
   awayExpressionId: string
   threshold: number
   closeThreshold: number
+  shoutThreshold: number
   attackDelay: number
   gain: number
   releaseDelay: number
@@ -61,6 +68,7 @@ export interface PngtuberState {
   pixelated: boolean
   collab: PngtuberCollabSettings
 }
+
 export function createExpression(name = '默认', id: string = crypto.randomUUID()): PngtuberExpression {
   return {
     id,
@@ -69,6 +77,9 @@ export function createExpression(name = '默认', id: string = crypto.randomUUID
     speakingImage: '',
     idleBlinkImage: '',
     speakingBlinkImage: '',
+    shoutImage: '',
+    speakingAnimation: '',
+    idleAnimation: '',
     hotkey: '',
     hotkeyMode: 'toggle',
     durationMs: 5000,
@@ -76,12 +87,14 @@ export function createExpression(name = '默认', id: string = crypto.randomUUID
     accessories: [],
   }
 }
+
 export const DEFAULT_PNGTUBER_STATE: PngtuberState = {
   expressions: [createExpression('默认', 'default')],
   defaultExpressionId: 'default',
   awayExpressionId: '',
   threshold: 15,
   closeThreshold: 10,
+  shoutThreshold: 75,
   attackDelay: 40,
   gain: 1,
   releaseDelay: 220,
@@ -108,6 +121,7 @@ export const DEFAULT_PNGTUBER_STATE: PngtuberState = {
   pixelated: false,
   collab: { ...DEFAULT_COLLAB_SETTINGS },
 }
+
 export interface PngtuberRuntime {
   expressionId: string
   isSpeaking: boolean
@@ -117,6 +131,7 @@ export interface PngtuberRuntime {
   updatedAt: number
   source: string
 }
+
 export const DEFAULT_PNGTUBER_RUNTIME: PngtuberRuntime = {
   expressionId: '',
   isSpeaking: false,
@@ -126,7 +141,15 @@ export const DEFAULT_PNGTUBER_RUNTIME: PngtuberRuntime = {
   updatedAt: 0,
   source: '',
 }
-export const IMAGE_SLOTS: ImageSlot[] = ['idleImage', 'speakingImage', 'idleBlinkImage', 'speakingBlinkImage']
+
+export const IMAGE_SLOTS: ImageSlot[] = [
+  'idleImage',
+  'speakingImage',
+  'idleBlinkImage',
+  'speakingBlinkImage',
+  'shoutImage',
+]
+
 export function isInlineImageData(value: string) {
   return /^(data|blob):/i.test(value)
 }

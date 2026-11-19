@@ -14,7 +14,7 @@ export const pngtuberComponent: ObsComponentDefinition = {
   icon: PersonOutline,
   obsPath: '/obs-store/pngtuber',
   requiresAccount: true,
-  managePath: '/manage/obs-store?component=pngtuber',
+  managesOwnObsUrl: true,
   defaultResolution: { width: 400, height: 500, label: '标准半身立绘 (400×500 px)' },
   supportedResolutions: [
     { width: 400, height: 500, label: '标准半身 (400×500 px)' },

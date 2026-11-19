@@ -2,6 +2,8 @@
 import ArrowReset24Regular from '@vicons/fluent/es/ArrowReset24Regular'
 import Checkmark24Regular from '@vicons/fluent/es/Checkmark24Regular'
 import Copy24Regular from '@vicons/fluent/es/Copy24Regular'
+import LockClosed24Regular from '@vicons/fluent/es/LockClosed24Regular'
+import LockOpen24Regular from '@vicons/fluent/es/LockOpen24Regular'
 import Open24Regular from '@vicons/fluent/es/Open24Regular'
 import People24Regular from '@vicons/fluent/es/People24Regular'
 import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
@@ -28,7 +30,6 @@ import { Button } from '@/shared/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card'
 import { Input } from '@/shared/ui/input'
 import { Progress } from '@/shared/ui/progress'
-import { Separator } from '@/shared/ui/separator'
 import { Slider } from '@/shared/ui/slider'
 import { Switch } from '@/shared/ui/switch'
 import { ToggleGroup, ToggleGroupItem } from '@/shared/ui/toggle-group'
@@ -42,7 +43,20 @@ const emit = defineEmits<{
   (e: 'patch', val: Partial<PngtuberState>): void
 }>()
 
-const { currentRoomCode, isHost, inRoom, members, collabError, createRoom, joinRoom, leaveRoom } = usePngtuberCollab()
+const {
+  currentRoomCode,
+  isHost,
+  isLocked,
+  hasPasscode,
+  inRoom,
+  members,
+  collabError,
+  createRoom,
+  joinRoom,
+  leaveRoom,
+  kickMember,
+  setRoomLocked,
+} = usePngtuberCollab()
 const account = useAccount()
 const {
   isMockCollab,
@@ -77,6 +91,7 @@ function resetToDefaults() {
 }
 
 const inputCode = ref('')
+const inputPasscode = ref('')
 const loading = ref(false)
 const copied = ref(false)
 const showSettings = ref(false)
@@ -102,7 +117,7 @@ async function handleCreate() {
   if (loading.value) return
   loading.value = true
   try {
-    const code = await createRoom(props.state)
+    const code = await createRoom(props.state, inputPasscode.value)
     toast.success(`组队房间已创建：${code}`)
   } catch (err: unknown) {
     toast.error(err instanceof Error ? err.message : String(err))
@@ -114,12 +129,12 @@ async function handleCreate() {
 async function handleJoin() {
   const code = inputCode.value.trim().toUpperCase()
   if (!code) {
-    toast.warning('请输入有效的 6 位房间码')
+    toast.warning('请输入有效的房间码')
     return
   }
   loading.value = true
   try {
-    await joinRoom(code, false, props.state)
+    await joinRoom(code, false, props.state, inputPasscode.value)
     inputCode.value = ''
     toast.success(`已加入组队房间：${code}`)
   } catch (err: unknown) {
@@ -132,6 +147,24 @@ async function handleJoin() {
 function handleLeave() {
   leaveRoom()
   toast.info('已退出组队联动')
+}
+
+async function handleToggleLock() {
+  try {
+    await setRoomLocked(!isLocked.value)
+    toast.success(isLocked.value ? '已解锁房间，允许新成员加入' : '已锁定房间，暂不允许新成员加入')
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : String(err))
+  }
+}
+
+async function handleKick(userId: number, name: string) {
+  try {
+    await kickMember(userId)
+    toast.info(`已将 ${name} 移出房间`)
+  } catch (err: unknown) {
+    toast.error(err instanceof Error ? err.message : String(err))
+  }
 }
 
 async function copyObsLink() {
@@ -154,7 +187,7 @@ async function copyObsLink() {
 
 function toggleMockPreview() {
   toggleMockCollab(props.state)
-  toast.info(isMockCollab.value ? '已启动多人组队前端模拟（3人轮流发言）' : '已退出组队模拟')
+  toast.info(isMockCollab.value ? '已启动多人组队前端模拟' : '已退出组队模拟')
 }
 
 const displayMembers = computed(() => {
@@ -165,7 +198,7 @@ const displayMembers = computed(() => {
 </script>
 
 <template>
-  <Card class="/80 bg-card/60">
+  <Card class="border-border/80 bg-card/60">
     <CardHeader class="py-3 px-4 flex flex-row items-center justify-between gap-2 border-b border-border/50">
       <div class="flex items-center gap-2 flex-wrap">
         <div class="flex items-center gap-1.5 font-semibold text-sm">
@@ -183,11 +216,27 @@ const displayMembers = computed(() => {
         </Badge>
 
         <Badge
+          v-if="inRoom && isLocked"
+          variant="outline"
+          size="xs"
+        >
+          已锁定
+        </Badge>
+
+        <Badge
+          v-if="inRoom && hasPasscode"
+          variant="outline"
+          size="xs"
+        >
+          密码保护
+        </Badge>
+
+        <Badge
           v-else-if="isMockCollab"
           variant="warning"
           class="gap-1 font-mono"
         >
-          模拟调试中 (3人)
+          模拟调试中 ({{ displayMembers.length }}人)
         </Badge>
       </div>
 
@@ -201,6 +250,24 @@ const displayMembers = computed(() => {
         >
           <Settings24Regular class="size-3.5" />
           房间设置
+        </Button>
+
+        <Button
+          v-if="inRoom && isHost"
+          variant="outline"
+          size="xs"
+          class="gap-1"
+          @click="handleToggleLock"
+        >
+          <LockClosed24Regular
+            v-if="isLocked"
+            class="size-3.5"
+          />
+          <LockOpen24Regular
+            v-else
+            class="size-3.5"
+          />
+          {{ isLocked ? '解锁房间' : '锁定房间' }}
         </Button>
 
         <Button
@@ -257,7 +324,7 @@ const displayMembers = computed(() => {
           size="xs"
           @click="handleLeave"
         >
-          {{ isHost ? '解散房间' : '退出组队' }}
+          退出组队
         </Button>
       </div>
     </CardHeader>
@@ -390,44 +457,45 @@ const displayMembers = computed(() => {
 
       <div
         v-if="!inRoom && !isMockCollab"
-        class="space-y-3"
+        class="space-y-2.5"
       >
         <p class="text-xs text-muted-foreground leading-relaxed m-0">
-          通过 6 位房间码与其他主播快速连麦组队！加入后将在同一个 OBS
-          画面中并排展示双方立绘，并实时同步说话状态。无需队友时也可点击「模拟多人效果」预览排版。
+          通过 6 位房间码与其他主播连麦组队，同屏展示立绘并实时同步说话与表情。无需队友时可点击「模拟多人效果」预览排版。
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-2.5 items-stretch sm:items-center">
-          <div class="flex items-center gap-1.5 flex-1">
+        <div class="flex flex-col gap-2">
+          <div class="flex flex-wrap items-center gap-1.5 min-w-0">
             <Input
               v-model="inputCode"
-              placeholder="输入 6 位房间码（如 MEUK86）"
-              class="uppercase tracking-widest font-mono"
+              placeholder="房间码（加入时填写）"
+              class="uppercase tracking-widest font-mono flex-1 min-w-[140px]"
               maxlength="16"
               @keyup.enter="handleJoin"
             />
+            <Input
+              v-model="inputPasscode"
+              type="password"
+              placeholder="房间密码（可选）"
+              class="w-full sm:w-36 shrink-0"
+              maxlength="32"
+              @keyup.enter="inputCode.trim() ? handleJoin() : handleCreate()"
+            />
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
             <Button
               variant="secondary"
-              class="shrink-0"
               :disabled="loading || !inputCode.trim()"
               @click="handleJoin"
             >
               加入组队
             </Button>
+            <Button
+              :disabled="loading"
+              @click="handleCreate"
+            >
+              创建房间
+            </Button>
           </div>
-
-          <Separator
-            orientation="vertical"
-            class="h-4 hidden sm:block shrink-0"
-          />
-
-          <Button
-            class="shrink-0"
-            :disabled="loading"
-            @click="handleCreate"
-          >
-            创建组队房间
-          </Button>
         </div>
       </div>
 
@@ -549,6 +617,20 @@ const displayMembers = computed(() => {
                 @click="removeMockMember(member.userId)"
               >
                 移除
+              </Button>
+            </div>
+
+            <div
+              v-else-if="inRoom && isHost && member.userId !== account.id"
+              class="flex justify-end pt-0.5"
+            >
+              <Button
+                variant="link"
+                size="xs"
+                class="h-auto p-0 text-muted-foreground hover:text-destructive text-[11px]"
+                @click="handleKick(member.userId, member.name)"
+              >
+                移出房间
               </Button>
             </div>
           </div>

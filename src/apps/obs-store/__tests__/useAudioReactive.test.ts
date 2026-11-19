@@ -254,9 +254,16 @@ describe('sampling and public API', () => {
 })
 
 describe('audio regression cases', () => {
-  it('keeps the component entry as the identical shared implementation', async () => {
-    const entry = await import('../components/pngtuber/useAudioReactive')
-    expect(entry.useAudioReactive).toBe(useAudioReactive)
+  it('falls back to default microphone when saved deviceId throws OverconstrainedError', async () => {
+    const { stream } = makeStream()
+    const deviceId = ref('stale-usb-mic')
+    const err = new Error('Requested device not found')
+    err.name = 'OverconstrainedError'
+    devices.getUserMedia.mockRejectedValueOnce(err).mockResolvedValueOnce(stream)
+    const { engine } = setup({ deviceId })
+    expect(await engine.startListening()).toBe(true)
+    expect(deviceId.value).toBe('default')
+    expect(devices.getUserMedia).toHaveBeenCalledTimes(2)
   })
 
   it('discards permission after unmount and does not recreate a context', async () => {

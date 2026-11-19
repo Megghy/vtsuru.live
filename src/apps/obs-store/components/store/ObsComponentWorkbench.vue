@@ -30,28 +30,33 @@ const isLoading = ref(false)
 
 watch(
   () => props.component,
-  async (comp) => {
+  (comp) => {
     if (!comp || !comp.manageComponent) {
       activeComponentLoader.value = null
+      isLoading.value = false
       return
     }
 
-    try {
-      isLoading.value = true
-      activeComponentLoader.value = defineAsyncComponent({
-        loader: comp.manageComponent,
-        delay: 100,
-        timeout: 20_000,
-        onError(error, retry, fail, attempts) {
-          if (attempts <= 2) retry()
-          else fail()
-        },
-      })
-    } catch {
-      activeComponentLoader.value = null
-    } finally {
-      isLoading.value = false
-    }
+    isLoading.value = true
+    const load = comp.manageComponent
+    activeComponentLoader.value = defineAsyncComponent({
+      loader: async () => {
+        try {
+          return await load()
+        } finally {
+          isLoading.value = false
+        }
+      },
+      delay: 100,
+      timeout: 20_000,
+      onError(_error, retry, fail, attempts) {
+        if (attempts <= 2) retry()
+        else {
+          isLoading.value = false
+          fail()
+        }
+      },
+    })
   },
   { immediate: true },
 )
@@ -165,7 +170,7 @@ async function handleCopy() {
           </span>
         </div>
 
-        <TooltipProvider v-if="props.component.obsPath">
+        <TooltipProvider v-if="props.component.obsPath && !props.component.managesOwnObsUrl">
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
@@ -190,7 +195,7 @@ async function handleCopy() {
           </Tooltip>
         </TooltipProvider>
 
-        <TooltipProvider v-if="props.component.obsPath">
+        <TooltipProvider v-if="props.component.obsPath && !props.component.managesOwnObsUrl">
           <Tooltip>
             <TooltipTrigger as-child>
               <Button

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Image24Regular from '@vicons/fluent/es/Image24Regular'
 import { onScopeDispose, ref, watch } from 'vue'
 import { toast } from 'vue-sonner'
 
@@ -7,12 +8,15 @@ import { Button } from '@/shared/ui/button'
 import { Input } from '@/shared/ui/input'
 import { Popconfirm } from '@/shared/ui/popconfirm'
 
+import PngtuberAssetLibraryDialog from './PngtuberAssetLibraryDialog.vue'
+
 const props = defineProps<{ value: string; label: string; disabled?: boolean }>()
 const emit = defineEmits<{ change: [value: string] }>()
 
 const url = ref(props.value)
 const busy = ref(false)
 const dragging = ref(false)
+const libraryOpen = ref(false)
 const input = ref<HTMLInputElement>()
 let disposed = false
 onScopeDispose(() => {
@@ -55,6 +59,9 @@ function apply() {
     toast.error('请输入有效的 HTTP(S) 图片地址')
   }
 }
+function selectFromLibrary(selectedUrl: string) {
+  if (!props.disabled) emit('change', selectedUrl)
+}
 </script>
 
 <template>
@@ -76,7 +83,7 @@ function apply() {
           <Button
             variant="ghost"
             size="xs"
-            class="h-5 px-1.5 text-[11px] text-destructive hover:text-destructive"
+            class="px-1.5 text-destructive hover:text-destructive"
             :disabled="disabled || busy"
           >
             清除
@@ -88,7 +95,7 @@ function apply() {
 
     <Button
       variant="outline"
-      class="image-preview h-auto min-h-[96px] w-full p-2 border-dashed border-2 flex-col-center font-normal"
+      class="image-preview w-full p-2 border-dashed flex-col-center font-normal"
       :disabled="disabled || busy"
       :aria-label="`上传${label}`"
       @click="input?.click()"
@@ -103,7 +110,7 @@ function apply() {
         v-else
         class="text-xs text-muted-foreground"
       >
-        拖放或选择图片
+        {{ busy ? '上传转码中…' : '拖放或选择图片' }}
       </span>
     </Button>
 
@@ -111,23 +118,35 @@ function apply() {
       ref="input"
       hidden
       type="file"
-      accept="image/png,image/apng,image/gif,image/webp"
+      accept="image/png,image/apng,image/gif,image/webp,.apng"
       :disabled="disabled || busy"
       @change="choose"
     />
 
-    <Button
-      class="w-full"
-      variant="outline"
-      :disabled="disabled || busy"
-      @click="input?.click()"
-    >
-      {{ value ? '更换图片' : '上传图片' }}
-    </Button>
+    <div class="flex items-center gap-1.5">
+      <Button
+        class="flex-1"
+        variant="outline"
+        size="xs"
+        :disabled="disabled || busy"
+        @click="input?.click()"
+      >
+        {{ value ? '更换图片' : '上传图片' }}
+      </Button>
+      <Button
+        variant="outline"
+        size="xs"
+        class="gap-1 shrink-0"
+        :disabled="disabled || busy"
+        @click="libraryOpen = true"
+      >
+        <Image24Regular class="size-3.5" />
+        素材库
+      </Button>
+    </div>
 
     <div class="flex items-center gap-1">
       <Input
-        size="xs"
         v-model="url"
         class="flex-1"
         placeholder="HTTP(S) 图片外链"
@@ -146,6 +165,13 @@ function apply() {
     </div>
 
     <span class="text-[11px] text-muted-foreground">PNG / APNG / GIF / WebP，最多 16 MB</span>
+
+    <PngtuberAssetLibraryDialog
+      v-model:open="libraryOpen"
+      :current-url="value"
+      selectable
+      @select="selectFromLibrary"
+    />
   </div>
 </template>
 
@@ -168,12 +194,9 @@ function apply() {
   gap: 8px;
 }
 .image-preview {
-  border: 0;
-  border-radius: 4px;
+  height: 100px;
   background: var(--muted);
   color: var(--muted-foreground);
-  height: 100px;
-  cursor: pointer;
 }
 .image-preview img {
   width: 100%;

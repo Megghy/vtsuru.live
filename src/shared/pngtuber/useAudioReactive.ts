@@ -1,5 +1,5 @@
-import { getCurrentInstance, onActivated, onDeactivated, onMounted, onScopeDispose, ref, toValue, watch } from 'vue'
-import type { MaybeRefOrGetter } from 'vue'
+import { getCurrentInstance, isReadonly, isRef, onActivated, onDeactivated, onMounted, onScopeDispose, ref, toValue, watch } from 'vue'
+import type { MaybeRefOrGetter, Ref } from 'vue'
 import { setInterval as workerInterval, clearInterval as clearWorkerInterval } from 'worker-timers'
 
 import { createAudioGate } from './audioGate'
@@ -237,14 +237,32 @@ export function useAudioReactive(options: UseAudioReactiveOptions = {}) {
           errorMessage.value = '当前环境不支持麦克风采集'
           return false
         }
-        const stream = await mediaDevices.getUserMedia({
-          audio: {
-            ...(device && device !== 'default' ? { deviceId: { exact: device } } : {}),
-            noiseSuppression,
-            echoCancellation: false,
-            autoGainControl: false,
-          },
-        })
+        const getStream = (targetDevice: string | undefined) =>
+          mediaDevices.getUserMedia({
+            audio: {
+              ...(targetDevice && targetDevice !== 'default' ? { deviceId: { exact: targetDevice } } : {}),
+              noiseSuppression,
+              echoCancellation: false,
+              autoGainControl: false,
+            },
+          })
+
+        let stream: MediaStream
+        let fellBackToDefault = false
+        try {
+          stream = await getStream(device)
+        } catch (captureError) {
+          const errName = captureError instanceof Error ? captureError.name : ''
+          if (device && device !== 'default' && (errName === 'OverconstrainedError' || errName === 'NotFoundError')) {
+            fellBackToDefault = true
+            stream = await getStream('default')
+          } else {
+            throw captureError
+          }
+        }
+        if (fellBackToDefault && valid() && isRef(options.deviceId) && !isReadonly(options.deviceId)) {
+          ;(options.deviceId as Ref<string | undefined>).value = 'default'
+        }
         if (!valid()) {
           // Permission may resolve after the empty pending session was already released.
           try {

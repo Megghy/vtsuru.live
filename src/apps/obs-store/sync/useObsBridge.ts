@@ -38,7 +38,6 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
   let revision = 0
   let pending: Partial<TState> = {}
   let channel: BroadcastChannel | undefined
-  let timer: ReturnType<typeof setTimeout> | undefined
   let writeTask: Promise<void> | undefined
   let destroyed = false
   let active = true
@@ -178,8 +177,6 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
 
   function cleanup() {
     generation++
-    clearTimeout(timer)
-    timer = undefined
     channel?.close()
     channel = undefined
     writeTask = undefined
@@ -190,8 +187,6 @@ export function useObsBridge<TState extends Record<string, any>, TAction = unkno
 
   function pausePolling() {
     active = false
-    clearTimeout(timer)
-    timer = undefined
   }
 
   function resumePolling() {

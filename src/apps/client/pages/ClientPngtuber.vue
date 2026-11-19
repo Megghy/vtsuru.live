@@ -55,8 +55,17 @@ async function control(patch: { expressionId?: string; muted?: boolean; away?: b
   }
 }
 
+async function handleCollabPatch(patch: Partial<typeof driver.config>) {
+  try {
+    await driver.patchConfig(patch)
+  } catch (cause) {
+    message.error(cause instanceof Error ? cause.message : String(cause))
+  }
+}
+
 onMounted(() => {
   void driver.refreshDevices()
+  void driver.loadConfig()
   void refreshInputs()
 })
 </script>
@@ -201,6 +210,7 @@ onMounted(() => {
     <PngtuberCollabCard
       :state="driver.config"
       :channel="driver.channel"
+      @patch="handleCollabPatch"
     />
 
     <Card>

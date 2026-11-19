@@ -13,6 +13,42 @@
 .pngtuber-obs-root.is-inline {
   min-height: 280px;
 }
+.pngtuber-obs-root.is-editable {
+  pointer-events: auto;
+}
+.canvas-guides {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+.guide-v {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  border-left: 1px dashed rgb(56 189 248 / 45%);
+}
+.guide-h {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  border-top: 1px dashed rgb(56 189 248 / 45%);
+}
+.accessory-image.is-draggable {
+  pointer-events: auto;
+  cursor: grab;
+  outline: 1px dashed rgb(56 189 248 / 50%);
+  outline-offset: -1px;
+}
+.accessory-image.is-draggable:active {
+  cursor: grabbing;
+}
+.accessory-image.is-selected {
+  outline: 2px solid rgb(56 189 248 / 95%);
+  outline-offset: -1px;
+}
 .pngtuber-canvas {
   position: relative;
   flex: none;

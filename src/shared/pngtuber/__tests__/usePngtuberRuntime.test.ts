@@ -7,16 +7,23 @@ import { usePngtuberRuntime } from '../usePngtuberRuntime'
 const account = ref({ id: 1, token: 'one' })
 vi.mock('@/api/account', () => ({ useAccount: () => account }))
 
-// Mock useRealtimeTopic
 const mockTopicState = {
   subscribedTopic: '',
   published: [] as Array<{ topic: string; event: string; payload: unknown }>,
   handlers: new Map<string, (payload: unknown) => void>(),
   connected: ref(true),
   error: ref(''),
+  ensureConnected: vi.fn(async () => {}),
+  unsubscribe: vi.fn(async () => {}),
+  subscribe: vi.fn(async () => {}),
 }
 
 vi.mock('@/shared/realtime', () => ({
+  getRealtimeBus: () => ({
+    ensureConnected: mockTopicState.ensureConnected,
+    unsubscribe: mockTopicState.unsubscribe,
+    subscribe: mockTopicState.subscribe,
+  }),
   useRealtimeTopic: (topicRef: { value: string }) => {
     mockTopicState.subscribedTopic = topicRef.value
     return {
@@ -33,9 +40,9 @@ vi.mock('@/shared/realtime', () => ({
         })
       }),
       on: vi.fn((eventName: string, handler: (payload: unknown) => void) => {
-        mockTopicState.handlers.set(eventName, handler)
+        mockTopicState.handlers.set(eventName.toLowerCase(), handler)
         return () => {
-          mockTopicState.handlers.delete(eventName)
+          mockTopicState.handlers.delete(eventName.toLowerCase())
         }
       }),
     }
@@ -59,6 +66,9 @@ describe('usePngtuberRuntime (RealtimeBus Topic)', () => {
     mockTopicState.handlers.clear()
     mockTopicState.connected.value = true
     mockTopicState.error.value = ''
+    mockTopicState.ensureConnected.mockClear()
+    mockTopicState.unsubscribe.mockClear()
+    mockTopicState.subscribe.mockClear()
     account.value = { id: 1, token: 'one' }
   })
 
@@ -78,11 +88,11 @@ describe('usePngtuberRuntime (RealtimeBus Topic)', () => {
     expect(runtime.connected.value).toBe(false)
   })
 
-  it('receives State event and updates runtime state', async () => {
+  it('receives state event and merges partial updates without dropping control fields', async () => {
     const runtime = setup(false, 1, 'default')
     expect(runtime.runtime.value.volume).toBe(0)
 
-    const stateHandler = mockTopicState.handlers.get('State')
+    const stateHandler = mockTopicState.handlers.get('state')
     expect(stateHandler).toBeDefined()
 
     stateHandler!({
@@ -90,6 +100,7 @@ describe('usePngtuberRuntime (RealtimeBus Topic)', () => {
       volume: 85,
       isSpeaking: true,
       expressionId: 'smile',
+      muted: false,
       updatedAt: 12345,
     })
     await nextTick()
@@ -97,17 +108,35 @@ describe('usePngtuberRuntime (RealtimeBus Topic)', () => {
     expect(runtime.runtime.value.volume).toBe(85)
     expect(runtime.runtime.value.isSpeaking).toBe(true)
     expect(runtime.runtime.value.expressionId).toBe('smile')
+
+    // Partial audio update preserves expressionId
+    stateHandler!({
+      volume: 42,
+      isSpeaking: false,
+      updatedAt: 12346,
+    })
+    await nextTick()
+    expect(runtime.runtime.value.volume).toBe(42)
+    expect(runtime.runtime.value.isSpeaking).toBe(false)
+    expect(runtime.runtime.value.expressionId).toBe('smile')
   })
 
-  it('publishes audio state when speaking', async () => {
+  it('publishes audio state and lets speaking edge transitions bypass 50ms throttle', async () => {
     const runtime = setup(true, 1, 'default')
     await runtime.publish(70, true, 'client')
+    await runtime.publish(72, true, 'client') // throttled (same speaking state within 50ms)
+    await runtime.publish(0, false, 'client') // edge change (speaking true -> false), must not be dropped
 
-    expect(mockTopicState.published).toHaveLength(1)
+    expect(mockTopicState.published).toHaveLength(2)
     expect(mockTopicState.published[0]).toEqual({
       topic: 'pngtuber:channel:1:default',
       event: 'audio',
       payload: { volume: 70, isSpeaking: true, source: 'client' },
+    })
+    expect(mockTopicState.published[1]).toEqual({
+      topic: 'pngtuber:channel:1:default',
+      event: 'audio',
+      payload: { volume: 0, isSpeaking: false, source: 'client' },
     })
   })
 
@@ -133,9 +162,17 @@ describe('usePngtuberRuntime (RealtimeBus Topic)', () => {
     await expect(runtime.control({ muted: true })).rejects.toThrow('立绘控制连接尚未就绪')
   })
 
+  it('reconnects by resubscribing topic on realtime bus', async () => {
+    const runtime = setup(true, 1, 'default')
+    await runtime.reconnect()
+    expect(mockTopicState.ensureConnected).toHaveBeenCalledTimes(1)
+    expect(mockTopicState.unsubscribe).toHaveBeenCalledWith('pngtuber:channel:1:default')
+    expect(mockTopicState.subscribe).toHaveBeenCalledWith('pngtuber:channel:1:default')
+  })
+
   it('closes mouth and mutes volume when disconnected or on scope dispose', async () => {
     const runtime = setup(false, 1, 'default')
-    const stateHandler = mockTopicState.handlers.get('State')
+    const stateHandler = mockTopicState.handlers.get('state')
     stateHandler!({
       ...DEFAULT_PNGTUBER_RUNTIME,
       volume: 90,

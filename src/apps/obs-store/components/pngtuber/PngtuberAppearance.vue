@@ -73,11 +73,11 @@ const switches = [
 </script>
 
 <template>
-  <Card class="p-3">
-    <CardHeader class="p-0">
+  <Card>
+    <CardHeader class="pb-3">
       <CardTitle>动效、眨眼与画布</CardTitle>
     </CardHeader>
-    <CardContent class="p-0 space-y-3">
+    <CardContent class="space-y-3">
       <div class="fields">
         <FormField
           v-for="f in selects"

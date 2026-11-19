@@ -2,7 +2,8 @@ import { computed, onScopeDispose, ref, toValue, watch } from 'vue'
 import type { MaybeRefOrGetter } from 'vue'
 
 import { useAccount } from '@/api/account'
-import { useRealtimeTopic } from '@/shared/realtime'
+import { getRealtimeBus, useRealtimeTopic } from '@/shared/realtime'
+
 import { DEFAULT_PNGTUBER_RUNTIME } from './types'
 import type { PngtuberRuntime } from './types'
 
@@ -31,15 +32,24 @@ export function usePngtuberRuntime(
       ...runtime.value,
       isSpeaking: false,
       volume: 0,
-      source: null,
+      source: '',
       updatedAt: Date.now(),
     }
   }
 
-  onRealtimeEvent<PngtuberRuntime>('State', (value) => {
+  onRealtimeEvent<Partial<PngtuberRuntime>>('state', (value) => {
     if (!value) return
-    if (value.updatedAt >= runtime.value.updatedAt) {
-      runtime.value = value
+    const nextUpdatedAt = typeof value.updatedAt === 'number' ? value.updatedAt : Date.now()
+    if (nextUpdatedAt < runtime.value.updatedAt) return
+    runtime.value = {
+      ...runtime.value,
+      ...(value.expressionId !== undefined ? { expressionId: value.expressionId ?? '' } : {}),
+      ...(value.isSpeaking !== undefined ? { isSpeaking: Boolean(value.isSpeaking) } : {}),
+      ...(value.volume !== undefined ? { volume: Number(value.volume) || 0 } : {}),
+      ...(value.muted !== undefined ? { muted: Boolean(value.muted) } : {}),
+      ...(value.away !== undefined ? { away: Boolean(value.away) } : {}),
+      ...(value.source !== undefined ? { source: value.source ?? '' } : {}),
+      updatedAt: nextUpdatedAt,
     }
   })
 
@@ -62,12 +72,17 @@ export function usePngtuberRuntime(
   )
 
   let lastSendTime = 0
+  let lastSentSpeaking: boolean | null = null
   let isPublishing = false
 
   async function publish(volume: number, speaking: boolean, source: 'controller' | 'client' | 'obs') {
-    if (!connected.value || !topic.value || isPublishing || performance.now() - lastSendTime < 50) return
+    if (!connected.value || !topic.value) return
+    const now = performance.now()
+    const isEdge = lastSentSpeaking !== speaking || (volume === 0 && !speaking && lastSentSpeaking === true)
+    if (!isEdge && (isPublishing || now - lastSendTime < 50)) return
     isPublishing = true
-    lastSendTime = performance.now()
+    lastSendTime = now
+    lastSentSpeaking = speaking
     try {
       await publishToTopic('audio', { volume, isSpeaking: speaking, source })
     } catch (cause) {
@@ -88,13 +103,24 @@ export function usePngtuberRuntime(
   }
 
   async function stopPublishing() {
+    lastSentSpeaking = false
     if (connected.value && controller && topic.value) {
       await publishToTopic('audio', { volume: 0, isSpeaking: false, source: 'client' })
     }
   }
 
-  function reconnect() {
+  async function reconnect() {
     silence()
+    error.value = ''
+    if (!topic.value) return
+    try {
+      const bus = getRealtimeBus()
+      await bus.ensureConnected()
+      await bus.unsubscribe(topic.value)
+      await bus.subscribe(topic.value)
+    } catch (cause) {
+      error.value = cause instanceof Error ? cause.message : String(cause)
+    }
   }
 
   onScopeDispose(() => {

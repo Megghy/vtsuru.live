@@ -802,7 +802,7 @@ function formatFileSize(bytes: number) {
 
               <FormField
                 label="私有附件文件"
-                extra="仅对已兑换该虚拟商品的用户签发 15 分钟临期签名下载链接，未兑换用户无法获取"
+                extra="支持图片、音视频、文档及 zip/7z/rar 压缩包，其他格式请打包为压缩包后上传；仅对已兑换用户签发 15 分钟临期下载链接"
               >
                 <div class="space-y-2">
                   <div class="flex items-center gap-2">

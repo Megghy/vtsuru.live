@@ -7,7 +7,15 @@ vi.mock('@/api/account', () => ({ useAccount: () => ref({ id: 1, token: 'test' }
 vi.mock('@/api/obs-store', () => ({
   getObsSyncState: async () => ({ hash: 'one', data: JSON.stringify({ inputMode: 'client' }) }),
 }))
-vi.mock('@/shared/config', () => ({ isTauri: () => false }))
+vi.mock('@/shared/config', () => ({ isTauri: () => false, getCurrentAPIUrl: () => 'https://api.example/' }))
+vi.mock('@/shared/realtime', () => ({
+  getRealtimeBus: () => ({ publish: vi.fn().mockResolvedValue(undefined) }),
+  useRealtimeTopic: () => ({
+    on: vi.fn(() => () => {}),
+    publish: vi.fn().mockResolvedValue(undefined),
+    status: ref({ connected: true, connecting: false, error: '' }),
+  }),
+}))
 vi.mock('../useOBSStore', () => ({ useOBSStore: () => ({}) }))
 vi.mock('@/shared/pngtuber/usePngtuberRuntime', () => ({
   usePngtuberRuntime: () => ({
