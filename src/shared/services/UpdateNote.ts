@@ -11,21 +11,71 @@ const NoteImage = (props: { src: string; width?: number; alt?: string }) =>
     imageClass: 'w-full h-auto object-contain',
     style: props.width ? { maxWidth: `${props.width}px` } : undefined,
   })
-const NoteButton = (props: any, context: any) =>
-  h(
-    'button',
+const NoteButton = (props: any, context: any) => {
+  const { tag, text: _text, type: _type, ...domProps } = props ?? {}
+  const isAnchor = tag === 'a' || Boolean(domProps.href)
+  return h(
+    isAnchor ? 'a' : 'button',
     {
-      ...props,
+      ...domProps,
+      ...(isAnchor && domProps.target === '_blank' ? { rel: 'noopener noreferrer' } : {}),
       class:
-        'inline-flex items-center justify-center px-2 py-1 text-xs rounded border border-border bg-background hover:bg-muted text-foreground transition-colors cursor-pointer',
+        'inline-flex items-center justify-center px-2 py-1 text-xs rounded border border-border bg-background hover:bg-muted text-foreground transition-colors cursor-pointer no-underline',
     },
     context?.slots?.default?.() ?? context?.default?.() ?? [],
   )
+}
 
 import UpdateNoteContainer from '@/apps/web/components/UpdateNoteContainer.vue'
 import { usePersistedStorage } from '@/shared/storage/persist'
 
 export const updateNotes: updateNoteType[] = [
+  {
+    ver: 13,
+    date: '2026.11.21',
+    items: [
+      {
+        type: 'new',
+        title: 'OBS 场景编辑器上线',
+        content: [
+          ['新增「OBS 场景编辑器」，可在网页画布中自由编排多个直播场景与全局常驻层，发布后通过单个 OBS 浏览器源即可实时切换画面'],
+          ['内置站内直播组件（弹幕机、提问箱、点歌、点播、排队、抽奖、投票、日程等）、OBS 小挂件（时钟、计时器、字幕、转盘、手柄/键显等）以及图片、文本、走马灯、装饰框等图层，支持站内组件配置复用或独立保存'],
+          ['支持画布拖拽缩放旋转、圆角与异形遮罩、框选多选、图层分组（支持嵌套、等比联动缩放与裁切超出）、右键选层及 Alt+点击 穿透选择'],
+          ['支持与本地客户端及 OBS WebSocket 双向联动，可一键写入 OBS 浏览器源并跟随场景自动切换'],
+          [
+            '入口：',
+            () =>
+              h(
+                NoteButton,
+                {
+                  text: true,
+                  tag: 'a',
+                  href: '/manage/obs-scene-editor',
+                  target: '_blank',
+                  type: 'info',
+                },
+                () => 'OBS 场景编辑器',
+              ),
+          ],
+        ],
+      },
+      {
+        type: 'optimize',
+        title: '字体库与组件字体',
+        content: [['重构字体选择器并补全完整字体库，支持为更多 OBS 组件自定义字体']],
+      },
+      {
+        type: 'optimize',
+        title: '图片加载与界面排版',
+        content: [['优化图片按需压缩加载与部分管理台界面排版']],
+      },
+      {
+        type: 'fix',
+        title: 'OBS 组件显示修复',
+        content: [['修复部分 OBS 组件主题切换不生效及透明/极简样式排版异常的问题']],
+      },
+    ],
+  },
   {
     ver: 12,
     date: '2026.8.4',
