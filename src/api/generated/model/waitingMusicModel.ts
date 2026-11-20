@@ -11,5 +11,5 @@ import type { ResponseSongModel } from './responseSongModel'
 export interface WaitingMusicModel {
   from: DanmakuUserInfo
   music: ResponseSongModel
-  isPinned?: boolean
+  isPinned: boolean
 }

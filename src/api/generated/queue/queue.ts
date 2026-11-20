@@ -269,32 +269,6 @@ export const postApiQueueJoinFromWeb = async (
   })
 }
 
-export const getPostApiQueuePriorityFromWebUrl = (params?: PostApiQueuePriorityFromWebParams) => {
-  const normalizedParams = new URLSearchParams()
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  })
-
-  const stringifiedParams = normalizedParams.toString()
-
-  return stringifiedParams.length > 0
-    ? `/api/queue/priority-from-web?${stringifiedParams}`
-    : `/api/queue/priority-from-web`
-}
-
-export const postApiQueuePriorityFromWeb = async (
-  params?: PostApiQueuePriorityFromWebParams,
-  options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfResponseQueueModel> => {
-  return vtsuruMutator<ResponseResultOfResponseQueueModel>(getPostApiQueuePriorityFromWebUrl(params), {
-    ...options,
-    method: 'POST',
-  })
-}
-
 export const getPostApiQueuePinUrl = () => {
   return `/api/queue/pin`
 }
@@ -322,6 +296,32 @@ export const postApiQueuePin = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(toggleQueuePinModel),
+  })
+}
+
+export const getPostApiQueuePriorityFromWebUrl = (params?: PostApiQueuePriorityFromWebParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/queue/priority-from-web?${stringifiedParams}`
+    : `/api/queue/priority-from-web`
+}
+
+export const postApiQueuePriorityFromWeb = async (
+  params?: PostApiQueuePriorityFromWebParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseQueueModel> => {
+  return vtsuruMutator<ResponseResultOfResponseQueueModel>(getPostApiQueuePriorityFromWebUrl(params), {
+    ...options,
+    method: 'POST',
   })
 }
 

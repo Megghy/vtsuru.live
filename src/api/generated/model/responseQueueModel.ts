@@ -21,7 +21,7 @@ export interface ResponseQueueModel {
   priorityLevel: number
   /** @nullable */
   sortOrder?: number | null
-  isPinned?: boolean
+  isPinned: boolean
   /** @nullable */
   mysteryBoxName?: string | null
   /** @nullable */

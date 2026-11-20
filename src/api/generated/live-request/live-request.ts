@@ -394,32 +394,6 @@ export const getApiLiveRequestGet = async (
   })
 }
 
-export const getPostApiLiveRequestPriorityFromWebUrl = (params?: PostApiLiveRequestPriorityFromWebParams) => {
-  const normalizedParams = new URLSearchParams()
-
-  Object.entries(params || {}).forEach(([key, value]) => {
-    if (value !== undefined) {
-      normalizedParams.append(key, value === null ? 'null' : String(value))
-    }
-  })
-
-  const stringifiedParams = normalizedParams.toString()
-
-  return stringifiedParams.length > 0
-    ? `/api/live-request/priority-from-web?${stringifiedParams}`
-    : `/api/live-request/priority-from-web`
-}
-
-export const postApiLiveRequestPriorityFromWeb = async (
-  params?: PostApiLiveRequestPriorityFromWebParams,
-  options?: Parameters<typeof vtsuruMutator>[1],
-): Promise<ResponseResultOfResponseSongRequestModel> => {
-  return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestPriorityFromWebUrl(params), {
-    ...options,
-    method: 'POST',
-  })
-}
-
 export const getPostApiLiveRequestPinUrl = () => {
   return `/api/live-request/pin`
 }
@@ -447,6 +421,32 @@ export const postApiLiveRequestPin = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
     body: JSON.stringify(toggleLiveRequestPinModel),
+  })
+}
+
+export const getPostApiLiveRequestPriorityFromWebUrl = (params?: PostApiLiveRequestPriorityFromWebParams) => {
+  const normalizedParams = new URLSearchParams()
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  })
+
+  const stringifiedParams = normalizedParams.toString()
+
+  return stringifiedParams.length > 0
+    ? `/api/live-request/priority-from-web?${stringifiedParams}`
+    : `/api/live-request/priority-from-web`
+}
+
+export const postApiLiveRequestPriorityFromWeb = async (
+  params?: PostApiLiveRequestPriorityFromWebParams,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfResponseSongRequestModel> => {
+  return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestPriorityFromWebUrl(params), {
+    ...options,
+    method: 'POST',
   })
 }
 
