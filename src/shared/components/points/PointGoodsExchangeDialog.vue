@@ -300,10 +300,16 @@ const requestClose = () => {
               {{ goods.name }}
             </DialogTitle>
             <div class="flex items-center gap-1.5 flex-wrap text-xs">
-              <Badge variant="default" size="xs">
+              <Badge
+                variant="default"
+                size="xs"
+              >
                 {{ priceText }} 积分
               </Badge>
-              <Badge variant="secondary" size="xs">
+              <Badge
+                variant="secondary"
+                size="xs"
+              >
                 {{ typeLabel }}
               </Badge>
               <span class="text-muted-foreground text-[11px]">{{ stockText }}</span>
@@ -321,17 +327,33 @@ const requestClose = () => {
 
       <ScrollArea class="flex-1 min-h-0 pr-4">
         <div class="space-y-3.5 text-xs">
-          <Alert size="sm" variant="warning" v-if="rebuyWarning">
+          <Alert
+            size="sm"
+            variant="warning"
+            v-if="rebuyWarning"
+          >
             <AlertDescription>{{ rebuyWarning }}</AlertDescription>
           </Alert>
 
+          <div
+            v-if="goods.description?.trim()"
+            class="p-2.5 rounded-lg bg-muted/30 border border-border/60 text-foreground/90 whitespace-pre-wrap break-words leading-relaxed"
+          >
+            {{ goods.description.trim() }}
+          </div>
+
           <template v-if="isService">
-            <Alert size="sm" v-if="serviceConfig?.rules" class="bg-muted/40 border-border/80">
-              <AlertDescription class="whitespace-pre-wrap leading-relaxed">{{
-                serviceConfig.rules
-              }}</AlertDescription>
+            <Alert
+              size="sm"
+              v-if="serviceConfig?.rules"
+              class="bg-muted/40 border-border/80"
+            >
+              <AlertDescription class="whitespace-pre-wrap leading-relaxed">{{ serviceConfig.rules }}</AlertDescription>
             </Alert>
-            <Alert size="sm" class="bg-muted/30 border-border/60">
+            <Alert
+              size="sm"
+              class="bg-muted/30 border-border/60"
+            >
               <AlertDescription class="text-muted-foreground">
                 提交后进入待接单状态<span v-if="serviceConfig?.estimatedDays"
                   >，预计 {{ serviceConfig.estimatedDays }} 天内完成</span
@@ -360,7 +382,11 @@ const requestClose = () => {
                   <SelectValue :placeholder="`请选择${field.label}`" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem v-for="opt in field.options" :key="opt" :value="opt">
+                  <SelectItem
+                    v-for="opt in field.options"
+                    :key="opt"
+                    :value="opt"
+                  >
                     {{ opt }}
                   </SelectItem>
                 </SelectContent>
@@ -476,7 +502,11 @@ const requestClose = () => {
                   <div class="min-w-0 flex flex-col gap-0.5">
                     <div class="flex items-center gap-1.5">
                       <strong class="font-medium text-foreground text-xs truncate">{{ sub.name }}</strong>
-                      <Badge variant="secondary" size="xs" class="font-mono">
+                      <Badge
+                        variant="secondary"
+                        size="xs"
+                        class="font-mono"
+                      >
                         {{ sub.price }}分
                       </Badge>
                     </div>
@@ -485,6 +515,13 @@ const requestClose = () => {
                     </span>
                   </div>
                 </div>
+
+                <p
+                  v-if="sub.description?.trim()"
+                  class="text-[11px] text-muted-foreground whitespace-pre-wrap break-words leading-relaxed m-0"
+                >
+                  {{ sub.description.trim() }}
+                </p>
 
                 <div
                   v-if="isSubItemChecked(sub.id) && !isService"

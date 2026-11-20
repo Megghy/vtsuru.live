@@ -125,6 +125,8 @@ export default defineConfig({
     'bg-destructive',
     'bg-accent',
     'bg-brand',
+    'bg-control',
+    'bg-inset',
     'h-control-xs',
     'h-control-sm',
     'h-control-default',

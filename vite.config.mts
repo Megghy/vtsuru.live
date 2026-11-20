@@ -11,7 +11,6 @@ import checker from 'vite-plugin-checker'
 import svgLoader from 'vite-svg-loader'
 
 import { customHtmlSandboxLibsPlugin } from './customHtmlSandboxLibsPlugin.ts'
-import unoConfig from './uno.config.ts'
 
 // 自定义SVGO插件，删除所有名称以sodipodi:和inkscape:开头的元素
 const removeSodipodiInkscape = {
@@ -46,7 +45,7 @@ export default defineConfig({
       // 仅在 build 时启用 overlay，避免开发时过多干扰
       overlay: { initialIsOpen: false },
     }),
-    UnoCSS(unoConfig),
+    UnoCSS(),
     {
       name: 'drop-ort-wasm',
       generateBundle(_, bundle) {

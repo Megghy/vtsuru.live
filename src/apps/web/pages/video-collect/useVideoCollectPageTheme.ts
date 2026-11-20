@@ -10,10 +10,12 @@ import { usePublicUserCustomCss } from '@/apps/user-page/runtime/customCss'
 import { resolvePageThemeIsDark } from '@/apps/user-page/theme'
 import { getUserPageAppearanceOverrides } from '@/apps/user-page/themeConfig'
 import type { UserPagesSettings } from '@/apps/user-page/types'
+import { buildSiteTokens } from '@/shared/config/theme/tokens'
 import { isDarkMode } from '@/shared/utils'
 
 export function useVideoCollectPageTheme(table: Ref<ResponseVideoCollectModel | null | undefined>) {
   const ownerSettings = ref<UserPagesSettings | null>(null)
+  const isThemeLoading = ref(false)
   let requestId = 0
 
   watch(
@@ -21,13 +23,19 @@ export function useVideoCollectPageTheme(table: Ref<ResponseVideoCollectModel | 
     async (ownerId) => {
       const currentRequest = ++requestId
       ownerSettings.value = null
-      if (!ownerId) return
+      if (!ownerId) {
+        isThemeLoading.value = false
+        return
+      }
 
+      isThemeLoading.value = true
       try {
         const settings = await fetchUserPagesSettingsByUserId(ownerId)
         if (currentRequest === requestId) ownerSettings.value = settings
       } catch (error) {
         console.error('加载视频征集所有者主题失败', error)
+      } finally {
+        if (currentRequest === requestId) isThemeLoading.value = false
       }
     },
     { immediate: true },
@@ -43,10 +51,12 @@ export function useVideoCollectPageTheme(table: Ref<ResponseVideoCollectModel | 
   })
   const effectiveIsDark = computed(() => resolvePageThemeIsDark(appearanceTheme.value?.pageThemeMode, isDarkMode.value))
   const pageBackground = computed(() => resolvePageBackground(ownerSettings.value?.background))
+  const showDefaultBackdrop = computed(() => !isThemeLoading.value && !pageBackground.value)
   const canvasColor = usePageCanvasColor(pageBackground, effectiveIsDark)
-  const pageThemeVars = computed(() =>
-    getUserPageThemeCssVars(appearanceTheme.value, effectiveIsDark.value, canvasColor.value),
-  )
+  const pageThemeVars = computed(() => ({
+    ...getUserPageThemeCssVars(appearanceTheme.value, effectiveIsDark.value, canvasColor.value),
+    '--vtsuru-page-canvas': buildSiteTokens(effectiveIsDark.value).canvas,
+  }))
   const pageBackgroundVars = computed(() =>
     pageBackground.value ? getPageBackgroundCssVars(pageBackground.value, effectiveIsDark.value) : {},
   )
@@ -64,5 +74,6 @@ export function useVideoCollectPageTheme(table: Ref<ResponseVideoCollectModel | 
     pageBackgroundClass,
     pageBackgroundVars,
     pageThemeVars,
+    showDefaultBackdrop,
   }
 }

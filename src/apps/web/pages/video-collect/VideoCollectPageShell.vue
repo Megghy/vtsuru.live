@@ -2,6 +2,7 @@
 import { computed, toRef } from 'vue'
 
 import type { ResponseVideoCollectModel } from '@/api/generated/model'
+import HomeEmojiBackdrop from '@/apps/web/components/HomeEmojiBackdrop.vue'
 import { provideThemeScope } from '@/shared/config/theme/scope'
 
 import { useVideoCollectPageTheme } from './useVideoCollectPageTheme'
@@ -10,9 +11,8 @@ const props = defineProps<{
   table?: ResponseVideoCollectModel | null
 }>()
 
-const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars } = useVideoCollectPageTheme(
-  toRef(props, 'table'),
-)
+const { effectiveIsDark, pageBackgroundClass, pageBackgroundVars, pageThemeVars, showDefaultBackdrop } =
+  useVideoCollectPageTheme(toRef(props, 'table'))
 
 const mergedThemeVars = computed(() => ({
   ...pageThemeVars.value,
@@ -27,7 +27,10 @@ provideThemeScope(mergedThemeVars)
     :class="pageBackgroundClass"
     :style="mergedThemeVars"
   >
-    <slot :effective-is-dark="effectiveIsDark" />
+    <HomeEmojiBackdrop v-if="showDefaultBackdrop" />
+    <div class="relative z-1 min-w-0">
+      <slot :effective-is-dark="effectiveIsDark" />
+    </div>
   </div>
 </template>
 
@@ -41,7 +44,7 @@ provideThemeScope(mergedThemeVars)
   overflow-y: auto;
   isolation: isolate;
   color: var(--foreground);
-  background: var(--background);
+  background: var(--vtsuru-page-canvas, var(--background));
   font-family: var(--vtsuru-page-font-family);
 }
 
