@@ -1,40 +1,22 @@
 <script setup lang="ts">
-import Board24Regular from '@vicons/fluent/es/Board24Regular'
-import BookCoins20Filled from '@vicons/fluent/es/BookCoins20Filled'
-import Bot24Regular from '@vicons/fluent/es/Bot24Regular'
-import CalendarClock24Filled from '@vicons/fluent/es/CalendarClock24Filled'
-import History24Regular from '@vicons/fluent/es/History24Regular'
 import Info24Filled from '@vicons/fluent/es/Info24Filled'
-import Live24Filled from '@vicons/fluent/es/Live24Filled'
-import Lottery24Filled from '@vicons/fluent/es/Lottery24Filled'
-import PeopleQueue24Filled from '@vicons/fluent/es/PeopleQueue24Filled'
 import PersonFeedback24Filled from '@vicons/fluent/es/PersonFeedback24Filled'
-import Receipt24Regular from '@vicons/fluent/es/Receipt24Regular'
-import Settings24Regular from '@vicons/fluent/es/Settings24Regular'
-import StoreMicrosoft24Regular from '@vicons/fluent/es/StoreMicrosoft24Regular'
-import TabletSpeaker24Filled from '@vicons/fluent/es/TabletSpeaker24Filled'
-import VehicleShip24Filled from '@vicons/fluent/es/VehicleShip24Filled'
-import VideoAdd20Filled from '@vicons/fluent/es/VideoAdd20Filled'
-import AnalyticsSharp from '@vicons/ionicons5/es/AnalyticsSharp'
 import Bookmark from '@vicons/ionicons5/es/Bookmark'
 import BookmarkOutline from '@vicons/ionicons5/es/BookmarkOutline'
-import Chatbox from '@vicons/ionicons5/es/Chatbox'
-import ChatbubbleEllipsesOutline from '@vicons/ionicons5/es/ChatbubbleEllipsesOutline'
 import ColorPaletteOutline from '@vicons/ionicons5/es/ColorPaletteOutline'
-import DocumentTextOutline from '@vicons/ionicons5/es/DocumentTextOutline'
-import Eye from '@vicons/ionicons5/es/Eye'
 import GridOutline from '@vicons/ionicons5/es/GridOutline'
 import ImageOutline from '@vicons/ionicons5/es/ImageOutline'
-import MusicalNote from '@vicons/ionicons5/es/MusicalNote'
-import MusicalNotesOutline from '@vicons/ionicons5/es/MusicalNotesOutline'
-import PlayCircleOutline from '@vicons/ionicons5/es/PlayCircleOutline'
-import StatsChartOutline from '@vicons/ionicons5/es/StatsChartOutline'
 import { createReusableTemplate } from '@vueuse/core'
-import { computed, watchEffect } from 'vue'
+import { computed, toRef, watch, watchEffect } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import type { ResponseAccountInfo } from '@/api/generated/model'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
+import {
+  type ManageNavGroupKey,
+  type ManageNavItem,
+  useManageNavigation,
+} from '@/apps/manage/composables/useManageNavigation'
 import { useManageShell } from '@/apps/manage/composables/useManageShell'
 import { useManageWorkspace } from '@/apps/manage/composables/useManageWorkspace'
 import { usePersistedStorage } from '@/shared/storage/persist'
@@ -55,19 +37,6 @@ const props = defineProps<{
   accountInfo: ResponseAccountInfo
 }>()
 
-type ManageNavGroupId = 'favorites' | 'user' | 'common' | 'data' | 'tools' | 'danmaku'
-type ManageNavGroupKey = `group-${ManageNavGroupId}`
-
-type ManageNavItem = {
-  key: string
-  label: string
-  icon: any
-  to?: { name: string }
-  disabled?: boolean
-  disabledReason?: string
-  group: Exclude<ManageNavGroupId, 'favorites'>
-}
-
 const [DefineSiderBody, ReuseSiderBody] = createReusableTemplate()
 
 const message = useMessage()
@@ -76,6 +45,16 @@ const router = useRouter()
 const biliAuth = useBiliAuth()
 const { workspace } = useManageWorkspace()
 const { isMobileSider, siderCollapsed, mobileSiderOpen } = useManageShell()
+const {
+  isBiliVerified,
+  userItems,
+  streamerItems,
+  streamerItemMap,
+  favoriteMenuItems,
+  isFavorite,
+  toggleFavorite,
+  recordRecent,
+} = useManageNavigation(toRef(props, 'accountInfo'))
 
 const collapsed = computed(() => !isMobileSider.value && siderCollapsed.value)
 const siderWidth = 180
@@ -89,18 +68,6 @@ const expandedGroups = usePersistedStorage<string[]>('Settings.ManageSiderExpand
   'group-danmaku',
 ])
 
-const favoriteMenuItems = usePersistedStorage<string[]>('Settings.FavoriteMenuItems', [])
-const isFavorite = (key: string) => (favoriteMenuItems.value ?? []).includes(key)
-function toggleFavorite(key: string) {
-  const list = favoriteMenuItems.value ?? []
-  const idx = list.indexOf(key)
-  if (idx === -1) list.unshift(key)
-  else list.splice(idx, 1)
-  favoriteMenuItems.value = [...list]
-}
-
-const isBiliVerified = computed(() => !!props.accountInfo?.isBiliVerified)
-const needsEmailVerified = computed(() => props.accountInfo?.isEmailVerified === false)
 const biliAccountOptions = computed(() => [
   ...biliAuth.biliTokens.map((account) => ({
     key: String(account.id),
@@ -124,240 +91,20 @@ async function switchBiliAccount(key: string) {
 
 const activeKey = computed(() => (route.meta.parent as string) ?? route.name?.toString() ?? '')
 
+watch(
+  [activeKey, workspace],
+  ([key, currentWorkspace]) => {
+    if (currentWorkspace !== 'streamer') return
+    if (key && streamerItemMap.value.has(key)) {
+      recordRecent(key)
+    }
+  },
+  { immediate: true },
+)
+
 const baseItems = computed<ManageNavItem[]>(() => {
-  if (workspace.value === 'user') {
-    return [
-      {
-        key: 'bili-user-points',
-        label: '我的积分',
-        icon: BookCoins20Filled,
-        to: { name: 'bili-user-points' },
-        group: 'user',
-      },
-      {
-        key: 'bili-user-orders',
-        label: '我的订单',
-        icon: Receipt24Regular,
-        to: { name: 'bili-user-orders' },
-        group: 'user',
-      },
-      {
-        key: 'bili-user-history',
-        label: '积分记录',
-        icon: History24Regular,
-        to: { name: 'bili-user-history' },
-        group: 'user',
-      },
-      {
-        key: 'bili-user-settings',
-        label: '账户设置',
-        icon: Settings24Regular,
-        to: { name: 'bili-user-settings' },
-        group: 'user',
-      },
-    ]
-  }
-  const emailDisabled = needsEmailVerified.value
-  const biliDisabled = !isBiliVerified.value
-  const biliReason = biliDisabled ? '需要完成 Bilibili 认证后才能使用' : undefined
-
-  return [
-    {
-      key: 'manage-history',
-      label: '历史',
-      icon: AnalyticsSharp,
-      to: { name: 'manage-history' },
-      disabled: emailDisabled,
-      group: 'common',
-    },
-    {
-      key: 'manage-live',
-      label: '直播记录',
-      icon: Live24Filled,
-      to: { name: 'manage-live' },
-      disabled: emailDisabled,
-      group: 'common',
-    },
-    {
-      key: 'manage-analyze',
-      label: '直播数据',
-      icon: Eye,
-      to: { name: 'manage-analyze' },
-      disabled: emailDisabled,
-      group: 'common',
-    },
-    {
-      key: 'org-index',
-      label: '组织',
-      icon: PeopleQueue24Filled,
-      to: { name: 'org-index' },
-      disabled: emailDisabled,
-      group: 'common',
-    },
-
-    {
-      key: 'manage-event',
-      label: '舰长和SC',
-      icon: VehicleShip24Filled,
-      to: { name: 'manage-event' },
-      disabled: emailDisabled,
-      group: 'data',
-    },
-    {
-      key: 'manage-point',
-      label: '积分和礼物',
-      icon: BookCoins20Filled,
-      to: { name: 'manage-point' },
-      disabled: emailDisabled,
-      group: 'data',
-    },
-
-    {
-      key: 'manage-schedule',
-      label: '日程',
-      icon: CalendarClock24Filled,
-      to: { name: 'manage-schedule' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-songList',
-      label: '歌单',
-      icon: MusicalNote,
-      to: { name: 'manage-songList' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-questionBox',
-      label: '棉花糖 (提问箱)',
-      icon: Chatbox,
-      to: { name: 'manage-questionBox' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-videoCollect',
-      label: '视频征集',
-      icon: VideoAdd20Filled,
-      to: { name: 'manage-videoCollect' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-lottery',
-      label: '动态抽奖',
-      icon: Lottery24Filled,
-      to: { name: 'manage-lottery' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-tools-dashboard',
-      label: '工具箱',
-      icon: GridOutline,
-      to: { name: 'manage-tools-dashboard' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-obsStore',
-      label: 'OBS 组件库',
-      icon: StoreMicrosoft24Regular,
-      to: { name: 'manage-obsStore' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-obsSceneEditor',
-      label: 'OBS 场景编辑器',
-      icon: Board24Regular,
-      to: { name: 'manage-obsSceneEditor' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-    {
-      key: 'manage-qqBot',
-      label: 'QQ 群机器人',
-      icon: Bot24Regular,
-      to: { name: 'manage-qqBot' },
-      disabled: emailDisabled,
-      group: 'tools',
-    },
-
-    {
-      key: 'live-dashboard',
-      label: '中控台',
-      icon: Board24Regular,
-      to: { name: 'live-dashboard' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-    {
-      key: 'manage-danmuji',
-      label: '弹幕机',
-      icon: ChatbubbleEllipsesOutline,
-      to: { name: 'manage-danmuji' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-    {
-      key: 'manage-liveRequest',
-      label: '点播',
-      icon: PlayCircleOutline,
-      to: { name: 'manage-liveRequest' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-    {
-      key: 'manage-liveLottery',
-      label: '弹幕抽奖',
-      icon: Lottery24Filled,
-      to: { name: 'manage-liveLottery' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-    {
-      key: 'manage-musicRequest',
-      label: '点歌机',
-      icon: MusicalNotesOutline,
-      to: { name: 'manage-musicRequest' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-    {
-      key: 'manage-liveQueue',
-      label: '排队',
-      icon: PeopleQueue24Filled,
-      to: { name: 'manage-liveQueue' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-    {
-      key: 'manage-speech',
-      label: '读弹幕',
-      icon: TabletSpeaker24Filled,
-      to: { name: 'manage-speech' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-    {
-      key: 'manage-danmakuVote',
-      label: '弹幕投票',
-      icon: StatsChartOutline,
-      to: { name: 'manage-danmakuVote' },
-      disabled: biliDisabled,
-      disabledReason: biliReason,
-      group: 'danmaku',
-    },
-  ]
+  if (workspace.value === 'user') return userItems
+  return streamerItems.value.filter((item) => !item.hideInSiderList)
 })
 
 type ManageNavGroup = {
@@ -436,6 +183,9 @@ function onClickNavItem(ev: MouseEvent, item: ManageNavItem) {
     ev.stopPropagation()
     return
   }
+  if (workspace.value === 'streamer') {
+    recordRecent(item.key)
+  }
   mobileSiderOpen.value = false
 }
 
@@ -449,6 +199,9 @@ function onClickDisabledItem(item: ManageNavItem) {
 }
 
 async function go(name: string, query?: Record<string, string>) {
+  if (workspace.value === 'streamer' && streamerItemMap.value.has(name)) {
+    recordRecent(name)
+  }
   mobileSiderOpen.value = false
   await router.push({ name, query })
 }

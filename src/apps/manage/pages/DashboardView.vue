@@ -21,6 +21,7 @@ import {
 } from '@/api/generated/account/account'
 import { BiliAuthCodeStatusType } from '@/api/generated/model'
 import AccountSecurityPanel from '@/apps/account/components/AccountSecurityPanel.vue'
+import DashboardQuickAccess from '@/apps/manage/components/dashboard/DashboardQuickAccess.vue'
 import EventFetcherStatusCard from '@/apps/manage/components/event-fetcher/EventFetcherStatusCard.vue'
 import WorkspaceSwitch from '@/apps/manage/components/layout/WorkspaceSwitch.vue'
 import SettingPaymentView from '@/apps/manage/pages/settings/SettingPaymentView.vue'
@@ -260,52 +261,6 @@ onUnmounted(() => {
       </div>
     </Alert>
 
-    <!-- 个人主页装扮常驻入口横幅 -->
-    <div
-      v-if="accountInfo"
-      class="rounded-lg border border-border bg-card p-3.5 shadow-sm transition-colors hover:border-brand/40 flex-between gap-3 flex-wrap"
-    >
-      <div class="flex items-center gap-3">
-        <div class="h-9 w-9 rounded-md bg-brand/10 text-brand flex-center shrink-0">
-          <component
-            :is="ColorPaletteOutline"
-            class="h-5 w-5"
-          />
-        </div>
-        <div class="flex flex-col gap-0.5">
-          <div class="text-sm font-semibold text-foreground">个性化你的主播主页</div>
-          <div class="text-xs text-muted-foreground">
-            为展示页定制全站壁纸、主题色及日程/歌单/提问箱等模块，打造专属主播风格。
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-2">
-        <Button
-          size="xs"
-          variant="outline"
-          @click="goToDecorate('theme')"
-        >
-          <component
-            :is="ImageOutline"
-            class="h-3.5 w-3.5 mr-1"
-          />
-          设置背景与主题
-        </Button>
-        <Button
-          size="xs"
-          variant="brand"
-          @click="goToDecorate()"
-        >
-          <component
-            :is="ColorPaletteOutline"
-            class="h-3.5 w-3.5 mr-1"
-          />
-          主页装修
-        </Button>
-      </div>
-    </div>
-
     <!-- 顶层 Tabs -->
     <Tabs
       v-if="accountInfo"
@@ -333,6 +288,12 @@ onUnmounted(() => {
         value="info"
         class="mt-3 space-y-3"
       >
+        <!-- 快捷入口（收藏优先，自动按最近访问与常用推荐补齐，含主页装修） -->
+        <DashboardQuickAccess
+          :account-info="accountInfo"
+          @require-bili-auth="bindBiliCodeModalVisible = true"
+        />
+
         <Card>
           <CardContent class="p-4 space-y-4">
             <!-- 头部概览 -->
