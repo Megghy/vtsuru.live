@@ -60,6 +60,8 @@ export interface QueueSortAccessor<T> {
   priorityLevel?: (item: T) => number | null | undefined
   /** 手动排序权重（升序，存在非空值的记录优先于规则排序） */
   sortOrder?: (item: T) => number | null | undefined
+  /** 独立置顶标记（置顶项恒排在未置顶项之前） */
+  isPinned?: (item: T) => boolean | null | undefined
 }
 
 function compareByQueueRule<T>(
@@ -96,7 +98,7 @@ function compareByQueueRule<T>(
 
 /**
  * 按队列排序策略对列表排序, 队列与点播共用。
- * 手动调序 (sortOrder) 优先级最高且不受倒序影响；其后是插队优先级（始终高优先级在前）；同级内再按规则与倒序设置比较。
+ * 置顶 (isPinned) 最高且不受倒序影响；其次是手动调序 (sortOrder)；其后是插队优先级（始终高优先级在前）；同级内再按规则与倒序设置比较。
  * 舰长等级原始值越小代表越高 (1 总督 > 2 提督 > 3 舰长 > 0 普通), 排序时把 0/空映射为 4 置后。
  */
 export function sortByQueueType<T>(
@@ -106,6 +108,10 @@ export function sortByQueueType<T>(
   accessor: QueueSortAccessor<T>,
 ): T[] {
   return [...items].toSorted((a, b) => {
+    const pinnedA = Boolean(accessor.isPinned?.(a))
+    const pinnedB = Boolean(accessor.isPinned?.(b))
+    if (pinnedA !== pinnedB) return pinnedA ? -1 : 1
+
     const orderA = accessor.sortOrder?.(a)
     const orderB = accessor.sortOrder?.(b)
     const hasA = orderA !== null && orderA !== undefined

@@ -4,6 +4,7 @@ import ArrowUp24Regular from '@vicons/fluent/es/ArrowUp24Regular'
 import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
 import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
 import Mic24Filled from '@vicons/fluent/es/Mic24Filled'
+import Pin24Filled from '@vicons/fluent/es/Pin24Filled'
 import Pin24Regular from '@vicons/fluent/es/Pin24Regular'
 import Play24Filled from '@vicons/fluent/es/Play24Filled'
 import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
@@ -154,6 +155,13 @@ function formatTimeAbsolute(time: number | string | Date) {
 
     <template #context>
       <Badge
+        v-if="song.isPinned"
+        variant="brand"
+        size="xs"
+      >
+        置顶
+      </Badge>
+      <Badge
         v-if="song.from === SongRequestFrom.Manual"
         variant="secondary"
         size="xs"
@@ -252,15 +260,23 @@ function formatTimeAbsolute(time: number | string | Date) {
             <TooltipTrigger as-child>
               <Button
                 size="icon-xs"
-                variant="ghost"
-                :disabled="!canMoveUp || isItemBusy"
-                aria-label="置顶"
+                :variant="song.isPinned ? 'secondary' : 'ghost'"
+                :class="song.isPinned ? 'text-primary' : undefined"
+                :disabled="isItemBusy"
+                :aria-label="song.isPinned ? '取消置顶' : '置顶'"
                 @click="songRequest.pinSong(song)"
               >
-                <Pin24Regular class="size-3.5" />
+                <Pin24Filled
+                  v-if="song.isPinned"
+                  class="size-3.5"
+                />
+                <Pin24Regular
+                  v-else
+                  class="size-3.5"
+                />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>置顶到待唱第一位</TooltipContent>
+            <TooltipContent>{{ song.isPinned ? '取消置顶' : '置顶到待唱第一位' }}</TooltipContent>
           </Tooltip>
 
           <Tooltip>

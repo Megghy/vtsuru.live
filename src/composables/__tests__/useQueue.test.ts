@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   getAll: vi.fn(),
   getActive: vi.fn(),
   getStats: vi.fn(),
+  postPin: vi.fn(),
   postReorder: vi.fn(),
   postResetOrder: vi.fn(),
   postDelete: vi.fn(),
@@ -52,6 +53,7 @@ vi.mock('@/api/generated/queue/queue', () => ({
   postApiQueueBatchStatus: vi.fn(),
   postApiQueueDeactivate: vi.fn(),
   postApiQueueDelete: (ids: number[]) => mocks.postDelete(ids),
+  postApiQueuePin: (body: any) => mocks.postPin(body),
   postApiQueueReorder: (ids: number[]) => mocks.postReorder(ids),
   postApiQueueResetOrder: () => mocks.postResetOrder(),
   postApiQueueSetStatus: vi.fn(),
@@ -73,6 +75,7 @@ function createQueueItem(overrides: Partial<ResponseQueueModel> & { id: number }
     finishAt: 0,
     priorityLevel: 0,
     sortOrder: null,
+    isPinned: false,
     requestBy: '',
     user: {
       name: `观众${overrides.id}`,
@@ -147,6 +150,38 @@ describe('useQueue', () => {
     expect(store.originQueue.map((q) => q.id)).toEqual([5])
   })
 
+  it('pinQueue 支持独立置顶与取消置顶并回滚失败请求，且不锁定规则排序', async () => {
+    const store = useQueue()
+    store.originQueue = [
+      createQueueItem({ id: 1, status: QueueStatus.Progressing, createAt: 100 }),
+      createQueueItem({ id: 2, createAt: 200 }),
+      createQueueItem({ id: 3, createAt: 300 }),
+    ]
+
+    mocks.postPin.mockResolvedValueOnce({ code: 200, data: true })
+    await store.pinQueue(store.originQueue[2])
+    expect(mocks.postPin).toHaveBeenCalledWith({ id: 3, isPinned: true })
+    expect(store.unfilteredQueue.map((q) => q.id)).toEqual([1, 3, 2])
+    expect(store.hasCustomOrder).toBe(false)
+
+    // 未置顶首项不能跨过已置顶项上移
+    await store.moveQueue(store.originQueue[1], 'up')
+    expect(mocks.postReorder).not.toHaveBeenCalled()
+
+    // 取消置顶失败时回滚
+    mocks.postPin.mockResolvedValueOnce({ code: 500, message: 'err' })
+    const failedOk = await store.pinQueue(store.originQueue[2])
+    expect(failedOk).toBe(false)
+    expect(store.originQueue[2].isPinned).toBe(true)
+
+    // 取消置顶成功后自动恢复规则顺序
+    mocks.postPin.mockResolvedValueOnce({ code: 200, data: false })
+    const okUnpin = await store.pinQueue(store.originQueue[2])
+    expect(okUnpin).toBe(true)
+    expect(mocks.postPin).toHaveBeenLastCalledWith({ id: 3, isPinned: false })
+    expect(store.unfilteredQueue.map((q) => q.id)).toEqual([1, 2, 3])
+  })
+
   it('reorderWaitingQueue 将处理中条目放在末尾并在接口失败时回滚，saveSettings 失败也回滚设置', async () => {
     const store = useQueue()
     store.originQueue = [
@@ -156,7 +191,7 @@ describe('useQueue', () => {
     ]
 
     mocks.postReorder.mockResolvedValueOnce({ code: 200 })
-    await store.pinQueue(store.originQueue[2])
+    await store.moveQueue(store.originQueue[2], 'up')
     expect(mocks.postReorder).toHaveBeenCalledWith([3, 2, 1])
 
     mocks.postReorder.mockResolvedValueOnce({ code: 500, message: 'err' })

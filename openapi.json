@@ -5538,6 +5538,58 @@
         ]
       }
     },
+    "/api/live-request/pin": {
+      "post": {
+        "tags": [
+          "LiveRequest"
+        ],
+        "operationId": "postApiLiveRequestPin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleLiveRequestPinModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/live-request/priority-from-web": {
       "post": {
         "tags": [
@@ -13088,6 +13140,58 @@
             }
           }
         }
+      }
+    },
+    "/api/queue/pin": {
+      "post": {
+        "tags": [
+          "Queue"
+        ],
+        "operationId": "postApiQueuePin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleQueuePinModel"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleQueuePinModel"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ToggleQueuePinModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResponseResultOfBoolean"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/api/queue/priority-from-web": {
@@ -26093,6 +26197,7 @@
           "from",
           "pointRefunded",
           "priorityLevel",
+          "isPinned",
           "createAt",
           "requestBy"
         ],
@@ -26129,6 +26234,9 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "isPinned": {
+            "type": "boolean"
           },
           "mysteryBoxName": {
             "type": "string",
@@ -29774,6 +29882,7 @@
           "from",
           "pointRefunded",
           "priorityLevel",
+          "isPinned",
           "createAt"
         ],
         "type": "object",
@@ -29815,6 +29924,9 @@
             "type": "integer",
             "format": "int32",
             "nullable": true
+          },
+          "isPinned": {
+            "type": "boolean"
           },
           "user": {
             "$ref": "#/components/schemas/DanmakuUserInfo"
@@ -32496,6 +32608,40 @@
         },
         "additionalProperties": false
       },
+      "ToggleLiveRequestPinModel": {
+        "required": [
+          "id",
+          "isPinned"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isPinned": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ToggleQueuePinModel": {
+        "required": [
+          "id",
+          "isPinned"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "isPinned": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "TransferOrgOwnerModel": {
         "required": [
           "targetUserId"
@@ -33309,7 +33455,8 @@
       "WaitingMusicModel": {
         "required": [
           "from",
-          "music"
+          "music",
+          "isPinned"
         ],
         "type": "object",
         "properties": {
@@ -33318,6 +33465,9 @@
           },
           "music": {
             "$ref": "#/components/schemas/ResponseSongModel"
+          },
+          "isPinned": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false

@@ -12,6 +12,7 @@ interface MockQueueEntry {
   fansMedalLevel?: number
   priorityLevel?: number
   sortOrder?: number | null
+  isPinned?: boolean
 }
 
 const accessor = {
@@ -21,6 +22,7 @@ const accessor = {
   fansMedalLevel: (item: MockQueueEntry) => item.fansMedalLevel,
   priorityLevel: (item: MockQueueEntry) => item.priorityLevel,
   sortOrder: (item: MockQueueEntry) => item.sortOrder,
+  isPinned: (item: MockQueueEntry) => item.isPinned,
 }
 
 describe('sortByQueueType', () => {
@@ -80,6 +82,21 @@ describe('sortByQueueType', () => {
       'auto-late',
       'auto-early',
     ])
+  })
+
+  it('isPinned 置顶优先级高于 sortOrder 与插队等级，且取消置顶后自动回到原位置', () => {
+    const items: MockQueueEntry[] = [
+      { id: 'manual-0', createAt: 100, sortOrder: 0, isPinned: false },
+      { id: 'priority-5', createAt: 200, priorityLevel: 5, sortOrder: null, isPinned: false },
+      { id: 'normal-late-pinned', createAt: 300, priorityLevel: 0, sortOrder: null, isPinned: true },
+    ]
+
+    const pinnedSorted = sortByQueueType(items, QueueSortType.TimeFirst, true, accessor)
+    expect(pinnedSorted.map((i) => i.id)).toEqual(['normal-late-pinned', 'manual-0', 'priority-5'])
+
+    items[2].isPinned = false
+    const unpinnedSorted = sortByQueueType(items, QueueSortType.TimeFirst, false, accessor)
+    expect(unpinnedSorted.map((i) => i.id)).toEqual(['manual-0', 'priority-5', 'normal-late-pinned'])
   })
 })
 

@@ -91,8 +91,14 @@ const hasRefundableSelected = computed(() => {
   )
 })
 
-function waitingIndex(id: number) {
-  return waitingSongs.value.findIndex((s) => s.id === id)
+function canMoveWaitingUp(index: number) {
+  if (songRequest.activeFilterKeyword.trim() || index <= 0 || index >= waitingSongs.value.length) return false
+  return Boolean(waitingSongs.value[index].isPinned) === Boolean(waitingSongs.value[index - 1].isPinned)
+}
+
+function canMoveWaitingDown(index: number) {
+  if (songRequest.activeFilterKeyword.trim() || index < 0 || index >= waitingSongs.value.length - 1) return false
+  return Boolean(waitingSongs.value[index].isPinned) === Boolean(waitingSongs.value[index + 1].isPinned)
 }
 
 const currentIsReverse = computed(() =>
@@ -514,12 +520,8 @@ async function copyWaitingQueue() {
         :index="index + 1"
         :is-loading="songRequest.isLoading"
         :is-lrc-loading="songRequest.isLrcLoading"
-        :can-move-up="!songRequest.activeFilterKeyword.trim() && waitingIndex(item.id) > 0"
-        :can-move-down="
-          !songRequest.activeFilterKeyword.trim() &&
-          waitingIndex(item.id) >= 0 &&
-          waitingIndex(item.id) < waitingSongs.length - 1
-        "
+        :can-move-up="canMoveWaitingUp(index)"
+        :can-move-down="canMoveWaitingDown(index)"
         :selection-mode="selectionMode"
         :selected="selectedIds.includes(item.id)"
         @toggle-select="(checked) => toggleSelect(item.id, checked)"

@@ -19,6 +19,8 @@ export interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: ResponseSongModel
   requestId?: string
+  isPinned?: boolean
+  orderSeq?: number
 }
 
 /** 点歌历史记录项 (前端本地记录, 因后端不保存点歌机历史) */
@@ -119,6 +121,25 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     return info
   }
 
+  function nextWaitingOrderSeq(list: readonly WaitMusicInfo[] = waitingMusics.value): number {
+    let maxSeq = -1
+    for (const item of list) {
+      if (typeof item.orderSeq === 'number' && Number.isFinite(item.orderSeq) && item.orderSeq > maxSeq) {
+        maxSeq = item.orderSeq
+      }
+    }
+    return maxSeq + 1
+  }
+
+  function ensureWaitingOrderSeq(list: WaitMusicInfo[]) {
+    let seq = nextWaitingOrderSeq(list)
+    for (const item of list) {
+      if (typeof item.orderSeq !== 'number' || !Number.isFinite(item.orderSeq)) {
+        item.orderSeq = seq++
+      }
+    }
+  }
+
   function findWaitingIndex(info: WaitMusicInfo): number {
     const refIdx = waitingMusics.value.indexOf(info)
     if (refIdx > -1) return refIdx
@@ -209,7 +230,11 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
         playing: currentOriginMusic.value
           ? { from: currentOriginMusic.value.from, music: currentOriginMusic.value.music }
           : undefined,
-        waiting: waitingMusics.value.map((w) => ({ from: w.from, music: w.music })),
+        waiting: waitingMusics.value.map((w) => ({
+          from: w.from,
+          music: w.music,
+          isPinned: Boolean(w.isPinned),
+        })),
       })
         .then((res) => {
           if (seq === snapshotSeq && res && res.code !== 200) {
@@ -287,22 +312,53 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     pushHistory(info, 'cancelled')
   }
 
-  function moveWaiting(index: number, direction: 'up' | 'down') {
+  function canMoveWaiting(index: number, direction: 'up' | 'down'): boolean {
     const targetIdx = direction === 'up' ? index - 1 : index + 1
-    if (index < 0 || targetIdx < 0 || targetIdx >= waitingMusics.value.length) return
-    const next = [...waitingMusics.value]
+    if (index < 0 || index >= waitingMusics.value.length || targetIdx < 0 || targetIdx >= waitingMusics.value.length) {
+      return false
+    }
+    return Boolean(waitingMusics.value[index].isPinned) === Boolean(waitingMusics.value[targetIdx].isPinned)
+  }
+
+  function moveWaiting(index: number, direction: 'up' | 'down') {
+    if (!canMoveWaiting(index, direction)) return
+    const targetIdx = direction === 'up' ? index - 1 : index + 1
+    const next = waitingMusics.value.map((w) => ({ ...w }))
+    ensureWaitingOrderSeq(next)
     const [moved] = next.splice(index, 1)
     next.splice(targetIdx, 0, moved)
+    if (!moved.isPinned) {
+      const prevIdx = direction === 'up' ? targetIdx + 1 : targetIdx - 1
+      const swapped = next[prevIdx]
+      const movedSeq = moved.orderSeq
+      moved.orderSeq = swapped.orderSeq
+      swapped.orderSeq = movedSeq
+    }
     waitingMusics.value = next
   }
 
-  function pinWaiting(index: number) {
-    if (index <= 0 || index >= waitingMusics.value.length) return
-    const next = [...waitingMusics.value]
-    const [moved] = next.splice(index, 1)
-    next.unshift(moved)
-    waitingMusics.value = next
-    message.success(`已将「${moved.music.name}」置顶至下一首播放`)
+  function pinWaiting(index: number, pinned?: boolean) {
+    if (index < 0 || index >= waitingMusics.value.length) return
+    const next = waitingMusics.value.map((w) => ({ ...w }))
+    ensureWaitingOrderSeq(next)
+    const target = next[index]
+    const nextPinned = pinned ?? !target.isPinned
+    if (nextPinned === Boolean(target.isPinned)) return
+
+    if (nextPinned) {
+      next.splice(index, 1)
+      target.isPinned = true
+      next.unshift(target)
+      waitingMusics.value = next
+      message.success(`已将「${target.music.name}」置顶至下一首播放`)
+      return
+    }
+
+    target.isPinned = false
+    const pinnedItems = next.filter((w) => Boolean(w.isPinned))
+    const unpinnedItems = next.filter((w) => !w.isPinned).toSorted((a, b) => (a.orderSeq ?? 0) - (b.orderSeq ?? 0))
+    waitingMusics.value = [...pinnedItems, ...unpinnedItems]
+    message.success(`已取消置顶「${target.music.name}」`)
   }
 
   function clearWaitingWithUndo() {
@@ -381,6 +437,9 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
       pushHistory(target, 'played')
       message.success(`正在播放 [${requesterName}] 点的 ${target.music.name}`)
     } else {
+      ensureWaitingOrderSeq(waitingMusics.value)
+      target.isPinned = false
+      target.orderSeq = nextWaitingOrderSeq()
       waitingMusics.value.push(target)
       message.success(
         options?.queueOnly ? `已加入待播: ${target.music.name}` : `[${requesterName}] 点了一首 ${target.music.name}`,
@@ -679,6 +738,7 @@ export const useMusicRequestProvider = defineStore('MusicRequest', () => {
     playMusic,
     addWaitingMusic,
     cancelWaiting,
+    canMoveWaiting,
     moveWaiting,
     pinWaiting,
     clearWaitingWithUndo,

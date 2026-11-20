@@ -23,6 +23,7 @@ import type {
   PostApiLiveRequestPriorityFromWebParams,
   PostApiLiveRequestSingingParams,
   ResponseResult,
+  ResponseResultOfBoolean,
   ResponseResultOfInt32,
   ResponseResultOfInt64Array,
   ResponseResultOfListOfResponseSongRequestModel,
@@ -31,6 +32,7 @@ import type {
   ResponseResultOfResponseSongrequestResponseAndSettings,
   ResponseResultOfString,
   SettingSongRequest,
+  ToggleLiveRequestPinModel,
 } from '../model'
 
 // https://stackoverflow.com/questions/49579094/typescript-conditional-types-filter-out-readonly-properties-pick-only-requir/49579497#49579497
@@ -415,6 +417,36 @@ export const postApiLiveRequestPriorityFromWeb = async (
   return vtsuruMutator<ResponseResultOfResponseSongRequestModel>(getPostApiLiveRequestPriorityFromWebUrl(params), {
     ...options,
     method: 'POST',
+  })
+}
+
+export const getPostApiLiveRequestPinUrl = () => {
+  return `/api/live-request/pin`
+}
+
+export const postApiLiveRequestPin = async (
+  toggleLiveRequestPinModel?: ToggleLiveRequestPinModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfBoolean> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfBoolean>(getPostApiLiveRequestPinUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(toggleLiveRequestPinModel),
   })
 }
 

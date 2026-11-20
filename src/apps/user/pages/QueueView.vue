@@ -59,6 +59,7 @@ const waitingItems = computed(() => {
       fansMedalWearing: (item) => item.user?.fans_medal_wearing_status,
       priorityLevel: (item) => item.priorityLevel,
       sortOrder: (item) => item.sortOrder,
+      isPinned: (item) => item.isPinned,
     },
   )
 })

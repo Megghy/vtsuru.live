@@ -21,6 +21,7 @@ import {
   postApiQueueBatchStatus,
   postApiQueueDeactivate,
   postApiQueueDelete,
+  postApiQueuePin,
   postApiQueueReorder,
   postApiQueueResetOrder,
   postApiQueueSetStatus,
@@ -184,6 +185,7 @@ export const useQueue = defineStore('queue', () => {
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
       priorityLevel: (q) => q.priorityLevel,
       sortOrder: (q) => q.sortOrder,
+      isPinned: (q) => q.isPinned,
     })
 
     return sorted.toSorted((a, b) => {
@@ -423,6 +425,7 @@ export const useQueue = defineStore('queue', () => {
     item.status = status
     if (status > QueueStatus.Progressing) {
       item.finishAt = now
+      item.isPinned = false
     }
     if (status === QueueStatus.Cancel && refundPoint && item.pointCost && item.pointCost > 0) {
       item.pointRefunded = true
@@ -554,6 +557,7 @@ export const useQueue = defineStore('queue', () => {
     await reorderWaitingQueue(item.id, (waiting, idx) => {
       const targetIdx = direction === 'up' ? idx - 1 : idx + 1
       if (targetIdx < 0 || targetIdx >= waiting.length) return null
+      if (Boolean(waiting[idx].isPinned) !== Boolean(waiting[targetIdx].isPinned)) return null
       const reordered = [...waiting]
       const [moved] = reordered.splice(idx, 1)
       reordered.splice(targetIdx, 0, moved)
@@ -561,13 +565,35 @@ export const useQueue = defineStore('queue', () => {
     })
   }
 
-  async function pinQueue(item: ResponseQueueModel) {
-    const ok = await reorderWaitingQueue(item.id, (waiting, idx) =>
-      idx <= 0 ? null : [item, ...waiting.filter((q) => q.id !== item.id)],
-    )
-    if (ok) {
-      window.$message.success(`已将「${item.user?.name || '该观众'}」置顶`)
+  async function pinQueue(item: ResponseQueueModel, pinned?: boolean) {
+    const nextPinned = pinned ?? !item.isPinned
+    const prevPinned = Boolean(item.isPinned)
+    if (nextPinned === prevPinned) return true
+
+    const name = item.user?.name || '该观众'
+    item.isPinned = nextPinned
+    if (!isLoggedIn.value) {
+      window.$message.success(nextPinned ? `已将「${name}」置顶` : `已取消置顶「${name}」`)
+      return true
     }
+
+    markOperating(item.id, true)
+    try {
+      const res = await postApiQueuePin({ id: item.id, isPinned: nextPinned })
+      if (res.code === 200) {
+        item.isPinned = Boolean(res.data)
+        window.$message.success(item.isPinned ? `已将「${name}」置顶` : `已取消置顶「${name}」`)
+        return true
+      }
+      item.isPinned = prevPinned
+      window.$message.error(`${nextPinned ? '置顶' : '取消置顶'}失败: ${res.message}`)
+    } catch (err: any) {
+      item.isPinned = prevPinned
+      window.$message.error(`${nextPinned ? '置顶' : '取消置顶'}出错: ${err.message || err}`)
+    } finally {
+      markOperating(item.id, false)
+    }
+    return false
   }
 
   async function resetOrder() {
@@ -692,6 +718,7 @@ export const useQueue = defineStore('queue', () => {
           if (existing.pointCost !== item.pointCost) existing.pointCost = item.pointCost
           if (existing.pointRefunded !== item.pointRefunded) existing.pointRefunded = item.pointRefunded
           if (existing.sortOrder !== item.sortOrder) existing.sortOrder = item.sortOrder
+          if (Boolean(existing.isPinned) !== Boolean(item.isPinned)) existing.isPinned = Boolean(item.isPinned)
           const paymentChanged =
             existing.giftPrice !== item.giftPrice ||
             existing.mysteryBoxName !== item.mysteryBoxName ||

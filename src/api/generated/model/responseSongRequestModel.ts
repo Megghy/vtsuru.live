@@ -24,6 +24,7 @@ export interface ResponseSongRequestModel {
   priorityLevel: number
   /** @nullable */
   sortOrder?: number | null
+  isPinned?: boolean
   user?: DanmakuUserInfo
   createAt: number
   /** @nullable */

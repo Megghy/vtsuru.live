@@ -69,8 +69,14 @@ const sortOptions = [
   { label: '粉丝牌', value: QueueSortType.FansMedalFirst },
 ]
 
-function waitingIndex(id: number) {
-  return waitingItems.value.findIndex((q) => q.id === id)
+function canMoveWaitingUp(index: number) {
+  if (store.activeFilterName.trim() || index <= 0 || index >= waitingItems.value.length) return false
+  return Boolean(waitingItems.value[index].isPinned) === Boolean(waitingItems.value[index - 1].isPinned)
+}
+
+function canMoveWaitingDown(index: number) {
+  if (store.activeFilterName.trim() || index < 0 || index >= waitingItems.value.length - 1) return false
+  return Boolean(waitingItems.value[index].isPinned) === Boolean(waitingItems.value[index + 1].isPinned)
 }
 
 async function handleAddManual() {
@@ -442,12 +448,8 @@ async function copyQueueList() {
             :key="queueData.id"
             :queue-data="queueData"
             :index="index + 1"
-            :can-move-up="!store.activeFilterName.trim() && waitingIndex(queueData.id) > 0"
-            :can-move-down="
-              !store.activeFilterName.trim() &&
-              waitingIndex(queueData.id) >= 0 &&
-              waitingIndex(queueData.id) < waitingItems.length - 1
-            "
+            :can-move-up="canMoveWaitingUp(index)"
+            :can-move-down="canMoveWaitingDown(index)"
             :selection-mode="selectionMode"
             :selected="selectedIds.includes(queueData.id)"
             @toggle-select="(checked) => toggleSelect(queueData.id, checked)"

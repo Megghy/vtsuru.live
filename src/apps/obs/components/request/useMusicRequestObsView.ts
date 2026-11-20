@@ -12,6 +12,7 @@ interface WaitMusicInfo {
   from: DanmakuUserInfo
   music: ResponseSongModel
   requestId?: string
+  isPinned?: boolean
 }
 
 /**
@@ -50,7 +51,10 @@ export function useMusicRequestObsView(currentId: MaybeRefOrGetter<string | numb
     return waiting.value.map((item, index) => ({
       id: item.requestId || (item.music.id ? `${item.music.id}-${index}` : `wait-${index}`),
       primary: item.music.name,
-      badges: [{ text: item.from ? item.from.name : '主播添加', tone: 'default' as const }],
+      badges: [
+        ...(item.isPinned ? [{ text: '置顶', tone: 'accent' as const }] : []),
+        { text: item.from ? item.from.name : '主播添加', tone: 'default' as const },
+      ],
     }))
   })
 

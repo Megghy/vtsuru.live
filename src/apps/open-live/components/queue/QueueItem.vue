@@ -4,6 +4,7 @@ import ArrowUp24Regular from '@vicons/fluent/es/ArrowUp24Regular'
 import Checkmark12Regular from '@vicons/fluent/es/Checkmark12Regular'
 import ClipboardTextLtr24Filled from '@vicons/fluent/es/ClipboardTextLtr24Filled'
 import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
+import Pin24Filled from '@vicons/fluent/es/Pin24Filled'
 import Pin24Regular from '@vicons/fluent/es/Pin24Regular'
 import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
 import { computed, ref } from 'vue'
@@ -127,6 +128,13 @@ function formatRelativeTime(timestamp: number) {
     </template>
 
     <template #context>
+      <Badge
+        v-if="queueData.isPinned"
+        variant="brand"
+        size="xs"
+      >
+        置顶
+      </Badge>
       <UserBadges
         :user="queueData.user"
         :show-fan-medal="store.settings.showFanMadelInfo"
@@ -230,15 +238,23 @@ function formatRelativeTime(timestamp: number) {
             <TooltipTrigger as-child>
               <Button
                 size="icon-xs"
-                variant="ghost"
-                :disabled="!canMoveUp || isItemBusy"
-                aria-label="置顶"
+                :variant="queueData.isPinned ? 'secondary' : 'ghost'"
+                :class="queueData.isPinned ? 'text-primary' : undefined"
+                :disabled="isItemBusy"
+                :aria-label="queueData.isPinned ? '取消置顶' : '置顶'"
                 @click="store.pinQueue(queueData)"
               >
-                <Pin24Regular class="size-3.5" />
+                <Pin24Filled
+                  v-if="queueData.isPinned"
+                  class="size-3.5"
+                />
+                <Pin24Regular
+                  v-else
+                  class="size-3.5"
+                />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>置顶到等待首位</TooltipContent>
+            <TooltipContent>{{ queueData.isPinned ? '取消置顶' : '置顶到等待首位' }}</TooltipContent>
           </Tooltip>
 
           <Tooltip>

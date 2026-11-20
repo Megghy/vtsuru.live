@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   getAll: vi.fn(),
   getActive: vi.fn(),
   getStats: vi.fn(),
+  postPin: vi.fn(),
   postReorder: vi.fn(),
   postResetOrder: vi.fn(),
   postDelete: vi.fn(),
@@ -52,6 +53,7 @@ vi.mock('@/api/generated/live-request/live-request', () => ({
   getApiLiveRequestGetAll: () => mocks.getAll(),
   getApiLiveRequestGetActive: (params?: any) => mocks.getActive(params),
   getApiLiveRequestStats: () => mocks.getStats(),
+  postApiLiveRequestPin: (body: any) => mocks.postPin(body),
   postApiLiveRequestReorder: (ids: number[]) => mocks.postReorder(ids),
   postApiLiveRequestResetOrder: () => mocks.postResetOrder(),
   postApiLiveRequestDelete: (ids: number[]) => mocks.postDelete(ids),
@@ -81,6 +83,7 @@ function createSongItem(overrides: Partial<SongRequestInfo> & { id: number; song
     startSingAt: 0,
     priorityLevel: 0,
     sortOrder: null,
+    isPinned: false,
     user: {
       name: `用户${overrides.id}`,
       uid: 1000 + overrides.id,
@@ -156,6 +159,38 @@ describe('useLiveRequest', () => {
     expect(store.originSongs.map((s) => s.id)).toEqual([9])
   })
 
+  it('pinSong 支持独立置顶与取消置顶并回滚失败请求，且不影响规则排序或 sortOrder', async () => {
+    const store = useLiveRequest()
+    store.originSongs = [
+      createSongItem({ id: 1, songName: '正在唱', status: SongRequestStatus.Singing, createAt: 100 }),
+      createSongItem({ id: 2, songName: '等待一', createAt: 200 }),
+      createSongItem({ id: 3, songName: '等待二', createAt: 300 }),
+    ]
+
+    mocks.postPin.mockResolvedValueOnce({ code: 200, data: true })
+    await store.pinSong(store.originSongs[2])
+    expect(mocks.postPin).toHaveBeenCalledWith({ id: 3, isPinned: true })
+    expect(store.unfilteredActiveSongs.map((s) => s.id)).toEqual([1, 3, 2])
+    expect(store.hasCustomOrder).toBe(false)
+
+    // 未置顶首项不能跨过已置顶项上移
+    await store.moveSong(store.originSongs[1], 'up')
+    expect(mocks.postReorder).not.toHaveBeenCalled()
+
+    // 取消置顶失败时回滚
+    mocks.postPin.mockResolvedValueOnce({ code: 500, message: 'fail' })
+    const failedOk = await store.pinSong(store.originSongs[2])
+    expect(failedOk).toBe(false)
+    expect(store.originSongs[2].isPinned).toBe(true)
+
+    // 取消置顶成功后自动回到规则排序位置
+    mocks.postPin.mockResolvedValueOnce({ code: 200, data: false })
+    const okUnpin = await store.pinSong(store.originSongs[2])
+    expect(okUnpin).toBe(true)
+    expect(mocks.postPin).toHaveBeenLastCalledWith({ id: 3, isPinned: false })
+    expect(store.unfilteredActiveSongs.map((s) => s.id)).toEqual([1, 2, 3])
+  })
+
   it('reorderWaitingSongs 把正在演唱放到末尾，并在调序失败时回滚 sortOrder', async () => {
     const store = useLiveRequest()
     store.originSongs = [
@@ -165,7 +200,7 @@ describe('useLiveRequest', () => {
     ]
 
     mocks.postReorder.mockResolvedValueOnce({ code: 200 })
-    await store.pinSong(store.originSongs[2])
+    await store.moveSong(store.originSongs[2], 'up')
     expect(mocks.postReorder).toHaveBeenCalledWith([3, 2, 1])
 
     mocks.postReorder.mockResolvedValueOnce({ code: 500, message: 'fail' })

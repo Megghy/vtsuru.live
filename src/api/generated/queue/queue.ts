@@ -19,6 +19,7 @@ import type {
   PostApiQueuePriorityFromWebParams,
   PostApiQueueSetStatusParams,
   ResponseResult,
+  ResponseResultOfBoolean,
   ResponseResultOfInt32,
   ResponseResultOfInt64Array,
   ResponseResultOfListOfResponseQueueModel,
@@ -26,6 +27,7 @@ import type {
   ResponseResultOfResponseQueueResponseAndSettings,
   ResponseResultOfResponseQueueStatsModel,
   SettingQueue,
+  ToggleQueuePinModel,
 } from '../model'
 
 // https://stackoverflow.com/questions/49579094/typescript-conditional-types-filter-out-readonly-properties-pick-only-requir/49579497#49579497
@@ -290,6 +292,36 @@ export const postApiQueuePriorityFromWeb = async (
   return vtsuruMutator<ResponseResultOfResponseQueueModel>(getPostApiQueuePriorityFromWebUrl(params), {
     ...options,
     method: 'POST',
+  })
+}
+
+export const getPostApiQueuePinUrl = () => {
+  return `/api/queue/pin`
+}
+
+export const postApiQueuePin = async (
+  toggleQueuePinModel?: ToggleQueuePinModel,
+  options?: Parameters<typeof vtsuruMutator>[1],
+): Promise<ResponseResultOfBoolean> => {
+  const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {}
+    if (h instanceof Headers) return Object.fromEntries(h.entries())
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      )
+    }
+    const headers: Record<string, string | readonly string[]> = {}
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value
+    }
+    return headers
+  }
+  return vtsuruMutator<ResponseResultOfBoolean>(getPostApiQueuePinUrl(), {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(toggleQueuePinModel),
   })
 }
 

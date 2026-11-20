@@ -25,6 +25,7 @@ export function useQueueData(currentId: MaybeRefOrGetter<string | number | null 
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
       priorityLevel: (q) => q.priorityLevel,
       sortOrder: (q) => q.sortOrder,
+      isPinned: (q) => q.isPinned,
     })
   })
 

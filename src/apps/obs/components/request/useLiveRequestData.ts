@@ -22,6 +22,7 @@ export function useLiveRequestData(currentId: MaybeRefOrGetter<string | number |
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
       priorityLevel: (q) => q.priorityLevel,
       sortOrder: (q) => q.sortOrder,
+      isPinned: (q) => q.isPinned,
     })
   })
 

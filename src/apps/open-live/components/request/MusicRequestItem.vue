@@ -3,6 +3,7 @@ import ArrowDown24Regular from '@vicons/fluent/es/ArrowDown24Regular'
 import ArrowUp24Regular from '@vicons/fluent/es/ArrowUp24Regular'
 import Dismiss16Filled from '@vicons/fluent/es/Dismiss16Filled'
 import MusicNote2Play20Filled from '@vicons/fluent/es/MusicNote2Play20Filled'
+import Pin24Filled from '@vicons/fluent/es/Pin24Filled'
 import Pin24Regular from '@vicons/fluent/es/Pin24Regular'
 import PresenceBlocked16Regular from '@vicons/fluent/es/PresenceBlocked16Regular'
 import { computed } from 'vue'
@@ -19,6 +20,7 @@ const props = defineProps<{
   music: ResponseSongModel
   fromName: string
   index: number
+  isPinned?: boolean
   canBlockUser?: boolean
   canMoveUp?: boolean
   canMoveDown?: boolean
@@ -59,6 +61,13 @@ const platformTag = computed(() => {
 
     <template #context>
       <Badge
+        v-if="isPinned"
+        variant="brand"
+        size="xs"
+      >
+        置顶
+      </Badge>
+      <Badge
         v-if="platformTag"
         :variant="platformTag.variant"
         size="xs"
@@ -82,15 +91,22 @@ const platformTag = computed(() => {
           <TooltipTrigger as-child>
             <Button
               size="icon-xs"
-              variant="ghost"
-              :disabled="!canMoveUp"
-              aria-label="置顶"
+              :variant="isPinned ? 'secondary' : 'ghost'"
+              :class="isPinned ? 'text-primary' : undefined"
+              :aria-label="isPinned ? '取消置顶' : '置顶'"
               @click="emit('pin')"
             >
-              <Pin24Regular class="size-3.5" />
+              <Pin24Filled
+                v-if="isPinned"
+                class="size-3.5"
+              />
+              <Pin24Regular
+                v-else
+                class="size-3.5"
+              />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>置顶到下一首</TooltipContent>
+          <TooltipContent>{{ isPinned ? '取消置顶' : '置顶到下一首' }}</TooltipContent>
         </Tooltip>
 
         <Tooltip>

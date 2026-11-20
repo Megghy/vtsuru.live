@@ -14,6 +14,7 @@ import {
   postApiLiveRequestDeactivate,
   postApiLiveRequestDelete,
   postApiLiveRequestFinish,
+  postApiLiveRequestPin,
   postApiLiveRequestReorder,
   postApiLiveRequestResetOrder,
   postApiLiveRequestSinging,
@@ -95,6 +96,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       fansMedalWearing: (q) => q.user?.fans_medal_wearing_status,
       priorityLevel: (q) => q.priorityLevel,
       sortOrder: (q) => q.sortOrder,
+      isPinned: (q) => q.isPinned,
     })
   })
 
@@ -315,6 +317,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
       song.startSingAt = now
     } else if (status > SongRequestStatus.Singing) {
       song.finishAt = now
+      song.isPinned = false
     }
     if (status === SongRequestStatus.Cancel && refundPoint && song.pointCost && song.pointCost > 0) {
       song.pointRefunded = true
@@ -451,6 +454,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
     await reorderWaitingSongs(song.id, (waiting, idx) => {
       const targetIdx = direction === 'up' ? idx - 1 : idx + 1
       if (targetIdx < 0 || targetIdx >= waiting.length) return null
+      if (Boolean(waiting[idx].isPinned) !== Boolean(waiting[targetIdx].isPinned)) return null
       const reordered = [...waiting]
       const [moved] = reordered.splice(idx, 1)
       reordered.splice(targetIdx, 0, moved)
@@ -458,13 +462,35 @@ export const useLiveRequest = defineStore('songRequest', () => {
     })
   }
 
-  async function pinSong(song: SongRequestInfo) {
-    const ok = await reorderWaitingSongs(song.id, (waiting, idx) =>
-      idx <= 0 ? null : [song, ...waiting.filter((s) => s.id !== song.id)],
-    )
-    if (ok) {
-      window.$message.success(`已将「${song.songName}」置顶`)
+  async function pinSong(song: SongRequestInfo, pinned?: boolean) {
+    const nextPinned = pinned ?? !song.isPinned
+    const prevPinned = Boolean(song.isPinned)
+    if (nextPinned === prevPinned) return true
+
+    song.isPinned = nextPinned
+    if (!isLoggedIn.value) {
+      window.$message.success(nextPinned ? `已将「${song.songName}」置顶` : `已取消置顶「${song.songName}」`)
+      return true
     }
+
+    markOperating(song.id, true)
+    try {
+      const res = await postApiLiveRequestPin({ id: song.id, isPinned: nextPinned })
+      if (res.code === 200) {
+        song.isPinned = Boolean(res.data)
+        window.$message.success(song.isPinned ? `已将「${song.songName}」置顶` : `已取消置顶「${song.songName}」`)
+        return true
+      }
+      song.isPinned = prevPinned
+      window.$message.error(`${nextPinned ? '置顶' : '取消置顶'}失败: ${res.message}`)
+    } catch (err) {
+      song.isPinned = prevPinned
+      console.error('[SONG-REQUEST] 切换置顶状态失败', err)
+      window.$message.error(`${nextPinned ? '置顶' : '取消置顶'}失败`)
+    } finally {
+      markOperating(song.id, false)
+    }
+    return false
   }
 
   async function resetOrder() {
@@ -599,6 +625,7 @@ export const useLiveRequest = defineStore('songRequest', () => {
             if (song.pointCost !== item.pointCost) song.pointCost = item.pointCost
             if (song.pointRefunded !== item.pointRefunded) song.pointRefunded = item.pointRefunded
             if (song.sortOrder !== item.sortOrder) song.sortOrder = item.sortOrder
+            if (Boolean(song.isPinned) !== Boolean(item.isPinned)) song.isPinned = Boolean(item.isPinned)
             if (item.startSingAt && !song.startSingAt) song.startSingAt = item.startSingAt
             if (item.finishAt && !song.finishAt) song.finishAt = item.finishAt
           } else {

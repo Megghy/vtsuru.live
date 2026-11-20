@@ -150,7 +150,7 @@ describe('useMusicRequestProvider', () => {
     expect(store.waitingMusics.map((w) => w.music.name)).toEqual(['夜曲', '花海'])
   })
 
-  it('moveWaiting 与 pinWaiting 能正确调整待播顺序', () => {
+  it('moveWaiting 与 pinWaiting 能正确调整待播顺序，并支持取消置顶恢复原位', () => {
     const store = useMusicRequestProvider()
     store.waitingMusics = [createWaitItem(1, 'A'), createWaitItem(2, 'B'), createWaitItem(3, 'C')]
 
@@ -159,6 +159,16 @@ describe('useMusicRequestProvider', () => {
 
     store.pinWaiting(2)
     expect(store.waitingMusics.map((w) => w.music.name)).toEqual(['C', 'B', 'A'])
+    expect(store.waitingMusics[0].isPinned).toBe(true)
+    expect(store.canMoveWaiting(1, 'up')).toBe(false)
+
+    // 置顶期间新增歌曲排在队列末尾，取消置顶后 C 回到新增歌曲之前
+    store.addWaitingMusic(createWaitItem(4, 'D'), { queueOnly: true })
+    expect(store.waitingMusics.map((w) => w.music.name)).toEqual(['C', 'B', 'A', 'D'])
+
+    store.pinWaiting(0)
+    expect(store.waitingMusics.map((w) => w.music.name)).toEqual(['B', 'A', 'C', 'D'])
+    expect(store.waitingMusics.every((w) => !w.isPinned)).toBe(true)
   })
 
   it('handleDanmaku 校验前缀、黑名单与冷却，并记录真实观众昵称', async () => {
